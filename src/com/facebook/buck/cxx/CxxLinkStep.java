@@ -19,20 +19,24 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
 public class CxxLinkStep extends ShellStep {
 
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> linker;
   private final Path argFilePath;
 
 
   public CxxLinkStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
       Path argFilePath) {
     super(workingDirectory);
+    this.environment = environment;
     this.linker = linker;
     this.argFilePath = argFilePath;
   }
@@ -43,6 +47,11 @@ public class CxxLinkStep extends ShellStep {
         .addAll(linker)
         .add("@" + argFilePath.toString())
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

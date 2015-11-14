@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.Verbosity;
@@ -139,14 +140,16 @@ public class RunCommand extends AbstractCommand {
     SourcePathResolver resolver =
         new SourcePathResolver(
             new BuildRuleResolver(ImmutableSet.copyOf(build.getActionGraph().getNodes())));
+    Tool executable = binaryBuildRule.getExecutableCommand();
     ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
-        .addAll(binaryBuildRule.getExecutableCommand().getCommandPrefix(resolver))
+        .addAll(executable.getCommandPrefix(resolver))
         .addAll(getTargetArguments())
         .build();
 
     ShellStep step = new DefaultShellStep(
         params.getCell().getFilesystem().getRootPath(),
-        fullCommand) {
+        fullCommand,
+        executable.getEnvironment(resolver)) {
       // Print the output from the step directly to stdout and stderr rather than buffering it and
       // printing it as two individual strings. This preserves the expected behavior where output
       // written to stdout and stderr may be interleaved when displayed in a terminal.

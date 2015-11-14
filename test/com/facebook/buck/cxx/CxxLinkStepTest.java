@@ -23,6 +23,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
@@ -38,6 +39,7 @@ public class CxxLinkStepTest {
     // Create our CxxLinkStep to test.
     CxxLinkStep cxxLinkStep = new CxxLinkStep(
         projectFilesystem.getRootPath(),
+        ImmutableMap.<String, String>of(),
         linker,
         projectFilesystem.getRootPath().resolve("argfile.txt"));
 

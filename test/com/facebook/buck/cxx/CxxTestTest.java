@@ -66,6 +66,7 @@ public class CxxTestTest {
       super(
           createBuildParams(),
           new SourcePathResolver(new BuildRuleResolver()),
+          ImmutableMap.<String, String>of(),
           Suppliers.ofInstance(ImmutableMap.<String, String>of()),
           Suppliers.ofInstance(ImmutableList.<String>of()),
           Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),

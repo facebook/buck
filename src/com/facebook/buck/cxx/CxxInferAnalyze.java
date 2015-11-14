@@ -123,7 +123,8 @@ public class CxxInferAnalyze extends AbstractBuildRule {
         .add(
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
-                getAnalyzeCommand(getSpecsOfAllDeps())))
+                getAnalyzeCommand(getSpecsOfAllDeps()),
+                inferTools.topLevel.getEnvironment(getResolver())))
         .build();
   }
 

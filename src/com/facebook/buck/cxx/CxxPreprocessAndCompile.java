@@ -211,12 +211,19 @@ public class CxxPreprocessAndCompile
       throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
 
-    Optional<ImmutableList<String>> preprocessorCommand =
-        preprocessDelegate.isPresent() ?
-            Optional.of(preprocessDelegate.get().getPreprocessorCommand()) :
-            Optional.<ImmutableList<String>>absent();
+    Optional<ImmutableList<String>> preprocessorCommand;
+    Optional<ImmutableMap<String, String>> preprocessorEnvironment;
+
+    if (preprocessDelegate.isPresent()) {
+      preprocessorCommand = Optional.of(preprocessDelegate.get().getPreprocessorCommand());
+      preprocessorEnvironment = Optional.of(preprocessDelegate.get().getPreprocessorEnvironment());
+    } else {
+      preprocessorCommand = Optional.absent();
+      preprocessorEnvironment = Optional.absent();
+    }
 
     Optional<ImmutableList<String>> compilerCommand;
+    Optional<ImmutableMap<String, String>> compilerEnvironment;
     if (compiler.isPresent()) {
       compilerCommand = Optional.of(
           ImmutableList.<String>builder()
@@ -224,8 +231,10 @@ public class CxxPreprocessAndCompile
               .addAll(getCompilerPlatformPrefix())
               .addAll(getCompilerSuffix())
               .build());
+      compilerEnvironment = Optional.of(compiler.get().getEnvironment(getResolver()));
     } else {
       compilerCommand = Optional.absent();
+      compilerEnvironment = Optional.absent();
     }
 
     return new CxxPreprocessAndCompileStep(
@@ -235,7 +244,9 @@ public class CxxPreprocessAndCompile
         getDepFilePath(),
         getResolver().deprecatedGetPath(input),
         inputType,
+        preprocessorEnvironment,
         preprocessorCommand,
+        compilerEnvironment,
         compilerCommand,
         replacementPaths,
         sanitizer,
