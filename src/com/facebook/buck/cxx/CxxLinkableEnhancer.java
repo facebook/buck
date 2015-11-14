@@ -95,8 +95,7 @@ public class CxxLinkableEnhancer {
             cxxPlatform,
             nativeLinkableDeps,
             depType,
-            blacklist,
-            /* reverse */ true);
+            blacklist);
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();

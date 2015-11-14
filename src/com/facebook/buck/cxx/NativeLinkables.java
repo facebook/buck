@@ -35,7 +35,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -169,8 +168,7 @@ public class NativeLinkables {
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
       Predicate<Object> traverse,
-      ImmutableSet<BuildTarget> blacklist,
-      boolean reverse) {
+      ImmutableSet<BuildTarget> blacklist) {
 
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, traverse);
@@ -185,11 +183,6 @@ public class NativeLinkables {
       }
     }
 
-    // Keep in non-reversed order if requested.
-    if (!reverse) {
-      Collections.reverse(filtered);
-    }
-
     // Return a merged view of all native linkable input.
     return NativeLinkableInput.concat(
         FluentIterable.from(filtered)
@@ -201,16 +194,14 @@ public class NativeLinkables {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
-      ImmutableSet<BuildTarget> blacklist,
-      boolean reverse) {
+      ImmutableSet<BuildTarget> blacklist) {
     return getTransitiveNativeLinkableInput(
         targetGraph,
         cxxPlatform,
         inputs,
         depType,
         Predicates.instanceOf(NativeLinkable.class),
-        blacklist,
-        reverse);
+        blacklist);
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkable> getTransitiveNativeLinkables(
