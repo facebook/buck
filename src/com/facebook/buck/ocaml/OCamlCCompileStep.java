@@ -70,21 +70,29 @@ public class OCamlCCompileStep extends ShellStep {
         .build();
   }
 
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return args.environment;
+  }
+
   public static class Args implements RuleKeyAppendable {
+    public final ImmutableMap<String, String> environment;
     public final Path ocamlCompiler;
     public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
     public final SourcePath input;
-    private final ImmutableMap<Path, SourcePath> includes;
+    public final ImmutableMap<Path, SourcePath> includes;
 
     public Args(
+        ImmutableMap<String, String> environment,
         ImmutableList<String> cCompiler,
         Path ocamlCompiler,
         Path output,
         SourcePath input,
         ImmutableList<String> flags,
         ImmutableMap<Path, SourcePath> includes) {
+      this.environment = environment;
       this.cCompiler = cCompiler;
       this.ocamlCompiler = ocamlCompiler;
       this.output = output;

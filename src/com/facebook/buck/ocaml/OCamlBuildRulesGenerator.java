@@ -189,12 +189,13 @@ public class OCamlBuildRulesGenerator {
           cCompileParams,
           pathResolver,
           new OCamlCCompileStep.Args(
-            cCompiler.getCommandPrefix(pathResolver),
-            ocamlContext.getOcamlCompiler().get(),
-            outputPath,
-            cSrc,
-            cCompileFlags.build(),
-            ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
+              cCompiler.getEnvironment(pathResolver),
+              cCompiler.getCommandPrefix(pathResolver),
+              ocamlContext.getOcamlCompiler().get(),
+              outputPath,
+              cSrc,
+              cCompileFlags.build(),
+              ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       resolver.addToIndex(compileRule);
       objects.add(
           new BuildTargetSourcePath(compileRule.getBuildTarget()));
@@ -256,6 +257,7 @@ public class OCamlBuildRulesGenerator {
         pathResolver,
         allInputs,
         new OCamlLinkStep.Args(
+            cxxCompiler.getEnvironment(pathResolver),
             cxxCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlCompiler().get(),
             ocamlContext.getOutput(),
@@ -304,6 +306,7 @@ public class OCamlBuildRulesGenerator {
         pathResolver,
         allInputs,
         new OCamlLinkStep.Args(
+            cxxCompiler.getEnvironment(pathResolver),
             cxxCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlBytecodeCompiler().get(),
             ocamlContext.getBytecodeOutput(),
@@ -469,11 +472,12 @@ public class OCamlBuildRulesGenerator {
         compileParams,
         pathResolver,
         new OCamlMLCompileStep.Args(
-          cCompiler.getCommandPrefix(pathResolver),
-          ocamlContext.getOcamlCompiler().get(),
-          outputPath,
-          mlSource,
-          compileFlags));
+            cCompiler.getEnvironment(pathResolver),
+            cCompiler.getCommandPrefix(pathResolver),
+            ocamlContext.getOcamlCompiler().get(),
+            outputPath,
+            mlSource,
+            compileFlags));
     resolver.addToIndex(compile);
     sourceToRule.put(
         mlSource,
@@ -564,11 +568,12 @@ public class OCamlBuildRulesGenerator {
         compileParams,
         pathResolver,
         new OCamlMLCompileStep.Args(
-          cCompiler.getCommandPrefix(pathResolver),
-          ocamlContext.getOcamlBytecodeCompiler().get(),
-          outputPath,
-          mlSource,
-          compileFlags));
+            cCompiler.getEnvironment(pathResolver),
+            cCompiler.getCommandPrefix(pathResolver),
+            ocamlContext.getOcamlBytecodeCompiler().get(),
+            outputPath,
+            mlSource,
+            compileFlags));
     resolver.addToIndex(compileBytecode);
     sourceToRule.put(
         mlSource,

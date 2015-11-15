@@ -39,7 +39,9 @@ public class OCamlBuildStep implements Step {
   private final SourcePathResolver resolver;
   private final ProjectFilesystem filesystem;
   private final OCamlBuildContext ocamlContext;
+  private final ImmutableMap<String, String> cCompilerEnvironment;
   private final ImmutableList<String> cCompiler;
+  private final ImmutableMap<String, String> cxxCompilerEnvironment;
   private final ImmutableList<String> cxxCompiler;
 
   private final boolean hasGeneratedSources;
@@ -49,12 +51,16 @@ public class OCamlBuildStep implements Step {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       OCamlBuildContext ocamlContext,
+      ImmutableMap<String, String> cCompilerEnvironment,
       ImmutableList<String> cCompiler,
+      ImmutableMap<String, String> cxxCompilerEnvironment,
       ImmutableList<String> cxxCompiler) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
+    this.cCompilerEnvironment = cCompilerEnvironment;
     this.cCompiler = cCompiler;
+    this.cxxCompilerEnvironment = cxxCompilerEnvironment;
     this.cxxCompiler = cxxCompiler;
 
     hasGeneratedSources = ocamlContext.getLexInput().size() > 0 ||
@@ -174,12 +180,13 @@ public class OCamlBuildStep implements Step {
           resolver,
           filesystem.getRootPath(),
           new OCamlCCompileStep.Args(
-            cCompiler,
-            ocamlContext.getOcamlCompiler().get(),
-            outputPath,
-            new PathSourcePath(filesystem, cSrc),
-            cCompileFlags.build(),
-            ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
+              cCompilerEnvironment,
+              cCompiler,
+              ocamlContext.getOcamlCompiler().get(),
+              outputPath,
+              new PathSourcePath(filesystem, cSrc),
+              cCompileFlags.build(),
+              ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;
@@ -199,6 +206,7 @@ public class OCamlBuildStep implements Step {
     OCamlLinkStep linkStep = new OCamlLinkStep(
         filesystem.getRootPath(),
         new OCamlLinkStep.Args(
+            cxxCompilerEnvironment,
             cxxCompiler,
             ocamlContext.getOcamlCompiler().get(),
             ocamlContext.getOutput(),
@@ -222,6 +230,7 @@ public class OCamlBuildStep implements Step {
     OCamlLinkStep linkStep = new OCamlLinkStep(
         filesystem.getRootPath(),
         new OCamlLinkStep.Args(
+            cxxCompilerEnvironment,
             cxxCompiler,
             ocamlContext.getOcamlBytecodeCompiler().get(),
             ocamlContext.getBytecodeOutput(),
@@ -274,11 +283,12 @@ public class OCamlBuildStep implements Step {
       Step compileStep = new OCamlMLCompileStep(
           workingDirectory,
           new OCamlMLCompileStep.Args(
-            cCompiler,
-            ocamlContext.getOcamlCompiler().get(),
-            outputPath,
-            Paths.get(inputOutput),
-            compileFlags));
+              cCompilerEnvironment,
+              cCompiler,
+              ocamlContext.getOcamlCompiler().get(),
+              outputPath,
+              Paths.get(inputOutput),
+              compileFlags));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;
@@ -314,7 +324,7 @@ public class OCamlBuildStep implements Step {
       Step compileBytecodeStep = new OCamlMLCompileStep(
           workingDirectory,
           new OCamlMLCompileStep.Args(
-            cCompiler,
+              cCompilerEnvironment, cCompiler,
             ocamlContext.getOcamlBytecodeCompiler().get(),
             outputPath,
             Paths.get(inputOutput),
