@@ -112,13 +112,14 @@ public class HalideLibrary
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
     commands.add(
-      new HalideCompilerStep(
-        getProjectFilesystem().getRootPath(),
-        halideCompiler.getCommandPrefix(getResolver()),
-        outputDir,
-        shortName,
-        halideBuckConfig.getHalideTargetForPlatform(cxxPlatform),
-        /* header-only */ !cxxPlatform.isPresent()));
+        new HalideCompilerStep(
+            getProjectFilesystem().getRootPath(),
+            halideCompiler.getEnvironment(getResolver()),
+            halideCompiler.getCommandPrefix(getResolver()),
+            outputDir,
+            shortName,
+            halideBuckConfig.getHalideTargetForPlatform(cxxPlatform),
+            /* header-only */ !cxxPlatform.isPresent()));
     return commands.build();
   }
 
