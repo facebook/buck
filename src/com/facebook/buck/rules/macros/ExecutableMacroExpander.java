@@ -58,6 +58,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
   @Override
   public String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
       throws MacroException {
+    // TODO(mikekap): Pass environment variables through.
     return Joiner.on(' ').join(
         Iterables.transform(
             getTool(rule).getCommandPrefix(resolver),
