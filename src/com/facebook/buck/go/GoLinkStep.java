@@ -42,7 +42,7 @@ public class GoLinkStep extends ShellStep {
     }
   }
 
-  private final Path goRoot;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cxxLinkCommandPrefix;
   private final ImmutableList<String> linkCommandPrefix;
   private final ImmutableList<String> flags;
@@ -53,7 +53,7 @@ public class GoLinkStep extends ShellStep {
 
   public GoLinkStep(
       Path workingDirectory,
-      Path goRoot,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> cxxLinkCommandPrefix,
       ImmutableList<String> linkCommandPrefix,
       ImmutableList<String> flags,
@@ -62,7 +62,7 @@ public class GoLinkStep extends ShellStep {
       LinkMode linkMode,
       Path output) {
     super(workingDirectory);
-    this.goRoot = goRoot;
+    this.environment = environment;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;
     this.flags = flags;
@@ -100,7 +100,7 @@ public class GoLinkStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return ImmutableMap.of("GOROOT", goRoot.toString());
+    return environment;
   }
 
   @Override
