@@ -31,18 +31,6 @@ java_library(
 )
 
 java_library(
-  name = 'classhash',
-  srcs = [
-    'HasJavaClassHashes.java',
-  ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//src/com/facebook/buck/model:model',
-  ],
-  visibility = ['PUBLIC'],
-)
-
-java_library(
   name = 'javac-internals',
   srcs = [
     'ZipEntryJavaFileObject.java',
@@ -81,11 +69,11 @@ java_immutables_library(
     '//test/com/facebook/buck/jvm/java:java',
   ],
   deps = [
-    ':classhash',
     ':javac-internals',
     ':packagefinder',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/jvm/java/abi:protocol',
     '//src/com/facebook/buck/jvm/java/tracing:api',
     '//src/com/facebook/buck/jvm/java/tracing:tracing',
@@ -160,7 +148,6 @@ java_library(
     '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
   ],
   deps = [
-    ':classhash',
     ':fat-jar-main',
     ':packagefinder',
     ':steps',
@@ -171,6 +158,7 @@ java_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/jvm/core:nativelinkable',
     '//src/com/facebook/buck/jvm/java/abi:protocol',
     '//src/com/facebook/buck/log:api',

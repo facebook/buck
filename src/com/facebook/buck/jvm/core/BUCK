@@ -12,3 +12,15 @@ java_library(
     'PUBLIC',
   ],
 )
+
+java_library(
+  name = 'classhash',
+  srcs = [
+    'HasJavaClassHashes.java',
+  ],
+  deps = [
+    '//third-party/java/guava:guava',
+    '//src/com/facebook/buck/model:model',
+  ],
+  visibility = ['PUBLIC'],
+)

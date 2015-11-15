@@ -30,7 +30,7 @@ java_immutables_library(
   deps = [
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/jvm/java:classhash',
+    '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/jvm/core:nativelinkable',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
@@ -128,7 +128,7 @@ java_immutables_library(
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/jvm/core:nativelinkable',
-    '//src/com/facebook/buck/jvm/java:classhash',
+    '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/jvm/java:rules',
     '//src/com/facebook/buck/jvm/java:steps',
     '//src/com/facebook/buck/jvm/java:support',
@@ -278,7 +278,7 @@ java_immutables_library(
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/jvm/java:classhash',
+    '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/jvm/java/classes:classes',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/log:log',  # This should not be required.
