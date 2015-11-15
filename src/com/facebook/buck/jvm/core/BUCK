@@ -19,8 +19,20 @@ java_library(
     'HasJavaClassHashes.java',
   ],
   deps = [
-    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/model:model',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'packagefinder',
+  srcs = [
+    'JavaPackageFinder.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//third-party/java/guava:guava',
   ],
   visibility = ['PUBLIC'],
 )
