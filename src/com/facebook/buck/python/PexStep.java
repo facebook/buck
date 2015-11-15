@@ -36,6 +36,9 @@ public class PexStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
 
+  // The PEX builder environment variables.
+  private final ImmutableMap<String, String> environment;
+
   // The PEX builder command prefix.
   private final ImmutableList<String> commandPrefix;
 
@@ -63,6 +66,7 @@ public class PexStep extends ShellStep {
 
   public PexStep(
       ProjectFilesystem filesystem,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
       Path pythonPath,
       Path tempDir,
@@ -76,6 +80,7 @@ public class PexStep extends ShellStep {
     super(filesystem.getRootPath());
 
     this.filesystem = filesystem;
+    this.environment = environment;
     this.commandPrefix = commandPrefix;
     this.pythonPath = pythonPath;
     this.tempDir = tempDir;
@@ -152,6 +157,11 @@ public class PexStep extends ShellStep {
 
     builder.add(destination.toString());
     return builder.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   private ImmutableMap<Path, Path> getExpandedSourcePaths(ImmutableMap<Path, Path> paths)

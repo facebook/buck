@@ -67,8 +67,8 @@ public class PythonTest
   public PythonTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Supplier<ImmutableMap<String, String>> env,
-      PythonBinary binary,
+      final Supplier<ImmutableMap<String, String>> env,
+      final PythonBinary binary,
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
@@ -76,7 +76,16 @@ public class PythonTest
 
     super(params, resolver);
 
-    this.env = Suppliers.memoize(env);
+    this.env = Suppliers.memoize(
+        new Supplier<ImmutableMap<String, String>>() {
+          @Override
+          public ImmutableMap<String, String> get() {
+            ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
+            environment.putAll(binary.getExecutableCommand().getEnvironment(getResolver()));
+            environment.putAll(env.get());
+            return environment.build();
+          }
+        });
     this.binary = binary;
     this.additionalDeps = additionalDeps;
     this.sourceUnderTest = sourceUnderTest;
