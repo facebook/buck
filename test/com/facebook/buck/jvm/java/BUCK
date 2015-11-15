@@ -48,8 +48,6 @@ java_library(
     '//src/com/facebook/buck/model:model',
   ],
   exported_deps = [
-    # this is a bit dubious, exporting the real one with the fake...
-    '//src/com/facebook/buck/jvm/java:packagefinder',
     '//src/com/facebook/buck/jvm/core:packagefinder',
   ],
   visibility = [
