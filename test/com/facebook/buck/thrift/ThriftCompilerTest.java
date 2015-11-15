@@ -312,6 +312,7 @@ public class ThriftCompilerTest {
         new MakeCleanDirectoryStep(params.getProjectFilesystem(), DEFAULT_OUTPUT_DIR),
         new ThriftCompilerStep(
             params.getProjectFilesystem().getRootPath(),
+            ImmutableMap.<String, String>of(),
             ImmutableList.<String>builder()
                 .addAll(DEFAULT_COMPILER.getCommandPrefix(pathResolver))
                 .addAll(DEFAULT_FLAGS)
