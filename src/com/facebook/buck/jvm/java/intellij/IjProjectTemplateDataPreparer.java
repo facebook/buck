@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaPackageFinder;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;

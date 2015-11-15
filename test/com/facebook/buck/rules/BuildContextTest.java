@@ -31,7 +31,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.BuckEventBusFactory.CapturingConsoleEventListener;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.jvm.java.JavaPackageFinder;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;

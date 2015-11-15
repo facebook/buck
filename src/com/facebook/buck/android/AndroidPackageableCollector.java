@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
-import com.facebook.buck.jvm.java.HasJavaClassHashes;
-import com.facebook.buck.jvm.java.JavaNativeLinkable;
+import com.facebook.buck.jvm.core.HasJavaClassHashes;
+import com.facebook.buck.jvm.core.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;

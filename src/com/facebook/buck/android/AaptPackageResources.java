@@ -20,7 +20,7 @@ import com.facebook.buck.android.AaptPackageResources.BuildOutput;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
-import com.facebook.buck.jvm.java.HasJavaClassHashes;
+import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;

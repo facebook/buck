@@ -44,7 +44,7 @@ public class FakeBuildContext {
   /**
    * User still needs to invoke {@link ImmutableBuildContext.Builder#setActionGraph(ActionGraph)}
    * and {@link ImmutableBuildContext.Builder#setJavaPackageFinder(
-   * com.facebook.buck.jvm.java.JavaPackageFinder)}
+   * com.facebook.buck.jvm.core.JavaPackageFinder)}
    * before the {@link ImmutableBuildContext.Builder#build()} method of the builder can be invoked.
    */
   public static ImmutableBuildContext.Builder newBuilder() {

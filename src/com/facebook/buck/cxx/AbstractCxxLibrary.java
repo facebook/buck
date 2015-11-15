@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.jvm.java.JavaNativeLinkable;
+import com.facebook.buck.jvm.core.JavaNativeLinkable;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
