@@ -21,17 +21,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import java.nio.file.Path;
-import java.util.List;
 
-import javax.annotation.Nullable;
-
-public class JavacToJarStepFactory {
-  // JavacStep parameters
+public class JavacStepFactory {
   private Path outputDirectory;
   private Optional<Path> workingDirectory;
   private ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -43,15 +37,8 @@ public class JavacToJarStepFactory {
   private SourcePathResolver resolver;
   private ProjectFilesystem filesystem;
 
-  // JarDirectoryStep parameters
-  private Path pathToOutputFile;
-  private ImmutableSortedSet<Path> entriesToJar;
-  @Nullable private String mainClass;
-  @Nullable private Path manifestFile;
-
-  private final List<Step> intermediateCommands;
-
-  public JavacToJarStepFactory(Path outputDirectory,
+  public JavacStepFactory(
+      Path outputDirectory,
       Optional<Path> workingDirectory,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
@@ -60,14 +47,8 @@ public class JavacToJarStepFactory {
       BuildTarget invokingRule,
       Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      @Nullable String mainClass,
-      @Nullable Path manifestFile,
-      List<Step> intermediateCommands
+      ProjectFilesystem filesystem
   ) {
-    // JavacStep parameters
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = javaSourceFilePaths;
@@ -78,18 +59,10 @@ public class JavacToJarStepFactory {
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
     this.filesystem = filesystem;
-
-    // JarDirectoryStep parameters
-    this.pathToOutputFile = pathToOutputFile;
-    this.entriesToJar = entriesToJar;
-    this.mainClass = mainClass;
-    this.manifestFile = manifestFile;
-
-    this.intermediateCommands = intermediateCommands;
   }
 
-  void getJavacToJarStep(ImmutableList.Builder<Step> steps) {
-    JavacStep javacStep = new JavacStep(
+  Step createCompileStep() {
+    return new JavacStep(
         outputDirectory,
         workingDirectory,
         javaSourceFilePaths,
@@ -101,15 +74,5 @@ public class JavacToJarStepFactory {
         suggestBuildRules,
         resolver,
         filesystem);
-
-    steps.add(javacStep);
-    steps.addAll(Lists.newCopyOnWriteArrayList(intermediateCommands));
-    steps.add(
-        new JarDirectoryStep(
-            filesystem,
-            pathToOutputFile,
-            entriesToJar,
-            mainClass,
-            manifestFile));
   }
 }
