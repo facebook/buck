@@ -190,11 +190,34 @@ java_test(
   ],
 )
 
+ANDROID_BINARY_INTEGRATION_TEST_SRCS = [
+  '*Binary*IntegrationTest.java',
+]
+java_test(
+  name = 'binary-integration',
+  srcs = glob(ANDROID_BINARY_INTEGRATION_TEST_SRCS),
+  resources = glob(['testdata/**'], include_dotfiles=True),
+  deps = [
+    ':utils',
+    ':testutil',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/zip:stream',
+    '//src/com/facebook/buck/zip:unzip',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/commons-compress:commons-compress',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+  ],
+)
+
 java_test(
   name = 'integration',
   srcs = glob(
     STANDARD_INTEGRATION_TEST_SRCS,
-    excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS),
+    excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS +
+      ANDROID_BINARY_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     ':utils',
@@ -207,14 +230,10 @@ java_test(
     '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/zip:stream',
-    '//src/com/facebook/buck/zip:unzip',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jimfs:jimfs',

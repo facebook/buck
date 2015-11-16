@@ -28,6 +28,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
+    '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
@@ -112,6 +113,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
+    '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
@@ -186,6 +188,7 @@ java_library(
   srcs = SPLIT_DEX_SRCS,
   tests = [
     '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [

@@ -40,7 +40,7 @@ public class AndroidInstrumentationTestIntegrationTest {
   public void testAndroidInstrumentationTest() throws IOException {
     tmpFolder.doNotDeleteOnExit();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        new AndroidBinaryIntegrationTest(),
+        this,
         "android_instrumentation_test_integration_test",
         tmpFolder);
     workspace.setUp();
