@@ -21,8 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidLibrary;
-import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -30,10 +28,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.ExternalJavac;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.jvm.java.Jsr199Javac;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -151,47 +146,6 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJsr199Javac()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
-
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        createExecutor(),
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent()).build();
-    DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-
-    Javac javac = libraryRule.getJavacOptions().getJavac();
-    assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
-  }
-
-  @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacSet()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    final File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
-
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-
-    ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
-
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent())
-        .build();
-
-    DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertEquals(
-        javac.toPath(),
-        ((ExternalJavac) libraryRule.getJavacOptions().getJavac()).getPath());
-  }
-
-  @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     final File javac = temporaryFolder.newFile();
@@ -226,59 +180,6 @@ public class KnownBuildRuleTypesTest {
     RuleKey libraryKey = factory.build(libraryRule);
 
     assertNotEquals(libraryKey, configuredKey);
-  }
-
-  @Test
-  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryRuleWithJsr199Javac()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
-
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        createExecutor(),
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent()).build();
-    AndroidLibraryDescription description =
-        (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
-
-    AndroidLibraryDescription.Arg arg = new AndroidLibraryDescription.Arg();
-    populateJavaArg(arg);
-    arg.manifest = Optional.absent();
-    AndroidLibrary rule = (AndroidLibrary) description
-        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
-
-    Javac javac = rule.getJavacOptions().getJavac();
-    assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
-  }
-
-  @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithJavacSet()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    final File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
-
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-
-    ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
-
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent())
-        .build();
-    AndroidLibraryDescription description =
-        (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
-
-    AndroidLibraryDescription.Arg arg = new AndroidLibraryDescription.Arg();
-    populateJavaArg(arg);
-    arg.manifest = Optional.absent();
-    AndroidLibrary rule = (AndroidLibrary) description
-        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
-
-    assertEquals(javac.toPath(), ((ExternalJavac) rule.getJavacOptions().getJavac()).getPath());
   }
 
   @Test

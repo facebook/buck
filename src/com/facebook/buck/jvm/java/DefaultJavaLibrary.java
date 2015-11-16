@@ -399,10 +399,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return exportedDeps;
   }
 
-  public JavacOptions getJavacOptions() {
-    return javacOptions;
-  }
-
   /**
    * Building a java_library() rule entails compiling the .java files specified in the srcs
    * attribute. They are compiled into a directory under
