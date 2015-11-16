@@ -76,6 +76,19 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 {call cxx_common.link_style /}
 
 {call buck.arg}
+  {param name : 'soname' /}
+  {param default : 'None' /}
+  {param desc}
+  Sets the soname ("shared object name") of any shared library produced from this rule.
+  The default value is based on the full rule name.
+  The macro <code>$(ext)</code> will be replaced with a platform-appropriate extension.
+  An argument can be provided, which is a library version.
+  For example <code>soname = 'libfoo.$(ext 2.3)'</code> will be{sp}
+  <code>libfoo.2.3.dylib</code> on Mac and <code>libfoo.so.2.3</code> on Linux.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'supported_platforms_regex' /}
   {param default : 'None' /}
   {param desc}

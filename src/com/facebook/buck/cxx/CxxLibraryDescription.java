@@ -381,10 +381,10 @@ public class CxxLibraryDescription implements
           pathResolver);
     }
 
-    String sharedLibrarySoname =
-        soname.or(
-            CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-                params.getBuildTarget(), cxxPlatform));
+    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+        soname,
+        params.getBuildTarget(),
+        cxxPlatform);
     Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
         params.getBuildTarget(),
         sharedLibrarySoname,

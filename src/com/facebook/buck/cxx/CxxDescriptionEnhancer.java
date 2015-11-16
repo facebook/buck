@@ -89,6 +89,9 @@ public class CxxDescriptionEnhancer {
           ImmutableMap.<String, MacroExpander>of(
               "location", new LocationMacroExpander()));
 
+  private static final Pattern SONAME_EXT_MACRO_PATTERN =
+      Pattern.compile("\\$\\(ext(?: ([.0-9]+))?\\)");
+
   private CxxDescriptionEnhancer() {}
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
@@ -431,6 +434,37 @@ public class CxxDescriptionEnhancer {
     String name = String.format("lib%s.a", target.getShortName());
     return BuildTargets.getGenPath(createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);
+  }
+
+  static String getSharedLibrarySoname(
+      Optional<String> declaredSoname,
+      BuildTarget target,
+      CxxPlatform platform) {
+    if (!declaredSoname.isPresent()) {
+      return getDefaultSharedLibrarySoname(target, platform);
+    }
+    return getNonDefaultSharedLibrarySoname(
+        declaredSoname.get(),
+        platform.getSharedLibraryExtension(),
+        platform.getSharedLibraryVersionedExtensionFormat());
+  }
+
+  @VisibleForTesting
+  static String getNonDefaultSharedLibrarySoname(
+      String declared,
+      String sharedLibraryExtension,
+      String sharedLibraryVersionedExtensionFormat) {
+    Matcher match = SONAME_EXT_MACRO_PATTERN.matcher(declared);
+    if (!match.find()) {
+      return declared;
+    }
+    String version = match.group(1);
+    if (version == null) {
+      return match.replaceFirst(sharedLibraryExtension);
+    }
+    return match.replaceFirst(String.format(
+        sharedLibraryVersionedExtensionFormat,
+        version));
   }
 
   public static String getDefaultSharedLibrarySoname(BuildTarget target, CxxPlatform platform) {

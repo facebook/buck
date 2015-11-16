@@ -73,17 +73,21 @@ public class DefaultCxxPlatforms {
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
           "dylib",
+          ".%s.dylib",
           Optional.<DebugPathSanitizer>absent(),
           ImmutableMap.<String, String>of());
     }
 
     String sharedLibraryExtension;
+    String sharedLibraryVersionedExtensionFormat;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
+        sharedLibraryVersionedExtensionFormat = "so.%s";
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
+        sharedLibraryVersionedExtensionFormat = "dll";
         break;
       //$CASES-OMITTED$
       default:
@@ -108,6 +112,7 @@ public class DefaultCxxPlatforms {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         sharedLibraryExtension,
+        sharedLibraryVersionedExtensionFormat,
         Optional.<DebugPathSanitizer>absent(),
         ImmutableMap.<String, String>of());
   }

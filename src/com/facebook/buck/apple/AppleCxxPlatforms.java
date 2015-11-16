@@ -259,6 +259,7 @@ public class AppleCxxPlatforms {
         cflags,
         ImmutableList.<String>of(),
         "dylib",
+        "%s.dylib",
         Optional.of(debugPathSanitizer),
         macros);
 

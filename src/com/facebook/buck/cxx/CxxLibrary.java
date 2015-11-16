@@ -255,11 +255,10 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
       return PythonPackageComponents.of();
     }
     ImmutableMap.Builder<Path, SourcePath> libs = ImmutableMap.builder();
-    String sharedLibrarySoname =
-        soname.or(
-            CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-                getBuildTarget(),
-                cxxPlatform));
+    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+        soname,
+        getBuildTarget(),
+        cxxPlatform);
     BuildRule sharedLibraryBuildRule = requireBuildRule(
         targetGraph,
         cxxPlatform.getFlavor(),
@@ -303,11 +302,10 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
       return ImmutableMap.of();
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-    String sharedLibrarySoname =
-        soname.or(
-            CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-                getBuildTarget(),
-                cxxPlatform));
+    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+        soname,
+        getBuildTarget(),
+        cxxPlatform);
     BuildRule sharedLibraryBuildRule = requireBuildRule(
         targetGraph,
         cxxPlatform.getFlavor(),

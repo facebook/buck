@@ -40,6 +40,7 @@ public class CxxPlatformUtils {
           .setStrip(new HashedFileTool(Paths.get("tool")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))
           .setSharedLibraryExtension(".so")
+          .setSharedLibraryVersionedExtensionFormat(".so.%s")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
 

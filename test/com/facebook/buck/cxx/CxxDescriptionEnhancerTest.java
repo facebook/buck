@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
@@ -159,5 +160,22 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
             target2,
             CxxPlatformUtils.DEFAULT_PLATFORM));
+  }
+
+  @Test
+  public void testSonameExpansion() {
+    assertThat(soname("libfoo.so", "dylib", "%s.dylib"), equalTo("libfoo.so"));
+    assertThat(soname("libfoo.$(ext)", "good", "%s.bad"), equalTo("libfoo.good"));
+    assertThat(soname("libfoo.$(ext 2.3)", "bad", "%s.good"), equalTo("libfoo.2.3.good"));
+    assertThat(soname("libfoo.$(ext 2.3)", "bad", "good.%s"), equalTo("libfoo.good.2.3"));
+    assertThat(soname("libfoo.$(ext 2.3)", "bad", "windows"), equalTo("libfoo.windows"));
+  }
+
+  /**
+   * Just a helper to make this shorter to write.
+   */
+  private static String soname(String declared, String extension, String versionedFormat) {
+    return CxxDescriptionEnhancer.getNonDefaultSharedLibrarySoname(
+        declared, extension, versionedFormat);
   }
 }

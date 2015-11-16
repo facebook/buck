@@ -2,7 +2,7 @@ package jlib;
 
 public class JLib {
   static {
-    System.loadLibrary("jlib-native");
+    System.loadLibrary("jtestlib");
   }
 
   public static int getValue() {

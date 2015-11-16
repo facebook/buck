@@ -64,6 +64,7 @@ interface AbstractCxxPlatform {
   List<String> getArflags();
 
   String getSharedLibraryExtension();
+  String getSharedLibraryVersionedExtensionFormat();
 
   DebugPathSanitizer getDebugPathSanitizer();
 

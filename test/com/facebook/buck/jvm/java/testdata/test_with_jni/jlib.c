@@ -8,7 +8,8 @@ typedef void* JNIEnv;
 typedef void* jclass;
 #endif
 
+#include <helper.h>
 
 JNIEXPORT jint JNICALL Java_jlib_JLib_nativeGetPreValue(JNIEnv* env, jclass clazz) {
-  return 2;
+  return helper_function(47);
 }

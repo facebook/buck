@@ -415,7 +415,9 @@ public class NdkCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 sanitizePaths.build()))
-        .setSharedLibraryExtension("so");
+        .setSharedLibraryExtension("so")
+        .setSharedLibraryVersionedExtensionFormat("so.%s")
+    ;
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(

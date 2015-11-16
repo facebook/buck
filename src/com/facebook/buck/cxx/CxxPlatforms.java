@@ -76,6 +76,7 @@ public class CxxPlatforms {
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
       String sharedLibraryExtension,
+      String sharedLibraryVersionedExtensionFormat,
       Optional<DebugPathSanitizer> debugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
@@ -98,6 +99,7 @@ public class CxxPlatforms {
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
         .setStrip(getTool(flavor, "strip", config).or(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
+        .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER))
         .setFlagMacros(flagMacros);
     builder.addAllCflags(cflags);
@@ -152,6 +154,8 @@ public class CxxPlatforms {
                 .or(defaultPlatform.getAr()))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
         .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
+        .setSharedLibraryVersionedExtensionFormat(
+            defaultPlatform.getSharedLibraryVersionedExtensionFormat())
         .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
 
     if (config.getDefaultPlatform().isPresent()) {

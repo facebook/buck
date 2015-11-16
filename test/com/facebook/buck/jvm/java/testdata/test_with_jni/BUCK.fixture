@@ -24,8 +24,18 @@ java_library(
 
 cxx_library(
   name = 'jlib-native',
+  soname = 'libjtestlib.$(ext)',
   preprocessor_flags = cppflags,
   srcs = ['jlib.c'],
+  deps = [
+    ':helper-lib',
+  ],
+)
+
+cxx_library(
+  name = 'helper-lib',
+  exported_headers = ['helper.h'],
+  srcs = ['helper.c'],
 )
 
 prebuilt_jar(
