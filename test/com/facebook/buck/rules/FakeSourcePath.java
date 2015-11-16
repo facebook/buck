@@ -19,13 +19,13 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-public class TestSourcePath extends PathSourcePath {
+public class FakeSourcePath extends PathSourcePath {
 
-  public TestSourcePath(String path) {
+  public FakeSourcePath(String path) {
     this(new FakeProjectFilesystem(), path);
   }
 
-  public TestSourcePath(ProjectFilesystem filesystem, String path) {
+  public FakeSourcePath(ProjectFilesystem filesystem, String path) {
     super(filesystem, filesystem.getRootPath().getFileSystem().getPath(path));
   }
 }

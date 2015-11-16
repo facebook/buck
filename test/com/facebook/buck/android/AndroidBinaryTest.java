@@ -35,9 +35,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -99,7 +99,7 @@ public class AndroidBinaryTest {
         .setBuildTargetsToExcludeFromDex(
             ImmutableSet.of(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo")))
-        .setManifest(new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setKeystore(keystoreRule.getBuildTarget())
         .build(ruleResolver);
 
@@ -172,8 +172,8 @@ public class AndroidBinaryTest {
       BuildRule androidResourceRule = ruleResolver.addToIndex(
           AndroidResourceRuleBuilder.newBuilder()
               .setResolver(new SourcePathResolver(ruleResolver))
-              .setAssets(new TestSourcePath(assetDirectory))
-              .setRes(resDirectory == null ? null : new TestSourcePath(resDirectory))
+              .setAssets(new FakeSourcePath(assetDirectory))
+              .setRes(resDirectory == null ? null : new FakeSourcePath(resDirectory))
               .setBuildTarget(resourceOnebuildTarget)
               .build());
 
@@ -200,14 +200,14 @@ public class AndroidBinaryTest {
 
     AndroidBinary ruleInRootDirectory = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);
     assertEquals(Paths.get(GEN_DIR + "/fb4a.apk"), ruleInRootDirectory.getApkPath());
 
     AndroidBinary ruleInNonRootDirectory = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//java/com/example:fb4a"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);
     assertEquals(
@@ -220,7 +220,7 @@ public class AndroidBinaryTest {
 
     AndroidBinary rule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
         .build(ruleResolver);
 
@@ -253,7 +253,7 @@ public class AndroidBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinary splitDexRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
         .setShouldSplitDex(true)
         .setLinearAllocHardLimit(0)
@@ -285,12 +285,12 @@ public class AndroidBinaryTest {
 
   @Test
   public void testDexingCommandWithIntraDexReorder() {
-    SourcePath reorderTool = new TestSourcePath("/tools#reorder_tool");
-    SourcePath reorderData = new TestSourcePath("/tools#reorder_data");
+    SourcePath reorderTool = new FakeSourcePath("/tools#reorder_tool");
+    SourcePath reorderData = new FakeSourcePath("/tools#reorder_data");
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinary splitDexRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
         .setShouldSplitDex(true)
         .setLinearAllocHardLimit(0)
@@ -331,7 +331,7 @@ public class AndroidBinaryTest {
     BuildRule keystoreRule = addKeystoreRule(resolver);
     AndroidBinaryBuilder builder = AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:target"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreRule.getBuildTarget())
         .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
         .setResourceCompressionMode(ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS);
@@ -369,7 +369,7 @@ public class AndroidBinaryTest {
                 BuildTargetFactory.newInstance(
                     "//missing:dep")))
         .setKeystore(keystoreRule.getBuildTarget())
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .build(resolver);
   }
 
@@ -398,7 +398,7 @@ public class AndroidBinaryTest {
 
     BuildRule rule = AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:target"))
         .setKeystore(keystoreRule.getBuildTarget())
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setOriginalDeps(ImmutableSortedSet.of(immediateDep.getBuildTarget()))
         .build(resolver);
 
@@ -408,8 +408,8 @@ public class AndroidBinaryTest {
   private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     return (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(new TestSourcePath("keystore/debug.keystore"))
-        .setProperties(new TestSourcePath("keystore/debug.keystore.properties"))
+        .setStore(new FakeSourcePath("keystore/debug.keystore"))
+        .setProperties(new FakeSourcePath("keystore/debug.keystore.properties"))
         .build(ruleResolver);
   }
 }

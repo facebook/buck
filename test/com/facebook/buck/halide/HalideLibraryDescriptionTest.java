@@ -31,21 +31,23 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
+
 import org.junit.Test;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -74,7 +76,7 @@ public class HalideLibraryDescriptionTest {
     compilerBuilder.setSrcs(
       ImmutableSortedSet.of(
         SourceWithFlags.of(
-          new TestSourcePath("main.cpp"))));
+          new FakeSourcePath("main.cpp"))));
     HalideLibraryBuilder libBuilder = new HalideLibraryBuilder(libTarget);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
       compilerBuilder.build(),

@@ -177,8 +177,8 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
 
     Iterable<? extends SourcePath> sourcePaths = ImmutableList.of(
-        new TestSourcePath("java/com/facebook/Main.java"),
-        new TestSourcePath("java/com/facebook/BuckConfig.java"),
+        new FakeSourcePath("java/com/facebook/Main.java"),
+        new FakeSourcePath("java/com/facebook/BuckConfig.java"),
         new BuildTargetSourcePath(rule.getBuildTarget()));
     Iterable<Path> inputs = pathResolver.filterInputsToCompareToOutput(sourcePaths);
     MoreAsserts.assertIterablesEquals(
@@ -203,9 +203,9 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule2);
 
     Iterable<? extends SourcePath> sourcePaths = ImmutableList.of(
-        new TestSourcePath("java/com/facebook/Main.java"),
+        new FakeSourcePath("java/com/facebook/Main.java"),
         new BuildTargetSourcePath(rule.getBuildTarget()),
-        new TestSourcePath("java/com/facebook/BuckConfig.java"),
+        new FakeSourcePath("java/com/facebook/BuckConfig.java"),
         new BuildTargetSourcePath(rule2.getBuildTarget()));
     Iterable<BuildRule> inputs = pathResolver.filterBuildRuleInputs(sourcePaths);
     MoreAsserts.assertIterablesEquals(

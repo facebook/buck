@@ -29,10 +29,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
@@ -136,13 +136,13 @@ public class CxxPreprocessablesTest {
   public void resolveHeaderMap() {
     BuildTarget target = BuildTargetFactory.newInstance("//hello/world:test");
     ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>of(
-        "foo/bar.h", new TestSourcePath("header1.h"),
-        "foo/hello.h", new TestSourcePath("header2.h"));
+        "foo/bar.h", new FakeSourcePath("header1.h"),
+        "foo/hello.h", new FakeSourcePath("header2.h"));
 
     // Verify that the resolveHeaderMap returns sane results.
     ImmutableMap<Path, SourcePath> expected = ImmutableMap.<Path, SourcePath>of(
-        target.getBasePath().resolve("foo/bar.h"), new TestSourcePath("header1.h"),
-        target.getBasePath().resolve("foo/hello.h"), new TestSourcePath("header2.h"));
+        target.getBasePath().resolve("foo/bar.h"), new FakeSourcePath("header1.h"),
+        target.getBasePath().resolve("foo/hello.h"), new FakeSourcePath("header2.h"));
     ImmutableMap<Path, SourcePath> actual = CxxPreprocessables.resolveHeaderMap(
         target.getBasePath(), headerMap);
     assertEquals(expected, actual);
@@ -222,7 +222,7 @@ public class CxxPreprocessablesTest {
     // another build rule.
     ImmutableMap<Path, SourcePath> links = ImmutableMap.<Path, SourcePath>of(
         Paths.get("link1"),
-        new TestSourcePath("hello"),
+        new FakeSourcePath("hello"),
         Paths.get("link2"),
         new BuildTargetSourcePath(genrule.getBuildTarget()));
 
@@ -286,10 +286,10 @@ public class CxxPreprocessablesTest {
             CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
-                    new TestSourcePath("bottom/file.h"))
+                    new FakeSourcePath("bottom/file.h"))
                 .putFullNameToPathMap(
                     Paths.get("buck-out/something/prefix/file.h"),
-                    new TestSourcePath("bottom/file.h"))
+                    new FakeSourcePath("bottom/file.h"))
                 .build())
         .build();
     BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", pathResolver, bottomInput);
@@ -299,10 +299,10 @@ public class CxxPreprocessablesTest {
             CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
-                    new TestSourcePath("top/file.h"))
+                    new FakeSourcePath("top/file.h"))
                 .putFullNameToPathMap(
                     Paths.get("buck-out/something-else/prefix/file.h"),
-                    new TestSourcePath("top/file.h"))
+                    new FakeSourcePath("top/file.h"))
                 .build())
         .build();
     BuildRule top = createFakeCxxPreprocessorDep("//:top", pathResolver, topInput, bottom);
@@ -335,10 +335,10 @@ public class CxxPreprocessablesTest {
             CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .putFullNameToPathMap(
                     Paths.get("buck-out/something/prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .build())
         .build();
     BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", pathResolver, bottomInput);
@@ -348,10 +348,10 @@ public class CxxPreprocessablesTest {
             CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .putFullNameToPathMap(
                     Paths.get("buck-out/something-else/prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .build())
         .build();
     BuildRule top = createFakeCxxPreprocessorDep("//:top", pathResolver, topInput, bottom);
@@ -361,13 +361,13 @@ public class CxxPreprocessablesTest {
             CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .putFullNameToPathMap(
                     Paths.get("buck-out/something/prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .putFullNameToPathMap(
                     Paths.get("buck-out/something-else/prefix/file.h"),
-                    new TestSourcePath("common/file.h"))
+                    new FakeSourcePath("common/file.h"))
                 .build())
         .build();
 

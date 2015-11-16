@@ -47,13 +47,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -181,7 +181,7 @@ public class DefaultJavaLibraryTest {
     try {
       JavaLibraryBuilder
           .createBuilder(BuildTargetFactory.newInstance("//library:code"))
-          .addResource(new TestSourcePath("library"))
+          .addResource(new FakeSourcePath("library"))
           .build(new BuildRuleResolver(), filesystem);
       fail("An exception should have been thrown because a directory was passed as a resource.");
     } catch (HumanReadableException e) {
@@ -983,7 +983,7 @@ public class DefaultJavaLibraryTest {
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* abiJar */ new TestSourcePath("abi.jar"),
+        /* abiJar */ new FakeSourcePath("abi.jar"),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         DEFAULT_JAVAC_OPTIONS,
         /* resourcesRoot */ Optional.<Path>absent(),
@@ -1072,10 +1072,10 @@ public class DefaultJavaLibraryTest {
         .addSrc(Paths.get("bdeafhkgcji.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
-        .addResource(new TestSourcePath("becgkaifhjd.txt"))
-        .addResource(new TestSourcePath("bkhajdifcge.txt"))
-        .addResource(new TestSourcePath("cabfghjekid.txt"))
-        .addResource(new TestSourcePath("chkdbafijge.txt"))
+        .addResource(new FakeSourcePath("becgkaifhjd.txt"))
+        .addResource(new FakeSourcePath("bkhajdifcge.txt"))
+        .addResource(new FakeSourcePath("cabfghjekid.txt"))
+        .addResource(new FakeSourcePath("chkdbafijge.txt"))
         .build(resolver1, filesystem);
 
     BuildRuleResolver resolver2 = new BuildRuleResolver();
@@ -1086,10 +1086,10 @@ public class DefaultJavaLibraryTest {
         .addSrc(Paths.get("bdehgaifjkc.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
         .addSrc(Paths.get("agifhbkjdec.java"))
-        .addResource(new TestSourcePath("chkdbafijge.txt"))
-        .addResource(new TestSourcePath("cabfghjekid.txt"))
-        .addResource(new TestSourcePath("bkhajdifcge.txt"))
-        .addResource(new TestSourcePath("becgkaifhjd.txt"))
+        .addResource(new FakeSourcePath("chkdbafijge.txt"))
+        .addResource(new FakeSourcePath("cabfghjekid.txt"))
+        .addResource(new FakeSourcePath("bkhajdifcge.txt"))
+        .addResource(new FakeSourcePath("becgkaifhjd.txt"))
         .build(resolver2, filesystem);
 
     ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
@@ -1318,13 +1318,13 @@ public class DefaultJavaLibraryTest {
       return new AndroidLibrary(
           buildRuleParams,
           new SourcePathResolver(new BuildRuleResolver()),
-          ImmutableSet.of(new TestSourcePath(src)),
+          ImmutableSet.of(new FakeSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<SourcePath>absent(),
           /* postprocessClassesCommands */ ImmutableList.<String>of(),
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-          /* abiJar */ new TestSourcePath("abi.jar"),
+          /* abiJar */ new FakeSourcePath("abi.jar"),
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),

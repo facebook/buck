@@ -28,9 +28,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -388,8 +388,8 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
     Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
     ImmutableList<SourceWithFlags> expectedResult = ImmutableList.of(
-        SourceWithFlags.of(new TestSourcePath("foo.m")),
-        SourceWithFlags.of(new TestSourcePath("bar.m")));
+        SourceWithFlags.of(new FakeSourcePath("foo.m")),
+        SourceWithFlags.of(new FakeSourcePath("bar.m")));
     assertEquals(expectedResult, result);
   }
 
@@ -405,9 +405,9 @@ public class TypeCoercerTest {
     Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
     ImmutableList<SourceWithFlags> expectedResult = ImmutableList.of(
         SourceWithFlags.of(
-            new TestSourcePath("foo.m"), ImmutableList.of("-Wall", "-Werror")),
+            new FakeSourcePath("foo.m"), ImmutableList.of("-Wall", "-Werror")),
         SourceWithFlags.of(
-            new TestSourcePath("bar.m"), ImmutableList.of("-fobjc-arc")));
+            new FakeSourcePath("bar.m"), ImmutableList.of("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 
@@ -424,12 +424,12 @@ public class TypeCoercerTest {
         ImmutableList.of("Group2/blech.m", ImmutableList.of("-fobjc-arc")));
     Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
     ImmutableList<SourceWithFlags> expectedResult = ImmutableList.of(
-        SourceWithFlags.of(new TestSourcePath("Group1/foo.m")),
+        SourceWithFlags.of(new FakeSourcePath("Group1/foo.m")),
         SourceWithFlags.of(
-            new TestSourcePath("Group1/bar.m"), ImmutableList.of("-Wall", "-Werror")),
-        SourceWithFlags.of(new TestSourcePath("Group2/baz.m")),
+            new FakeSourcePath("Group1/bar.m"), ImmutableList.of("-Wall", "-Werror")),
+        SourceWithFlags.of(new FakeSourcePath("Group2/baz.m")),
         SourceWithFlags.of(
-            new TestSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
+            new FakeSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 

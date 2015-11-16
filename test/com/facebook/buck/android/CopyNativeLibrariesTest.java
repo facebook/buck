@@ -26,9 +26,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -109,7 +109,7 @@ public class CopyNativeLibrariesTest {
         new CopyNativeLibraries(
             new FakeBuildRuleParamsBuilder(target).build(),
             new SourcePathResolver(new BuildRuleResolver()),
-            ImmutableSet.<SourcePath>of(new TestSourcePath("lib1"), new TestSourcePath("lib2")),
+            ImmutableSet.<SourcePath>of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.<StrippedObjectDescription>of(),
             ImmutableSet.<StrippedObjectDescription>of(),
             ImmutableSet.<TargetCpuType>of());

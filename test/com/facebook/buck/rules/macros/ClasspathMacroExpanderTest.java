@@ -27,8 +27,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -103,7 +103,7 @@ public class ClasspathMacroExpanderTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule rule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
-          .setSrc(new TestSourcePath("some-file.jar"))
+          .setSrc(new FakeSourcePath("some-file.jar"))
           .build(ruleResolver);
 
     expander.expand(pathResolver, filesystem, rule);

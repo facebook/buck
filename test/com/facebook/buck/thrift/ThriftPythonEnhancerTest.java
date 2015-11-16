@@ -32,10 +32,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -83,11 +83,11 @@ public class ThriftPythonEnhancerTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         resolver,
         new CommandTool.Builder()
-            .addArg(new TestSourcePath("compiler"))
+            .addArg(new FakeSourcePath("compiler"))
             .build(),
         ImmutableList.<String>of(),
         Paths.get("output"),
-        new TestSourcePath("source"),
+        new FakeSourcePath("source"),
         "language",
         ImmutableSet.<String>of(),
         ImmutableList.<Path>of(),

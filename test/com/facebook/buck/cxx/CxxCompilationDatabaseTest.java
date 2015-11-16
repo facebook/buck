@@ -30,10 +30,10 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -117,7 +117,7 @@ public class CxxCompilationDatabaseTest {
                     Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
               Paths.get("test.ii"),
-              new TestSourcePath("test.cpp"),
+              new FakeSourcePath("test.cpp"),
               CxxSource.Type.CXX,
               CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
@@ -133,7 +133,7 @@ public class CxxCompilationDatabaseTest {
                 ImmutableList.<String>of(),
                 ImmutableList.<String>of(),
                 Paths.get("test.o"),
-                new TestSourcePath("test.ii"),
+                new FakeSourcePath("test.ii"),
                 CxxSource.Type.CXX_CPP_OUTPUT,
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
         break;
@@ -164,7 +164,7 @@ public class CxxCompilationDatabaseTest {
                 ImmutableList.<String>of(),
                 ImmutableList.<String>of(),
                 Paths.get("test.o"),
-                new TestSourcePath("test.cpp"),
+                new FakeSourcePath("test.cpp"),
                 CxxSource.Type.CXX,
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy));

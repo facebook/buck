@@ -26,10 +26,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
@@ -46,9 +46,9 @@ public class ArchivesTest {
       new HashedFileTool(Paths.get("ar")));
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
-      new TestSourcePath("a.o"),
-      new TestSourcePath("b.o"),
-      new TestSourcePath("c.o"));
+      new FakeSourcePath("a.o"),
+      new FakeSourcePath("b.o"),
+      new FakeSourcePath("c.o"));
 
   @Test
   public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
@@ -74,7 +74,7 @@ public class ArchivesTest {
         DEFAULT_ARCHIVER,
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
-            new TestSourcePath("simple.o"),
+            new FakeSourcePath("simple.o"),
             new BuildTargetSourcePath(genrule1.getBuildTarget()),
             new BuildTargetSourcePath(genrule2.getBuildTarget())));
 

@@ -27,10 +27,10 @@ import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -96,14 +96,14 @@ public class AuditClasspathCommandTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     TargetNode<?> keystoreNode = KeystoreBuilder
         .createBuilder(keystoreTarget)
-        .setStore(new TestSourcePath("debug.keystore"))
-        .setProperties(new TestSourcePath("keystore.properties"))
+        .setStore(new FakeSourcePath("debug.keystore"))
+        .setProperties(new FakeSourcePath("keystore.properties"))
         .build();
 
     BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");
     TargetNode<?> testAndroidNode = AndroidBinaryBuilder
         .createBuilder(testAndroidTarget)
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
         .build();

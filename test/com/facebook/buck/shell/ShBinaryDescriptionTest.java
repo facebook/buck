@@ -20,8 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
@@ -32,7 +32,7 @@ public class ShBinaryDescriptionTest {
   @Test
   public void mainIsIncludedInCommand() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    TestSourcePath main = new TestSourcePath("main.sh");
+    FakeSourcePath main = new FakeSourcePath("main.sh");
     ShBinary shBinary =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
@@ -45,8 +45,8 @@ public class ShBinaryDescriptionTest {
   @Test
   public void resourcesAreIncludedInCommand() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    TestSourcePath main = new TestSourcePath("main.sh");
-    TestSourcePath resource = new TestSourcePath("resource.dat");
+    FakeSourcePath main = new FakeSourcePath("main.sh");
+    FakeSourcePath resource = new FakeSourcePath("resource.dat");
     ShBinary shBinary =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)

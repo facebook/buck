@@ -33,10 +33,10 @@ import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -153,7 +153,7 @@ public class CxxPythonExtensionDescriptionTest {
             .setSrcs(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(
-                        new TestSourcePath("something.cpp"),
+                        new FakeSourcePath("something.cpp"),
                         ImmutableList.<String>of())))
             .build(resolver, filesystem, targetNodes);
     NativeLinkableInput depInput =

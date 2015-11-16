@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +46,7 @@ public class PythonLibraryTest {
   @Test
   public void testGetters() {
     ImmutableMap<Path, SourcePath> srcs = ImmutableMap.<Path, SourcePath>of(
-        Paths.get("dummy"), new TestSourcePath(""));
+        Paths.get("dummy"), new FakeSourcePath(""));
     PythonLibrary pythonLibrary = new PythonLibrary(
         new FakeBuildRuleParamsBuilder(
             BuildTargetFactory.newInstance("//scripts/python:foo"))

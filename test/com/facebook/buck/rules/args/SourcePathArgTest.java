@@ -22,9 +22,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 
@@ -35,7 +35,7 @@ public class SourcePathArgTest {
 
   @Test
   public void stringify() {
-    SourcePath path = new TestSourcePath("something");
+    SourcePath path = new FakeSourcePath("something");
     SourcePathArg arg = new SourcePathArg(new SourcePathResolver(new BuildRuleResolver()), path);
     assertThat(arg.stringify(), Matchers.equalTo("something"));
   }

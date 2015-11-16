@@ -27,11 +27,11 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
@@ -51,10 +51,10 @@ import java.nio.file.Paths;
 public class ThriftCompilerTest {
 
   private static final Tool DEFAULT_COMPILER =
-      new CommandTool.Builder().addArg(new TestSourcePath("thrift")).build();
+      new CommandTool.Builder().addArg(new FakeSourcePath("thrift")).build();
   private static final ImmutableList<String> DEFAULT_FLAGS = ImmutableList.of("--allow-64-bits");
   private static final Path DEFAULT_OUTPUT_DIR = Paths.get("output-dir");
-  private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.thrift");
+  private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.thrift");
   private static final String DEFAULT_LANGUAGE = "cpp";
   private static final ImmutableSet<String> DEFAULT_OPTIONS = ImmutableSet.of("templates");
   private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS =
@@ -64,7 +64,7 @@ public class ThriftCompilerTest {
   private static final ImmutableMap<Path, SourcePath> DEFAULT_INCLUDES =
       ImmutableMap.<Path, SourcePath>of(
           Paths.get("something.thrift"),
-          new TestSourcePath("blah/something.thrift"));
+          new FakeSourcePath("blah/something.thrift"));
   private static final ImmutableSortedSet<String> DEFAULT_GENERATED_SOURCES =
       ImmutableSortedSet.of("source1", "source2");
 
@@ -107,7 +107,7 @@ public class ThriftCompilerTest {
         new ThriftCompiler(
             params,
             resolver,
-            new CommandTool.Builder().addArg(new TestSourcePath("different")).build(),
+            new CommandTool.Builder().addArg(new FakeSourcePath("different")).build(),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_DIR,
             DEFAULT_INPUT,
@@ -164,7 +164,7 @@ public class ThriftCompilerTest {
             DEFAULT_COMPILER,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_DIR,
-            new TestSourcePath("different"),
+            new FakeSourcePath("different"),
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
@@ -263,7 +263,7 @@ public class ThriftCompilerTest {
             DEFAULT_HEADER_MAPS,
             ImmutableMap.<Path, SourcePath>of(
                 DEFAULT_INCLUDES.entrySet().iterator().next().getKey(),
-                new TestSourcePath("different")),
+                new FakeSourcePath("different")),
             DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, includesKeyChange);
 

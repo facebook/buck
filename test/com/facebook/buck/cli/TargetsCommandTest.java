@@ -47,12 +47,12 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeOutputStream;
@@ -408,7 +408,7 @@ public class TargetsCommandTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(libraryNode);
@@ -447,7 +447,7 @@ public class TargetsCommandTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
         .build();
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
@@ -456,7 +456,7 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -575,7 +575,7 @@ public class TargetsCommandTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
         .setTests(Optional.of(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2)))
         .build();
 
@@ -584,7 +584,7 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo1.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -593,7 +593,7 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo2.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
         .build();
 
@@ -601,7 +601,7 @@ public class TargetsCommandTest {
         .createBuilder(testLibraryTarget)
         .setSrcs(Optional.of(ImmutableSortedSet.of(
                     SourceWithFlags.of(
-                        new TestSourcePath("testlib/testlib.m")))))
+                        new FakeSourcePath("testlib/testlib.m")))))
         .setTests(Optional.of(ImmutableSortedSet.of(testLibraryTestTarget)))
         .build();
 
@@ -612,7 +612,7 @@ public class TargetsCommandTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(
-                        new TestSourcePath("testlib/testlib-test.m")))))
+                        new FakeSourcePath("testlib/testlib-test.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
         .build();
 

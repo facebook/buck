@@ -24,11 +24,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -58,13 +58,13 @@ public class CxxLinkTest {
           new StringArg("libc.a"),
           new SourcePathArg(
               new SourcePathResolver(new BuildRuleResolver()),
-              new TestSourcePath("a.o")),
+              new FakeSourcePath("a.o")),
           new SourcePathArg(
               new SourcePathResolver(new BuildRuleResolver()),
-              new TestSourcePath("b.o")),
+              new FakeSourcePath("b.o")),
           new SourcePathArg(
               new SourcePathResolver(new BuildRuleResolver()),
-              new TestSourcePath("libc.a")),
+              new FakeSourcePath("libc.a")),
           new StringArg("-L"),
           new StringArg("/System/Libraries/libz.dynlib"),
           new StringArg("-llibz.dylib"));
@@ -128,7 +128,7 @@ public class CxxLinkTest {
             ImmutableList.<Arg>of(
                 new SourcePathArg(
                     new SourcePathResolver(new BuildRuleResolver()),
-                    new TestSourcePath("different")))));
+                    new FakeSourcePath("different")))));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 

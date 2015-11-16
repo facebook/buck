@@ -26,8 +26,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -35,20 +35,20 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -206,13 +206,13 @@ public class CxxBinaryDescriptionTest {
         (CxxBinaryBuilder) new CxxBinaryBuilder(target)
               .setSrcs(
                   ImmutableSortedSet.of(
-                      SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
+                      SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
                       SourceWithFlags.of(
                           new BuildTargetSourcePath(
                               genSource.getBuildTarget()))))
               .setHeaders(
                   ImmutableSortedSet.<SourcePath>of(
-                      new TestSourcePath("test/bar.h"),
+                      new FakeSourcePath("test/bar.h"),
                       new BuildTargetSourcePath(genHeader.getBuildTarget())))
               .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
     CxxBinary binRule = (CxxBinary) cxxBinaryBuilder.build(resolver);

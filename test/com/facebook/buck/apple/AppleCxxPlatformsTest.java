@@ -45,12 +45,12 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -750,7 +750,7 @@ AppleSdkPaths appleSdkPaths =
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
-                      new TestSourcePath(source),
+                      new FakeSourcePath(source),
                       ImmutableList.<String>of()),
                   CxxSourceRuleFactory.PicType.PIC,
                   CxxPreprocessMode.COMBINED);
@@ -762,7 +762,7 @@ AppleSdkPaths appleSdkPaths =
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
-                      new TestSourcePath(source),
+                      new FakeSourcePath(source),
                       ImmutableList.<String>of()),
                   CxxSourceRuleFactory.PicType.PIC);
           break;
@@ -773,7 +773,7 @@ AppleSdkPaths appleSdkPaths =
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
-                      new TestSourcePath(source),
+                      new FakeSourcePath(source),
                       ImmutableList.<String>of()),
                   CxxSourceRuleFactory.PicType.PIC);
           break;
@@ -813,7 +813,7 @@ AppleSdkPaths appleSdkPaths =
               Paths.get("output"),
               SourcePathArg.from(
                   pathResolver,
-                  new TestSourcePath("input.o")),
+                  new FakeSourcePath("input.o")),
               Linker.LinkableDepType.SHARED,
               ImmutableList.<BuildRule>of(),
               Optional.<SourcePath>absent(),

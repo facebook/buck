@@ -37,17 +37,17 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -71,9 +71,9 @@ public class CxxLinkableEnhancerTest {
   private static final ImmutableList<Arg> DEFAULT_INPUTS =
       SourcePathArg.from(
           new SourcePathResolver(new BuildRuleResolver()),
-          new TestSourcePath("a.o"),
-          new TestSourcePath("b.o"),
-          new TestSourcePath("c.o"));
+          new FakeSourcePath("a.o"),
+          new FakeSourcePath("b.o"),
+          new FakeSourcePath("c.o"));
   private static final ImmutableSortedSet<BuildRule> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(FakeBuckConfig.builder().build()));
@@ -170,7 +170,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         SourcePathArg.from(
             new SourcePathResolver(resolver),
-            new TestSourcePath("simple.o"),
+            new FakeSourcePath("simple.o"),
             new BuildTargetSourcePath(genrule1.getBuildTarget()),
             new BuildTargetSourcePath(genrule2.getBuildTarget())),
         Linker.LinkableDepType.STATIC,
@@ -502,10 +502,10 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         SourcePathArg.from(
             new SourcePathResolver(resolver),
-            new TestSourcePath("simple.o")),
+            new FakeSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<SourcePath>of(new TestSourcePath("path/to/MyBundleLoader")),
+        Optional.<SourcePath>of(new FakeSourcePath("path/to/MyBundleLoader")),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
     assertThat(
@@ -533,7 +533,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         SourcePathArg.from(
             new SourcePathResolver(resolver),
-            new TestSourcePath("simple.o")),
+            new FakeSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<SourcePath>absent(),
@@ -554,7 +554,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         SourcePathArg.from(
             new SourcePathResolver(resolver),
-            new TestSourcePath("another.o")),
+            new FakeSourcePath("another.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<SourcePath>of(

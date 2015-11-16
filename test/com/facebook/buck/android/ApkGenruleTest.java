@@ -44,13 +44,13 @@ import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -95,12 +95,12 @@ public class ApkGenruleTest {
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(new TestSourcePath(filesystem, "keystore/debug.keystore"))
-        .setProperties(new TestSourcePath(filesystem, "keystore/debug.keystore.properties"))
+        .setStore(new FakeSourcePath(filesystem, "keystore/debug.keystore"))
+        .setProperties(new FakeSourcePath(filesystem, "keystore/debug.keystore.properties"))
         .build(ruleResolver, filesystem);
 
     AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setOriginalDeps(ImmutableSortedSet.of(androidLibRule.getBuildTarget()))
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver, filesystem);
