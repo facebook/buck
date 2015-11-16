@@ -232,15 +232,22 @@ public class ProjectWorkspace {
     return getPath(pathToGeneratedJarFile);
   }
 
-  public ProcessExecutor.Result runJar(Path jar, String... args)
-      throws IOException, InterruptedException {
+  public ProcessExecutor.Result runJar(Path jar,
+      ImmutableList<String> vmArgs,
+      String... args)  throws IOException, InterruptedException {
     List<String> command = ImmutableList.<String>builder()
         .add("java")
         .add("-jar")
+        .addAll(vmArgs)
         .add(jar.toString())
         .addAll(ImmutableList.copyOf(args))
         .build();
     return doRunCommand(command);
+  }
+
+  public ProcessExecutor.Result runJar(Path jar, String... args)
+      throws IOException, InterruptedException {
+    return runJar(jar, ImmutableList.<String>of(), args);
   }
 
   public ProcessExecutor.Result runCommand(String exe, String... args)

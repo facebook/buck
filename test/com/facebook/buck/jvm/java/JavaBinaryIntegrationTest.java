@@ -25,6 +25,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -70,4 +72,18 @@ public class JavaBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//:bin-exit-code").assertSpecialExitCode("error", 5);
   }
 
+  @Test
+  public void fatJarWithVmArguments() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
+    workspace.setUp();
+    ImmutableList<String> args = ImmutableList.of(
+        "-ea",
+        "-Dfoo.bar.baz=1234",
+        "-Xms64m");
+    String expected = Joiner.on("\n").join(args);
+    Path jar = workspace.buildAndReturnOutput("//:bin-jvm-args");
+    ProcessExecutor.Result result = workspace.runJar(jar, args);
+    assertEquals(expected, result.getStdout().get().trim());
+  }
 }

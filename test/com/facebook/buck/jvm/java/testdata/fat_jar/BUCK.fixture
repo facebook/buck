@@ -65,3 +65,21 @@ java_library(
     'LibExitCode.java',
   ],
 )
+
+java_binary(
+  name = 'bin-jvm-args',
+  main_class = 'LibJvmArgs',
+  deps = [
+    ':lib-jvm-args',
+  ],
+)
+
+java_library(
+  name = 'lib-jvm-args',
+  srcs = [
+    'LibJvmArgs.java',
+  ],
+  deps = [
+    ':lib',
+  ],
+)

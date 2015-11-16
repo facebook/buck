@@ -27,6 +27,8 @@ import com.facebook.buck.util.exportedfiles.Preconditions;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,13 +56,26 @@ public class FatJarMain {
     env.put(librarySearchPathName, newlibPath);
   }
 
+  private static List<String> getJVMArguments() {
+    RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+    try {
+      return runtimeMxBean.getInputArguments();
+    } catch (java.lang.SecurityException e) {
+      //Do not have the ManagementPermission("monitor") permission
+      return new ArrayList<String>();
+    }
+  }
+
   /**
    * @return a command to start a new JVM process to execute the given main class.
    */
   private static List<String> getCommand(Path jar, String[] args) throws Exception {
     List<String> cmd = new ArrayList<String>();
+
     // Lookup the Java binary used to start us.
     cmd.add(Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java").toString());
+    // Pass through any VM arguments to the child process
+    cmd.addAll(getJVMArguments());
     cmd.add("-jar");
     // Lookup our current JAR context.
     cmd.add(jar.toString());
