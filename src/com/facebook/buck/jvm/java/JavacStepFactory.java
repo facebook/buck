@@ -18,9 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -32,7 +35,7 @@ public class JavacStepFactory {
     this.javacOptions = javacOptions;
   }
 
-  Step createCompileStep(
+  void createCompileStep(
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
@@ -41,18 +44,31 @@ public class JavacStepFactory {
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
-      Optional<JavacStep.SuggestBuildRules> suggestBuildRules) {
-    return new JavacStep(
-        outputDirectory,
-        workingDirectory,
-        sourceFilePaths,
-        pathToSrcsList,
-        declaredClasspathEntries,
-        javacOptions.getJavac(),
-        javacOptions,
-        invokingRule,
-        suggestBuildRules,
-        resolver,
-        filesystem);
+      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
+      /* output params */
+      ImmutableList.Builder<Step> steps,
+      BuildableContext buildableContext) {
+
+    // Javac requires that the root directory for generated sources already exist.
+    Path annotationGenFolder =
+        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName();
+    if (annotationGenFolder != null) {
+      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder));
+      buildableContext.recordArtifact(annotationGenFolder);
+    }
+
+    steps.add(
+        new JavacStep(
+            outputDirectory,
+            workingDirectory,
+            sourceFilePaths,
+            pathToSrcsList,
+            declaredClasspathEntries,
+            javacOptions.getJavac(),
+            javacOptions,
+            invokingRule,
+            suggestBuildRules,
+            resolver,
+            filesystem));
   }
 }

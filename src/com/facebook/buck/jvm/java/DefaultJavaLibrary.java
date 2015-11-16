@@ -135,7 +135,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
-
+  private final Optional<Path> generatedSourceFolder;
 
   // TODO(jacko): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
@@ -321,6 +321,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.generatedSourceFolder = fromNullable(
+        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName());
   }
 
   private Path getPathToAbiOutputDir() {
@@ -389,8 +391,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return fromNullable(
-        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName());
+    return generatedSourceFolder;
   }
 
   @Override
@@ -426,15 +427,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             .putAll(this, additionalClasspathEntries)
             .build();
 
-    // Javac requires that the root directory for generated sources already exist.
-    Path annotationGenFolder =
-        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName();
-    if (annotationGenFolder != null) {
-      MakeCleanDirectoryStep mkdirGeneratedSources =
-          new MakeCleanDirectoryStep(getProjectFilesystem(), annotationGenFolder);
-      steps.add(mkdirGeneratedSources);
-      buildableContext.recordArtifact(annotationGenFolder);
-    }
     JavacStepFactory javacStepFactory = new JavacStepFactory(javacOptions);
 
     // Always create the output directory, even if there are no .java files to compile because there
@@ -500,7 +492,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
-      steps.add(javacStepFactory.createCompileStep(
+      javacStepFactory.createCompileStep(
           getJavaSrcs(),
           target,
           getResolver(),
@@ -509,7 +501,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           outputDirectory,
           workingDirectory,
           Optional.of(pathToSrcsList),
-          suggestBuildRule));
+          suggestBuildRule,
+          steps,
+          buildableContext);
+
       steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
               getProjectFilesystem().getRootPath(),
               postprocessClassesCommands,
