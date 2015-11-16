@@ -26,7 +26,9 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
@@ -172,6 +174,34 @@ public class JavaBuckConfigTest {
     assertFalse(isOptionContaining(jse5, "-bootclasspath"));
     assertTrue(isOptionContaining(jse6, "-bootclasspath one.jar"));
     assertTrue(isOptionContaining(jse7, "-bootclasspath two.jar"));
+  }
+
+  @Test
+  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJsr199Javac()
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
+    JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
+
+    Javac javac = javacOptions.getJavac();
+    assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
+  }
+
+  @Test
+  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacSet()
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    final File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "tools", ImmutableMap.of("javac", javac.toString()));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
+    JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
+
+    assertEquals(
+        javac.toPath(),
+        ((ExternalJavac) javacOptions.getJavac()).getPath());
   }
 
   private boolean isOptionContaining(JavacOptions options, String expectedParameter) {
