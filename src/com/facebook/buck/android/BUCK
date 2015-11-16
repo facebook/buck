@@ -30,6 +30,7 @@ java_immutables_library(
     '//test/com/facebook/buck/android:aar-integration',
     '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:build-config-integration',
+    '//test/com/facebook/buck/android:instrumentation-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
@@ -116,6 +117,7 @@ java_immutables_library(
     '//test/com/facebook/buck/android:aar-integration',
     '//test/com/facebook/buck/android:binary-integration',
     '//test/com/facebook/buck/android:build-config-integration',
+    '//test/com/facebook/buck/android:instrumentation-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
@@ -191,6 +193,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:binary-integration',
+    '//test/com/facebook/buck/android:instrumentation-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
