@@ -212,12 +212,30 @@ java_test(
   ],
 )
 
+ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS = [
+  '*BuildConfig*IntegrationTest.java',
+]
+java_test(
+  name = 'build-config-integration',
+  srcs = glob(ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS),
+  resources = glob(['testdata/**'], include_dotfiles=True),
+  deps = [
+    ':utils',
+    ':testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+  ],
+)
+
 java_test(
   name = 'integration',
   srcs = glob(
     STANDARD_INTEGRATION_TEST_SRCS,
     excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS +
-      ANDROID_BINARY_INTEGRATION_TEST_SRCS),
+      ANDROID_BINARY_INTEGRATION_TEST_SRCS +
+      ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     ':utils',
