@@ -307,6 +307,7 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotTxtDir = getPathToRDotTxtDir();
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
         getProjectFilesystem(),
+        getResolver(),
         resourceDeps,
         getPathToRDotTxtFile(),
         rDotJavaSrc,

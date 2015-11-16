@@ -21,6 +21,7 @@ import static com.google.common.collect.Ordering.natural;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreStrings;
@@ -54,6 +55,7 @@ public class MergeAndroidResourcesStep implements Step {
   private static final Logger LOG = Logger.get(MergeAndroidResourcesStep.class);
 
   private final ProjectFilesystem filesystem;
+  private final SourcePathResolver pathResolver;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Optional<Path> uberRDotTxt;
   private final Path outputDir;
@@ -68,11 +70,13 @@ public class MergeAndroidResourcesStep implements Step {
   @VisibleForTesting
   MergeAndroidResourcesStep(
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Optional<Path> uberRDotTxt,
       Path outputDir,
       Optional<String> unionPackage) {
     this.filesystem = filesystem;
+    this.pathResolver = pathResolver;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
     this.outputDir = outputDir;
@@ -81,11 +85,13 @@ public class MergeAndroidResourcesStep implements Step {
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path outputDir,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
+        pathResolver,
         androidResourceDeps,
         Optional.<Path>absent(),
         outputDir,
@@ -94,12 +100,14 @@ public class MergeAndroidResourcesStep implements Step {
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path uberRDotTxt,
       Path outputDir,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
+        pathResolver,
         androidResourceDeps,
         Optional.of(uberRDotTxt),
         outputDir,
@@ -150,7 +158,7 @@ public class MergeAndroidResourcesStep implements Step {
       // This is because each `androidResourceDeps` might be from a different repo, so we can't
       // assume that they exist in the calling rule's projectfilesystem.
       rDotTxtToPackage.put(
-          res.getPathToTextSymbolsFile(),
+          pathResolver.getRelativePath(res.getPathToTextSymbolsFile()),
           res.getRDotJavaPackage());
     }
     Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;

@@ -128,6 +128,7 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         filesystem,
+        new SourcePathResolver(new BuildRuleResolver()),
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         Paths.get("output"),
@@ -195,6 +196,7 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         filesystem,
+        new SourcePathResolver(new BuildRuleResolver()),
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         Paths.get("output"),
@@ -254,6 +256,7 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
         filesystem,
+        new SourcePathResolver(new BuildRuleResolver()),
         ImmutableList.of(res1, res2),
         Paths.get("output"),
         Optional.of("res1"));

@@ -56,7 +56,7 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
-    public Path getPathToTextSymbolsFile() {
+    public SourcePath getPathToTextSymbolsFile() {
       return null;
     }
 

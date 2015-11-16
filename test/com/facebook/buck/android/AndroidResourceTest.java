@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidResource.BuildOutput;
@@ -38,8 +39,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +50,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -221,6 +225,41 @@ public class AndroidResourceTest {
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE, "com.ex.pkg");
     androidResource.initializeFromDisk(onDiskBuildInfo);
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
+  }
+
+  @Test
+  public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InputBasedRuleKeyBuilderFactory factory =
+        new InputBasedRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    AndroidResource dep =
+        (AndroidResource) AndroidResourceBuilder
+            .createBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setManifest(new TestSourcePath("manifest"))
+            .setRes(Paths.get("res"))
+            .build(resolver, filesystem);
+    AndroidResource resource =
+        (AndroidResource) AndroidResourceBuilder
+            .createBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver, filesystem);
+
+    filesystem.writeContentsToPath(
+        "something",
+        pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+    RuleKey original = factory.build(resource);
+
+    fileHashCache.invalidateAll();
+
+    filesystem.writeContentsToPath(
+        "something else",
+        pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+    RuleKey changed = factory.build(resource);
+
+    assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule, String hashChar) {

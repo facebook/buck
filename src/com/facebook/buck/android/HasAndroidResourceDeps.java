@@ -24,8 +24,6 @@ import com.google.common.base.Predicate;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 /**
@@ -33,7 +31,7 @@ import javax.annotation.Nullable;
  */
 public interface HasAndroidResourceDeps extends HasBuildTarget {
 
-  public static final Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> ABI_HASHER =
+  Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> ABI_HASHER =
       new Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode>() {
         @Override
         public Sha1HashCode apply(Iterable<HasAndroidResourceDeps> deps) {
@@ -50,7 +48,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
         }
       };
 
-  public static final Function<HasAndroidResourceDeps, String> TO_R_DOT_JAVA_PACKAGE =
+  Function<HasAndroidResourceDeps, String> TO_R_DOT_JAVA_PACKAGE =
       new Function<HasAndroidResourceDeps, String>() {
         @Override
         public String apply(HasAndroidResourceDeps input) {
@@ -58,7 +56,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
         }
       };
 
-  public static final Predicate<HasAndroidResourceDeps> NON_EMPTY_RESOURCE =
+  Predicate<HasAndroidResourceDeps> NON_EMPTY_RESOURCE =
       new Predicate<HasAndroidResourceDeps>() {
         @Override
         public boolean apply(HasAndroidResourceDeps input) {
@@ -66,11 +64,11 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
         }
       };
 
-  public static final Function<HasAndroidResourceDeps, Path> GET_RES_SYMBOLS_TXT =
-      new Function<HasAndroidResourceDeps, Path>() {
+  Function<HasAndroidResourceDeps, SourcePath> GET_RES_SYMBOLS_TXT =
+      new Function<HasAndroidResourceDeps, SourcePath>() {
         @Nullable
         @Override
-        public Path apply(HasAndroidResourceDeps input) {
+        public SourcePath apply(HasAndroidResourceDeps input) {
           return input.getPathToTextSymbolsFile();
         }
       };
@@ -83,7 +81,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
   /**
    * @return path to a temporary directory for storing text symbols.
    */
-  Path getPathToTextSymbolsFile();
+  SourcePath getPathToTextSymbolsFile();
 
   /**
    * @return an ABI for the file pointed by {@link #getPathToTextSymbolsFile()}. Since the symbols

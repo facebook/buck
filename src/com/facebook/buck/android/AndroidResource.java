@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -48,6 +49,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
@@ -121,6 +123,9 @@ public class AndroidResource extends AbstractBuildRule
   @AddToRuleKey
   @Nullable
   private final SourcePath manifestFile;
+
+  @AddToRuleKey
+  private final Supplier<ImmutableSortedSet<SourcePath>> symbolsOfDeps;
 
   @AddToRuleKey
   private final boolean hasWhitelistedStrings;
@@ -217,6 +222,18 @@ public class AndroidResource extends AbstractBuildRule
       }
     };
 
+    this.symbolsOfDeps =
+        new Supplier<ImmutableSortedSet<SourcePath>>() {
+          @Override
+          public ImmutableSortedSet<SourcePath> get() {
+            return FluentIterable.from(getDeps())
+                .filter(HasAndroidResourceDeps.class)
+                .filter(NON_EMPTY_RESOURCE)
+                .transform(GET_RES_SYMBOLS_TXT)
+                .toSortedSet(Ordering.natural());
+          }
+        };
+
   }
 
   @Override
@@ -273,9 +290,10 @@ public class AndroidResource extends AbstractBuildRule
       buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
     }
 
-    ImmutableSet<Path> pathsToSymbolsOfDeps = FluentIterable.from(getNonEmptyResourceDeps())
-        .transform(GET_RES_SYMBOLS_TXT)
-        .toSet();
+    ImmutableSet<Path> pathsToSymbolsOfDeps =
+        FluentIterable.from(symbolsOfDeps.get())
+            .transform(getResolver().getAbsolutePathFunction())
+            .toSet();
 
     steps.add(
         new MiniAapt(
@@ -305,8 +323,8 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToTextSymbolsFile() {
-    return pathToTextSymbolsFile;
+  public SourcePath getPathToTextSymbolsFile() {
+    return new BuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsFile);
   }
 
   @Override
@@ -326,12 +344,6 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
-  }
-
-  private Iterable<HasAndroidResourceDeps> getNonEmptyResourceDeps() {
-    return FluentIterable.from(getDeps())
-        .filter(HasAndroidResourceDeps.class)
-        .filter(NON_EMPTY_RESOURCE);
   }
 
   @Override

@@ -82,8 +82,8 @@ public class AndroidPrebuiltAar
   }
 
   @Override
-  public Path getPathToTextSymbolsFile() {
-    return unzipAar.getTextSymbolsFile();
+  public SourcePath getPathToTextSymbolsFile() {
+    return new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());
   }
 
   @Override

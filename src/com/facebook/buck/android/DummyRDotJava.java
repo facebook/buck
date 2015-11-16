@@ -105,6 +105,7 @@ public class DummyRDotJava extends AbstractBuildRule
     } else {
       MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
           getProjectFilesystem(),
+          getResolver(),
           androidResourceDeps,
           rDotJavaSrcFolder,
           unionPackage);

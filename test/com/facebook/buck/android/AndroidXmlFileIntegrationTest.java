@@ -108,7 +108,7 @@ public class AndroidXmlFileIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
 
     buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
-    buildLog.assertTargetHadMatchingInputRuleKey("//res/com/sample/top:top");
+    buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
     buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
     assertThat(
         buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
