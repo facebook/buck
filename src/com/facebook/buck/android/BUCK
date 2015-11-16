@@ -10,7 +10,9 @@ java_library(
   ],
   deps = [
     '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/util:exceptions',
+  ],
+  exported_deps = [
+    '//src/com/facebook/buck/util:exceptions',  # Inherits from HumanReadableException
   ],
   visibility = ['PUBLIC'],
 )
@@ -266,7 +268,7 @@ java_immutables_library(
               excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS +
                   UTILS_SRCS + HELPERS_SRCS),
   tests = [
-    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:steps',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [

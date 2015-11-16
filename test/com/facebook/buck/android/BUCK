@@ -61,14 +61,52 @@ java_library(
 )
 
 
+STEP_TEST_SRCS = [
+  '*StepTest.java',
+]
+java_test(
+  name = 'steps',
+  srcs = glob(STEP_TEST_SRCS),
+  deps = [
+    ':testutil',
+    '//src/com/facebook/buck/android:packageable',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/android/aapt:aapt',
+    '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/android:split_dex',
+    '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/android:utils',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/dalvik:dalvik',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/step:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//third-party/java/asm:asm',
+    '//third-party/java/easymock:easymock',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+  ],
+)
+
 java_test(
   name = 'unit',
-  srcs = glob(STANDARD_TEST_SRCS, excludes = STANDARD_INTEGRATION_TEST_SRCS),
+  srcs = glob(
+    STANDARD_TEST_SRCS,
+    excludes = STANDARD_INTEGRATION_TEST_SRCS +
+      STEP_TEST_SRCS),
   deps = [
     ':utils',
     ':testutil',
     '//src/com/facebook/buck/android/aapt:aapt',
-    '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:helpers',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
@@ -76,7 +114,6 @@ java_test(
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
-    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
@@ -103,7 +140,6 @@ java_test(
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/cache:cache',
