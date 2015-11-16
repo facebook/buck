@@ -161,7 +161,6 @@ java_immutables_library(
     '//src/com/facebook/buck/test:config',
     '//src/com/facebook/buck/test:report-format',
     '//src/com/facebook/buck/test:test',
-    '//src/com/facebook/buck/test/result/groups:groups',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/timing:timing',

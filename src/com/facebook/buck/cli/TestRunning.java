@@ -49,7 +49,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -96,7 +95,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -182,14 +180,6 @@ public class TestRunning {
     // Buck, not the test being run.
     Verbosity verbosity = params.getConsole().getVerbosity();
     final boolean printTestResults = (verbosity != Verbosity.SILENT);
-
-    // For grouping results!
-    final TestResultsGrouper grouper;
-    if (options.isIgnoreFailingDependencies()) {
-      grouper = new TestResultsGrouper(tests);
-    } else {
-      grouper = null;
-    }
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(buildEngine);
     final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
@@ -329,7 +319,6 @@ public class TestRunning {
             transformTestResults(
                 params,
                 testResults,
-                grouper,
                 testRun.getTest(),
                 testRun.getTestReportingCallback(),
                 testTargets,
@@ -362,7 +351,6 @@ public class TestRunning {
                           Optional.of(testRun.getTest().getBuildTarget()),
                           directExecutorService,
                           testStepRunningCallback),
-                      grouper,
                       testRun.getTest(),
                       testRun.getTestReportingCallback(),
                       testTargets,
@@ -460,7 +448,6 @@ public class TestRunning {
   private static ListenableFuture<TestResults> transformTestResults(
       final CommandRunnerParams params,
       ListenableFuture<TestResults> originalTestResults,
-      @Nullable final TestResultsGrouper grouper,
       final TestRule testRule,
       final TestRule.TestReportingCallback testReportingCallback,
       final ImmutableSet<String> testTargets,
@@ -508,14 +495,7 @@ public class TestRunning {
       public void onSuccess(TestResults testResults) {
         LOG.debug("Transforming successful test results %s", testResults);
         if (printTestResults) {
-          if (grouper == null) {
-            postTestResults(testResults);
-          } else {
-            Map<TestRule, TestResults> postableTestResultsMap = grouper.post(testRule, testResults);
-            for (TestResults rr : postableTestResultsMap.values()) {
-              postTestResults(rr);
-            }
-          }
+          postTestResults(testResults);
         }
         transformedTestResults.set(testResults);
       }

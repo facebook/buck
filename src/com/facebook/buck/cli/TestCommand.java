@@ -123,16 +123,16 @@ public class TestCommand extends BuildCommand {
   @Nullable
   private Boolean isBuildFiltered = null;
 
+  // TODO(#9061229): See if we can remove this option entirely. For now, the
+  // underlying code has been removed, and this option is ignored.
   @Option(
       name = "--ignore-when-dependencies-fail",
       aliases = {"-i"},
       usage =
-          "Ignore test failures for libraries if they depend on other libraries " +
-          "that aren't passing their tests.  " +
-          "For example, if java_library A depends on B, " +
-          "and they are tested respectively by T1 and T2 and both of those tests fail, " +
-          "only print the error for T2.")
-  private boolean isIgnoreFailingDependencies = false;
+          "Deprecated option (ignored).",
+      hidden = true)
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private boolean isIgnoreFailingDependencies;
 
   @Option(
       name = "--dry-run",
@@ -252,7 +252,6 @@ public class TestCommand extends BuildCommand {
         .setRunAllTests(isRunAllTests())
         .setTestSelectorList(testSelectorOptions.getTestSelectorList())
         .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
-        .setIgnoreFailingDependencies(isIgnoreFailingDependencies)
         .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
         .setDryRun(isDryRun)
         .setShufflingTests(isShufflingTests)
