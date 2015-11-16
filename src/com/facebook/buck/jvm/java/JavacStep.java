@@ -116,7 +116,6 @@ public class JavacStep implements Step {
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.javacOptions = javacOptions;
-
     this.declaredClasspathEntries = declaredClasspathEntries;
     this.javac = javac;
     this.invokingRule = invokingRule;

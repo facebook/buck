@@ -435,6 +435,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(mkdirGeneratedSources);
       buildableContext.recordArtifact(annotationGenFolder);
     }
+    JavacStepFactory javacStepFactory = new JavacStepFactory(javacOptions);
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
@@ -465,6 +466,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .addAll(declaredClasspathEntries.values())
         .addAll(provided)
         .build();
+
 
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToAbiOutputDir());
@@ -497,20 +499,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
-      JavacStepFactory javacStepFactory = new JavacStepFactory(
+
+      steps.add(javacStepFactory.createCompileStep(
+          getJavaSrcs(),
+          target,
+          getResolver(),
+          getProjectFilesystem(),
+          declared,
           outputDirectory,
           workingDirectory,
-          getJavaSrcs(),
           Optional.of(pathToSrcsList),
-          declared,
-          javacOptions,
-          target,
-          suggestBuildRule,
-          getResolver(),
-          getProjectFilesystem()
-      );
-
-      steps.add(javacStepFactory.createCompileStep());
+          suggestBuildRule));
       steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
               getProjectFilesystem().getRootPath(),
               postprocessClassesCommands,
