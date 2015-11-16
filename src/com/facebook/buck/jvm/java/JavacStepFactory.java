@@ -26,46 +26,26 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class JavacStepFactory {
-  private Path outputDirectory;
-  private Optional<Path> workingDirectory;
-  private ImmutableSortedSet<Path> javaSourceFilePaths;
-  private Optional<Path> pathToSrcsList;
-  private ImmutableSortedSet<Path> declaredClasspathEntries;
-  private JavacOptions javacOptions;
-  private BuildTarget invokingRule;
-  private Optional<JavacStep.SuggestBuildRules> suggestBuildRules;
-  private SourcePathResolver resolver;
-  private ProjectFilesystem filesystem;
+  private final JavacOptions javacOptions;
 
-  public JavacStepFactory(
-      Path outputDirectory,
-      Optional<Path> workingDirectory,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      JavacOptions javacOptions,
-      BuildTarget invokingRule,
-      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem
-  ) {
-    this.outputDirectory = outputDirectory;
-    this.workingDirectory = workingDirectory;
-    this.javaSourceFilePaths = javaSourceFilePaths;
-    this.pathToSrcsList = pathToSrcsList;
-    this.declaredClasspathEntries = declaredClasspathEntries;
+  public JavacStepFactory(JavacOptions javacOptions) {
     this.javacOptions = javacOptions;
-    this.invokingRule = invokingRule;
-    this.suggestBuildRules = suggestBuildRules;
-    this.resolver = resolver;
-    this.filesystem = filesystem;
   }
 
-  Step createCompileStep() {
+  Step createCompileStep(
+      ImmutableSortedSet<Path> sourceFilePaths,
+      BuildTarget invokingRule,
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
+      Path outputDirectory,
+      Optional<Path> workingDirectory,
+      Optional<Path> pathToSrcsList,
+      Optional<JavacStep.SuggestBuildRules> suggestBuildRules) {
     return new JavacStep(
         outputDirectory,
         workingDirectory,
-        javaSourceFilePaths,
+        sourceFilePaths,
         pathToSrcsList,
         declaredClasspathEntries,
         javacOptions.getJavac(),
