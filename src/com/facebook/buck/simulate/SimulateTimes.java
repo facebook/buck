@@ -33,8 +33,8 @@ import java.util.Map;
 public class SimulateTimes {
   private final ImmutableMap<String, Long> buildTargetTimes;
   private final String file;
-  private final String timeType;
-  private final long defaultMillis;
+  private final String timeAggregate;
+  private final long ruleFallbackTimeMillis;
 
   private SimulateTimes(
       ImmutableMap<String, Long> buildTargetTimes,
@@ -43,8 +43,8 @@ public class SimulateTimes {
       long defaultMillis) {
     this.buildTargetTimes = buildTargetTimes;
     this.file = file;
-    this.timeType = timeType;
-    this.defaultMillis = defaultMillis;
+    this.timeAggregate = timeType;
+    this.ruleFallbackTimeMillis = defaultMillis;
   }
 
   public static SimulateTimes createEmpty(long defaultMillis) {
@@ -91,11 +91,11 @@ public class SimulateTimes {
       return buildTargetTimes.get(buildTarget);
     }
 
-    return getDefaultMillis();
+    return getRuleFallbackTimeMillis();
   }
 
-  public long getDefaultMillis() {
-    return defaultMillis;
+  public long getRuleFallbackTimeMillis() {
+    return ruleFallbackTimeMillis;
   }
 
   public boolean hasMillisForTarget(String buildTarget) {
@@ -106,8 +106,8 @@ public class SimulateTimes {
     return file;
   }
 
-  public String getTimeType() {
-    return timeType;
+  public String getTimeAggregate() {
+    return timeAggregate;
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)

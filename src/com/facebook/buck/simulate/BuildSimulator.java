@@ -56,8 +56,8 @@ public class BuildSimulator {
         .setTimestampMillis(currentTimeMillis)
         .setBuildTargets(FluentIterable.from(buildTargets).transform(Functions.toStringFunction()))
         .setSimulateTimesFile(times.getFile())
-        .setSimulateTimeType(times.getTimeType())
-        .setSimulateDefaultMillis(times.getDefaultMillis())
+        .setTimeAggregate(times.getTimeAggregate())
+        .setRuleFallbackTimeMillis(times.getRuleFallbackTimeMillis())
         .setTotalActionGraphNodes(Iterables.size(actionGraph.getNodes()))
         .setNumberOfThreads(numberOfThreads);
 

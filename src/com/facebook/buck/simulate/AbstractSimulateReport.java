@@ -33,6 +33,6 @@ abstract class AbstractSimulateReport {
   public abstract int getNumberOfThreads();
   public abstract int getActionGraphNodesWithoutSimulateTime();
   public abstract String getSimulateTimesFile();
-  public abstract String getSimulateTimeType();
-  public abstract long getSimulateDefaultMillis();
+  public abstract String getTimeAggregate();
+  public abstract long getRuleFallbackTimeMillis();
 }

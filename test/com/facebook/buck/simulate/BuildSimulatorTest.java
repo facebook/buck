@@ -57,7 +57,7 @@ public class BuildSimulatorTest {
         ImmutableList.of(BuildTargetFactory.newInstance((ROOT_NODE))));
     Assert.assertEquals(1, report.getBuildTargets().size());
     Assert.assertEquals(1, report.getActionGraphNodesWithoutSimulateTime());
-    Assert.assertEquals(times.getDefaultMillis(), report.getBuildDurationMillis());
+    Assert.assertEquals(times.getRuleFallbackTimeMillis(), report.getBuildDurationMillis());
   }
 
   @Test
