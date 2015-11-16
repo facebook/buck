@@ -148,7 +148,8 @@ public class ExternalJavac implements Javac {
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     if (DEFAULT_VERSION.equals(getVersion())) {
-      return builder.setReflectively("javac", pathToJavac);
+      // What we really want to do here is use a VersionedTool, however, this will suffice for now.
+      return builder.setReflectively("javac", pathToJavac.toString());
     }
 
     return builder.setReflectively("javac.version", getVersion().toString());

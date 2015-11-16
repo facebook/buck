@@ -90,7 +90,7 @@ public class SymlinkTree
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
       builder.setReflectively(
           "link(" + entry.getKey().toString() + ")",
-          getResolver().deprecatedGetPath(entry.getValue()).toString());
+          getResolver().getRelativePath(entry.getValue()).toString());
     }
     return builder;
   }

@@ -42,8 +42,8 @@ import java.nio.file.Paths;
 
 public class ArchiveTest {
 
-  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(
-      new HashedFileTool(Paths.get("ar")));
+  private static final Path AR = Paths.get("ar");
+  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(new HashedFileTool(AR));
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
@@ -60,11 +60,11 @@ public class ArchiveTest {
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
-                    "ar", Strings.repeat("0", 40),
+                    AR.toString(), Strings.repeat("0", 40),
                     "a.o", Strings.repeat("a", 40),
                     "b.o", Strings.repeat("b", 40),
                     "c.o", Strings.repeat("c", 40),
-                    "different", Strings.repeat("d", 40))),
+                    Paths.get("different").toString(), Strings.repeat("d", 40))),
             pathResolver);
 
     // Generate a rule key for the defaults.
@@ -111,7 +111,7 @@ public class ArchiveTest {
         new Archive(
             params,
             pathResolver,
-            new BsdArchiver(new HashedFileTool(Paths.get("ar"))),
+            new BsdArchiver(new HashedFileTool(AR)),
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);

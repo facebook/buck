@@ -50,7 +50,7 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     for (Path path : ImmutableSortedSet.copyOf(getNameToPathMap().keySet())) {
       SourcePath source = getNameToPathMap().get(path);
-      builder.setReflectively("include(" + path + ")", source);
+      builder.setReflectively("include(" + path.toString() + ")", source);
     }
 
     return builder;

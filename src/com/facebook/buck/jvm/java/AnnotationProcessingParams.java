@@ -123,8 +123,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     if (!isEmpty()) {
       // searchPathElements is not needed here since it comes from rules, which is appended below.
-      String owner = (ownerTarget == null) ? null : ownerTarget.getFullyQualifiedName();
-      builder.setReflectively("owner", owner)
+      builder.setReflectively("owner", ownerTarget)
           .setReflectively("names", names)
           .setReflectively("parameters", parameters)
           .setReflectively("processOnly", processOnly)

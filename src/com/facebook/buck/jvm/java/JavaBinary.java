@@ -34,12 +34,14 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -104,7 +106,10 @@ public class JavaBinary extends AbstractBuildRule
     ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
     BuildRules.addInputsToSortedSet(metaInfDirectory, paths, directoryTraverser);
 
-    return builder.setReflectively("metaInfDirectory", paths.build());
+    return builder.setReflectively(
+        "metaInfDirectory",
+        FluentIterable.from(paths.build())
+            .transform(SourcePaths.toSourcePath(getProjectFilesystem())));
   }
 
   @Override

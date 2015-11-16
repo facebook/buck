@@ -56,6 +56,6 @@ public class GoTool implements Tool {
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return underlyingCommand.appendToRuleKey(builder).setReflectively("goRoot", goRoot);
+    return underlyingCommand.appendToRuleKey(builder).setReflectively("goRoot", goRoot.toString());
   }
 }

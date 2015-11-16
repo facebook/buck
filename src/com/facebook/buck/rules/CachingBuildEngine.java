@@ -1053,7 +1053,7 @@ public class CachingBuildEngine implements BuildEngine {
     RuleKeyBuilder builder = cellData.depFileRuleKeyBuilderFactory.newInstance(rule);
     for (Path input : inputs) {
       try {
-        builder.setPath(input);
+        builder.setPath(rule.getProjectFilesystem().resolve(input), input);
       } catch (NoSuchFileException e) {
         if (!allowMissingInputs) {
           throw e;

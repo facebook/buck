@@ -103,7 +103,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey javacKey = new RuleKeyBuilder(pathResolver, fileHashCache)
-        .setReflectively("javac", javac)
+        .setReflectively("javac", javac.toString())
         .build();
     RuleKeyBuilder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);

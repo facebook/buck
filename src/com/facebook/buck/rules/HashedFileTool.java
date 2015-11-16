@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class HashedFileTool implements Tool {
@@ -41,7 +42,12 @@ public class HashedFileTool implements Tool {
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("path", path);
+    try {
+      return builder.setPath(path.toAbsolutePath(), path);
+    } catch (IOException e) {
+
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

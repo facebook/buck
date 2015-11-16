@@ -207,8 +207,8 @@ class DexSplitMode implements RuleKeyAppendable {
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("dexStore", dexStore.name());
-    builder.setReflectively("dexSplitStrategy", dexSplitStrategy.name());
+    builder.setReflectively("dexStore", dexStore);
+    builder.setReflectively("dexSplitStrategy", dexSplitStrategy);
     builder.setReflectively("isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
     builder.setReflectively("linearAllocHardLimit", linearAllocHardLimit);
