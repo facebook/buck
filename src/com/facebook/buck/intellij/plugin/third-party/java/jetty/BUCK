@@ -20,6 +20,6 @@ java_library(
     # '//third-party/java/servlet-api:servlet-api',
   ],
   visibility = [
-    '/com/facebook/buck/intellij/plugin:',
+    '//:ideabuck-lib',
   ],
 )

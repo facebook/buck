@@ -13,6 +13,7 @@ java_library(
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jetty:jetty',
+    '//third-party/java/gson:gson'
   ],
 )
 
