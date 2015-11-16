@@ -10,4 +10,4 @@ done
 BUCK_DIR=$(dirname "$BUCK_PATH")
 
 PYTHON=$(command -v python2 python | head -1)
-exec $PYTHON "$BUCK_DIR"/../programs/buck.py "$@"
+PYTHONPATH="$BUCK_DIR"/../third-party/nailgun exec $PYTHON "$BUCK_DIR"/../programs/buck.py "$@"

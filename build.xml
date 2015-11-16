@@ -27,7 +27,6 @@
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="javadoc-with-android.dir" value="${build.dir}/javadoc-with-android" />
   <property name="javadoc-all.dir" value="${build.dir}/javadoc-all" />
-  <property name="client.dir" value="third-party/nailgun" />
   <property name="test.class" value="Test" />
   <property name="test.debug_port" value="8787" />
   <property name="lint.outputpath" value="${build.dir}/lint.output" />
@@ -165,7 +164,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
+  <target name="default" depends="compile, dx, javac-tracing, report-generator-jar" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -983,16 +982,6 @@
 
   <target name="travis" depends="verify-javadoc, lint" />
 
-  <target name="client" description="install nailgun buckd c client (non Windows only)">
-    <mkdir dir="${build.dir}" />
-    <exec dir="${basedir}"
-          executable="gcc"
-          failonerror="true"
-          osfamily="unix">
-      <arg line="-Wall -pedantic -O3 -o ${build.dir}/ng ${client.dir}/nailgun-client/ng.c" />
-    </exec>
-  </target>
-
   <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
-  <target name="all" depends="jar, test, javadoc, client" />
+  <target name="all" depends="jar, test, javadoc" />
 </project>

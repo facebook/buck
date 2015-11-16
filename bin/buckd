@@ -9,4 +9,4 @@ while [ -h "$BUCK_PATH" ]; do
 done
 BUCK_DIR=$(dirname "$BUCK_PATH")
 
-exec python "$BUCK_DIR"/../programs/buckd.py "$@"
+PYTHONPATH="$BUCK_DIR"/../third-party/nailgun exec python "$BUCK_DIR"/../programs/buckd.py "$@"

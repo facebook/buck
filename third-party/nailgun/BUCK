@@ -1,8 +1,7 @@
-cxx_binary(
+python_library(
   name='ng',
-  srcs=[
-    'nailgun-client/ng.c',
-  ],
+  srcs=glob(['pynailgun/*.py']),
+  base_module='',
   visibility = [
     'PUBLIC',
   ],

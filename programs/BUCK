@@ -61,11 +61,6 @@ BUCK_CORE_RESOURCES = {
     #':path_to_static_content',
 }
 
-BUCK_WITH_NAILGUN_RESOURCES = {
-    'buck_client': '//third-party/nailgun:ng',
-}
-BUCK_WITH_NAILGUN_RESOURCES.update(BUCK_CORE_RESOURCES)
-
 python_library(
   name='bucklib',
   srcs=[
@@ -76,8 +71,9 @@ python_library(
     'timing.py',
     'tracing.py',
   ],
-  resources=BUCK_WITH_NAILGUN_RESOURCES,
+  resources=BUCK_CORE_RESOURCES,
   deps = [
+    '//third-party/nailgun:ng',
     ':subprocutils',
     ':buck_version',
   ],
