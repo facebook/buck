@@ -317,7 +317,7 @@ public class ThriftCompilerTest {
                 .addAll(DEFAULT_FLAGS)
                 .build(),
             DEFAULT_OUTPUT_DIR,
-            pathResolver.deprecatedGetPath(DEFAULT_INPUT),
+            pathResolver.getAbsolutePath(DEFAULT_INPUT),
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             ImmutableList.<Path>builder()
