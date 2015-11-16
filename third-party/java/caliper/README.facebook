@@ -1,0 +1,15 @@
+README for Caliper: Microbenchmarking Framework for Java
+
+License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+Downloaded from: https://github.com/google/caliper
+Version: da08dbe4cd20e9a215eb1485085f575f0aba377d
+
+Instructions:
+1. clone github repo
+2. apply da08dbe.diff to repository. This changes the CICompilerCount to 2,
+   as 1 is no longer supported by the JVM in the default configuration, see
+   https://bugs.openjdk.java.net/browse/JDK-8130858
+3. Run `mvn package`
+4. Run
+ java -jar /path/to/jarjar-1.4.jar process jarjar-rules.txt caliper-1.0-all.jar caliper-1.0-shaded.jar
+

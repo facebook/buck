@@ -553,6 +553,7 @@
   <path id="tests.run.classpath">
     <path refid="classpath" />
     <fileset dir="${third-party.dir}/java">
+      <include name="caliper/caliper-1.0-all.jar" />
       <include name="cglib/cglib-nodep-2.2.jar" />
       <include name="easymock/easymock-3.3.1.jar" />
       <include name="hamcrest/hamcrest-junit-2.0.0.0.jar" />

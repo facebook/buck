@@ -1,0 +1,37 @@
+prebuilt_jar(
+  name = 'caliper',
+  binary_jar = ':caliper_shaded',
+  deps = [
+    ':java-allocation-instrumenter',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+
+genrule(
+  name = 'caliper_shaded',
+  srcs = [
+    'jarjar-rules.txt',
+  ],
+  cmd = '$(exe //third-party/java/jarjar:jarjar) process ' \
+      '$SRCDIR/jarjar-rules.txt $(location :caliper-all) $OUT',
+  out = 'caliper_shaded.jar',
+)
+
+
+prebuilt_jar(
+  name = 'caliper-all',
+  binary_jar = 'caliper-1.0-all.jar',
+  deps = [
+    ':java-allocation-instrumenter',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+
+prebuilt_jar(
+  name = 'java-allocation-instrumenter',
+  binary_jar = 'java-allocation-instrumenter-3.0.jar',
+)

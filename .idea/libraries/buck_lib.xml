@@ -19,6 +19,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/okio/okio-1.2.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/stringtemplate/ST-4.0.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/caliper/caliper-1.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
