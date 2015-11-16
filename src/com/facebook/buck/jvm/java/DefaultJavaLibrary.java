@@ -323,55 +323,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
-  /**
-   * @param outputDirectory Directory to write class files to
-   * @param declaredClasspathEntries Classpaths of all declared dependencies.
-   * @param javacOptions javac configuration.
-   * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
-   * @param commands List of steps to add to.
-   */
-  @VisibleForTesting
-  void createCommandsForJavacJar(
-      Path outputDirectory,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      JavacOptions javacOptions,
-      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
-      ImmutableList.Builder<Step> commands,
-      BuildTarget target,
-      Path pathToOutputFile,
-      ImmutableList<Step> intermediateCommands) {
-      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
-      commands.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
-
-      Optional<Path> workingDirectory;
-      Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
-      commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
-      workingDirectory = Optional.of(scratchDir);
-
-      JavacStepFactory javacStepFactory = new JavacStepFactory(
-          outputDirectory,
-          workingDirectory,
-          getJavaSrcs(),
-          Optional.of(pathToSrcsList),
-          declaredClasspathEntries,
-          javacOptions,
-          target,
-          suggestBuildRules,
-          getResolver(),
-          getProjectFilesystem()
-      );
-
-      commands.add(javacStepFactory.createCompileStep());
-      commands.addAll(Lists.newCopyOnWriteArrayList(intermediateCommands));
-      commands.add(
-          new JarDirectoryStep(
-              getProjectFilesystem(),
-              pathToOutputFile,
-              ImmutableSortedSet.of(outputDirectory),
-              /* mainClass */null,
-              /* manifestFile */null));
-  }
-
   private Path getPathToAbiOutputDir() {
     return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
   }
@@ -540,18 +491,37 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     if (!getJavaSrcs().isEmpty()) {
       Path output = outputJar.get();
       // This adds the javac command, along with any supporting commands.
-      createCommandsForJavacJar(
+      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+      steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+
+      Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
+      Optional<Path> workingDirectory = Optional.of(scratchDir);
+      JavacStepFactory javacStepFactory = new JavacStepFactory(
           outputDirectory,
+          workingDirectory,
+          getJavaSrcs(),
+          Optional.of(pathToSrcsList),
           declared,
           javacOptions,
-          suggestBuildRule,
-          steps,
           target,
-          output,
-          addPostprocessClassesCommands(
+          suggestBuildRule,
+          getResolver(),
+          getProjectFilesystem()
+      );
+
+      steps.add(javacStepFactory.createCompileStep());
+      steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
               getProjectFilesystem().getRootPath(),
               postprocessClassesCommands,
-              outputDirectory));
+              outputDirectory)));
+      steps.add(
+          new JarDirectoryStep(
+              getProjectFilesystem(),
+              output,
+              ImmutableSortedSet.of(outputDirectory),
+              /* mainClass */null,
+              /* manifestFile */null));
     }
 
 
