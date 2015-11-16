@@ -171,9 +171,30 @@ java_test(
   ],
 )
 
+ANDROID_AAR_INTEGRATION_TEST_SRCS = [
+  '*Aar*IntegrationTest.java',
+]
+java_test(
+  name = 'aar-integration',
+  srcs = glob(ANDROID_AAR_INTEGRATION_TEST_SRCS),
+  resources = glob(['testdata/**'], include_dotfiles=True),
+  deps = [
+    ':utils',
+    ':testutil',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/zip:unzip',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+  ],
+)
+
 java_test(
   name = 'integration',
-  srcs = glob(STANDARD_INTEGRATION_TEST_SRCS),
+  srcs = glob(
+    STANDARD_INTEGRATION_TEST_SRCS,
+    excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     ':utils',

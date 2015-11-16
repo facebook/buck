@@ -27,6 +27,7 @@ java_immutables_library(
   srcs = PACKAGEABLE_SOURCES,
   tests = [
     '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:aar-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
@@ -110,6 +111,7 @@ java_immutables_library(
   srcs = RULES_SRCS,
   tests = [
     '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:aar-integration',
     '//test/com/facebook/buck/android:integration',
   ],
   deps = [
