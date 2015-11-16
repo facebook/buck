@@ -30,7 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
-import com.facebook.buck.jvm.java.HasJavaClassHashes;
+import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;

@@ -34,6 +34,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;

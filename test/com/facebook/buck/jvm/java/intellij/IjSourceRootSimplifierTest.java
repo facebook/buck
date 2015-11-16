@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java.intellij;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
-import com.facebook.buck.jvm.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

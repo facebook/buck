@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.SourcePath;

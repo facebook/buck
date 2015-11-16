@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.java.JavaNativeLinkable;
+import com.facebook.buck.jvm.core.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
