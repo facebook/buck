@@ -83,6 +83,7 @@ public class DCompileBuildRule extends AbstractBuildRule {
     steps.add(
         new DCompileStep(
             getProjectFilesystem().getRootPath(),
+            compiler.getEnvironment(getResolver()),
             compiler.getCommandPrefix(getResolver()),
             compilerFlags,
             outputPath,

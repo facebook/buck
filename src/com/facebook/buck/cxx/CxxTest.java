@@ -67,7 +67,8 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
   public CxxTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Supplier<ImmutableMap<String, String>> env,
+      final ImmutableMap<String, String> toolEnv,
+      final Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
@@ -76,7 +77,16 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
-    this.env = Suppliers.memoize(env);
+    this.env = Suppliers.memoize(
+        new Supplier<ImmutableMap<String, String>>() {
+          @Override
+          public ImmutableMap<String, String> get() {
+            ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+            builder.putAll(toolEnv);
+            builder.putAll(env.get());
+            return builder.build();
+          }
+        });
     this.args = Suppliers.memoize(args);
     this.additionalDeps = Suppliers.memoize(additionalDeps);
     this.labels = labels;

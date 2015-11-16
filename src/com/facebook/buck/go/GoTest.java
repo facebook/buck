@@ -43,7 +43,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -106,7 +105,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
                 .add("-test.v")
                 .add("-test.timeout", executionContext.getDefaultTestTimeoutMillis() + "ms")
                 .build(),
-            /* env */ ImmutableMap.<String, String>of(),
+            testMain.getExecutableCommand().getEnvironment(getResolver()),
             getPathToTestExitCode(),
             getPathToTestResults()));
   }
@@ -254,6 +253,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("go")
+        .putAllEnv(testMain.getExecutableCommand().getEnvironment(getResolver()))
         .addAllCommand(testMain.getExecutableCommand().getCommandPrefix(getResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())

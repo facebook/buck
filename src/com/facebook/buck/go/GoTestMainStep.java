@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class GoTestMainStep extends ShellStep {
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> generatorCommandPrefix;
   private final String coverageMode;
   private final ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables;
@@ -34,12 +35,14 @@ public class GoTestMainStep extends ShellStep {
 
   public GoTestMainStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
       String coverageMode,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables,
       Path packageName,
       ImmutableList<Path> testFiles, Path output) {
     super(workingDirectory);
+    this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;
     this.coverageVariables = coverageVariables;
@@ -85,6 +88,11 @@ public class GoTestMainStep extends ShellStep {
     }
 
     return command.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

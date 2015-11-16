@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -54,6 +55,11 @@ public class UnknownLinker implements Linker {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return tool.getCommandPrefix(resolver);
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override

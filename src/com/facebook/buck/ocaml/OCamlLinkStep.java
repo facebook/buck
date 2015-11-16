@@ -25,6 +25,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -36,6 +37,7 @@ import java.nio.file.Path;
 public class OCamlLinkStep extends ShellStep {
 
   public static class Args implements RuleKeyAppendable {
+    public final ImmutableMap<String, String> environment;
     public final Path ocamlCompiler;
     public final ImmutableList<String> cxxCompiler;
     public final ImmutableList<String> flags;
@@ -47,6 +49,7 @@ public class OCamlLinkStep extends ShellStep {
     public final boolean isBytecode;
 
     public Args(
+        ImmutableMap<String, String> environment,
         ImmutableList<String> cxxCompiler,
         Path ocamlCompiler,
         Path output,
@@ -56,6 +59,7 @@ public class OCamlLinkStep extends ShellStep {
         ImmutableList<String> flags,
         boolean isLibrary,
         boolean isBytecode) {
+      this.environment = environment;
       this.isLibrary = isLibrary;
       this.isBytecode = isBytecode;
       this.ocamlCompiler = ocamlCompiler;
@@ -153,5 +157,10 @@ public class OCamlLinkStep extends ShellStep {
                 FluentIterable.from(args.nativeDepInput)
                     .transform(Arg.stringifyFunction())))
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return args.environment;
   }
 }

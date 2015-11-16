@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -27,6 +28,7 @@ import java.nio.file.Path;
  */
 public class StripStep extends ShellStep {
 
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> stripCommandPrefix;
   private final ImmutableList<String> flags;
   private final Path source;
@@ -34,11 +36,13 @@ public class StripStep extends ShellStep {
 
   public StripStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> stripCommandPrefix,
       ImmutableList<String> flags,
       Path source,
       Path destination) {
     super(workingDirectory);
+    this.environment = environment;
     this.stripCommandPrefix = stripCommandPrefix;
     this.flags = flags;
     this.source = source;
@@ -54,6 +58,11 @@ public class StripStep extends ShellStep {
         .add("-o")
         .add(destination.toString())
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

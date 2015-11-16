@@ -24,6 +24,7 @@ import com.facebook.buck.util.CommandSplitter;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -34,14 +35,16 @@ public class ArchiveStep extends CompositeStep {
 
   public ArchiveStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
-    super(getArchiveCommandSteps(workingDirectory, archiver, output, inputs));
+    super(getArchiveCommandSteps(workingDirectory, environment, archiver, output, inputs));
   }
 
   private static ImmutableList<Step> getArchiveCommandSteps(
       Path workingDirectory,
+      final ImmutableMap<String, String> environment,
       ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
@@ -66,6 +69,11 @@ public class ArchiveStep extends CompositeStep {
             @Override
             protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
               return command;
+            }
+
+            @Override
+            public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+              return environment;
             }
           });
     }

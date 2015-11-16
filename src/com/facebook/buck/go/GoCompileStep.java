@@ -27,7 +27,7 @@ import java.nio.file.Path;
 
 public class GoCompileStep extends ShellStep {
 
-  private final Path goRoot;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compilerCommandPrefix;
   private final Path packageName;
   private final ImmutableList<String> flags;
@@ -37,7 +37,7 @@ public class GoCompileStep extends ShellStep {
 
   public GoCompileStep(
       Path workingDirectory,
-      Path goRoot,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> compilerCommandPrefix,
       ImmutableList<String> flags,
       Path packageName,
@@ -45,7 +45,7 @@ public class GoCompileStep extends ShellStep {
       ImmutableList<Path> includeDirectories,
       Path output) {
     super(workingDirectory);
-    this.goRoot = goRoot;
+    this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;
     this.packageName = packageName;
@@ -82,7 +82,7 @@ public class GoCompileStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return ImmutableMap.of("GOROOT", goRoot.toString());
+    return environment;
   }
 
   @Override

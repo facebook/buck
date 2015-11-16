@@ -73,7 +73,10 @@ public class FatBinary extends AbstractBuildRule {
     }
     return ImmutableList.<Step>of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new DefaultShellStep(getProjectFilesystem().getRootPath(), commandBuilder.build()));
+        new DefaultShellStep(
+            getProjectFilesystem().getRootPath(),
+            commandBuilder.build(),
+            lipo.getEnvironment(getResolver())));
   }
 
   @Override

@@ -27,6 +27,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
@@ -52,6 +53,7 @@ public class ArchiveStepTest {
     // Create and archive step.
     ArchiveStep archiveStep = new ArchiveStep(
         projectFilesystem.getRootPath(),
+        /* environment */ ImmutableMap.<String, String>of(),
         archiver,
         output,
         inputs);

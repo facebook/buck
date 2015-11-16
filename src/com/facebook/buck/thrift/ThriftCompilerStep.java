@@ -23,6 +23,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -30,6 +31,7 @@ import java.nio.file.Path;
 
 public class ThriftCompilerStep extends ShellStep {
 
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compilerPrefix;
   private final Path outputDir;
   private final Path input;
@@ -39,6 +41,7 @@ public class ThriftCompilerStep extends ShellStep {
 
   public ThriftCompilerStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> compilerPrefix,
       Path outputDir,
       Path input,
@@ -46,6 +49,7 @@ public class ThriftCompilerStep extends ShellStep {
       ImmutableSet<String> options,
       ImmutableList<Path> includes) {
     super(workingDirectory);
+    this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
     this.input = input;
@@ -66,6 +70,11 @@ public class ThriftCompilerStep extends ShellStep {
         .add("-o", outputDir.toString())
         .add(input.toString())
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override
@@ -107,6 +116,10 @@ public class ThriftCompilerStep extends ShellStep {
     }
 
     if (!outputDir.equals(that.outputDir)) {
+      return false;
+    }
+
+    if (!environment.equals(that.environment)) {
       return false;
     }
 

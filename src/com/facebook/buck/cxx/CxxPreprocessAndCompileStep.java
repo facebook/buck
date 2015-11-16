@@ -66,7 +66,9 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Path depFile;
   private final Path input;
   private final CxxSource.Type inputType;
+  private final Optional<ImmutableMap<String, String>> preprocessorEnvironment;
   private final Optional<ImmutableList<String>> preprocessorCommand;
+  private final Optional<ImmutableMap<String, String>> compilerEnvironment;
   private final Optional<ImmutableList<String>> compilerCommand;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final DebugPathSanitizer sanitizer;
@@ -86,11 +88,15 @@ public class CxxPreprocessAndCompileStep implements Step {
       Path depFile,
       Path input,
       CxxSource.Type inputType,
+      Optional<ImmutableMap<String, String>> preprocessorEnvironment,
       Optional<ImmutableList<String>> preprocessorCommand,
+      Optional<ImmutableMap<String, String>> compilerEnvironment,
       Optional<ImmutableList<String>> compilerCommand,
       ImmutableMap<Path, Path> replacementPaths,
       DebugPathSanitizer sanitizer,
       Optional<Function<String, Iterable<String>>> extraLineProcessor) {
+    this.preprocessorEnvironment = preprocessorEnvironment;
+    this.compilerEnvironment = compilerEnvironment;
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
@@ -276,6 +282,9 @@ public class CxxPreprocessAndCompileStep implements Step {
     ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
     ProcessBuilder preprocessBuilder = makeSubprocessBuilder();
     preprocessBuilder.command(makePreprocessCommand());
+    if (preprocessorEnvironment.isPresent()) {
+      preprocessBuilder.environment().putAll(preprocessorEnvironment.get());
+    }
     preprocessBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
 
     ByteArrayOutputStream compileError = new ByteArrayOutputStream();
@@ -285,6 +294,9 @@ public class CxxPreprocessAndCompileStep implements Step {
             "-",
             inputType.getPreprocessedLanguage(),
             /* preprocessable */ false));
+    if (compilerEnvironment.isPresent()) {
+      compileBuilder.environment().putAll(compilerEnvironment.get());
+    }
     compileBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
 
     Process preprocess = null;

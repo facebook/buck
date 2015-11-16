@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -63,6 +64,11 @@ public class HashedFileTool implements Tool {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return ImmutableList.of(path.toString());
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return ImmutableMap.of();
   }
 
 }

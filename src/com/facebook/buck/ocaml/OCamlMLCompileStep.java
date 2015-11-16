@@ -23,6 +23,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -35,6 +36,7 @@ public class OCamlMLCompileStep extends ShellStep {
 
   public static class Args implements RuleKeyAppendable {
 
+    public final ImmutableMap<String, String> environment;
     public final Path ocamlCompiler;
     public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
@@ -42,11 +44,13 @@ public class OCamlMLCompileStep extends ShellStep {
     public final Path input;
 
     public Args(
+        ImmutableMap<String, String> environment,
         ImmutableList<String> cCompiler,
         Path ocamlCompiler,
         Path output,
         Path input,
         ImmutableList<String> flags) {
+      this.environment = environment;
       this.ocamlCompiler = ocamlCompiler;
       this.cCompiler = cCompiler;
       this.flags = flags;
@@ -122,4 +126,8 @@ public class OCamlMLCompileStep extends ShellStep {
         .build();
   }
 
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return args.environment;
+  }
 }

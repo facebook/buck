@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -63,6 +64,11 @@ public class PythonEnvironment implements RuleKeyAppendable, Tool {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return ImmutableList.of(pythonPath.toString());
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return ImmutableMap.of();
   }
 
 }

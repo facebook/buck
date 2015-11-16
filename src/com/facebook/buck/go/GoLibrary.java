@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -36,7 +37,7 @@ import java.nio.file.Path;
 
 public class GoLibrary extends GoLinkable implements HasTests {
   @AddToRuleKey
-  private final GoTool compiler;
+  private final Tool compiler;
   @AddToRuleKey(stringify = true)
   private final Path packageName;
   @AddToRuleKey
@@ -57,7 +58,7 @@ public class GoLibrary extends GoLinkable implements HasTests {
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> compilerFlags,
-      GoTool compiler,
+      Tool compiler,
       ImmutableSortedSet<BuildTarget> tests) {
     super(params, resolver);
     this.srcs = srcs;
@@ -84,7 +85,7 @@ public class GoLibrary extends GoLinkable implements HasTests {
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoCompileStep(
             getProjectFilesystem().getRootPath(),
-            compiler.getGoRoot(),
+            compiler.getEnvironment(getResolver()),
             compiler.getCommandPrefix(getResolver()),
             flags,
             packageName,

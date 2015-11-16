@@ -139,6 +139,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   }
 
+  public ImmutableMap<String, String> getPreprocessorEnvironment() {
+    return preprocessor.getEnvironment(resolver);
+  }
+
   /**
    * Get platform preprocessor flags for composing into the compiler command line.
    */

@@ -75,6 +75,7 @@ public class CxxLink
                 .toList()),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
+            linker.getEnvironment(getResolver()),
             linker.getCommandPrefix(getResolver()),
             argFilePath),
         new FileScrubberStep(

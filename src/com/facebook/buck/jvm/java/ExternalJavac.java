@@ -42,6 +42,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -100,6 +101,11 @@ public class ExternalJavac implements Javac {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return ImmutableList.<String>builder().add(pathToJavac.toString()).build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return ImmutableMap.of();
   }
 
   public static Javac createJavac(Path pathToJavac) {

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.Tool;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -79,6 +80,11 @@ public class VersionedTool implements Tool {
         .add(path.toString())
         .addAll(extraArgs)
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return ImmutableMap.of();
   }
 
   @Override

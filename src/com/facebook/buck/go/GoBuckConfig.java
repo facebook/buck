@@ -18,6 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.io.ExecutableFinder;
@@ -73,10 +74,10 @@ public class GoBuckConfig {
         });
   }
 
-  Supplier<GoTool> getGoCompiler() {
+  Supplier<Tool> getGoCompiler() {
     return getGoTool("compiler", "compile");
   }
-  Supplier<GoTool> getGoLinker() {
+  Supplier<Tool> getGoLinker() {
     return getGoTool("linker", "link");
   }
 
@@ -96,17 +97,18 @@ public class GoBuckConfig {
           delegate.getValue("go", "linker_flags").or("")));
   }
 
-  private Supplier<GoTool> getGoTool(final String configName, final String toolName) {
-    return new Supplier<GoTool>() {
+  private Supplier<Tool> getGoTool(final String configName, final String toolName) {
+    return new Supplier<Tool>() {
       @Override
-      public GoTool get() {
+      public Tool get() {
         Optional<Path> toolPath = delegate.getPath("go", configName);
-        if (toolPath.isPresent()) {
-          return new GoTool(goRootSupplier.get(), new HashedFileTool(toolPath.get()));
+        if (!toolPath.isPresent()) {
+          toolPath = Optional.of(goToolDirSupplier.get().resolve(toolName));
         }
 
-        return new GoTool(goRootSupplier.get(), new HashedFileTool(
-            goToolDirSupplier.get().resolve(toolName)));
+        return new CommandTool.Builder(new HashedFileTool(toolPath.get()))
+            .addEnvironment("GOROOT", goRootSupplier.get().toString())
+            .build();
       }
     };
   }

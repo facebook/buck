@@ -20,6 +20,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -41,16 +42,19 @@ public class CommandTool implements Tool {
 
   private final Optional<Tool> baseTool;
   private final ImmutableList<Arg> args;
+  private final ImmutableMap<String, Arg> environment;
   private final ImmutableSortedSet<SourcePath> extraInputs;
   private final ImmutableSortedSet<BuildRule> extraDeps;
 
   private CommandTool(
       Optional<Tool> baseTool,
       ImmutableList<Arg> args,
+      ImmutableMap<String, Arg> environment,
       ImmutableSortedSet<SourcePath> extraInputs,
       ImmutableSortedSet<BuildRule> extraDeps) {
     this.baseTool = baseTool;
     this.args = args;
+    this.environment = environment;
     this.extraInputs = extraInputs;
     this.extraDeps = extraDeps;
   }
@@ -92,6 +96,18 @@ public class CommandTool implements Tool {
   }
 
   @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    if (baseTool.isPresent()) {
+      env.putAll(baseTool.get().getEnvironment(resolver));
+    }
+    for (ImmutableMap.Entry<String, Arg> var : environment.entrySet()) {
+      env.put(var.getKey(), var.getValue().format(resolver));
+    }
+    return env.build();
+  }
+
+  @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("baseTool", baseTool)
@@ -104,6 +120,7 @@ public class CommandTool implements Tool {
 
     private final Optional<Tool> baseTool;
     private final ImmutableList.Builder<Arg> args = ImmutableList.builder();
+    private final ImmutableMap.Builder<String, Arg> environment = ImmutableMap.builder();
     private final ImmutableSortedSet.Builder<SourcePath> extraInputs =
         ImmutableSortedSet.naturalOrder();
     private final ImmutableSortedSet.Builder<BuildRule> extraDeps =
@@ -142,6 +159,21 @@ public class CommandTool implements Tool {
     }
 
     /**
+     * Adds an environment variable key=value.
+     */
+    public Builder addEnvironment(String key, String format, SourcePath... inputs) {
+      environment.put(key, new Arg(format, ImmutableList.copyOf(inputs)));
+      return this;
+    }
+
+    /**
+     * Add a `SourcePath` as an environment variable value.
+     */
+    public Builder addEnvironment(String key, SourcePath value) {
+      return addEnvironment(key, "%s", value);
+    }
+
+    /**
      * Adds additional non-argument inputs to the tool.
      */
     public Builder addInputs(Iterable<? extends SourcePath> inputs) {
@@ -166,7 +198,12 @@ public class CommandTool implements Tool {
     }
 
     public CommandTool build() {
-      return new CommandTool(baseTool, args.build(), extraInputs.build(), extraDeps.build());
+      return new CommandTool(
+          baseTool,
+          args.build(),
+          environment.build(),
+          extraInputs.build(),
+          extraDeps.build());
     }
 
   }

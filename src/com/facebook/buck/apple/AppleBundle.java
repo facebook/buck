@@ -338,6 +338,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         stepsBuilder.add(
             new DsymStep(
                 getProjectFilesystem(),
+                dsymutil.getEnvironment(getResolver()),
                 dsymutil.getCommandPrefix(getResolver()),
                 bundleBinaryPath,
                 dsymPath));
@@ -357,7 +358,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
                         .addAll(strip.getCommandPrefix(getResolver()))
                         .add("-S")
                         .add(getProjectFilesystem().resolve(bundleBinaryPath).toString())
-                        .build()))
+                        .build(),
+                    strip.getEnvironment(getResolver())))
                     .execute(context);
               } else {
                 LOG.info("Not stripping code-signed binary.");
@@ -629,6 +631,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
+              ibtool.getEnvironment(getResolver()),
               ibtool.getCommandPrefix(getResolver()),
               ImmutableList.of("--target-device", "watch", "--compile"),
               sourcePath,
@@ -637,6 +640,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
+              ibtool.getEnvironment(getResolver()),
               ibtool.getCommandPrefix(getResolver()),
               ImmutableList.of("--target-device", "watch", "--link"),
               compiledStoryboardPath,
@@ -653,6 +657,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
+              ibtool.getEnvironment(getResolver()),
               ibtool.getCommandPrefix(getResolver()),
               ImmutableList.of("--compile"),
               sourcePath,
@@ -690,6 +695,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         stepsBuilder.add(
             new IbtoolStep(
                 getProjectFilesystem(),
+                ibtool.getEnvironment(getResolver()),
                 ibtool.getCommandPrefix(getResolver()),
                 ImmutableList.of("--compile"),
                 sourcePath,

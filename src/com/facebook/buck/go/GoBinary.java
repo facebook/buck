@@ -32,13 +32,14 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
 public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @AddToRuleKey
-  private final GoTool linker;
+  private final Tool linker;
   @AddToRuleKey
   private final ImmutableList<String> linkerFlags;
   @AddToRuleKey
@@ -55,7 +56,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
       Linker cxxLinker,
       GoSymlinkTree linkTree,
       GoLinkable mainObject,
-      GoTool linker,
+      Tool linker,
       ImmutableList<String> linkerFlags) {
     super(params, resolver);
     this.cxxLinker = cxxLinker;
@@ -82,11 +83,16 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    // There is no way to specify real-ld environment variables to the go linker - just hope
+    // that the two sets don't collide.
+    ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
+    environment.putAll(cxxLinker.getEnvironment(getResolver()));
+    environment.putAll(linker.getEnvironment(getResolver()));
     return ImmutableList.<Step>of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
-            linker.getGoRoot(),
+            environment.build(),
             cxxLinker.getCommandPrefix(getResolver()),
             linker.getCommandPrefix(getResolver()),
             linkerFlags,

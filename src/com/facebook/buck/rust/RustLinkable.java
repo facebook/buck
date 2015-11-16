@@ -107,6 +107,7 @@ abstract class RustLinkable extends AbstractBuildRule {
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new RustCompileStep(
             getProjectFilesystem().getRootPath(),
+            compiler.getEnvironment(getResolver()),
             compiler.getCommandPrefix(getResolver()),
             flags,
             features,

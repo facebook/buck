@@ -20,9 +20,14 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import java.nio.file.Path;
 
 public class HalideCompilerStep extends ShellStep {
+  // The list of environment variables needed to run our generated compiler.
+  private final ImmutableMap<String, String> environment;
+
   // The list of arguments needed to run our generated compiler.
   private final ImmutableList<String> compilerPrefix;
 
@@ -42,12 +47,14 @@ public class HalideCompilerStep extends ShellStep {
 
   public HalideCompilerStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> compilerPrefix,
       Path outputDir,
       String funcName,
       Optional<String> halideTarget,
       boolean headerOnly) {
     super(workingDirectory);
+    this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
     this.funcName = funcName;
@@ -71,6 +78,11 @@ public class HalideCompilerStep extends ShellStep {
 
     builder.add(funcName);
     return builder.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

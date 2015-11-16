@@ -82,6 +82,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     super(
         params,
         resolver,
+        executable.getEnvironment(resolver),
         env,
         args,
         additionalDeps,

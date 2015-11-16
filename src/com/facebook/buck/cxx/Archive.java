@@ -69,6 +69,7 @@ public class Archive extends AbstractBuildRule {
         new RmStep(getProjectFilesystem(), output, /* shouldForceDeletion */ true),
         new ArchiveStep(
             getProjectFilesystem().getRootPath(),
+            archiver.getEnvironment(getResolver()),
             archiver.getCommandPrefix(getResolver()),
             output,
             getResolver().deprecatedAllPaths(inputs)),
