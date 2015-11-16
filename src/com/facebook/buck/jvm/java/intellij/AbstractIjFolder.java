@@ -31,14 +31,17 @@ import java.nio.file.Path;
 @BuckStyleImmutable
 abstract class AbstractIjFolder {
   public enum Type {
-    EXCLUDE_FOLDER("excludeFolder"),
-    SOURCE_FOLDER("sourceFolder"),
-    TEST_FOLDER("sourceFolder"); // The test folder is a sourceFolder with a separate 'isTest' flag.
+    EXCLUDE_FOLDER("excludeFolder", false),
+    SOURCE_FOLDER("sourceFolder", true),
+    // test folders are sourceFolders with a separate 'isTest' flag.
+    TEST_FOLDER("sourceFolder", true);
 
     private final String ijName;
+    private final boolean isCoalescent;
 
-    Type(String ijName) {
+    Type(String ijName, boolean isCoalescent) {
       this.ijName = ijName;
+      this.isCoalescent = isCoalescent;
     }
 
     /**
@@ -46,6 +49,14 @@ abstract class AbstractIjFolder {
      */
     public String getIjName() {
       return ijName;
+    }
+
+    /**
+     * @return true if the folder can be coalesced with others of the same type
+     */
+
+    public boolean isCoalescent() {
+      return isCoalescent;
     }
 
     /**

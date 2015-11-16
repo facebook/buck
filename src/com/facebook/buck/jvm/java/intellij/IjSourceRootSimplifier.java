@@ -48,9 +48,6 @@ public class IjSourceRootSimplifier {
     this.javaPackageFinder = javaPackageFinder;
   }
 
-  private static final ImmutableSet<IjFolder.Type> MERGABLE_FOLDER_TYPES =
-      ImmutableSet.of(AbstractIjFolder.Type.SOURCE_FOLDER, AbstractIjFolder.Type.TEST_FOLDER);
-
   /**
    * Merges {@link IjFolder}s of the same type and package prefix.
    *
@@ -66,10 +63,10 @@ public class IjSourceRootSimplifier {
     ImmutableSet.Builder<IjFolder> foldersToMergeBuilder = ImmutableSet.builder();
 
     for (IjFolder folder : folders) {
-      if (!MERGABLE_FOLDER_TYPES.contains(folder.getType())) {
-        mergedFoldersBuilder.add(folder);
-      } else {
+      if (folder.getType().isCoalescent()) {
         foldersToMergeBuilder.add(folder);
+      } else {
+        mergedFoldersBuilder.add(folder);
       }
     }
 
