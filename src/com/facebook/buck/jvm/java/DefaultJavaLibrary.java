@@ -63,6 +63,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.reflect.ClassPath;
@@ -347,7 +348,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       workingDirectory = Optional.of(scratchDir);
 
-      JavacToJarStepFactory javacToJarStepFactory = new JavacToJarStepFactory(
+      JavacStepFactory javacStepFactory = new JavacStepFactory(
           outputDirectory,
           workingDirectory,
           getJavaSrcs(),
@@ -357,14 +358,18 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           target,
           suggestBuildRules,
           getResolver(),
-          getProjectFilesystem(),
-          pathToOutputFile,
-          ImmutableSortedSet.of(outputDirectory),
-          null,
-          null,
-          intermediateCommands);
+          getProjectFilesystem()
+      );
 
-      javacToJarStepFactory.getJavacToJarStep(commands);
+      commands.add(javacStepFactory.createCompileStep());
+      commands.addAll(Lists.newCopyOnWriteArrayList(intermediateCommands));
+      commands.add(
+          new JarDirectoryStep(
+              getProjectFilesystem(),
+              pathToOutputFile,
+              ImmutableSortedSet.of(outputDirectory),
+              /* mainClass */null,
+              /* manifestFile */null));
   }
 
   private Path getPathToAbiOutputDir() {

@@ -156,7 +156,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             /* compressionLevel */ 0,
         fatJarDir);
 
-    JavacToJarStepFactory javacToJarStepFactory = new JavacToJarStepFactory(
+    JavacStepFactory javacStepFactory = new JavacStepFactory(
         fatJarDir,
         Optional.<Path>absent(),
         ImmutableSortedSet.copyOf(javaSourceFilePaths),
@@ -166,15 +166,21 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         getBuildTarget(),
         Optional.<JavacStep.SuggestBuildRules>absent(),
         getResolver(),
-        getProjectFilesystem(),
-        getOutputPath(),
-        ImmutableSortedSet.of(zipped),
-        FatJarMain.class.getName(),
-        /* manifestFile */ null,
-        ImmutableList.of(zipStep)
+        getProjectFilesystem()
+        /* manifestFile */
     );
 
-    javacToJarStepFactory.getJavacToJarStep(steps);
+    steps.add(javacStepFactory.createCompileStep());
+    steps.add(zipStep);
+    steps.add(
+        new JarDirectoryStep(
+            getProjectFilesystem(),
+            getOutputPath(),
+            ImmutableSortedSet.of(zipped),
+            FatJarMain.class.getName(),
+            /* manifestFile */ null));
+
+
     return steps.build();
   }
 
