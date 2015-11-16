@@ -481,7 +481,8 @@ def is_java8():
     if _java8 is not None:
         return _java8
     try:
-        output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
+        cmd = ['java', '-Xms64m', '-version']
+        output = check_output(cmd, stderr=subprocess.STDOUT)
         version_line = output.strip().splitlines()[0]
         m = re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
         _java8 = bool(m)
