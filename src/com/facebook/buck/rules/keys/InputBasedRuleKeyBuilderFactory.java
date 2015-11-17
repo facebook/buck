@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -40,7 +39,7 @@ import javax.annotation.Nonnull;
 public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
 
   private final InputHandling inputHandling;
-  private final LoadingCache<RuleKeyAppendable, Pair<RuleKey, ImmutableSet<BuildRule>>> cache;
+  private final LoadingCache<RuleKeyAppendable, Result> cache;
 
   protected InputBasedRuleKeyBuilderFactory(
       final FileHashCache hashCache,
@@ -51,13 +50,13 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
 
     // Build the cache around the sub-rule-keys and their dep lists.
     cache = CacheBuilder.newBuilder().weakKeys().build(
-        new CacheLoader<RuleKeyAppendable, Pair<RuleKey, ImmutableSet<BuildRule>>>() {
+        new CacheLoader<RuleKeyAppendable, Result>() {
           @Override
-          public Pair<RuleKey, ImmutableSet<BuildRule>> load(
+          public Result load(
               @Nonnull RuleKeyAppendable appendable) {
             Builder subKeyBuilder = new Builder(pathResolver, hashCache);
             appendable.appendToRuleKey(subKeyBuilder);
-            return subKeyBuilder.buildWithDeps();
+            return subKeyBuilder.buildResult();
           }
         });
   }
@@ -79,9 +78,9 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
       // are explicit dependencies of the rule.
       @Override
       public RuleKey build() {
-        Pair<RuleKey, ImmutableSet<BuildRule>> result = buildWithDeps();
-        Preconditions.checkState(rule.getDeps().containsAll(result.getSecond()));
-        return result.getFirst();
+        Result result = buildResult();
+        Preconditions.checkState(rule.getDeps().containsAll(result.getDeps()));
+        return result.getRuleKey();
       }
 
     };
@@ -92,6 +91,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     private final SourcePathResolver pathResolver;
 
     private final ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
+    private final ImmutableSet.Builder<SourcePath> inputs = ImmutableSet.builder();
 
     private Builder(
         SourcePathResolver pathResolver,
@@ -105,9 +105,10 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
         SourcePathResolver resolver,
         FileHashCache hashCache,
         RuleKeyAppendable appendable) {
-      Pair<RuleKey, ImmutableSet<BuildRule>> result = cache.getUnchecked(appendable);
-      deps.addAll(result.getSecond());
-      return result.getFirst();
+      Result result = cache.getUnchecked(appendable);
+      deps.addAll(result.getDeps());
+      inputs.addAll(result.getInputs());
+      return result.getRuleKey();
     }
 
     // Input-based rule keys are evaluated after all dependencies for a rule are available on
@@ -119,6 +120,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
         deps.addAll(pathResolver.getRule(sourcePath).asSet());
         setSingleValue(pathResolver.deprecatedGetPath(sourcePath));
       }
+      inputs.add(sourcePath);
       return this;
     }
 
@@ -131,8 +133,8 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     }
 
     // Build the rule key and the list of deps found from this builder.
-    protected Pair<RuleKey, ImmutableSet<BuildRule>> buildWithDeps() {
-      return new Pair<>(super.build(), deps.build());
+    protected Result buildResult() {
+      return new Result(super.build(), deps.build(), inputs.build());
     }
 
   }
@@ -152,6 +154,35 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
      * where the list of inputs will be provided explicitly.
      */
     IGNORE,
+
+  }
+
+  protected static class Result {
+
+    private final RuleKey ruleKey;
+    private final ImmutableSet<BuildRule> deps;
+    private final ImmutableSet<SourcePath> inputs;
+
+    public Result(
+        RuleKey ruleKey,
+        ImmutableSet<BuildRule> deps,
+        ImmutableSet<SourcePath> inputs) {
+      this.ruleKey = ruleKey;
+      this.deps = deps;
+      this.inputs = inputs;
+    }
+
+    public RuleKey getRuleKey() {
+      return ruleKey;
+    }
+
+    public ImmutableSet<BuildRule> getDeps() {
+      return deps;
+    }
+
+    public ImmutableSet<SourcePath> getInputs() {
+      return inputs;
+    }
 
   }
 
