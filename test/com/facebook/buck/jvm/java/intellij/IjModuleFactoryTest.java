@@ -30,9 +30,9 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -215,7 +215,7 @@ public class IjModuleFactoryTest {
 
     TargetNode<?> androidBinary = AndroidBinaryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/test:test"))
-        .setManifest(new TestSourcePath("java/com/example/test/AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("java/com/example/test/AndroidManifest.xml"))
         .setOriginalDeps(ImmutableSortedSet.of(javaLibBase.getBuildTarget()))
         .build();
 
@@ -426,7 +426,7 @@ public class IjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     String manifestName = "Manifest.xml";
-    SourcePath manifestPath = new TestSourcePath(manifestName);
+    SourcePath manifestPath = new FakeSourcePath(manifestName);
     TargetNode<?> androidBinary = AndroidBinaryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example:droid"))
         .setManifest(manifestPath)
@@ -453,7 +453,7 @@ public class IjModuleFactoryTest {
           @Override
           public Path getAndroidManifestPath(
               TargetNode<AndroidBinaryDescription.Arg> targetNode) {
-            return ((TestSourcePath) targetNode.getConstructorArg().manifest).getRelativePath();
+            return ((FakeSourcePath) targetNode.getConstructorArg().manifest).getRelativePath();
           }
 
           @Override
@@ -483,7 +483,7 @@ public class IjModuleFactoryTest {
     String sourceName = "cpp/lib/foo.cpp";
     TargetNode<?> cxxLibrary = new CxxLibraryBuilder(
         BuildTargetFactory.newInstance("//cpp/lib:foo"))
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath(sourceName))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath(sourceName))))
         .build();
 
     Path moduleBasePath = Paths.get("java/com/example/base");

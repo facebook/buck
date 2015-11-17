@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 
 import java.nio.file.Path;
 
@@ -35,7 +35,7 @@ public class AndroidPrebuiltAarBuilder
  }
 
  public AndroidPrebuiltAarBuilder setBinaryAar(Path binaryAar) {
-  arg.aar = new TestSourcePath(binaryAar.toString());
+  arg.aar = new FakeSourcePath(binaryAar.toString());
   return this;
  }
 }

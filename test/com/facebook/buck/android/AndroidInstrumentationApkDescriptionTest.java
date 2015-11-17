@@ -25,8 +25,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -57,11 +57,11 @@ public class AndroidInstrumentationApkDescriptionTest {
             new Keystore(
                 new FakeBuildRuleParamsBuilder("//:keystore").build(),
                 pathResolver,
-                new TestSourcePath("store"),
-                new TestSourcePath("properties")));
+                new FakeSourcePath("store"),
+                new FakeSourcePath("properties")));
     AndroidBinary androidBinary =
         (AndroidBinary) AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
-            .setManifest(new TestSourcePath("manifest.xml"))
+            .setManifest(new FakeSourcePath("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
@@ -70,7 +70,7 @@ public class AndroidInstrumentationApkDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk) AndroidInstrumentationApkBuilder.createBuilder(target)
-            .setManifest(new TestSourcePath("manifest.xml"))
+            .setManifest(new FakeSourcePath("manifest.xml"))
             .setApk(androidBinary.getBuildTarget())
             .build(ruleResolver);
     assertThat(androidInstrumentationApk.getDeps(), Matchers.hasItem(transitiveDep));

@@ -25,8 +25,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
@@ -85,7 +85,7 @@ public class AndroidManifestTest {
         new FakeBuildRuleParamsBuilder("//java/com/example:manifest").build();
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.skeleton = new TestSourcePath("java/com/example/AndroidManifestSkeleton.xml");
+    arg.skeleton = new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml");
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     return description
         .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);

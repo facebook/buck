@@ -45,13 +45,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -150,7 +150,7 @@ public class AndroidBinaryGraphEnhancerTest {
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         aaptPackageResourcesParams,
         new SourcePathResolver(ruleResolver),
-        /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         createMock(FilteredResourcesProvider.class),
         ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<SourcePath>of(),
@@ -167,11 +167,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.of(javaDep2BuildTarget),
             /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
         .addClasspathEntry(
-            ((HasJavaClassHashes) javaDep1), new TestSourcePath("ignored"))
+            ((HasJavaClassHashes) javaDep1), new FakeSourcePath("ignored"))
         .addClasspathEntry(
-            ((HasJavaClassHashes) javaDep2), new TestSourcePath("ignored"))
+            ((HasJavaClassHashes) javaDep2), new FakeSourcePath("ignored"))
         .addClasspathEntry(
-            ((HasJavaClassHashes) javaLib), new TestSourcePath("ignored"))
+            ((HasJavaClassHashes) javaLib), new FakeSourcePath("ignored"))
         .build();
 
 
@@ -243,7 +243,7 @@ public class AndroidBinaryGraphEnhancerTest {
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
-        new TestSourcePath("AndroidManifest.xml"),
+        new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
@@ -363,7 +363,7 @@ public class AndroidBinaryGraphEnhancerTest {
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
-        new TestSourcePath("AndroidManifest.xml"),
+        new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
@@ -407,7 +407,7 @@ public class AndroidBinaryGraphEnhancerTest {
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
-        new TestSourcePath("AndroidManifest.xml"),
+        new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
@@ -461,7 +461,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 null,
                 ImmutableSortedSet.<SourcePath>of(),
                 Optional.<SourcePath>absent(),
-                new TestSourcePath("manifest"),
+                new FakeSourcePath("manifest"),
                 false));
 
     // set it up.
@@ -478,7 +478,7 @@ public class AndroidBinaryGraphEnhancerTest {
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
-        new TestSourcePath("AndroidManifest.xml"),
+        new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
