@@ -75,7 +75,7 @@ public class DefaultIjLibraryFactoryTest {
     libraryFactoryResolver = new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
       @Override
       public Path getPath(SourcePath path) {
-        return sourcePathResolver.deprecatedGetPath(path);
+        return sourcePathResolver.getRelativePath(path);
       }
 
       @Override
