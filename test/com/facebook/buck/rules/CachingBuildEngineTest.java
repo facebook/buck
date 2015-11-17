@@ -79,7 +79,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -1211,10 +1210,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             return ImmutableList.of(input);
           }
           @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
-          }
-          @Override
           public Path getPathToOutput() {
             return output;
           }
@@ -1308,10 +1303,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             return ImmutableList.of(input);
           }
           @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
-          }
-          @Override
           public Path getPathToOutput() {
             return output;
           }
@@ -1388,10 +1379,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
             return ImmutableList.of(input);
-          }
-          @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
           }
           @Override
           public Path getPathToOutput() {
@@ -1480,10 +1467,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
             return ImmutableList.of();
-          }
-          @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
           }
           @Override
           public Path getPathToOutput() {

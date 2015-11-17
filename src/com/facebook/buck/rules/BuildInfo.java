@@ -63,11 +63,6 @@ class BuildInfo {
   static final String METADATA_KEY_FOR_DEP_FILE = "DEP_FILE";
 
   /**
-   * Key for the input map of dependencies of a build rule.
-   */
-  static final String METADATA_KEY_FOR_INPUT_MAP = "INPUT_MAP";
-
-  /**
    * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
    */
   static final String METADATA_KEY_FOR_TARGET = "TARGET";

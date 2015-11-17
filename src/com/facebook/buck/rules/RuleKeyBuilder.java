@@ -31,7 +31,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -193,16 +192,6 @@ public class RuleKeyBuilder {
         }
         feed("{".getBytes());
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-          setReflectively(key, entry.getKey());
-          feed(" -> ".getBytes());
-          setReflectively(key, entry.getValue());
-        }
-        return feed("}".getBytes());
-      }
-
-      if (val instanceof Multimap) {
-        feed("{".getBytes());
-        for (Map.Entry<?, ?> entry : ((Multimap<?, ?>) val).asMap().entrySet()) {
           setReflectively(key, entry.getKey());
           feed(" -> ".getBytes());
           setReflectively(key, entry.getValue());

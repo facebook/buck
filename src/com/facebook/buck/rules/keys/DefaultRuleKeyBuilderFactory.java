@@ -41,33 +41,6 @@ import javax.annotation.Nonnull;
  */
 public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
-  protected static final Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>
-      DEFAULT_ADD_DEPS_TO_RULE_KEY =
-      new Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>() {
-        @Override
-        public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
-          BuildRule rule = input.getSecond();
-          if (rule instanceof AbstractBuildRule) {
-            // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
-            // rules should explicitly take the needed sub-sets of deps as constructor args.
-            AbstractBuildRule abstractBuildRule = (AbstractBuildRule) rule;
-            return input.getFirst()
-                .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
-                .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
-          } else {
-            return input.getFirst().setReflectively("buck.deps", rule.getDeps());
-          }
-        }
-      };
-  protected static final Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>
-      NOOP_ADD_DEPS_TO_RULE_KEY =
-      new Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>() {
-        @Override
-        public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
-          return input.getFirst();
-        }
-      };
-
   protected final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
   private final FileHashCache hashCache;
   private final SourcePathResolver pathResolver;
@@ -100,7 +73,21 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
     this(
         hashCache,
         pathResolver,
-        DEFAULT_ADD_DEPS_TO_RULE_KEY);
+        new Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>() {
+          @Override
+          public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
+            if (input.getSecond() instanceof AbstractBuildRule) {
+              // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
+              // rules should explicitly take the needed sub-sets of deps as constructor args.
+              AbstractBuildRule abstractBuildRule = (AbstractBuildRule) input.getSecond();
+              return input.getFirst()
+                  .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
+                  .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
+            } else {
+              return input.getFirst().setReflectively("buck.deps", input.getSecond().getDeps());
+            }
+          }
+        });
   }
 
   protected RuleKeyBuilder newBuilder(

@@ -36,7 +36,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Ordering;
 
 import java.io.IOException;
@@ -375,12 +374,8 @@ public class CxxPreprocessAndCompile
     return inputs.build();
   }
 
-  @Override
-  public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() throws IOException {
-    return preprocessDelegate.get().getSymlinkTreeInputMap(getDeps(), readDepFileLines());
-  }
-
   private ImmutableList<String> readDepFileLines() throws IOException {
     return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
   }
+
 }
