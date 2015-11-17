@@ -16,9 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-import static com.google.common.base.Optional.fromNullable;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
@@ -63,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.reflect.ClassPath;
@@ -134,12 +133,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
+  private final Optional<Path> generatedSourceFolder;
 
-
-  // TODO(jacko): This really should be final, but we need to refactor how we get the
-  // AndroidPlatformTarget first before it can be.
   @AddToRuleKey
-  private JavacOptions javacOptions;
+  private final JavacStepFactory javacStepFactory;
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
@@ -187,13 +184,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePathResolver resolver,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
+      Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
       ImmutableSet<Path> additionalClasspathEntries,
-      JavacOptions javacOptions,
+      JavacStepFactory javacStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -202,6 +200,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         resolver,
         srcs,
         resources,
+        generatedSourceFolder,
         proguardConfig,
         postprocessClassesCommands,
         exportedDeps,
@@ -215,7 +214,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             }),
         additionalClasspathEntries,
-        javacOptions,
+        javacStepFactory,
         resourcesRoot,
         mavenCoords,
         tests);
@@ -226,6 +225,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       final SourcePathResolver resolver,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
+      Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
@@ -233,7 +233,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePath abiJar,
       final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
-      JavacOptions javacOptions,
+      JavacStepFactory javacStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -246,6 +246,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             }),
         resolver);
+    this.javacStepFactory = javacStepFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -265,7 +266,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
     this.additionalClasspathEntries = additionalClasspathEntries;
-    this.javacOptions = javacOptions;
     this.resourcesRoot = resourcesRoot;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
@@ -320,51 +320,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
-  }
-
-  /**
-   * @param outputDirectory Directory to write class files to
-   * @param declaredClasspathEntries Classpaths of all declared dependencies.
-   * @param javacOptions javac configuration.
-   * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
-   * @param commands List of steps to add to.
-   */
-  @VisibleForTesting
-  void createCommandsForJavacJar(
-      Path outputDirectory,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      JavacOptions javacOptions,
-      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
-      ImmutableList.Builder<Step> commands,
-      BuildTarget target,
-      Path pathToOutputFile,
-      ImmutableList<Step> intermediateCommands) {
-      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
-      commands.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
-
-      Optional<Path> workingDirectory;
-      Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
-      commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
-      workingDirectory = Optional.of(scratchDir);
-
-      JavacToJarStepFactory javacToJarStepFactory = new JavacToJarStepFactory(
-          outputDirectory,
-          workingDirectory,
-          getJavaSrcs(),
-          Optional.of(pathToSrcsList),
-          declaredClasspathEntries,
-          javacOptions,
-          target,
-          suggestBuildRules,
-          getResolver(),
-          getProjectFilesystem(),
-          pathToOutputFile,
-          ImmutableSortedSet.of(outputDirectory),
-          null,
-          null,
-          intermediateCommands);
-
-      javacToJarStepFactory.getJavacToJarStep(commands);
+    this.generatedSourceFolder = generatedSourceFolder;
   }
 
   private Path getPathToAbiOutputDir() {
@@ -433,17 +389,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return fromNullable(
-        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName());
+    return generatedSourceFolder;
   }
 
   @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
     return exportedDeps;
-  }
-
-  public JavacOptions getJavacOptions() {
-    return javacOptions;
   }
 
   /**
@@ -458,27 +409,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Only override the bootclasspath if this rule is supposed to compile Android code.
-    if (getProperties().is(ANDROID)) {
-      this.javacOptions = JavacOptions.builder(javacOptions)
-          .setBootclasspath(context.getAndroidBootclasspathSupplier().get())
-          .build();
-    }
-
     ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries =
         ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .putAll(getDeclaredClasspathEntries())
             .putAll(this, additionalClasspathEntries)
             .build();
 
-    // Javac requires that the root directory for generated sources already exist.
-    Path annotationGenFolder =
-        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName();
-    if (annotationGenFolder != null) {
-      MakeCleanDirectoryStep mkdirGeneratedSources =
-          new MakeCleanDirectoryStep(getProjectFilesystem(), annotationGenFolder);
-      steps.add(mkdirGeneratedSources);
-      buildableContext.recordArtifact(annotationGenFolder);
-    }
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
@@ -510,6 +446,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .addAll(provided)
         .build();
 
+
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToAbiOutputDir());
     steps.add(mkdir);
@@ -535,18 +472,38 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     if (!getJavaSrcs().isEmpty()) {
       Path output = outputJar.get();
       // This adds the javac command, along with any supporting commands.
-      createCommandsForJavacJar(
-          outputDirectory,
+      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+      steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+
+      Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
+      Optional<Path> workingDirectory = Optional.of(scratchDir);
+
+      javacStepFactory.createCompileStep(
+          context,
+          getJavaSrcs(),
+          target,
+          getResolver(),
+          getProjectFilesystem(),
           declared,
-          javacOptions,
+          outputDirectory,
+          workingDirectory,
+          Optional.of(pathToSrcsList),
           suggestBuildRule,
           steps,
-          target,
-          output,
-          addPostprocessClassesCommands(
+          buildableContext);
+
+      steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
               getProjectFilesystem().getRootPath(),
               postprocessClassesCommands,
-              outputDirectory));
+              outputDirectory)));
+      steps.add(
+          new JarDirectoryStep(
+              getProjectFilesystem(),
+              output,
+              ImmutableSortedSet.of(outputDirectory),
+              /* mainClass */null,
+              /* manifestFile */null));
     }
 
 

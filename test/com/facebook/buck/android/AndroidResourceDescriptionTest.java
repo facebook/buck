@@ -20,8 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 
 import org.junit.Rule;
@@ -90,9 +90,9 @@ public class AndroidResourceDescriptionTest {
         inputs,
         containsInAnyOrder(
             // This clever cast saves us mucking around with generics.
-            (SourcePath) new TestSourcePath(filesystem, "res/image.png"),
-            new TestSourcePath(filesystem, "res/layout.xml"),
-            new TestSourcePath(filesystem, "res/_file"),
-            new TestSourcePath(filesystem, "res/dirs/values/strings.xml")));
+            (SourcePath) new FakeSourcePath(filesystem, "res/image.png"),
+            new FakeSourcePath(filesystem, "res/layout.xml"),
+            new FakeSourcePath(filesystem, "res/_file"),
+            new FakeSourcePath(filesystem, "res/dirs/values/strings.xml")));
   }
 }

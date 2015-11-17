@@ -18,9 +18,9 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -51,7 +51,7 @@ public class SrcZipAwareFileBundlerTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableList.<Step>builder(),
         dest,
-        ImmutableSet.<SourcePath>of(new TestSourcePath("src")),
+        ImmutableSet.<SourcePath>of(new FakeSourcePath("src")),
         false);
   }
 

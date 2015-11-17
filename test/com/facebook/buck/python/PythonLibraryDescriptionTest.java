@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +41,7 @@ public class PythonLibraryDescriptionTest {
   public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     String sourceName = "main.py";
-    SourcePath source = new TestSourcePath("foo/" + sourceName);
+    SourcePath source = new FakeSourcePath("foo/" + sourceName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -72,8 +72,8 @@ public class PythonLibraryDescriptionTest {
   @Test
   public void platformSrcs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new TestSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new TestSourcePath("foo/b.py");
+    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
+    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
     PythonLibrary library =
         (PythonLibrary) new PythonLibraryBuilder(target)
             .setPlatformSrcs(
@@ -94,8 +94,8 @@ public class PythonLibraryDescriptionTest {
   @Test
   public void platformResources() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new TestSourcePath("foo/a.dat");
-    SourcePath unmatchedSource = new TestSourcePath("foo/b.dat");
+    SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
+    SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");
     PythonLibrary library =
         (PythonLibrary) new PythonLibraryBuilder(target)
             .setPlatformResources(

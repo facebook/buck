@@ -156,6 +156,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 pathResolver,
                 args.srcs.get(),
                 validateResources(pathResolver, args, params.getProjectFilesystem()),
+                javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
                 args.postprocessClassesCommands.get(),
@@ -163,7 +164,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                javacOptions,
+                new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.tests.get()));
@@ -238,12 +239,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     if (args.compiler.isPresent()) {
-      Either<BuiltInJavac, SourcePath> left = args.compiler.get();
+      Either<BuiltInJavac, SourcePath> either = args.compiler.get();
 
-      if (left.isRight()) {
-        SourcePath right = left.getRight();
+      if (either.isRight()) {
+        SourcePath sourcePath = either.getRight();
 
-        Optional<BuildRule> possibleRule = resolver.getRule(right);
+        Optional<BuildRule> possibleRule = resolver.getRule(sourcePath);
         if (possibleRule.isPresent()) {
           BuildRule rule = possibleRule.get();
           if (rule instanceof PrebuiltJar) {
@@ -253,7 +254,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
           }
         } else {
-          builder.setJavacPath(resolver.deprecatedGetPath(right));
+          builder.setJavacPath(resolver.deprecatedGetPath(sourcePath));
         }
       }
     } else {

@@ -53,11 +53,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -131,9 +131,9 @@ public class NewNativeTargetProjectMutatorTest {
   public void testSourceGroups() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    SourcePath foo = new TestSourcePath("Group1/foo.m");
-    SourcePath bar = new TestSourcePath("Group1/bar.m");
-    SourcePath baz = new TestSourcePath("Group2/baz.m");
+    SourcePath foo = new FakeSourcePath("Group1/foo.m");
+    SourcePath bar = new FakeSourcePath("Group1/bar.m");
+    SourcePath baz = new FakeSourcePath("Group2/baz.m");
     mutator.setSourcesWithFlags(
         ImmutableSet.of(
             SourceWithFlags.of(foo),
@@ -163,9 +163,9 @@ public class NewNativeTargetProjectMutatorTest {
   public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    SourcePath foo = new TestSourcePath("HeaderGroup1/foo.h");
-    SourcePath bar = new TestSourcePath("HeaderGroup1/bar.h");
-    SourcePath baz = new TestSourcePath("HeaderGroup2/baz.h");
+    SourcePath foo = new FakeSourcePath("HeaderGroup1/foo.h");
+    SourcePath bar = new FakeSourcePath("HeaderGroup1/bar.h");
+    SourcePath baz = new FakeSourcePath("HeaderGroup2/baz.h");
     mutator.setPublicHeaders(ImmutableSet.of(bar, baz));
     mutator.setPrivateHeaders(ImmutableSet.of(foo));
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
@@ -193,7 +193,7 @@ public class NewNativeTargetProjectMutatorTest {
   @Test
   public void testPrefixHeaderInSourceGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    SourcePath prefixHeader = new TestSourcePath("Group1/prefix.pch");
+    SourcePath prefixHeader = new FakeSourcePath("Group1/prefix.pch");
     mutator.setPrefixHeader(Optional.of(prefixHeader));
 
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
@@ -238,7 +238,7 @@ public class NewNativeTargetProjectMutatorTest {
 
     AppleResourceDescription appleResourceDescription = new AppleResourceDescription();
     AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
-    arg.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
+    arg.files = ImmutableSet.<SourcePath>of(new FakeSourcePath("foo.png"));
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
@@ -331,7 +331,7 @@ public class NewNativeTargetProjectMutatorTest {
 
     TargetNode<?> prebuildNode = XcodePrebuildScriptBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
-        .setSrcs(ImmutableSortedSet.<SourcePath>of(new TestSourcePath("script/input.png")))
+        .setSrcs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("script/input.png")))
         .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
         .setCmd("echo \"hello world!\"")
         .build();

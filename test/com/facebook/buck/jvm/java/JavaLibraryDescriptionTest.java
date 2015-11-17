@@ -37,11 +37,11 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -185,7 +185,7 @@ public class JavaLibraryDescriptionTest {
   public void compilerArgWithPathReturnsExternalJavac() {
     Path externalJavac = Paths.get("/foo/bar/javac.exe");
     Either<BuiltInJavac, SourcePath> either =
-        Either.ofRight((SourcePath) new TestSourcePath(externalJavac.toString()));
+        Either.ofRight((SourcePath) new FakeSourcePath(externalJavac.toString()));
 
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
@@ -203,7 +203,7 @@ public class JavaLibraryDescriptionTest {
   @Test
   public void compilerArgTakesPrecedenceOverJavacPathArg() {
     Path externalJavac = Paths.get("/foo/bar/javac.exe");
-    SourcePath sourcePath = new TestSourcePath(externalJavac.toString());
+    SourcePath sourcePath = new FakeSourcePath(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);

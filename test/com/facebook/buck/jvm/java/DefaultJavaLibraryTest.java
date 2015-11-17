@@ -47,13 +47,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -181,7 +181,7 @@ public class DefaultJavaLibraryTest {
     try {
       JavaLibraryBuilder
           .createBuilder(BuildTargetFactory.newInstance("//library:code"))
-          .addResource(new TestSourcePath("library"))
+          .addResource(new FakeSourcePath("library"))
           .build(new BuildRuleResolver(), filesystem);
       fail("An exception should have been thrown because a directory was passed as a resource.");
     } catch (HumanReadableException e) {
@@ -979,17 +979,18 @@ public class DefaultJavaLibraryTest {
         new SourcePathResolver(new BuildRuleResolver()),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
+        DEFAULT_JAVAC_OPTIONS.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.<SourcePath>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* abiJar */ new TestSourcePath("abi.jar"),
+        /* abiJar */ new FakeSourcePath("abi.jar"),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        DEFAULT_JAVAC_OPTIONS,
+        new JavacStepFactory(DEFAULT_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
-    };
+        };
   }
 
   @Test
@@ -1072,10 +1073,10 @@ public class DefaultJavaLibraryTest {
         .addSrc(Paths.get("bdeafhkgcji.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
-        .addResource(new TestSourcePath("becgkaifhjd.txt"))
-        .addResource(new TestSourcePath("bkhajdifcge.txt"))
-        .addResource(new TestSourcePath("cabfghjekid.txt"))
-        .addResource(new TestSourcePath("chkdbafijge.txt"))
+        .addResource(new FakeSourcePath("becgkaifhjd.txt"))
+        .addResource(new FakeSourcePath("bkhajdifcge.txt"))
+        .addResource(new FakeSourcePath("cabfghjekid.txt"))
+        .addResource(new FakeSourcePath("chkdbafijge.txt"))
         .build(resolver1, filesystem);
 
     BuildRuleResolver resolver2 = new BuildRuleResolver();
@@ -1086,10 +1087,10 @@ public class DefaultJavaLibraryTest {
         .addSrc(Paths.get("bdehgaifjkc.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
         .addSrc(Paths.get("agifhbkjdec.java"))
-        .addResource(new TestSourcePath("chkdbafijge.txt"))
-        .addResource(new TestSourcePath("cabfghjekid.txt"))
-        .addResource(new TestSourcePath("bkhajdifcge.txt"))
-        .addResource(new TestSourcePath("becgkaifhjd.txt"))
+        .addResource(new FakeSourcePath("chkdbafijge.txt"))
+        .addResource(new FakeSourcePath("cabfghjekid.txt"))
+        .addResource(new FakeSourcePath("bkhajdifcge.txt"))
+        .addResource(new FakeSourcePath("becgkaifhjd.txt"))
         .build(resolver2, filesystem);
 
     ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
@@ -1110,71 +1111,6 @@ public class DefaultJavaLibraryTest {
     RuleKey key1 = ruleKeyBuilderFactory1.build(rule1);
     RuleKey key2 = ruleKeyBuilderFactory2.build(rule2);
     assertEquals(key1, key2);
-  }
-
-  @Test
-  public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    BuildRule rule = JavaLibraryBuilder
-        .createBuilder(libraryOneTarget)
-        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-        .build(ruleResolver);
-    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
-
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    buildable.createCommandsForJavacJar(
-        buildable.getPathToOutput(),
-        ImmutableSortedSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
-        DEFAULT_JAVAC_OPTIONS,
-        Optional.<JavacStep.SuggestBuildRules>absent(),
-        stepsBuilder,
-        libraryOneTarget,
-        buildable.getPathToOutput().resolve("output.jar"),
-        ImmutableList.<Step>of());
-
-    List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
-  }
-
-  @Test
-  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    BuildTarget javacTarget = BuildTargetFactory.newInstance("//langtools:javac");
-    BuildRule javac = PrebuiltJarBuilder.createBuilder(javacTarget)
-        .setBinaryJar(Paths.get("java/src/com/libone/JavacJar.jar"))
-        .build(ruleResolver);
-    BuildRule rule = JavaLibraryBuilder
-        .createBuilder(libraryOneTarget)
-        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-        .setCompiler(javac)
-        .build(ruleResolver);
-    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
-
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    buildable.createCommandsForJavacJar(
-        buildable.getPathToOutput(),
-        ImmutableSortedSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
-        buildable.getJavacOptions(),
-        Optional.<JavacStep.SuggestBuildRules>absent(),
-        stepsBuilder,
-        libraryOneTarget,
-        buildable.getPathToOutput().resolve("output.jar"),
-        ImmutableList.<Step>of()
-    );
-
-    List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
-    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(2)).getJavac()));
-    assertEquals(
-        jsrJavac.getCompilerClassPath(),
-        ImmutableSet.of(
-            new BuildTargetSourcePath(javac.getBuildTarget())));
   }
 
   @Test
@@ -1383,13 +1319,13 @@ public class DefaultJavaLibraryTest {
       return new AndroidLibrary(
           buildRuleParams,
           new SourcePathResolver(new BuildRuleResolver()),
-          ImmutableSet.of(new TestSourcePath(src)),
+          ImmutableSet.of(new FakeSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<SourcePath>absent(),
           /* postprocessClassesCommands */ ImmutableList.<String>of(),
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-          /* abiJar */ new TestSourcePath("abi.jar"),
+          /* abiJar */ new FakeSourcePath("abi.jar"),
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),

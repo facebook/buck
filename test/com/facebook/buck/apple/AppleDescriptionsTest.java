@@ -19,9 +19,9 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -41,46 +41,46 @@ public class AppleDescriptionsTest {
   public void parseAppleHeadersForUseFromOtherTargetsFromSet() {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "prefix/some_file.h", new TestSourcePath("path/to/some_file.h"),
-            "prefix/another_file.h", new TestSourcePath("path/to/another_file.h"),
-            "prefix/a_file.h", new TestSourcePath("different/path/to/a_file.h"),
-            "prefix/file.h", new TestSourcePath("file.h")),
+            "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
+            "prefix/another_file.h", new FakeSourcePath("path/to/another_file.h"),
+            "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
+            "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
             new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             Paths.get("prefix"),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("path/to/some_file.h"),
-                    new TestSourcePath("path/to/another_file.h"),
-                    new TestSourcePath("different/path/to/a_file.h"),
-                    new TestSourcePath("file.h")))));
+                    new FakeSourcePath("path/to/some_file.h"),
+                    new FakeSourcePath("path/to/another_file.h"),
+                    new FakeSourcePath("different/path/to/a_file.h"),
+                    new FakeSourcePath("file.h")))));
   }
 
   @Test
   public void parseAppleHeadersForUseFromTheSameFromSet() {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "some_file.h", new TestSourcePath("path/to/some_file.h"),
-            "another_file.h", new TestSourcePath("path/to/another_file.h"),
-            "a_file.h", new TestSourcePath("different/path/to/a_file.h"),
-            "file.h", new TestSourcePath("file.h")),
+            "some_file.h", new FakeSourcePath("path/to/some_file.h"),
+            "another_file.h", new FakeSourcePath("path/to/another_file.h"),
+            "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
+            "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
             new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("path/to/some_file.h"),
-                    new TestSourcePath("path/to/another_file.h"),
-                    new TestSourcePath("different/path/to/a_file.h"),
-                    new TestSourcePath("file.h")))));
+                    new FakeSourcePath("path/to/some_file.h"),
+                    new FakeSourcePath("path/to/another_file.h"),
+                    new FakeSourcePath("different/path/to/a_file.h"),
+                    new FakeSourcePath("file.h")))));
   }
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromMap() {
     ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
-        "virtual/path.h", new TestSourcePath("path/to/some_file.h"),
-        "another/path.h", new TestSourcePath("path/to/another_file.h"),
-        "another/file.h", new TestSourcePath("different/path/to/a_file.h"),
-        "file.h", new TestSourcePath("file.h"));
+        "virtual/path.h", new FakeSourcePath("path/to/some_file.h"),
+        "another/path.h", new FakeSourcePath("path/to/another_file.h"),
+        "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
+        "file.h", new FakeSourcePath("file.h"));
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
@@ -92,10 +92,10 @@ public class AppleDescriptionsTest {
   @Test
   public void parseAppleHeadersForUseFromTheSameTargetFromMap() {
     ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
-        "virtual/path.h", new TestSourcePath("path/to/some_file.h"),
-        "another/path.h", new TestSourcePath("path/to/another_file.h"),
-        "another/file.h", new TestSourcePath("different/path/to/a_file.h"),
-        "file.h", new TestSourcePath("file.h"));
+        "virtual/path.h", new FakeSourcePath("path/to/some_file.h"),
+        "another/path.h", new FakeSourcePath("path/to/another_file.h"),
+        "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
+        "file.h", new FakeSourcePath("file.h"));
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
@@ -107,36 +107,36 @@ public class AppleDescriptionsTest {
   public void convertToFlatCxxHeadersWithPrefix() {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "prefix/some_file.h", new TestSourcePath("path/to/some_file.h"),
-            "prefix/another_file.h", new TestSourcePath("path/to/another_file.h"),
-            "prefix/a_file.h", new TestSourcePath("different/path/to/a_file.h"),
-            "prefix/file.h", new TestSourcePath("file.h")),
+            "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
+            "prefix/another_file.h", new FakeSourcePath("path/to/another_file.h"),
+            "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
+            "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get("prefix"),
             new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             ImmutableSet.<SourcePath>of(
-                new TestSourcePath("path/to/some_file.h"),
-                new TestSourcePath("path/to/another_file.h"),
-                new TestSourcePath("different/path/to/a_file.h"),
-                new TestSourcePath("file.h"))));
+                new FakeSourcePath("path/to/some_file.h"),
+                new FakeSourcePath("path/to/another_file.h"),
+                new FakeSourcePath("different/path/to/a_file.h"),
+                new FakeSourcePath("file.h"))));
   }
 
   @Test
   public void convertToFlatCxxHeadersWithoutPrefix() {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "some_file.h", new TestSourcePath("path/to/some_file.h"),
-            "another_file.h", new TestSourcePath("path/to/another_file.h"),
-            "a_file.h", new TestSourcePath("different/path/to/a_file.h"),
-            "file.h", new TestSourcePath("file.h")),
+            "some_file.h", new FakeSourcePath("path/to/some_file.h"),
+            "another_file.h", new FakeSourcePath("path/to/another_file.h"),
+            "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
+            "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get(""),
             new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             ImmutableSet.<SourcePath>of(
-                new TestSourcePath("path/to/some_file.h"),
-                new TestSourcePath("path/to/another_file.h"),
-                new TestSourcePath("different/path/to/a_file.h"),
-                new TestSourcePath("file.h"))));
+                new FakeSourcePath("path/to/some_file.h"),
+                new FakeSourcePath("path/to/another_file.h"),
+                new FakeSourcePath("different/path/to/a_file.h"),
+                new FakeSourcePath("file.h"))));
   }
 
   @Test

@@ -19,6 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsAmender;
+import com.facebook.buck.jvm.java.JavacStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -56,13 +58,14 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* srcs */ ImmutableSortedSet.of(
             new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
+        javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.<SourcePath>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         abiJar,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javacOptions,
+        new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of());

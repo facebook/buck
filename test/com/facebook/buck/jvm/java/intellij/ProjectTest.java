@@ -43,10 +43,10 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
@@ -103,7 +103,7 @@ public class ProjectTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(new SourcePathResolver(ruleResolver))
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
-            .setRes(new TestSourcePath("android_res/base/res"))
+            .setRes(new FakeSourcePath("android_res/base/res"))
             .setRDotJavaPackage("com.facebook")
             .build());
 
@@ -166,8 +166,8 @@ public class ProjectTest {
     // keystore //keystore:debug
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(new TestSourcePath("keystore/debug.keystore"))
-        .setProperties(new TestSourcePath("keystore/debug.keystore.properties"))
+        .setStore(new FakeSourcePath("keystore/debug.keystore"))
+        .setProperties(new FakeSourcePath("keystore/debug.keystore.properties"))
         .build(ruleResolver);
 
     // android_binary //foo:app
@@ -176,7 +176,7 @@ public class ProjectTest {
     AndroidBinary androidBinaryRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//foo:app"))
             .setOriginalDeps(androidBinaryRuleDepsTarget)
-            .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
+            .setManifest(new FakeSourcePath("foo/AndroidManifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .setBuildTargetsToExcludeFromDex(
                 ImmutableSet.of(
@@ -195,7 +195,7 @@ public class ProjectTest {
     AndroidBinary barAppBuildRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//bar:app"))
             .setOriginalDeps(barAppBuildRuleDepsTarget)
-            .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
+            .setManifest(new FakeSourcePath("foo/AndroidManifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .build(ruleResolver);
 

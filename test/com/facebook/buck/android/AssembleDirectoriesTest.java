@@ -25,9 +25,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -67,7 +67,7 @@ public class AssembleDirectoriesTest {
         .setProjectFilesystem(filesystem)
         .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
-        new TestSourcePath(filesystem, "folder_a"), new TestSourcePath(filesystem, "folder_b"));
+        new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
         buildRuleParams, new SourcePathResolver(new BuildRuleResolver()), directories);
     ImmutableList<Step> steps = assembleDirectories.getBuildSteps(

@@ -24,9 +24,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -105,8 +105,8 @@ public class MergeAndroidResourcesSourcesTest {
         .setProjectFilesystem(filesystem)
         .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
-        new TestSourcePath("res_in_1"),
-        new TestSourcePath("res_in_2"));
+        new FakeSourcePath("res_in_1"),
+        new FakeSourcePath("res_in_2"));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(
             buildRuleParams,

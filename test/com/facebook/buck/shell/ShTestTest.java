@@ -26,9 +26,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -58,7 +58,7 @@ public class ShTestTest extends EasyMockSupport {
             .setProjectFilesystem(filesystem)
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
-        new TestSourcePath("run_test.sh"),
+        new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* labels */ ImmutableSet.<Label>of());
 
@@ -87,7 +87,7 @@ public class ShTestTest extends EasyMockSupport {
             .setExtraDeps(ImmutableSortedSet.of(extraDep))
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
-        new TestSourcePath("run_test.sh"),
+        new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* labels */ ImmutableSet.<Label>of());
 

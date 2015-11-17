@@ -23,10 +23,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 
@@ -62,9 +62,9 @@ public class PrebuiltJarTest {
     junitJarRule = new PrebuiltJar(
         buildRuleParams,
         new SourcePathResolver(new BuildRuleResolver()),
-        new TestSourcePath("abi.jar"),
+        new FakeSourcePath("abi.jar"),
         new PathSourcePath(filesystem, PATH_TO_JUNIT_JAR),
-        Optional.<SourcePath>of(new TestSourcePath("lib/junit-4.11-sources.jar")),
+        Optional.<SourcePath>of(new FakeSourcePath("lib/junit-4.11-sources.jar")),
         /* gwtJar */ Optional.<SourcePath>absent(),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
         /* mavenCoords */ Optional.<String>absent());

@@ -36,11 +36,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
@@ -223,7 +223,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup a simple thrift source.
     String sourceName = "test.thrift";
-    SourcePath sourcePath = new TestSourcePath(sourceName);
+    SourcePath sourcePath = new FakeSourcePath(sourceName);
 
     // Generate these rules using no deps.
     ImmutableMap<String, ThriftCompiler> rules =
@@ -311,7 +311,7 @@ public class ThriftLibraryDescriptionTest {
     // Create a build rule that represents the thrift rule.
     ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
-            .setMain(new TestSourcePath("thrift.sh"))
+            .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));
@@ -367,7 +367,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup the thrift source.
     String sourceName = "test.thrift";
-    SourcePath source = new TestSourcePath(sourceName);
+    SourcePath source = new FakeSourcePath(sourceName);
 
     // Create a dep and verify it gets attached.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
@@ -443,13 +443,13 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup a normal thrift source file.
     final String thriftSourceName2 = "bar.thrift";
-    SourcePath thriftSource2 = new TestSourcePath(thriftSourceName2);
+    SourcePath thriftSource2 = new FakeSourcePath(thriftSourceName2);
     final ImmutableList<String> thriftServices2 = ImmutableList.of();
 
     // Create a build rule that represents the thrift rule.
     final ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
-            .setMain(new TestSourcePath("thrift.sh"))
+            .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());

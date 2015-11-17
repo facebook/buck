@@ -28,8 +28,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.step.Step;
@@ -54,7 +54,7 @@ public class PythonTestDescriptionTest {
         (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py"))))
+                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("blah.py"))))
             .build(resolver);
     PythonBinary binRule = testRule.getBinary();
     PythonPackageComponents components = binRule.getComponents();
@@ -76,7 +76,7 @@ public class PythonTestDescriptionTest {
   public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     String sourceName = "main.py";
-    SourcePath source = new TestSourcePath("foo/" + sourceName);
+    SourcePath source = new FakeSourcePath("foo/" + sourceName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -123,8 +123,8 @@ public class PythonTestDescriptionTest {
   @Test
   public void platformSrcs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
-    SourcePath matchedSource = new TestSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new TestSourcePath("foo/b.py");
+    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
+    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
     PythonTest test =
         (PythonTest) PythonTestBuilder.create(target)
             .setPlatformSrcs(
@@ -147,8 +147,8 @@ public class PythonTestDescriptionTest {
   @Test
   public void platformResources() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
-    SourcePath matchedSource = new TestSourcePath("foo/a.dat");
-    SourcePath unmatchedSource = new TestSourcePath("foo/b.dat");
+    SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
+    SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");
     PythonTest test =
         (PythonTest) PythonTestBuilder.create(target)
             .setPlatformResources(

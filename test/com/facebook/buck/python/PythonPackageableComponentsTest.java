@@ -22,8 +22,8 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -39,13 +39,13 @@ public class PythonPackageableComponentsTest {
   @Test
   public void testMergeZipSafe() {
     PythonPackageComponents compA = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(Paths.get("test"), new TestSourcePath("sourceA")),
+        ImmutableMap.<Path, SourcePath>of(Paths.get("test"), new FakeSourcePath("sourceA")),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),
         Optional.of(true));
     PythonPackageComponents compB = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(Paths.get("test2"), new TestSourcePath("sourceB")),
+        ImmutableMap.<Path, SourcePath>of(Paths.get("test2"), new FakeSourcePath("sourceB")),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),
@@ -65,9 +65,9 @@ public class PythonPackageableComponentsTest {
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     Path dest = Paths.get("test");
-    builder.addModule(dest, new TestSourcePath("sourceA"), them);
+    builder.addModule(dest, new FakeSourcePath("sourceA"), them);
     try {
-      builder.addModule(dest, new TestSourcePath("sourceB"), them);
+      builder.addModule(dest, new FakeSourcePath("sourceB"), them);
       fail("expected to throw");
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("duplicate entries"));
@@ -80,13 +80,13 @@ public class PythonPackageableComponentsTest {
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     Path dest = Paths.get("test");
     PythonPackageComponents compA = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(dest, new TestSourcePath("sourceA")),
+        ImmutableMap.<Path, SourcePath>of(dest, new FakeSourcePath("sourceA")),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     PythonPackageComponents compB = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(dest, new TestSourcePath("sourceB")),
+        ImmutableMap.<Path, SourcePath>of(dest, new FakeSourcePath("sourceB")),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),

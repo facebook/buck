@@ -23,10 +23,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -56,13 +56,13 @@ public class AppleResourcesTest {
     BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo:resource");
 
     Set<SourcePath> variants = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("path/aa.lproj/Localizable.strings"),
-        new TestSourcePath("path/bb.lproj/Localizable.strings"),
-        new TestSourcePath("path/cc.lproj/Localizable.strings"));
+        new FakeSourcePath("path/aa.lproj/Localizable.strings"),
+        new FakeSourcePath("path/bb.lproj/Localizable.strings"),
+        new FakeSourcePath("path/cc.lproj/Localizable.strings"));
 
     TargetNode<AppleResourceDescription.Arg> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
+            .setFiles(ImmutableSet.<SourcePath>of(new FakeSourcePath("foo.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .setVariants(Optional.of(variants))
             .build();
@@ -89,7 +89,7 @@ public class AppleResourcesTest {
     BuildTarget fooResourceTarget = BuildTargetFactory.newInstance("//foo:resource");
     TargetNode<AppleResourceDescription.Arg> fooResourceNode =
         AppleResourceBuilder.createBuilder(fooResourceTarget)
-            .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
+            .setFiles(ImmutableSet.<SourcePath>of(new FakeSourcePath("foo.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -100,7 +100,7 @@ public class AppleResourcesTest {
     BuildTarget barResourceTarget = BuildTargetFactory.newInstance("//bar:resource");
     TargetNode<AppleResourceDescription.Arg> barResourceNode =
         AppleResourceBuilder.createBuilder(barResourceTarget)
-            .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
+            .setFiles(ImmutableSet.<SourcePath>of(new FakeSourcePath("bar.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> barLibNode = AppleLibraryBuilder
