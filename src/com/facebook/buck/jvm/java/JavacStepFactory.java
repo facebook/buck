@@ -18,7 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -28,14 +31,17 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class JavacStepFactory {
+public class JavacStepFactory implements RuleKeyAppendable {
   private final JavacOptions javacOptions;
+  private final JavacOptionsAmender amender;
 
-  public JavacStepFactory(JavacOptions javacOptions) {
+  public JavacStepFactory(JavacOptions javacOptions, JavacOptionsAmender amender) {
     this.javacOptions = javacOptions;
+    this.amender = amender;
   }
 
   void createCompileStep(
+      BuildContext context,
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
@@ -49,12 +55,14 @@ public class JavacStepFactory {
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
 
+    final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
+
     // Javac requires that the root directory for generated sources already exist.
-    Path annotationGenFolder =
-        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName();
-    if (annotationGenFolder != null) {
-      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder));
-      buildableContext.recordArtifact(annotationGenFolder);
+    Optional<Path> annotationGenFolder =
+        buildTimeOptions.getGeneratedSourceFolderName();
+    if (annotationGenFolder.isPresent()) {
+      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder.get()));
+      buildableContext.recordArtifact(annotationGenFolder.get());
     }
 
     steps.add(
@@ -64,11 +72,18 @@ public class JavacStepFactory {
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            javacOptions.getJavac(),
-            javacOptions,
+            buildTimeOptions.getJavac(),
+            buildTimeOptions,
             invokingRule,
             suggestBuildRules,
             resolver,
             filesystem));
+  }
+
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    builder.setReflectively("javacOptions", javacOptions);
+    // Hmm. Feels a bit icky to not include the amender here.
+    return builder;
   }
 }

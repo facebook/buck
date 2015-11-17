@@ -156,9 +156,11 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             /* compressionLevel */ 0,
         fatJarDir);
 
-    JavacStepFactory javacStepFactory = new JavacStepFactory(javacOptions);
+    JavacStepFactory javacStepFactory =
+        new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY);
 
     javacStepFactory.createCompileStep(
+        context,
         ImmutableSortedSet.copyOf(javaSourceFilePaths),
         getBuildTarget(),
         getResolver(),

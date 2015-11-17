@@ -979,17 +979,18 @@ public class DefaultJavaLibraryTest {
         new SourcePathResolver(new BuildRuleResolver()),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
+        DEFAULT_JAVAC_OPTIONS.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.<SourcePath>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* abiJar */ new FakeSourcePath("abi.jar"),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        DEFAULT_JAVAC_OPTIONS,
+        new JavacStepFactory(DEFAULT_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
-    };
+        };
   }
 
   @Test
