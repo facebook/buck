@@ -11,12 +11,12 @@ java_library(
     'FakeBuildRuleParamsBuilder.java',
     'FakeExportDependenciesRule.java',
     'FakeOnDiskBuildInfo.java',
+    'FakeSourcePath.java',
     'FakeTestRule.java',
     'NonCheckingBuildRuleFactoryParams.java',
     'ProjectConfigBuilder.java',
     'RetainOrderComparator.java',
     'TestCellBuilder.java',
-    'TestSourcePath.java',
   ],
   deps = [
     '//src/com/facebook/buck/apple:rules',

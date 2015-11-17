@@ -23,8 +23,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -122,7 +122,7 @@ public class MergeAndroidResourcesStepTest {
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(new SourcePathResolver(new BuildRuleResolver()))
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
-        .setRes(new TestSourcePath("res"))
+        .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
 
@@ -190,7 +190,7 @@ public class MergeAndroidResourcesStepTest {
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(new SourcePathResolver(new BuildRuleResolver()))
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
-        .setRes(new TestSourcePath("res"))
+        .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
 
@@ -243,14 +243,14 @@ public class MergeAndroidResourcesStepTest {
     HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(new SourcePathResolver(new BuildRuleResolver()))
         .setBuildTarget(BuildTargetFactory.newInstance("//:res1"))
-        .setRes(new TestSourcePath("res1"))
+        .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("res1")
         .build();
 
     HasAndroidResourceDeps res2 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(new SourcePathResolver(new BuildRuleResolver()))
         .setBuildTarget(BuildTargetFactory.newInstance("//:res2"))
-        .setRes(new TestSourcePath("res2"))
+        .setRes(new FakeSourcePath("res2"))
         .setRDotJavaPackage("res2")
         .build();
 

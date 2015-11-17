@@ -27,13 +27,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -68,12 +68,12 @@ public class CxxPreprocessAndCompileTest {
   private static final ImmutableList<String> DEFAULT_PREPROCESOR_RULE_FLAGS =
       ImmutableList.of("-DTEST");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
-  private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
+  private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final ImmutableList<CxxHeaders> DEFAULT_INCLUDES =
       ImmutableList.of(
           CxxHeaders.builder()
-              .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
+              .putNameToPathMap(Paths.get("test.h"), new FakeSourcePath("foo/test.h"))
               .build());
   private static final ImmutableSet<Path> DEFAULT_INCLUDE_ROOTS = ImmutableSet.of(
       Paths.get("foo/bar"),
@@ -202,7 +202,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_PLATFORM_FLAGS,
             DEFAULT_RULE_FLAGS,
             DEFAULT_OUTPUT,
-            new TestSourcePath("different"),
+            new FakeSourcePath("different"),
             DEFAULT_INPUT_TYPE,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, inputChange);
@@ -459,7 +459,7 @@ public class CxxPreprocessAndCompileTest {
             platformFlags,
             ruleFlags,
             output,
-            new TestSourcePath(input.toString()),
+            new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
             DEFAULT_SANITIZER);
 
@@ -507,10 +507,10 @@ public class CxxPreprocessAndCompileTest {
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
                 DEFAULT_FRAMEWORK_ROOTS,
-                Optional.<SourcePath>of(new TestSourcePath(prefixHeader.toString())),
+                Optional.<SourcePath>of(new FakeSourcePath(prefixHeader.toString())),
                 ImmutableList.of(CxxHeaders.builder().build())),
             output,
-            new TestSourcePath(input.toString()),
+            new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
             DEFAULT_SANITIZER);
 

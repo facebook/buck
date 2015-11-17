@@ -29,9 +29,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -92,8 +92,8 @@ public class AndroidInstrumentationApkTest {
 
     BuildRule keystore = KeystoreBuilder.createBuilder(
         BuildTargetFactory.newInstance("//keystores:debug"))
-        .setProperties(new TestSourcePath("keystores/debug.properties"))
-        .setStore(new TestSourcePath("keystores/debug.keystore"))
+        .setProperties(new FakeSourcePath("keystores/debug.properties"))
+        .setStore(new FakeSourcePath("keystores/debug.keystore"))
         .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
@@ -103,7 +103,7 @@ public class AndroidInstrumentationApkTest {
         javaLibrary2.getBuildTarget(),
         javaLibrary3.getBuildTarget());
     androidBinaryBuilder
-        .setManifest(new TestSourcePath("apps/AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("apps/AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
         .setOriginalDeps(originalDepsTargets);
     AndroidBinary androidBinary = (AndroidBinary) androidBinaryBuilder.build(ruleResolver);
@@ -115,7 +115,7 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApkDescription.Arg arg = new AndroidInstrumentationApkDescription.Arg();
     arg.apk = androidBinary.getBuildTarget();
     arg.deps = Optional.of(apkOriginalDepsTargets);
-    arg.manifest = new TestSourcePath("apps/InstrumentationAndroidManifest.xml");
+    arg.manifest = new FakeSourcePath("apps/InstrumentationAndroidManifest.xml");
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTargetFactory.newInstance("//apps:instrumentation"))

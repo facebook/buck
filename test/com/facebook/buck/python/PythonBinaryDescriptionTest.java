@@ -32,10 +32,10 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
@@ -97,7 +97,7 @@ public class PythonBinaryDescriptionTest {
   public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     String sourceName = "main.py";
-    SourcePath source = new TestSourcePath("foo/" + sourceName);
+    SourcePath source = new FakeSourcePath("foo/" + sourceName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.

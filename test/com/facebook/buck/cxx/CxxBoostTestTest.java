@@ -25,9 +25,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -78,7 +78,7 @@ public class CxxBoostTestTest {
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
         new CommandTool.Builder()
-            .addArg(new TestSourcePath(""))
+            .addArg(new FakeSourcePath(""))
             .build(),
         Suppliers.ofInstance(ImmutableMap.<String, String>of()),
         Suppliers.ofInstance(ImmutableList.<String>of()),

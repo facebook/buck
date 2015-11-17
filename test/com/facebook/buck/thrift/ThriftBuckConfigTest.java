@@ -26,9 +26,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -97,7 +97,7 @@ public class ThriftBuckConfigTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
-            .setMain(new TestSourcePath("thrift.sh"))
+            .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
 
     // Add the thrift rule to the resolver.

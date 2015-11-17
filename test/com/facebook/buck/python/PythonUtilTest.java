@@ -21,9 +21,9 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,11 +46,11 @@ public class PythonUtilTest {
         ImmutableList.of(
             SourceList.ofNamedSources(
                 ImmutableSortedMap.<String, SourcePath>of(
-                    "hello.py", new TestSourcePath("goodbye.py")))));
+                    "hello.py", new FakeSourcePath("goodbye.py")))));
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve("hello.py"),
-            new TestSourcePath("goodbye.py")),
+            new FakeSourcePath("goodbye.py")),
         srcs);
   }
 

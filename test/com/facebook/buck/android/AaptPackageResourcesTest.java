@@ -17,15 +17,16 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,7 @@ public class AaptPackageResourcesTest {
         new AaptPackageResources(
             params,
             pathResolver,
-            /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
+            /* manifest */ new FakeSourcePath("facebook/base/AndroidManifest.xml"),
             resourcesProvider,
             ImmutableList.<HasAndroidResourceDeps>of(),
             ImmutableSet.<SourcePath>of(),

@@ -23,12 +23,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
@@ -47,9 +47,9 @@ public class ArchiveTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
-          new TestSourcePath("a.o"),
-          new TestSourcePath("b.o"),
-          new TestSourcePath("c.o"));
+          new FakeSourcePath("a.o"),
+          new FakeSourcePath("b.o"),
+          new FakeSourcePath("c.o"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
@@ -103,7 +103,7 @@ public class ArchiveTest {
             pathResolver,
             DEFAULT_ARCHIVER,
             DEFAULT_OUTPUT,
-            ImmutableList.<SourcePath>of(new TestSourcePath("different"))));
+            ImmutableList.<SourcePath>of(new FakeSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.

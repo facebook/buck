@@ -22,10 +22,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -226,7 +226,7 @@ public class NativeLinkablesTest {
             ImmutableList.<NativeLinkable>of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("libc.so", new TestSourcePath("libc.so")));
+            ImmutableMap.<String, SourcePath>of("libc.so", new FakeSourcePath("libc.so")));
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
@@ -234,7 +234,7 @@ public class NativeLinkablesTest {
             ImmutableList.<NativeLinkable>of(),
             NativeLinkable.Linkage.STATIC,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("libb.so", new TestSourcePath("libb.so")));
+            ImmutableMap.<String, SourcePath>of("libb.so", new FakeSourcePath("libb.so")));
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
@@ -242,7 +242,7 @@ public class NativeLinkablesTest {
             ImmutableList.<NativeLinkable>of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("liba.so", new TestSourcePath("liba.so")));
+            ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
             TargetGraph.EMPTY,
@@ -253,8 +253,8 @@ public class NativeLinkablesTest {
         sharedLibs,
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "liba.so", new TestSourcePath("liba.so"),
-                "libc.so", new TestSourcePath("libc.so"))));
+                "liba.so", new FakeSourcePath("liba.so"),
+                "libc.so", new FakeSourcePath("libc.so"))));
   }
 
   @Test
