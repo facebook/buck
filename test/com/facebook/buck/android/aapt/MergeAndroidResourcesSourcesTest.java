@@ -105,8 +105,8 @@ public class MergeAndroidResourcesSourcesTest {
         .setProjectFilesystem(filesystem)
         .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
-        new TestSourcePath("res_in_1"),
-        new TestSourcePath("res_in_2"));
+        new TestSourcePath(filesystem, "res_in_1"),
+        new TestSourcePath(filesystem, "res_in_2"));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(
             buildRuleParams,
@@ -122,13 +122,14 @@ public class MergeAndroidResourcesSourcesTest {
             Matchers.hasProperty("shortName", Matchers.equalTo("rm_&&_mkdir")),
             Matchers.instanceOf(MergeAndroidResourceSourcesStep.class)
         ));
+    String resIn1 = filesystem.getRootPath().resolve("res_in_1").toString();
+    String resIn2 = filesystem.getRootPath().resolve("res_in_2").toString();
+
     assertThat(
         FluentIterable.from(steps).transform(stepDescriptionFunction),
         Matchers.contains(
             Matchers.stringContainsInOrder("rm", "mkdir"),
-            Matchers.equalTo(
-                "merge-resources res_in_1,res_in_2 -> " +
-                    "buck-out/gen/__merged_resources_output_folder__")
+            Matchers.startsWith(String.format("merge-resources %s,%s -> ", resIn1, resIn2))
         )
     );
   }
@@ -139,7 +140,6 @@ public class MergeAndroidResourcesSourcesTest {
     File outFolder = tmp.newFolder("out");
 
     MergeAndroidResourceSourcesStep step = new MergeAndroidResourceSourcesStep(
-        filesystem,
         ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")),
         outFolder.toPath()
     );

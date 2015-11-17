@@ -51,16 +51,16 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext context,
+      BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destinationDirectory));
     steps.add(
         new MergeAndroidResourceSourcesStep(
-            getProjectFilesystem(),
             FluentIterable.from(originalDirectories)
-                .transform(getResolver().deprecatedPathFunction())
+                .transform(getResolver().getAbsolutePathFunction())
                 .toList(),
-            destinationDirectory
+            getProjectFilesystem().resolve(destinationDirectory)
         ));
     buildableContext.recordArtifact(destinationDirectory);
     return steps.build();
