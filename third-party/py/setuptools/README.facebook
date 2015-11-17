@@ -1,4 +1,4 @@
-Project URL: https://pypi.python.org/packages/source/s/setuptools/setuptools-3.6.tar.gz#md5=8f3a1dcdc14313c8334eb6af4f66ea0a
-Version: 3.6
+Project URL: https://pypi.python.org/packages/source/s/setuptools/setuptools-18.5.tar.gz#md5=533c868f01169a3085177dffe5e768bb
+Version: 18.5
 License: PSF or ZPL
-Local modifications: none
+Local modifications: kept only pkg_resources module

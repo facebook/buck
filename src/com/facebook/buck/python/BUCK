@@ -94,18 +94,10 @@ java_immutables_library(
   ],
 )
 
-python_library(
-  name = 'pexlib',
-  resources = [
-    '//third-party/py/setuptools:pkg_resources.py',
-  ],
-)
-
 python_binary(
   name = 'pex',
-  main = 'pex.py',
+  main = 'make_pex.py',
   deps = [
-    ':pexlib',
     '//third-party/py/twitter-commons/src/python:twitter-commons',
   ],
   visibility = [

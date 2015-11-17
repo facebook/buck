@@ -14,11 +14,14 @@ The package resource API is designed to work with normal filesystem packages,
 method.
 """
 
+from __future__ import absolute_import
+
 import sys
 import os
+import io
 import time
 import re
-import imp
+import types
 import zipfile
 import zipimport
 import warnings
@@ -29,30 +32,34 @@ import token
 import symbol
 import operator
 import platform
+import collections
+import plistlib
+import email.parser
+import tempfile
+import textwrap
 from pkgutil import get_importer
 
 try:
-    from urlparse import urlparse, urlunparse
+    import _imp
 except ImportError:
+    # Python 3.2 compatibility
+    import imp as _imp
+
+PY3 = sys.version_info > (3,)
+PY2 = not PY3
+
+if PY3:
     from urllib.parse import urlparse, urlunparse
 
-try:
-    frozenset
-except NameError:
-    from sets import ImmutableSet as frozenset
-try:
-    basestring
-    next = lambda o: o.next()
-    from cStringIO import StringIO as BytesIO
-except NameError:
-    basestring = str
-    from io import BytesIO
-    def execfile(fn, globs=None, locs=None):
-        if globs is None:
-            globs = globals()
-        if locs is None:
-            locs = globs
-        exec(compile(open(fn).read(), fn, 'exec'), globs, locs)
+if PY2:
+    from urlparse import urlparse, urlunparse
+
+if PY3:
+    string_types = str,
+else:
+    string_types = str, eval('unicode')
+
+iteritems = (lambda i: i.items()) if PY3 else lambda i: i.iteritems()
 
 # capture these to bypass sandboxing
 from os import utime
@@ -68,23 +75,159 @@ from os.path import isdir, split
 
 # Avoid try/except due to potential problems with delayed import mechanisms.
 if sys.version_info >= (3, 3) and sys.implementation.name == "cpython":
-    import importlib._bootstrap as importlib_bootstrap
+    import importlib.machinery as importlib_machinery
 else:
-    importlib_bootstrap = None
+    importlib_machinery = None
 
 try:
     import parser
 except ImportError:
     pass
 
-def _bypass_ensure_directory(name, mode=0o777):
-    # Sandbox-bypassing version of ensure_directory()
-    if not WRITE_SUPPORT:
-        raise IOError('"os.mkdir" not supported on this platform.')
-    dirname, filename = split(name)
-    if dirname and filename and not isdir(dirname):
-        _bypass_ensure_directory(dirname)
-        mkdir(dirname, mode)
+try:
+    import pkg_resources._vendor.packaging.version
+    import pkg_resources._vendor.packaging.specifiers
+    packaging = pkg_resources._vendor.packaging
+except ImportError:
+    # fallback to naturally-installed version; allows system packagers to
+    #  omit vendored packages.
+    import packaging.version
+    import packaging.specifiers
+
+
+if (3, 0) < sys.version_info < (3, 3):
+    msg = (
+        "Support for Python 3.0-3.2 has been dropped. Future versions "
+        "will fail here."
+    )
+    warnings.warn(msg)
+
+# declare some globals that will be defined later to
+# satisfy the linters.
+require = None
+working_set = None
+
+
+class PEP440Warning(RuntimeWarning):
+    """
+    Used when there is an issue with a version or specifier not complying with
+    PEP 440.
+    """
+
+
+class _SetuptoolsVersionMixin(object):
+
+    def __hash__(self):
+        return super(_SetuptoolsVersionMixin, self).__hash__()
+
+    def __lt__(self, other):
+        if isinstance(other, tuple):
+            return tuple(self) < other
+        else:
+            return super(_SetuptoolsVersionMixin, self).__lt__(other)
+
+    def __le__(self, other):
+        if isinstance(other, tuple):
+            return tuple(self) <= other
+        else:
+            return super(_SetuptoolsVersionMixin, self).__le__(other)
+
+    def __eq__(self, other):
+        if isinstance(other, tuple):
+            return tuple(self) == other
+        else:
+            return super(_SetuptoolsVersionMixin, self).__eq__(other)
+
+    def __ge__(self, other):
+        if isinstance(other, tuple):
+            return tuple(self) >= other
+        else:
+            return super(_SetuptoolsVersionMixin, self).__ge__(other)
+
+    def __gt__(self, other):
+        if isinstance(other, tuple):
+            return tuple(self) > other
+        else:
+            return super(_SetuptoolsVersionMixin, self).__gt__(other)
+
+    def __ne__(self, other):
+        if isinstance(other, tuple):
+            return tuple(self) != other
+        else:
+            return super(_SetuptoolsVersionMixin, self).__ne__(other)
+
+    def __getitem__(self, key):
+        return tuple(self)[key]
+
+    def __iter__(self):
+        component_re = re.compile(r'(\d+ | [a-z]+ | \.| -)', re.VERBOSE)
+        replace = {
+            'pre': 'c',
+            'preview': 'c',
+            '-': 'final-',
+            'rc': 'c',
+            'dev': '@',
+        }.get
+
+        def _parse_version_parts(s):
+            for part in component_re.split(s):
+                part = replace(part, part)
+                if not part or part == '.':
+                    continue
+                if part[:1] in '0123456789':
+                    # pad for numeric comparison
+                    yield part.zfill(8)
+                else:
+                    yield '*'+part
+
+            # ensure that alpha/beta/candidate are before final
+            yield '*final'
+
+        def old_parse_version(s):
+            parts = []
+            for part in _parse_version_parts(s.lower()):
+                if part.startswith('*'):
+                    # remove '-' before a prerelease tag
+                    if part < '*final':
+                        while parts and parts[-1] == '*final-':
+                            parts.pop()
+                    # remove trailing zeros from each series of numeric parts
+                    while parts and parts[-1] == '00000000':
+                        parts.pop()
+                parts.append(part)
+            return tuple(parts)
+
+        # Warn for use of this function
+        warnings.warn(
+            "You have iterated over the result of "
+            "pkg_resources.parse_version. This is a legacy behavior which is "
+            "inconsistent with the new version class introduced in setuptools "
+            "8.0. In most cases, conversion to a tuple is unnecessary. For "
+            "comparison of versions, sort the Version instances directly. If "
+            "you have another use case requiring the tuple, please file a "
+            "bug with the setuptools project describing that need.",
+            RuntimeWarning,
+            stacklevel=1,
+        )
+
+        for part in old_parse_version(str(self)):
+            yield part
+
+
+class SetuptoolsVersion(_SetuptoolsVersionMixin, packaging.version.Version):
+    pass
+
+
+class SetuptoolsLegacyVersion(_SetuptoolsVersionMixin,
+                              packaging.version.LegacyVersion):
+    pass
+
+
+def parse_version(v):
+    try:
+        return SetuptoolsVersion(v)
+    except packaging.version.InvalidVersion:
+        return SetuptoolsLegacyVersion(v)
 
 
 _state_vars = {}
@@ -166,6 +309,9 @@ __all__ = [
     'ResolutionError', 'VersionConflict', 'DistributionNotFound',
     'UnknownExtra', 'ExtractionError',
 
+    # Warnings
+    'PEP440Warning',
+
     # Parsing functions and string utilities
     'parse_requirements', 'parse_version', 'safe_name', 'safe_version',
     'get_platform', 'compatible_platforms', 'yield_lines', 'split_sections',
@@ -193,11 +339,78 @@ class ResolutionError(Exception):
     def __repr__(self):
         return self.__class__.__name__+repr(self.args)
 
+
 class VersionConflict(ResolutionError):
-    """An already-installed version conflicts with the requested version"""
+    """
+    An already-installed version conflicts with the requested version.
+
+    Should be initialized with the installed Distribution and the requested
+    Requirement.
+    """
+
+    _template = "{self.dist} is installed but {self.req} is required"
+
+    @property
+    def dist(self):
+        return self.args[0]
+
+    @property
+    def req(self):
+        return self.args[1]
+
+    def report(self):
+        return self._template.format(**locals())
+
+    def with_context(self, required_by):
+        """
+        If required_by is non-empty, return a version of self that is a
+        ContextualVersionConflict.
+        """
+        if not required_by:
+            return self
+        args = self.args + (required_by,)
+        return ContextualVersionConflict(*args)
+
+
+class ContextualVersionConflict(VersionConflict):
+    """
+    A VersionConflict that accepts a third parameter, the set of the
+    requirements that required the installed Distribution.
+    """
+
+    _template = VersionConflict._template + ' by {self.required_by}'
+
+    @property
+    def required_by(self):
+        return self.args[2]
+
 
 class DistributionNotFound(ResolutionError):
     """A requested distribution was not found"""
+
+    _template = ("The '{self.req}' distribution was not found "
+                 "and is required by {self.requirers_str}")
+
+    @property
+    def req(self):
+        return self.args[0]
+
+    @property
+    def requirers(self):
+        return self.args[1]
+
+    @property
+    def requirers_str(self):
+        if not self.requirers:
+            return 'the application'
+        return ', '.join(self.requirers)
+
+    def report(self):
+        return self._template.format(**locals())
+
+    def __str__(self):
+        return self.report()
+
 
 class UnknownExtra(ResolutionError):
     """Distribution doesn't have an "extra feature" of the given name"""
@@ -233,11 +446,9 @@ def get_provider(moduleOrReq):
 
 def _macosx_vers(_cache=[]):
     if not _cache:
-        import platform
         version = platform.mac_ver()[0]
         # fallback for MacPorts
         if version == '':
-            import plistlib
             plist = '/System/Library/CoreServices/SystemVersion.plist'
             if os.path.exists(plist):
                 if hasattr(plistlib, 'readPlist'):
@@ -309,13 +520,9 @@ def compatible_platforms(provided, required):
                 macosversion = "%s.%s" % (reqMac.group(1), reqMac.group(2))
                 if dversion == 7 and macosversion >= "10.3" or \
                         dversion == 8 and macosversion >= "10.4":
-
-                    #import warnings
-                    #warnings.warn("Mac eggs should be rebuilt to "
-                    #    "use the macosx designation instead of darwin.",
-                    #    category=DeprecationWarning)
                     return True
-            return False    # egg isn't macosx or legacy darwin
+            # egg isn't macosx or legacy darwin
+            return False
 
         # are they the same major version and machine type?
         if provMac.group(1) != reqMac.group(1) or \
@@ -345,8 +552,10 @@ run_main = run_script
 
 def get_distribution(dist):
     """Return a current distribution object for a Requirement or string"""
-    if isinstance(dist, basestring): dist = Requirement.parse(dist)
-    if isinstance(dist, Requirement): dist = get_provider(dist)
+    if isinstance(dist, string_types):
+        dist = Requirement.parse(dist)
+    if isinstance(dist, Requirement):
+        dist = get_provider(dist)
     if not isinstance(dist, Distribution):
         raise TypeError("Expected string, Requirement, or Distribution", dist)
     return dist
@@ -507,8 +716,7 @@ class WorkingSet(object):
         if dist is not None and dist not in req:
             # XXX add more info
             raise VersionConflict(dist, req)
-        else:
-            return dist
+        return dist
 
     def iter_entry_points(self, group, name=None):
         """Yield entry point objects from `group` matching `name`
@@ -607,6 +815,10 @@ class WorkingSet(object):
         best = {}
         to_activate = []
 
+        # Mapping of requirement to set of distributions that required it;
+        # useful for reporting info about conflicts.
+        required_by = collections.defaultdict(set)
+
         while requirements:
             # process dependencies breadth-first
             req = requirements.pop(0)
@@ -630,18 +842,22 @@ class WorkingSet(object):
                             ws = WorkingSet([])
                     dist = best[req.key] = env.best_match(req, ws, installer)
                     if dist is None:
-                        #msg = ("The '%s' distribution was not found on this "
-                        #       "system, and is required by this application.")
-                        #raise DistributionNotFound(msg % req)
-
-                        # unfortunately, zc.buildout uses a str(err)
-                        # to get the name of the distribution here..
-                        raise DistributionNotFound(req)
+                        requirers = required_by.get(req, None)
+                        raise DistributionNotFound(req, requirers)
                 to_activate.append(dist)
             if dist not in req:
                 # Oops, the "best" so far conflicts with a dependency
-                raise VersionConflict(dist, req) # XXX put more info here
-            requirements.extend(dist.requires(req.extras)[::-1])
+                dependent_req = required_by[req]
+                raise VersionConflict(dist, req).with_context(dependent_req)
+
+            # push the new requirements onto the stack
+            new_requirements = dist.requires(req.extras)[::-1]
+            requirements.extend(new_requirements)
+
+            # Register the new requirements needed by req
+            for new_requirement in new_requirements:
+                required_by[new_requirement].add(req.project_name)
+
             processed[req] = True
 
         # return list of distros to activate
@@ -656,8 +872,10 @@ class WorkingSet(object):
             distributions, errors = working_set.find_plugins(
                 Environment(plugin_dirlist)
             )
-            map(working_set.add, distributions)  # add plugins+libs to sys.path
-            print 'Could not load', errors        # display errors
+            # add plugins+libs to sys.path
+            map(working_set.add, distributions)
+            # display errors
+            print('Could not load', errors)
 
         The `plugin_env` should be an ``Environment`` instance that contains
         only distributions that are in the project's "plugin directory" or
@@ -707,8 +925,7 @@ class WorkingSet(object):
                 try:
                     resolvees = shadow_set.resolve(req, env, installer)
 
-                except ResolutionError:
-                    v = sys.exc_info()[1]
+                except ResolutionError as v:
                     # save error info
                     error_info[dist] = v
                     if fallback:
@@ -885,7 +1102,8 @@ class Environment(object):
     def __iter__(self):
         """Yield the unique project names of the available distributions"""
         for key in self._distmap.keys():
-            if self[key]: yield key
+            if self[key]:
+                yield key
 
     def __iadd__(self, other):
         """In-place addition of a distribution or environment"""
@@ -1156,13 +1374,15 @@ def safe_name(name):
 
 
 def safe_version(version):
-    """Convert an arbitrary string to a standard version string
-
-    Spaces become dots, and all other non-alphanumeric characters become
-    dashes, with runs of multiple dashes condensed to a single dash.
     """
-    version = version.replace(' ','.')
-    return re.sub('[^A-Za-z0-9.]+', '-', version)
+    Convert an arbitrary string to a standard version string
+    """
+    try:
+        # normalize the version
+        return str(packaging.version.Version(version))
+    except packaging.version.InvalidVersion:
+        version = version.replace(' ','.')
+        return re.sub('[^A-Za-z0-9.]+', '-', version)
 
 
 def safe_extra(extra):
@@ -1190,6 +1410,7 @@ class MarkerEvaluation(object):
         'python_version': lambda: platform.python_version()[:3],
         'platform_version': platform.version,
         'platform_machine': platform.machine,
+        'platform_python_implementation': platform.python_implementation,
         'python_implementation': platform.python_implementation,
     }
 
@@ -1201,8 +1422,8 @@ class MarkerEvaluation(object):
         """
         try:
             cls.evaluate_marker(text)
-        except SyntaxError:
-            return cls.normalize_exception(sys.exc_info()[1])
+        except SyntaxError as e:
+            return cls.normalize_exception(e)
         return False
 
     @staticmethod
@@ -1282,6 +1503,10 @@ class MarkerEvaluation(object):
             'in': lambda x, y: x in y,
             '==': operator.eq,
             '!=': operator.ne,
+            '<':  operator.lt,
+            '>':  operator.gt,
+            '<=': operator.le,
+            '>=': operator.ge,
         }
         if hasattr(symbol, 'or_test'):
             ops[symbol.or_test] = cls.test
@@ -1301,6 +1526,17 @@ class MarkerEvaluation(object):
         """
         return cls.interpret(parser.expr(text).totuple(1)[1])
 
+    @staticmethod
+    def _translate_metadata2(env):
+        """
+        Markerlib implements Metadata 1.2 (PEP 345) environment markers.
+        Translate the variables to Metadata 2.0 (PEP 426).
+        """
+        return dict(
+            (key.replace('.', '_'), value)
+            for key, value in env
+        )
+
     @classmethod
     def _markerlib_evaluate(cls, text):
         """
@@ -1309,16 +1545,11 @@ class MarkerEvaluation(object):
         Raise SyntaxError if marker is invalid.
         """
         import _markerlib
-        # markerlib implements Metadata 1.2 (PEP 345) environment markers.
-        # Translate the variables to Metadata 2.0 (PEP 426).
-        env = _markerlib.default_environment()
-        for key in env.keys():
-            new_key = key.replace('.', '_')
-            env[new_key] = env.pop(key)
+
+        env = cls._translate_metadata2(_markerlib.default_environment())
         try:
             result = _markerlib.interpret(text, env)
-        except NameError:
-            e = sys.exc_info()[1]
+        except NameError as e:
             raise SyntaxError(e.args[0])
         return result
 
@@ -1383,7 +1614,7 @@ class NullProvider:
         return self._fn(self.module_path, resource_name)
 
     def get_resource_stream(self, manager, resource_name):
-        return BytesIO(self.get_resource_string(manager, resource_name))
+        return io.BytesIO(self.get_resource_string(manager, resource_name))
 
     def get_resource_string(self, manager, resource_name):
         return self._get(self._fn(self.module_path, resource_name))
@@ -1431,7 +1662,9 @@ class NullProvider:
         script_filename = self._fn(self.egg_info, script)
         namespace['__file__'] = script_filename
         if os.path.exists(script_filename):
-            execfile(script_filename, namespace, namespace)
+            source = open(script_filename).read()
+            code = compile(source, script_filename, 'exec')
+            exec(code, namespace, namespace)
         else:
             from linecache import cache
             cache[script_filename] = (
@@ -1507,16 +1740,13 @@ class DefaultProvider(EggProvider):
         return open(self._fn(self.module_path, resource_name), 'rb')
 
     def _get(self, path):
-        stream = open(path, 'rb')
-        try:
+        with open(path, 'rb') as stream:
             return stream.read()
-        finally:
-            stream.close()
 
 register_loader_type(type(None), DefaultProvider)
 
-if importlib_bootstrap is not None:
-    register_loader_type(importlib_bootstrap.SourceFileLoader, DefaultProvider)
+if importlib_machinery is not None:
+    register_loader_type(importlib_machinery.SourceFileLoader, DefaultProvider)
 
 
 class EmptyProvider(NullProvider):
@@ -1533,47 +1763,81 @@ class EmptyProvider(NullProvider):
 empty_provider = EmptyProvider()
 
 
-def build_zipmanifest(path):
+class ZipManifests(dict):
     """
-    This builds a similar dictionary to the zipimport directory
-    caches.  However instead of tuples, ZipInfo objects are stored.
+    zip manifest builder
+    """
 
-    The translation of the tuple is as follows:
-      * [0] - zipinfo.filename on stock pythons this needs "/" --> os.sep
-              on pypy it is the same (one reason why distribute did work
-              in some cases on pypy and win32).
-      * [1] - zipinfo.compress_type
-      * [2] - zipinfo.compress_size
-      * [3] - zipinfo.file_size
-      * [4] - len(utf-8 encoding of filename) if zipinfo & 0x800
-              len(ascii encoding of filename) otherwise
-      * [5] - (zipinfo.date_time[0] - 1980) << 9 |
-               zipinfo.date_time[1] << 5 | zipinfo.date_time[2]
-      * [6] - (zipinfo.date_time[3] - 1980) << 11 |
-               zipinfo.date_time[4] << 5 | (zipinfo.date_time[5] // 2)
-      * [7] - zipinfo.CRC
+    @classmethod
+    def build(cls, path):
+        """
+        Build a dictionary similar to the zipimport directory
+        caches, except instead of tuples, store ZipInfo objects.
+
+        Use a platform-specific path separator (os.sep) for the path keys
+        for compatibility with pypy on Windows.
+        """
+        with ContextualZipFile(path) as zfile:
+            items = (
+                (
+                    name.replace('/', os.sep),
+                    zfile.getinfo(name),
+                )
+                for name in zfile.namelist()
+            )
+            return dict(items)
+
+    load = build
+
+
+class MemoizedZipManifests(ZipManifests):
     """
-    zipinfo = dict()
-    zfile = zipfile.ZipFile(path)
-    #Got ZipFile has not __exit__ on python 3.1
-    try:
-        for zitem in zfile.namelist():
-            zpath = zitem.replace('/', os.sep)
-            zipinfo[zpath] = zfile.getinfo(zitem)
-            assert zipinfo[zpath] is not None
-    finally:
-        zfile.close()
-    return zipinfo
+    Memoized zipfile manifests.
+    """
+    manifest_mod = collections.namedtuple('manifest_mod', 'manifest mtime')
+
+    def load(self, path):
+        """
+        Load a manifest at path or return a suitable manifest already loaded.
+        """
+        path = os.path.normpath(path)
+        mtime = os.stat(path).st_mtime
+
+        if path not in self or self[path].mtime != mtime:
+            manifest = self.build(path)
+            self[path] = self.manifest_mod(manifest, mtime)
+
+        return self[path].manifest
+
+
+class ContextualZipFile(zipfile.ZipFile):
+    """
+    Supplement ZipFile class to support context manager for Python 2.6
+    """
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Construct a ZipFile or ContextualZipFile as appropriate
+        """
+        if hasattr(zipfile.ZipFile, '__exit__'):
+            return zipfile.ZipFile(*args, **kwargs)
+        return super(ContextualZipFile, cls).__new__(cls)
 
 
 class ZipProvider(EggProvider):
     """Resource support for zips and eggs"""
 
     eagers = None
+    _zip_manifests = MemoizedZipManifests()
 
     def __init__(self, module):
         EggProvider.__init__(self, module)
-        self.zipinfo = build_zipmanifest(self.loader.archive)
         self.zip_pre = self.loader.archive+os.sep
 
     def _zipinfo_name(self, fspath):
@@ -1586,13 +1850,18 @@ class ZipProvider(EggProvider):
         )
 
     def _parts(self, zip_path):
-        # Convert a zipfile subpath into an egg-relative path part list
-        fspath = self.zip_pre+zip_path  # pseudo-fs path
+        # Convert a zipfile subpath into an egg-relative path part list.
+        # pseudo-fs path
+        fspath = self.zip_pre+zip_path
         if fspath.startswith(self.egg_root+os.sep):
             return fspath[len(self.egg_root)+1:].split(os.sep)
         raise AssertionError(
             "%s is not a subpath of %s" % (fspath, self.egg_root)
         )
+
+    @property
+    def zipinfo(self):
+        return self._zip_manifests.load(self.loader.archive)
 
     def get_resource_filename(self, manager, resource_name):
         if not self.egg_name:
@@ -1680,9 +1949,8 @@ class ZipProvider(EggProvider):
             return False
         # check that the contents match
         zip_contents = self.loader.get_data(zip_path)
-        f = open(file_path, 'rb')
-        file_contents = f.read()
-        f.close()
+        with open(file_path, 'rb') as f:
+            file_contents = f.read()
         return zip_contents == file_contents
 
     def _get_eager_resources(self):
@@ -1750,9 +2018,8 @@ class FileMetadata(EmptyProvider):
 
     def get_metadata(self, name):
         if name=='PKG-INFO':
-            f = open(self.path,'rU')
-            metadata = f.read()
-            f.close()
+            with open(self.path,'rU') as f:
+                metadata = f.read()
             return metadata
         raise KeyError("No metadata except PKG-INFO is available")
 
@@ -1791,7 +2058,6 @@ class EggMetadata(ZipProvider):
     def __init__(self, importer):
         """Create a metadata provider from a zipimporter"""
 
-        self.zipinfo = build_zipmanifest(importer.archive)
         self.zip_pre = importer.archive+os.sep
         self.loader = importer
         if importer.prefix:
@@ -1875,11 +2141,8 @@ def find_on_path(importer, path_item, only=False):
                     for dist in dists:
                         yield dist
                 elif not only and lower.endswith('.egg-link'):
-                    entry_file = open(os.path.join(path_item, entry))
-                    try:
+                    with open(os.path.join(path_item, entry)) as entry_file:
                         entry_lines = entry_file.readlines()
-                    finally:
-                        entry_file.close()
                     for line in entry_lines:
                         if not line.strip():
                             continue
@@ -1890,8 +2153,8 @@ def find_on_path(importer, path_item, only=False):
                         break
 register_finder(pkgutil.ImpImporter, find_on_path)
 
-if importlib_bootstrap is not None:
-    register_finder(importlib_bootstrap.FileFinder, find_on_path)
+if importlib_machinery is not None:
+    register_finder(importlib_machinery.FileFinder, find_on_path)
 
 _declare_state('dict', _namespace_handlers={})
 _declare_state('dict', _namespace_packages={})
@@ -1925,7 +2188,7 @@ def _handle_ns(packageName, path_item):
         return None
     module = sys.modules.get(packageName)
     if module is None:
-        module = sys.modules[packageName] = imp.new_module(packageName)
+        module = sys.modules[packageName] = types.ModuleType(packageName)
         module.__path__ = []
         _set_parent_ns(packageName)
     elif not hasattr(module,'__path__'):
@@ -1944,7 +2207,7 @@ def _handle_ns(packageName, path_item):
 def declare_namespace(packageName):
     """Declare that package 'packageName' is a namespace package"""
 
-    imp.acquire_lock()
+    _imp.acquire_lock()
     try:
         if packageName in _namespace_packages:
             return
@@ -1971,17 +2234,18 @@ def declare_namespace(packageName):
             _handle_ns(packageName, path_item)
 
     finally:
-        imp.release_lock()
+        _imp.release_lock()
 
 def fixup_namespace_packages(path_item, parent=None):
     """Ensure that previously-declared namespace packages include path_item"""
-    imp.acquire_lock()
+    _imp.acquire_lock()
     try:
         for package in _namespace_packages.get(parent,()):
             subpath = _handle_ns(package, path_item)
-            if subpath: fixup_namespace_packages(subpath, package)
+            if subpath:
+                fixup_namespace_packages(subpath, package)
     finally:
-        imp.release_lock()
+        _imp.release_lock()
 
 def file_ns_handler(importer, path_item, packageName, module):
     """Compute an ns-package subpath for a filesystem or zipfile importer"""
@@ -1998,8 +2262,8 @@ def file_ns_handler(importer, path_item, packageName, module):
 register_namespace_handler(pkgutil.ImpImporter, file_ns_handler)
 register_namespace_handler(zipimport.zipimporter, file_ns_handler)
 
-if importlib_bootstrap is not None:
-    register_namespace_handler(importlib_bootstrap.FileFinder, file_ns_handler)
+if importlib_machinery is not None:
+    register_namespace_handler(importlib_machinery.FileFinder, file_ns_handler)
 
 
 def null_ns_handler(importer, path_item, packageName, module):
@@ -2028,8 +2292,8 @@ def _set_parent_ns(packageName):
 
 
 def yield_lines(strs):
-    """Yield non-empty/non-comment lines of a ``basestring`` or sequence"""
-    if isinstance(strs, basestring):
+    """Yield non-empty/non-comment lines of a string or sequence"""
+    if isinstance(strs, string_types):
         for s in strs.splitlines():
             s = s.strip()
             # skip blank lines/comments
@@ -2047,77 +2311,26 @@ CONTINUE = re.compile(r"\s*\\\s*(#.*)?$").match
 # Distribution or extra
 DISTRO = re.compile(r"\s*((\w|[-.])+)").match
 # ver. info
-VERSION = re.compile(r"\s*(<=?|>=?|==|!=)\s*((\w|[-.])+)").match
+VERSION = re.compile(r"\s*(<=?|>=?|===?|!=|~=)\s*((\w|[-.*_!+])+)").match
 # comma between items
 COMMA = re.compile(r"\s*,").match
 OBRACKET = re.compile(r"\s*\[").match
 CBRACKET = re.compile(r"\s*\]").match
 MODULE = re.compile(r"\w+(\.\w+)*$").match
 EGG_NAME = re.compile(
-    r"(?P<name>[^-]+)"
-    r"( -(?P<ver>[^-]+) (-py(?P<pyver>[^-]+) (-(?P<plat>.+))? )? )?",
-    re.VERBOSE | re.IGNORECASE
+    r"""
+    (?P<name>[^-]+) (
+        -(?P<ver>[^-]+) (
+            -py(?P<pyver>[^-]+) (
+                -(?P<plat>.+)
+            )?
+        )?
+    )?
+    """,
+    re.VERBOSE | re.IGNORECASE,
 ).match
 
-component_re = re.compile(r'(\d+ | [a-z]+ | \.| -)', re.VERBOSE)
-replace = {'pre':'c', 'preview':'c','-':'final-','rc':'c','dev':'@'}.get
 
-def _parse_version_parts(s):
-    for part in component_re.split(s):
-        part = replace(part, part)
-        if not part or part=='.':
-            continue
-        if part[:1] in '0123456789':
-            # pad for numeric comparison
-            yield part.zfill(8)
-        else:
-            yield '*'+part
-
-    # ensure that alpha/beta/candidate are before final
-    yield '*final'
-
-def parse_version(s):
-    """Convert a version string to a chronologically-sortable key
-
-    This is a rough cross between distutils' StrictVersion and LooseVersion;
-    if you give it versions that would work with StrictVersion, then it behaves
-    the same; otherwise it acts like a slightly-smarter LooseVersion. It is
-    *possible* to create pathological version coding schemes that will fool
-    this parser, but they should be very rare in practice.
-
-    The returned value will be a tuple of strings.  Numeric portions of the
-    version are padded to 8 digits so they will compare numerically, but
-    without relying on how numbers compare relative to strings.  Dots are
-    dropped, but dashes are retained.  Trailing zeros between alpha segments
-    or dashes are suppressed, so that e.g. "2.4.0" is considered the same as
-    "2.4". Alphanumeric parts are lower-cased.
-
-    The algorithm assumes that strings like "-" and any alpha string that
-    alphabetically follows "final"  represents a "patch level".  So, "2.4-1"
-    is assumed to be a branch or patch of "2.4", and therefore "2.4.1" is
-    considered newer than "2.4-1", which in turn is newer than "2.4".
-
-    Strings like "a", "b", "c", "alpha", "beta", "candidate" and so on (that
-    come before "final" alphabetically) are assumed to be pre-release versions,
-    so that the version "2.4" is considered newer than "2.4a1".
-
-    Finally, to handle miscellaneous cases, the strings "pre", "preview", and
-    "rc" are treated as if they were "c", i.e. as though they were release
-    candidates, and therefore are not as new as a version string that does not
-    contain them, and "dev" is replaced with an '@' so that it sorts lower than
-    than any other pre-release tag.
-    """
-    parts = []
-    for part in _parse_version_parts(s.lower()):
-        if part.startswith('*'):
-            # remove '-' before a prerelease tag
-            if part<'*final':
-                while parts and parts[-1]=='*final-': parts.pop()
-            # remove trailing zeros from each series of numeric parts
-            while parts and parts[-1]=='00000000':
-                parts.pop()
-        parts.append(part)
-    return tuple(parts)
 class EntryPoint(object):
     """Object representing an advertised importable object"""
 
@@ -2141,16 +2354,30 @@ class EntryPoint(object):
     def __repr__(self):
         return "EntryPoint.parse(%r)" % str(self)
 
-    def load(self, require=True, env=None, installer=None):
-        if require: self.require(env, installer)
-        entry = __import__(self.module_name, globals(), globals(),
-            ['__name__'])
-        for attr in self.attrs:
-            try:
-                entry = getattr(entry, attr)
-            except AttributeError:
-                raise ImportError("%r has no %r attribute" % (entry, attr))
-        return entry
+    def load(self, require=True, *args, **kwargs):
+        """
+        Require packages for this EntryPoint, then resolve it.
+        """
+        if not require or args or kwargs:
+            warnings.warn(
+                "Parameters to load are deprecated.  Call .resolve and "
+                ".require separately.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if require:
+            self.require(*args, **kwargs)
+        return self.resolve()
+
+    def resolve(self):
+        """
+        Resolve the entry point from its module and attrs.
+        """
+        module = __import__(self.module_name, fromlist=['__name__'], level=0)
+        try:
+            return functools.reduce(getattr, self.attrs, module)
+        except AttributeError as exc:
+            raise ImportError(str(exc))
 
     def require(self, env=None, installer=None):
         if self.extras and not self.dist:
@@ -2158,6 +2385,15 @@ class EntryPoint(object):
         reqs = self.dist.requires(self.extras)
         items = working_set.resolve(reqs, env, installer)
         list(map(working_set.add, items))
+
+    pattern = re.compile(
+        r'\s*'
+        r'(?P<name>.+?)\s*'
+        r'=\s*'
+        r'(?P<module>[\w.]+)\s*'
+        r'(:\s*(?P<attr>[\w.]+))?\s*'
+        r'(?P<extras>\[.*\])?\s*$'
+    )
 
     @classmethod
     def parse(cls, src, dist=None):
@@ -2170,26 +2406,23 @@ class EntryPoint(object):
         The entry name and module name are required, but the ``:attrs`` and
         ``[extras]`` parts are optional
         """
-        try:
-            attrs = extras = ()
-            name, value = src.split('=',1)
-            if '[' in value:
-                value, extras = value.split('[',1)
-                req = Requirement.parse("x["+extras)
-                if req.specs: raise ValueError
-                extras = req.extras
-            if ':' in value:
-                value, attrs = value.split(':',1)
-                if not MODULE(attrs.rstrip()):
-                    raise ValueError
-                attrs = attrs.rstrip().split('.')
-        except ValueError:
-            raise ValueError(
-                "EntryPoint must be in 'name=module:attrs [extras]' format",
-                src
-            )
-        else:
-            return cls(name.strip(), value.strip(), attrs, extras, dist)
+        m = cls.pattern.match(src)
+        if not m:
+            msg = "EntryPoint must be in 'name=module:attrs [extras]' format"
+            raise ValueError(msg, src)
+        res = m.groupdict()
+        extras = cls._parse_extras(res['extras'])
+        attrs = res['attr'].split('.') if res['attr'] else ()
+        return cls(res['name'], res['module'], attrs, extras, dist)
+
+    @classmethod
+    def _parse_extras(cls, extras_spec):
+        if not extras_spec:
+            return ()
+        req = Requirement.parse('x' + extras_spec)
+        if req.specs:
+            raise ValueError()
+        return req.extras
 
     @classmethod
     def parse_group(cls, group, lines, dist=None):
@@ -2269,12 +2502,12 @@ class Distribution(object):
     @property
     def hashcmp(self):
         return (
-            getattr(self, 'parsed_version', ()),
+            self.parsed_version,
             self.precedence,
             self.key,
             _remove_md5_fragment(self.location),
-            self.py_version,
-            self.platform,
+            self.py_version or '',
+            self.platform or '',
         )
 
     def __hash__(self):
@@ -2315,11 +2548,36 @@ class Distribution(object):
 
     @property
     def parsed_version(self):
-        try:
-            return self._parsed_version
-        except AttributeError:
-            self._parsed_version = pv = parse_version(self.version)
-            return pv
+        if not hasattr(self, "_parsed_version"):
+            self._parsed_version = parse_version(self.version)
+
+        return self._parsed_version
+
+    def _warn_legacy_version(self):
+        LV = packaging.version.LegacyVersion
+        is_legacy = isinstance(self._parsed_version, LV)
+        if not is_legacy:
+            return
+
+        # While an empty version is technically a legacy version and
+        # is not a valid PEP 440 version, it's also unlikely to
+        # actually come from someone and instead it is more likely that
+        # it comes from setuptools attempting to parse a filename and
+        # including it in the list. So for that we'll gate this warning
+        # on if the version is anything at all or not.
+        if not self.version:
+            return
+
+        tmpl = textwrap.dedent("""
+            '{project_name} ({version})' is being parsed as a legacy,
+            non PEP 440,
+            version. You may find odd behavior and sort order.
+            In particular it will be sorted as less than 0.0. It
+            is recommended to migrate to PEP 440 compatible
+            versions.
+            """).strip().replace('\n', ' ')
+
+        warnings.warn(tmpl.format(**vars(self)), PEP440Warning)
 
     @property
     def version(self):
@@ -2344,7 +2602,7 @@ class Distribution(object):
                 for extra, reqs in split_sections(self._get_metadata(name)):
                     if extra:
                         if ':' in extra:
-                            extra, marker = extra.split(':',1)
+                            extra, marker = extra.split(':', 1)
                             if invalid_marker(marker):
                                 # XXX warn
                                 reqs=[]
@@ -2358,7 +2616,7 @@ class Distribution(object):
         """List of Requirements needed for this distro if `extras` are used"""
         dm = self._dep_map
         deps = []
-        deps.extend(dm.get(None,()))
+        deps.extend(dm.get(None, ()))
         for ext in extras:
             try:
                 deps.extend(dm[safe_extra(ext)])
@@ -2375,7 +2633,8 @@ class Distribution(object):
 
     def activate(self, path=None):
         """Ensure distribution is importable on `path` (default=sys.path)"""
-        if path is None: path = sys.path
+        if path is None:
+            path = sys.path
         self.insert_on(path)
         if path is sys.path:
             fixup_namespace_packages(self.location)
@@ -2391,7 +2650,7 @@ class Distribution(object):
         )
 
         if self.platform:
-            filename += '-'+self.platform
+            filename += '-' + self.platform
         return filename
 
     def __repr__(self):
@@ -2401,8 +2660,10 @@ class Distribution(object):
             return str(self)
 
     def __str__(self):
-        try: version = getattr(self,'version',None)
-        except ValueError: version = None
+        try:
+            version = getattr(self, 'version', None)
+        except ValueError:
+            version = None
         version = version or "[unknown version]"
         return "%s %s" % (self.project_name, version)
 
@@ -2421,7 +2682,12 @@ class Distribution(object):
 
     def as_requirement(self):
         """Return a ``Requirement`` that matches this distribution exactly"""
-        return Requirement.parse('%s==%s' % (self.project_name, self.version))
+        if isinstance(self.parsed_version, packaging.version.Version):
+            spec = "%s==%s" % (self.project_name, self.parsed_version)
+        else:
+            spec = "%s===%s" % (self.project_name, self.parsed_version)
+
+        return Requirement.parse(spec)
 
     def load_entry_point(self, group, name):
         """Return the `name` entry point of `group` or raise ImportError"""
@@ -2458,9 +2724,9 @@ class Distribution(object):
         npath= [(p and _normalize_cached(p) or p) for p in path]
 
         for p, item in enumerate(npath):
-            if item==nloc:
+            if item == nloc:
                 break
-            elif item==bdir and self.precedence==EGG_DIST:
+            elif item == bdir and self.precedence == EGG_DIST:
                 # if it's an .egg, give it precedence over its directory
                 if path is sys.path:
                     self.check_version_conflict()
@@ -2474,7 +2740,7 @@ class Distribution(object):
             return
 
         # p is the spot where we found or inserted loc; now remove duplicates
-        while 1:
+        while True:
             try:
                 np = npath.index(nloc, p+1)
             except ValueError:
@@ -2487,7 +2753,7 @@ class Distribution(object):
         return
 
     def check_version_conflict(self):
-        if self.key=='setuptools':
+        if self.key == 'setuptools':
             # ignore the inevitable setuptools self-conflicts  :(
             return
 
@@ -2512,16 +2778,14 @@ class Distribution(object):
         try:
             self.version
         except ValueError:
-            issue_warning("Unbuilt egg for "+repr(self))
+            issue_warning("Unbuilt egg for " + repr(self))
             return False
         return True
 
     def clone(self,**kw):
         """Copy this distribution, substituting in any changed keyword args"""
-        for attr in (
-            'project_name', 'version', 'py_version', 'platform', 'location',
-            'precedence'
-        ):
+        names = 'project_name version py_version platform location precedence'
+        for attr in names.split():
             kw.setdefault(attr, getattr(self, attr, None))
         kw.setdefault('metadata', self._provider)
         return self.__class__(**kw)
@@ -2542,9 +2806,8 @@ class DistInfoDistribution(Distribution):
         try:
             return self._pkg_info
         except AttributeError:
-            from email.parser import Parser
             metadata = self.get_metadata(self.PKG_INFO)
-            self._pkg_info = Parser().parsestr(metadata)
+            self._pkg_info = email.parser.Parser().parsestr(metadata)
             return self._pkg_info
 
     @property
@@ -2612,15 +2875,18 @@ def issue_warning(*args,**kw):
             level += 1
     except ValueError:
         pass
-    from warnings import warn
-    warn(stacklevel = level+1, *args, **kw)
+    warnings.warn(stacklevel=level + 1, *args, **kw)
+
+
+class RequirementParseError(ValueError):
+    def __str__(self):
+        return ' '.join(self.args)
 
 
 def parse_requirements(strs):
     """Yield ``Requirement`` objects for each specification in `strs`
 
-    `strs` must be an instance of ``basestring``, or a (possibly-nested)
-    iterable thereof.
+    `strs` must be a string, or a (possibly-nested) iterable thereof.
     """
     # create a steppable iterator, so we can handle \-continuations
     lines = iter(yield_lines(strs))
@@ -2635,14 +2901,13 @@ def parse_requirements(strs):
                     line = next(lines)
                     p = 0
                 except StopIteration:
-                    raise ValueError(
-                        "\\ must not appear on the last nonblank line"
-                    )
+                    msg = "\\ must not appear on the last nonblank line"
+                    raise RequirementParseError(msg)
 
             match = ITEM(line, p)
             if not match:
                 msg = "Expected " + item_name + " in"
-                raise ValueError(msg, line, "at", line[p:])
+                raise RequirementParseError(msg, line, "at", line[p:])
 
             items.append(match.group(*groups))
             p = match.end()
@@ -2653,16 +2918,18 @@ def parse_requirements(strs):
                 p = match.end()
             elif not TERMINATOR(line, p):
                 msg = "Expected ',' or end-of-list in"
-                raise ValueError(msg, line, "at", line[p:])
+                raise RequirementParseError(msg, line, "at", line[p:])
 
         match = TERMINATOR(line, p)
-        if match: p = match.end()   # skip the terminator, if any
+        # skip the terminator, if any
+        if match:
+            p = match.end()
         return line, p, items
 
     for line in lines:
         match = DISTRO(line)
         if not match:
-            raise ValueError("Missing distribution spec", line)
+            raise RequirementParseError("Missing distribution spec", line)
         project_name = match.group(1)
         p = match.end()
         extras = []
@@ -2676,7 +2943,7 @@ def parse_requirements(strs):
 
         line, p, specs = scan_list(VERSION, LINE_END, line, p, (1, 2),
             "version spec")
-        specs = [(op, safe_version(val)) for op, val in specs]
+        specs = [(op, val) for op, val in specs]
         yield Requirement(project_name, specs, extras)
 
 
@@ -2685,55 +2952,44 @@ class Requirement:
         """DO NOT CALL THIS UNDOCUMENTED METHOD; use Requirement.parse()!"""
         self.unsafe_name, project_name = project_name, safe_name(project_name)
         self.project_name, self.key = project_name, project_name.lower()
-        index = [
-            (parse_version(v), state_machine[op], op, v)
-            for op, v in specs
-        ]
-        index.sort()
-        self.specs = [(op, ver) for parsed, trans, op, ver in index]
-        self.index, self.extras = index, tuple(map(safe_extra, extras))
+        self.specifier = packaging.specifiers.SpecifierSet(
+            ",".join(["".join([x, y]) for x, y in specs])
+        )
+        self.specs = specs
+        self.extras = tuple(map(safe_extra, extras))
         self.hashCmp = (
             self.key,
-            tuple((op, parsed) for parsed, trans, op, ver in index),
+            self.specifier,
             frozenset(self.extras),
         )
         self.__hash = hash(self.hashCmp)
 
     def __str__(self):
-        specs = ','.join([''.join(s) for s in self.specs])
         extras = ','.join(self.extras)
-        if extras: extras = '[%s]' % extras
-        return '%s%s%s' % (self.project_name, extras, specs)
+        if extras:
+            extras = '[%s]' % extras
+        return '%s%s%s' % (self.project_name, extras, self.specifier)
 
     def __eq__(self, other):
-        return isinstance(other, Requirement) and self.hashCmp==other.hashCmp
+        return (
+            isinstance(other, Requirement) and
+            self.hashCmp == other.hashCmp
+        )
+
+    def __ne__(self, other):
+        return not self == other
 
     def __contains__(self, item):
         if isinstance(item, Distribution):
             if item.key != self.key:
                 return False
-            # only get if we need it
-            if self.index:
-                item = item.parsed_version
-        elif isinstance(item, basestring):
-            item = parse_version(item)
-        last = None
-        # -1, 0, 1
-        compare = lambda a, b: (a > b) - (a < b)
-        for parsed, trans, op, ver in self.index:
-            # Indexing: 0, 1, -1
-            action = trans[compare(item, parsed)]
-            if action=='F':
-                return False
-            elif action=='T':
-                return True
-            elif action=='+':
-                last = True
-            elif action=='-' or last is None:
-                last = False
-        # no rules encountered
-        if last is None: last = True
-        return last
+
+            item = item.version
+
+        # Allow prereleases always in order to match the previous behavior of
+        # this method. In the future this should be smarter and follow PEP 440
+        # more accurately.
+        return self.specifier.contains(item, prereleases=True)
 
     def __hash__(self):
         return self.__hash
@@ -2742,22 +2998,8 @@ class Requirement:
 
     @staticmethod
     def parse(s):
-        reqs = list(parse_requirements(s))
-        if reqs:
-            if len(reqs)==1:
-                return reqs[0]
-            raise ValueError("Expected only one requirement", s)
-        raise ValueError("No requirements found", s)
-
-state_machine = {
-    #       =><
-    '<': '--T',
-    '<=': 'T-T',
-    '>': 'F+F',
-    '>=': 'T+F',
-    '==': 'T..',
-    '!=': 'F++',
-}
+        req, = parse_requirements(s)
+        return req
 
 
 def _get_mro(cls):
@@ -2779,6 +3021,17 @@ def ensure_directory(path):
     dirname = os.path.dirname(path)
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
+
+
+def _bypass_ensure_directory(path):
+    """Sandbox-bypassing version of ensure_directory()"""
+    if not WRITE_SUPPORT:
+        raise IOError('"os.mkdir" not supported on this platform.')
+    dirname, filename = split(path)
+    if dirname and filename and not isdir(dirname):
+        _bypass_ensure_directory(dirname)
+        mkdir(dirname, 0o755)
+
 
 def split_sections(s):
     """Split a string or iterable thereof into (section, content) pairs
@@ -2806,38 +3059,66 @@ def split_sections(s):
     yield section, content
 
 def _mkstemp(*args,**kw):
-    from tempfile import mkstemp
     old_open = os.open
     try:
         # temporarily bypass sandboxing
         os.open = os_open
-        return mkstemp(*args,**kw)
+        return tempfile.mkstemp(*args,**kw)
     finally:
         # and then put it back
         os.open = old_open
 
 
-# Set up global resource manager (deliberately not state-saved)
-_manager = ResourceManager()
-def _initialize(g):
-    for name in dir(_manager):
+# Silence the PEP440Warning by default, so that end users don't get hit by it
+# randomly just because they use pkg_resources. We want to append the rule
+# because we want earlier uses of filterwarnings to take precedence over this
+# one.
+warnings.filterwarnings("ignore", category=PEP440Warning, append=True)
+
+
+# from jaraco.functools 1.3
+def _call_aside(f, *args, **kwargs):
+    f(*args, **kwargs)
+    return f
+
+
+@_call_aside
+def _initialize(g=globals()):
+    "Set up global resource manager (deliberately not state-saved)"
+    manager = ResourceManager()
+    g['_manager'] = manager
+    for name in dir(manager):
         if not name.startswith('_'):
-            g[name] = getattr(_manager, name)
-_initialize(globals())
+            g[name] = getattr(manager, name)
 
-# Prepare the master working set and make the ``require()`` API available
-working_set = WorkingSet._build_master()
-_declare_state('object', working_set=working_set)
 
-require = working_set.require
-iter_entry_points = working_set.iter_entry_points
-add_activation_listener = working_set.subscribe
-run_script = working_set.run_script
-# backward compatibility
-run_main = run_script
-# Activate all distributions already on sys.path, and ensure that
-# all distributions added to the working set in the future (e.g. by
-# calling ``require()``) will get activated as well.
-add_activation_listener(lambda dist: dist.activate())
-working_set.entries=[]
-list(map(working_set.add_entry, sys.path)) # match order
+@_call_aside
+def _initialize_master_working_set():
+    """
+    Prepare the master working set and make the ``require()``
+    API available.
+
+    This function has explicit effects on the global state
+    of pkg_resources. It is intended to be invoked once at
+    the initialization of this module.
+
+    Invocation by other packages is unsupported and done
+    at their own risk.
+    """
+    working_set = WorkingSet._build_master()
+    _declare_state('object', working_set=working_set)
+
+    require = working_set.require
+    iter_entry_points = working_set.iter_entry_points
+    add_activation_listener = working_set.subscribe
+    run_script = working_set.run_script
+    # backward compatibility
+    run_main = run_script
+    # Activate all distributions already on sys.path, and ensure that
+    # all distributions added to the working set in the future (e.g. by
+    # calling ``require()``) will get activated as well.
+    add_activation_listener(lambda dist: dist.activate())
+    working_set.entries=[]
+    # match order
+    list(map(working_set.add_entry, sys.path))
+    globals().update(locals())
