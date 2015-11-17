@@ -156,6 +156,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 pathResolver,
                 args.srcs.get(),
                 validateResources(pathResolver, args, params.getProjectFilesystem()),
+                javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
                 args.postprocessClassesCommands.get(),
@@ -163,7 +164,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                javacOptions,
+                new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.tests.get()));

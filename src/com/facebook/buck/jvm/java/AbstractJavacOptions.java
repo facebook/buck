@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.google.common.base.Optional.fromNullable;
+
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
@@ -228,5 +230,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     builder.addAllExtraArguments(options.getExtraArguments());
 
     return builder;
+  }
+
+  public final Optional<Path> getGeneratedSourceFolderName() {
+    return fromNullable(getAnnotationProcessingParams().getGeneratedSourceFolderName());
   }
 }
