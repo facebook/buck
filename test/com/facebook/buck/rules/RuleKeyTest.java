@@ -498,7 +498,7 @@ public class RuleKeyTest {
     RuleKey nullRuleKey = new NoopSetterRuleKeyBuilder(pathResolver, hashCache)
         .build();
     RuleKey noopRuleKey = new NoopSetterRuleKeyBuilder(pathResolver, hashCache)
-        .setReflectively("key", new TestSourcePath("value"))
+        .setReflectively("key", new FakeSourcePath("value"))
         .build();
 
     assertThat(noopRuleKey, is(equalTo(nullRuleKey)));

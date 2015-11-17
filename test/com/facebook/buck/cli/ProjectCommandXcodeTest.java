@@ -29,10 +29,10 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -100,7 +100,7 @@ public class ProjectCommandXcodeTest {
         .createBuilder(fooTestTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
-        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -122,21 +122,21 @@ public class ProjectCommandXcodeTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
         .setBinary(fooBinBinaryTarget)
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
-        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux:bin");
@@ -149,7 +149,7 @@ public class ProjectCommandXcodeTest {
     workspaceExtraTestNode = AppleTestBuilder
         .createBuilder(workspaceExtraTestTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget workspaceTarget = BuildTargetFactory.newInstance("//foo:workspace");

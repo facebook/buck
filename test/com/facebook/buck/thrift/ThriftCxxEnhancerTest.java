@@ -37,10 +37,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -105,11 +105,11 @@ public class ThriftCxxEnhancerTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         resolver,
         new CommandTool.Builder()
-            .addArg(new TestSourcePath("compiler"))
+            .addArg(new FakeSourcePath("compiler"))
             .build(),
         ImmutableList.<String>of(),
         Paths.get("output"),
-        new TestSourcePath("source"),
+        new FakeSourcePath("source"),
         "language",
         ImmutableSet.<String>of(),
         ImmutableList.<Path>of(),
@@ -571,10 +571,10 @@ public class ThriftCxxEnhancerTest {
     final String cppHeaderNamespace = "foo";
     final ImmutableSortedMap<String, SourcePath> cppHeaders =
         ImmutableSortedMap.<String, SourcePath>of(
-            "header.h", new TestSourcePath("header.h"));
+            "header.h", new FakeSourcePath("header.h"));
     final ImmutableSortedMap<String, SourceWithFlags> cppSrcs =
         ImmutableSortedMap.of(
-            "source.cpp", SourceWithFlags.of(new TestSourcePath("source.cpp")));
+            "source.cpp", SourceWithFlags.of(new FakeSourcePath("source.cpp")));
 
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.cppOptions = Optional.absent();

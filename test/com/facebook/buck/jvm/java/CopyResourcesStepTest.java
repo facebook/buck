@@ -23,9 +23,9 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -54,8 +54,8 @@ public class CopyResourcesStepTest {
         resolver,
         buildTarget,
         ImmutableSet.of(
-            new TestSourcePath("android/java/src/com/facebook/base/data.json"),
-            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
+            new FakeSourcePath("android/java/src/com/facebook/base/data.json"),
+            new FakeSourcePath("android/java/src/com/facebook/common/util/data.json")),
         SCRATCH_PATH.resolve("android/java/lib__resources__classes"),
         javaPackageFinder);
 
@@ -88,8 +88,8 @@ public class CopyResourcesStepTest {
         new SourcePathResolver(new BuildRuleResolver()),
         buildTarget,
         ImmutableSet.<SourcePath>of(
-            new TestSourcePath("android/java/src/com/facebook/base/data.json"),
-            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
+            new FakeSourcePath("android/java/src/com/facebook/base/data.json"),
+            new FakeSourcePath("android/java/src/com/facebook/common/util/data.json")),
         SCRATCH_PATH.resolve("android/java/src/lib__resources__classes"),
         javaPackageFinder);
 
@@ -123,8 +123,8 @@ public class CopyResourcesStepTest {
         new SourcePathResolver(new BuildRuleResolver()),
         buildTarget,
         ImmutableSet.of(
-            new TestSourcePath("android/java/src/com/facebook/base/data.json"),
-            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
+            new FakeSourcePath("android/java/src/com/facebook/base/data.json"),
+            new FakeSourcePath("android/java/src/com/facebook/common/util/data.json")),
         SCRATCH_PATH.resolve("android/java/src/com/facebook/lib__resources__classes"),
         javaPackageFinder);
 

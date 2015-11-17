@@ -136,7 +136,7 @@ public class CommandToolTest {
   public void environment() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    SourcePath path = new TestSourcePath("input");
+    SourcePath path = new FakeSourcePath("input");
     CommandTool tool =
         new CommandTool.Builder()
             .addArg("runit")
@@ -152,7 +152,7 @@ public class CommandToolTest {
   public void sourcePathsContributeToRuleKeys() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    SourcePath path = new TestSourcePath("input");
+    SourcePath path = new FakeSourcePath("input");
     CommandTool tool =
         new CommandTool.Builder()
             .addArg("exec %s", path)

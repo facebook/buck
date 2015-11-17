@@ -33,9 +33,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.google.common.base.Optional;
@@ -69,7 +69,7 @@ public class JavaSourceJarTest {
   @Test
   public void shouldOnlyIncludePathBasedSources() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    SourcePath fileBased = new TestSourcePath("some/path/File.java");
+    SourcePath fileBased = new FakeSourcePath("some/path/File.java");
     SourcePath ruleBased = new BuildTargetSourcePath(
         BuildTargetFactory.newInstance("//cheese:cake"));
 

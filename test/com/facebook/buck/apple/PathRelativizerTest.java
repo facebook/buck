@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +52,7 @@ public class PathRelativizerTest {
   public void testOutputPathToSourcePath() {
     assertEquals(
         Paths.get("../../source/path/foo.h"),
-        pathRelativizer.outputPathToSourcePath(new TestSourcePath("source/path/foo.h")));
+        pathRelativizer.outputPathToSourcePath(new FakeSourcePath("source/path/foo.h")));
   }
 
   @Test

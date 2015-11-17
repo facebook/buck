@@ -35,12 +35,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
@@ -141,7 +141,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetInputsFromSourcePaths() {
     ExportFileBuilder builder = ExportFileBuilder.newExportFileBuilder(target)
-        .setSrc(new TestSourcePath("chips"))
+        .setSrc(new FakeSourcePath("chips"))
         .setOut("cake");
 
     ExportFile exportFile = (ExportFile) builder

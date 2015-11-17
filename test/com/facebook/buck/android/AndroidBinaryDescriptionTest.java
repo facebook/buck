@@ -25,8 +25,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -55,12 +55,12 @@ public class AndroidBinaryDescriptionTest {
             new Keystore(
                 new FakeBuildRuleParamsBuilder("//:keystore").build(),
                 pathResolver,
-                new TestSourcePath("store"),
-                new TestSourcePath("properties")));
+                new FakeSourcePath("store"),
+                new FakeSourcePath("properties")));
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     AndroidBinary androidBinary =
         (AndroidBinary) AndroidBinaryBuilder.createBuilder(target)
-            .setManifest(new TestSourcePath("manifest.xml"))
+            .setManifest(new FakeSourcePath("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))

@@ -29,11 +29,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -120,7 +120,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> cxxLibraryBuilder = new CxxLibraryBuilder(
         BuildTargetFactory.newInstance("//:cxxlib"))
         .setSoname("somelib.so")
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("test/bar.cpp"))));
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
     TargetNode<CxxLibraryDescription.Arg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(
