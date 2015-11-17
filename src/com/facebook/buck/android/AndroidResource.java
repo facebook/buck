@@ -282,7 +282,7 @@ public class AndroidResource extends AbstractBuildRule
               "null. This should already be enforced by the constructor.");
       steps.add(
           new ExtractFromAndroidManifestStep(
-              getResolver().deprecatedGetPath(manifestFile),
+              getResolver().getAbsolutePath(manifestFile),
               getProjectFilesystem(),
               buildableContext,
               METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
