@@ -312,31 +312,106 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
+    String usedHeaderName = "source_full_header.h";
+    String sourceName = "source_full_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
+      throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
+    String usedHeaderName = "source_relative_header.h";
+    String sourceName = "source_relative_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
   public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:source_relative_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
-        workspace.getDestPath(),
-        target,
-        cxxPlatform);
-    String usedHeaderName = "source_relative_header.h";
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     String unusedHeaderName = "unused_header.h";
-    String sourceName = "source_relative_header.cpp";
-    BuildTarget preprocessTarget;
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      preprocessTarget = cxxSourceRuleFactory.createPreprocessBuildTarget(
-          sourceName,
-          AbstractCxxSource.Type.CXX,
-          CxxSourceRuleFactory.PicType.PDC);
-    } else {
-      preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(
-          sourceName,
-          CxxSourceRuleFactory.PicType.PDC);
-    }
+    String sourceName = "source.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
 
     // Run the build and verify that the C++ source was preprocessed.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry firstRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -350,7 +425,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Run the build again and verify that got a matching depfile rule key, and therefore
     // didn't recompile.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry secondRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -362,28 +437,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assertThat(
         secondRunEntry.getRuleKey(),
         Matchers.not(equalTo(firstRunEntry.getRuleKey())));
-
-    workspace.writeContentsToPath(
-        "static inline int newFunction() { return 20; }",
-        usedHeaderName);
-
-    // Run the build again and verify that we recompiled as the header caused the depfile rule key
-    // to change.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
-    BuckBuildLog.BuildLogEntry thirdRunEntry =
-        workspace.getBuildLog().getLogEntry(preprocessTarget);
-    assertThat(
-        thirdRunEntry.getSuccessType(),
-        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
-
-
-    // Also, make sure all three rule keys are actually different.
-    assertThat(
-        thirdRunEntry.getRuleKey(),
-        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
-    assertThat(
-        thirdRunEntry.getRuleKey(),
-        Matchers.not(equalTo(secondRunEntry.getRuleKey())));
   }
 
   @Test
@@ -398,6 +451,28 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assumeTrue(
         Platform.detect() != Platform.MACOS ||
             !ImmutableSet.of(CxxPreprocessMode.SEPARATE, CxxPreprocessMode.PIPED).contains(mode));
+  }
+
+  private BuildTarget getPreprocessTarget(
+      CxxPlatform cxxPlatform,
+      BuildTarget target,
+      String source,
+      CxxSource.Type type) {
+    CxxSourceRuleFactory cxxSourceRuleFactory =
+        CxxSourceRuleFactoryHelper.of(
+            workspace.getDestPath(),
+            target,
+            cxxPlatform);
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      return cxxSourceRuleFactory.createPreprocessBuildTarget(
+          source,
+          type,
+          CxxSourceRuleFactory.PicType.PDC);
+    } else {
+      return cxxSourceRuleFactory.createCompileBuildTarget(
+          source,
+          CxxSourceRuleFactory.PicType.PDC);
+    }
   }
 
 }

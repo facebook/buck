@@ -51,10 +51,20 @@ cxx_binary(
 )
 
 cxx_binary(
-  name = 'source_relative_header',
+  name = 'binary_with_used_full_header',
+  header_namespace = 'prefix',
+  headers = [
+    'source_full_header.h',
+  ],
+  srcs = [
+    'source_full_header.cpp',
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_used_relative_header',
   headers = [
     'source_relative_header.h',
-    'unused_header.h',
   ],
   srcs = [
     'source_relative_header.cpp',
