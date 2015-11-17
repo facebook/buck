@@ -238,12 +238,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     if (args.compiler.isPresent()) {
-      Either<BuiltInJavac, SourcePath> left = args.compiler.get();
+      Either<BuiltInJavac, SourcePath> either = args.compiler.get();
 
-      if (left.isRight()) {
-        SourcePath right = left.getRight();
+      if (either.isRight()) {
+        SourcePath sourcePath = either.getRight();
 
-        Optional<BuildRule> possibleRule = resolver.getRule(right);
+        Optional<BuildRule> possibleRule = resolver.getRule(sourcePath);
         if (possibleRule.isPresent()) {
           BuildRule rule = possibleRule.get();
           if (rule instanceof PrebuiltJar) {
@@ -253,7 +253,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
           }
         } else {
-          builder.setJavacPath(resolver.deprecatedGetPath(right));
+          builder.setJavacPath(resolver.deprecatedGetPath(sourcePath));
         }
       }
     } else {
