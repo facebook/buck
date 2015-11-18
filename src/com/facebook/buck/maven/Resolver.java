@@ -360,7 +360,7 @@ public class Resolver {
           continue;
         }
 
-        // TODO(simons): Do we always want optional dependencies?
+        // TODO(shs96c): Do we always want optional dependencies?
 //        if (dependency.isOptional()) {
 //          continue;
 //        }

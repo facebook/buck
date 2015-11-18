@@ -84,7 +84,7 @@ public class IjProjectWriter {
 
     ST moduleContents = getST(StringTemplateFile.MODULE_TEMPLATE);
 
-    // TODO(mkosiba): support androidFacet.
+    // TODO(marcinkosiba): support androidFacet.
     moduleContents.add("androidFacet", false);
     moduleContents.add("contentRoot", projectDataPreparer.getContentRoot(module));
     moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
@@ -102,7 +102,7 @@ public class IjProjectWriter {
     contents.add("classPaths", library.getClassPaths());
     contents.add("sourceJar", library.getSourceJar().orNull());
     contents.add("javadocUrl", library.getJavadocUrl().orNull());
-    //TODO(mkosiba): support res and assets for aar.
+    //TODO(marcinkosiba): support res and assets for aar.
 
     writeToFile(contents, path);
   }

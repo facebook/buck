@@ -136,7 +136,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final ImmutableSortedSet<BuildTarget> tests;
 
 
-  // TODO(jacko): This really should be final, but we need to refactor how we get the
+  // TODO(oconnor663): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
   @AddToRuleKey
   private JavacOptions javacOptions;

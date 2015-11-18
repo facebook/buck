@@ -74,7 +74,7 @@ import java.nio.file.Path;
  * As a rule of thumb, if the "out" parameter is missing, the "name" parameter is used as the name
  * of the file to be saved.
  */
-// TODO(simons): Extend to also allow exporting a rule.
+// TODO(shs96c): Extend to also allow exporting a rule.
 public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
   @AddToRuleKey

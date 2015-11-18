@@ -101,7 +101,7 @@ public class JavaSymbolFinder {
    */
   public ImmutableSetMultimap<String, BuildTarget> findTargetsForSymbols(Set<String> symbols)
       throws InterruptedException {
-    // TODO(jacko): Handle files that aren't included in any rule.
+    // TODO(oconnor663): Handle files that aren't included in any rule.
 
     // First find all the source roots in the current project.
     Collection<Path> srcRoots;
@@ -243,7 +243,7 @@ public class JavaSymbolFinder {
    */
   private ImmutableSortedSet<Path> getDefiningPaths(String symbol, Collection<Path> srcRoots) {
     ImmutableSortedSet.Builder<Path> definingPaths = ImmutableSortedSet.naturalOrder();
-    // TODO(simons): This should use the same javac env as was used for compiling the code.
+    // TODO(shs96c): This should use the same javac env as was used for compiling the code.
     JavaFileParser parser = JavaFileParser.createJavaFileParser(javacOptions);
 
     for (Path candidatePath : getCandidatePaths(symbol, srcRoots)) {

@@ -222,7 +222,7 @@ public class ProjectWorkspace {
     buildResult.assertSuccess();
 
     // Use `buck targets` to find the output JAR file.
-    // TODO(jacko): This is going to overwrite the build.log. Maybe stash that and return it?
+    // TODO(oconnor663): This is going to overwrite the build.log. Maybe stash that and return it?
     ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
         "targets",
         "--show-output",

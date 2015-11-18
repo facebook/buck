@@ -212,7 +212,7 @@ public class CachingBuildEngine implements BuildEngine {
             rule.getRuleKey(),
             buildInfoRecorder,
             context.getArtifactCache(),
-            // TODO(simons): This should be a shared between all tests, not one per cell
+            // TODO(shs96c): This should be a shared between all tests, not one per cell
             rule.getProjectFilesystem(),
             context);
     if (cacheResult.getType().isSuccess()) {
@@ -304,7 +304,7 @@ public class CachingBuildEngine implements BuildEngine {
                       inputRuleKey,
                       buildInfoRecorder,
                       context.getArtifactCache(),
-                      // TODO(simons): This should be a shared between all tests, not one per cell
+                      // TODO(shs96c): This should be a shared between all tests, not one per cell
                       rule.getProjectFilesystem(),
                       context);
               if (cacheResult.getType().isSuccess()) {
@@ -538,7 +538,7 @@ public class CachingBuildEngine implements BuildEngine {
             buildResult,
             new FutureCallback<BuildResult>() {
 
-              // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
+              // TODO(bolinfest): Delete all files produced by the rule, as they are not guaranteed
               // to be valid at this point?
               private void cleanupAfterError() {
                 try {
@@ -874,7 +874,7 @@ public class CachingBuildEngine implements BuildEngine {
       throw new RuntimeException(e);
     }
 
-    // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
+    // TODO(bolinfest): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
     CacheResult cacheResult =

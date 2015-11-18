@@ -273,7 +273,7 @@ public class InstallCommand extends BuildCommand {
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     for (int index = 0; index < getArguments().size(); index++) {
 
-      // TODO(markwang): Cache argument parsing
+      // TODO(ryu2): Cache argument parsing
         TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
             params.getBuckConfig(),
             getArguments()).get(index);
@@ -367,7 +367,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
-    // TODO(beng): This should be shared with the build and passed down.
+    // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
 
     final Path helperPath;
@@ -493,7 +493,7 @@ public class InstallCommand extends BuildCommand {
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
 
-    // TODO(beng): This should be shared with the build and passed down.
+    // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     Optional<Path> xcodeDeveloperPath = appleConfig.getAppleDeveloperDirectorySupplier(
         processExecutor).get();

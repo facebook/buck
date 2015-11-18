@@ -74,7 +74,7 @@ public class Unzip {
           }
         }
 
-        // TODO(mbolin): Keep track of which directories have already been written to avoid
+        // TODO(bolinfest): Keep track of which directories have already been written to avoid
         // making unnecessary Files.createDirectories() calls. In practice, a single zip file will
         // have many entries in the same directory.
 
@@ -92,7 +92,7 @@ public class Unzip {
             ByteStreams.copy(is, out);
           }
 
-          // TODO(simons): Implement what the comment below says we should do.
+          // TODO(shs96c): Implement what the comment below says we should do.
           //
           // Sets the file permissions of the output file given the information in {@code entry}'s
           // extra data field. According to the docs at

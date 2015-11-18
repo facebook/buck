@@ -94,7 +94,7 @@ public class AppleCxxPlatforms {
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
-    // TODO(beng): Add more and better cflags.
+    // TODO(bhamiltoncx): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);

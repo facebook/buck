@@ -57,7 +57,7 @@ public class CleanCommand extends AbstractCommand {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     if (isCleanBuckProjectFiles()) {
       // Delete directories that were created for the purpose of `buck project`.
-      // TODO(mbolin): Unify these two directories under a single buck-ide directory,
+      // TODO(bolinfest): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
       projectFilesystem.deleteRecursivelyIfExists(Project.ANDROID_GEN_PATH);
       projectFilesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);

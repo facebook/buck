@@ -58,7 +58,7 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private ProjectFilesystem projectFilesystem;
 
-  // TODO(mbolin): When it is possible to inject a mock object for stderr,
+  // TODO(bolinfest): When it is possible to inject a mock object for stderr,
   // create a test that runs `buck clean unexpectedarg` and verify that the
   // exit code is 1 and that the appropriate error message is printed.
 

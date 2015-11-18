@@ -404,7 +404,7 @@ public class IjModuleFactory {
       TargetNode<T> targetNode,
       ModuleBuildContext context) {
     T arg = targetNode.getConstructorArg();
-    // TODO(mkosiba): investigate supporting annotation processors without resorting to this.
+    // TODO(marcinkosiba): investigate supporting annotation processors without resorting to this.
     boolean hasAnnotationProcessors = !arg.annotationProcessors.get().isEmpty();
     if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
       context.addCompileShadowDep(targetNode.getBuildTarget());
@@ -471,7 +471,7 @@ public class IjModuleFactory {
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
 
-      // TODO(mkosiba): Add support for arg.rDotJavaPackage and maybe arg.manifest
+      // TODO(marcinkosiba): Add support for arg.rDotJavaPackage and maybe arg.manifest
       Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
       if (assets.isPresent()) {
         androidFacetBuilder.addAssetPaths(assets.get());

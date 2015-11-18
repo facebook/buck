@@ -7,7 +7,7 @@ apple_resource(
 apple_binary(
     name = 'TestHostBinary',
     srcs = ['TestHostApp.m'],
-    # TODO(beng): We should be able to make this a private header
+    # TODO(bhamiltoncx): We should be able to make this a private header
     exported_headers = ['TestHostApp.h'],
     frameworks = [
         '$SDKROOT/System/Library/Frameworks/Foundation.framework',

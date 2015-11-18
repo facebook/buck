@@ -342,7 +342,7 @@ def glob_internal(includes, excludes, include_dotfiles, search_base):
     def includes_iterator():
         for pattern in includes:
             for path in search_base.glob(pattern):
-                # TODO(beng): Handle hidden files on Windows.
+                # TODO(bhamiltoncx): Handle hidden files on Windows.
                 if path.is_file() and (include_dotfiles or not path.name.startswith('.')):
                     yield path.relative_to(search_base)
 

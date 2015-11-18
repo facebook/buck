@@ -91,7 +91,7 @@ public class DummyRDotJava extends AbstractBuildRule
       // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
       // out, so we have to create one, anyway.
 
-      // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
+      // TODO(bolinfest): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
       Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), emptyRDotJava.getParent()));

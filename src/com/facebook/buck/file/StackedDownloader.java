@@ -109,7 +109,7 @@ public class StackedDownloader implements Downloader {
     }
 
     // Add a default downloader
-    // TODO(simons): Remove the maven_repo check
+    // TODO(shs96c): Remove the maven_repo check
     Optional<String> defaultMavenRepo = downloadConfig.getMavenRepo();
     if (defaultMavenRepo.isPresent()) {
       LOG.warn("Please configure maven repos by adding them to a 'maven_repositories' " +

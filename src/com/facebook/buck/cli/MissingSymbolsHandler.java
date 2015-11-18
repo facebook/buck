@@ -172,8 +172,8 @@ public class MissingSymbolsHandler {
 
     for (BuildTarget target: targetsMissingSymbols.keySet()) {
       for (String symbol : targetsMissingSymbols.get(target)) {
-        // TODO(jacko): Properly handle symbols that are defined in more than one place.
-        // TODO(jacko): Properly handle target visibility.
+        // TODO(oconnor663): Properly handle symbols that are defined in more than one place.
+        // TODO(oconnor663): Properly handle target visibility.
         neededDeps.putAll(target, ImmutableSortedSet.copyOf(symbolProviders.get(symbol)));
       }
     }

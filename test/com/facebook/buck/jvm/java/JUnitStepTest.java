@@ -205,7 +205,7 @@ public class JUnitStepTest {
             testClass2),
         observedArgs);
 
-    // TODO(simons): Why does the CapturingPrintStream append spaces?
+    // TODO(shs96c): Why does the CapturingPrintStream append spaces?
     assertEquals("Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.",
         console.getTextWrittenToStdErr().trim());
   }

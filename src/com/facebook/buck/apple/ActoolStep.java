@@ -54,7 +54,7 @@ public class ActoolStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
-    //TODO(jakubzika): Let apps select their minimum target.
+    //TODO(k21): Let apps select their minimum target.
     String target = "7.0";
 
     commandBuilder.addAll(actoolCommand);
@@ -65,7 +65,7 @@ public class ActoolStep extends ShellStep {
         "--errors",
         "--platform", applePlatformName,
         "--minimum-deployment-target", target,
-        //TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
+        //TODO(k21): Let apps decide which device they want to target (iPhone / iPad / both)
         "--target-device", "iphone",
         "--target-device", "ipad",
         "--compress-pngs",

@@ -783,7 +783,7 @@ public class ParserNgTest {
   }
 
   @Test
-  // TODO(simons): avoid invalidation when arbitrary contained (possibly backup) files are added.
+  // TODO(shs96c): avoid invalidation when arbitrary contained (possibly backup) files are added.
   public void whenNotifiedOfContainedFileAddThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
@@ -881,7 +881,7 @@ public class ParserNgTest {
   }
 
   @Test
-  // TODO(simons): avoid invalidation when arbitrary contained (possibly backup) files are deleted.
+  // TODO(shs96c): avoid invalidation when arbitrary contained (possibly backup) files are deleted.
   public void whenNotifiedOfContainedFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.

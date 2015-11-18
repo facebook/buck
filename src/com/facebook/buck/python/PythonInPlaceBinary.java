@@ -36,7 +36,7 @@ import java.nio.file.Path;
 
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
-  // TODO(agallagher): Task #8098647: This rule has no steps, so it
+  // TODO(andrewjcg): Task #8098647: This rule has no steps, so it
   // really doesn't need a rule key.
   //
   // However, Python tests will never be re-run if the rule key

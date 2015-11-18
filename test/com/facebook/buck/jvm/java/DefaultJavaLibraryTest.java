@@ -1248,7 +1248,7 @@ public class DefaultJavaLibraryTest {
     return context;
   }
 
-  // TODO(mbolin): Eliminate the bootclasspath parameter, as it is completely misused in this test.
+  // TODO(bolinfest): Eliminate the bootclasspath parameter, as it is completely misused in this test.
   private BuildContext createBuildContext(BuildRule javaLibrary,
                                           @Nullable String bootclasspath,
                                           @Nullable ProjectFilesystem projectFilesystem) {
@@ -1264,7 +1264,7 @@ public class DefaultJavaLibraryTest {
       projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     }
 
-    // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
+    // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
     return ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
@@ -1361,7 +1361,7 @@ public class DefaultJavaLibraryTest {
       return options;
     }
 
-    // TODO(simons): Actually generate a java library rule, rather than an android one.
+    // TODO(shs96c): Actually generate a java library rule, rather than an android one.
     private BuildRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);

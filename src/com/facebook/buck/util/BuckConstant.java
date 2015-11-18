@@ -36,7 +36,7 @@ public class BuckConstant {
   public static final Path CURRENT_VERSION_FILE =
       BUCK_OUTPUT_PATH.resolve(".currentversion");
 
-  // TODO(mbolin): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
+  // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.

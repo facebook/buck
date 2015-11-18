@@ -171,14 +171,14 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         String.format("%s__tmp", target.getShortNameAndFlavorPostfix()));
-    // TODO(simons): pathToTmpDirectory.toAbsolutePath() should be enough
+    // TODO(shs96c): pathToTmpDirectory.toAbsolutePath() should be enough
     this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(pathToTmpDirectory);
 
     this.pathToSrcDirectory = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         String.format("%s__srcs", target.getShortNameAndFlavorPostfix()));
-    // TODO(simons): And here.
+    // TODO(shs96c): And here.
     this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
@@ -216,7 +216,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
 
-    // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
+    // TODO(bolinfest): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
     AndroidPlatformTarget android;
     try {

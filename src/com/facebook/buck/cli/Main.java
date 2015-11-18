@@ -354,7 +354,7 @@ public final class Main {
         ImmutableSet.Builder<String> encounteredWatchmanWarningsBuilder = ImmutableSet.builder();
         watchmanWatcher.postEvents(eventBus, encounteredWatchmanWarningsBuilder);
 
-        // TODO(beng): Pass encountered Watchman warnings to parser so Watchman glob can
+        // TODO(bhamiltoncx): Pass encountered Watchman warnings to parser so Watchman glob can
         // ignore them.
       }
     }
@@ -551,7 +551,7 @@ public final class Main {
     // We need a BuckConfig to create a Console, but we get BuckConfig from Cell, and we need
     // a Console to create a Cell. To break this bootstrapping loop, create a temporary
     // BuckConfig.
-    // TODO(jacko): We probably shouldn't rely on BuckConfig to instantiate Console.
+    // TODO(oconnor663): We probably shouldn't rely on BuckConfig to instantiate Console.
     // Begin ugly bootstrapping code
 
     BuckCommand command = new BuckCommand();
@@ -974,11 +974,11 @@ public final class Main {
       final AndroidDirectoryResolver androidDirectoryResolver,
       final AndroidBuckConfig androidBuckConfig,
       final BuckEventBus eventBus) {
-    // TODO(mbolin): Only one such Supplier should be created per Cell per Buck execution.
+    // TODO(bolinfest): Only one such Supplier should be created per Cell per Buck execution.
     // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
     // and passes it from above all the way through, but it is not parameterized by Cell.
     //
-    // TODO(mbolin): Every build rule that uses AndroidPlatformTarget must include the result of its
+    // TODO(bolinfest): Every build rule that uses AndroidPlatformTarget must include the result of its
     // getName() method in its RuleKey.
     return new Supplier<AndroidPlatformTarget>() {
 

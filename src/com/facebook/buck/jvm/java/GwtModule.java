@@ -39,7 +39,7 @@ import java.nio.file.Path;
  */
 public class GwtModule extends AbstractBuildRule {
 
-  // TODO(mbolin): Figure out how to move this to the com.facebook.buck.gwt package.
+  // TODO(bolinfest): Figure out how to move this to the com.facebook.buck.gwt package.
   // To do that, we need a way to register a flavor with a Description from outside the package.
 
   private final Path outputFile;

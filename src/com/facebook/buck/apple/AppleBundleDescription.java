@@ -198,7 +198,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
 
-    // TODO(beng): Sort through the changes needed to make project generation work with
+    // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with
     // binary being optional.
     BuildRule flavoredBinaryRule = getFlavoredBinaryRule(targetGraph, params, resolver, args);
     BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithUpdatedDeps(

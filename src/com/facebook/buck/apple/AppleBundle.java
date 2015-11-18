@@ -292,7 +292,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     stepsBuilder.add(
         new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot),
         new MkdirStep(getProjectFilesystem(), metadataPath),
-        // TODO(beng): This is only appropriate for .app bundles.
+        // TODO(bhamiltoncx): This is only appropriate for .app bundles.
         new WriteFileStep(
             getProjectFilesystem(),
             "APPLWRUN",
@@ -403,7 +403,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     }
     for (SourcePath file : resourceFiles) {
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
-      // TODO(simons): Check that this work cross-cell
+      // TODO(shs96c): Check that this work cross-cell
       Path resolvedFilePath = getResolver().getRelativePath(file);
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
@@ -413,7 +413,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
     if (resourceVariantFiles.isPresent()) {
       for (SourcePath variantSourcePath : resourceVariantFiles.get()) {
-        // TODO(simons): Ensure this works cross-cell, as relative path begins with "buck-out"
+        // TODO(shs96c): Ensure this works cross-cell, as relative path begins with "buck-out"
         Path variantFilePath = getResolver().getRelativePath(variantSourcePath);
 
         Path variantDirectory = variantFilePath.getParent();

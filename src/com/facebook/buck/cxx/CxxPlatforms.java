@@ -79,7 +79,7 @@ public class CxxPlatforms {
       String sharedLibraryVersionedExtensionFormat,
       Optional<DebugPathSanitizer> debugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
-    // TODO(beng, agallagher): Generalize this so we don't need all these setters.
+    // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
     builder
@@ -87,7 +87,7 @@ public class CxxPlatforms {
         .setAs(getTool(flavor, "as", config).or(as))
         .setAspp(
             getTool(flavor, "aspp", config).transform(getPreprocessor(aspp.getClass())).or(aspp))
-        // TODO(coneko): Don't assume the compiler override specifies the same type of compiler as
+        // TODO(Coneko): Don't assume the compiler override specifies the same type of compiler as
         // the default one.
         .setCc(getTool(flavor, "cc", config).transform(getCompiler(cc.getClass())).or(cc))
         .setCxx(getTool(flavor, "cxx", config).transform(getCompiler(cxx.getClass())).or(cxx))

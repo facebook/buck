@@ -217,7 +217,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   }
 
   ImmutableSortedMap<String, HashCode> getClassNames() {
-    // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
+    // TODO(bolinfest): Assert that this Buildable has been built. Currently, there is no way to do
     // that from a Buildable (but there is from an AbstractCachingBuildRule).
     return buildOutputInitializer.getBuildOutput().classnamesToHashes;
   }

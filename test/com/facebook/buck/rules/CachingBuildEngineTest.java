@@ -1970,15 +1970,15 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
 
-  // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
+  // TODO(bolinfest): Test that when the success files match, nothing is built and nothing is written
   // back to the cache.
 
-  // TODO(mbolin): Test that when the value in the success file does not agree with the current
+  // TODO(bolinfest): Test that when the value in the success file does not agree with the current
   // value, the rule is rebuilt and the result is written back to the cache.
 
-  // TODO(mbolin): Test that a failure when executing the build steps is propagated appropriately.
+  // TODO(bolinfest): Test that a failure when executing the build steps is propagated appropriately.
 
-  // TODO(mbolin): Test what happens when the cache's methods throw an exception.
+  // TODO(bolinfest): Test what happens when the cache's methods throw an exception.
 
   private BuildRule createRule(
       ProjectFilesystem filesystem,

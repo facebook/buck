@@ -17,6 +17,8 @@
 */
 
 /**
+ * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
+ * @author Pete Kirkham (Win32 port)
  */
 
 #ifdef WIN32

@@ -109,7 +109,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath>
         nativeLinkableLibsAssetsBuilder = ImmutableMap.builder();
 
-    // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
+    // TODO(andrewjcg): We currently treat an empty set of filters to mean to allow everything.
     // We should fix this by assigning a default list of CPU filters in the descriptions, but
     // until we do, if the set of filters is empty, just build for all available platforms.
     ImmutableSet<NdkCxxPlatforms.TargetCpuType> filters =

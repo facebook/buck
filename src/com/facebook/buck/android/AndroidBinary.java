@@ -830,7 +830,7 @@ public class AndroidBinary
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
-    // TODO(devjasta): the output path we choose is the result of a slicing function against
+    // TODO(jasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
     final ImmutableMap<Path, Path> inputOutputEntries = FluentIterable
         .from(classpathEntriesToDex)

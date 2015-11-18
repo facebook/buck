@@ -156,7 +156,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   }
 
   /**
-   * TODO(agallagher): It'd be nice to eventually move this implementation to an
+   * TODO(andrewjcg): It'd be nice to eventually move this implementation to an
    * `AbstractDescription` base class, so that the various types of descriptions
    * can install their own implementations.  However, we'll probably want to move
    * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up

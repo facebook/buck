@@ -183,7 +183,7 @@ public class AppleSdkDiscovery {
   private static void addArchitecturesForPlatform(
       AppleSdk.Builder sdkBuilder,
       ApplePlatform applePlatform) {
-    // TODO(beng): These need to be read from the SDK, not hard-coded.
+    // TODO(bhamiltoncx): These need to be read from the SDK, not hard-coded.
     switch (applePlatform.getName()) {
       case ApplePlatform.Name.MACOSX:
         // Fall through.

@@ -574,7 +574,7 @@ public class TestRunning {
     } else if (isRunningWithTestSelectors) {
       // As a feature to aid developers, we'll assume that when we are using test selectors,
       // we should always run each test (and never look at the cache.)
-      // TODO(edward) When #3090004 and #3436849 are closed we can respect the cache again.
+      // TODO(edwardspeyer) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&

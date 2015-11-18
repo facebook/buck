@@ -129,7 +129,7 @@ public class Parser {
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
-   * TODO(jimp): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
+   * TODO(jimpurbrick): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
    */
   @VisibleForTesting
   static class BuildFileTreeCache implements Supplier<BuildFileTree> {
@@ -189,13 +189,13 @@ public class Parser {
     return new Parser(
         cell,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
-        // TODO(simons): Consider momoizing the suppler.
+        // TODO(shs96c): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
           @Override
           public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(
                 cell.getFilesystem(),
-                cell.getBuildFileName());  // TODO(simons): This is doomed to failure.
+                cell.getBuildFileName());  // TODO(shs96c): This is doomed to failure.
           }
         },
         allowSymlinks);
@@ -353,7 +353,7 @@ public class Parser {
         console,
         eventBus)) {
       buildFileParsers.setEnableProfiling(enableProfiling);
-      // TODO(simons): This is doomed since we should be using the cell for each resolved node.
+      // TODO(shs96c): This is doomed since we should be using the cell for each resolved node.
       ProjectBuildFileParser buildFileParser = buildFileParsers.create(cell);
 
       // Resolve the target node specs to the build targets the represent.
@@ -506,7 +506,7 @@ public class Parser {
           cell.getFilesystem().getRootPath(),
           cell.getFilesystem().resolve(basePath.get()));
       builder.add(BuildTarget.builder(
-              // TODO(simons): Check that this is actually correct.
+              // TODO(shs96c): Check that this is actually correct.
               cell.getFilesystem().getRootPath(),
               "//" + MorePaths.pathWithUnixSeparators(targetBasePath),
               (String) buildFileTarget.get("name")).build());

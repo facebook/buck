@@ -105,7 +105,7 @@ public class AuditRulesCommand extends AbstractCommand {
             .setBuildFileName(parserConfig.getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(
-              // TODO(simons): When we land dynamic loading, this MUST change.
+              // TODO(shs96c): When we land dynamic loading, this MUST change.
               params.getCell().getAllDescriptions())
             .build());
     try (ProjectBuildFileParser parser = factory.createParser(

@@ -118,7 +118,7 @@ public class Cell {
                   Joiner.on(",\n  ").join(knownRoots));
             }
 
-            // TODO(simons): Get the overrides from the parent config
+            // TODO(shs96c): Get the overrides from the parent config
             ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
             Config config = Config.createDefaultConfig(
                 cellPath,

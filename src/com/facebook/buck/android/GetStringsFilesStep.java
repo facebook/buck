@@ -70,7 +70,7 @@ public class GetStringsFilesStep implements Step {
       };
 
       for (Path resDir : resDirs) {
-        // TODO(russell): Remove the need to check the whitelist
+        // TODO(russellporter): Remove the need to check the whitelist
         if (!isPathWhitelisted(resDir)) {
           stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
         }

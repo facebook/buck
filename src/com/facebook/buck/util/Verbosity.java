@@ -20,7 +20,7 @@ package com.facebook.buck.util;
  * An indication of how verbose Buck should be. Enum values are in order from least to most verbose.
  */
 public enum Verbosity {
-  // TODO(mbolin): Consider introducing more Verbosity levels that affect the Java Logger setting.
+  // TODO(bolinfest): Consider introducing more Verbosity levels that affect the Java Logger setting.
 
   /** Do not print anything to the console. */
   SILENT,

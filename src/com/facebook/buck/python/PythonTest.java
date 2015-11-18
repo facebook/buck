@@ -94,7 +94,7 @@ public class PythonTest
   }
 
   private Step getRunTestStep() {
-    // TODO(simons): I'm not convinced this is the right root path
+    // TODO(shs96c): I'm not convinced this is the right root path
     return new ShellStep(getProjectFilesystem().getRootPath()) {
 
       @Override

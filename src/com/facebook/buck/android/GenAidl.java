@@ -123,7 +123,7 @@ public class GenAidl extends AbstractBuildRule {
 
     // Warn the user if the genDirectory is not under the output directory.
     if (!importPath.startsWith(target.getBasePath().toString())) {
-      // TODO(simons): Make this fatal. Give people some time to clean up their rules.
+      // TODO(shs96c): Make this fatal. Give people some time to clean up their rules.
       context.getEventBus().post(
           ConsoleEvent.warning(
               "%s, gen_aidl import path (%s) should be a child of %s",

@@ -154,7 +154,7 @@ public class MergeAndroidResourcesStep implements Step {
     // ids are unique.  This forces us to re-enumerate new unique ids.
     ImmutableMap.Builder<Path, String> rDotTxtToPackage = ImmutableMap.builder();
     for (HasAndroidResourceDeps res : androidResourceDeps) {
-      // TODO(simons): These have to be absolute for this all to work with multi-repo.
+      // TODO(shs96c): These have to be absolute for this all to work with multi-repo.
       // This is because each `androidResourceDeps` might be from a different repo, so we can't
       // assume that they exist in the calling rule's projectfilesystem.
       rDotTxtToPackage.put(

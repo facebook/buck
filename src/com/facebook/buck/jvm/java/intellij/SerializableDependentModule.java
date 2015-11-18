@@ -117,7 +117,7 @@ class SerializableDependentModule {
 
   static SerializableDependentModule newIntelliJPluginJdk() {
     SerializableDependentModule dependentModule = new SerializableDependentModule("jdk", null);
-    // TODO(mbolin): Find the appropriate jdkName for the user's machine.
+    // TODO(bolinfest): Find the appropriate jdkName for the user's machine.
     // "IDEA IC-117.798" is the one used on my machine for IntelliJ Community Edition 11.1.3.
     // It seems as though we need to find the IntelliJ executable on the user's machine and ask
     // what version it is, which is probably a path to madness. Instead, a user should probably

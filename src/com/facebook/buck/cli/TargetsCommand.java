@@ -92,7 +92,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(TargetsCommand.class);
 
-  // TODO(mbolin): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
+  // TODO(bolinfest): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
   // manually, which is likely the path to madness.
   @Option(name = "--referenced-file",
       aliases = {"--referenced_file"},
@@ -272,7 +272,7 @@ public class TargetsCommand extends AbstractCommand {
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
     //
-    // TODO(jakubzika):
+    // TODO(k21):
     // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
     // know which targets can refer to the specified targets or their dependencies in their
     // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
@@ -816,7 +816,7 @@ public class TargetsCommand extends AbstractCommand {
           params.getConsole(),
           params.getEnvironment());
     } catch (BuildTargetException | BuildFileParseException e) {
-      // TODO(devjasta): this doesn't smell right!
+      // TODO(jasta): this doesn't smell right!
       return null;
     }
 

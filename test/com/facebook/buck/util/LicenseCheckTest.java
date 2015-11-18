@@ -50,7 +50,7 @@ public class LicenseCheckTest {
 
   private static class JavaCopyrightTraversal extends DirectoryTraversal {
     private static final Pattern LICENSE_FRAGMENT = Pattern.compile(
-        // TODO(simons): This is very lame.
+        // TODO(shs96c): This is very lame.
         // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the next
         // part of the copyright.
         "^/\\\\*.*?" +

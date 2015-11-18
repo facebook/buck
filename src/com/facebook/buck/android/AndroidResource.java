@@ -259,7 +259,7 @@ public class AndroidResource extends AbstractBuildRule
       final BuildableContext buildableContext) {
     // If there is no res directory, then there is no R.java to generate, so the ABI key doesn't
     // need to take anything into account.
-    // TODO(mbolin): Change android_resources() so that 'res' is required.
+    // TODO(bolinfest): Change android_resources() so that 'res' is required.
     if (getRes() == null) {
       buildableContext.addMetadata(
           METADATA_KEY_FOR_ABI,

@@ -62,7 +62,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
 
   // If multiple valid ones, find the one which matches the most specifically.  I.e.,
   // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
-  // TODO(markwang): Account for differences between development and distribution certificates.
+  // TODO(ryu2): Account for differences between development and distribution certificates.
   public Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
       String bundleID,
       Optional<String> prefix) {
