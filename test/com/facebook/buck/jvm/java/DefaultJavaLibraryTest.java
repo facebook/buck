@@ -775,7 +775,6 @@ public class DefaultJavaLibraryTest {
     // Now actually change the Java library dependency's ABI JAR.  This *should* affect the
     // input-based rule key of the consuming java library.
     resolver = new BuildRuleResolver();
-    pathResolver = pathResolver;
     dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("Source.java"))
@@ -870,7 +869,6 @@ public class DefaultJavaLibraryTest {
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
     resolver = new BuildRuleResolver();
-    pathResolver = pathResolver;
     exportedDep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:edep"))
             .addSrc(Paths.get("Source1.java"))
@@ -977,7 +975,6 @@ public class DefaultJavaLibraryTest {
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
     resolver = new BuildRuleResolver();
-    pathResolver = pathResolver;
     exportedDep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:edep"))
             .addSrc(Paths.get("Source1.java"))
