@@ -266,6 +266,32 @@ public class PythonBuckConfigTest {
   }
 
   @Test
+  public void testGetPypyVersion() throws Exception {
+    String pypyOutput =
+        "Python 2.7.10 (850edf14b2c75573720f59e95767335fb1affe55, Oct 30 2015, 00:18:28)\n" +
+        "[PyPy 4.0.0 with GCC 4.2.1 Compatible Apple LLVM 7.0.0 (clang-700.1.76)]\n";
+
+    PythonVersion version =
+        PythonBuckConfig.extractPythonVersion(
+            Paths.get("non", "important", "path"),
+            new ProcessExecutor.Result(0, "", pypyOutput));
+    assertThat(version.toString(), Matchers.equalTo("Python 2.7"));
+  }
+
+  @Test
+  public void testGetPypyWindowsVersion() throws Exception {
+    String pypyOutput =
+        "Python 2.7.10 (850edf14b2c75573720f59e95767335fb1affe55, Oct 30 2015, 00:18:28)\r\n" +
+        "[PyPy 4.0.0 with GCC 4.2.1 Compatible Apple LLVM 7.0.0 (ok that was a lie)]\r\n";
+
+    PythonVersion version =
+        PythonBuckConfig.extractPythonVersion(
+            Paths.get("non", "important", "path"),
+            new ProcessExecutor.Result(0, "", pypyOutput));
+    assertThat(version.toString(), Matchers.equalTo("Python 2.7"));
+  }
+
+  @Test
   public void testDefaultPythonLibrary() throws InterruptedException {
     BuildTarget library = BuildTargetFactory.newInstance("//:library");
     PythonBuckConfig config =

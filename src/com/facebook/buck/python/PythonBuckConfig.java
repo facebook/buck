@@ -241,7 +241,7 @@ public class PythonBuckConfig {
           CharMatcher.WHITESPACE.trimFrom(versionResult.getStderr().get()) +
           CharMatcher.WHITESPACE.trimFrom(versionResult.getStdout().get())
               .replaceAll("\u001B\\[[;\\d]*m", ""));
-      Matcher matcher = PYTHON_VERSION_REGEX.matcher(versionString);
+      Matcher matcher = PYTHON_VERSION_REGEX.matcher(versionString.split("\\r?\\n")[0]);
       if (!matcher.matches()) {
         throw new HumanReadableException(
             "`%s -V` returned an invalid version string %s",
