@@ -72,6 +72,18 @@ public class InterCellIntegrationTest {
   }
 
   @Test
+  public void shouldBeAbleToUseACxxLibraryXCell() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
+
+    result.assertSuccess();
+  }
+
+  @Test
   @Ignore
   public void shouldBeAbleToUseAJavaLibraryTargetXCell() {
 

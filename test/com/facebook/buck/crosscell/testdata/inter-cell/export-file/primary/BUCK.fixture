@@ -3,3 +3,10 @@ export_file(
   src = '@secondary//:hello',
 )
 
+cxx_binary(
+  name = 'cxxbinary',
+  srcs = glob(['*.cpp']),
+  deps = [
+    '@secondary//:cxxlib'
+  ],
+)

@@ -1,4 +1,11 @@
 export_file(
   name = 'hello',
-  src = 'hello.txt')
+  src = 'hello.txt',
+  visibility = ['PUBLIC'],
+)
 
+cxx_library(
+  name = 'cxxlib',
+  srcs = glob(['*.cpp']),
+  visibility = ['PUBLIC'],
+)
