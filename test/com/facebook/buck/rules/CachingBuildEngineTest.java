@@ -965,6 +965,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY);
@@ -1047,6 +1048,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY);
@@ -1142,6 +1144,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY);
@@ -1206,8 +1209,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
-            return ImmutableList.of(input);
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
           }
           @Override
           public Path getPathToOutput() {
@@ -1222,6 +1225,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new FixedRuleKeyBuilderFactory(
@@ -1259,7 +1263,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void depFileRuleKeyMatchAvoidsBuilding() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
@@ -1299,8 +1303,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 });
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
-            return ImmutableList.of(input);
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
           }
           @Override
           public Path getPathToOutput() {
@@ -1315,6 +1319,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new FixedRuleKeyBuilderFactory(
@@ -1377,8 +1382,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
-            return ImmutableList.of(input);
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
           }
           @Override
           public Path getPathToOutput() {
@@ -1421,6 +1426,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new DependencyFileRuleKeyBuilderFactory(
@@ -1465,7 +1471,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
             return ImmutableList.of();
           }
           @Override
@@ -1509,6 +1515,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new DependencyFileRuleKeyBuilderFactory(
@@ -1793,6 +1800,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             new AbiRuleKeyBuilderFactory(fileHashCache, pathResolver),
             NOOP_RULE_KEY_FACTORY);
@@ -1844,6 +1852,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             abiRuleKeyBuilderFactory,
             NOOP_RULE_KEY_FACTORY);
@@ -1893,6 +1902,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
+            pathResolver,
             NOOP_RULE_KEY_FACTORY,
             abiRuleKeyBuilderFactory,
             NOOP_RULE_KEY_FACTORY);

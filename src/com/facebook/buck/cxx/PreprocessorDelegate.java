@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -26,20 +24,19 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.Multimaps;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 
 /**
  * Helper class for handling preprocessing related tasks of a cxx compilation rule.
@@ -119,9 +116,13 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
     for (Map.Entry<Path, SourcePath> entry :
         CxxHeaders.concat(includes).getFullNameToPathMap().entrySet()) {
+      // TODO(#9117006): We don't currently support a way to serialize `SourcePath` objects in a
+      // cache-compatible format, and we certainly can't use absolute paths here.  So, for now,
+      // just use relative paths.  The consequence here is that debug paths and error/warning
+      // messages may be incorrect when referring to headers in another cell.
       replacementPathsBuilder.put(
           entry.getKey(),
-          resolver.deprecatedGetPath(entry.getValue()));
+          resolver.getRelativePath(entry.getValue()));
     }
     return replacementPathsBuilder.build();
   }
@@ -194,43 +195,39 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey
    */
-  public ImmutableList<Path> getInputsAfterBuildingLocally(List<String> depFileLines) {
-    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
-    inputs.addAll(
-        Ordering.natural().immutableSortedCopy(
-            resolver.deprecatedAllPaths(preprocessor.getInputs())));
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(List<String> depFileLines) {
+    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
+
+    // Add inputs that we always use.
+    inputs.addAll(preprocessor.getInputs());
     if (prefixHeader.isPresent()) {
-      inputs.add(resolver.deprecatedGetPath(prefixHeader.get()));
+      inputs.add(prefixHeader.get());
     }
-    inputs.addAll(Iterables.transform(depFileLines, MorePaths.TO_PATH));
+
+    // Add any header/include inputs that our dependency file said we used.
+    //
+    // TODO(#9117006): We need to find out which `SourcePath` each line in the dep file refers to.
+    // Since we force our compilation process to refer to headers using relative paths,
+    // which results in dep files containing relative paths, we can't always get this 100%
+    // correct (e.g. there may be two `SourcePath` includes with the same relative path, but
+    // coming from different cells).  Favor correctness in this case and just add *all*
+    // `SourcePath`s that have relative paths matching those specific in the dep file.
+    ImmutableMultimap<String, SourcePath> pathToSourcePathMap;
+    try {
+      pathToSourcePathMap =
+          Multimaps.index(
+              CxxHeaders.concat(includes).getFullNameToPathMap().values(),
+              Functions.compose(
+                  Functions.toStringFunction(),
+                  resolver.getRelativePathFunction()));
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw Throwables.propagate(e);
+    }
+    for (String line : depFileLines) {
+      inputs.addAll(pathToSourcePathMap.get(line));
+    }
+
     return inputs.build();
-  }
-
-  /**
-   * @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey
-   */
-  public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap(
-      SortedSet<BuildRule> deps,
-      List<String> depFileLines) {
-    ImmutableMultimap.Builder<String, String> fullHeaderMapBuilder = ImmutableMultimap.builder();
-    for (HeaderSymlinkTree headerSymlinkTree :
-        Iterables.filter(deps, HeaderSymlinkTree.class)) {
-      for (Map.Entry<Path, Path> entry : Maps
-          .transformValues(headerSymlinkTree.getFullLinks(), resolver.deprecatedPathFunction())
-          .entrySet()) {
-        fullHeaderMapBuilder.put(entry.getValue().toString(), entry.getKey().toString());
-      }
-    }
-    ImmutableMultimap<String, String> fullHeaderMap = fullHeaderMapBuilder.build();
-
-    ImmutableMultimap.Builder<String, String> headerMap = ImmutableMultimap.builder();
-    for (String input : depFileLines) {
-      if (!fullHeaderMap.containsKey(input)) {
-        return Optional.absent();
-      }
-      headerMap.putAll(input, fullHeaderMap.get(input));
-    }
-    return Optional.of(headerMap.build());
   }
 
 }

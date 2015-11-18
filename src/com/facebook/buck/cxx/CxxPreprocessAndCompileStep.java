@@ -509,8 +509,9 @@ public class CxxPreprocessAndCompileStep implements Step {
                  PerfEventId.of("depfile-parse"),
                  params)) {
           for (String prereq : Depfiles.parseDepfile(reader).getPrereqs()) {
-            if (values.contains(Paths.get(prereq))) {
-              writer.write(prereq);
+            Path path = Paths.get(prereq);
+            if (values.contains(path)) {
+              writer.write(path.toString());
               writer.newLine();
               continue;
             }

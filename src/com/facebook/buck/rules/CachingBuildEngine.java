@@ -107,6 +107,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final FileHashCache fileHashCache;
   private final BuildMode buildMode;
   private final DepFiles depFiles;
+  private final SourcePathResolver pathResolver;
 
   private final RuleKeyFactories ruleKeyFactories;
 
@@ -120,6 +121,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.fileHashCache = fileHashCache;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
+    this.pathResolver = new SourcePathResolver(resolver);
 
     this.ruleKeyFactories = RuleKeyFactories.build(fileHashCache, resolver);
   }
@@ -130,6 +132,7 @@ public class CachingBuildEngine implements BuildEngine {
       FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
+      SourcePathResolver pathResolver,
       RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
       RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
       RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
@@ -137,6 +140,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.fileHashCache = fileHashCache;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
+    this.pathResolver = pathResolver;
 
     this.ruleKeyFactories = new RuleKeyFactories(
             inputBasedRuleKeyBuilderFactory,
@@ -455,21 +459,17 @@ public class CachingBuildEngine implements BuildEngine {
             // list and re-calculate the dep file rule key.
             if (useDependencyFileRuleKey(rule) && success == BuildRuleSuccessType.BUILT_LOCALLY) {
 
-              // Query the rule for the actual inputs it used, and verify these are relative.
-              ImmutableList<Path> inputs =
+              // Query the rule for the actual inputs it used.
+              ImmutableList<SourcePath> inputs =
                   ((SupportsDependencyFileRuleKey) rule).getInputsAfterBuildingLocally();
-              for (Path path : inputs) {
-                Preconditions.checkState(
-                    !path.isAbsolute(),
-                    String.format(
-                        "%s: reported absolute path as an input: %s",
-                        rule.getBuildTarget(),
-                        path));
-              }
 
               // Record the inputs into our metadata for next time.
+              //
+              // TODO(#9117006): We don't support a way to serlialize `SourcePath`s to the cache,
+              // so need to use relative paths instead and recover them on deserialization.
               ImmutableList<String> inputStrings =
                   FluentIterable.from(inputs)
+                      .transform(pathResolver.getRelativePathFunction())
                       .transform(Functions.toStringFunction())
                       .toList();
               buildInfoRecorder.addMetadata(

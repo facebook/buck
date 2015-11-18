@@ -537,16 +537,16 @@ public class CxxPreprocessAndCompileTest {
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    Path preprocessor = Paths.get("preprocessor");
+    SourcePath preprocessor = new PathSourcePath(filesystem, Paths.get("preprocessor"));
     Tool preprocessorTool =
         new CommandTool.Builder()
-            .addInput(new PathSourcePath(filesystem, preprocessor))
+            .addInput(preprocessor)
             .build();
 
-    Path compiler = Paths.get("compiler");
+    SourcePath compiler = new PathSourcePath(filesystem, Paths.get("compiler"));
     Tool compilerTool =
         new CommandTool.Builder()
-            .addInput(new PathSourcePath(filesystem, compiler))
+            .addInput(compiler)
             .build();
 
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());

@@ -352,9 +352,8 @@ public class CxxPreprocessAndCompile
   }
 
   @Override
-  public ImmutableList<Path> getInputsAfterBuildingLocally() throws IOException {
-    SourcePathResolver resolver = getResolver();
-    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // If present, include all inputs coming from the preprocessor tool.
     if (preprocessDelegate.isPresent()) {
@@ -364,12 +363,11 @@ public class CxxPreprocessAndCompile
     // If present, include all inputs coming from the compiler tool.
     if (compiler.isPresent()) {
       inputs.addAll(
-          Ordering.natural().immutableSortedCopy(
-              resolver.deprecatedAllPaths(compiler.get().getInputs())));
+          Ordering.natural().immutableSortedCopy(compiler.get().getInputs()));
     }
 
     // Add the input.
-    inputs.add(resolver.deprecatedGetPath(input));
+    inputs.add(input);
 
     return inputs.build();
   }
