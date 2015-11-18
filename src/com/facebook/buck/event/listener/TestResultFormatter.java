@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -30,9 +31,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class TestResultFormatter {
+
+  private static final int DEFAULT_MAX_LOG_LINES = 50;
+  private static final Logger LOG = Logger.get(TestResultFormatter.class);
 
   private final Ansi ansi;
   private final Verbosity verbosity;
@@ -108,6 +116,43 @@ public class TestResultFormatter {
           reportResultSummary(addTo, testResult);
         }
       }
+
+      if (results.getTestLogPath().isPresent()) {
+        reportLogSummary(
+            addTo,
+            results.getTestLogPath().get(),
+            summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
+      }
+    }
+  }
+
+  private static void reportLogSummary(
+      ImmutableList.Builder<String> addTo,
+      Path logPath,
+      int maxLogLines) {
+    if (maxLogLines <= 0) {
+      return;
+    }
+    try {
+      List<String> logLines = Files.readAllLines(
+          logPath,
+          StandardCharsets.UTF_8);
+      if (logLines.isEmpty()) {
+        return;
+      }
+      addTo.add("====TEST LOGS====");
+
+      int logLinesStartIndex;
+      if (logLines.size() > maxLogLines) {
+        addTo.add(String.format("Last %d test log lines from %s:", maxLogLines, logPath));
+        logLinesStartIndex = logLines.size() - maxLogLines;
+      } else {
+        addTo.add(String.format("Test logs from %s:", logPath));
+        logLinesStartIndex = 0;
+      }
+      addTo.addAll(logLines.subList(logLinesStartIndex, logLines.size()));
+    } catch (IOException e) {
+      LOG.error(e, "Could not read test logs from %s", logPath);
     }
   }
 
