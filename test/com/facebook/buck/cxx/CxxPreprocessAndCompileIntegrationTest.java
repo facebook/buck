@@ -30,12 +30,10 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
@@ -90,11 +88,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
-
-    // TODO(7534285): Currently, we don't properly sanitize the working directory for the default
-    // platform when using the clang compiler.
-    assumeNotUsingSeparateOrPipedModesWithClang();
-
     workspace.runBuckBuild("//:simple#default,static").assertSuccess();
     Path lib = workspace.getPath("buck-out/gen/simple#default,static/libsimple.a");
     String contents =
@@ -106,11 +99,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
-
-    // TODO(7534285): Currently, we don't properly sanitize the working directory for the default
-    // platform when using the clang compiler.
-    assumeNotUsingSeparateOrPipedModesWithClang();
-
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
 
@@ -445,12 +433,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
         "\n[project]\n  check_package_boundary = false\n",
         ".buckconfig");
     workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
-  }
-
-  public void assumeNotUsingSeparateOrPipedModesWithClang() {
-    assumeTrue(
-        Platform.detect() != Platform.MACOS ||
-            !ImmutableSet.of(CxxPreprocessMode.SEPARATE, CxxPreprocessMode.PIPED).contains(mode));
   }
 
   private BuildTarget getPreprocessTarget(
