@@ -45,6 +45,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -1170,22 +1171,13 @@ public class DefaultJavaLibraryTest {
         .createBuilder(libraryOneTarget)
         .addSrc(Paths.get("java/src/com/libone/Bar.java"))
         .build(ruleResolver);
-    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
+    DefaultJavaLibrary buildRule = (DefaultJavaLibrary) rule;
+    ImmutableList<Step> steps = buildRule.getBuildSteps(
+        FakeBuildContext.NOOP_CONTEXT,
+        new FakeBuildableContext());
 
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    buildable.createCommandsForJavacJar(
-        buildable.getPathToOutput(),
-        ImmutableSortedSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
-        DEFAULT_JAVAC_OPTIONS,
-        Optional.<JavacStep.SuggestBuildRules>absent(),
-        stepsBuilder,
-        libraryOneTarget,
-        buildable.getPathToOutput().resolve("output.jar"),
-        ImmutableList.<Step>of());
-
-    List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
+    assertEquals(11, steps.size());
+    assertTrue(((JavacStep) steps.get(6)).getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1203,27 +1195,15 @@ public class DefaultJavaLibraryTest {
         .setCompiler(javac)
         .build(ruleResolver);
     DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
-
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    buildable.createCommandsForJavacJar(
-        buildable.getPathToOutput(),
-        ImmutableSortedSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
-        buildable.getJavacOptions(),
-        Optional.<JavacStep.SuggestBuildRules>absent(),
-        stepsBuilder,
-        libraryOneTarget,
-        buildable.getPathToOutput().resolve("output.jar"),
-        ImmutableList.<Step>of()
-    );
-
-    List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
-    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(2)).getJavac()));
+    ImmutableList<Step> steps =
+        buildable.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    assertEquals(11, steps.size());
+    Javac javacStep = ((JavacStep) steps.get(6)).getJavac();
+    assertTrue(javacStep instanceof Jsr199Javac);
+    JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep);
     assertEquals(
         jsrJavac.getCompilerClassPath(),
-        ImmutableSet.of(
-            new BuildTargetSourcePath(javac.getBuildTarget())));
+        ImmutableSet.of(new BuildTargetSourcePath(javac.getBuildTarget())));
   }
 
   @Test

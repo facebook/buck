@@ -194,7 +194,7 @@ java_library(
     'CalculateAbiStep.java',
     'CopyResourcesStep.java',
     'GenerateCodeCoverageReportStep.java',
-    'JavacToJarStepFactory.java',
+    'JavacStepFactory.java',
     'JarDirectoryStep.java',
     'JarDirectoryStepHelper.java',
     'JavacStep.java',
