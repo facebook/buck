@@ -330,8 +330,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @param commands List of steps to add to.
    */
-  @VisibleForTesting
-  void createCommandsForJavacJar(
+  private void createCommandsForJavacJar(
       Path outputDirectory,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
