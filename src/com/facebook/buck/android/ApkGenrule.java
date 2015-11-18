@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -64,7 +63,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableApk apk) {
     super(
         params,
@@ -73,8 +71,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
         cmd,
         bash,
         cmdExe,
-        /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk",
-        relativeToAbsolutePathFunction);
+        /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk");
 
     this.apk = apk;
   }
@@ -109,7 +106,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(context, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
-    String apkAbsolutePath = relativeToAbsolutePathFunction.apply(apk.getApkPath()).toString();
+    String apkAbsolutePath = apk.getProjectFilesystem().resolve(apk.getApkPath()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
   }
 }

@@ -27,14 +27,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
 
@@ -59,8 +56,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out,
-      Function<Path, Path> relativeToAbsolutePathFunction) {
+      String out) {
 
     final BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
@@ -89,7 +85,6 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmd,
         bash,
         cmdExe,
-        relativeToAbsolutePathFunction,
         (InstallableApk) installableApk);
   }
 

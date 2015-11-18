@@ -63,8 +63,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out,
-      final Function<Path, Path> relativeToAbsolutePathFunction);
+      String out);
 
   @Override
   public <A extends T> BuildRule createBuildRule(
@@ -106,8 +105,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         cmd,
         bash,
         cmdExe,
-        args.out,
-        params.getProjectFilesystem().getAbsolutifier());
+        args.out);
   }
 
   @Override

@@ -22,11 +22,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
 
 public class GenruleDescription extends AbstractGenruleDescription<AbstractGenruleDescription.Arg> {
 
@@ -51,8 +48,7 @@ public class GenruleDescription extends AbstractGenruleDescription<AbstractGenru
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out,
-      Function<Path, Path> relativeToAbsolutePathFunction) {
+      String out) {
     return new Genrule(
         params,
         new SourcePathResolver(resolver),
@@ -60,8 +56,7 @@ public class GenruleDescription extends AbstractGenruleDescription<AbstractGenru
         cmd,
         bash,
         cmdExe,
-        out,
-        relativeToAbsolutePathFunction);
+        out);
   }
 
 }
