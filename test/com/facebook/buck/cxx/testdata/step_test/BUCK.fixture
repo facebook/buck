@@ -70,3 +70,19 @@ cxx_binary(
     'source_relative_header.cpp',
   ],
 )
+
+genrule(
+  name = 'simple.s',
+  cmd = 'gcc -S -o $OUT $SRCS',
+  out = 'simple.s',
+  srcs = [
+    'simple.cc',
+  ],
+)
+
+cxx_library(
+  name = 'simple_assembly',
+  srcs = [
+    ':simple.s',
+  ],
+)

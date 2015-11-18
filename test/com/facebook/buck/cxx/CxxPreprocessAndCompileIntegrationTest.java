@@ -77,6 +77,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.writeContentsToPath(
         "[cxx]\n" +
         "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+        "  asflags = -g\n" +
         "  cppflags = -g\n" +
         "  cflags = -g\n" +
         "  cxxppflags = -g\n" +
@@ -90,6 +91,18 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeWorkingDirectory() throws IOException {
     workspace.runBuckBuild("//:simple#default,static").assertSuccess();
     Path lib = workspace.getPath("buck-out/gen/simple#default,static/libsimple.a");
+    String contents =
+        Files.asByteSource(lib.toFile())
+            .asCharSource(Charsets.ISO_8859_1)
+            .read();
+    assertFalse(lib.toString(), contents.contains(tmp.getRootPath().toString()));
+  }
+
+  @Test
+  public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
+    workspace.runBuckBuild("//:simple_assembly#default,static").assertSuccess();
+    Path lib =
+        workspace.getPath("buck-out/gen/simple_assembly#default,static/libsimple_assembly.a");
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)

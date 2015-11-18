@@ -35,8 +35,10 @@ public class DebugSectionFinder {
           // DWARF sections
           .put(".debug_str", ImmutableSet.of(STRINGS))
           .put(".debug_line", ImmutableSet.of(STRINGS))
+          .put(".debug_info", ImmutableSet.of(STRINGS))
           .put(".zdebug_str", ImmutableSet.of(STRINGS, COMPRESSED))
           .put(".zdebug_line", ImmutableSet.of(STRINGS, COMPRESSED))
+          .put(".zdebug_info", ImmutableSet.of(STRINGS, COMPRESSED))
           // STABS sections
           .put(".stabstr", ImmutableSet.of(STRINGS))
           .build();

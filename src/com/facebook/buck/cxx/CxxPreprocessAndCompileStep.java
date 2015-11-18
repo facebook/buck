@@ -223,7 +223,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         "PWD",
         // We only need to expand the working directory if compiling, as we override it in the
         // preprocessed otherwise.
-        operation == Operation.COMPILE_MUNGE_DEBUGINFO ?
+        shouldSanitizeOutputBinary() ?
             sanitizer.getExpandedPath(filesystem.getRootPath().toAbsolutePath()) :
             filesystem.getRootPath().toAbsolutePath().toString());
 
@@ -528,7 +528,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       // through #line directive modification, perform the in-place update of the compilation per
       // above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
-      if (exitCode == 0 && operation == Operation.COMPILE_MUNGE_DEBUGINFO) {
+      if (exitCode == 0 && shouldSanitizeOutputBinary()) {
         try {
           sanitizer.restoreCompilationDirectory(
               filesystem.getRootPath().toAbsolutePath().resolve(output),
@@ -596,6 +596,13 @@ public class CxxPreprocessAndCompileStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return getDescriptionNoContext();
+  }
+
+  // We need to do binary rewriting if doing combined preprocessing and compiling or if we're
+  // building assembly code (which doesn't respect line-marker-re-writing to fixup the
+  // DW_AT_comp_dir.
+  private boolean shouldSanitizeOutputBinary() {
+    return operation == Operation.COMPILE_MUNGE_DEBUGINFO || inputType.isAssembly();
   }
 
   public enum Operation {
