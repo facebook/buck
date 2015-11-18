@@ -19,10 +19,12 @@ import platform
 import optparse
 import os
 import os.path
+import Queue
 import select
 import socket
 import struct
 import sys
+from threading import Condition, Event, Thread
 
 # @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
 # @author Pete Kirkham (Win32 port)
@@ -57,6 +59,9 @@ HEARTBEAT_TIMEOUT_SECS = HEARTBEAT_TIMEOUT_NANOS / (NSEC_PER_SEC * 1.0)
 # We need to support Python 2.6 hosts which lack memoryview().
 HAS_MEMORYVIEW = 'memoryview' in dir(__builtins__)
 
+EVENT_STDIN_CHUNK = 0
+EVENT_STDIN_CLOSED = 1
+EVENT_STDIN_EXCEPTION = 2
 
 class NailgunException(Exception):
     SOCKET_FAILED = 231
@@ -94,10 +99,15 @@ class NailgunConnection(object):
             self.send_flags |= socket.MSG_NOSIGNAL
         self.header_buf = ctypes.create_string_buffer(CHUNK_HEADER_LEN)
         self.buf = ctypes.create_string_buffer(BUFSIZE)
-        self.ready_to_send = True
-        self.stdin_eof = False
+        self.ready_to_send_condition = Condition()
         self.sendtime_nanos = 0
         self.exit_code = None
+        self.stdin_queue = Queue.Queue()
+        self.shutdown_event = Event()
+        self.stdin_thread = Thread(
+            target=stdin_thread_main,
+            args=(self.stdin, self.stdin_queue, self.shutdown_event, self.ready_to_send_condition))
+        self.stdin_thread.daemon = True
 
     def send_command(
             self,
@@ -122,10 +132,15 @@ class NailgunConnection(object):
             send_env_var(k, v, self)
         send_chunk(cwd, CHUNKTYPE_DIR, self)
         send_chunk(cmd, CHUNKTYPE_CMD, self)
-        # TODO(bhamiltoncx): You can't select on both FDs and sockets on Windows.
-        # We need a separate thread for that.
+        self.stdin_thread.start()
         while self.exit_code is None:
             self._process_next_chunk()
+            self._check_stdin_queue()
+        self.shutdown_event.set()
+        with self.ready_to_send_condition:
+            self.ready_to_send_condition.notify()
+        # We can't really join on self.stdin_thread, since
+        # there's no way to interrupt its call to sys.stdin.readline.
         return self.exit_code
 
     def _process_next_chunk(self):
@@ -133,16 +148,10 @@ class NailgunConnection(object):
         Processes the next chunk from the nailgun server.
         '''
         select_list = set([self.socket])
-        if self.ready_to_send and not self.stdin_eof:
-            select_list.add(sys.stdin)
         readable, _, exceptional = select.select(
             select_list, [], select_list, HEARTBEAT_TIMEOUT_SECS)
-        for r in readable:
-            if r is self.socket:
-                process_nailgun_stream(self)
-            elif r is sys.stdin:
-                if not process_stdin(self):
-                    self.stdin_eof = True
+        if self.socket in readable:
+            process_nailgun_stream(self)
         now = monotonic_time_nanos()
         if now - self.sendtime_nanos > HEARTBEAT_TIMEOUT_NANOS:
             send_heartbeat(self)
@@ -150,6 +159,20 @@ class NailgunConnection(object):
             raise NailgunException(
                 'Server disconnected in select',
                 NailgunException.CONNECTION_BROKEN)
+
+    def _check_stdin_queue(self):
+        '''Check if the stdin thread has read anything.'''
+        while not self.stdin_queue.empty():
+            try:
+                (event_type, event_arg) = self.stdin_queue.get_nowait()
+                if event_type == EVENT_STDIN_CHUNK:
+                    send_chunk(event_arg, CHUNKTYPE_STDIN, self)
+                elif event_type == EVENT_STDIN_CLOSED:
+                    send_chunk('', CHUNKTYPE_STDIN_EOF, self)
+                elif event_type == EVENT_STDIN_EXCEPTION:
+                    raise event_arg
+            except Queue.Empty:
+                break
 
     def __enter__(self):
         return self
@@ -344,21 +367,6 @@ def process_exit(exit_len, nailgun_connection):
     nailgun_connection.exit_code = int(''.join(nailgun_connection.buf.raw[:num_bytes]))
 
 
-def send_stdin(stdin_len, nailgun_connection):
-    '''
-    Sends stdin_len bytes read from the connected terminal to the nailgun server.
-    '''
-    nailgun_connection.ready_to_send = False
-    send_chunk(nailgun_connection.buf.raw[:stdin_len], CHUNKTYPE_STDIN, nailgun_connection)
-
-
-def process_eof(nailgun_connection):
-    '''
-    Sends a stdin EOF chunk to the nailgun server.
-    '''
-    send_chunk('', CHUNKTYPE_STDIN_EOF, nailgun_connection)
-
-
 def send_heartbeat(nailgun_connection):
     '''
     Sends a heartbeat to the nailgun server to indicate the client is still alive.
@@ -371,21 +379,25 @@ def send_heartbeat(nailgun_connection):
         pass
 
 
-def process_stdin(nailgun_connection):
-    '''
-    Reads from stdin and transmits it to the nailgun server in a stdin chunk.
-    Sends a stdin-eof chunk if necessary.
-
-    Returns the number of bytes read, or 0 to indicate EOF.
-    '''
-    if not nailgun_connection.stdin:
+def stdin_thread_main(stdin, queue, shutdown_event, ready_to_send_condition):
+    if not stdin:
         return
-    bytes_read = nailgun_connection.stdin.readinto(nailgun_connection.buf)
-    if bytes_read > 0:
-        send_stdin(bytes_read, nailgun_connection)
-    else:
-        process_eof(nailgun_connection)
-    return bytes_read
+    try:
+        while not shutdown_event.is_set():
+            with ready_to_send_condition:
+                ready_to_send_condition.wait()
+            if shutdown_event.is_set():
+                break
+            # This is a bit cheesy, but there isn't a great way to
+            # portably tell Python to read as much as possible on
+            # stdin without blocking.
+            buf = stdin.readline()
+            if buf == '':
+                queue.put((EVENT_STDIN_CLOSED, None))
+                break
+            queue.put((EVENT_STDIN_CHUNK, buf))
+    except Exception as e:
+        queue.put((EVENT_STDIN_EXCEPTION, e))
 
 
 def process_nailgun_stream(nailgun_connection):
@@ -403,7 +415,9 @@ def process_nailgun_stream(nailgun_connection):
     elif chunk_type == CHUNKTYPE_EXIT:
         process_exit(chunk_len, nailgun_connection)
     elif chunk_type == CHUNKTYPE_SENDINPUT:
-        nailgun_connection.ready_to_send = True
+        with nailgun_connection.ready_to_send_condition:
+            # Wake up the stdin thread and tell it to read as much data as possible.
+            nailgun_connection.ready_to_send_condition.notify()
     else:
         raise NailgunException(
             'Unexpected chunk type: {0}'.format(chunk_type),
