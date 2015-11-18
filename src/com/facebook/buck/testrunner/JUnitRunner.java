@@ -67,7 +67,7 @@ public final class JUnitRunner extends BaseRunner {
 
   @Override
   public void run() throws Throwable {
-    Level stdOutLogLevel = Level.FINE;
+    Level stdOutLogLevel = Level.INFO;
     Level stdErrLogLevel = Level.WARNING;
 
     String unparsedStdOutLogLevel = System.getProperty(STD_OUT_LOG_LEVEL_PROPERTY);

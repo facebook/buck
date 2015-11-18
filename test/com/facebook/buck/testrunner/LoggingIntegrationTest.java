@@ -58,11 +58,11 @@ public class LoggingIntegrationTest {
     String debugLogs = testOutputBeforeAndAfterErrorLogs[0];
     String errorLogs = testOutputBeforeAndAfterErrorLogs[1];
 
-    // debugLogs should get debug messages and up when a test fails.
+    // debugLogs should get info messages and up when a test fails.
     assertThat(debugLogs, containsString("This is an error in a failing test"));
     assertThat(debugLogs, containsString("This is a warning in a failing test"));
     assertThat(debugLogs, containsString("This is an info message in a failing test"));
-    assertThat(debugLogs, containsString("This is a debug message in a failing test"));
+    assertThat(debugLogs, not(containsString("This is a debug message in a failing test")));
     assertThat(debugLogs, not(containsString("This is a verbose message in a failing test")));
 
     // errorLogs should get warnings and errors only when a test fails.
