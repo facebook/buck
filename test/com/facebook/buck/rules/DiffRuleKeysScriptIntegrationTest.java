@@ -146,11 +146,11 @@ public class DiffRuleKeysScriptIntegrationTest {
         "Change details for [//:java_lib_2->buck.extraDeps]",
         "  (buck.declaredDeps):",
         "    -[ruleKey(sha1=ac6415ff8680a632832c3c87f236f26b7c949430)]\n" +
-        "    +[ruleKey(sha1=e7c35a5f3e0425960a61354f6e5ed2c9d3e3e92d)]\n" +
+        "    +[ruleKey(sha1=1a0566857a6c974cf3f8f6d4943ccf75fb68fbc0)]\n" +
         "Change details for [//:java_lib_2->buck.extraDeps]",
         "  (buck.declaredDeps):",
         "    -[ruleKey(sha1=ac6415ff8680a632832c3c87f236f26b7c949430)]\n" +
-        "    +[ruleKey(sha1=e7c35a5f3e0425960a61354f6e5ed2c9d3e3e92d)]\n" +
+        "    +[ruleKey(sha1=1a0566857a6c974cf3f8f6d4943ccf75fb68fbc0)]\n" +
         "  (name):",
         "    -[string(\"//:java_lib_1#abi\")]",
         "    +[string(\"//:java_lib_3#abi\")]",

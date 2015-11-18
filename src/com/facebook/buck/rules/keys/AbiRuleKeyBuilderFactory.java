@@ -16,12 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
@@ -29,32 +27,19 @@ public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
   public AbiRuleKeyBuilderFactory(
       FileHashCache hashCache,
       SourcePathResolver pathResolver) {
-    super(
-        hashCache,
-        pathResolver,
-        new Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>() {
-          @Override
-          public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
-            Preconditions.checkArgument(
-                input.getSecond() instanceof AbiRule,
-                String.format(
-                    "Expected an AbiRule, but '%s' was a '%s'.",
-                    input.getSecond().getBuildTarget().getFullyQualifiedName(),
-                    input.getSecond().getType()));
-            AbiRule abiRule = (AbiRule) input.getSecond();
-            return input.getFirst().setReflectively("buck.deps", abiRule.getAbiKeyForDeps());
-          }
-        });
+    super(hashCache, pathResolver);
   }
 
-  public class Builder extends RuleKeyBuilder {
-
-    private Builder(
-        SourcePathResolver pathResolver,
-        FileHashCache hashCache) {
-      super(pathResolver, hashCache);
-    }
-
-
+  @Override
+  protected void addDepsToRuleKey(RuleKeyBuilder builder, BuildRule buildRule) {
+    Preconditions.checkArgument(
+        buildRule instanceof AbiRule,
+        String.format(
+            "Expected an AbiRule, but '%s' was a '%s'.",
+            buildRule.getBuildTarget().getFullyQualifiedName(),
+            buildRule.getType()));
+    AbiRule abiRule = (AbiRule) buildRule;
+    builder.setReflectively("buck.deps", abiRule.getAbiKeyForDeps());
   }
+
 }

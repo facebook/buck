@@ -36,8 +36,11 @@ import javax.annotation.Nonnull;
  *
  * @see SupportsInputBasedRuleKey
  */
-public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
+public class InputBasedRuleKeyBuilderFactory
+    extends ReflectiveRuleKeyBuilderFactory<InputBasedRuleKeyBuilderFactory.Builder> {
 
+  private final FileHashCache fileHashCache;
+  private final SourcePathResolver pathResolver;
   private final InputHandling inputHandling;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
 
@@ -45,7 +48,8 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
       final FileHashCache hashCache,
       final SourcePathResolver pathResolver,
       InputHandling inputHandling) {
-    super(hashCache, pathResolver);
+    this.fileHashCache = hashCache;
+    this.pathResolver = pathResolver;
     this.inputHandling = inputHandling;
 
     // Build the cache around the sub-rule-keys and their dep lists.
@@ -54,7 +58,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
           @Override
           public Result load(
               @Nonnull RuleKeyAppendable appendable) {
-            Builder subKeyBuilder = new Builder(pathResolver, hashCache);
+            Builder subKeyBuilder = new Builder();
             appendable.appendToRuleKey(subKeyBuilder);
             return subKeyBuilder.buildResult();
           }
@@ -68,11 +72,8 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
   }
 
   @Override
-  protected RuleKeyBuilder newBuilder(
-      SourcePathResolver pathResolver,
-      FileHashCache hashCache,
-      final BuildRule rule) {
-    return new Builder(pathResolver, hashCache) {
+  protected Builder newBuilder(final BuildRule rule) {
+    return new Builder() {
 
       // Construct the rule key, verifying that all the deps we saw when constructing it
       // are explicit dependencies of the rule.
@@ -88,16 +89,11 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
 
   public class Builder extends RuleKeyBuilder {
 
-    private final SourcePathResolver pathResolver;
-
     private final ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
     private final ImmutableSet.Builder<SourcePath> inputs = ImmutableSet.builder();
 
-    private Builder(
-        SourcePathResolver pathResolver,
-        FileHashCache hashCache) {
-      super(pathResolver, hashCache);
-      this.pathResolver = pathResolver;
+    private Builder() {
+      super(pathResolver, fileHashCache);
     }
 
     @Override
