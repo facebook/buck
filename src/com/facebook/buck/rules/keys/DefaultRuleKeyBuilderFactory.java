@@ -77,8 +77,9 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
           @Override
           public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
             if (input.getSecond() instanceof AbstractBuildRule) {
-              // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
-              // rules should explicitly take the needed sub-sets of deps as constructor args.
+              // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules.
+              // Instead rules should explicitly take the needed sub-sets of deps as constructor
+              // args.
               AbstractBuildRule abstractBuildRule = (AbstractBuildRule) input.getSecond();
               return input.getFirst()
                   .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())

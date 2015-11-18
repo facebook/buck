@@ -978,8 +978,8 @@ public final class Main {
     // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
     // and passes it from above all the way through, but it is not parameterized by Cell.
     //
-    // TODO(bolinfest): Every build rule that uses AndroidPlatformTarget must include the result of its
-    // getName() method in its RuleKey.
+    // TODO(bolinfest): Every build rule that uses AndroidPlatformTarget must include the result
+    // of its getName() method in its RuleKey.
     return new Supplier<AndroidPlatformTarget>() {
 
       @Nullable

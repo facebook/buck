@@ -48,8 +48,8 @@ public class SymlinkFileStep implements Step {
    */
   private Path getExistingFilePath() {
     // This could be either an absolute or relative path.
-    // TODO(edelron): Ideally all symbolic links should be relative, consider eliminating the absolute
-    // option.
+    // TODO(edelron): Ideally all symbolic links should be relative, consider eliminating the
+    // absolute option.
     return (useAbsolutePaths ? getAbsolutePath(existingFile, filesystem) :
         MorePaths.getRelativePath(existingFile, desiredLink.getParent()));
   }

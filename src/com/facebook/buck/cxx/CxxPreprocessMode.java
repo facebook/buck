@@ -37,8 +37,8 @@ public enum CxxPreprocessMode {
    * information at the preprocessor level; does a search-and-replace on the debug section
    * instead.
    *
-   * TODO(dcolascione): Figure out a sane way to normalize debugging information without having access to
-   * #line directives.  -fremap-prefix-map?  A real DWARF parser?
+   * TODO(dcolascione): Figure out a sane way to normalize debugging information without having
+   * access to #line directives.  -fremap-prefix-map?  A real DWARF parser?
    */
   COMBINED,
 };

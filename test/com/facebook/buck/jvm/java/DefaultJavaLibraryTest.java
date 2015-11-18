@@ -1248,7 +1248,8 @@ public class DefaultJavaLibraryTest {
     return context;
   }
 
-  // TODO(bolinfest): Eliminate the bootclasspath parameter, as it is completely misused in this test.
+  // TODO(bolinfest): Eliminate the bootclasspath parameter, as it is completely misused in this
+  // test.
   private BuildContext createBuildContext(BuildRule javaLibrary,
                                           @Nullable String bootclasspath,
                                           @Nullable ProjectFilesystem projectFilesystem) {
