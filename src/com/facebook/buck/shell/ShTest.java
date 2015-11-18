@@ -150,7 +150,7 @@ public class ShTest
       return new Callable<TestResults>() {
         @Override
         public TestResults call() throws Exception {
-          return new TestResults(
+          return TestResults.of(
               getBuildTarget(),
               ImmutableList.<TestCaseSummary>of(),
               contacts,
@@ -170,7 +170,7 @@ public class ShTest
           TestCaseSummary testCaseSummary = new TestCaseSummary(
               getBuildTarget().getFullyQualifiedName(),
               ImmutableList.of(testResultSummary));
-          return new TestResults(
+          return TestResults.of(
               getBuildTarget(),
               ImmutableList.of(testCaseSummary),
               contacts,

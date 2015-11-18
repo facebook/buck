@@ -179,7 +179,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
               resultSummaries);
           summaries.add(summary);
         }
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries.build(),
             contacts,

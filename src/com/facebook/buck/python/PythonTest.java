@@ -181,7 +181,7 @@ public class PythonTest
               getBuildTarget().getFullyQualifiedName(),
               ImmutableList.copyOf(testResultSummaries)));
         }
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries.build(),
             contacts,

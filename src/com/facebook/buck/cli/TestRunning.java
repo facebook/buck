@@ -458,9 +458,7 @@ public class TestRunning {
     final SettableFuture<TestResults> transformedTestResults = SettableFuture.create();
     FutureCallback<TestResults> callback = new FutureCallback<TestResults>() {
 
-      private void postTestResults(TestResults testResults) {
-        testResults.setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet());
-        testResults.setTotalNumberOfTests(totalNumberOfTests);
+      private TestResults postTestResults(TestResults testResults) {
         if (!testRule.supportsStreamingTests()) {
           // For test rules which don't support streaming tests, we'll
           // stream test summary events after interpreting the
@@ -478,10 +476,16 @@ public class TestRunning {
           testReportingCallback.testsDidEnd(testResults.getTestCases());
           LOG.debug("Done simulating streaming test events for rule %s", testRule);
         }
+        TestResults transformedTestResults = TestResults.builder()
+            .from(testResults)
+            .setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet())
+            .setTotalNumberOfTests(totalNumberOfTests)
+            .build();
         params.getBuckEventBus().post(
             IndividualTestEvent.finished(
                 testTargets,
-                testResults));
+                transformedTestResults));
+        return transformedTestResults;
       }
 
       private String getStackTrace(Throwable throwable) {
@@ -505,7 +509,7 @@ public class TestRunning {
         LOG.warn(throwable, "Test command step failed, marking %s as failed", testRule);
         // If the test command steps themselves fail, report this as special test result.
         TestResults testResults =
-            new TestResults(
+            TestResults.of(
                 testRule.getBuildTarget(),
                 ImmutableList.of(
                     new TestCaseSummary(
@@ -523,10 +527,13 @@ public class TestRunning {
                 testRule.getContacts(),
                 FluentIterable.from(
                     testRule.getLabels()).transform(Functions.toStringFunction()).toSet());
+        TestResults newTestResults;
         if (printTestResults) {
-          postTestResults(testResults);
+          newTestResults = postTestResults(testResults);
+        } else {
+          newTestResults = testResults;
         }
-        transformedTestResults.set(testResults);
+        transformedTestResults.set(newTestResults);
       }
     };
     Futures.addCallback(originalTestResults, callback);
@@ -547,7 +554,7 @@ public class TestRunning {
             .from(originalTestResults.getTestCases())
             .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
             .toList();
-        return new TestResults(
+        return TestResults.of(
             originalTestResults.getBuildTarget(),
             cachedTestResults,
             originalTestResults.getContacts(),

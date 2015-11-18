@@ -198,7 +198,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
           summaries.add(
               XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
         }
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries.build(),
             contacts,

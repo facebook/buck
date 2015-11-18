@@ -363,7 +363,7 @@ public class AppleTest
             }
           }
         }
-        return new TestResults(
+        return TestResults.of(
           getBuildTarget(),
           testCaseSummaries,
           contacts,

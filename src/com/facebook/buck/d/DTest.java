@@ -182,7 +182,7 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
             testOutput,
             /* stderr */ "");
 
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             ImmutableList.of(
                 new TestCaseSummary(

@@ -189,7 +189,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
               getBuildTarget().getFullyQualifiedName(),
               parseTestResults()));
         }
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries,
             contacts,

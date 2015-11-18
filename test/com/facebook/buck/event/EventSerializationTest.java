@@ -37,6 +37,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -264,7 +265,7 @@ public class EventSerializationTest {
     TestCaseSummary testCase = new TestCaseSummary(testCaseName,
         ImmutableList.of(testResultSummary));
     ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
-    return new TestResults(testCases);
+    return FakeTestResults.of(testCases);
   }
 
   private void matchJsonObjects(String path, JsonNode expected, JsonNode actual) {

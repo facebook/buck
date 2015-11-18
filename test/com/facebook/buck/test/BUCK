@@ -7,9 +7,21 @@ java_test(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:config',
-    '//src/com/facebook/buck/test:test',  
+    '//src/com/facebook/buck/test:test',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/cli:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
+  ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes=['*Test.java']),
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/test:test',
+  ],
+  visibility = [
+    '//test/...',
   ],
 )

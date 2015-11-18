@@ -791,7 +791,7 @@ public class SuperConsoleEventBusListenerTest {
             TestRunEvent.finished(
                 ImmutableSet.copyOf(testArgs),
                 ImmutableList.of(
-                    new TestResults(
+                    TestResults.of(
                         testTarget,
                         ImmutableList.of(
                             new TestCaseSummary(
@@ -1063,7 +1063,7 @@ public class SuperConsoleEventBusListenerTest {
             TestRunEvent.finished(
                 ImmutableSet.copyOf(testArgs),
                 ImmutableList.of(
-                    new TestResults(
+                    TestResults.of(
                         testTarget,
                         ImmutableList.of(
                             new TestCaseSummary(
@@ -1339,7 +1339,7 @@ public class SuperConsoleEventBusListenerTest {
             TestRunEvent.finished(
                 ImmutableSet.copyOf(testArgs),
                 ImmutableList.of(
-                    new TestResults(
+                    TestResults.of(
                         testTarget,
                         ImmutableList.of(
                             new TestCaseSummary(

@@ -56,6 +56,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -300,7 +301,7 @@ public class TestRunningTest {
     TestCaseSummary testCase = new TestCaseSummary("TestCase", resultList);
     List<TestCaseSummary> testCases = ImmutableList.of(testCase);
 
-    TestResults testResults = new TestResults(testCases);
+    TestResults testResults = FakeTestResults.of(testCases);
     List<TestResults> testResultsList = ImmutableList.of(testResults);
 
     // Call the XML generation method with our test data.
@@ -512,7 +513,7 @@ public class TestRunningTest {
             0,
             atomicExecutionOrder);
     final TestResults fakeTestResults =
-        new TestResults(
+        FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
                     "TestCase",
@@ -648,7 +649,7 @@ public class TestRunningTest {
             0,
             atomicExecutionOrder);
     final TestResults fakeTestResults =
-        new TestResults(
+        FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
                     "TestCase",
@@ -904,7 +905,7 @@ public class TestRunningTest {
         .builder()
         .build();
     final TestResults failingTestResults =
-        new TestResults(
+        FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
                     "TestCase",

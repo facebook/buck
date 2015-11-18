@@ -412,7 +412,7 @@ public class JavaTest
         // were run by its deps. In this case, return an empty TestResults.
         Set<String> testClassNames = getClassNamesForSources();
         if (testClassNames.isEmpty()) {
-          return new TestResults(
+          return TestResults.of(
               getBuildTarget(),
               ImmutableList.<TestCaseSummary>of(),
               contacts,
@@ -452,7 +452,7 @@ public class JavaTest
           }
         }
 
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries,
             contacts,

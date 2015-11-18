@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -196,7 +197,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));
@@ -209,7 +210,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest, failingTest));
-    TestResults results = new TestResults(
+    TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
         /* contacts */ ImmutableSet.<String>of(),
@@ -242,7 +243,7 @@ public class TestResultFormatterTest {
                 null,
                 null,
                 null)));
-    TestResults results = new TestResults(
+    TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
         /* contacts */ ImmutableSet.<String>of(),
@@ -263,7 +264,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
@@ -277,7 +278,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createNoisyFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
@@ -305,7 +306,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);

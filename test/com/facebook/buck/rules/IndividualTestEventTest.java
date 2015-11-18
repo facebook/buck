@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResults;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class IndividualTestEventTest {
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        tests, new TestResults(ImmutableList.<TestCaseSummary>of()));
+        tests, FakeTestResults.of(ImmutableList.<TestCaseSummary>of()));
 
     assertTrue(started.isRelatedTo(finished));
     assertTrue(finished.isRelatedTo(started));
@@ -45,7 +45,7 @@ public class IndividualTestEventTest {
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        otherTests, new TestResults(ImmutableList.<TestCaseSummary>of()));
+        otherTests, FakeTestResults.of(ImmutableList.<TestCaseSummary>of()));
 
     assertFalse(started.isRelatedTo(finished));
     assertFalse(finished.isRelatedTo(started));
