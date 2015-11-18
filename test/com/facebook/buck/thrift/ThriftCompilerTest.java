@@ -29,7 +29,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -72,21 +71,18 @@ public class ThriftCompilerTest {
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of(
-                    "blah/something.thrift", Strings.repeat("e", 40),
-                    "different", Strings.repeat("c", 40),
-                    "something.thrift", Strings.repeat("d", 40),
-                    "thrift", Strings.repeat("a", 40),
-                    "test.thrift", Strings.repeat("b", 40))),
-            resolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            "blah/something.thrift", Strings.repeat("e", 40),
+            "different", Strings.repeat("c", 40),
+            "something.thrift", Strings.repeat("d", 40),
+            "thrift", Strings.repeat("a", 40),
+            "test.thrift", Strings.repeat("b", 40)));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -103,7 +99,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the compiler causes a rulekey change.
 
-    RuleKey compilerChange = ruleKeyBuilderFactory.build(
+    RuleKey compilerChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -121,7 +117,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = ruleKeyBuilderFactory.build(
+    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -139,7 +135,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey outputDirChange = ruleKeyBuilderFactory.build(
+    RuleKey outputDirChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -157,7 +153,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey inputChange = ruleKeyBuilderFactory.build(
+    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -175,7 +171,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey languageChange = ruleKeyBuilderFactory.build(
+    RuleKey languageChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -193,7 +189,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey optionsChange = ruleKeyBuilderFactory.build(
+    RuleKey optionsChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -212,7 +208,7 @@ public class ThriftCompilerTest {
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey includeRootsChange = ruleKeyBuilderFactory.build(
+    RuleKey includeRootsChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -231,7 +227,7 @@ public class ThriftCompilerTest {
     // Verify that changing the header maps does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey headerMapKeyChange = ruleKeyBuilderFactory.build(
+    RuleKey headerMapKeyChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -249,7 +245,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the name of the include causes a rulekey change.
 
-    RuleKey includesKeyChange = ruleKeyBuilderFactory.build(
+    RuleKey includesKeyChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -269,7 +265,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the contents of an include causes a rulekey change.
 
-    RuleKey includesValueChange = ruleKeyBuilderFactory.build(
+    RuleKey includesValueChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,

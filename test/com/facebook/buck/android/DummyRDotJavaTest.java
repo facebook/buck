@@ -28,12 +28,16 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -59,8 +63,12 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testBuildSteps() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
@@ -79,7 +87,9 @@ public class DummyRDotJavaTest {
     setAndroidResourceBuildOutput(resourceRule2, RESOURCE_RULE2_KEY);
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
+            .setProjectFilesystem(filesystem)
+            .build(),
         pathResolver,
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
@@ -93,7 +103,6 @@ public class DummyRDotJavaTest {
         buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 6, steps.size());
 
-    ProjectFilesystem filesystem = dummyRDotJava.getProjectFilesystem();
     String rDotJavaSrcFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__").toString();
     String rDotJavaBinFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_bin__").toString();
     String rDotJavaAbiFolder = Paths.get(
@@ -123,7 +132,7 @@ public class DummyRDotJavaTest {
         ImmutableList.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2));
-    assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps());
+    assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps(ruleKeyBuilderFactory));
   }
 
   @Test

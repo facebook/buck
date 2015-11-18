@@ -28,6 +28,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -144,7 +145,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() {
+  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
   }
 

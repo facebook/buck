@@ -63,18 +63,9 @@ public class AndroidResourceTest {
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    String commonHash = Strings.repeat("a", 40);
-    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
-            "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
-            "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
-            "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setFileHashCache(fakeFileHashCache)
-        .build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
 
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
@@ -120,17 +111,18 @@ public class AndroidResourceTest {
                 Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(ImmutableMap.of(
-                "java/src/com/facebook/base/AndroidManifest.xml", "bbbbbbbbbb",
-                "java/src/com/facebook/base/assets/drawable/A.xml", "cccccccccccc",
-                "java/src/com/facebook/base/assets/drawable/B.xml", "aaaaaaaaaaaa",
-                "java/src/com/facebook/base/res/drawable/A.xml", "dddddddddd",
-                "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
-                )),
-            pathResolver);
-    RuleKey ruleKey1 = factory.build(androidResource1);
-    RuleKey ruleKey2 = factory.build(androidResource2);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            "java/src/com/facebook/base/AndroidManifest.xml", "bbbbbbbbbb",
+            "java/src/com/facebook/base/assets/drawable/A.xml", "cccccccccccc",
+            "java/src/com/facebook/base/assets/drawable/B.xml", "aaaaaaaaaaaa",
+            "java/src/com/facebook/base/res/drawable/A.xml", "dddddddddd",
+            "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
+        ));
+    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+        androidResource1);
+    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+        androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.",
@@ -233,8 +225,6 @@ public class AndroidResourceTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
-    InputBasedRuleKeyBuilderFactory factory =
-        new InputBasedRuleKeyBuilderFactory(fileHashCache, pathResolver);
     AndroidResource dep =
         (AndroidResource) AndroidResourceBuilder
             .createBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -250,14 +240,22 @@ public class AndroidResourceTest {
     filesystem.writeContentsToPath(
         "something",
         pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
-    RuleKey original = factory.build(resource);
+    RuleKey original = new InputBasedRuleKeyBuilderFactory(
+        fileHashCache,
+        pathResolver,
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver))
+        .build(resource);
 
     fileHashCache.invalidateAll();
 
     filesystem.writeContentsToPath(
         "something else",
         pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
-    RuleKey changed = factory.build(resource);
+    RuleKey changed = new InputBasedRuleKeyBuilderFactory(
+        fileHashCache,
+        pathResolver,
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver))
+        .build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }

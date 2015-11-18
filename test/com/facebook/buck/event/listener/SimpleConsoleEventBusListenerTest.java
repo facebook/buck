@@ -22,10 +22,10 @@ import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -37,6 +37,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -45,6 +48,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -75,6 +79,8 @@ public class SimpleConsoleEventBusListenerTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of());
 
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
+        ImmutableMap.of(fakeTarget, new RuleKey("aaaa")));
     SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
         console,
         fakeClock,
@@ -106,8 +112,12 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
     assertOutput(expectedOutput, console);
 
-    rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(fakeRule), 600L, TimeUnit.MILLISECONDS, threadId));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildRuleEvent.started(fakeRule, ruleKeyBuilderFactory),
+            600L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne = postStoreScheduled(
         rawEventBus, threadId, TARGET_ONE, 700L);
@@ -122,6 +132,7 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildRuleEvent.finished(
                 fakeRule,
+                ruleKeyBuilderFactory,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),

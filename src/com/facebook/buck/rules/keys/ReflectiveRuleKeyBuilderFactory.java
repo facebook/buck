@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 
@@ -33,9 +34,17 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder>
 
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
+  private final LoadingCache<BuildRule, RuleKey> knownRules;
 
   public ReflectiveRuleKeyBuilderFactory() {
     knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
+    knownRules = CacheBuilder.newBuilder().weakKeys().build(
+        new CacheLoader<BuildRule, RuleKey>() {
+          @Override
+          public RuleKey load(BuildRule key) throws Exception {
+            return newInstance(key).build();
+          }
+        });
   }
 
   /**
@@ -73,7 +82,7 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder>
 
   @Override
   public final RuleKey build(BuildRule buildRule) {
-    return newInstance(buildRule).build();
+    return knownRules.getUnchecked(buildRule);
   }
 
 }

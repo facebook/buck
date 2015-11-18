@@ -51,7 +51,6 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -1605,8 +1604,7 @@ public class ParserNgTest {
     return Preconditions.checkNotNull(
         new TargetGraphToActionGraph(
             eventBus,
-            new BuildTargetNodeToBuildRuleTransformer(),
-            new NullFileHashCache())
+            new BuildTargetNodeToBuildRuleTransformer())
             .apply(targetGraph))
         .getFirst();
   }

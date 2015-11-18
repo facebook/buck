@@ -18,21 +18,12 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +35,6 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
   private final BuckEventBus eventBus;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
-  private final FileHashCache fileHashCache;
 
   private volatile int hashOfTargetGraph;
   @Nullable
@@ -53,11 +43,9 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
-      TargetNodeToBuildRuleTransformer buildRuleGenerator,
-      FileHashCache fileHashCache) {
+      TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     this.eventBus = eventBus;
     this.buildRuleGenerator = buildRuleGenerator;
-    this.fileHashCache = fileHashCache;
   }
 
   @Override
@@ -82,25 +70,6 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
     final BuildRuleResolver resolver = new BuildRuleResolver();
 
-    // I think this could be a little more verbose, but I'm not quite sure how.
-    final LoadingCache<ProjectFilesystem, RuleKeyBuilderFactory>
-        ruleKeyBuilderFactories = CacheBuilder.newBuilder().build(
-        new CacheLoader<ProjectFilesystem, RuleKeyBuilderFactory>() {
-          @Override
-          public RuleKeyBuilderFactory load(ProjectFilesystem filesystem) throws Exception {
-
-            StackedFileHashCache cellHashCache = new StackedFileHashCache(
-                ImmutableList.of(
-                    fileHashCache,
-                    new DefaultFileHashCache(filesystem)));
-
-            return new DefaultRuleKeyBuilderFactory(
-                cellHashCache,
-                new SourcePathResolver(resolver));
-            }
-        }
-    );
-
     final int numberOfNodes = targetGraph.getNodes().size();
     final AtomicInteger processedNodes = new AtomicInteger(0);
 
@@ -109,16 +78,12 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
           @Override
           public void visit(TargetNode<?> node) {
-            RuleKeyBuilderFactory data = ruleKeyBuilderFactories.getUnchecked(
-                node.getRuleFactoryParams().getProjectFilesystem());
-
             BuildRule rule;
             try {
               rule = buildRuleGenerator.transform(
                   targetGraph,
                   resolver,
-                  node,
-                  data);
+                  node);
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }

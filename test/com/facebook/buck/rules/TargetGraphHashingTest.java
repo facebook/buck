@@ -72,11 +72,11 @@ public class TargetGraphHashingTest {
 
     FileHashCache baseCache = new FakeFileHashCache(
         ImmutableMap.of(
-            Paths.get("foo/FooLib.java"), HashCode.fromString("abcdef")));
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef")));
 
     FileHashCache modifiedCache = new FakeFileHashCache(
         ImmutableMap.of(
-            Paths.get("foo/FooLib.java"), HashCode.fromString("abc1ef")));
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
 
     Map<BuildTarget, HashCode> baseResult = TargetGraphHashing.hashTargetGraph(
         projectFilesystem,
@@ -117,8 +117,8 @@ public class TargetGraphHashingTest {
 
     FileHashCache fileHashCache = new FakeFileHashCache(
         ImmutableMap.of(
-            Paths.get("foo/FooLib.java"), HashCode.fromString("abcdef"),
-            Paths.get("bar/BarLib.java"), HashCode.fromString("123456")));
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
+            projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultsA = TargetGraphHashing.hashTargetGraph(
         projectFilesystem,
@@ -191,8 +191,8 @@ public class TargetGraphHashingTest {
 
     FileHashCache fileHashCache = new FakeFileHashCache(
         ImmutableMap.of(
-            Paths.get("foo/FooLib.java"), HashCode.fromString("abcdef"),
-            Paths.get("dep/DepLib.java"), HashCode.fromString("123456")));
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
+            projectFilesystem.resolve("dep/DepLib.java"), HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultA = TargetGraphHashing.hashTargetGraph(
         projectFilesystem,

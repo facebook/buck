@@ -177,12 +177,12 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 modifiedSymlinkTreeBuildRule)));
 
     // Calculate their rule keys and verify they're different.
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
-            resolver);
-    RuleKey key1 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);
-    RuleKey key2 = ruleKeyBuilderFactory.build(modifiedSymlinkTreeBuildRule);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.<String, String>of());
+    RuleKey key1 = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+        symlinkTreeBuildRule);
+    RuleKey key2 = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+        modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
 
@@ -191,10 +191,10 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         symlinkTreeBuildRule)));
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
-            resolver);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        FakeFileHashCache.createFromStrings(
+            ImmutableMap.<String, String>of()),
+        resolver);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);

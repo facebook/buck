@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -41,17 +42,19 @@ import java.nio.file.Paths;
  * Unit tests for {@link PathHashing}.
  */
 public class PathHashingTest {
+  ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
   FileHashCache fileHashCache = new FakeFileHashCache(
       ImmutableMap.of(
-          Paths.get("foo/foo.txt"), HashCode.fromString("abcdef"),
-          Paths.get("foo/bar.txt"), HashCode.fromString("abcdef"),
-          Paths.get("foo/baz.txt"), HashCode.fromString("abcdef")));
+          projectFilesystem.resolve("foo/foo.txt"), HashCode.fromString("abcdef"),
+          projectFilesystem.resolve("foo/bar.txt"), HashCode.fromString("abcdef"),
+          projectFilesystem.resolve("foo/baz.txt"), HashCode.fromString("abcdef")));
 
   FileHashCache modifiedFileHashCache = new FakeFileHashCache(
       ImmutableMap.of(
-          Paths.get("foo/foo.txt"), HashCode.fromString("123456"),
-          Paths.get("foo/bar.txt"), HashCode.fromString("123456"),
-          Paths.get("foo/baz.txt"), HashCode.fromString("123456")));
+          projectFilesystem.resolve("foo/foo.txt"), HashCode.fromString("123456"),
+          projectFilesystem.resolve("foo/bar.txt"), HashCode.fromString("123456"),
+          projectFilesystem.resolve("foo/baz.txt"), HashCode.fromString("123456")));
 
   @Test
   public void emptyPathHasExpectedHash() throws IOException {

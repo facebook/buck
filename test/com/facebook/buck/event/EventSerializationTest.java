@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -128,7 +130,11 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventStarted() throws IOException {
-    BuildRuleEvent.Started event = BuildRuleEvent.started(generateFakeBuildRule());
+    BuildRule rule = generateFakeBuildRule();
+    BuildRuleEvent.Started event = BuildRuleEvent.started(
+        rule,
+        new FakeRuleKeyBuilderFactory(
+            ImmutableMap.of(rule.getBuildTarget(), new RuleKey("aaaa"))));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(
@@ -141,9 +147,12 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventFinished() throws IOException {
+    BuildRule rule = generateFakeBuildRule();
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
-            generateFakeBuildRule(),
+            rule,
+            new FakeRuleKeyBuilderFactory(
+                ImmutableMap.of(rule.getBuildTarget(), new RuleKey("aaaa"))),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.<BuildRuleSuccessType>absent(),
@@ -242,12 +251,10 @@ public class EventSerializationTest {
 
   private BuildRule generateFakeBuildRule() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
-    FakeBuildRule result = new FakeBuildRule(
+    return new FakeBuildRule(
         buildTarget,
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of());
-    result.setRuleKey(new RuleKey("aaaa"));
-    return result;
   }
 
   private TestResults generateFakeTestResults() {

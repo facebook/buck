@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -202,10 +201,6 @@ public class BuildSimulatorTest {
     public BuildableProperties getProperties() {
       throw new IllegalStateException("Not implemented");
     }
-
-    @Override
-    public RuleKey getRuleKey() {
-      throw new IllegalStateException("Not implemented");
-    }
   }
+
 }

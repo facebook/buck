@@ -65,15 +65,16 @@ public class CalculateAbiTest {
             builder.createBuildRuleParams(resolver, filesystem),
             new BuildTargetSourcePath(javaLibraryTarget));
 
-    RuleKey initialKey =
-        new DefaultRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
-            .build(calculateAbi);
+    DefaultFileHashCache initialHashCache = new DefaultFileHashCache(filesystem);
+    DefaultRuleKeyBuilderFactory initialRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        initialHashCache,
+        pathResolver);
+    RuleKey initialKey = initialRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey initialInputKey =
         new InputBasedRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
+            initialHashCache,
+            pathResolver,
+            initialRuleKeyBuilderFactory)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
@@ -85,15 +86,16 @@ public class CalculateAbiTest {
     pathResolver = new SourcePathResolver(resolver);
     builder.build(resolver, filesystem);
 
-    RuleKey alteredKey =
-        new DefaultRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
-            .build(calculateAbi);
+    DefaultFileHashCache alteredHashCache = new DefaultFileHashCache(filesystem);
+    DefaultRuleKeyBuilderFactory alteredRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        alteredHashCache,
+        pathResolver);
+    RuleKey alteredKey = alteredRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey alteredInputKey =
         new InputBasedRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
+            alteredHashCache,
+            pathResolver,
+            alteredRuleKeyBuilderFactory)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
@@ -125,15 +127,16 @@ public class CalculateAbiTest {
             builder.createBuildRuleParams(resolver, filesystem),
             new BuildTargetSourcePath(javaLibraryTarget));
 
-    RuleKey initialKey =
-        new DefaultRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
-            .build(calculateAbi);
+    DefaultFileHashCache initialHashCache = new DefaultFileHashCache(filesystem);
+    DefaultRuleKeyBuilderFactory initialRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        initialHashCache,
+        pathResolver);
+    RuleKey initialKey = initialRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey initialInputKey =
         new InputBasedRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
+            initialHashCache,
+            pathResolver,
+            initialRuleKeyBuilderFactory)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
@@ -144,15 +147,16 @@ public class CalculateAbiTest {
     pathResolver = new SourcePathResolver(resolver);
     builder.build(resolver, filesystem);
 
-    RuleKey alteredKey =
-        new DefaultRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
-            .build(calculateAbi);
+    DefaultFileHashCache alteredHashCache = new DefaultFileHashCache(filesystem);
+    DefaultRuleKeyBuilderFactory alteredRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        alteredHashCache,
+        pathResolver);
+    RuleKey alteredKey = alteredRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey alteredInputKey =
         new InputBasedRuleKeyBuilderFactory(
-            new DefaultFileHashCache(filesystem),
-            pathResolver)
+            alteredHashCache,
+            pathResolver,
+            alteredRuleKeyBuilderFactory)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));

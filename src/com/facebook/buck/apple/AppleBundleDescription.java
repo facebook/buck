@@ -292,8 +292,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                 resolver,
                 binaryTargetNode.getExtraDeps())),
         params.getProjectFilesystem(),
-        params.getCellRoots(),
-        params.getRuleKeyBuilderFactory());
+        params.getCellRoots());
 
     return CxxDescriptionEnhancer.requireBuildRule(
         targetGraph,

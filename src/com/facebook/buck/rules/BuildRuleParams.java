@@ -42,7 +42,6 @@ public class BuildRuleParams {
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
   private final ProjectFilesystem projectFilesystem;
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final Function<Optional<String>, Path> cellRoots;
 
   public BuildRuleParams(
@@ -50,14 +49,12 @@ public class BuildRuleParams {
       final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
       ProjectFilesystem projectFilesystem,
-      Function<Optional<String>, Path> cellRoots,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      Function<Optional<String>, Path> cellRoots) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
     this.cellRoots = cellRoots;
-    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
 
     this.totalDeps = Suppliers.memoize(
         new Supplier<ImmutableSortedSet<BuildRule>>() {
@@ -115,8 +112,7 @@ public class BuildRuleParams {
         declaredDeps,
         extraDeps,
         projectFilesystem,
-        cellRoots,
-        ruleKeyBuilderFactory);
+        cellRoots);
   }
 
   public BuildRuleParams withoutFlavor(Flavor flavor) {
@@ -175,10 +171,6 @@ public class BuildRuleParams {
 
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
-  }
-
-  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
-    return ruleKeyBuilderFactory;
   }
 
 }

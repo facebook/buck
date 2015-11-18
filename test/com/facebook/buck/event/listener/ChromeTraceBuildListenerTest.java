@@ -26,13 +26,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.event.ArtifactCompressionEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -41,16 +43,16 @@ import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepEvent;
@@ -170,11 +172,13 @@ public class ChromeTraceBuildListenerTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of());
     RuleKey ruleKey = new RuleKey("abc123");
-    rule.setRuleKey(ruleKey);
     String stepShortName = "fakeStep";
     String stepDescription = "I'm a Fake Step!";
     UUID stepUuid = UUID.randomUUID();
 
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
+        ImmutableMap.of(
+            target, ruleKey));
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);
 
@@ -211,7 +215,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(artifactCompressionStartedEvent);
     eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
 
-    eventBus.post(BuildRuleEvent.started(rule));
+    eventBus.post(BuildRuleEvent.started(rule, ruleKeyBuilderFactory));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
 
@@ -269,6 +273,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(
         BuildRuleEvent.finished(
             rule,
+            ruleKeyBuilderFactory,
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),

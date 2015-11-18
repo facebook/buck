@@ -57,9 +57,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
-
-    RuleKey expected = builder.build();
+    RuleKey expected = factory.build(rule);
 
     class UndecoratedFields extends EmptyRule {
 
@@ -151,7 +149,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey subKey =
-        new RuleKeyBuilder(pathResolver, fileHashCache)
+        new RuleKeyBuilder(pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
             .build();
 
@@ -195,22 +193,18 @@ public class DefaultRuleKeyBuilderFactoryTest {
         return builder.setReflectively("cheese", "brie");
       }
 
-      @Override
-      public RuleKey getRuleKey() {
-        return new RuleKey("abcd");
-      }
     }
 
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
     RuleKey subKey =
-        new RuleKeyBuilder(pathResolver, fileHashCache)
+        new RuleKeyBuilder(pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
             .build();
 
     RuleKeyBuilder builder = factory.newInstance(rule);
     builder.setReflectively("field.appendableSubKey", subKey);
-    builder.setReflectively("field", appendableRule.getRuleKey());
+    builder.setReflectively("field", factory.build(appendableRule));
     RuleKey expected = builder.build();
 
     class RuleContainingAppendableRule extends EmptyRule {
@@ -419,11 +413,6 @@ public class DefaultRuleKeyBuilderFactoryTest {
     @Override
     public ProjectFilesystem getProjectFilesystem() {
       return new FakeProjectFilesystem();
-    }
-
-    @Override
-    public RuleKey getRuleKey() {
-      throw new UnsupportedOperationException("getRuleKey");
     }
 
     @Override

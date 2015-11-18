@@ -26,7 +26,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -56,19 +55,16 @@ public class ArchiveTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of(
-                    AR.toString(), Strings.repeat("0", 40),
-                    "a.o", Strings.repeat("a", 40),
-                    "b.o", Strings.repeat("b", 40),
-                    "c.o", Strings.repeat("c", 40),
-                    Paths.get("different").toString(), Strings.repeat("d", 40))),
-            pathResolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            AR.toString(), Strings.repeat("0", 40),
+            "a.o", Strings.repeat("a", 40),
+            "b.o", Strings.repeat("b", 40),
+            "c.o", Strings.repeat("c", 40),
+            Paths.get("different").toString(), Strings.repeat("d", 40)));
 
     // Generate a rule key for the defaults.
-    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
@@ -77,7 +73,7 @@ public class ArchiveTest {
             DEFAULT_INPUTS));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKey archiverChange = ruleKeyBuilderFactory.build(
+    RuleKey archiverChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
@@ -87,7 +83,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKey outputChange = ruleKeyBuilderFactory.build(
+    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
@@ -97,7 +93,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKey inputChange = ruleKeyBuilderFactory.build(
+    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
@@ -107,7 +103,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
-    RuleKey archiverTypeChange = ruleKeyBuilderFactory.build(
+    RuleKey archiverTypeChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
@@ -115,7 +111,6 @@ public class ArchiveTest {
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
-
   }
 
 }

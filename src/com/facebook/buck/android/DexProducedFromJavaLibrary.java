@@ -21,6 +21,7 @@ import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -231,7 +232,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
    * of this buildable is the hash of the {@code .class} files for {@link #javaLibrary}.
    */
   @Override
-  public Sha1HashCode getAbiKeyForDeps() {
+  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return computeAbiKey(javaLibrary.getClassNamesToHashes());
   }
 

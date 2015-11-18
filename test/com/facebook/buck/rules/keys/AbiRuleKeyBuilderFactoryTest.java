@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbiRuleBuildRule;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -51,17 +52,18 @@ public class AbiRuleKeyBuilderFactoryTest {
             new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), pathResolver));
     dep.setOutputFile(depOutput.toString());
 
-    FakeFileHashCache hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(depOutput, HashCode.fromInt(0)));
+    FakeFileHashCache hashCache = new FakeFileHashCache(
+        ImmutableMap.of(depOutput, HashCode.fromInt(0)));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
 
     BuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver, dep);
 
-    dep.setRuleKey(new RuleKey("aaaa"));
-    RuleKey inputKey1 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
+    RuleKey inputKey1 =
+        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
 
-    dep.setRuleKey(new RuleKey("bbbb"));
-    RuleKey inputKey2 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
+    RuleKey inputKey2 =
+        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
 
     assertThat(
         inputKey1,
@@ -72,15 +74,20 @@ public class AbiRuleKeyBuilderFactoryTest {
   public void ruleKeyChangesWhenAbiKeyChanges() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    FakeFileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+    FakeFileHashCache hashCache = new FakeFileHashCache(
+        ImmutableMap.<Path, HashCode>of());
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
 
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("a", 40)));
-    RuleKey inputKey1 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
+    RuleKey inputKey1 =
+        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("b", 40)));
-    RuleKey inputKey2 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
+    RuleKey inputKey2 =
+        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
 
     assertThat(
         inputKey1,

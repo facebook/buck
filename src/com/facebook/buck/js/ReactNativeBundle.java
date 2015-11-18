@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -155,7 +156,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() {
+  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return depsFinder.getInputsHash();
   }
 

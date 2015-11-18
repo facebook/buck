@@ -18,16 +18,26 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 
 public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
 
+  private final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
+
   public AbiRuleKeyBuilderFactory(
       FileHashCache hashCache,
-      SourcePathResolver pathResolver) {
+      SourcePathResolver pathResolver,
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     super(hashCache, pathResolver);
+    this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
+  }
+
+  @Override
+  public RuleKeyBuilderFactory getDefaultRuleKeyBuilderFactory() {
+    return defaultRuleKeyBuilderFactory;
   }
 
   @Override
@@ -39,7 +49,9 @@ public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
             buildRule.getBuildTarget().getFullyQualifiedName(),
             buildRule.getType()));
     AbiRule abiRule = (AbiRule) buildRule;
-    builder.setReflectively("buck.deps", abiRule.getAbiKeyForDeps());
+    builder.setReflectively(
+        "buck.deps",
+        abiRule.getAbiKeyForDeps(defaultRuleKeyBuilderFactory));
   }
 
 }

@@ -402,8 +402,7 @@ public class AndroidBinaryGraphEnhancer {
           /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           buildRuleParams.getProjectFilesystem(),
-          buildRuleParams.getCellRoots(),
-          buildRuleParams.getRuleKeyBuilderFactory());
+          buildRuleParams.getCellRoots());
       JavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription.createBuildRule(
           buildConfigParams,
           javaPackage,

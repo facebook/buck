@@ -21,8 +21,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Functions;
 
 import org.hamcrest.Matchers;
@@ -31,9 +33,13 @@ import org.junit.Test;
 public class SanitizedArgTest {
 
   private RuleKeyBuilder createRuleKeyBuilder() {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     return new RuleKeyBuilder(
-        new SourcePathResolver(new BuildRuleResolver()),
-        new DefaultFileHashCache(new FakeProjectFilesystem()));
+        resolver,
+        new DefaultFileHashCache(projectFilesystem),
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver));
   }
 
   @Test

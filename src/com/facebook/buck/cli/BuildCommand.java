@@ -341,8 +341,7 @@ public class BuildCommand extends AbstractCommand {
       TargetGraphToActionGraph targetGraphToActionGraph =
           new TargetGraphToActionGraph(
               params.getBuckEventBus(),
-              new BuildTargetNodeToBuildRuleTransformer(),
-              params.getFileHashCache());
+              new BuildTargetNodeToBuildRuleTransformer());
       actionGraphAndResolver = Preconditions.checkNotNull(
           targetGraphToActionGraph.apply(result.getSecond()));
     } catch (BuildTargetException | BuildFileParseException e) {

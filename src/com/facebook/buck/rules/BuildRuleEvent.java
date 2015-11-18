@@ -28,10 +28,12 @@ import com.google.common.hash.HashCode;
  */
 public abstract class BuildRuleEvent extends AbstractBuckEvent {
   private final BuildRule rule;
+  private final String ruleKey;
 
-  protected BuildRuleEvent(BuildRule rule) {
+  protected BuildRuleEvent(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     super(EventKey.slowValueKey("BuildRuleEvent", rule.getFullyQualifiedName()));
     this.rule = rule;
+    this.ruleKey = ruleKeyBuilderFactory.newInstance(rule).build().toString();
   }
 
   public BuildRule getBuildRule() {
@@ -47,35 +49,42 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
    * @return The string representation of the rulekey or the error text.
    */
   public String getRuleKeySafe() {
-    String ruleKey;
-    ruleKey = rule.getRuleKey().toString();
     return ruleKey;
   }
 
-  public static Started started(BuildRule rule) {
-    return new Started(rule);
+  public static Started started(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    return new Started(rule, ruleKeyBuilderFactory);
   }
 
-  public static Finished finished(BuildRule rule,
+  public static Finished finished(
+      BuildRule rule,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleStatus status,
       CacheResult cacheResult,
       Optional<BuildRuleSuccessType> successType,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize) {
-    return new Finished(rule, status, cacheResult, successType, outputHash, outputSize);
+    return new Finished(
+        rule,
+        ruleKeyBuilderFactory,
+        status,
+        cacheResult,
+        successType,
+        outputHash,
+        outputSize);
   }
 
-  public static Suspended suspended(BuildRule rule) {
-    return new Suspended(rule);
+  public static Suspended suspended(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    return new Suspended(rule, ruleKeyBuilderFactory);
   }
 
-  public static Resumed resumed(BuildRule rule) {
-    return new Resumed(rule);
+  public static Resumed resumed(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    return new Resumed(rule, ruleKeyBuilderFactory);
   }
 
   public static class Started extends BuildRuleEvent {
-    protected Started(BuildRule rule) {
-      super(rule);
+    protected Started(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      super(rule, ruleKeyBuilderFactory);
     }
 
     @Override
@@ -92,13 +101,15 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
 
-    protected Finished(BuildRule rule,
+    protected Finished(
+        BuildRule rule,
+        RuleKeyBuilderFactory ruleKeyBuilderFactory,
         BuildRuleStatus status,
         CacheResult cacheResult,
         Optional<BuildRuleSuccessType> successType,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize) {
-      super(rule);
+      super(rule, ruleKeyBuilderFactory);
       this.status = status;
       this.cacheResult = cacheResult;
       this.successType = successType;
@@ -131,16 +142,13 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
 
     @Override
     public String toString() {
-      RuleKey ruleKey;
-      ruleKey = getBuildRule().getRuleKey();
-
       String success = successType.isPresent() ? successType.get().toString() : "MISSING";
       return String.format("BuildRuleFinished(%s): %s %s %s %s",
           getBuildRule(),
           getStatus(),
           getCacheResult(),
           success,
-          ruleKey);
+          getRuleKeySafe());
     }
 
     @Override
@@ -151,8 +159,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
 
   public static class Suspended extends BuildRuleEvent {
 
-    protected Suspended(BuildRule rule) {
-      super(rule);
+    protected Suspended(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      super(rule, ruleKeyBuilderFactory);
     }
 
     @Override
@@ -164,8 +172,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
 
   public static class Resumed extends BuildRuleEvent {
 
-    protected Resumed(BuildRule rule) {
-      super(rule);
+    protected Resumed(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      super(rule, ruleKeyBuilderFactory);
     }
 
     @Override

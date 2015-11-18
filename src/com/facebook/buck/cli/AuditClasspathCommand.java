@@ -137,8 +137,7 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer(),
-        params.getFileHashCache());
+        new BuildTargetNodeToBuildRuleTransformer());
 
     if (shouldGenerateDotOutput()) {
       return printDotOutput(params, targetGraph);

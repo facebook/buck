@@ -93,24 +93,21 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.<String, String>builder()
-                    .put("preprocessor", Strings.repeat("a", 40))
-                    .put("compiler", Strings.repeat("a", 40))
-                    .put("test.o", Strings.repeat("b", 40))
-                    .put("test.cpp", Strings.repeat("c", 40))
-                    .put("different", Strings.repeat("d", 40))
-                    .put("foo/test.h", Strings.repeat("e", 40))
-                    .put("path/to/a/plugin.so", Strings.repeat("f", 40))
-                    .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
-                    .build()),
-            pathResolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.<String, String>builder()
+            .put("preprocessor", Strings.repeat("a", 40))
+            .put("compiler", Strings.repeat("a", 40))
+            .put("test.o", Strings.repeat("b", 40))
+            .put("test.cpp", Strings.repeat("c", 40))
+            .put("different", Strings.repeat("d", 40))
+            .put("foo/test.h", Strings.repeat("e", 40))
+            .put("path/to/a/plugin.so", Strings.repeat("f", 40))
+            .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
+            .build());
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -124,7 +121,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the compiler causes a rulekey change.
 
-    RuleKey compilerChange = ruleKeyBuilderFactory.build(
+    RuleKey compilerChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -139,7 +136,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the operation causes a rulekey change.
 
-    RuleKey operationChange = ruleKeyBuilderFactory.build(
+    RuleKey operationChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
@@ -164,7 +161,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the platform flags causes a rulekey change.
 
-    RuleKey platformFlagsChange = ruleKeyBuilderFactory.build(
+    RuleKey platformFlagsChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -179,7 +176,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the rule flags causes a rulekey change.
 
-    RuleKey ruleFlagsChange = ruleKeyBuilderFactory.build(
+    RuleKey ruleFlagsChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -194,7 +191,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey inputChange = ruleKeyBuilderFactory.build(
+    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -213,24 +210,21 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.<String, String>builder()
-                    .put("preprocessor", Strings.repeat("a", 40))
-                    .put("compiler", Strings.repeat("a", 40))
-                    .put("test.o", Strings.repeat("b", 40))
-                    .put("test.cpp", Strings.repeat("c", 40))
-                    .put("different", Strings.repeat("d", 40))
-                    .put("foo/test.h", Strings.repeat("e", 40))
-                    .put("path/to/a/plugin.so", Strings.repeat("f", 40))
-                    .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
-                    .build()),
-            pathResolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.<String, String>builder()
+            .put("preprocessor", Strings.repeat("a", 40))
+            .put("compiler", Strings.repeat("a", 40))
+            .put("test.o", Strings.repeat("b", 40))
+            .put("test.cpp", Strings.repeat("c", 40))
+            .put("different", Strings.repeat("d", 40))
+            .put("foo/test.h", Strings.repeat("e", 40))
+            .put("path/to/a/plugin.so", Strings.repeat("f", 40))
+            .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
+            .build());
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
@@ -255,7 +249,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey includesChange = ruleKeyBuilderFactory.build(
+    RuleKey includesChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
@@ -280,7 +274,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the system includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey systemIncludesChange = ruleKeyBuilderFactory.build(
+    RuleKey systemIncludesChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
@@ -305,7 +299,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the header maps does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey headerMapsIncludesChange = ruleKeyBuilderFactory.build(
+    RuleKey headerMapsChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
@@ -325,11 +319,11 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
             DEFAULT_SANITIZER));
-    assertEquals(defaultRuleKey, headerMapsIncludesChange);
+    assertEquals(defaultRuleKey, headerMapsChange);
 
     // Verify that changing the framework roots causes a rulekey change.
 
-    RuleKey frameworkRootsChange = ruleKeyBuilderFactory.build(
+    RuleKey frameworkRootsChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,

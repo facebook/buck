@@ -29,6 +29,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -38,7 +39,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -133,6 +133,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildMode buildMode,
       DepFiles depFiles,
       SourcePathResolver pathResolver,
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
       RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
       RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
       RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
@@ -143,9 +144,10 @@ public class CachingBuildEngine implements BuildEngine {
     this.pathResolver = pathResolver;
 
     this.ruleKeyFactories = new RuleKeyFactories(
-            inputBasedRuleKeyBuilderFactory,
-            abiRuleKeyBuilderFactory,
-            depFileRuleKeyBuilderFactory);
+        defaultRuleKeyBuilderFactory,
+        inputBasedRuleKeyBuilderFactory,
+        abiRuleKeyBuilderFactory,
+        depFileRuleKeyBuilderFactory);
   }
 
   @VisibleForTesting
@@ -200,7 +202,7 @@ public class CachingBuildEngine implements BuildEngine {
     // 1. Check if it's already built.
     Optional<RuleKey> cachedRuleKey =
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
-    if (rule.getRuleKey().equals(cachedRuleKey.orNull())) {
+    if (ruleKeyFactories.defaultRuleKeyBuilderFactory.build(rule).equals(cachedRuleKey.orNull())) {
       return Futures.immediateFuture(
           BuildResult.success(
               rule,
@@ -212,7 +214,7 @@ public class CachingBuildEngine implements BuildEngine {
     final CacheResult cacheResult =
         tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
             rule,
-            rule.getRuleKey(),
+            ruleKeyFactories.defaultRuleKeyBuilderFactory.build(rule),
             buildInfoRecorder,
             context.getArtifactCache(),
             // TODO(shs96c): This should be a shared between all tests, not one per cell
@@ -224,7 +226,11 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     // Log to the event bus.
-    context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.suspended(rule));
+    context.getEventBus().logVerboseAndPost(
+        LOG,
+        BuildRuleEvent.suspended(
+            rule,
+            ruleKeyFactories.defaultRuleKeyBuilderFactory));
 
     // 3. Build deps.
     return Futures.transform(
@@ -235,7 +241,11 @@ public class CachingBuildEngine implements BuildEngine {
               throws Exception {
 
             // Log to the event bus.
-            context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.resumed(rule));
+            context.getEventBus().logVerboseAndPost(
+                LOG,
+                BuildRuleEvent.resumed(
+                    rule,
+                    ruleKeyFactories.defaultRuleKeyBuilderFactory));
 
             // If any dependency wasn't successful, cancel ourselves.
             for (BuildResult depResult : depResults) {
@@ -383,7 +393,11 @@ public class CachingBuildEngine implements BuildEngine {
       throws InterruptedException {
 
     // Log to the event bus.
-    context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.resumed(rule));
+    context.getEventBus().logVerboseAndPost(
+        LOG,
+        BuildRuleEvent.resumed(
+            rule,
+            ruleKeyFactories.defaultRuleKeyBuilderFactory));
 
     final OnDiskBuildInfo onDiskBuildInfo = context.createOnDiskBuildInfoFor(
         rule.getBuildTarget(),
@@ -392,7 +406,7 @@ public class CachingBuildEngine implements BuildEngine {
         context.createBuildInfoRecorder(rule.getBuildTarget(), rule.getProjectFilesystem())
             .addBuildMetadata(
                 BuildInfo.METADATA_KEY_FOR_RULE_KEY,
-                rule.getRuleKey().toString());
+                ruleKeyFactories.defaultRuleKeyBuilderFactory.build(rule).toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
 
     // Dispatch the build job for this rule.
@@ -552,7 +566,8 @@ public class CachingBuildEngine implements BuildEngine {
                 // If the rule key has changed (and is not already in the cache), we need to push
                 // the artifact to cache using the new key.
                 if (success.shouldUploadResultingArtifact()) {
-                  ruleKeys.add(rule.getRuleKey());
+                  ruleKeys.add(
+                      ruleKeyFactories.defaultRuleKeyBuilderFactory.build(rule));
                 }
 
                 // If the input-based rule key has changed, we need to push the artifact to cache
@@ -624,6 +639,7 @@ public class CachingBuildEngine implements BuildEngine {
                     LOG,
                     BuildRuleEvent.finished(
                         rule,
+                        ruleKeyFactories.defaultRuleKeyBuilderFactory,
                         input.getStatus(),
                         input.getCacheResult(),
                         successType,
@@ -807,13 +823,17 @@ public class CachingBuildEngine implements BuildEngine {
             public RuleKey apply(List<RuleKey> input) {
               context.getEventBus().logVerboseAndPost(
                   LOG,
-                  BuildRuleEvent.started(rule));
+                  BuildRuleEvent.started(
+                      rule,
+                      ruleKeyFactories.defaultRuleKeyBuilderFactory));
               try {
-                return rule.getRuleKey();
+                return ruleKeyFactories.defaultRuleKeyBuilderFactory.build(rule);
               } finally {
                 context.getEventBus().logVerboseAndPost(
                     LOG,
-                    BuildRuleEvent.suspended(rule));
+                    BuildRuleEvent.suspended(
+                        rule,
+                        ruleKeyFactories.defaultRuleKeyBuilderFactory));
               }
             }
           },
@@ -1085,37 +1105,42 @@ public class CachingBuildEngine implements BuildEngine {
 
   @VisibleForTesting
   static class RuleKeyFactories {
+    public final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
     public final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
     public final RuleKeyBuilderFactory abiRuleKeyBuilderFactory;
     public final RuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
 
     public static RuleKeyFactories build(
-        FileHashCache sharedHashCache,
+        FileHashCache fileHashCache,
         BuildRuleResolver ruleResolver) {
-
-      ImmutableList.Builder<FileHashCache> caches = ImmutableList.builder();
-      caches.add(sharedHashCache);
-
-      StackedFileHashCache fileHashCache = new StackedFileHashCache(caches.build());
       SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+      DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+          fileHashCache,
+          pathResolver);
 
       return new RuleKeyFactories(
+          defaultRuleKeyBuilderFactory,
           new InputBasedRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver),
+              pathResolver,
+              defaultRuleKeyBuilderFactory),
           new AbiRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver),
+              pathResolver,
+              defaultRuleKeyBuilderFactory),
           new DependencyFileRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver));
+              pathResolver,
+              defaultRuleKeyBuilderFactory));
     }
 
     @VisibleForTesting
     RuleKeyFactories(
+        RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
         RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
         RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
         RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
+      this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
       this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
       this.abiRuleKeyBuilderFactory = abiRuleKeyBuilderFactory;
       this.depFileRuleKeyBuilderFactory = depFileRuleKeyBuilderFactory;

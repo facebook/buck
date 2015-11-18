@@ -24,8 +24,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 
-import javax.annotation.Nullable;
-
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
  * matches the one on disk, then it has no work to do. It should also try to fetch its output from
@@ -38,17 +36,14 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
-  @Nullable private volatile RuleKey ruleKey;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
     this.deps = buildRuleParams.getTotalDeps();
-    this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.resolver = resolver;
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
@@ -117,21 +112,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public final String toString() {
     return getFullyQualifiedName();
-  }
-
-  /**
-   * This method should be overridden only for unit testing.
-   */
-  @Override
-  public RuleKey getRuleKey() {
-    if (ruleKey == null) {
-      synchronized (this) {
-        if (ruleKey == null) {
-          ruleKey = ruleKeyBuilderFactory.build(this);
-        }
-      }
-    }
-    return ruleKey;
   }
 
 }

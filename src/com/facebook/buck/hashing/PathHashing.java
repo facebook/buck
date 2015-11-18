@@ -50,7 +50,7 @@ public class PathHashing {
     );
     for (Path path : walkedPathsInSortedOrder(projectFilesystem, paths)) {
       StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
-      hasher.putBytes(fileHashLoader.get(path).asBytes());
+      hasher.putBytes(fileHashLoader.get(projectFilesystem.resolve(path)).asBytes());
     }
   }
 

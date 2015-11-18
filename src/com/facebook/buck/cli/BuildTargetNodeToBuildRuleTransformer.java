@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -38,8 +37,7 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
   public <T> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      TargetNode<T> targetNode,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      TargetNode<T> targetNode)
       throws NoSuchBuildTargetException {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
@@ -54,8 +52,7 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getDeclaredDeps())),
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
-        targetNode.getCellNames(),
-        ruleKeyBuilderFactory);
+        targetNode.getCellNames());
     return description.createBuildRule(targetGraph, params, ruleResolver, arg);
   }
 }

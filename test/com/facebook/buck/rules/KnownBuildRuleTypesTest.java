@@ -217,13 +217,12 @@ public class KnownBuildRuleTypesTest {
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     Path javacPath = javac.toPath();
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(
-            new FakeFileHashCache(
-                ImmutableMap.of(javacPath, MorePaths.asByteSource(javacPath).hash(Hashing.sha1()))),
-            resolver);
-    RuleKey configuredKey = factory.build(configuredRule);
-    RuleKey libraryKey = factory.build(libraryRule);
+    FakeFileHashCache hashCache = new FakeFileHashCache(
+        ImmutableMap.of(javacPath, MorePaths.asByteSource(javacPath).hash(Hashing.sha1())));
+    RuleKey configuredKey = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+        configuredRule);
+    RuleKey libraryKey = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+        libraryRule);
 
     assertNotEquals(libraryKey, configuredKey);
   }

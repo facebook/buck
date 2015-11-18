@@ -57,6 +57,7 @@ public class RuleKeyBuilder {
   private final SourcePathResolver resolver;
   private final Hasher hasher;
   private final FileHashCache hashCache;
+  private final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
   private Stack<String> keyStack;
 
   @Nullable
@@ -64,10 +65,12 @@ public class RuleKeyBuilder {
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
-      FileHashCache hashCache) {
+      FileHashCache hashCache,
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     this.resolver = resolver;
     this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
     this.hashCache = hashCache;
+    this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
     this.keyStack = new Stack<>();
     if (logger.isVerboseEnabled()) {
       this.logElms = Lists.newArrayList();
@@ -117,7 +120,7 @@ public class RuleKeyBuilder {
   }
 
   protected RuleKeyBuilder setBuildRule(BuildRule rule) {
-    return setSingleValue(rule.getRuleKey());
+    return setSingleValue(defaultRuleKeyBuilderFactory.build(rule));
   }
 
   /**
@@ -129,7 +132,10 @@ public class RuleKeyBuilder {
       SourcePathResolver resolver,
       FileHashCache hashCache,
       RuleKeyAppendable appendable) {
-    RuleKeyBuilder subKeyBuilder = new RuleKeyBuilder(resolver, hashCache);
+    RuleKeyBuilder subKeyBuilder = new RuleKeyBuilder(
+        resolver,
+        hashCache,
+        defaultRuleKeyBuilderFactory);
     appendable.appendToRuleKey(subKeyBuilder);
     return subKeyBuilder.build();
   }

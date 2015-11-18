@@ -31,6 +31,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,8 +58,13 @@ public class RuleKeyTest {
   @Test
   public void testRuleKeyDependsOnDeps() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
     BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
     BuildRuleResolver ruleResolver2 = new BuildRuleResolver();
+    RuleKeyBuilderFactory ruleKeyBuilderFactory1 =
+        new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver1));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory2 =
+        new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver2));
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
     JavaLibraryBuilder builder = JavaLibraryBuilder
@@ -80,8 +86,8 @@ public class RuleKeyTest {
     BuildRule libraryWithCommon = javaLibraryBuilder.build(ruleResolver2, filesystem);
 
     // Assert that the RuleKeys are distinct.
-    RuleKey r1 = libraryNoCommon.getRuleKey();
-    RuleKey r2 = libraryWithCommon.getRuleKey();
+    RuleKey r1 = ruleKeyBuilderFactory1.build(libraryNoCommon);
+    RuleKey r2 = ruleKeyBuilderFactory2.build(libraryWithCommon);
     assertThat("Rule keys should be distinct because the deps of the rules are different.",
         r1,
         not(equalTo(r2)));
@@ -277,9 +283,7 @@ public class RuleKeyTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeBuildRule fake1 = new FakeBuildRule("//:fake1", pathResolver);
-    fake1.setRuleKey(RuleKey.TO_RULE_KEY.apply("deadbeef"));
     FakeBuildRule fake2 = new FakeBuildRule("//:fake2", pathResolver);
-    fake2.setRuleKey(RuleKey.TO_RULE_KEY.apply("feeddeed"));
     resolver.addToIndex(fake1);
     resolver.addToIndex(fake2);
 
@@ -428,6 +432,8 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    DefaultFileHashCache hashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
+
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
         pathResolver,
@@ -439,8 +445,8 @@ public class RuleKeyTest {
         "foo",
         "xyzzy");
 
-    RuleKey ruleKey1 = buildRule1.getRuleKey();
-    RuleKey ruleKey2 = buildRule2.getRuleKey();
+    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(buildRule1);
+    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(buildRule2);
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -450,6 +456,8 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    DefaultFileHashCache hashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
+
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
         pathResolver,
@@ -472,8 +480,10 @@ public class RuleKeyTest {
         .build();
     BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
 
-    RuleKey ruleKey1 = parentRule1.getRuleKey();
-    RuleKey ruleKey2 = parentRule2.getRuleKey();
+    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+        parentRule1);
+    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+        parentRule2);
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -482,8 +492,11 @@ public class RuleKeyTest {
   public void subclassWithNoopSetter() {
     class NoopSetterRuleKeyBuilder extends RuleKeyBuilder {
 
-      public NoopSetterRuleKeyBuilder(SourcePathResolver pathResolver, FileHashCache hashCache) {
-        super(pathResolver, hashCache);
+      public NoopSetterRuleKeyBuilder(
+          SourcePathResolver pathResolver,
+          FileHashCache hashCache,
+          RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+        super(pathResolver, hashCache, defaultRuleKeyBuilderFactory);
       }
 
       @Override
@@ -494,12 +507,17 @@ public class RuleKeyTest {
 
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        hashCache,
+        pathResolver);
 
-    RuleKey nullRuleKey = new NoopSetterRuleKeyBuilder(pathResolver, hashCache)
-        .build();
-    RuleKey noopRuleKey = new NoopSetterRuleKeyBuilder(pathResolver, hashCache)
-        .setReflectively("key", new FakeSourcePath("value"))
-        .build();
+    RuleKey nullRuleKey =
+        new NoopSetterRuleKeyBuilder(pathResolver, hashCache, ruleKeyBuilderFactory)
+            .build();
+    RuleKey noopRuleKey =
+        new NoopSetterRuleKeyBuilder(pathResolver, hashCache, ruleKeyBuilderFactory)
+            .setReflectively("key", new FakeSourcePath("value"))
+            .build();
 
     assertThat(noopRuleKey, is(equalTo(nullRuleKey)));
   }
@@ -507,6 +525,11 @@ public class RuleKeyTest {
   @Test
   public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
+    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        hashCache,
+        sourcePathResolver);
+
     BuildTarget target = BuildTargetFactory.newInstance("//a:target");
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
@@ -532,9 +555,15 @@ public class RuleKeyTest {
     NoopBuildRule ruleWithBothDeps =
         new NoopBuildRule(paramsWithBothDeps, sourcePathResolver);
 
-    assertNotEquals(ruleWithDeclaredDep.getRuleKey(), ruleWithExtraDep.getRuleKey());
-    assertNotEquals(ruleWithDeclaredDep.getRuleKey(), ruleWithBothDeps.getRuleKey());
-    assertNotEquals(ruleWithExtraDep.getRuleKey(), ruleWithBothDeps.getRuleKey());
+    assertNotEquals(
+        ruleKeyBuilderFactory.newInstance(ruleWithDeclaredDep).build(),
+        ruleKeyBuilderFactory.newInstance(ruleWithExtraDep).build());
+    assertNotEquals(
+        ruleKeyBuilderFactory.newInstance(ruleWithDeclaredDep).build(),
+        ruleKeyBuilderFactory.newInstance(ruleWithBothDeps).build());
+    assertNotEquals(
+        ruleKeyBuilderFactory.newInstance(ruleWithExtraDep).build(),
+        ruleKeyBuilderFactory.newInstance(ruleWithBothDeps).build());
   }
 
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {

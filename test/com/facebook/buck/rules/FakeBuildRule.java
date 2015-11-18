@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -35,9 +34,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
 
   @Nullable
   private Path outputFile;
-
-  @Nullable
-  private RuleKey ruleKey;
 
   public FakeBuildRule(
       BuildTarget target,
@@ -80,19 +76,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
 
   public void setOutputFile(String outputFile) {
     this.outputFile = Paths.get(outputFile);
-  }
-
-  public void setRuleKey(RuleKey ruleKey) {
-    this.ruleKey = ruleKey;
-  }
-
-  @Override
-  public RuleKey getRuleKey() {
-    if (ruleKey == null) {
-      String hashCode = String.valueOf(Math.abs(this.hashCode()));
-      ruleKey = new RuleKey(Strings.repeat(hashCode, 40 / hashCode.length() + 1).substring(0, 40));
-    }
-    return ruleKey;
   }
 
   @Override

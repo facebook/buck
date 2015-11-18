@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
 
@@ -28,8 +29,13 @@ public class DependencyFileRuleKeyBuilderFactory extends InputBasedRuleKeyBuilde
 
   public DependencyFileRuleKeyBuilderFactory(
       FileHashCache hashCache,
-      SourcePathResolver pathResolver) {
-    super(hashCache, pathResolver, InputHandling.IGNORE);
+      SourcePathResolver pathResolver,
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+    super(
+        hashCache,
+        pathResolver,
+        defaultRuleKeyBuilderFactory,
+        InputHandling.IGNORE);
   }
 
 }

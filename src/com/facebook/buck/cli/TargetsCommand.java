@@ -39,7 +39,10 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
@@ -47,6 +50,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -624,16 +628,23 @@ public class TargetsCommand extends AbstractCommand {
     if (isShowTargetHash()) {
       return doShowTargetHash(params, matchingBuildTargets);
     } else {
-      Optional<ActionGraph> actionGraph;
+      // We only need the action graph if we're showing the output or the keys, and the
+      // RuleKeyBuilderFactory if we're showing the keys.
+      Optional<ActionGraph> actionGraph = Optional.absent();
+      Optional<RuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
       if (isShowRuleKey() || isShowOutput()) {
         TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
             params.getBuckEventBus(),
-            new BuildTargetNodeToBuildRuleTransformer(),
-            params.getFileHashCache());
-        actionGraph = Optional.of(
-            Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getFirst());
-      } else {
-        actionGraph = Optional.absent();
+            new BuildTargetNodeToBuildRuleTransformer());
+        Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+            targetGraphTransformer.apply(targetGraph));
+        actionGraph = Optional.of(result.getFirst());
+        if (isShowRuleKey()) {
+          ruleKeyBuilderFactory = Optional.<RuleKeyBuilderFactory>of(
+              new DefaultRuleKeyBuilderFactory(
+                  params.getFileHashCache(),
+                  new SourcePathResolver(result.getSecond())));
+        }
       }
 
       for (BuildTarget target : ImmutableSortedSet.copyOf(matchingBuildTargets)) {
@@ -643,7 +654,7 @@ public class TargetsCommand extends AbstractCommand {
           BuildRule rule = Preconditions.checkNotNull(
               actionGraph.get().findBuildRuleByTarget(target));
           if (isShowRuleKey()) {
-            builder.add(rule.getRuleKey().toString());
+            builder.add(ruleKeyBuilderFactory.get().build(rule).toString());
           }
           if (isShowOutput()) {
             Path outputPath = rule.getPathToOutput();

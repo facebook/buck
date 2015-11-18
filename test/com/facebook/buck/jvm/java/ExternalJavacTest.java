@@ -102,7 +102,10 @@ public class ExternalJavacTest extends EasyMockSupport {
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
-    RuleKey javacKey = new RuleKeyBuilder(pathResolver, fileHashCache)
+    RuleKey javacKey = new RuleKeyBuilder(
+        pathResolver,
+        fileHashCache,
+        fakeRuleKeyBuilderFactory)
         .setReflectively("javac", javac.toString())
         .build();
     RuleKeyBuilder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
@@ -147,7 +150,10 @@ public class ExternalJavacTest extends EasyMockSupport {
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
-    RuleKey javacKey = new RuleKeyBuilder(pathResolver, fileHashCache)
+    RuleKey javacKey = new RuleKeyBuilder(
+        pathResolver,
+        fileHashCache,
+        fakeRuleKeyBuilderFactory)
         .setReflectively("javac.version", javacVersion.toString())
         .build();
     RuleKeyBuilder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);

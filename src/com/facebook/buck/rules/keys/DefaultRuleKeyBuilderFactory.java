@@ -53,10 +53,15 @@ public class DefaultRuleKeyBuilderFactory extends ReflectiveRuleKeyBuilderFactor
     this.pathResolver = pathResolver;
   }
 
+  protected RuleKeyBuilderFactory getDefaultRuleKeyBuilderFactory() {
+    return this;
+  }
+
   private RuleKeyBuilder newBuilder() {
     return new RuleKeyBuilder(
         pathResolver,
-        hashCache) {
+        hashCache,
+        getDefaultRuleKeyBuilderFactory()) {
       @Override
       protected RuleKey getAppendableRuleKey(
           SourcePathResolver resolver,

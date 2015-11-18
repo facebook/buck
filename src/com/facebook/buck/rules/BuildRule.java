@@ -57,12 +57,6 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
    */
   ImmutableSortedSet<BuildRule> getDeps();
 
-  /**
-   * @return key based on the BuildRule's state, including the transitive closure of its
-   *     dependencies' keys.
-   */
-  RuleKey getRuleKey();
-
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override
   String toString();

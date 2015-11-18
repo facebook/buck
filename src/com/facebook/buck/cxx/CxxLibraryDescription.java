@@ -299,8 +299,7 @@ public class CxxLibraryDescription implements
               Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
               Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
               params.getProjectFilesystem(),
-              params.getCellRoots(),
-              params.getRuleKeyBuilderFactory()),
+              params.getCellRoots()),
           pathResolver);
     }
 
@@ -376,8 +375,7 @@ public class CxxLibraryDescription implements
               Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
               Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
               params.getProjectFilesystem(),
-              params.getCellRoots(),
-              params.getRuleKeyBuilderFactory()),
+              params.getCellRoots()),
           pathResolver);
     }
 

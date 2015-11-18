@@ -516,12 +516,11 @@ public class ProjectCommand extends BuildCommand {
   int runExperimentalIntellijProjectGenerator(
       CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets) throws IOException, InterruptedException {
+    TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
+        params.getBuckEventBus(),
+        new BuildTargetNodeToBuildRuleTransformer());
     ActionGraph actionGraph = Preconditions
-        .checkNotNull(
-            new TargetGraphToActionGraph(
-                params.getBuckEventBus(),
-                new BuildTargetNodeToBuildRuleTransformer(),
-                params.getFileHashCache()).apply(targetGraphAndTargets.getTargetGraph()))
+        .checkNotNull(targetGraphToActionGraph.apply(targetGraphAndTargets.getTargetGraph()))
         .getFirst();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes()));
@@ -574,10 +573,11 @@ public class ProjectCommand extends BuildCommand {
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
     ActionGraph actionGraph = Preconditions
-        .checkNotNull(new TargetGraphToActionGraph(
-            params.getBuckEventBus(),
-            new BuildTargetNodeToBuildRuleTransformer(),
-            params.getFileHashCache()).apply(targetGraphAndTargets.getTargetGraph()))
+        .checkNotNull(
+            new TargetGraphToActionGraph(
+                params.getBuckEventBus(),
+                new BuildTargetNodeToBuildRuleTransformer())
+                .apply(targetGraphAndTargets.getTargetGraph()))
         .getFirst();
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
@@ -806,8 +806,7 @@ public class ProjectCommand extends BuildCommand {
             public Path apply(TargetNode<?> input) {
               TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
                   params.getBuckEventBus(),
-                  new BuildTargetNodeToBuildRuleTransformer(),
-                  params.getFileHashCache());
+                  new BuildTargetNodeToBuildRuleTransformer());
               TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
                   ImmutableSet.of(
                       input));

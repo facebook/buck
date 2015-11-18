@@ -110,37 +110,34 @@ public class PythonPackagedBinaryTest {
     Path source2Relative = MorePaths.relativize(tmpDir.getRoot().toPath(), source2);
 
     // Setup a rulekey builder factory.
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of(
-                    mainRelative.toString(), Strings.repeat("a", 40),
-                    source1Relative.toString(), Strings.repeat("b", 40),
-                    source2Relative.toString(), Strings.repeat("c", 40))),
-            resolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            mainRelative.toString(), Strings.repeat("a", 40),
+            source1Relative.toString(), Strings.repeat("b", 40),
+            source2Relative.toString(), Strings.repeat("c", 40)));
 
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
     RuleKey pair1 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
     RuleKey pair2 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
     RuleKey pair3 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
     RuleKey pair4 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source1Relative,

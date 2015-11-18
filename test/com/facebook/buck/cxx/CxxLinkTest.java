@@ -74,20 +74,17 @@ public class CxxLinkTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of(
-                    "ld", Strings.repeat("0", 40),
-                    "a.o", Strings.repeat("a", 40),
-                    "b.o", Strings.repeat("b", 40),
-                    "libc.a", Strings.repeat("c", 40),
-                    "different", Strings.repeat("d", 40))),
-            pathResolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            "ld", Strings.repeat("0", 40),
+            "a.o", Strings.repeat("a", 40),
+            "b.o", Strings.repeat("b", 40),
+            "libc.a", Strings.repeat("c", 40),
+            "different", Strings.repeat("d", 40)));
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -97,7 +94,7 @@ public class CxxLinkTest {
 
     // Verify that changing the archiver causes a rulekey change.
 
-    RuleKey linkerChange = ruleKeyBuilderFactory.build(
+    RuleKey linkerChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -108,7 +105,7 @@ public class CxxLinkTest {
 
     // Verify that changing the output path causes a rulekey change.
 
-    RuleKey outputChange = ruleKeyBuilderFactory.build(
+    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -119,7 +116,7 @@ public class CxxLinkTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = ruleKeyBuilderFactory.build(
+    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
