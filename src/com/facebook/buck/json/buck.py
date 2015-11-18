@@ -495,7 +495,7 @@ class BuildFileProcessor(object):
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
         frame = inspect.currentframe()
-        while frame.f_globals['__name__'] == __name__:
+        while frame.f_globals['__name__'] in (__name__, '_functools'):
             frame = frame.f_back
         self._merge_globals(mod, frame.f_globals)
 
