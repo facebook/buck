@@ -73,6 +73,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -80,6 +81,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -888,7 +890,6 @@ public class ProjectFilesystem {
 
   public void move(Path source, Path target, CopyOption... options) throws IOException {
     Files.move(resolve(source), resolve(target), options);
-
   }
 
   public void copyFolder(Path source, Path target) throws IOException {
@@ -918,6 +919,19 @@ public class ProjectFilesystem {
       }
     } else {
       Files.createSymbolicLink(symLink, realFile);
+    }
+  }
+
+  /**
+   * Returns the set of POSIX file permissions, or the empty set if the underlying file system
+   * does not support POSIX file attributes.
+   */
+  public Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
+    Path resolvedPath = getPathForRelativePath(path);
+    if (Files.getFileAttributeView(resolvedPath, PosixFileAttributeView.class) != null) {
+      return Files.getPosixFilePermissions(resolvedPath);
+    } else {
+      return ImmutableSet.of();
     }
   }
 

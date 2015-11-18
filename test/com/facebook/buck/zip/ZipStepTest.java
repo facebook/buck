@@ -19,6 +19,7 @@ package com.facebook.buck.zip;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -132,6 +133,12 @@ public class ZipStepTest {
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
+    // Make sure we have the right attributes.
+    try (ZipFile zip = new ZipFile(out.toFile())) {
+      ZipArchiveEntry entry = zip.getEntry("child/");
+      assertNotEquals(entry.getUnixMode() & ZipStep.S_IFDIR, 0);
+    }
+
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zip.getFileNames());
     }
@@ -159,6 +166,12 @@ public class ZipStepTest {
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+
+    // Make sure we have the right attributes.
+    try (ZipFile zip = new ZipFile(out.toFile())) {
+      ZipArchiveEntry entry = zip.getEntry("file.txt");
+      assertTrue(entry.isUnixSymlink());
+    }
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file.txt"), zip.getFileNames());

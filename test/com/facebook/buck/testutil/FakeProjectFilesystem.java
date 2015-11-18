@@ -66,6 +66,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -697,6 +698,15 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       deleteRecursivelyIfExists(symLink);
     }
     symLinks.put(symLink, realFile);
+  }
+
+  @Override
+  public Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
+    return ImmutableSet.of(
+        PosixFilePermission.OWNER_READ,
+        PosixFilePermission.OWNER_WRITE,
+        PosixFilePermission.GROUP_READ,
+        PosixFilePermission.OTHERS_READ);
   }
 
   @Override

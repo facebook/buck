@@ -154,7 +154,13 @@ class EntryAccounting {
   }
 
   public int getRequiredExtractVersion() {
-    return method.getRequiredExtractVersion();
+    int requiredExtractVersion = method.getRequiredExtractVersion();
+    // Set the creator system indicator if we have UNIX-style file attributes.
+    // http://forensicswiki.org/wiki/Zip#External_file_attributes
+    if (externalAttributes >= (1 << 16)) {
+      requiredExtractVersion |= (3 << 8);
+    }
+    return requiredExtractVersion;
   }
 
   public long getExternalAttributes() {
