@@ -36,8 +36,9 @@ public class SourcePathArgTest {
   @Test
   public void stringify() {
     SourcePath path = new FakeSourcePath("something");
-    SourcePathArg arg = new SourcePathArg(new SourcePathResolver(new BuildRuleResolver()), path);
-    assertThat(arg.stringify(), Matchers.equalTo("something"));
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathArg arg = new SourcePathArg(resolver, path);
+    assertThat(arg.stringify(), Matchers.equalTo(resolver.getAbsolutePath(path).toString()));
   }
 
   @Test

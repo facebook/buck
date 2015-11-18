@@ -491,6 +491,7 @@ public class CxxLinkableEnhancerTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    ProjectFilesystem filesystem = params.getProjectFilesystem();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         TargetGraph.EMPTY,
         CXX_PLATFORM,
@@ -505,7 +506,7 @@ public class CxxLinkableEnhancerTest {
             new FakeSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<SourcePath>of(new FakeSourcePath("path/to/MyBundleLoader")),
+        Optional.<SourcePath>of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
     assertThat(
@@ -513,7 +514,9 @@ public class CxxLinkableEnhancerTest {
         hasItem("-bundle"));
     assertThat(
         cxxLink.getArgs(),
-        hasConsecutiveItems("-bundle_loader", "path/to/MyBundleLoader"));
+        hasConsecutiveItems(
+            "-bundle_loader",
+            filesystem.resolve("path/to/MyBundleLoader").toString()));
   }
 
   @Test

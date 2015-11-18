@@ -19,8 +19,6 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -55,13 +53,7 @@ public class NdkLibraryIntegrationTest {
 
     // Verify that rule keys generated from building in two different working directories
     // does not affect the rule key.
-    BuildTarget target = BuildTargetFactory.newInstance("//jni:foo");
     assertNotEquals(workspace1.resolve(Paths.get("test")), workspace2.resolve(Paths.get("test")));
-    assertEquals(
-        workspace1.getFileContents(
-            NdkLibraryDescription.getGeneratedMakefilePath(target).toString()),
-        workspace2.getFileContents(
-            NdkLibraryDescription.getGeneratedMakefilePath(target).toString()));
     assertEquals(
         workspace1.getBuildLog().getRuleKey("//jni:foo"),
         workspace2.getBuildLog().getRuleKey("//jni:foo"));
