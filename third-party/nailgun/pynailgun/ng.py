@@ -481,8 +481,8 @@ def main():
 
     try:
         with NailgunConnection(
-                nailgun_server=options.nailgun_server,
-                nailgun_port=options.nailgun_port) as c:
+                options.nailgun_server,
+                server_port=options.nailgun_port) as c:
             exit_code = c.send_command(cmd, cmd_args, options.nailgun_filearg)
             sys.exit(exit_code)
     except NailgunException as e:
