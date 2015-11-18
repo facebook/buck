@@ -880,7 +880,8 @@ public class ProjectCommand extends BuildCommand {
       return;
     }
 
-    if (enablePrompt && canPrompt()) {
+    boolean canPromptResult = canPrompt(params.getEnvironment());
+    if (enablePrompt && canPromptResult) {
       if (
           prompt(
               params,
@@ -905,16 +906,21 @@ public class ProjectCommand extends BuildCommand {
     } else {
       LOG.debug(
           "Xcode is running, but cannot prompt to kill it (enabled %s, can prompt %s)",
-          enablePrompt, canPrompt());
+          enablePrompt, canPromptResult);
     }
   }
 
-  private boolean canPrompt() {
-    return System.console() != null;
+  private boolean canPrompt(ImmutableMap<String, String> environment) {
+    String nailgunStdinTty = environment.get("NAILGUN_TTY_0");
+    if (nailgunStdinTty != null) {
+      return nailgunStdinTty.equals("1");
+    } else {
+      return System.console() != null;
+    }
   }
 
   private boolean prompt(CommandRunnerParams params, String prompt) throws IOException {
-    Preconditions.checkState(canPrompt());
+    Preconditions.checkState(canPrompt(params.getEnvironment()));
 
     LOG.debug("Displaying prompt %s..", prompt);
     params
