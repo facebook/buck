@@ -363,7 +363,12 @@ def send_heartbeat(nailgun_connection):
     '''
     Sends a heartbeat to the nailgun server to indicate the client is still alive.
     '''
-    send_chunk('', CHUNKTYPE_HEARTBEAT, nailgun_connection)
+    try:
+        send_chunk('', CHUNKTYPE_HEARTBEAT, nailgun_connection)
+    except IOError as e:
+        # The Nailgun C client ignores SIGPIPE etc. on heartbeats,
+        # so we do too. (This typically happens when shutting down.)
+        pass
 
 
 def process_stdin(nailgun_connection):
