@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -37,7 +38,7 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,25 +47,29 @@ import com.google.common.hash.HashCode;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class InputBasedRuleKeyBuilderFactoryTest {
 
   @Test
-  public void ruleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() {
+  public void ruleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     Path depOutput = Paths.get("output");
     FakeBuildRule dep =
         resolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), pathResolver));
+            new FakeBuildRule(
+                BuildTargetFactory.newInstance("//:dep"),
+                filesystem,
+                pathResolver));
     dep.setOutputFile(depOutput.toString());
+    filesystem.writeContentsToPath("hello", dep.getPathToOutput());
 
-    FakeFileHashCache hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(depOutput, HashCode.fromInt(0)));
+    DefaultFileHashCache hashCache = new DefaultFileHashCache(filesystem);
 
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -72,7 +77,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             .setSrcs(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(dep.getBuildTarget())))
-            .build(resolver);
+            .build(resolver, filesystem);
 
     dep.setRuleKey(new RuleKey("aaaa"));
     RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
@@ -102,7 +107,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                output,
+                filesystem.resolve(output),
                 HashCode.fromInt(0)));
     RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -110,7 +115,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                output,
+                filesystem.resolve(output),
                 HashCode.fromInt(1)));
     RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -141,7 +146,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                Preconditions.checkNotNull(dep.getPathToOutput()),
+                pathResolver.getAbsolutePath(new BuildTargetSourcePath(dep.getBuildTarget())),
                 HashCode.fromInt(0)));
     RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -149,7 +154,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                Preconditions.checkNotNull(dep.getPathToOutput()),
+                pathResolver.getAbsolutePath(new BuildTargetSourcePath(dep.getBuildTarget())),
                 HashCode.fromInt(1)));
     RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -165,7 +170,8 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:rule").build();
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
     BuildRule rule =
         new NoopBuildRule(params, pathResolver) {
           @AddToRuleKey
@@ -177,7 +183,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                output,
+                filesystem.resolve(output),
                 HashCode.fromInt(0)));
     RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -185,7 +191,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                output,
+                filesystem.resolve(output),
                 HashCode.fromInt(1)));
     RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -208,6 +214,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//:rule")
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
+            .setProjectFilesystem(filesystem)
             .build();
     BuildRule rule =
         new NoopBuildRule(params, pathResolver) {
@@ -221,7 +228,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                Preconditions.checkNotNull(dep.getPathToOutput()),
+                pathResolver.getAbsolutePath(new BuildTargetSourcePath(dep.getBuildTarget())),
                 HashCode.fromInt(0)));
     RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
@@ -229,7 +236,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                Preconditions.checkNotNull(dep.getPathToOutput()),
+                pathResolver.getAbsolutePath(new BuildTargetSourcePath(dep.getBuildTarget())),
                 HashCode.fromInt(1)));
     RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 

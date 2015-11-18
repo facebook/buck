@@ -24,10 +24,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+
+import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
@@ -114,7 +117,13 @@ public class InputBasedRuleKeyBuilderFactory
     protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
         deps.addAll(pathResolver.getRule(sourcePath).asSet());
-        setSingleValue(pathResolver.deprecatedGetPath(sourcePath));
+        try {
+          setPath(
+              pathResolver.getAbsolutePath(sourcePath),
+              pathResolver.getRelativePath(sourcePath));
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
+        }
       }
       inputs.add(sourcePath);
       return this;
