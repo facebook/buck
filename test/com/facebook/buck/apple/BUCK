@@ -41,6 +41,7 @@ java_test(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/cache:cache',
+    '//src/com/facebook/buck/zip:unzip',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/cxx:testutil',
     '//test/com/facebook/buck/event:testutil',
