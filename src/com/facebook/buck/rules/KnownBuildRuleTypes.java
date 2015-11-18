@@ -421,8 +421,6 @@ public class KnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
-    JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
-        .build();
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
@@ -464,20 +462,20 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
-            androidBinaryOptions,
+            defaultJavacOptions,
             proGuardConfig,
             ndkCxxPlatforms,
             dxExecutorService));
-    builder.register(new AndroidBuildConfigDescription(androidBinaryOptions));
+    builder.register(new AndroidBuildConfigDescription(defaultJavacOptions));
     builder.register(new AndroidInstrumentationApkDescription(
             proGuardConfig,
-            androidBinaryOptions,
+            defaultJavacOptions,
             ndkCxxPlatforms,
             dxExecutorService));
     builder.register(new AndroidInstrumentationTestDescription(defaultTestRuleTimeoutMs));
-    builder.register(new AndroidLibraryDescription(androidBinaryOptions));
+    builder.register(new AndroidLibraryDescription(defaultJavacOptions));
     builder.register(new AndroidManifestDescription());
-    builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));
+    builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
@@ -564,7 +562,7 @@ public class KnownBuildRuleTypes {
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(
-            androidBinaryOptions,
+            defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform,
             testTempDirOverride));
