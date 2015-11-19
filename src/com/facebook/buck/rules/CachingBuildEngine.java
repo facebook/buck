@@ -72,7 +72,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -175,7 +174,7 @@ public class CachingBuildEngine implements BuildEngine {
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
                     Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
-                    ImmutableSet.<PathMatcher>of()));
+                    ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
             return new StackedFileHashCache(
                 ImmutableList.of(defaultCache, cellCache, buckOutCache));
           }

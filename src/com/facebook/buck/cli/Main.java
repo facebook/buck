@@ -124,7 +124,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -235,7 +234,7 @@ public final class Main {
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
-                  ImmutableSet.<PathMatcher>of()));
+                  ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
       this.parser = Parser.createBuildFileParser(
@@ -430,7 +429,10 @@ public final class Main {
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
       // create a new daemon.
       if (!daemon.cell.equals(cell)) {
-        LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
+        LOG.warn(
+            "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
+            daemon.cell,
+            cell);
         if (shouldReuseWebServer(cell)) {
           webServer = daemon.getWebServer();
           LOG.info("Reusing web server");
@@ -691,7 +693,7 @@ public final class Main {
               new ProjectFilesystem(
                   rootCell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
-                  ImmutableSet.<PathMatcher>of()));
+                  ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
     }
 
     // Build up the hash cache, which is a collection of the stateful cell cache and some per-run

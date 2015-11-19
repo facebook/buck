@@ -612,6 +612,11 @@ public class BuckConfig {
   }
 
   @Override
+  public String toString() {
+    return String.format("%s (config=%s)", super.toString(), config);
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hashCode(config);
   }

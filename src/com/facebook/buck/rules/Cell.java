@@ -272,6 +272,16 @@ public class Cell {
   }
 
   @Override
+  public String toString() {
+    return String.format(
+        "%s filesystem=%s config=%s directoryResolver=%s",
+        super.toString(),
+        filesystem,
+        config,
+        directoryResolver);
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(filesystem, config, directoryResolver);
   }

@@ -128,7 +128,7 @@ public class ProjectFilesystem {
   private final Function<Path, Path> pathRelativizer;
 
   private final Optional<ImmutableSet<Path>> whiteListedPaths;
-  private final ImmutableSet<PathMatcher> blackListedPaths;
+  private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
   private final ImmutableSortedSet<Path> blackListedDirectories;
 
   // Defaults to false, and so paths should be valid.
@@ -140,7 +140,7 @@ public class ProjectFilesystem {
         root.getFileSystem(),
         root,
         Optional.<ImmutableSet<Path>>absent(),
-        ImmutableSet.<PathMatcher>of());
+        ImmutableSet.<PathOrGlobMatcher>of());
   }
 
   /**
@@ -149,7 +149,7 @@ public class ProjectFilesystem {
   public ProjectFilesystem(
       Path projectRoot,
       Optional<ImmutableSet<Path>> whiteListedPaths,
-      ImmutableSet<PathMatcher> blackListedPaths) {
+      ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
     this(
         projectRoot.getFileSystem(),
         projectRoot,
@@ -165,11 +165,11 @@ public class ProjectFilesystem {
         extractIgnorePaths(root, config));
   }
 
-  protected ProjectFilesystem(
+  private ProjectFilesystem(
       FileSystem vfs,
       final Path root,
       Optional<ImmutableSet<Path>> whiteListedPaths,
-      ImmutableSet<PathMatcher> blackListedPaths) {
+      ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
     Preconditions.checkArgument(Files.isDirectory(root));
     Preconditions.checkState(vfs.equals(root.getFileSystem()));
     Preconditions.checkArgument(root.isAbsolute());
@@ -197,10 +197,15 @@ public class ProjectFilesystem {
     this.blackListedPaths = blackListedPaths;
 
     this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
-        .filter(BasePathMatcher.class)
-        .transform(new Function<BasePathMatcher, Path>() {
+        .filter(new Predicate<PathOrGlobMatcher>() {
+            @Override
+            public boolean apply(PathOrGlobMatcher matcher) {
+              return matcher.getType() == PathOrGlobMatcher.Type.PATH;
+            }
+        })
+        .transform(new Function<PathOrGlobMatcher, Path>() {
           @Override
-          public Path apply(BasePathMatcher matcher) {
+          public Path apply(PathOrGlobMatcher matcher) {
             Path path = matcher.getPath();
             ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(
                 ImmutableSet.<Path>of(path),
@@ -235,27 +240,29 @@ public class ProjectFilesystem {
     }
 
 
-  private static ImmutableSet<PathMatcher> extractIgnorePaths(final Path root, Config config) {
-    ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
+  private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
+      final Path root,
+      Config config) {
+    ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
 
-    builder.add(new BasePathMatcher(root, ".idea"));
+    builder.add(new PathOrGlobMatcher(root, ".idea"));
 
     final String projectKey = "project";
     final String ignoreKey = "ignore";
 
     String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
     if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      builder.add(new BasePathMatcher(root, buckdDirProperty));
+      builder.add(new PathOrGlobMatcher(root, buckdDirProperty));
     }
 
     Path cacheDir = getCacheDir(root, config.getValue("cache", "dir"));
-    builder.add(new BasePathMatcher(cacheDir));
+    builder.add(new PathOrGlobMatcher(cacheDir));
 
     builder.addAll(FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
-        .transform(new Function<String, PathMatcher>() {
+        .transform(new Function<String, PathOrGlobMatcher>() {
           @Nullable
           @Override
-          public PathMatcher apply(String input) {
+          public PathOrGlobMatcher apply(String input) {
             // We don't really want to ignore the output directory when doing things like filesystem
             // walks, so return null
             if (BuckConstant.BUCK_OUTPUT_DIRECTORY.equals(input)) {
@@ -263,13 +270,15 @@ public class ProjectFilesystem {
             }
 
             if (GLOB_CHARS.matcher(input).find()) {
-              return root.getFileSystem().getPathMatcher("glob:" + input);
+              return new PathOrGlobMatcher(
+                  root.getFileSystem().getPathMatcher("glob:" + input),
+                  input);
             }
-            return new BasePathMatcher(root, input);
+            return new PathOrGlobMatcher(root, input);
           }
         })
         // And now remove any null patterns
-        .filter(Predicates.<PathMatcher>notNull())
+        .filter(Predicates.<PathOrGlobMatcher>notNull())
         .toList());
 
     return builder.build();
@@ -890,6 +899,7 @@ public class ProjectFilesystem {
 
   public void move(Path source, Path target, CopyOption... options) throws IOException {
     Files.move(resolve(source), resolve(target), options);
+
   }
 
   public void copyFolder(Path source, Path target) throws IOException {
@@ -1024,9 +1034,29 @@ public class ProjectFilesystem {
 
     ProjectFilesystem that = (ProjectFilesystem) other;
 
-    return Objects.equals(projectRoot, that.projectRoot) &&
-        Objects.equals(whiteListedPaths, that.whiteListedPaths) &&
-        Objects.equals(blackListedPaths, that.blackListedPaths);
+    if (!Objects.equals(projectRoot, that.projectRoot)) {
+      return false;
+    }
+
+    if (!Objects.equals(whiteListedPaths, that.whiteListedPaths)) {
+      return false;
+    }
+
+    if (!Objects.equals(blackListedPaths, that.blackListedPaths)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "%s (projectRoot=%s, whiteListedPaths=%s, blackListedPaths=%s",
+        super.toString(),
+        projectRoot,
+        whiteListedPaths,
+        blackListedPaths);
   }
 
   @Override
@@ -1047,7 +1077,7 @@ public class ProjectFilesystem {
   }
 
   private boolean isBlackListed(Path path) {
-    for (PathMatcher blackListedPath : blackListedPaths) {
+    for (PathOrGlobMatcher blackListedPath : blackListedPaths) {
       if (blackListedPath.matches(path)) {
         return true;
       }
@@ -1123,24 +1153,86 @@ public class ProjectFilesystem {
     };
   }
 
-  private static class BasePathMatcher implements PathMatcher {
-    private final Path basePath;
+  public static class PathOrGlobMatcher {
+    public enum Type {
+        PATH,
+        GLOB
+    }
+    private final Type type;
+    private final Optional<Path> basePath;
+    private final Optional<PathMatcher> globMatcher;
+    private final Optional<String> globPattern;
 
-    public BasePathMatcher(Path basePath) {
-      this.basePath = basePath;
+    public PathOrGlobMatcher(Path basePath) {
+      this.type = Type.PATH;
+      this.basePath = Optional.of(basePath);
+      this.globPattern = Optional.absent();
+      this.globMatcher = Optional.absent();
     }
 
-    public BasePathMatcher(Path root, String basePath) {
-      this.basePath = root.getFileSystem().getPath(basePath);
+    public PathOrGlobMatcher(Path root, String basePath) {
+      this(root.getFileSystem().getPath(basePath));
+    }
+
+    public PathOrGlobMatcher(PathMatcher globMatcher, String globPattern) {
+      this.type = Type.GLOB;
+      this.basePath = Optional.absent();
+      this.globMatcher = Optional.of(globMatcher);
+      this.globPattern = Optional.of(globPattern);
+    }
+
+    public Type getType() {
+      return type;
     }
 
     @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      }
+
+      if (!(other instanceof PathOrGlobMatcher)) {
+        return false;
+      }
+
+      PathOrGlobMatcher that = (PathOrGlobMatcher) other;
+
+      return
+          Objects.equals(type, that.type) &&
+          Objects.equals(basePath, that.basePath) &&
+          // We don't compare globMatcher here, since sun.nio.fs.UnixFileSystem.getPathMatcher()
+          // returns an anonymous class which doesn't implement equals().
+          Objects.equals(globPattern, that.globPattern);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(type, basePath, globPattern);
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "%s type=%s basePath=%s globPattern=%s",
+          super.toString(),
+          type,
+          basePath,
+          globPattern);
+    }
+
     public boolean matches(Path path) {
-      return path.startsWith(basePath);
+      switch (type) {
+        case PATH:
+          return path.startsWith(basePath.get());
+        case GLOB:
+          return globMatcher.get().matches(path);
+      }
+      throw new RuntimeException("Unsupported type " + type);
     }
 
     public Path getPath() {
-      return basePath;
+      Preconditions.checkState(type == Type.PATH);
+      return basePath.get();
     }
   }
 }

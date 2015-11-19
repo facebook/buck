@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -628,5 +629,17 @@ public class ProjectFilesystemTest {
     ImmutableSet<String> found = allPaths.build();
     assertTrue(found.contains("foo/bar/cake.txt"));
     assertFalse(found.contains("foo/bar/cake.txt.orig"));
+  }
+
+  @Test
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = **/*.orig");
+    Path rootPath = tmp.getRoot();
+    assertThat(
+        "Two ProjectFilesystems with same glob in ignore should be equal",
+        new ProjectFilesystem(rootPath, config),
+        equalTo(new ProjectFilesystem(rootPath, config)));
   }
 }

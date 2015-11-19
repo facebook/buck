@@ -236,6 +236,17 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   @Override
+  public String toString() {
+    return String.format(
+        "%s projectFilesystem=%s, targetNdkVersion=%s, propertyFinder=%s, findAndroidNdkDir()=%s",
+        super.toString(),
+        projectFilesystem,
+        targetNdkVersion,
+        propertyFinder,
+        findAndroidNdkDir());
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(projectFilesystem, targetNdkVersion, propertyFinder);
   }
