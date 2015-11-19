@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FILE;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -89,7 +91,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     properties.setProperty(
         "jacoco.output.dir",
         filesystem.getAbsolutifier().apply(outputDirectory).toString());
-    properties.setProperty("jacoco.exec.data.file", JUnitStep.JACOCO_EXEC_COVERAGE_FILE);
+    properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);
     properties.setProperty("jacoco.format", format.toString().toLowerCase());
     properties.setProperty("jacoco.title", title);
     properties.setProperty(

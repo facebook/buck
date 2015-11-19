@@ -84,6 +84,14 @@ public class JavaTest
     extends DefaultJavaLibrary
     implements TestRule, HasRuntimeDeps, HasPostBuildSteps, ExternalTestRunnerRule {
 
+  // TODO(#9027062): Migrate this to a PackagedResource so we don't make assumptions
+  // about the ant build.
+  private static final Path TESTRUNNER_CLASSES =
+      Paths.get(
+          System.getProperty(
+              "buck.testrunner_classes",
+              new File("build/testrunner/classes").getAbsolutePath()));
+
   @AddToRuleKey
   private final ImmutableList<String> vmArgs;
 
@@ -205,7 +213,8 @@ public class JavaTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       Optional<Path> outDir,
-      Optional<Path> tempDir) {
+      Optional<Path> tempDir,
+      Optional<Path> robolectricLogPath) {
 
     Set<String> testClassNames = getClassNamesForSources();
     Iterable<String> reorderedTestClasses =
@@ -215,25 +224,31 @@ public class JavaTest
         this.vmArgs,
         executionContext.getTargetDeviceOptional());
 
+    JUnitJVMArgs args = JUnitJVMArgs.builder()
+        .setTestType(testType)
+        .setDirectoryForTestResults(outDir)
+        .setTmpDirectory(tempDir)
+        .setClasspathFile(getClassPathFile())
+        .setTestRunnerClasspath(TESTRUNNER_CLASSES)
+        .setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled())
+        .setDebugEnabled(executionContext.isDebugEnabled())
+        .setPathToJavaAgent(options.getPathToJavaAgent())
+        .setBuildId(executionContext.getBuckEventBus().getBuildId())
+        .setBuckModuleBaseSourceCodePath(getBuildTarget().getBasePath())
+        .setStdOutLogLevel(stdOutLogLevel)
+        .setStdErrLogLevel(stdErrLogLevel)
+        .setRobolectricLogPath(robolectricLogPath)
+        .setExtraJvmArgs(properVmArgs)
+        .addAllTestClasses(reorderedTestClasses)
+        .setDryRun(options.isDryRun())
+        .setTestSelectorList(options.getTestSelectorList())
+        .build();
+
     return new JUnitStep(
         getProjectFilesystem(),
-        ImmutableSet.of("@" + getProjectFilesystem().resolve(getClassPathFile())),
-        reorderedTestClasses,
-        properVmArgs,
         nativeLibsEnvironment,
-        outDir,
-        getBuildTarget().getBasePath(),
-        tempDir,
-        executionContext.isCodeCoverageEnabled(),
-        executionContext.isDebugEnabled(),
-        executionContext.getBuckEventBus().getBuildId(),
-        options.getTestSelectorList(),
-        options.isDryRun(),
-        testType,
         testRuleTimeoutMs,
-        stdOutLogLevel,
-        stdErrLogLevel,
-        options.getPathToJavaAgent());
+        args);
   }
 
   /**
@@ -266,7 +281,8 @@ public class JavaTest
             executionContext,
             options,
             Optional.of(pathToTestOutput),
-            Optional.of(tmpDirectory));
+            Optional.of(tmpDirectory),
+            Optional.of(pathToTestOutput.resolve("robolectric-log.txt")));
     steps.add(junit);
     return steps.build();
   }
@@ -604,6 +620,7 @@ public class JavaTest
         getJUnitStep(
             executionContext,
             options,
+            Optional.<Path>absent(),
             Optional.<Path>absent(),
             Optional.<Path>absent());
     return ExternalTestRunnerTestSpec.builder()
