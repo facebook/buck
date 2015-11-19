@@ -49,8 +49,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final ImmutableList<String> buildArgs;
   private final Tool pathToPexExecuter;
   @AddToRuleKey
-  private final String pexExtension;
-  @AddToRuleKey
   private final String mainModule;
   @AddToRuleKey
   private final PythonPackageComponents components;
@@ -70,11 +68,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       String mainModule,
       PythonPackageComponents components,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
-    super(params, resolver, pythonPlatform, mainModule, components);
+    super(params, resolver, pythonPlatform, mainModule, components, pexExtension);
     this.builder = builder;
     this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;
-    this.pexExtension = pexExtension;
     this.pythonEnvironment = pythonEnvironment;
     this.mainModule = mainModule;
     this.components = components;
@@ -84,15 +81,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
-  }
-
-  public Path getBinPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s" + pexExtension);
-  }
-
-  @Override
-  public Path getPathToOutput() {
-    return getBinPath();
   }
 
   @Override

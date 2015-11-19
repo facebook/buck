@@ -16,7 +16,9 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -25,6 +27,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public abstract class PythonBinary
     extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
@@ -32,31 +36,44 @@ public abstract class PythonBinary
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
   private final PythonPackageComponents components;
+  @AddToRuleKey
+  private final String pexExtension;
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       PythonPlatform pythonPlatform,
       String mainModule,
-      PythonPackageComponents components) {
+      PythonPackageComponents components,
+      String pexExtension) {
     super(buildRuleParams, resolver);
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
     this.components = components;
+    this.pexExtension = pexExtension;
+  }
+
+  protected final Path getBinPath() {
+    return BuildTargets.getGenPath(getBuildTarget(), "%s" + pexExtension);
+  }
+
+  @Override
+  public final Path getPathToOutput() {
+    return getBinPath();
   }
 
   @VisibleForTesting
-  protected PythonPlatform getPythonPlatform() {
+  protected final PythonPlatform getPythonPlatform() {
     return pythonPlatform;
   }
 
   @VisibleForTesting
-  protected String getMainModule() {
+  protected final String getMainModule() {
     return mainModule;
   }
 
   @VisibleForTesting
-  protected PythonPackageComponents getComponents() {
+  protected final PythonPackageComponents getComponents() {
     return components;
   }
 

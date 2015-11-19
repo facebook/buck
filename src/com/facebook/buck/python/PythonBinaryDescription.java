@@ -36,24 +36,17 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 
-import org.stringtemplate.v4.ST;
-
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -61,8 +54,6 @@ import java.util.Set;
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
-
-  private static final String RUN_INPLACE_RESOURCE = "com/facebook/buck/python/run_inplace.py.in";
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
 
@@ -90,14 +81,6 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
-  }
-
-  private String getRunInplaceResource() {
-    try {
-      return Resources.toString(Resources.getResource(RUN_INPLACE_RESOURCE), Charsets.UTF_8);
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
-    }
   }
 
   private PythonPackageComponents addMissingInitModules(
@@ -192,54 +175,16 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
           params.getBuildTarget().getUnflavoredBuildTarget());
     }
 
-    BuildTarget scriptTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("script"))
-            .build();
-    Path scriptPath =
-        BuildTargets.getGenPath(
-            params.getBuildTarget(),
-            "%s" + pythonBuckConfig.getPexExtension());
-
-    // Find the link-tree using a relative path from the script, so that the binary is executable
-    // from any working dir (e.g. so this works in `genrule`s).
-    String relativeLinkTreeRootStr =
-        Escaper.escapeAsPythonString(scriptPath.getParent().relativize(linkTreeRoot).toString());
-
-    // Generate the wrapper script.
-    WriteFile script =
-        resolver.addToIndex(
-            new WriteFile(
-                params.copyWithChanges(
-                    scriptTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-                pathResolver,
-                new ST(getRunInplaceResource())
-                    .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
-                    .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
-                    .add("MODULES_DIR", relativeLinkTreeRootStr)
-                    .add(
-                        "NATIVE_LIBS_ENV_VAR",
-                        Escaper.escapeAsPythonString(cxxPlatform.getLd().searchPathEnvVar()))
-                    .add(
-                        "NATIVE_LIBS_DIR",
-                        components.getNativeLibraries().isEmpty() ?
-                            "None" :
-                            relativeLinkTreeRootStr)
-                    .render(),
-                scriptPath,
-                /* executable */ true));
-
     return new PythonInPlaceBinary(
         params,
         pathResolver,
         pythonPlatform,
-        script,
+        cxxPlatform,
         linkTree,
         mainModule,
         components,
-        pythonPlatform.getEnvironment());
+        pythonPlatform.getEnvironment(),
+        pythonBuckConfig.getPexExtension());
   }
 
   protected PythonBinary createPackageRule(
