@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +64,8 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void shouldIncludeARuleIfNothingIsGiven() throws MacroException {
-    final BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    final BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:cake"))
             .addSrc(Paths.get("Example.java"))  // Force a jar to be created
@@ -73,7 +76,8 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void shouldIncludeTransitiveDependencies() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
@@ -99,7 +103,8 @@ public class ClasspathMacroExpanderTest {
 
   @Test(expected = MacroException.class)
   public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule rule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
@@ -111,7 +116,8 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void shouldExpandTransitiveDependencies() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
@@ -135,7 +141,8 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void extractRuleKeyAppendables() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))

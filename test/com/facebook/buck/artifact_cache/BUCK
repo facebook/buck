@@ -35,6 +35,7 @@ java_test(
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/artifact_cache:config',
     '//src/com/facebook/buck/artifact_cache:impl',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',

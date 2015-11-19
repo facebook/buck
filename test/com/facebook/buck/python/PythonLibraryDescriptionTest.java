@@ -19,11 +19,13 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +50,10 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary normal =
         (PythonLibrary) new PythonLibraryBuilder(target)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.of(
             target.getBasePath().resolve(sourceName),
@@ -61,7 +66,10 @@ public class PythonLibraryDescriptionTest {
         (PythonLibrary) new PythonLibraryBuilder(target)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
             .setBaseModule("blah")
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.of(
             Paths.get(baseModule).resolve(sourceName),
@@ -85,7 +93,10 @@ public class PythonLibraryDescriptionTest {
                         Pattern.compile("won't match anything"),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         library.getSrcs(PythonTestUtils.PYTHON_PLATFORM).values(),
         Matchers.contains(matchedSource));
@@ -107,7 +118,10 @@ public class PythonLibraryDescriptionTest {
                         Pattern.compile("won't match anything"),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         library.getResources(PythonTestUtils.PYTHON_PLATFORM).values(),
         Matchers.contains(matchedSource));

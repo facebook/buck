@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.step.Step;
@@ -49,7 +51,8 @@ public class PythonTestDescriptionTest {
 
   @Test
   public void thatTestModulesAreInComponents() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     PythonTest testRule =
         (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setSrcs(
@@ -83,7 +86,10 @@ public class PythonTestDescriptionTest {
     PythonTest normal =
         (PythonTest) PythonTestBuilder.create(target)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         normal.getBinary().getComponents().getModules().keySet(),
         Matchers.hasItem(target.getBasePath().resolve(sourceName)));
@@ -94,7 +100,10 @@ public class PythonTestDescriptionTest {
         (PythonTest) PythonTestBuilder.create(target)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
             .setBaseModule(baseModule)
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         withBaseModule.getBinary().getComponents().getModules().keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
@@ -103,7 +112,8 @@ public class PythonTestDescriptionTest {
   @Test
   public void buildArgs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonTest test =
         (PythonTest) PythonTestBuilder.create(target)
@@ -136,7 +146,10 @@ public class PythonTestDescriptionTest {
                         Pattern.compile("won't match anything"),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         test.getBinary().getComponents().getModules().values(),
         Matchers.allOf(
@@ -160,7 +173,10 @@ public class PythonTestDescriptionTest {
                         Pattern.compile("won't match anything"),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         test.getBinary().getComponents().getResources().values(),
         Matchers.allOf(
@@ -191,18 +207,25 @@ public class PythonTestDescriptionTest {
     PythonTest test1 =
         (PythonTest) builder
             .setPlatform(platform1.getFlavor().toString())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(test1.getBinary().getPythonPlatform(), Matchers.equalTo(platform1));
     PythonTest test2 =
         (PythonTest) builder
             .setPlatform(platform2.getFlavor().toString())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(test2.getBinary().getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
   @Test
   public void runtimeDepOnDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule cxxBinary =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .build(resolver);

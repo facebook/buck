@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -63,7 +64,8 @@ public class ConstructorArgMarshallerTest {
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
     marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
-    ruleResolver = new BuildRuleResolver();
+    ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     filesystem = new FakeProjectFilesystem();
   }
 
@@ -203,9 +205,10 @@ public class ConstructorArgMarshallerTest {
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
-    FakeBuildRule rule = new FakeBuildRule(
-        target,
-        new SourcePathResolver(new BuildRuleResolver()));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    FakeBuildRule rule = new FakeBuildRule(target, resolver);
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
@@ -539,7 +542,9 @@ public class ConstructorArgMarshallerTest {
     }
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     BuildRule rule = new FakeBuildRule(
         BuildTargetFactory.newInstance("//will:happen"), pathResolver);
     ruleResolver.addToIndex(rule);
@@ -603,9 +608,12 @@ public class ConstructorArgMarshallerTest {
     }
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeBuildRule expectedRule = new FakeBuildRule(
         BuildTargetFactory.newInstance("//example/path:path"),
-        new SourcePathResolver(new BuildRuleResolver()));
+        resolver);
     ruleResolver.addToIndex(expectedRule);
 
     ImmutableMap<String, Object> args = ImmutableMap.<String, Object>builder()
@@ -690,7 +698,8 @@ public class ConstructorArgMarshallerTest {
       public ImmutableSortedSet<SourcePath> srcs;
     }
 
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
     BuildRule rule = new FakeBuildRule(target, new SourcePathResolver(resolver));
     resolver.addToIndex(rule);

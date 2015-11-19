@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -40,7 +41,8 @@ public class AndroidManifestDescriptionTest {
 
   @Test
   public void testGeneratedSkeletonAppearsInDeps() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     BuildRule ruleWithOutput = new FakeBuildRule(
         BuildTargetFactory.newInstance("//foo:bar"),

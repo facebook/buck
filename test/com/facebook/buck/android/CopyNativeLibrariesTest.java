@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -108,7 +110,10 @@ public class CopyNativeLibrariesTest {
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
             new FakeBuildRuleParamsBuilder(target).build(),
-            new SourcePathResolver(new BuildRuleResolver()),
+            new SourcePathResolver(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer())),
             ImmutableSet.<SourcePath>of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.<StrippedObjectDescription>of(),
             ImmutableSet.<StrippedObjectDescription>of(),

@@ -139,8 +139,11 @@ java_immutables_library(
     'SourceRoot.java',
     'TargetGraph.java',
     'TargetGraphHashing.java',
+    'TargetGraphToActionGraph.java',
+    'TargetGraphTransformer.java',
     'TargetName.java',
     'TargetNode.java',
+    'TargetNodeToBuildRuleTransformer.java',
     'TargetNodes.java',
     'Tool.java',
   ],
@@ -172,33 +175,6 @@ java_immutables_library(
   ],
   exported_deps = [
     ':rule_key',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-java_immutables_library(
-  name = 'target_graph_to_action_graph',
-  srcs = [
-    'TargetGraphToActionGraph.java',
-    'TargetGraphTransformer.java',
-    'TargetNodeToBuildRuleTransformer.java',
-  ],
-  deps = [
-    ':build_rule',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:rule_pattern',
-    '//src/com/facebook/buck/rules/keys:keys',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util/cache:cache',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC',

@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;
@@ -33,7 +34,9 @@ public class FakeBuildEngineTest {
   @Test
   public void buildRuleFutureHasResult() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
@@ -48,7 +51,9 @@ public class FakeBuildEngineTest {
   @Test
   public void buildRuleResultIsPresent() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
@@ -63,7 +68,9 @@ public class FakeBuildEngineTest {
   @Test
   public void buildRuleIsBuilt() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
@@ -78,7 +85,9 @@ public class FakeBuildEngineTest {
   @Test
   public void unbuiltRuleIsNotBuilt() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
@@ -94,7 +103,9 @@ public class FakeBuildEngineTest {
   @Test
   public void ruleKeyIsPresent() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());

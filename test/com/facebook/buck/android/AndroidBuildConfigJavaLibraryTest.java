@@ -19,12 +19,14 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +42,8 @@ public class AndroidBuildConfigJavaLibraryTest {
   public void testAddToCollector() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
             params,
@@ -69,7 +72,8 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
     BuildConfigFields fields = BuildConfigFields.fromFieldDeclarations(
         Collections.singleton("String KEY = \"value\""));
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
             params,

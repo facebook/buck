@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -68,7 +70,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
         BuildTargetFactory.newInstance("//foo:bar"), pathResolver) {
       @Override
@@ -174,7 +178,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             params,
-            new SourcePathResolver(new BuildRuleResolver()),
+            new SourcePathResolver(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer())),
             javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
@@ -226,7 +233,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
             params,
-            new SourcePathResolver(new BuildRuleResolver()),
+            new SourcePathResolver(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer())),
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutput());
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());
@@ -245,7 +255,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void getOutputDoesNotAccessWrappedJavaLibrary() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     JavaLibrary javaLibrary =

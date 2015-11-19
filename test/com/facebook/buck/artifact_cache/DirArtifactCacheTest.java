@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -99,8 +101,11 @@ public class DirArtifactCacheTest {
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
-        inputRuleX)));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(inputRuleX);
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
@@ -124,8 +129,11 @@ public class DirArtifactCacheTest {
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
-        inputRuleX)));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(inputRuleX);
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
@@ -158,8 +166,11 @@ public class DirArtifactCacheTest {
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
-        inputRuleX)));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(inputRuleX);
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
@@ -202,10 +213,13 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleY));
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
-        inputRuleX,
-        inputRuleY,
-        inputRuleZ)));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(inputRuleX);
+    ruleResolver.addToIndex(inputRuleY);
+    ruleResolver.addToIndex(inputRuleZ);
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
@@ -268,10 +282,13 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleY));
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
-        inputRuleX,
-        inputRuleY,
-        inputRuleZ)));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(inputRuleX);
+    ruleResolver.addToIndex(inputRuleY);
+    ruleResolver.addToIndex(inputRuleZ);
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
@@ -425,10 +442,13 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
-        inputRuleX,
-        inputRuleY,
-        inputRuleZ)));
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(inputRuleX);
+    ruleResolver.addToIndex(inputRuleY);
+    ruleResolver.addToIndex(inputRuleZ);
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
@@ -540,7 +560,10 @@ public class DirArtifactCacheTest {
     private BuildRuleForTest(Path file) {
       super(
           BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()),
-          new SourcePathResolver(new BuildRuleResolver()));
+          new SourcePathResolver(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new BuildTargetNodeToBuildRuleTransformer())));
       this.file = file;
     }
   }

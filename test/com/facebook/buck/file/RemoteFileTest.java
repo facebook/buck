@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -63,7 +65,10 @@ public class RemoteFileTest {
         (RemoteFile) new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
             .setSha1(Hashing.sha1().hashLong(42))
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
 
     BuildableContext buildableContext = EasyMock.createNiceMock(BuildableContext.class);
     buildableContext.recordArtifact(remoteFile.getPathToOutput());
@@ -124,7 +129,8 @@ public class RemoteFileTest {
         .build();
     RemoteFile remoteFile = new RemoteFile(
         params,
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         downloader,
         new URI("http://example.com"),
         hashCode,

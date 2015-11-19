@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -105,7 +107,8 @@ public class CxxPythonExtensionDescriptionTest {
     Set<TargetNode<?>> targetNodes = Sets.newHashSet();
 
     // Verify we use the default base module when none is set.
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtension normal =
         (CxxPythonExtension) createBuilder(resolver, filesystem, targetNodes, target)
@@ -121,7 +124,8 @@ public class CxxPythonExtensionDescriptionTest {
         normalComps.getModules().keySet());
 
     // Verify that explicitly setting works.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2#py2");
     String name = "blah";
     CxxPythonExtension baseModule =
@@ -141,7 +145,8 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void createBuildRuleNativeLinkableDep() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Set<TargetNode<?>> targetNodes = Sets.newHashSet();
@@ -188,7 +193,8 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void createBuildRulePythonPackageable() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Set<TargetNode<?>> targetNodes = Sets.newHashSet();
 
@@ -223,7 +229,8 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void findDepsFromParamsAddsPythonDep() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Set<TargetNode<?>> targetNodes = Sets.newHashSet();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -241,7 +248,8 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void py2AndPy3PropagateToLinkRules() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Set<TargetNode<?>> targetNodes = Sets.newHashSet();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");

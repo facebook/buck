@@ -114,6 +114,7 @@ java_test(
     '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/android/aapt:aapt',
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',

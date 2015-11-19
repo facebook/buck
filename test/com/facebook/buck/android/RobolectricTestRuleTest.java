@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -91,7 +93,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
@@ -122,7 +125,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
     filesystem.mkdirs(Paths.get("res1/values"));
@@ -164,7 +168,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricThrowsIfResourceDirNotThere() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
@@ -185,7 +190,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void runtimeDepsIncludeTransitiveResources() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget genRuleTarget = BuildTargetFactory.newInstance("//:gen");

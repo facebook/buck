@@ -19,12 +19,14 @@ package com.facebook.buck.jvm.java.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +54,9 @@ public class DefaultIjLibraryFactoryTest {
 
   @Before
   public void setUp() throws Exception {
-    sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
+    sourcePathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     guavaJarPath = Paths.get("third_party/java/guava.jar");
     guava = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))

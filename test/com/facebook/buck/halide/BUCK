@@ -24,6 +24,7 @@ java_test(
   srcs = glob(['*Test.java']),
   deps = [
     ':testutil',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/graph:graph',

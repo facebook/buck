@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableCollection;
@@ -78,7 +80,10 @@ public class RustLinkableTest {
         ImmutableSet<SourcePath> srcs) {
       super(
           new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
-          new SourcePathResolver(new BuildRuleResolver()),
+          new SourcePathResolver(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new BuildTargetNodeToBuildRuleTransformer())),
           srcs,
           /* flags */ ImmutableList.<String>of(),
           /* features */ ImmutableSet.<String>of(),

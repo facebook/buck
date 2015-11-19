@@ -23,6 +23,7 @@ java_test(
   name='unit',
   srcs=glob(["*Test.java"], excludes=["*IntegrationTest.java"]),
   deps=[
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:exceptions',

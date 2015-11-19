@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.TriState;
@@ -266,7 +268,9 @@ public class RemoteLogUploaderEventListenerTest {
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
     FakeBuildRule buildRule = createFakeBuildRule("//build:rule1", resolver);

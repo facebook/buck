@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -29,6 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,7 +62,8 @@ public class LocationMacroExpanderTest {
 
   @Test
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
         .build(resolver);
@@ -90,7 +93,8 @@ public class LocationMacroExpanderTest {
   @Test
   public void replaceLocationOfFullyQualifiedBuildTarget() throws IOException, MacroException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
     Path outputPath = javaBinary.getPathToOutput();
     Path absolutePath = outputPath.toAbsolutePath();
@@ -120,7 +124,8 @@ public class LocationMacroExpanderTest {
   @Test
   public void extractRuleKeyAppendable() throws MacroException {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     LocationMacroExpander macroExpander = new LocationMacroExpander();
     assertThat(
         macroExpander.extractRuleKeyAppendables(

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -40,7 +42,9 @@ import java.util.List;
 public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     // Files:
     // android/java/BUILD
     // android/java/src/com/facebook/base/data.json
@@ -85,7 +89,8 @@ public class CopyResourcesStepTest {
 
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         buildTarget,
         ImmutableSet.<SourcePath>of(
             new FakeSourcePath("android/java/src/com/facebook/base/data.json"),
@@ -120,7 +125,8 @@ public class CopyResourcesStepTest {
 
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         buildTarget,
         ImmutableSet.of(
             new FakeSourcePath("android/java/src/com/facebook/base/data.json"),

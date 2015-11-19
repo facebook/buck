@@ -21,7 +21,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
@@ -137,9 +136,7 @@ public class RunCommand extends AbstractCommand {
     // Clearly something bad has happened here. If you are using `buck run` to start up a server
     // or some other process that is meant to "run forever," then it's pretty common to do:
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(ImmutableSet.copyOf(build.getActionGraph().getNodes())));
+    SourcePathResolver resolver = new SourcePathResolver(build.getRuleResolver());
     Tool executable = binaryBuildRule.getExecutableCommand();
     ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
         .addAll(executable.getCommandPrefix(resolver))

@@ -23,10 +23,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
@@ -225,8 +227,11 @@ public class JavacOptionsTest {
         .setJavacJarPath(javacJarPath)
         .build();
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
-        options.getInputs(new SourcePathResolver(new BuildRuleResolver())),
+        options.getInputs(resolver),
         Matchers.<SourcePath>containsInAnyOrder(javacJarPath));
   }
 

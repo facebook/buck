@@ -25,11 +25,13 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +65,9 @@ public class MiniAaptTest {
         .build();
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final SourcePathResolver resolver =
+      new SourcePathResolver(
+          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -73,7 +78,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -135,7 +140,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -186,7 +191,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -210,7 +215,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -238,7 +243,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("android_drawable.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -271,7 +276,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("custom_drawable.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -299,7 +304,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -319,7 +324,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -342,7 +347,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -370,7 +375,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -398,7 +403,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -420,7 +425,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(rDotTxt, depRTxt);
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -454,7 +459,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -477,7 +482,7 @@ public class MiniAaptTest {
         Paths.get("res/values/value.xml~"));
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
@@ -513,7 +518,7 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         filesystem,
         new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),

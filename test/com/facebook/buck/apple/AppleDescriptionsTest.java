@@ -18,10 +18,12 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +41,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromSet() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -46,7 +51,7 @@ public class AppleDescriptionsTest {
             "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
+            resolver.deprecatedPathFunction(),
             Paths.get("prefix"),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
@@ -58,6 +63,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromTheSameFromSet() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -65,7 +73,7 @@ public class AppleDescriptionsTest {
             "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
+            resolver.deprecatedPathFunction(),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
                     new FakeSourcePath("path/to/some_file.h"),
@@ -81,10 +89,13 @@ public class AppleDescriptionsTest {
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
         "file.h", new FakeSourcePath("file.h"));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
+            resolver.deprecatedPathFunction(),
             Paths.get("prefix"),
             SourceList.ofNamedSources(headerMap)));
   }
@@ -96,15 +107,21 @@ public class AppleDescriptionsTest {
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
         "file.h", new FakeSourcePath("file.h"));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
+            resolver.deprecatedPathFunction(),
             SourceList.ofNamedSources(headerMap)));
   }
 
   @Test
   public void convertToFlatCxxHeadersWithPrefix() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -113,7 +130,7 @@ public class AppleDescriptionsTest {
             "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get("prefix"),
-            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
+            resolver.deprecatedPathFunction(),
             ImmutableSet.<SourcePath>of(
                 new FakeSourcePath("path/to/some_file.h"),
                 new FakeSourcePath("path/to/another_file.h"),
@@ -123,6 +140,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithoutPrefix() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -131,7 +151,7 @@ public class AppleDescriptionsTest {
             "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get(""),
-            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
+            resolver.deprecatedPathFunction(),
             ImmutableSet.<SourcePath>of(
                 new FakeSourcePath("path/to/some_file.h"),
                 new FakeSourcePath("path/to/another_file.h"),

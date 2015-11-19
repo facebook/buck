@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -65,7 +67,10 @@ public class CxxTestTest {
     public FakeCxxTest() {
       super(
           createBuildParams(),
-          new SourcePathResolver(new BuildRuleResolver()),
+          new SourcePathResolver(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new BuildTargetNodeToBuildRuleTransformer())),
           ImmutableMap.<String, String>of(),
           Suppliers.ofInstance(ImmutableMap.<String, String>of()),
           Suppliers.ofInstance(ImmutableList.<String>of()),

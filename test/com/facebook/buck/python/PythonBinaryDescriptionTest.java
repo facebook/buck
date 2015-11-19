@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
@@ -59,7 +61,8 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void thatComponentSourcePathDepsPropagateProperly() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule genrule =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
             .setOut("blah.py")
@@ -81,7 +84,8 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void thatMainSourcePathPropagatesToDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule genrule =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
             .setOut("blah.py")
@@ -104,7 +108,10 @@ public class PythonBinaryDescriptionTest {
     PythonBinary normal =
         (PythonBinary) PythonBinaryBuilder.create(target)
             .setMain(source)
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         normal.getComponents().getModules().keySet(),
         Matchers.hasItem(target.getBasePath().resolve(sourceName)));
@@ -115,7 +122,10 @@ public class PythonBinaryDescriptionTest {
         (PythonBinary) PythonBinaryBuilder.create(target)
             .setMain(source)
             .setBaseModule(baseModule)
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(
         withBaseModule.getComponents().getModules().keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
@@ -124,7 +134,8 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void mainModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     String mainModule = "foo.main";
     PythonBinary binary =
         (PythonBinary) PythonBinaryBuilder.create(target)
@@ -136,7 +147,8 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void pexExtension() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder().setSections(
@@ -163,7 +175,8 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void buildArgs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonBinary binary =
         (PythonBinary) PythonBinaryBuilder.create(target)
@@ -204,18 +217,25 @@ public class PythonBinaryDescriptionTest {
     PythonBinary binary1 =
         (PythonBinary) builder
             .setPlatform(platform1.getFlavor().toString())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(binary1.getPythonPlatform(), Matchers.equalTo(platform1));
     PythonBinary binary2 =
         (PythonBinary) builder
             .setPlatform(platform2.getFlavor().toString())
-            .build(new BuildRuleResolver());
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer()));
     assertThat(binary2.getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
   @Test
   public void runtimeDepOnDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule cxxBinary =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .build(resolver);
@@ -236,7 +256,8 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void executableCommandWithPathToPexExecutor() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     final Path executor = Paths.get("executor");
     PythonBuckConfig config =
@@ -267,7 +288,8 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void executableCommandWithNoPathToPexExecutor() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PythonPackagedBinary binary =
         (PythonPackagedBinary) PythonBinaryBuilder.create(target)

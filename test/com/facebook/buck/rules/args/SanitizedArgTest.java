@@ -18,9 +18,11 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -35,7 +37,9 @@ public class SanitizedArgTest {
   private RuleKeyBuilder createRuleKeyBuilder() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     return new RuleKeyBuilder(
         resolver,
         new DefaultFileHashCache(projectFilesystem),

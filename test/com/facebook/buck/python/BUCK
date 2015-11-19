@@ -39,6 +39,7 @@ java_test(
   deps = [
     ':builders',
     ':testutil',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',

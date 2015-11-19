@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -83,17 +84,12 @@ public class Build implements Closeable {
       };
 
   private final ActionGraph actionGraph;
-
+  private final BuildRuleResolver ruleResolver;
   private final ExecutionContext executionContext;
-
   private final ArtifactCache artifactCache;
-
   private final BuildEngine buildEngine;
-
   private final DefaultStepRunner stepRunner;
-
   private final JavaPackageFinder javaPackageFinder;
-
   private final Clock clock;
 
   /** Not set until {@link #executeBuild(Iterable, boolean)} is invoked. */
@@ -102,6 +98,7 @@ public class Build implements Closeable {
 
   public Build(
       ActionGraph actionGraph,
+      BuildRuleResolver ruleResolver,
       Optional<TargetDevice> targetDevice,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
@@ -121,7 +118,7 @@ public class Build implements Closeable {
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions) {
     this.actionGraph = actionGraph;
-
+    this.ruleResolver = ruleResolver;
     this.executionContext = ExecutionContext.builder()
         .setConsole(console)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
@@ -148,6 +145,10 @@ public class Build implements Closeable {
 
   public ActionGraph getActionGraph() {
     return actionGraph;
+  }
+
+  public BuildRuleResolver getRuleResolver() {
+    return ruleResolver;
   }
 
   public ExecutionContext getExecutionContext() {

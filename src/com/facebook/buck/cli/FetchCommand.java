@@ -99,6 +99,7 @@ public class FetchCommand extends BuildCommand {
          Build build = createBuild(
              params.getBuckConfig(),
              actionGraphAndResolver.getFirst(),
+             actionGraphAndResolver.getSecond(),
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),

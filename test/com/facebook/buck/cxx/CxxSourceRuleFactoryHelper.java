@@ -16,11 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +37,8 @@ public class CxxSourceRuleFactoryHelper {
       Path cellRoot,
       BuildTarget target,
       CxxPlatform cxxPlatform) {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     return new CxxSourceRuleFactory(
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))

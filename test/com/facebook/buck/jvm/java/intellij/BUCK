@@ -4,6 +4,7 @@ java_test(
   deps = [
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',

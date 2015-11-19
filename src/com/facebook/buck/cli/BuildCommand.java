@@ -216,6 +216,7 @@ public class BuildCommand extends AbstractCommand {
   Build createBuild(
       BuckConfig buckConfig,
       ActionGraph graph,
+      BuildRuleResolver ruleResolver,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
@@ -233,6 +234,7 @@ public class BuildCommand extends AbstractCommand {
     }
     return new Build(
         graph,
+        ruleResolver,
         targetDevice,
         androidPlatformTargetSupplier,
         buildEngine,
@@ -387,6 +389,7 @@ public class BuildCommand extends AbstractCommand {
          Build build = createBuild(
              params.getBuckConfig(),
              actionGraphAndResolver.getFirst(),
+             actionGraphAndResolver.getSecond(),
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),

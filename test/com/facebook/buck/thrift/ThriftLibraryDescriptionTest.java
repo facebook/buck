@@ -23,6 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.model.BuildTarget;
@@ -181,7 +182,8 @@ public class ThriftLibraryDescriptionTest {
 
   @Test
   public void createThriftCompilerBuildRulesHasCorrectDeps() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -352,7 +354,8 @@ public class ThriftLibraryDescriptionTest {
 
   @Test
   public void createBuildRuleForUnflavoredTargetCreateThriftLibrary() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
@@ -403,7 +406,8 @@ public class ThriftLibraryDescriptionTest {
 
   @Test
   public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -568,9 +572,10 @@ public class ThriftLibraryDescriptionTest {
   public void findDepsFromParamsSetsUpDepsForFlavoredTarget() {
     // Create the thrift target and implicit dep.
     BuildTarget thriftTarget = BuildTargetFactory.newInstance("//bar:thrift_compiler");
-    FakeBuildRule implicitDep = createFakeBuildRule(
-        "//foo:implicit_dep",
-        new SourcePathResolver(new BuildRuleResolver()));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    FakeBuildRule implicitDep = createFakeBuildRule("//foo:implicit_dep", resolver);
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";

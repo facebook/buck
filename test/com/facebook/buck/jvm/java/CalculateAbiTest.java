@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -42,7 +44,8 @@ public class CalculateAbiTest {
 
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -82,7 +85,8 @@ public class CalculateAbiTest {
     filesystem.writeContentsToPath("new stuff", javaLibrary.getPathToOutput());
 
     // Re-setup some entities to drop internal rule key caching.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     pathResolver = new SourcePathResolver(resolver);
     builder.build(resolver, filesystem);
 
@@ -104,7 +108,8 @@ public class CalculateAbiTest {
 
   @Test
   public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -143,7 +148,8 @@ public class CalculateAbiTest {
     filesystem.writeContentsToPath("new stuff", input);
 
     // Re-setup some entities to drop internal rule key caching.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     pathResolver = new SourcePathResolver(resolver);
     builder.build(resolver, filesystem);
 

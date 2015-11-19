@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
@@ -32,6 +33,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -580,7 +582,9 @@ public class IjModuleGraphTest {
       final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths,
       final Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver,
       IjModuleGraph.AggregationMode aggregationMode) {
-    final SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
+    final SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     DefaultIjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
           @Override

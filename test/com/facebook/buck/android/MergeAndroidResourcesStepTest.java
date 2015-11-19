@@ -21,10 +21,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -119,8 +121,12 @@ public class MergeAndroidResourcesStepTest {
     Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(new SourcePathResolver(new BuildRuleResolver()))
+        .setResolver(resolver)
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
@@ -128,7 +134,7 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         Paths.get("output"),
@@ -187,8 +193,12 @@ public class MergeAndroidResourcesStepTest {
     Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(new SourcePathResolver(new BuildRuleResolver()))
+        .setResolver(resolver)
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
@@ -196,7 +206,7 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         Paths.get("output"),
@@ -240,15 +250,19 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+
     HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(new SourcePathResolver(new BuildRuleResolver()))
+        .setResolver(resolver)
         .setBuildTarget(BuildTargetFactory.newInstance("//:res1"))
         .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("res1")
         .build();
 
     HasAndroidResourceDeps res2 = AndroidResourceRuleBuilder.newBuilder()
-        .setResolver(new SourcePathResolver(new BuildRuleResolver()))
+        .setResolver(resolver)
         .setBuildTarget(BuildTargetFactory.newInstance("//:res2"))
         .setRes(new FakeSourcePath("res2"))
         .setRDotJavaPackage("res2")
@@ -256,7 +270,7 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         ImmutableList.of(res1, res2),
         Paths.get("output"),
         Optional.of("res1"));

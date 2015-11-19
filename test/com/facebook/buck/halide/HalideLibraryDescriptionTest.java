@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -69,7 +70,8 @@ public class HalideLibraryDescriptionTest {
       .withFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:rule");
 
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     HalideLibraryBuilder compilerBuilder =
       new HalideLibraryBuilder(compilerTarget);

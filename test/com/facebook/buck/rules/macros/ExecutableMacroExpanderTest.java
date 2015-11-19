@@ -21,6 +21,7 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -69,7 +71,8 @@ public class ExecutableMacroExpanderTest {
   @Test
   public void testReplaceBinaryBuildRuleRefsInCmd() throws MacroException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTarget.builder(filesystem.getRootPath(), "//cheese", "cake").build();
     createSampleJavaBinaryRule(ruleResolver);
     String originalCmd = "$(exe //java/com/facebook/util:ManifestGenerator) $OUT";
@@ -99,7 +102,8 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void testReplaceRelativeBinaryBuildRuleRefsInCmd() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule = createSampleJavaBinaryRule(ruleResolver);
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
 
@@ -127,7 +131,8 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void testDepsGenrule() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule = createSampleJavaBinaryRule(ruleResolver);
 
     // Interpolate the build target in the genrule cmd string.
@@ -157,7 +162,8 @@ public class ExecutableMacroExpanderTest {
   @Test
   public void testBuildTimeDependencies() throws MacroException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     final BuildRule dep1 =
@@ -202,7 +208,8 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void extractRuleKeyAppendable() throws MacroException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();

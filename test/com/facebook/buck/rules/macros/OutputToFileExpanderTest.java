@@ -21,10 +21,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
@@ -58,7 +60,7 @@ public class OutputToFileExpanderTest {
     String result = expander.expand(
         target,
         createCellRoots(filesystem),
-        new BuildRuleResolver(),
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()),
         filesystem,
         "totally ignored");
 

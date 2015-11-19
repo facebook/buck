@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -49,7 +51,8 @@ public class ThriftBuckConfigTest {
   @Test
   public void getCompilerFailsIfNothingSet() {
     // Setup an empty thrift buck config, missing the compiler.
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
@@ -66,7 +69,8 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerSucceedsIfJustCompilerPathIsSet() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Path thriftPath = Paths.get("thrift_path");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(thriftPath);
@@ -94,7 +98,8 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerSucceedsIfJustCompilerTargetIsSet() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
             .setMain(new FakeSourcePath("thrift.sh"))
@@ -121,7 +126,8 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerThriftVsThrift2() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     // Setup an empty thrift buck config with thrift and thrift2 set..
@@ -149,7 +155,8 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerThrift2FallsbackToThrift() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     // Setup an empty thrift buck config with thrift and thrift2 set..

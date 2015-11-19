@@ -151,7 +151,6 @@ java_immutables_library(
     '//src/com/facebook/buck/query:query',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/rules:target_graph_to_action_graph',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/rules/coercer:coercer',
     '//src/com/facebook/buck/rules/coercer:types',
@@ -200,14 +199,7 @@ java_immutables_library(
   visibility = [
     '//src/com/facebook/buck/event:dependencies-for-external-projects-inner',
     '//src/com/facebook/buck/event:event',
-    '//test/com/facebook/buck/android:steps',
-    '//test/com/facebook/buck/apple:apple',
-    '//test/com/facebook/buck/jvm/java:java',
-    '//test/com/facebook/buck/cli/...',
-    '//test/com/facebook/buck/parser:parser',
-    '//test/com/facebook/buck/query:query',
-    '//test/com/facebook/buck/test:test',
-    '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/...',
   ],
 )
 

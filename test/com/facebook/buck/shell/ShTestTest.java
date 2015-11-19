@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +59,8 @@ public class ShTestTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
             .setProjectFilesystem(filesystem)
             .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* labels */ ImmutableSet.<Label>of());
@@ -74,7 +77,8 @@ public class ShTestTest extends EasyMockSupport {
 
   @Test
   public void depsAreRuntimeDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
@@ -86,7 +90,8 @@ public class ShTestTest extends EasyMockSupport {
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .setExtraDeps(ImmutableSortedSet.of(extraDep))
             .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* labels */ ImmutableSet.<Label>of());

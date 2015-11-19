@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -54,7 +55,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
   @Test
   public void testNdkLibrary() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
     NdkLibrary ndkLibrary = (NdkLibrary) new NdkLibraryBuilder(
@@ -101,7 +103,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testCxxLibrary() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
     NdkCxxPlatform ndkCxxPlatform =

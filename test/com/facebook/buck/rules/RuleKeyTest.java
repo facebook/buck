@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -59,8 +60,10 @@ public class RuleKeyTest {
   public void testRuleKeyDependsOnDeps() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache = new DefaultFileHashCache(filesystem);
-    BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
-    BuildRuleResolver ruleResolver2 = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver1 =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver2 =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     RuleKeyBuilderFactory ruleKeyBuilderFactory1 =
         new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver1));
     RuleKeyBuilderFactory ruleKeyBuilderFactory2 =
@@ -95,15 +98,16 @@ public class RuleKeyTest {
 
   @Test
   public void ensureSimpleValuesCorrectRuleKeyChangesMade() {
-    RuleKey reflective = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey reflective = createEmptyRuleKey(resolver)
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
         .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
         .build();
 
-    RuleKey manual = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
+    RuleKey manual = createEmptyRuleKey(resolver)
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
         .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
@@ -119,15 +123,16 @@ public class RuleKeyTest {
             new TestRuleKeyAppendable("foo"),
             new TestRuleKeyAppendable("bar"));
 
-    RuleKey ruleKeyPairA = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey ruleKeyPairA = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
+        .build();
 
-    RuleKey ruleKeyPairB = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
-            .build();
+    RuleKey ruleKeyPairB = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
+        .build();
 
     assertEquals(ruleKeyPairA, ruleKeyPairB);
   }
@@ -144,15 +149,16 @@ public class RuleKeyTest {
             new TestRuleKeyAppendable("bar"),
             new TestRuleKeyAppendable("foo"));
 
-    RuleKey ruleKeyPairA = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListA)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey ruleKeyPairA = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListA)
+        .build();
 
-    RuleKey ruleKeyPairB = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListB)
-            .build();
+    RuleKey ruleKeyPairB = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListB)
+        .build();
 
     assertNotEquals(ruleKeyPairA, ruleKeyPairB);
   }
@@ -164,15 +170,16 @@ public class RuleKeyTest {
             "foo", new TestRuleKeyAppendable("foo"),
             "bar", new TestRuleKeyAppendable("bar"));
 
-    RuleKey ruleKeyPairA = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey ruleKeyPairA = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
+        .build();
 
-    RuleKey ruleKeyPairB = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
-            .build();
+    RuleKey ruleKeyPairB = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
+        .build();
 
     assertEquals(ruleKeyPairA, ruleKeyPairB);
   }
@@ -189,15 +196,16 @@ public class RuleKeyTest {
             "bar", new TestRuleKeyAppendable("bar"),
             "foo", new TestRuleKeyAppendable("foo"));
 
-    RuleKey ruleKeyPairA = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapA)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey ruleKeyPairA = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapA)
+        .build();
 
-    RuleKey ruleKeyPairB = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapB)
-            .build();
+    RuleKey ruleKeyPairB = createEmptyRuleKey(resolver)
+        .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapB)
+        .build();
 
     assertNotEquals(ruleKeyPairA, ruleKeyPairB);
   }
@@ -207,14 +215,15 @@ public class RuleKeyTest {
     ImmutableList<SourceRoot> sourceroots = ImmutableList.of(new SourceRoot("cake"));
     ImmutableList<String> strings = ImmutableList.of("one", "two");
 
-    RuleKey reflective = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey reflective = createEmptyRuleKey(resolver)
         .setReflectively("sourceroot", sourceroots)
         .setReflectively("strings", strings)
         .build();
 
-    RuleKey manual = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
+    RuleKey manual = createEmptyRuleKey(resolver)
         .setReflectively("sourceroot", sourceroots)
         .setReflectively("strings", strings)
         .build();
@@ -224,19 +233,19 @@ public class RuleKeyTest {
 
   @Test
   public void testRuleKeyEqualsAndHashCodeMethods() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     RuleKey keyPair1 =
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("something", "foo")
             .build();
     RuleKey keyPair2 =
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("something", "foo")
             .build();
     RuleKey keyPair3 =
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("something", "bar")
             .build();
     assertEquals(keyPair1, keyPair2);
@@ -251,14 +260,15 @@ public class RuleKeyTest {
   public void setInputPathSourcePath() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     // Changing the name of a named source path should change the hash...
     assertNotEquals(
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("key", new PathSourcePath(projectFilesystem, Paths.get("something")))
             .build(),
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively(
                 "key",
                 new PathSourcePath(projectFilesystem, Paths.get("something", "else")))
@@ -266,12 +276,10 @@ public class RuleKeyTest {
 
     // ... as should changing the key
     assertNotEquals(
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("key", new PathSourcePath(projectFilesystem, Paths.get("something")))
             .build(),
-        createEmptyRuleKey(
-            new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively(
                 "different-key",
                 new PathSourcePath(projectFilesystem, Paths.get("something")))
@@ -280,7 +288,8 @@ public class RuleKeyTest {
 
   @Test
   public void setInputBuildTargetSourcePath() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeBuildRule fake1 = new FakeBuildRule("//:fake1", pathResolver);
     FakeBuildRule fake2 = new FakeBuildRule("//:fake2", pathResolver);
@@ -372,10 +381,10 @@ public class RuleKeyTest {
         "boolean",
         true);
 
-    RuleKey key =
-        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("map", map)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey key = createEmptyRuleKey(resolver).setReflectively("map", map).build();
 
     assertNotNull(key);
   }
@@ -386,8 +395,11 @@ public class RuleKeyTest {
         Paths.get("some/path"), "woohoo!",
         42L, "life, the universe and everything");
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     RuleKey key =
-        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("map", map)
             .build();
 
@@ -396,8 +408,11 @@ public class RuleKeyTest {
 
   @Test
   public void canAddRuleKeyAppendable() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     RuleKey key =
-        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+        createEmptyRuleKey(resolver)
             .setReflectively("rule_key_appendable", new TestRuleKeyAppendable("foo"))
             .build();
     assertNotNull(key);
@@ -408,10 +423,10 @@ public class RuleKeyTest {
     ImmutableList<TestRuleKeyAppendable> list = ImmutableList.of(
         new TestRuleKeyAppendable("foo"),
         new TestRuleKeyAppendable("bar"));
-    RuleKey key =
-        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("list", list)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey key = createEmptyRuleKey(resolver).setReflectively("list", list).build();
     assertNotNull(key);
   }
 
@@ -420,10 +435,10 @@ public class RuleKeyTest {
     ImmutableMap<String, TestRuleKeyAppendable> map = ImmutableMap.of(
         "foo", new TestRuleKeyAppendable("foo"),
         "bar", new TestRuleKeyAppendable("bar"));
-    RuleKey key =
-        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("map", map)
-            .build();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKey key = createEmptyRuleKey(resolver).setReflectively("map", map).build();
     assertNotNull(key);
   }
 
@@ -431,7 +446,9 @@ public class RuleKeyTest {
   public void changingRuleKeyFieldChangesKeyWhenClassImplementsAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     DefaultFileHashCache hashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
@@ -455,7 +472,9 @@ public class RuleKeyTest {
   public void changingRuleKeyFieldOfDepChangesKeyWhenClassImplementsAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     DefaultFileHashCache hashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
@@ -505,7 +524,9 @@ public class RuleKeyTest {
       }
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         hashCache,
@@ -524,7 +545,9 @@ public class RuleKeyTest {
 
   @Test
   public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         hashCache,

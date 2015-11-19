@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -51,27 +53,26 @@ public class CxxLinkTest {
 
   private static final Linker DEFAULT_LINKER = new GnuLinker(new HashedFileTool(Paths.get("ld")));
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
+  private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
+      new SourcePathResolver(
+          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
   private static final ImmutableList<Arg> DEFAULT_ARGS =
       ImmutableList.of(
           new StringArg("-rpath"),
           new StringArg("/lib"),
           new StringArg("libc.a"),
-          new SourcePathArg(
-              new SourcePathResolver(new BuildRuleResolver()),
-              new FakeSourcePath("a.o")),
-          new SourcePathArg(
-              new SourcePathResolver(new BuildRuleResolver()),
-              new FakeSourcePath("b.o")),
-          new SourcePathArg(
-              new SourcePathResolver(new BuildRuleResolver()),
-              new FakeSourcePath("libc.a")),
+          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("a.o")),
+          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("b.o")),
+          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("libc.a")),
           new StringArg("-L"),
           new StringArg("/System/Libraries/libz.dynlib"),
           new StringArg("-llibz.dylib"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
@@ -124,14 +125,19 @@ public class CxxLinkTest {
             DEFAULT_OUTPUT,
             ImmutableList.<Arg>of(
                 new SourcePathArg(
-                    new SourcePathResolver(new BuildRuleResolver()),
+                    new SourcePathResolver(
+                        new BuildRuleResolver(
+                            TargetGraph.EMPTY,
+                            new BuildTargetNodeToBuildRuleTransformer())),
                     new FakeSourcePath("different")))));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
   @Test
   public void sanitizedPathsInFlagsDoNotAffectRuleKey() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     RuleKeyBuilderFactory ruleKeyBuilderFactory =

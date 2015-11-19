@@ -16,6 +16,7 @@
 
 package com.facebook.buck.simulate;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -183,7 +185,8 @@ public class BuildSimulatorTest {
   private static class TestBuildRule extends NoopBuildRule {
     private static final ProjectFilesystem FILE_SYSTEM = new FakeProjectFilesystem();
     private static final SourcePathResolver RESOLVER =
-        new SourcePathResolver(new BuildRuleResolver());
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     public static TestBuildRule fromName(String name, TestBuildRule... deps) {
       return new TestBuildRule(

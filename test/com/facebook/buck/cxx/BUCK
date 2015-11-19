@@ -3,6 +3,7 @@ java_library(
   srcs = glob(['*.java'], excludes=['*Test.java']),
   deps = [
     '//src/com/facebook/buck/android:packageable',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
@@ -40,6 +41,7 @@ java_test(
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/apple/xcode:xcode',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',

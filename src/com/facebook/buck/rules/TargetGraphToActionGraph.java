@@ -63,12 +63,11 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     return result;
   }
 
-  private Pair<ActionGraph, BuildRuleResolver> createActionGraph(
-      final TargetGraph targetGraph) {
+  private Pair<ActionGraph, BuildRuleResolver> createActionGraph(final TargetGraph targetGraph) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
-    final BuildRuleResolver resolver = new BuildRuleResolver();
+    final BuildRuleResolver resolver = new BuildRuleResolver(targetGraph, buildRuleGenerator);
 
     final int numberOfNodes = targetGraph.getNodes().size();
     final AtomicInteger processedNodes = new AtomicInteger(0);

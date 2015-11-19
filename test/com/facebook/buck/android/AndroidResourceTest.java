@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidResource.BuildOutput;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -62,7 +64,9 @@ public class AndroidResourceTest {
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
@@ -132,7 +136,8 @@ public class AndroidResourceTest {
 
   @Test
   public void testAbiKeyExcludesEmptyResources() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     BuildRule resourceRule1 = ruleResolver.addToIndex(
@@ -180,7 +185,8 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsSpecified() {
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
@@ -199,7 +205,8 @@ public class AndroidResourceTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
@@ -221,7 +228,8 @@ public class AndroidResourceTest {
 
   @Test
   public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);

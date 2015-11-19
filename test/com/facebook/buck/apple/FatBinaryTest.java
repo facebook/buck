@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -60,7 +62,8 @@ public class FatBinaryTest {
   @SuppressWarnings({"unchecked"})
   @Test
   public void appleBinaryDescriptionWithMultiplePlatformArgsShouldGenerateFatBinary() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule fatBinaryRule = AppleBinaryBuilder
         .createBuilder(
@@ -93,7 +96,8 @@ public class FatBinaryTest {
 
   @Test
   public void appleBinaryDescriptionWithMultipleDifferentSdksShouldFail() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     try {
       AppleBinaryBuilder
@@ -112,7 +116,8 @@ public class FatBinaryTest {
 
   @Test
   public void fatBinaryWithSpecialBuildActionShouldFail() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors = ImmutableList.of(
         CxxInferEnhancer.INFER,

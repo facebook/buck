@@ -519,12 +519,10 @@ public class ProjectCommand extends BuildCommand {
     TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
         new BuildTargetNodeToBuildRuleTransformer());
-    ActionGraph actionGraph = Preconditions
-        .checkNotNull(targetGraphToActionGraph.apply(targetGraphAndTargets.getTargetGraph()))
-        .getFirst();
-    BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes()));
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+        targetGraphToActionGraph.apply(targetGraphAndTargets.getTargetGraph()));
+    BuildRuleResolver ruleResolver = result.getSecond();
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
     JavacOptions javacOptions = new JavaBuckConfig(params.getBuckConfig())
         .getDefaultJavacOptions();
@@ -533,7 +531,7 @@ public class ProjectCommand extends BuildCommand {
         targetGraphAndTargets,
         getJavaPackageFinder(params.getBuckConfig()),
         JavaFileParser.createJavaFileParser(javacOptions),
-        buildRuleResolver,
+        ruleResolver,
         sourcePathResolver,
         params.getCell().getFilesystem(),
         getIntellijAggregationMode(params.getBuckConfig()));
@@ -572,18 +570,16 @@ public class ProjectCommand extends BuildCommand {
     }
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
-    ActionGraph actionGraph = Preconditions
-        .checkNotNull(
-            new TargetGraphToActionGraph(
-                params.getBuckEventBus(),
-                new BuildTargetNodeToBuildRuleTransformer())
-                .apply(targetGraphAndTargets.getTargetGraph()))
-        .getFirst();
+    Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+        new TargetGraphToActionGraph(
+            params.getBuckEventBus(),
+            new BuildTargetNodeToBuildRuleTransformer())
+            .apply(targetGraphAndTargets.getTargetGraph()));
+    ActionGraph actionGraph = result.getFirst();
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
-          new SourcePathResolver(
-              new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes()))),
+          new SourcePathResolver(result.getSecond()),
           FluentIterable
               .from(actionGraph.getNodes())
               .filter(ProjectConfig.class)

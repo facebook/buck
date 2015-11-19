@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
@@ -87,8 +88,11 @@ public class AndroidManifestTest {
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml");
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    return description
-        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
+    return description.createBuildRule(
+        TargetGraph.EMPTY,
+        buildRuleParams,
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()),
+        arg);
   }
 
   // TODO(abhi): Add another unit test that passes in a non-trivial DependencyGraph and verify that

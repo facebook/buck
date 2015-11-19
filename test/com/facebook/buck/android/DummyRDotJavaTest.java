@@ -20,6 +20,7 @@ import static com.facebook.buck.android.AndroidResource.BuildOutput;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -65,7 +67,8 @@ public class DummyRDotJavaTest {
   public void testBuildSteps() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache = new DefaultFileHashCache(filesystem);
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
@@ -140,7 +143,8 @@ public class DummyRDotJavaTest {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/com/example:library"))
             .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<HasAndroidResourceDeps>of(),
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,

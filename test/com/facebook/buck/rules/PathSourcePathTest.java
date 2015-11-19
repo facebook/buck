@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
@@ -32,7 +33,10 @@ public class PathSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     PathSourcePath path = new PathSourcePath(projectFilesystem, Paths.get("cheese"));
 
-    Path resolved = new SourcePathResolver(new BuildRuleResolver()).deprecatedGetPath(path);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    Path resolved = resolver.deprecatedGetPath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }

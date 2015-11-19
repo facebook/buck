@@ -18,11 +18,13 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.TargetGraph;
 
 import org.junit.Test;
 
@@ -33,7 +35,8 @@ public class AndroidLibraryTest {
 
   @Test
   public void testAndroidAnnotation() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
     BuildRule processorRule = JavaLibraryBuilder

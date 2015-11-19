@@ -20,6 +20,7 @@ java_test(
   srcs = glob(['*Test.java']),
   deps = [
     ':testutil',
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',
