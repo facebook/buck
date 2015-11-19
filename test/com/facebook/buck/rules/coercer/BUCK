@@ -6,6 +6,8 @@ java_test(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules/coercer:coercer',
+    '//src/com/facebook/buck/rules/coercer:types',
     '//src/com/facebook/buck/util:exceptions',
     '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',

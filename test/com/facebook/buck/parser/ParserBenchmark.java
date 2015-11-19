@@ -22,7 +22,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.Console;
@@ -99,9 +101,13 @@ public class ParserBenchmark {
 
     eventBus = BuckEventBusFactory.newInstance();
 
-    parser = new ParserNg();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
+    parser = new ParserNg(typeCoercerFactory, marshaller);
     legacyParser = Parser.createBuildFileParser(
         cell,
+        typeCoercerFactory,
+        marshaller,
         ParserConfig.AllowSymlinks.FORBID);
     legacyParserConfig = new ParserConfig(config);
     console = new TestConsole();

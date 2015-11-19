@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
@@ -62,6 +63,7 @@ public class TargetNodeTest {
                 "string", "//example/path:one",
                 "target", "//example/path:two",
                 "sourcePaths", ImmutableSortedSet.of())),
+        new DefaultTypeCoercerFactory(),
         buildRuleFactoryParams,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTargetPattern>of(),
@@ -100,6 +102,7 @@ public class TargetNodeTest {
                 "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
                 "appleSource", "//example/path:five",
                 "source", "AnotherClass.java")),
+        new DefaultTypeCoercerFactory(),
         buildRuleFactoryParams,
         depsTargets,
         ImmutableSet.<BuildTargetPattern>of(),
@@ -165,7 +168,8 @@ public class TargetNodeTest {
       Description<Arg> description,
       BuildRuleFactoryParams buildRuleFactoryParams,
       Map<String, Object> instance) throws NoSuchBuildTargetException {
-    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
+    ConstructorArgMarshaller marshaller =
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Arg constructorArg = description.createUnpopulatedConstructorArg();
     try {

@@ -32,8 +32,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -97,6 +99,7 @@ public class JavaSymbolFinderIntegrationTest {
         projectFilesystem,
         srcRootsFinder,
         DEFAULT_JAVAC_OPTIONS,
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
         projectBuildFileParserFactory,
         config,
         buckEventBus,

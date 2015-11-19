@@ -153,6 +153,8 @@ java_immutables_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:target_graph_to_action_graph',
     '//src/com/facebook/buck/rules:types',
+    '//src/com/facebook/buck/rules/coercer:coercer',
+    '//src/com/facebook/buck/rules/coercer:types',
     '//src/com/facebook/buck/rules/keys:keys',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/simulate:simulate',

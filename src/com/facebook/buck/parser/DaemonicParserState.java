@@ -42,6 +42,7 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -94,6 +95,7 @@ class DaemonicParserState {
    */
   private static final String INCLUDES_META_RULE = "__includes";
 
+  private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
   private final OptimisticLoadingCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
@@ -126,8 +128,11 @@ class DaemonicParserState {
    */
   private final Set<Cell> knownCells;
 
-  public DaemonicParserState() {
-    this.marshaller = new ConstructorArgMarshaller();
+  public DaemonicParserState(
+      TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller) {
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.marshaller = marshaller;
     this.allRawNodes = new OptimisticLoadingCache<>();
     this.targetsCornucopia = HashMultimap.create();
     this.allTargetNodes = new OptimisticLoadingCache<>();
@@ -396,6 +401,7 @@ class DaemonicParserState {
             hasher.hash(),
             description,
             constructorArg,
+            typeCoercerFactory,
             factoryParams,
             declaredDeps.build(),
             visibilityPatterns.build(),

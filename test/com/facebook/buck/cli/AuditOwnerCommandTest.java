@@ -48,6 +48,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
@@ -114,6 +115,7 @@ public class AuditOwnerCommandTest {
           Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
           description,
           arg,
+          new DefaultTypeCoercerFactory(),
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of(),

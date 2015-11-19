@@ -28,6 +28,7 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuckPyFunction;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -65,6 +66,7 @@ public class JavaSymbolFinder {
   private final ProjectFilesystem projectFilesystem;
   private final SrcRootsFinder srcRootsFinder;
   private final JavacOptions javacOptions;
+  private final ConstructorArgMarshaller marshaller;
   private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final BuckConfig config;
   private final BuckEventBus buckEventBus;
@@ -75,6 +77,7 @@ public class JavaSymbolFinder {
       ProjectFilesystem projectFilesystem,
       SrcRootsFinder srcRootsFinder,
       JavacOptions javacOptions,
+      ConstructorArgMarshaller marshaller,
       ProjectBuildFileParserFactory projectBuildFileParserFactory,
       BuckConfig config,
       BuckEventBus buckEventBus,
@@ -83,6 +86,7 @@ public class JavaSymbolFinder {
     this.projectFilesystem = projectFilesystem;
     this.srcRootsFinder = srcRootsFinder;
     this.javacOptions = javacOptions;
+    this.marshaller = marshaller;
     this.projectBuildFileParserFactory = projectBuildFileParserFactory;
     this.config = config;
     this.buckEventBus = buckEventBus;
@@ -147,6 +151,7 @@ public class JavaSymbolFinder {
     ImmutableSetMultimap.Builder<Path, BuildTarget> sourceFileTargetsMultimap =
         ImmutableSetMultimap.builder();
     try (ProjectBuildFileParser parser = projectBuildFileParserFactory.createParser(
+        marshaller,
         console,
         environment,
         buckEventBus)) {

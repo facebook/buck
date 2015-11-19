@@ -44,6 +44,7 @@ import java.nio.file.Path;
 public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
   private final HashCode rawInputsHashCode;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final BuildRuleFactoryParams ruleFactoryParams;
   private final Function<Optional<String>, Path> cellRoots;
 
@@ -60,6 +61,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       HashCode rawInputsHashCode,
       Description<T> description,
       T constructorArg,
+      TypeCoercerFactory typeCoercerFactory,
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns,
@@ -68,6 +70,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     this.rawInputsHashCode = rawInputsHashCode;
     this.description = description;
     this.constructorArg = constructorArg;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.ruleFactoryParams = params;
     this.cellRoots = cellRoots;
 
@@ -75,7 +78,6 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     final ImmutableSortedSet.Builder<BuildTarget> extraDeps = ImmutableSortedSet.naturalOrder();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
-    TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       ParamInfo<T> info = new ParamInfo<>(typeCoercerFactory, field);
@@ -298,6 +300,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           rawInputsHashCode,
           description,
           constructorArg,
+          typeCoercerFactory,
           ruleFactoryParams,
           declaredDeps,
           visibilityPatterns,

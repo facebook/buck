@@ -21,18 +21,20 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaSymbolFinder;
-import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.SrcRootsFinder;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.jvm.java.JavaSymbolFinder;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.SrcRootsFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -87,6 +89,7 @@ public class MissingSymbolsHandler {
         projectFilesystem,
         srcRootsFinder,
         javacOptions,
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
         projectBuildFileParserFactory,
         config,
         buckEventBus,

@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -265,6 +266,7 @@ public class TargetNodeVisibilityTest {
         Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
         description,
         arg,
+        new DefaultTypeCoercerFactory(),
         params,
         ImmutableSet.<BuildTarget>of(),
         visibilityPatterns,

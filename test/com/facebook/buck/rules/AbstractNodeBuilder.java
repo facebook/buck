@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -127,6 +128,7 @@ public abstract class AbstractNodeBuilder<A> {
           hash,
           description,
           arg,
+          new DefaultTypeCoercerFactory(),
           factoryParams,
           getDepsFromArg(),
           ImmutableSet.<BuildTargetPattern>of(),
@@ -191,7 +193,7 @@ public abstract class AbstractNodeBuilder<A> {
 
   private void populateWithDefaultValues(A arg) {
     try {
-      new ConstructorArgMarshaller().populate(
+      new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()).populate(
           cellRoots,
           new FakeProjectFilesystem(),
           factoryParams,

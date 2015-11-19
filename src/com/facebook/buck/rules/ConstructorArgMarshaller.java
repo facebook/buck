@@ -55,8 +55,8 @@ public class ConstructorArgMarshaller {
    * additional paths to ones relative to the project root, and to allow {@link BuildTarget}
    * instances to be fully qualified.
    */
-  public ConstructorArgMarshaller() {
-    this.typeCoercerFactory = new TypeCoercerFactory();
+  public ConstructorArgMarshaller(TypeCoercerFactory typeCoercerFactory) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.coercedTypes = CacheBuilder.newBuilder().build();
   }
 

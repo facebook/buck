@@ -42,6 +42,7 @@ import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -309,7 +310,7 @@ public class JavaLibraryDescriptionTest {
             BuildTargetFactory.newInstance("//example:target"));
 
     try {
-      new ConstructorArgMarshaller().populate(
+      new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()).populate(
           createCellRoots(factoryParams.getProjectFilesystem()),
           factoryParams.getProjectFilesystem(),
           factoryParams,

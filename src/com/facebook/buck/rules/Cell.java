@@ -232,6 +232,7 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
+      ConstructorArgMarshaller marshaller,
       Console console,
       BuckEventBus eventBus) {
     ParserConfig parserConfig = new ParserConfig(getBuckConfig());
@@ -239,7 +240,7 @@ public class Cell {
         parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
         watchman.hasWildmatchGlob();
     ProjectBuildFileParserFactory factory = createBuildFileParserFactory(useWatchmanGlob);
-    return factory.createParser(console, config.getEnvironment(), eventBus);
+    return factory.createParser(marshaller, console, config.getEnvironment(), eventBus);
   }
 
   @VisibleForTesting

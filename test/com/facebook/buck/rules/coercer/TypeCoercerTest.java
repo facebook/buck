@@ -58,7 +58,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class TypeCoercerTest {
-  private final TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+  private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Function<Optional<String>, Path> cellRoots;
 

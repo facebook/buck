@@ -33,8 +33,10 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.Console;
@@ -63,9 +65,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashMap;
 
 public class ProjectBuildFileParserTest {
 
@@ -232,6 +234,7 @@ public class ProjectBuildFileParserTest {
 
     @Override
     public ProjectBuildFileParser createParser(
+        ConstructorArgMarshaller marshaller,
         Console console,
         ImmutableMap<String, String> environment,
         BuckEventBus buckEventBus) {
@@ -359,6 +362,7 @@ public class ProjectBuildFileParserTest {
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .build(),
+            new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
             ImmutableMap.<String, String>of(),
             buckEventBus,
             processExecutor);

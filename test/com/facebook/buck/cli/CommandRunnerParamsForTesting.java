@@ -29,7 +29,9 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
@@ -60,6 +62,7 @@ public class CommandRunnerParamsForTesting {
       ObjectMapper objectMapper,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     return new CommandRunnerParams(
         console,
         cell,
@@ -71,6 +74,8 @@ public class CommandRunnerParamsForTesting {
         eventBus,
         Parser.createBuildFileParser(
             cell,
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
             ParserConfig.AllowSymlinks.ALLOW),
         platform,
         environment,

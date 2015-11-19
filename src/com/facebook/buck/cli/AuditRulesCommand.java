@@ -26,6 +26,8 @@ import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuckPyFunction;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
@@ -109,6 +111,7 @@ public class AuditRulesCommand extends AbstractCommand {
               params.getCell().getAllDescriptions())
             .build());
     try (ProjectBuildFileParser parser = factory.createParser(
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
         params.getConsole(),
         params.getEnvironment(),
         params.getBuckEventBus())) {

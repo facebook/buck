@@ -44,10 +44,12 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
@@ -148,7 +150,8 @@ public class ParserNgTest {
         .setBuckConfig(config)
         .build();
 
-    parser = new ParserNg();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    parser = new ParserNg(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1230,7 +1233,8 @@ public class ParserNgTest {
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    parser = new ParserNg();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    parser = new ParserNg(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1344,7 +1348,8 @@ public class ParserNgTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    parser = new ParserNg();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    parser = new ParserNg(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
@@ -66,7 +67,8 @@ public class GenruleDescriptionTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
         /* enforeBuckBoundaryCheck */ true);
-    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
+    ConstructorArgMarshaller marshaller =
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
     GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
@@ -86,6 +88,7 @@ public class GenruleDescriptionTest {
         Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
         genruleDescription,
         constructorArg,
+        new DefaultTypeCoercerFactory(),
         params,
         declaredDeps.build(),
         visibilityPatterns.build(),

@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -49,6 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
   private final DaemonicParserState permState;
+  private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
 
@@ -74,10 +76,12 @@ class PerBuildState implements AutoCloseable {
 
   public PerBuildState(
       DaemonicParserState permState,
+      ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling) {
     this.permState = permState;
+    this.marshaller = marshaller;
     this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
     this.cells = new ConcurrentHashMap<>();
@@ -145,6 +149,7 @@ class PerBuildState implements AutoCloseable {
     ProjectBuildFileParser parser = parsers.get(cell);
     if (parser == null) {
       parser = cell.createBuildFileParser(
+          marshaller,
           console,
           eventBus);
       parser.setEnableProfiling(enableProfiling);

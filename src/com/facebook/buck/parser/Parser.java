@@ -53,6 +53,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.EnvironmentFilter;
@@ -125,8 +126,6 @@ public class Parser {
 
   private static final Logger LOG = Logger.get(Parser.class);
 
-  private static final ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
-
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
    * TODO(jimpurbrick): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
@@ -180,14 +179,21 @@ public class Parser {
       currentBuildId = event.getBuildId();
     }
   }
+
+  private final TypeCoercerFactory typeCoercerFactory;
+  private final ConstructorArgMarshaller marshaller;
   private final BuildFileTreeCache buildFileTreeCache;
 
   public static Parser createBuildFileParser(
       final Cell cell,
+      TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     return new Parser(
         cell,
+        typeCoercerFactory,
+        marshaller,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         // TODO(shs96c): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
@@ -207,10 +213,14 @@ public class Parser {
   @VisibleForTesting
   Parser(
       Cell cell,
+      TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller,
       Supplier<BuildFileTree> buildFileTreeSupplier,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     this.cell = cell;
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.marshaller = marshaller;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
     this.state = new CachedState(cell.getBuildFileName(), allowSymlinks);
   }
@@ -303,6 +313,7 @@ public class Parser {
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     try (BuildFileParsers buildFileParsers = new BuildFileParsers(
+        marshaller,
         console,
         eventBus)) {
       buildFileParsers.setEnableProfiling(enableProfiling);
@@ -350,6 +361,7 @@ public class Parser {
     TargetGraph graph = null;
 
     try (BuildFileParsers buildFileParsers = new BuildFileParsers(
+        marshaller,
         console,
         eventBus)) {
       buildFileParsers.setEnableProfiling(enableProfiling);
@@ -426,6 +438,7 @@ public class Parser {
       // Used to parse a single file and return the map. Create and close.
 
       try (BuildFileParsers buildFileParsers = new BuildFileParsers(
+          marshaller,
           console,
           eventBus)) {
         buildFileParsers.setEnableProfiling(enableProfiling);
@@ -734,6 +747,7 @@ public class Parser {
       BuckEventBus buckEventBus)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (BuildFileParsers buildFileParsers = new BuildFileParsers(
+        marshaller,
         console,
         buckEventBus)) {
       return parseBuildFile(
@@ -1363,6 +1377,7 @@ public class Parser {
                 hasher.hash(),
                 description,
                 constructorArg,
+                typeCoercerFactory,
                 factoryParams,
                 declaredDeps.build(),
                 visibilityPatterns.build(),
@@ -1454,12 +1469,17 @@ public class Parser {
 
   private static class BuildFileParsers implements AutoCloseable {
 
+    private final ConstructorArgMarshaller marshaller;
     private final Console console;
     private final BuckEventBus eventBus;
     private Map<Cell, ProjectBuildFileParser> toClose = new HashMap<>();
     private boolean enableProfiling;
 
-    public BuildFileParsers(Console console, BuckEventBus eventBus) {
+    public BuildFileParsers(
+        ConstructorArgMarshaller marshaller,
+        Console console,
+        BuckEventBus eventBus) {
+      this.marshaller = marshaller;
       this.console = console;
       this.eventBus = eventBus;
     }
@@ -1472,7 +1492,7 @@ public class Parser {
       ProjectBuildFileParser parser = toClose.get(cell);
 
       if (parser == null) {
-        parser = cell.createBuildFileParser(console, eventBus);
+        parser = cell.createBuildFileParser(marshaller, console, eventBus);
         parser.setEnableProfiling(enableProfiling);
         toClose.put(cell, parser);
       }

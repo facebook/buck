@@ -29,8 +29,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -61,9 +63,11 @@ public class ParserNg {
   private static final Logger LOG = Logger.get(ParserNg.class);
 
   private final DaemonicParserState permState;
+  private final ConstructorArgMarshaller marshaller;
 
-  public ParserNg() {
-    this.permState = new DaemonicParserState();
+  public ParserNg(TypeCoercerFactory typeCoercerFactory, ConstructorArgMarshaller marshaller) {
+    this.permState = new DaemonicParserState(typeCoercerFactory, marshaller);
+    this.marshaller = marshaller;
   }
 
   public ImmutableList<Map<String, Object>> getRawTargetNodes(
@@ -74,7 +78,9 @@ public class ParserNg {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    try (PerBuildState state = new PerBuildState(permState, eventBus, cell, enableProfiling)) {
+    try (
+        PerBuildState state =
+            new PerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
       return state.getAllRawNodes(cell, buildFile);
     }
   }
@@ -91,7 +97,9 @@ public class ParserNg {
         cell.getRoot(),
         buildFile);
 
-    try (PerBuildState state = new PerBuildState(permState, eventBus, cell, enableProfiling)) {
+    try (
+        PerBuildState state =
+            new PerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -103,7 +111,9 @@ public class ParserNg {
       boolean enableProfiling,
       BuildTarget target)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    try (PerBuildState state = new PerBuildState(permState, eventBus, cell, enableProfiling)) {
+    try (
+        PerBuildState state =
+            new PerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
       return state.getTargetNode(target);
     } catch (RuntimeException e) {
       throw e;
@@ -155,7 +165,9 @@ public class ParserNg {
     eventBus.post(parseStart);
 
     TargetGraph targetGraph = null;
-    try (PerBuildState state = new PerBuildState(permState, eventBus, rootCell, enableProfiling)) {
+    try (
+        PerBuildState state =
+            new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       final AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
           new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
 
@@ -252,7 +264,9 @@ public class ParserNg {
 
     TargetGraph graph = null;
 
-    try (PerBuildState state = new PerBuildState(permState, eventBus, rootCell, enableProfiling)) {
+    try (
+        PerBuildState state =
+            new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       // Resolve the target node specs to the build targets the represent.
       ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
           state,
@@ -305,7 +319,9 @@ public class ParserNg {
       boolean enableProfiling,
       TargetNodeSpec spec)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
-    try (PerBuildState state = new PerBuildState(permState, eventBus, rootCell, enableProfiling)) {
+    try (
+        PerBuildState state =
+            new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       return resolveTargetSpec(state, rootCell, spec);
     }
   }

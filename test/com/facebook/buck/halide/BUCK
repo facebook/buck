@@ -8,6 +8,7 @@ java_library(
     '//src/com/facebook/buck/halide:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules/coercer:coercer',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/cxx:testutil',
     '//test/com/facebook/buck/rules:testutil',

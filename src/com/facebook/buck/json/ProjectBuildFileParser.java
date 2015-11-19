@@ -92,6 +92,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
+  private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final BserDeserializer bserDeserializer;
@@ -106,11 +107,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   protected ProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
+      ConstructorArgMarshaller marshaller,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor) {
     this.pathToBuckPy = Optional.absent();
     this.options = options;
+    this.marshaller = marshaller;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
@@ -503,8 +506,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
 
-      ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
-      BuckPyFunction function = new BuckPyFunction(inspector);
+      BuckPyFunction function = new BuckPyFunction(marshaller);
       for (Description<?> description : descriptions) {
         out.write(function.toPythonFunction(
             description.getBuildRuleType(),

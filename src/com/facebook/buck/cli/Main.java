@@ -27,10 +27,10 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -54,8 +54,11 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
@@ -237,8 +240,11 @@ public final class Main {
                   ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
+      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
       this.parser = Parser.createBuildFileParser(
           cell,
+          typeCoercerFactory,
+          new ConstructorArgMarshaller(typeCoercerFactory),
           allowSymlinks);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
@@ -843,8 +849,11 @@ public final class Main {
       }
 
       if (parser == null) {
+        TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
         parser = Parser.createBuildFileParser(
             rootCell,
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
             allowSymlinks);
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
