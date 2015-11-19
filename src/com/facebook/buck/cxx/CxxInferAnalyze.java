@@ -22,7 +22,9 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
@@ -63,13 +65,14 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     this.inferTools = inferTools;
   }
 
-  private ImmutableSortedSet<Path> getSpecsOfAllDeps() {
+  private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
     return FluentIterable.from(captureAndAnalyzeRules.allAnalyzeRules)
         .transform(
-            new Function<CxxInferAnalyze, Path>() {
+            new Function<CxxInferAnalyze, SourcePath>() {
               @Override
-              public Path apply(CxxInferAnalyze input) {
-                return input.getSpecsDir();
+              public SourcePath apply(CxxInferAnalyze input) {
+                return new BuildTargetSourcePath(
+                    input.getBuildTarget(), input.getSpecsDir());
               }
             }
         )
@@ -84,15 +87,15 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     return captureAndAnalyzeRules.allAnalyzeRules;
   }
 
-  private ImmutableList<String> getAnalyzeCommand(ImmutableSortedSet<Path> specsDirs) {
+  private ImmutableList<String> getAnalyzeCommand(ImmutableSortedSet<SourcePath> specsDirs) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder
         .addAll(inferTools.topLevel.getCommandPrefix(getResolver()))
         .add("--project_root", getProjectFilesystem().getRootPath().toString())
         .add("--out", resultsDir.toString());
 
-    for (Path specDir : specsDirs) {
-      commandBuilder.add("--specs-dir", getProjectFilesystem().resolve(specDir).toString());
+    for (SourcePath specDir : specsDirs) {
+      commandBuilder.add("--specs-dir", getResolver().getAbsolutePath(specDir).toString());
     }
 
     commandBuilder.add("--", "analyze");
