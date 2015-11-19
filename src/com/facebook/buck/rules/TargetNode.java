@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -302,6 +303,24 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           constructorArg,
           typeCoercerFactory,
           ruleFactoryParams,
+          declaredDeps,
+          visibilityPatterns,
+          cellRoots);
+    } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
+      // This is extremely unlikely to happen --- we've already created a TargetNode with these
+      // values before.
+      throw new RuntimeException(e);
+    }
+  }
+
+  public TargetNode<T> withFlavors(Iterable<Flavor> flavors) {
+    try {
+      return new TargetNode<>(
+          rawInputsHashCode,
+          description,
+          constructorArg,
+          typeCoercerFactory,
+          ruleFactoryParams.withFlavors(flavors),
           declaredDeps,
           visibilityPatterns,
           cellRoots);

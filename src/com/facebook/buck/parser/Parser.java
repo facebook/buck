@@ -56,6 +56,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -610,6 +611,7 @@ public class Parser {
       final BuckEventBus eventBus) throws IOException, InterruptedException {
 
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
     final Optional<BuckEventBus> eventBusOptional = Optional.of(eventBus);
 
@@ -692,6 +694,15 @@ public class Parser {
             TargetNode<?> targetNode = getTargetNode(buildTarget);
             Preconditions.checkNotNull(targetNode, "No target node found for %s", buildTarget);
             graph.addNode(targetNode);
+            MoreMaps.putCheckEquals(index, targetNode.getBuildTarget(), targetNode);
+            if (targetNode.getBuildTarget().isFlavored()) {
+              BuildTarget unflavoredBuildTarget = BuildTarget.of(
+                  targetNode.getBuildTarget().getUnflavoredBuildTarget());
+              MoreMaps.putCheckEquals(
+                  index,
+                  unflavoredBuildTarget,
+                  getTargetNode(unflavoredBuildTarget));
+            }
             for (BuildTarget target : targetNode.getDeps()) {
               graph.addEdge(targetNode, Preconditions.checkNotNull(getTargetNode(target)));
             }
@@ -708,7 +719,7 @@ public class Parser {
       throw new HumanReadableException(e.getMessage());
     }
 
-    return new TargetGraph(graph);
+    return new TargetGraph(graph, ImmutableMap.copyOf(index));
   }
 
   private synchronized void parseBuildFileContainingTarget(

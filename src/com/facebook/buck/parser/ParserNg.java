@@ -34,17 +34,20 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -156,17 +159,18 @@ public class ParserNg {
   public TargetGraph buildTargetGraph(
       final BuckEventBus eventBus,
       final Cell rootCell,
-      boolean enableProfiling,
+      final boolean enableProfiling,
       final Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
     TargetGraph targetGraph = null;
     try (
-        PerBuildState state =
+        final PerBuildState state =
             new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       final AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
           new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
@@ -219,12 +223,18 @@ public class ParserNg {
             protected void onNodeExplored(BuildTarget target)
                 throws IOException, InterruptedException {
               try {
-                TargetNode<?> targetNode = null;
-
-                targetNode = state.getTargetNode(target);
+                TargetNode<?> targetNode = state.getTargetNode(target);
 
                 Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
                 graph.addNode(targetNode);
+                MoreMaps.putCheckEquals(index, target, targetNode);
+                if (target.isFlavored()) {
+                  BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+                  MoreMaps.putCheckEquals(
+                      index,
+                      unflavoredTarget,
+                      state.getTargetNode(unflavoredTarget));
+                }
                 for (BuildTarget dep : targetNode.getDeps()) {
                   graph.addEdge(targetNode, state.getTargetNode(dep));
                 }
@@ -240,7 +250,7 @@ public class ParserNg {
           };
 
       traversal.traverse(toExplore);
-      targetGraph = new TargetGraph(graph);
+      targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
       return targetGraph;
     } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());

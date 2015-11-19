@@ -42,7 +42,7 @@ public class TargetGraphFactory {
         graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
       }
     }
-    return new TargetGraph(graph);
+    return new TargetGraph(graph, map);
   }
 
   public static TargetGraph newInstance(TargetNode<?>... nodes) {
