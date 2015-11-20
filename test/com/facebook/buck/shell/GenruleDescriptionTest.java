@@ -108,7 +108,7 @@ public class GenruleDescriptionTest {
   }
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule transitiveDep =

@@ -21,8 +21,9 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.python.PythonPlatform;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,10 +32,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -122,11 +122,9 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
-        targetGraph,
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),
@@ -138,21 +136,19 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     Pair<Flavor, HeaderVisibility> key = new Pair<>(cxxPlatform.getFlavor(), headerVisibility);
     ImmutableMap<BuildTarget, CxxPreprocessorInput> result = cxxPreprocessorInputCache.get(key);
     if (result == null) {
       Map<BuildTarget, CxxPreprocessorInput> builder = Maps.newLinkedHashMap();
       builder.put(
           getBuildTarget(),
-          getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
+          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
       for (BuildRule dep : getDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(
               ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
-                  targetGraph,
                   cxxPlatform,
                   headerVisibility));
         }
@@ -176,9 +172,8 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) {
+      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
 
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
@@ -199,7 +194,6 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
     if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
       BuildRule rule =
           requireBuildRule(
-              targetGraph,
               cxxPlatform.getFlavor(),
               type == Linker.LinkableDepType.STATIC ?
                   CxxDescriptionEnhancer.STATIC_FLAVOR :
@@ -215,7 +209,6 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
     } else {
       BuildRule rule =
           requireBuildRule(
-              targetGraph,
               cxxPlatform.getFlavor(),
               CxxDescriptionEnhancer.SHARED_FLAVOR);
       linkerArgsBuilder.add(
@@ -229,10 +222,8 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
         Preconditions.checkNotNull(libraries));
   }
 
-  public BuildRule requireBuildRule(
-      TargetGraph targetGraph,
-      Flavor ... flavors) {
-    return CxxDescriptionEnhancer.requireBuildRule(targetGraph, params, ruleResolver, flavors);
+  public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {
+    return ruleResolver.requireRule(getBuildTarget().withFlavors(flavors));
   }
 
   @Override
@@ -242,9 +233,8 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
-      TargetGraph targetGraph,
       PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     if (headerOnly.apply(cxxPlatform)) {
       return PythonPackageComponents.of();
     }
@@ -260,7 +250,6 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
         getBuildTarget(),
         cxxPlatform);
     BuildRule sharedLibraryBuildRule = requireBuildRule(
-        targetGraph,
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
@@ -290,8 +279,7 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     if (headerOnly.apply(cxxPlatform)) {
       return ImmutableMap.of();
     }
@@ -307,7 +295,6 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
         getBuildTarget(),
         cxxPlatform);
     BuildRule sharedLibraryBuildRule = requireBuildRule(
-        targetGraph,
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(

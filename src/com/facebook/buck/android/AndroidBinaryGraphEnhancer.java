@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -65,7 +65,6 @@ public class AndroidBinaryGraphEnhancer {
   public static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
       ImmutableFlavor.of("package_string_assets");
 
-  private final TargetGraph targetGraph;
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
@@ -95,7 +94,6 @@ public class AndroidBinaryGraphEnhancer {
   private final ListeningExecutorService dxExecutorService;
 
   AndroidBinaryGraphEnhancer(
-      TargetGraph targetGraph,
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
@@ -120,7 +118,6 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Integer> xzCompressionLevel,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService) {
-    this.targetGraph = targetGraph;
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -153,7 +150,7 @@ public class AndroidBinaryGraphEnhancer {
         cpuFilters);
   }
 
-  AndroidGraphEnhancementResult createAdditionalBuildables() {
+  AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {
     ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
     enhancedDeps.addAll(originalDeps);
 
@@ -315,7 +312,6 @@ public class AndroidBinaryGraphEnhancer {
         pathResolver.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
     Optional<CopyNativeLibraries> copyNativeLibraries = nativeLibsEnhancer.getCopyNativeLibraries(
-        targetGraph,
         packageableCollection);
     if (copyNativeLibraries.isPresent()) {
       ruleResolver.addToIndex(copyNativeLibraries.get());

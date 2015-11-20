@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -82,7 +83,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     JavacOptions.Builder javacOptionsBuilder =
@@ -99,7 +100,6 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     JavacOptions javacOptions = javacOptionsBuilder.build();
 
     CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
-        targetGraph,
         params,
         args.useCxxLibraries,
         pathResolver,
@@ -211,14 +211,13 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public final ImmutableMap<String, String> nativeLibsEnvironment;
 
     public CxxLibraryEnhancement(
-        TargetGraph targetGraph,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
         SourcePathResolver pathResolver,
-        CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       if (useCxxLibraries.or(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(targetGraph, params, pathResolver, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.
@@ -237,12 +236,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     }
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
-        TargetGraph targetGraph,
         BuildRuleParams buildRuleParams,
         SourcePathResolver pathResolver,
-        CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-          targetGraph,
           buildRuleParams,
           pathResolver,
           cxxPlatform,

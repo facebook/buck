@@ -62,7 +62,7 @@ public class HalideLibraryDescriptionTest {
   }
 
   @Test
-  public void testCreateBuildRule() {
+  public void testCreateBuildRule() throws Exception {
     // Set up a #halide-compiler rule, then set up a halide_library rule, and
     // check that the library rule depends on the compiler rule.
     BuildTarget compilerTarget = BuildTargetFactory
@@ -70,8 +70,6 @@ public class HalideLibraryDescriptionTest {
       .withFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:rule");
 
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     HalideLibraryBuilder compilerBuilder =
       new HalideLibraryBuilder(compilerTarget);
@@ -83,6 +81,8 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
       compilerBuilder.build(),
       libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
     CxxBinary compiler = (CxxBinary) compilerBuilder.build(
       resolver,
       filesystem,
@@ -123,13 +123,11 @@ public class HalideLibraryDescriptionTest {
         .addSystemIncludeRoots(headerRoot)
         .build(),
       lib.getCxxPreprocessorInput(
-        targetGraph,
         cxxPlatform,
         HeaderVisibility.PUBLIC));
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input = lib.getNativeLinkableInput(
-        targetGraph,
         cxxPlatform,
         Linker.LinkableDepType.STATIC);
     BuildRule buildRule =

@@ -28,6 +28,7 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.buck.util.Ansi;
@@ -120,13 +120,12 @@ public class OCamlRuleBuilder {
 
   public static AbstractBuildRule createBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
-      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
       boolean isLibrary,
       ImmutableList<String> argFlags,
-      final ImmutableList<String> linkerFlags) {
+      final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     boolean noYaccOrLexSources = FluentIterable.from(srcs).transform(OCamlSource.TO_SOURCE_PATH)
         .filter(OCamlUtil.sourcePathExt(
@@ -137,7 +136,6 @@ public class OCamlRuleBuilder {
     if (noYaccOrLexSources) {
       return createFineGrainedBuildRule(
           ocamlBuckConfig,
-          targetGraph,
           params,
           resolver,
           srcs,
@@ -147,7 +145,6 @@ public class OCamlRuleBuilder {
     } else {
       return createBulkBuildRule(
           ocamlBuckConfig,
-          targetGraph,
           params,
           resolver,
           srcs,
@@ -176,11 +173,9 @@ public class OCamlRuleBuilder {
   }
 
   private static NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      Iterable<BuildRule> deps) {
+      Iterable<BuildRule> deps) throws NoSuchBuildTargetException {
     return NativeLinkables.getTransitiveNativeLinkableInput(
-        targetGraph,
         cxxPlatform,
         deps,
         Linker.LinkableDepType.STATIC,
@@ -189,18 +184,16 @@ public class OCamlRuleBuilder {
 
   public static AbstractBuildRule createBulkBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
-      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
       boolean isLibrary,
       ImmutableList<String> argFlags,
-      final ImmutableList<String> linkerFlags) {
+      final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps;
     try {
       cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-              targetGraph,
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -221,7 +214,7 @@ public class OCamlRuleBuilder {
     NativeLinkableInput linkableInput =
         getLinkableInput(params.getDeps());
     NativeLinkableInput nativeLinkableInput =
-        getNativeLinkableInput(targetGraph, ocamlBuckConfig.getCxxPlatform(), params.getDeps());
+        getNativeLinkableInput(ocamlBuckConfig.getCxxPlatform(), params.getDeps());
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
 
@@ -323,18 +316,16 @@ public class OCamlRuleBuilder {
 
   public static AbstractBuildRule createFineGrainedBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
-      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
       boolean isLibrary,
       ImmutableList<String> argFlags,
-      final ImmutableList<String> linkerFlags) {
+      final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps;
     try {
       cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-              targetGraph,
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -355,7 +346,7 @@ public class OCamlRuleBuilder {
     NativeLinkableInput linkableInput =
         getLinkableInput(params.getDeps());
     NativeLinkableInput nativeLinkableInput =
-        getNativeLinkableInput(targetGraph, ocamlBuckConfig.getCxxPlatform(), params.getDeps());
+        getNativeLinkableInput(ocamlBuckConfig.getCxxPlatform(), params.getDeps());
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
 

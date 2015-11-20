@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -516,7 +517,7 @@ public class ThriftCxxEnhancerTest {
   }
 
   @Test
-  public void createBuildRule() {
+  public void createBuildRule() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -565,7 +566,7 @@ public class ThriftCxxEnhancerTest {
   }
 
   @Test
-  public void cppSrcsAndHeadersArePropagated() {
+  public void cppSrcsAndHeadersArePropagated() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -609,7 +610,7 @@ public class ThriftCxxEnhancerTest {
               TargetGraph targetGraph,
               BuildRuleParams params,
               BuildRuleResolver resolver,
-              A args) {
+              A args) throws NoSuchBuildTargetException {
             assertThat(args.headerNamespace, Matchers.equalTo(Optional.of(cppHeaderNamespace)));
             for (Map.Entry<String, SourcePath> header : cppHeaders.entrySet()) {
               assertThat(

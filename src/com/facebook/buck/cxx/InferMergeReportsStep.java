@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -81,7 +82,8 @@ class InferMergeReportsStep implements Step {
     return "Merge Infer Reports";
   }
 
-  private class InferReportMerger {
+  @VisibleForTesting
+  class InferReportMerger {
 
     private ImmutableSortedSet<Path> reportsToMerge;
     private JsonWriter destinationWriter;

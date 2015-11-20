@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -203,7 +204,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       BuildRuleResolver resolver,
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
-      ImmutableSortedSet<BuildRule> deps) {
+      ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 

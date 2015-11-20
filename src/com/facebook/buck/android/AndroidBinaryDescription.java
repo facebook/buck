@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -118,7 +119,7 @@ public class AndroidBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     ResourceCompressionMode compressionMode = getCompressionMode(args);
 
     BuildTarget target = params.getBuildTarget();
@@ -175,7 +176,6 @@ public class AndroidBinaryDescription
         new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
 
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        targetGraph,
         params,
         resolver,
         compressionMode,

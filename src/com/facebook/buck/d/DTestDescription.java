@@ -18,6 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -61,7 +62,7 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     BuildTarget target = params.getBuildTarget();
 
@@ -78,8 +79,7 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
         ImmutableList.of("-unittest"),
         buildRuleResolver,
         cxxPlatform,
-        dBuckConfig,
-        targetGraph);
+        dBuckConfig);
 
     return new DTest(
         params.appendExtraDeps(ImmutableList.of(binaryRule)),

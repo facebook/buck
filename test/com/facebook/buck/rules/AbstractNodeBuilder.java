@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -37,7 +36,6 @@ import com.google.common.hash.Hashing;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -85,29 +83,19 @@ public abstract class AbstractNodeBuilder<A> {
     populateWithDefaultValues(this.arg);
   }
 
-  public final BuildRule build(BuildRuleResolver resolver) {
+  public final BuildRule build(BuildRuleResolver resolver) throws NoSuchBuildTargetException {
     return build(resolver, new FakeProjectFilesystem(), TargetGraph.EMPTY);
   }
 
-  public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem) {
+  public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem)
+      throws NoSuchBuildTargetException {
     return build(resolver, filesystem, TargetGraph.EMPTY);
   }
 
   public final BuildRule build(
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
-      Collection<TargetNode<?>> targetNodes) {
-    targetNodes.add(build());
-    return build(
-        resolver,
-        filesystem,
-        TargetGraphFactory.newInstance(ImmutableSet.copyOf(targetNodes)));
-  }
-
-  public final BuildRule build(
-      BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
-      TargetGraph targetGraph) {
+      TargetGraph targetGraph) throws NoSuchBuildTargetException {
 
     // The BuildRule determines its deps by extracting them from the rule parameters.
     BuildRuleParams params = createBuildRuleParams(resolver, filesystem);

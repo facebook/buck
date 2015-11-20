@@ -227,7 +227,7 @@ public class AndroidResourceTest {
   }
 
   @Test
-  public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws IOException {
+  public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

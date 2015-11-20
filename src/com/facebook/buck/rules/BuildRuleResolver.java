@@ -78,7 +78,7 @@ public class BuildRuleResolver {
     if (rule != null) {
       return rule;
     }
-    TargetNode<?> node = Preconditions.checkNotNull(targetGraph.get(target));
+    TargetNode<?> node = targetGraph.get(target);
     Preconditions.checkNotNull(
         node,
         "Required target for rule '%s' was not found in the target graph.",

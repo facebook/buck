@@ -27,6 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -157,9 +158,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
    *     file and also appends relevant preprocessor and linker flags to use C/C++ library deps.
    */
   private Pair<String, Iterable<BuildRule>> generateMakefile(
-      TargetGraph targetGraph,
-      final BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      BuildRuleParams params,
+      BuildRuleResolver resolver) throws NoSuchBuildTargetException {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -175,7 +175,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         // NDK library rules.
         cxxPreprocessorInput = CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                targetGraph,
                 cxxPlatform,
                 params.getDeps(),
                 Predicates.instanceOf(NdkLibrary.class)));
@@ -212,7 +211,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // NDK library rules.
       NativeLinkableInput nativeLinkableInput =
           NativeLinkables.getTransitiveNativeLinkableInput(
-              targetGraph,
               cxxPlatform,
               params.getDeps(),
               Linker.LinkableDepType.SHARED,
@@ -343,9 +341,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
-    Pair<String, Iterable<BuildRule>> makefilePair =
-        generateMakefile(targetGraph, params, resolver);
+      A args) throws NoSuchBuildTargetException {
+    Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
     return new NdkLibrary(
         params.appendExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder()

@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 public class PythonLibraryDescriptionTest {
 
   @Test
-  public void baseModule() {
+  public void baseModule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     String sourceName = "main.py";
     SourcePath source = new FakeSourcePath("foo/" + sourceName);
@@ -78,7 +78,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void platformSrcs() {
+  public void platformSrcs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = new FakeSourcePath("foo/a.py");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
@@ -103,7 +103,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void platformResources() {
+  public void platformResources() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");

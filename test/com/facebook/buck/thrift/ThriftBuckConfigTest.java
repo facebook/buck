@@ -97,7 +97,7 @@ public class ThriftBuckConfigTest {
   }
 
   @Test
-  public void getCompilerSucceedsIfJustCompilerTargetIsSet() {
+  public void getCompilerSucceedsIfJustCompilerTargetIsSet() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ShBinary thriftRule =

@@ -53,7 +53,7 @@ public class ArchivesTest {
       new FakeSourcePath("c.o"));
 
   @Test
-  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");

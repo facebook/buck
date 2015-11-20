@@ -28,7 +28,8 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.google.common.collect.ImmutableMap;
 
-public class HalideLibraryBuilder extends AbstractCxxSourceBuilder<HalideLibraryDescription.Arg> {
+public class HalideLibraryBuilder extends
+    AbstractCxxSourceBuilder<HalideLibraryDescription.Arg, HalideLibraryBuilder> {
   public HalideLibraryBuilder(
     BuildTarget target,
     HalideBuckConfig halideBuckConfig,
@@ -58,11 +59,17 @@ public class HalideLibraryBuilder extends AbstractCxxSourceBuilder<HalideLibrary
   public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
     Flavor defaultFlavor = ImmutableFlavor.of("default");
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-    return new FlavorDomain<CxxPlatform>(
+    return new FlavorDomain<>(
         "C/C++ Platform",
         ImmutableMap.<Flavor, CxxPlatform>builder()
           .put(defaultFlavor, cxxPlatform)
           .put(cxxPlatform.getFlavor(), cxxPlatform)
           .build());
   }
+
+  @Override
+  protected HalideLibraryBuilder getThis() {
+    return this;
+  }
+
 }

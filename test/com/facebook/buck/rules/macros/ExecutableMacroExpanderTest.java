@@ -52,7 +52,7 @@ import java.nio.file.Paths;
 
 public class ExecutableMacroExpanderTest {
 
-  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
+  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) throws Exception {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildRule javaLibrary = JavaLibraryBuilder
@@ -69,7 +69,7 @@ public class ExecutableMacroExpanderTest {
   }
 
   @Test
-  public void testReplaceBinaryBuildRuleRefsInCmd() throws MacroException {
+  public void testReplaceBinaryBuildRuleRefsInCmd() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -101,7 +101,7 @@ public class ExecutableMacroExpanderTest {
   }
 
   @Test
-  public void testReplaceRelativeBinaryBuildRuleRefsInCmd() throws MacroException {
+  public void testReplaceRelativeBinaryBuildRuleRefsInCmd() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule = createSampleJavaBinaryRule(ruleResolver);
@@ -130,7 +130,7 @@ public class ExecutableMacroExpanderTest {
   }
 
   @Test
-  public void testDepsGenrule() throws MacroException {
+  public void testDepsGenrule() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule = createSampleJavaBinaryRule(ruleResolver);
@@ -160,7 +160,7 @@ public class ExecutableMacroExpanderTest {
   }
 
   @Test
-  public void testBuildTimeDependencies() throws MacroException {
+  public void testBuildTimeDependencies() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());

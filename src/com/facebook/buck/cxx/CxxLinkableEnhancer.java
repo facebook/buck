@@ -20,11 +20,11 @@ import static com.google.common.base.Predicates.notNull;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -65,7 +65,6 @@ public class CxxLinkableEnhancer {
    * and a dependency tree of {@link NativeLinkable} dependencies.
    */
   public static CxxLink createCxxLinkableBuildRule(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       final SourcePathResolver resolver,
@@ -78,7 +77,7 @@ public class CxxLinkableEnhancer {
       Iterable<? extends BuildRule> nativeLinkableDeps,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      ImmutableSet<FrameworkPath> frameworks) {
+      ImmutableSet<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -90,22 +89,18 @@ public class CxxLinkableEnhancer {
     Linker linker = cxxPlatform.getLd();
 
     // Collect and topologically sort our deps that contribute to the link.
-    NativeLinkableInput linkableInput =
-        NativeLinkableInput.concat(
-            FluentIterable
-                .from(
-                    Maps.filterKeys(
-                        NativeLinkables.getNativeLinkables(
-                            cxxPlatform,
-                            FluentIterable.from(nativeLinkableDeps)
-                                .filter(NativeLinkable.class),
-                            depType),
-                        Predicates.not(Predicates.in(blacklist))).values())
-                .transform(
-                    NativeLinkables.getNativeLinkableInputFunction(
-                        targetGraph,
-                        cxxPlatform,
-                        depType)));
+    ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
+    for (NativeLinkable nativeLinkable : Maps.filterKeys(
+        NativeLinkables.getNativeLinkables(
+            cxxPlatform,
+            FluentIterable.from(nativeLinkableDeps)
+                .filter(NativeLinkable.class),
+            depType),
+        Predicates.not(Predicates.in(blacklist))).values()) {
+      nativeLinkableInputs.add(
+          NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
+    }
+    NativeLinkableInput linkableInput = NativeLinkableInput.concat(nativeLinkableInputs.build());
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();

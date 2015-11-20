@@ -65,7 +65,6 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,7 +83,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
+  public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws Exception {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .build(
@@ -104,7 +103,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
+  public void shouldSetOutToNameParamValueIfSrcIsSet() throws Exception {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setOut("fish")
@@ -125,7 +124,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
+  public void shouldSetOutAndSrcAndNameParametersSeparately() throws Exception {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
@@ -147,7 +146,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetInputsFromSourcePaths() {
+  public void shouldSetInputsFromSourcePaths() throws Exception {
     ExportFileBuilder builder = ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new FakeSourcePath("chips"))
         .setOut("cake");
@@ -180,7 +179,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void getOutputName() {
+  public void getOutputName() throws Exception {
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setOut("cake")
         .build(
@@ -192,7 +191,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws IOException {
+  public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws Exception {
     Path root = Files.createTempDirectory("root");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
     Path temp = Paths.get("example_file");

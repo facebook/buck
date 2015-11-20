@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -34,12 +35,11 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 public class KeystoreTest {
 
-  private static Keystore createKeystoreRuleForTest() {
+  private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     return (Keystore) KeystoreBuilder.createBuilder(
@@ -50,7 +50,7 @@ public class KeystoreTest {
   }
 
   @Test
-  public void testObservers() {
+  public void testObservers() throws Exception {
     Keystore keystore = createKeystoreRuleForTest();
     assertEquals("keystore", keystore.getType());
 
@@ -60,7 +60,7 @@ public class KeystoreTest {
   }
 
   @Test
-  public void testBuildInternal() throws IOException {
+  public void testBuildInternal() throws Exception {
     BuildContext buildContext = createMock(BuildContext.class);
 
     replay(buildContext);

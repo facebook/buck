@@ -58,7 +58,7 @@ public class RemoteFileTest {
   public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void ensureOutputIsAddedToBuildableContextSoItIsCached() {
+  public void ensureOutputIsAddedToBuildableContextSoItIsCached() throws Exception {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
     RemoteFile remoteFile =

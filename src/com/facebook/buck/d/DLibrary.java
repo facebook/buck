@@ -22,16 +22,16 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,16 +74,13 @@ public class DLibrary extends DCompileBuildRule implements NativeLinkable {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) {
+      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     BuildRule buildRule =
-        CxxDescriptionEnhancer.requireBuildRule(
-            targetGraph,
-            params,
-            buildRuleResolver,
-            cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.STATIC_FLAVOR);
+        buildRuleResolver.requireRule(
+            getBuildTarget().withFlavors(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.STATIC_FLAVOR));
     return NativeLinkableInput.of(
         ImmutableList.of(
             new SourcePathArg(
@@ -99,9 +96,7 @@ public class DLibrary extends DCompileBuildRule implements NativeLinkable {
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
 }

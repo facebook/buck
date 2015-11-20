@@ -2134,7 +2134,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   @Test
-  public void getNumRulesToBuild() {
+  public void getNumRulesToBuild() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule3 =

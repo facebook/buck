@@ -33,7 +33,7 @@ import org.junit.Test;
 public class AndroidTransitiveDependencyGraphTest {
 
   @Test
-  public void findManifestFilesWithTransitiveDeps() {
+  public void findManifestFilesWithTransitiveDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep3 =

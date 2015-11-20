@@ -32,7 +32,7 @@ import org.junit.Test;
 public class ShBinaryDescriptionTest {
 
   @Test
-  public void mainIsIncludedInCommand() {
+  public void mainIsIncludedInCommand() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     FakeSourcePath main = new FakeSourcePath("main.sh");
@@ -46,7 +46,7 @@ public class ShBinaryDescriptionTest {
   }
 
   @Test
-  public void resourcesAreIncludedInCommand() {
+  public void resourcesAreIncludedInCommand() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     FakeSourcePath main = new FakeSourcePath("main.sh");

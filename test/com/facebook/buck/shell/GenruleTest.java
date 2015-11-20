@@ -222,7 +222,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testDepsEnvironmentVariableIsComplete() {
+  public void testDepsEnvironmentVariableIsComplete() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -274,7 +274,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws IOException {
+  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -310,7 +310,8 @@ public class GenruleTest {
     assertEquals(Paths.get(baseTmpPath + "other/place.txt"), linkCmd.getTarget());
   }
 
-  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
+  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver)
+      throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildRule javaLibrary = JavaLibraryBuilder
@@ -327,7 +328,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() {
+  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
@@ -363,7 +364,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
+  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
@@ -379,7 +380,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGetShellCommand() {
+  public void testGetShellCommand() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     String bash = "rm -rf /usr";
@@ -437,7 +438,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGetOutputNameMethod() {
+  public void testGetOutputNameMethod() throws Exception {
     {
       String name = "out.txt";
       Genrule genrule = (Genrule) GenruleBuilder
@@ -463,7 +464,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void thatChangingOutChangesRuleKey() {
+  public void thatChangingOutChangesRuleKey() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -490,7 +491,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void inputBasedRuleKeyLocationMacro() throws IOException {
+  public void inputBasedRuleKeyLocationMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -564,7 +565,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void inputBasedRuleKeyExecutableMacro() throws IOException {
+  public void inputBasedRuleKeyExecutableMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -641,7 +642,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void inputBasedRuleKeyClasspathMacro() throws IOException {
+  public void inputBasedRuleKeyClasspathMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))

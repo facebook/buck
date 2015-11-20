@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -54,7 +53,7 @@ import java.nio.file.Paths;
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
   @Test
-  public void testNdkLibrary() {
+  public void testNdkLibrary() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
@@ -86,7 +85,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableSet.<BuildRule>of(ndkLibrary)));
 
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
-        enhancer.getCopyNativeLibraries(TargetGraph.EMPTY, collector.build());
+        enhancer.getCopyNativeLibraries(collector.build());
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
     assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
@@ -102,10 +101,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testCxxLibrary() {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
+  public void testCxxLibrary() throws Exception {
 
     NdkCxxPlatform ndkCxxPlatform =
         NdkCxxPlatform.builder()
@@ -120,12 +116,15 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
         .build();
 
-    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> cxxLibraryBuilder = new CxxLibraryBuilder(
+    CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(
         BuildTargetFactory.newInstance("//:cxxlib"))
         .setSoname("somelib.so")
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
     TargetNode<CxxLibraryDescription.Arg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(
         ruleResolver,
         new FakeProjectFilesystem(),
@@ -156,7 +155,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
-        enhancer.getCopyNativeLibraries(targetGraph, packageableCollection);
+        enhancer.getCopyNativeLibraries(packageableCollection);
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
     assertThat(

@@ -19,14 +19,15 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.ClosureException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -83,10 +84,9 @@ public class CxxPreprocessables {
    * found while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      final TargetGraph targetGraph,
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final Predicate<Object> traverse) {
+      final Predicate<Object> traverse) throws NoSuchBuildTargetException {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -100,28 +100,34 @@ public class CxxPreprocessables {
           public ImmutableSet<BuildRule> visit(BuildRule rule) {
             if (rule instanceof CxxPreprocessorDep) {
               CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-              deps.putAll(
-                  dep.getTransitiveCxxPreprocessorInput(
-                      targetGraph,
-                      cxxPlatform,
-                      HeaderVisibility.PUBLIC));
+              try {
+                deps.putAll(
+                    dep.getTransitiveCxxPreprocessorInput(
+                        cxxPlatform,
+                        HeaderVisibility.PUBLIC));
+              } catch (NoSuchBuildTargetException e) {
+                throw new ClosureException(e);
+              }
               return ImmutableSet.of();
             }
             return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
           }
         };
-    visitor.start();
+    try {
+      visitor.start();
+    } catch (ClosureException e) {
+      throw (NoSuchBuildTargetException) e.getException();
+    }
+
 
     // Grab the cxx preprocessor inputs and return them.
     return deps.values();
   }
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      TargetGraph targetGraph,
       final CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs) {
+      Iterable<? extends BuildRule> inputs) throws NoSuchBuildTargetException {
     return getTransitiveCxxPreprocessorInput(
-        targetGraph,
         cxxPlatform,
         inputs,
         Predicates.alwaysTrue());
@@ -170,20 +176,17 @@ public class CxxPreprocessables {
    * Builds a {@link CxxPreprocessorInput} for a rule.
    */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Flavor flavor,
       HeaderVisibility headerVisibility,
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Iterable<FrameworkPath> frameworks) {
-    BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
-        targetGraph,
-        params,
-        ruleResolver,
-        flavor,
-        CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility));
+      Iterable<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
+    BuildRule rule = ruleResolver.requireRule(
+        params.getBuildTarget().withFlavors(
+            flavor,
+            CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility)));
     Preconditions.checkState(rule instanceof HeaderSymlinkTree);
     HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder()

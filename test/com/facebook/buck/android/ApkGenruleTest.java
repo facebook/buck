@@ -86,7 +86,7 @@ public class ApkGenruleTest {
 
   private void createSampleAndroidBinaryRule(
       BuildRuleResolver ruleResolver,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem) throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");

@@ -49,7 +49,7 @@ import java.nio.file.Paths;
 public class AndroidInstrumentationApkTest {
 
   @Test
-  public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
+  public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

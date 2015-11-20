@@ -41,7 +41,7 @@ import java.nio.file.Paths;
 public class ApkGenruleDescriptionTest {
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

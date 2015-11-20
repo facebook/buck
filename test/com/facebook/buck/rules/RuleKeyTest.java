@@ -41,7 +41,6 @@ import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -57,7 +56,7 @@ public class RuleKeyTest {
    * Ensure that build rules with the same inputs but different deps have unique RuleKeys.
    */
   @Test
-  public void testRuleKeyDependsOnDeps() throws IOException {
+  public void testRuleKeyDependsOnDeps() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache = new DefaultFileHashCache(filesystem);
     BuildRuleResolver ruleResolver1 =

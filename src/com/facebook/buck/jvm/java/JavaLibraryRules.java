@@ -21,15 +21,16 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.core.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.ClosureException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -94,26 +95,33 @@ public class JavaLibraryRules {
    *     a map from their system-specific library names to their {@link SourcePath} objects.
    */
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
-      final TargetGraph targetGraph,
       Iterable<BuildRule> deps,
-      final CxxPlatform cxxPlatform) {
+      final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     final ImmutableMap.Builder<String, SourcePath> libraries = ImmutableMap.builder();
 
-    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof JavaNativeLinkable) {
-          JavaNativeLinkable linkable = (JavaNativeLinkable) rule;
-          libraries.putAll(linkable.getSharedLibraries(targetGraph, cxxPlatform));
+    try {
+      new AbstractBreadthFirstTraversal<BuildRule>(deps) {
+        @Override
+        public ImmutableSet<BuildRule> visit(BuildRule rule) {
+          if (rule instanceof JavaNativeLinkable) {
+            JavaNativeLinkable linkable = (JavaNativeLinkable) rule;
+            try {
+              libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
+            } catch (NoSuchBuildTargetException e) {
+              throw new ClosureException(e);
+            }
+          }
+          if (rule instanceof JavaNativeLinkable ||
+              rule instanceof JavaLibrary) {
+            return rule.getDeps();
+          } else {
+            return ImmutableSet.of();
+          }
         }
-        if (rule instanceof JavaNativeLinkable ||
-            rule instanceof JavaLibrary) {
-          return rule.getDeps();
-        } else {
-          return ImmutableSet.of();
-        }
-      }
-    }.start();
+      }.start();
+    } catch (ClosureException e) {
+      throw (NoSuchBuildTargetException) e.getException();
+    }
 
     return libraries.build();
   }

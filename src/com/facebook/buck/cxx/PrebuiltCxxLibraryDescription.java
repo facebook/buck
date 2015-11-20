@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -244,11 +245,10 @@ public class PrebuiltCxxLibraryDescription
    * @return a {@link CxxLink} rule for a shared library version of this prebuilt C/C++ library.
    */
   private <A extends Arg> BuildRule createSharedLibraryBuildRule(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
@@ -271,7 +271,6 @@ public class PrebuiltCxxLibraryDescription
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath = BuildTargets.getGenPath(sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        targetGraph,
         cxxPlatform,
         params,
         pathResolver,
@@ -304,7 +303,7 @@ public class PrebuiltCxxLibraryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      final A args) {
+      final A args) throws NoSuchBuildTargetException {
     if (args.includeDirs.get().size() > 0) {
       LOG.warn(
           "Build target %s uses `include_dirs` which is deprecated. Use `exported_headers` instead",
@@ -337,7 +336,6 @@ public class PrebuiltCxxLibraryDescription
             args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
-            targetGraph,
             params,
             resolver,
             platform.get().getValue(),

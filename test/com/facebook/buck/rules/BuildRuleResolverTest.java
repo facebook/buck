@@ -35,7 +35,7 @@ import org.junit.Test;
 public class BuildRuleResolverTest {
 
   @Test
-  public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() {
+  public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() throws Exception {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -54,7 +54,7 @@ public class BuildRuleResolverTest {
   }
 
   @Test
-  public void testAddIterableToBuildRuleResolver() {
+  public void testAddIterableToBuildRuleResolver() throws Exception {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 

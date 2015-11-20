@@ -35,6 +35,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -143,7 +144,6 @@ public class HalideLibraryDescription implements
   }
 
   private CxxBinary requireHalideCompiler(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -152,7 +152,8 @@ public class HalideLibraryDescription implements
       Optional<ImmutableList<String>> compilerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<ImmutableList<String>> linkerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags) {
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
+      throws NoSuchBuildTargetException {
     BuildTarget target = createHalideCompilerBuildTarget(params.getBuildTarget());
 
     // Check the cache for the halide compiler rule.
@@ -180,24 +181,23 @@ public class HalideLibraryDescription implements
     Optional<SourcePath> prefixHeader = Optional.absent();
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
-      CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
-        targetGraph,
-        params.copyWithBuildTarget(target),
-        ruleResolver,
-        cxxPlatform,
-        srcs,
-        /* headers */ ImmutableMap.<Path, SourcePath>of(),
-        preprocessMode,
-        Linker.LinkableDepType.STATIC,
-        preprocessorFlags,
-        platformPreprocessorFlags,
-        langPreprocessorFlags,
-        frameworks,
-        compilerFlags,
-        platformCompilerFlags,
-        prefixHeader,
-        linkerFlags,
-        platformLinkerFlags);
+        CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
+            params.copyWithBuildTarget(target),
+            ruleResolver,
+            cxxPlatform,
+            srcs,
+            /* headers */ ImmutableMap.<Path, SourcePath>of(),
+            preprocessMode,
+            Linker.LinkableDepType.STATIC,
+            preprocessorFlags,
+            platformPreprocessorFlags,
+            langPreprocessorFlags,
+            frameworks,
+            compilerFlags,
+            platformCompilerFlags,
+            prefixHeader,
+            linkerFlags,
+            platformLinkerFlags);
 
     BuildRuleParams binParams = params.copyWithBuildTarget(target);
     binParams.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
@@ -219,7 +219,7 @@ public class HalideLibraryDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      final A args) {
+      final A args) throws NoSuchBuildTargetException {
     BuildTarget target = params.getBuildTarget();
     Optional<Map.Entry<Flavor, Type>> type;
     Optional<Map.Entry<Flavor, CxxPlatform>> cxxPlatform;
@@ -269,7 +269,6 @@ public class HalideLibraryDescription implements
         final ImmutableSortedSet<BuildTarget> compilerDeps =
           args.compilerDeps.or(ImmutableSortedSet.<BuildTarget>of());
         CxxBinary halideCompiler = requireHalideCompiler(
-          targetGraph,
           params.copyWithDeps(
             /* declared deps */ Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
             /* extra deps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),

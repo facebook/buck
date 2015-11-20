@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -77,14 +77,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       List<JavaNativeLinkable> linkables,
       ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> builder,
       NdkCxxPlatforms.TargetCpuType targetCpuType,
-      TargetGraph targetGraph,
-      NdkCxxPlatform platform) {
+      NdkCxxPlatform platform) throws NoSuchBuildTargetException {
 
     boolean hasNativeLibs = false;
 
     for (JavaNativeLinkable nativeLinkable : linkables) {
       ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
-          targetGraph,
           platform.getCxxPlatform());
       for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
         builder.put(
@@ -97,8 +95,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   }
 
   public Optional<CopyNativeLibraries> getCopyNativeLibraries(
-      TargetGraph targetGraph,
-      AndroidPackageableCollection packageableCollection) {
+      AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared
     // libraries for all the {@link TargetCpuType}s that we care about.  We deposit them into a map
     // of CPU type and SONAME to the shared library path, which the {@link CopyNativeLibraries}
@@ -122,13 +119,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           packageableCollection.getNativeLinkables(),
           nativeLinkableLibsBuilder,
           targetCpuType,
-          targetGraph,
           platform);
       boolean hasNativeLibsAssets = populateMapWithLinkables(
           packageableCollection.getNativeLinkablesAssets(),
           nativeLinkableLibsAssetsBuilder,
           targetCpuType,
-          targetGraph,
           platform);
 
       // If we're using a C/C++ runtime other than the system one, add it to the APK.

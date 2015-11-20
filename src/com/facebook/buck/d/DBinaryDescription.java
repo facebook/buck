@@ -19,6 +19,7 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -63,7 +64,7 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     // Create a rule that actually builds the binary, and add that
     // rule to the index.
@@ -73,8 +74,7 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
         /* compilerFlags */ ImmutableList.<String>of(),
         buildRuleResolver,
         cxxPlatform,
-        dBuckConfig,
-        targetGraph);
+        dBuckConfig);
     buildRuleResolver.addToIndex(nativeLinkable);
 
     // Create a Tool for the executable.

@@ -37,11 +37,11 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -114,7 +114,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedPublicCxxPreprocessorInput,
         cxxLibrary.getCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             HeaderVisibility.PUBLIC));
 
@@ -125,7 +124,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
         cxxLibrary.getCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             HeaderVisibility.PRIVATE));
 
@@ -141,7 +139,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             Linker.LinkableDepType.STATIC));
 
@@ -157,7 +154,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             Linker.LinkableDepType.SHARED));
 
@@ -173,7 +169,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedPythonPackageComponents,
         cxxLibrary.getPythonPackageComponents(
-            TargetGraph.EMPTY,
             PythonTestUtils.PYTHON_PLATFORM,
             cxxPlatform));
 
@@ -183,7 +178,7 @@ public class CxxLibraryTest {
   }
 
   @Test
-  public void staticLinkage() {
+  public void staticLinkage() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -223,12 +218,11 @@ public class CxxLibraryTest {
         /* isAsset */ false);
 
     assertThat(
-        cxxLibrary.getSharedLibraries(TargetGraph.EMPTY, cxxPlatform).entrySet(),
+        cxxLibrary.getSharedLibraries(cxxPlatform).entrySet(),
         Matchers.empty());
     assertThat(
         cxxLibrary
             .getPythonPackageComponents(
-                TargetGraph.EMPTY,
                 PythonTestUtils.PYTHON_PLATFORM,
                 cxxPlatform)
             .getNativeLibraries()
@@ -247,7 +241,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             Linker.LinkableDepType.SHARED));
   }

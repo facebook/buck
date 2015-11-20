@@ -22,7 +22,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.Arg> {
+public class CxxTestBuilder extends
+    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestBuilder> {
 
   public CxxTestBuilder(
       BuildTarget target,
@@ -64,6 +65,11 @@ public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.
 
   public CxxTestBuilder setFramework(CxxTestType framework) {
     arg.framework = Optional.of(framework);
+    return this;
+  }
+
+  @Override
+  protected CxxTestBuilder getThis() {
     return this;
   }
 

@@ -46,7 +46,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -77,7 +76,7 @@ public class NdkLibraryTest {
   }
 
   @Test
-  public void testSimpleNdkLibraryRule() throws IOException {
+  public void testSimpleNdkLibraryRule() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;

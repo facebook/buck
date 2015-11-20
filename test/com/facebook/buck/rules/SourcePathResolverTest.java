@@ -250,7 +250,7 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void getSourcePathNameOnBuildTargetSourcePath() {
+  public void getSourcePathNameOnBuildTargetSourcePath() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

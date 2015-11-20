@@ -20,14 +20,13 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -136,22 +135,16 @@ public class NativeLinkables {
     return result.build();
   }
 
-  public static Function<NativeLinkable, NativeLinkableInput> getNativeLinkableInputFunction(
-      final TargetGraph targetGraph,
-      final CxxPlatform cxxPlatform,
-      final Linker.LinkableDepType linkStyle) {
-    return new Function<NativeLinkable, NativeLinkableInput>() {
-      @Override
-      public NativeLinkableInput apply(NativeLinkable nativeLinkable) {
-        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
-        return nativeLinkable.getNativeLinkableInput(
-            targetGraph,
-            cxxPlatform,
-            link == NativeLinkable.Linkage.STATIC && linkStyle == Linker.LinkableDepType.SHARED ?
-                Linker.LinkableDepType.STATIC_PIC :
-                linkStyle);
-      }
-    };
+  public static NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType linkStyle,
+      NativeLinkable nativeLinkable) throws NoSuchBuildTargetException {
+    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+    return nativeLinkable.getNativeLinkableInput(
+        cxxPlatform,
+        link == NativeLinkable.Linkage.STATIC && linkStyle == Linker.LinkableDepType.SHARED ?
+            Linker.LinkableDepType.STATIC_PIC :
+            linkStyle);
   }
 
   /**
@@ -161,32 +154,20 @@ public class NativeLinkables {
    * {@link com.facebook.buck.rules.BuildRule} roots.
    */
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
-      Predicate<Object> traverse) {
+      Predicate<Object> traverse) throws NoSuchBuildTargetException {
 
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, traverse);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getNativeLinkables(cxxPlatform, roots.values(), depType);
-    return NativeLinkableInput.concat(
-        FluentIterable.from(nativeLinkables.values())
-            .transform(getNativeLinkableInputFunction(targetGraph, cxxPlatform, depType)));
-  }
-
-  public static NativeLinkableInput getTransitiveNativeLinkableInput(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs,
-      Linker.LinkableDepType depType) {
-    return getTransitiveNativeLinkableInput(
-        targetGraph,
-        cxxPlatform,
-        inputs,
-        depType,
-        Predicates.instanceOf(NativeLinkable.class));
+    ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
+    for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
+      nativeLinkableInputs.add(getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
+    }
+    return NativeLinkableInput.concat(nativeLinkableInputs.build());
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkable> getTransitiveNativeLinkables(
@@ -231,10 +212,9 @@ public class NativeLinkables {
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      Predicate<Object> traverse) {
+      Predicate<Object> traverse) throws NoSuchBuildTargetException {
 
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, traverse);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
@@ -244,7 +224,7 @@ public class NativeLinkables {
     for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
       NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
       if (linkage != NativeLinkable.Linkage.STATIC) {
-        libraries.putAll(nativeLinkable.getSharedLibraries(targetGraph, cxxPlatform));
+        libraries.putAll(nativeLinkable.getSharedLibraries(cxxPlatform));
       }
     }
     return libraries.build();

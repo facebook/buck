@@ -50,7 +50,7 @@ import java.nio.file.Paths;
 public class DependencyFileRuleKeyBuilderFactoryTest {
 
   @Test
-  public void ruleKeyDoesNotChangeIfInputContentsChanges() throws IOException {
+  public void ruleKeyDoesNotChangeIfInputContentsChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

@@ -46,7 +46,7 @@ public class SourcePathArgTest {
   }
 
   @Test
-  public void getDeps() {
+  public void getDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
@@ -32,10 +33,10 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -111,12 +112,11 @@ public class CxxPythonExtensionDescription implements
   }
 
   private <A extends Arg> BuildRule createExtensionBuildRule(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Extract all C/C++ sources from the constructor arg.
@@ -139,7 +139,6 @@ public class CxxPythonExtensionDescription implements
         HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            targetGraph,
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
@@ -150,7 +149,6 @@ public class CxxPythonExtensionDescription implements
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.<FrameworkPath>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                targetGraph,
                 cxxPlatform,
                 params.getDeps()));
 
@@ -195,7 +193,6 @@ public class CxxPythonExtensionDescription implements
             pythonPlatform.getFlavor(),
             cxxPlatform.getFlavor());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        targetGraph,
         cxxPlatform,
         params,
         pathResolver,
@@ -219,7 +216,7 @@ public class CxxPythonExtensionDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -243,7 +240,6 @@ public class CxxPythonExtensionDescription implements
     if (type.isPresent() && platform.isPresent() && pythonPlatform.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       return createExtensionBuildRule(
-          targetGraph,
           // Reconstruct the params with irrelevant python platform C/C++ libs filtered out.
           params.copyWithExtraDeps(
               new Supplier<ImmutableSortedSet<BuildRule>>() {

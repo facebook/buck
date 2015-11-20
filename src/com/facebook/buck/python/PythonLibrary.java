@@ -26,7 +26,6 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -58,7 +57,6 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
-      TargetGraph targetGraph,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
     return PythonPackageComponents.of(

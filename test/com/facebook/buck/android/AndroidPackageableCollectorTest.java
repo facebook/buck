@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -52,7 +51,7 @@ public class AndroidPackageableCollectorTest {
    * re-introduced to fb4a.
    */
   @Test
-  public void testFindTransitiveDependencies() throws IOException {
+  public void testFindTransitiveDependencies() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -201,7 +200,7 @@ public class AndroidPackageableCollectorTest {
    * values).
    */
   @Test
-  public void testGetAndroidResourceDeps() {
+  public void testGetAndroidResourceDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -286,7 +285,7 @@ public class AndroidPackageableCollectorTest {
    * the keystore's android_library should not contribute to the classpath of the android_binary.
    */
   @Test
-  public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
+  public void testGraphForAndroidBinaryExcludesKeystoreDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

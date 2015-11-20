@@ -81,7 +81,6 @@ public class NativeLinkablesTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return nativeLinkableInput;
@@ -94,7 +93,6 @@ public class NativeLinkablesTest {
 
     @Override
     public ImmutableMap<String, SourcePath> getSharedLibraries(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform) {
       return sharedLibraries;
     }
@@ -222,7 +220,7 @@ public class NativeLinkablesTest {
   }
 
   @Test
-  public void gatherTransitiveSharedLibraries() {
+  public void gatherTransitiveSharedLibraries() throws Exception {
     FakeNativeLinkable c =
         new FakeNativeLinkable(
             "//:c",
@@ -249,7 +247,6 @@ public class NativeLinkablesTest {
             ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            TargetGraph.EMPTY,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Predicates.instanceOf(NativeLinkable.class));

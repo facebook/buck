@@ -27,6 +27,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -92,9 +93,8 @@ public class AppleLibraryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     return createBuildRule(
-        targetGraph,
         params,
         resolver,
         args,
@@ -104,13 +104,12 @@ public class AppleLibraryDescription implements
   }
 
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist) {
+      ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
@@ -125,7 +124,6 @@ public class AppleLibraryDescription implements
         params.getBuildTarget());
 
     return delegate.createBuildRule(
-        targetGraph,
         params,
         resolver,
         delegateArg,

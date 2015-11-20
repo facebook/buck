@@ -49,14 +49,13 @@ import com.google.common.hash.HashCode;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class InputBasedRuleKeyBuilderFactoryTest {
 
   @Test
-  public void ruleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() throws IOException {
+  public void ruleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -100,7 +99,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
   }
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromPathSourceChanges() {
+  public void ruleKeyChangesIfInputContentsFromPathSourceChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -146,7 +145,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
 
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
+  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -243,7 +242,8 @@ public class InputBasedRuleKeyBuilderFactoryTest {
   }
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges() {
+  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges()
+      throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

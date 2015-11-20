@@ -20,12 +20,13 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.ClosureException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -93,11 +94,10 @@ public class PythonUtil {
   }
 
   public static PythonPackageComponents getAllComponents(
-      final TargetGraph targetGraph,
       BuildRuleParams params,
       PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
-      final CxxPlatform cxxPlatform) {
+      final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
 
     final PythonPackageComponents.Builder components =
         new PythonPackageComponents.Builder(params.getBuildTarget());
@@ -107,27 +107,35 @@ public class PythonUtil {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractBreadthFirstTraversal<BuildRule>(params.getDeps()) {
-      @Override
-      public ImmutableSortedSet<BuildRule> visit(BuildRule rule) {
-        // We only process and recurse on instances of PythonPackagable.
-        if (rule instanceof PythonPackagable) {
-          PythonPackagable lib = (PythonPackagable) rule;
+    try {
+      new AbstractBreadthFirstTraversal<BuildRule>(params.getDeps()) {
+        @Override
+        public ImmutableSortedSet<BuildRule> visit(BuildRule rule) {
+          // We only process and recurse on instances of PythonPackagable.
+          if (rule instanceof PythonPackagable) {
+            PythonPackagable lib = (PythonPackagable) rule;
 
-          // Add all components from the python packable into our top-level
-          // package.
-          components.addComponent(
-              lib.getPythonPackageComponents(targetGraph, pythonPlatform, cxxPlatform),
-              rule.getBuildTarget());
+            // Add all components from the python packable into our top-level
+            // package.
+            try {
+              components.addComponent(
+                  lib.getPythonPackageComponents(pythonPlatform, cxxPlatform),
+                  rule.getBuildTarget());
+            } catch (NoSuchBuildTargetException e) {
+              throw new ClosureException(e);
+            }
 
-          // Return all our deps to recurse on them.
-          return rule.getDeps();
+            // Return all our deps to recurse on them.
+            return rule.getDeps();
+          }
+
+          // Don't recurse on anything from other rules.
+          return ImmutableSortedSet.of();
         }
-
-        // Don't recurse on anything from other rules.
-        return ImmutableSortedSet.of();
-      }
-    }.start();
+      }.start();
+    } catch (ClosureException e) {
+      throw (NoSuchBuildTargetException) e.getException();
+    }
 
     return components.build();
   }

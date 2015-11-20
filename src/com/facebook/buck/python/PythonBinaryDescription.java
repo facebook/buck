@@ -26,6 +26,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -243,7 +244,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -304,7 +305,6 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
         /* zipSafe */ args.zipSafe);
     PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
-        targetGraph,
         params,
         binaryPackageComponents,
         pythonPlatform,

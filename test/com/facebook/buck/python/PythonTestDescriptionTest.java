@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 public class PythonTestDescriptionTest {
 
   @Test
-  public void thatTestModulesAreInComponents() {
+  public void thatTestModulesAreInComponents() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     PythonTest testRule =
@@ -76,7 +76,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void baseModule() {
+  public void baseModule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     String sourceName = "main.py";
     SourcePath source = new FakeSourcePath("foo/" + sourceName);
@@ -110,7 +110,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void buildArgs() {
+  public void buildArgs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -131,7 +131,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformSrcs() {
+  public void platformSrcs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     SourcePath matchedSource = new FakeSourcePath("foo/a.py");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
@@ -158,7 +158,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformResources() {
+  public void platformResources() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");
@@ -185,7 +185,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void explicitPythonHome() {
+  public void explicitPythonHome() throws Exception {
     PythonPlatform platform1 =
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat1"),
@@ -223,7 +223,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() {
+  public void runtimeDepOnDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule cxxBinary =

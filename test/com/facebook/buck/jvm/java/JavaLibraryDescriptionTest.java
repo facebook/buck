@@ -163,7 +163,7 @@ public class JavaLibraryDescriptionTest {
   }
 
   @Test
-  public void compilerArgWithPrebuiltJarValueReturnsJsr199Javac() {
+  public void compilerArgWithPrebuiltJarValueReturnsJsr199Javac() throws Exception {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJarBuilder.createBuilder(target)
@@ -225,7 +225,7 @@ public class JavaLibraryDescriptionTest {
   }
 
   @Test
-  public void compilerArgTakesPrecedenceOverJavacJarArg() {
+  public void compilerArgTakesPrecedenceOverJavacJarArg() throws Exception {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJarBuilder.createBuilder(target)
@@ -270,7 +270,7 @@ public class JavaLibraryDescriptionTest {
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -290,7 +290,7 @@ public class JavaLibraryDescriptionTest {
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

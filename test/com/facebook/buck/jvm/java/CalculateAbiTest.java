@@ -36,14 +36,13 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CalculateAbiTest {
 
   @Test
-  public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws IOException {
+  public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -107,7 +106,7 @@ public class CalculateAbiTest {
   }
 
   @Test
-  public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws IOException {
+  public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 public class CommandToolTest {
 
   @Test
-  public void buildTargetSourcePath() {
+  public void buildTargetSourcePath() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

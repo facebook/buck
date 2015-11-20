@@ -28,6 +28,7 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -166,7 +167,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(params.getBuildTarget());
     AppleBundleDestinations destinations =
         AppleBundleDestinations.platformDestinations(
@@ -254,7 +255,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
     ImmutableSet<Flavor> flavors = params.getBuildTarget()
         .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
@@ -279,26 +280,13 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           Joiner.on(", ").join(SUPPORTED_LIBRARY_FLAVORS));
     }
 
-    BuildRuleParams binaryRuleParams = new BuildRuleParams(
-        args.binary,
-        Suppliers.ofInstance(
-            BuildRules.toBuildRulesFor(
-                params.getBuildTarget(),
-                resolver,
-                binaryTargetNode.getDeclaredDeps())),
-        Suppliers.ofInstance(
-            BuildRules.toBuildRulesFor(
-                params.getBuildTarget(),
-                resolver,
-                binaryTargetNode.getExtraDeps())),
-        params.getProjectFilesystem(),
-        params.getCellRoots());
-
-    return CxxDescriptionEnhancer.requireBuildRule(
-        targetGraph,
-        binaryRuleParams,
-        resolver,
-        flavors.toArray(new Flavor[0]));
+    return resolver.requireRule(
+        BuildTarget.of(
+            args.binary.getUnflavoredBuildTarget(),
+            ImmutableSet.<Flavor>builder()
+                .addAll(flavors)
+                .addAll(args.binary.getFlavors())
+                .build()));
   }
 
   private static BuildRuleParams getBundleParamsWithUpdatedDeps(

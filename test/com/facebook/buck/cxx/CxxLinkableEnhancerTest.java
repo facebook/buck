@@ -53,6 +53,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -111,7 +112,6 @@ public class CxxLinkableEnhancerTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
@@ -124,7 +124,6 @@ public class CxxLinkableEnhancerTest {
 
     @Override
     public ImmutableMap<String, SourcePath> getSharedLibraries(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform) {
       return ImmutableMap.of();
     }
@@ -147,7 +146,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -165,7 +164,6 @@ public class CxxLinkableEnhancerTest {
 
     // Build the archive using a normal input the outputs of the genrules above.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         new SourcePathResolver(resolver),
@@ -192,7 +190,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
+  public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() throws Exception {
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
@@ -210,7 +208,6 @@ public class CxxLinkableEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .build();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -230,7 +227,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void testThatBuildTargetsFromNativeLinkableDepsContributeToActualDeps() {
+  public void testThatBuildTargetsFromNativeLinkableDepsContributeToActualDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -260,7 +257,6 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -280,7 +276,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void createCxxLinkableBuildRuleExecutableVsShared() {
+  public void createCxxLinkableBuildRuleExecutableVsShared() throws Exception {
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
@@ -293,7 +289,6 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links as an executable.
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -312,7 +307,6 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links as a shared lib.
     CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -331,7 +325,6 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links as a shared lib with a SONAME.
     CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -350,7 +343,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void createCxxLinkableBuildRuleStaticVsSharedDeps() {
+  public void createCxxLinkableBuildRuleStaticVsSharedDeps() throws Exception {
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
@@ -375,7 +368,6 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -396,7 +388,6 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links using shared dependencies.
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         pathResolver,
@@ -418,7 +409,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void platformLdFlags() {
+  public void platformLdFlags() throws Exception {
     ImmutableMap<Linker.LinkableDepType, String> runtimes =
         ImmutableMap.of(
             Linker.LinkableDepType.SHARED, "-ldummy-shared-libc",
@@ -437,7 +428,6 @@ public class CxxLinkableEnhancerTest {
     for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
-              TargetGraph.EMPTY,
               cxxPlatform,
               params,
               pathResolver,
@@ -456,7 +446,8 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
+  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
+      throws Exception {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     SourcePathResolver pathResolver =
@@ -486,10 +477,10 @@ public class CxxLinkableEnhancerTest {
     // in the bottom input.
     NativeLinkableInput totalInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.of(top),
-            Linker.LinkableDepType.STATIC);
+            Linker.LinkableDepType.STATIC,
+            Predicates.instanceOf(NativeLinkable.class));
     assertThat(
         FluentIterable.from(bottomInput.getArgs())
             .transform(Arg.stringifyFunction())
@@ -503,14 +494,13 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void machOBundleWithBundleLoaderHasExpectedArgs() {
+  public void machOBundleWithBundleLoaderHasExpectedArgs() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = params.getProjectFilesystem();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         params,
         new SourcePathResolver(resolver),
@@ -537,14 +527,13 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void machOBundleSourcePathIsInDepsOfRule() {
+  public void machOBundleSourcePathIsInDepsOfRule() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     BuildTarget bundleLoaderTarget = BuildTargetFactory.newInstance("//foo:bundleLoader");
     BuildRuleParams bundleLoaderParams = new FakeBuildRuleParamsBuilder(bundleLoaderTarget).build();
     CxxLink bundleLoaderRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         bundleLoaderParams,
         new SourcePathResolver(resolver),
@@ -565,7 +554,6 @@ public class CxxLinkableEnhancerTest {
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
     BuildRuleParams bundleParams = new FakeBuildRuleParamsBuilder(bundleTarget).build();
     CxxLink bundleRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        TargetGraph.EMPTY,
         CXX_PLATFORM,
         bundleParams,
         new SourcePathResolver(resolver),

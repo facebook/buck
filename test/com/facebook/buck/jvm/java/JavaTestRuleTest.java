@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -40,7 +41,7 @@ import java.util.List;
 public class JavaTestRuleTest {
 
   @Test
-  public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() {
+  public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() throws Exception {
     ImmutableList<String> vmArgs = ImmutableList.of("--one", "--two", "--three");
     JavaTest rule = newRule(vmArgs);
 
@@ -50,7 +51,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void shouldAddEmulatorTargetDeviceToVmArgsIfPresent() {
+  public void shouldAddEmulatorTargetDeviceToVmArgsIfPresent() throws Exception {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
@@ -62,7 +63,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void shouldAddRealTargetDeviceToVmArgsIfPresent() {
+  public void shouldAddRealTargetDeviceToVmArgsIfPresent() throws Exception {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
@@ -74,7 +75,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void shouldAddDeviceSerialIdToVmArgsIfPresent() {
+  public void shouldAddDeviceSerialIdToVmArgsIfPresent() throws Exception {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
@@ -87,7 +88,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void transitiveLibraryDependenciesAreRuntimeDeps() {
+  public void transitiveLibraryDependenciesAreRuntimeDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -116,7 +117,7 @@ public class JavaTestRuleTest {
         Matchers.<BuildRule>contains(firstOrderDep, transitiveDep));
   }
 
-  private JavaTest newRule(ImmutableList<String> vmArgs) {
+  private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {
     return (JavaTest) JavaTestBuilder
         .createBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)

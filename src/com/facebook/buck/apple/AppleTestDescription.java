@@ -30,6 +30,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -149,7 +150,7 @@ public class AppleTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     String extension = args.extension.isLeft() ?
         args.extension.getLeft().toFileExtension() :
         args.extension.getRight();
@@ -241,7 +242,6 @@ public class AppleTestDescription implements
     }
 
     BuildRule library = appleLibraryDescription.createBuildRule(
-        targetGraph,
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget())
                 .addAllFlavors(extraFlavorsBuilder.build())

@@ -23,6 +23,10 @@ import com.facebook.buck.model.BuildTargetPattern;
 @SuppressWarnings("serial")
 public class NoSuchBuildTargetException extends BuildTargetException {
 
+  public NoSuchBuildTargetException(BuildTarget target) {
+    this(String.format("No such target: '%s'", target));
+  }
+
   private NoSuchBuildTargetException(String message) {
     super(message);
   }

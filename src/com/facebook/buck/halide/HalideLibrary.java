@@ -22,13 +22,14 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -130,15 +131,13 @@ public class HalideLibrary
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     switch (headerVisibility) {
       case PUBLIC:
         return CxxPreprocessorInput.builder()
           .from(
             CxxPreprocessables.getCxxPreprocessorInput(
-              targetGraph,
               params,
               ruleResolver,
               cxxPlatform.getFlavor(),
@@ -156,9 +155,8 @@ public class HalideLibrary
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     Pair<Flavor, HeaderVisibility> key = new Pair<>(
       cxxPlatform.getFlavor(),
       headerVisibility);
@@ -169,7 +167,7 @@ public class HalideLibrary
         ImmutableMap.builder();
       builder.put(
         getBuildTarget(),
-        getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
+        getCxxPreprocessorInput(cxxPlatform, headerVisibility));
       result = builder.build();
       cxxPreprocessorInputCache.put(key, result);
     }
@@ -189,7 +187,6 @@ public class HalideLibrary
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
     // Create a new flavored HalideLibrary rule object for the given platform.
@@ -210,9 +207,7 @@ public class HalideLibrary
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.<String, SourcePath>of();
   }
 

@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -135,7 +136,7 @@ public class DefaultJavaLibraryTest {
   /** Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used. */
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
-  public void testBuildInternalWithAndroidBootclasspath() throws IOException {
+  public void testBuildInternalWithAndroidBootclasspath() throws Exception {
     String folder = "android/java/src/com/facebook";
     tmp.newFolder(folder.split("/"));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//" + folder + ":fb");
@@ -175,7 +176,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testJavaLibaryThrowsIfResourceIsDirectory() {
+  public void testJavaLibaryThrowsIfResourceIsDirectory() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
       @Override
       public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
@@ -202,7 +203,7 @@ public class DefaultJavaLibraryTest {
    * Verify adding an annotation processor java binary.
    */
   @Test
-  public void testAddAnnotationProcessorJavaBinary() throws IOException {
+  public void testAddAnnotationProcessorJavaBinary() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
 
@@ -236,7 +237,7 @@ public class DefaultJavaLibraryTest {
    * Verify adding an annotation processor prebuilt jar.
    */
   @Test
-  public void testAddAnnotationProcessorPrebuiltJar() throws IOException {
+  public void testAddAnnotationProcessorPrebuiltJar() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_PREBUILT_JAR);
 
@@ -256,7 +257,7 @@ public class DefaultJavaLibraryTest {
    * Verify adding an annotation processor java library.
    */
   @Test
-  public void testAddAnnotationProcessorJavaLibrary() throws IOException {
+  public void testAddAnnotationProcessorJavaLibrary() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_PREBUILT_JAR);
 
@@ -276,7 +277,7 @@ public class DefaultJavaLibraryTest {
    * Verify adding multiple annotation processors.
    */
   @Test
-  public void testAddAnnotationProcessorJar() throws IOException {
+  public void testAddAnnotationProcessorJar() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_PREBUILT_JAR);
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
@@ -295,7 +296,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testGetClasspathEntriesMap() {
+  public void testGetClasspathEntriesMap() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -330,7 +331,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testGetClasspathDeps() {
+  public void testGetClasspathDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -363,7 +364,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testClasspathForJavacCommand() throws IOException {
+  public void testClasspathForJavacCommand() throws Exception {
     // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
     // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
@@ -446,7 +447,7 @@ public class DefaultJavaLibraryTest {
    * Verify adding an annotation processor java binary with options.
    */
   @Test
-  public void testAddAnnotationProcessorWithOptions() throws IOException {
+  public void testAddAnnotationProcessorWithOptions() throws Exception {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
 
@@ -491,7 +492,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testExportedDeps() {
+  public void testExportedDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -620,7 +621,7 @@ public class DefaultJavaLibraryTest {
    * parameter.
    */
   @Test
-  public void testExportedDepsShouldOnlyContainJavaLibraryRules() {
+  public void testExportedDepsShouldOnlyContainJavaLibraryRules() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -655,7 +656,7 @@ public class DefaultJavaLibraryTest {
    * Tests that input-based rule keys work properly with generated sources.
    */
   @Test
-  public void testInputBasedRuleKeySourceChange() throws IOException {
+  public void testInputBasedRuleKeySourceChange() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -736,7 +737,7 @@ public class DefaultJavaLibraryTest {
    * Tests that input-based rule keys work properly with simple Java library deps.
    */
   @Test
-  public void testInputBasedRuleKeyWithJavaLibraryDep() throws IOException {
+  public void testInputBasedRuleKeyWithJavaLibraryDep() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -823,7 +824,7 @@ public class DefaultJavaLibraryTest {
    * first-order dep.
    */
   @Test
-  public void testInputBasedRuleKeyWithExportedDeps() throws IOException {
+  public void testInputBasedRuleKeyWithExportedDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -924,7 +925,7 @@ public class DefaultJavaLibraryTest {
    * multiple Java library dependencies.
    */
   @Test
-  public void testInputBasedRuleKeyWithRecursiveExportedDeps() throws IOException {
+  public void testInputBasedRuleKeyWithRecursiveExportedDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -1067,7 +1068,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testSuggsetDepsReverseTopoSortRespected() {
+  public void testSuggsetDepsReverseTopoSortRespected() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
@@ -1128,7 +1129,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testRuleKeyIsOrderInsensitiveForSourcesAndResources() throws IOException {
+  public void testRuleKeyIsOrderInsensitiveForSourcesAndResources() throws Exception {
     // Note that these filenames were deliberately chosen to have identical hashes to maximize
     // the chance of order-sensitivity when being inserted into a HashMap.  Just using
     // {foo,bar}.{java,txt} resulted in a passing test even for the old broken code.
@@ -1190,7 +1191,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() {
+  public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -1209,7 +1210,7 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() {
+  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -1340,7 +1341,7 @@ public class DefaultJavaLibraryTest {
   private enum AnnotationProcessorTarget {
     VALID_PREBUILT_JAR("//tools/java/src/com/facebook/library:prebuilt-processors") {
       @Override
-      public BuildRule createRule(BuildTarget target) {
+      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
         return PrebuiltJarBuilder.createBuilder(target)
             .setBinaryJar(Paths.get("MyJar"))
             .build(
@@ -1351,7 +1352,7 @@ public class DefaultJavaLibraryTest {
     },
     VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {
       @Override
-      public BuildRule createRule(BuildTarget target) {
+      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
        return new JavaBinaryRuleBuilder(target)
             .setMainClass("com.facebook.Main")
             .build(
@@ -1362,7 +1363,7 @@ public class DefaultJavaLibraryTest {
     },
     VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {
       @Override
-      public BuildRule createRule(BuildTarget target) {
+      public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
         return JavaLibraryBuilder.createBuilder(target)
             .addSrc(Paths.get("MyClass.java"))
             .setProguardConfig(Paths.get("MyProguardConfig"))
@@ -1383,7 +1384,7 @@ public class DefaultJavaLibraryTest {
       return BuildTargetFactory.newInstance(targetName);
     }
 
-    public abstract BuildRule createRule(BuildTarget target);
+    public abstract BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException;
   }
 
   // Captures all the common code between the different annotation processing test scenarios.
@@ -1402,7 +1403,8 @@ public class DefaultJavaLibraryTest {
       return annotationProcessingParamsBuilder;
     }
 
-    public void addAnnotationProcessorTarget(AnnotationProcessorTarget processor) {
+    public void addAnnotationProcessorTarget(AnnotationProcessorTarget processor)
+        throws NoSuchBuildTargetException {
       BuildTarget target = processor.createTarget();
       BuildRule rule = processor.createRule(target);
 

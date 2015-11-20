@@ -44,7 +44,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -92,7 +91,7 @@ public class RobolectricTestRuleTest {
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Test
-  public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws IOException {
+  public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
@@ -124,7 +123,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
+  public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -167,7 +166,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void testRobolectricThrowsIfResourceDirNotThere() throws IOException {
+  public void testRobolectricThrowsIfResourceDirNotThere() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
@@ -189,7 +188,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void runtimeDepsIncludeTransitiveResources() throws IOException {
+  public void runtimeDepsIncludeTransitiveResources() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());

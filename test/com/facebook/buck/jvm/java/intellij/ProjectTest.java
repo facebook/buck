@@ -91,7 +91,7 @@ public class ProjectTest {
    * for each of the android_binary rules.
    */
   public ProjectWithModules createActionGraphForTesting(
-      @Nullable JavaPackageFinder javaPackageFinder) throws IOException {
+      @Nullable JavaPackageFinder javaPackageFinder) throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -233,7 +233,7 @@ public class ProjectTest {
    * {@code android_binary} is handled appropriately when generating an IntelliJ project.
    */
   @Test
-  public void testProject() throws IOException {
+  public void testProject() throws Exception {
     JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
     EasyMock
         .expect(javaPackageFinder.findJavaPackage(Paths.get("foo/module_foo.iml")))
@@ -399,7 +399,7 @@ public class ProjectTest {
   }
 
   @Test
-  public void testPrebuiltJarIncludesDeps() throws IOException {
+  public void testPrebuiltJarIncludesDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -489,7 +489,7 @@ public class ProjectTest {
   }
 
   @Test
-  public void testIfModuleIsBothTestAndCompileDepThenTreatAsCompileDep() throws IOException {
+  public void testIfModuleIsBothTestAndCompileDepThenTreatAsCompileDep() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -551,7 +551,7 @@ public class ProjectTest {
    * &lt;orderEntry scope="COMPILE"/> group.
    */
   @Test
-  public void testThatJarsAreListedBeforeModules() throws IOException {
+  public void testThatJarsAreListedBeforeModules() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -624,7 +624,7 @@ public class ProjectTest {
    * Each of these should be treated differently.
    */
   @Test
-  public void testSrcRoots() throws IOException {
+  public void testSrcRoots() throws Exception {
     // Create a project_config() with src_roots=None.
     BuildRuleResolver ruleResolver1 =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -792,7 +792,7 @@ public class ProjectTest {
   }
 
   @Test
-  public void testNdkLibraryHasCorrectPath() throws IOException {
+  public void testNdkLibraryHasCorrectPath() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 

@@ -28,13 +28,12 @@ import com.facebook.buck.rules.TargetGraph;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 
 public class AndroidLibraryTest {
 
   @Test
-  public void testAndroidAnnotation() throws IOException {
+  public void testAndroidAnnotation() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 

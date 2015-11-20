@@ -24,16 +24,16 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -95,7 +95,6 @@ abstract class DDescriptionUtils {
    * @param buildRuleResolver resolver for build rules
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
-   * @param targetGraph the TargetGraph to generate build targets for
    * @return the new build rule
    */
   public static CxxLink createNativeLinkable(
@@ -104,8 +103,7 @@ abstract class DDescriptionUtils {
       ImmutableList<String> compilerFlags,
       BuildRuleResolver buildRuleResolver,
       CxxPlatform cxxPlatform,
-      DBuckConfig dBuckConfig,
-      TargetGraph targetGraph) {
+      DBuckConfig dBuckConfig) throws NoSuchBuildTargetException {
 
     BuildTarget buildTarget = params.getBuildTarget();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
@@ -122,7 +120,6 @@ abstract class DDescriptionUtils {
     // Return a rule to link the .o for the binary together with its
     // dependencies.
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        targetGraph,
         cxxPlatform,
         params,
         sourcePathResolver,

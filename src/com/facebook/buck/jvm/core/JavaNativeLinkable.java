@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -30,8 +30,7 @@ public interface JavaNativeLinkable {
    * @return a map of shared library SONAME to shared library path for the given
    *     {@link CxxPlatform}.
    */
-  ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform);
+  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
 
 }

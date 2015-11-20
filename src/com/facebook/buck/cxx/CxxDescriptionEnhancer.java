@@ -23,28 +23,26 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.args.MacroArg;
-import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -342,13 +340,13 @@ public class CxxDescriptionEnhancer {
   }
 
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<FrameworkPath> frameworks,
-      Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps) {
+      Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps)
+      throws NoSuchBuildTargetException {
 
     // Add the private includes of any rules which list this rule as a test.
     BuildTarget targetWithoutFlavor = BuildTarget.of(
@@ -365,7 +363,6 @@ public class CxxDescriptionEnhancer {
               params.getBuildTarget());
           cxxPreprocessorInputFromTestedRulesBuilder.add(
               testable.getCxxPreprocessorInput(
-                  targetGraph,
                   cxxPlatform,
                   HeaderVisibility.PRIVATE));
         }
@@ -526,17 +523,15 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      CxxPreprocessMode preprocessMode) {
+      CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
 
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(params, resolver, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers = parseHeaders(params, resolver, cxxPlatform, args);
     return createBuildRulesForCxxBinary(
-        targetGraph,
         params,
         resolver,
         cxxPlatform,
@@ -556,7 +551,6 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -572,7 +566,8 @@ public class CxxDescriptionEnhancer {
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<ImmutableList<String>> linkerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags) {
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
+      throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     Path linkOutput = getLinkOutputPath(params.getBuildTarget());
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -589,7 +584,6 @@ public class CxxDescriptionEnhancer {
         HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         collectCxxPreprocessorInput(
-            targetGraph,
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
@@ -600,7 +594,6 @@ public class CxxDescriptionEnhancer {
             ImmutableList.of(headerSymlinkTree),
             frameworks.get(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                targetGraph,
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -648,7 +641,6 @@ public class CxxDescriptionEnhancer {
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               createSharedLibrarySymlinkTree(
-                  targetGraph,
                   params,
                   sourcePathResolver,
                   cxxPlatform,
@@ -677,7 +669,6 @@ public class CxxDescriptionEnhancer {
     // target, so that it corresponds to the actual binary we build.
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
-            targetGraph,
             cxxPlatform,
             params,
             sourcePathResolver,
@@ -700,51 +691,6 @@ public class CxxDescriptionEnhancer {
         cxxLink,
         ImmutableSortedSet.copyOf(objects.keySet()),
         executableBuilder.build());
-  }
-
-  private static <T> BuildRule createBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      TargetNode<T> node,
-      Flavor... flavors) {
-    BuildTarget target = BuildTarget.builder(params.getBuildTarget()).addFlavors(flavors).build();
-    Description<T> description = node.getDescription();
-    T args = node.getConstructorArg();
-    return description.createBuildRule(
-        targetGraph,
-        params.copyWithChanges(
-            target,
-            params.getDeclaredDeps(),
-            params.getExtraDeps()),
-        ruleResolver,
-        args);
-  }
-
-  /**
-   * Ensure that the build rule generated by the given {@link BuildRuleParams} had been generated
-   * by it's corresponding {@link Description} and added to the {@link BuildRuleResolver}.  If not,
-   * call into it's associated {@link Description} to generate it's {@link BuildRule}.
-   *
-   * @return the {@link BuildRule} generated by the description corresponding to the supplied
-   *     {@link BuildRuleParams}.
-   */
-  public static BuildRule requireBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      Flavor... flavors) {
-    BuildTarget target = BuildTarget.builder(params.getBuildTarget()).addFlavors(flavors).build();
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
-    if (!rule.isPresent()) {
-      TargetNode<?> node = targetGraph.get(params.getBuildTarget());
-      Preconditions.checkNotNull(
-          node,
-          String.format("%s not in target graph", params.getBuildTarget()));
-      rule = Optional.of(createBuildRule(targetGraph, params, ruleResolver, node, flavors));
-      ruleResolver.addToIndex(rule.get());
-    }
-    return rule.get();
   }
 
   /**
@@ -808,11 +754,10 @@ public class CxxDescriptionEnhancer {
    * transitive dependencies.
    */
   public static SymlinkTree createSharedLibrarySymlinkTree(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      Predicate<Object> traverse) {
+      Predicate<Object> traverse) throws NoSuchBuildTargetException {
 
     BuildTarget symlinkTreeTarget =
         createSharedLibrarySymlinkTreeTarget(
@@ -825,7 +770,6 @@ public class CxxDescriptionEnhancer {
 
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
-            targetGraph,
             cxxPlatform,
             params.getDeps(),
             traverse);

@@ -53,14 +53,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonBinaryDescriptionTest {
 
   @Test
-  public void thatComponentSourcePathDepsPropagateProperly() {
+  public void thatComponentSourcePathDepsPropagateProperly() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule genrule =
@@ -83,7 +82,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void thatMainSourcePathPropagatesToDeps() {
+  public void thatMainSourcePathPropagatesToDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule genrule =
@@ -98,7 +97,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void baseModule() {
+  public void baseModule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     String sourceName = "main.py";
     SourcePath source = new FakeSourcePath("foo/" + sourceName);
@@ -132,7 +131,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void mainModule() {
+  public void mainModule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -145,7 +144,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void pexExtension() {
+  public void pexExtension() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -173,7 +172,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void buildArgs() {
+  public void buildArgs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -194,7 +193,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void explicitPythonHome() {
+  public void explicitPythonHome() throws Exception {
     PythonPlatform platform1 =
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat1"),
@@ -233,7 +232,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() {
+  public void runtimeDepOnDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule cxxBinary =
@@ -254,7 +253,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void executableCommandWithPathToPexExecutor() throws IOException {
+  public void executableCommandWithPathToPexExecutor() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -286,7 +285,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void executableCommandWithNoPathToPexExecutor() {
+  public void executableCommandWithNoPathToPexExecutor() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());

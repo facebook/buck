@@ -33,14 +33,13 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -49,15 +48,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 
 public class PrebuiltCxxLibraryDescriptionTest {
 
@@ -128,13 +124,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleDefault() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void createBuildRuleDefault() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -147,7 +143,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build();
     assertThat(
         lib.getCxxPreprocessorInput(
-            targetGraph,
             CXX_PLATFORM,
             HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
@@ -162,7 +157,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -174,7 +169,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -187,17 +182,17 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void createBuildRuleHeaderOnly() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+  public void createBuildRuleHeaderOnly() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setHeaderOnly(true);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -209,7 +204,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setRules(getInputRules(lib))
         .build();
     assertThat(
-        lib.getCxxPreprocessorInput(targetGraph, CXX_PLATFORM, HeaderVisibility.PUBLIC),
+        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify static native linkable input.
@@ -219,7 +214,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -228,7 +223,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -239,18 +234,18 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void createBuildRuleExternal() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void createBuildRuleExternal() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setProvided(true);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -262,7 +257,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setRules(getInputRules(lib))
         .build();
     assertThat(
-        lib.getCxxPreprocessorInput(targetGraph, CXX_PLATFORM, HeaderVisibility.PUBLIC),
+        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify shared native linkable input.
@@ -275,7 +270,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -286,18 +281,18 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void createBuildRuleIncludeDirs() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void createBuildRuleIncludeDirs() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setIncludeDirs(ImmutableList.of("test"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -309,7 +304,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setRules(getInputRules(lib))
         .build();
     assertThat(
-        lib.getCxxPreprocessorInput(targetGraph, CXX_PLATFORM, HeaderVisibility.PUBLIC),
+        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify static native linkable input.
@@ -322,7 +317,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -334,7 +329,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -347,21 +342,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void missingSharedLibsAreAutoBuilt() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void missingSharedLibsAreAutoBuilt() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
-        targetGraph,
         CXX_PLATFORM,
         Linker.LinkableDepType.SHARED);
     BuildRule rule =
@@ -373,7 +367,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void missingSharedLibsAreNotAutoBuiltForHeaderOnlyRules() {
+  public void missingSharedLibsAreNotAutoBuiltForHeaderOnlyRules() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -384,7 +378,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
-        targetGraph,
         CXX_PLATFORM,
         Linker.LinkableDepType.SHARED);
     assertThat(
@@ -395,7 +388,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void addsLibsToAndroidPackageableCollector() {
+  public void addsLibsToAndroidPackageableCollector() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -408,7 +401,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg),
             new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
-        lib.getSharedLibraries(targetGraph, CXX_PLATFORM));
+        lib.getSharedLibraries(CXX_PLATFORM));
   }
 
   @Test
@@ -461,14 +454,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleExportedHeaders() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void createBuildRuleExportedHeaders() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setExportedHeaders(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -481,7 +474,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build();
     assertThat(
         lib.getCxxPreprocessorInput(
-            targetGraph,
             CXX_PLATFORM,
             HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
@@ -496,7 +488,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -508,7 +500,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -521,20 +513,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void createBuildRuleExportedPlatformHeaders() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void createBuildRuleExportedPlatformHeaders() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setExportedPlatformHeaders(
             CXX_PLATFORM,
             SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -546,7 +538,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setRules(getInputRules(lib))
         .build();
     assertThat(
-        lib.getCxxPreprocessorInput(targetGraph, CXX_PLATFORM, HeaderVisibility.PUBLIC),
+        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify static native linkable input.
@@ -559,7 +551,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -571,7 +563,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -584,18 +576,18 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void createBuildRuleHeaderNamespace() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void createBuildRuleHeaderNamespace() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setHeaderNamespace("hello");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
@@ -607,7 +599,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setRules(getInputRules(lib))
         .build();
     assertThat(
-        lib.getCxxPreprocessorInput(targetGraph, CXX_PLATFORM, HeaderVisibility.PUBLIC),
+        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
 
     // Verify static native linkable input.
@@ -620,7 +612,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -632,7 +624,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
@@ -645,11 +637,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
+        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
-  public void staticPicLibsUseCorrectPath() {
+  public void staticPicLibsUseCorrectPath() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -659,7 +651,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
-            targetGraph,
             CXX_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC);
     assertThat(
@@ -671,7 +662,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void missingStaticPicLibsUseStaticLibs() throws IOException {
+  public void missingStaticPicLibsUseStaticLibs() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -681,7 +672,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
-        targetGraph,
         CXX_PLATFORM,
         Linker.LinkableDepType.STATIC_PIC);
     assertThat(
@@ -695,19 +685,16 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void forceStatic() {
+  public void forceStatic() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Set<TargetNode<?>> targetNodes = Sets.newHashSet();
     PrebuiltCxxLibrary prebuiltCxxLibrary =
         (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(TARGET)
             .setForceStatic(true)
-            .build(resolver, filesystem, targetNodes);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+            .build(resolver, filesystem);
     NativeLinkableInput nativeLinkableInput =
         prebuiltCxxLibrary.getNativeLinkableInput(
-            targetGraph,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED);
     assertThat(
@@ -718,13 +705,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Matchers.endsWith(".a"));
     assertThat(
         prebuiltCxxLibrary.getSharedLibraries(
-            targetGraph,
             CxxPlatformUtils.DEFAULT_PLATFORM)
             .entrySet(),
         Matchers.empty());
     assertThat(
         prebuiltCxxLibrary.getPythonPackageComponents(
-            targetGraph,
             PythonTestUtils.PYTHON_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORM)
             .getNativeLibraries()
@@ -733,7 +718,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() {
+  public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target =
@@ -752,7 +737,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkableDeps() {
+  public void nativeLinkableDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary dep =
@@ -772,7 +757,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkableExportedDeps() {
+  public void nativeLinkableExportedDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary dep =

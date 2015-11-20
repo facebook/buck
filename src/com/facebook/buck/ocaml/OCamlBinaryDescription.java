@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -50,7 +51,7 @@ public class OCamlBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     ImmutableList<OCamlSource> srcs = args.srcs.get();
     ImmutableList.Builder<String> flags = ImmutableList.builder();
@@ -62,7 +63,6 @@ public class OCamlBinaryDescription implements
     ImmutableList<String> linkerFlags = args.linkerFlags.get();
     return OCamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
-        targetGraph,
         params,
         resolver,
         srcs,

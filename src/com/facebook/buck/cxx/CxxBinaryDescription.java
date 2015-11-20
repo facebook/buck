@@ -21,6 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -91,7 +92,7 @@ public class CxxBinaryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -134,7 +135,6 @@ public class CxxBinaryDescription implements
           .paramsWithoutCompilationDatabaseFlavor(params);
       CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
           .createBuildRulesForCxxBinaryDescriptionArg(
-              targetGraph,
               paramsWithoutCompilationDatabaseFlavor,
               resolver,
               cxxPlatform,
@@ -149,7 +149,6 @@ public class CxxBinaryDescription implements
 
     if (flavors.contains(CxxInferEnhancer.INFER)) {
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-          targetGraph,
           params,
           resolver,
           pathResolver,
@@ -160,7 +159,6 @@ public class CxxBinaryDescription implements
 
     if (flavors.contains(CxxInferEnhancer.INFER_ANALYZE)) {
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-          targetGraph,
           params,
           resolver,
           pathResolver,
@@ -171,7 +169,6 @@ public class CxxBinaryDescription implements
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            targetGraph,
             params,
             resolver,
             cxxPlatform,

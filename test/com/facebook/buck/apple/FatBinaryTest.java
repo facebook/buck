@@ -61,7 +61,8 @@ public class FatBinaryTest {
 
   @SuppressWarnings({"unchecked"})
   @Test
-  public void appleBinaryDescriptionWithMultiplePlatformArgsShouldGenerateFatBinary() {
+  public void appleBinaryDescriptionWithMultiplePlatformArgsShouldGenerateFatBinary()
+      throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -95,7 +96,7 @@ public class FatBinaryTest {
   }
 
   @Test
-  public void appleBinaryDescriptionWithMultipleDifferentSdksShouldFail() {
+  public void appleBinaryDescriptionWithMultipleDifferentSdksShouldFail() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
@@ -115,7 +116,7 @@ public class FatBinaryTest {
   }
 
   @Test
-  public void fatBinaryWithSpecialBuildActionShouldFail() {
+  public void fatBinaryWithSpecialBuildActionShouldFail() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;

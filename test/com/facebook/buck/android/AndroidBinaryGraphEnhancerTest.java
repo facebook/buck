@@ -73,7 +73,7 @@ import java.util.EnumSet;
 public class AndroidBinaryGraphEnhancerTest {
 
   @Test
-  public void testCreateDepsForPreDexing() {
+  public void testCreateDepsForPreDexing() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -111,7 +111,6 @@ public class AndroidBinaryGraphEnhancerTest {
         filesystem,
         TestCellBuilder.createCellRoots(filesystem));
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.DISABLED,
@@ -206,7 +205,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testAllBuildablesExceptPreDexRule() {
+  public void testAllBuildablesExceptPreDexRule() throws Exception {
     // Create an android_build_config() as a dependency of the android_binary().
     BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
     BuildRuleParams buildConfigParams = new FakeBuildRuleParamsBuilder(buildConfigBuildTarget)
@@ -231,7 +230,6 @@ public class AndroidBinaryGraphEnhancerTest {
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
@@ -334,7 +332,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testResourceRulesBecomeDepsOfAaptPackageResources() {
+  public void testResourceRulesBecomeDepsOfAaptPackageResources() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -352,7 +350,6 @@ public class AndroidBinaryGraphEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
@@ -387,7 +384,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testPackageStringsDependsOnResourcesFilter() {
+  public void testPackageStringsDependsOnResourcesFilter() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
@@ -397,7 +394,6 @@ public class AndroidBinaryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(target)
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
@@ -434,7 +430,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testResourceRulesDependOnRulesBehindResourceSourcePaths() {
+  public void testResourceRulesDependOnRulesBehindResourceSourcePaths() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -469,7 +465,6 @@ public class AndroidBinaryGraphEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,

@@ -19,11 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonPlatform;
-import com.facebook.buck.python.PythonTestUtils;
 import com.google.common.base.Optional;
 
-public class CxxPythonExtensionBuilder
-    extends AbstractCxxSourceBuilder<CxxPythonExtensionDescription.Arg> {
+public class CxxPythonExtensionBuilder extends
+    AbstractCxxSourceBuilder<CxxPythonExtensionDescription.Arg, CxxPythonExtensionBuilder> {
 
   public CxxPythonExtensionBuilder(
       BuildTarget target,
@@ -33,12 +32,13 @@ public class CxxPythonExtensionBuilder
     super(new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms), target);
   }
 
-  public CxxPythonExtensionBuilder(BuildTarget target) {
-    this(target, PythonTestUtils.PYTHON_PLATFORMS, createDefaultConfig(), createDefaultPlatforms());
-  }
-
   public CxxPythonExtensionBuilder setBaseModule(String baseModule) {
     arg.baseModule = Optional.of(baseModule);
+    return this;
+  }
+
+  @Override
+  protected CxxPythonExtensionBuilder getThis() {
     return this;
   }
 

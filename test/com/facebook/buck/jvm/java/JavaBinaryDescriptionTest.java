@@ -33,7 +33,7 @@ import org.junit.Test;
 public class JavaBinaryDescriptionTest {
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

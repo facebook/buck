@@ -63,7 +63,7 @@ public class ClasspathMacroExpanderTest {
   }
 
   @Test
-  public void shouldIncludeARuleIfNothingIsGiven() throws MacroException {
+  public void shouldIncludeARuleIfNothingIsGiven() throws Exception {
     final BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule =
@@ -75,7 +75,7 @@ public class ClasspathMacroExpanderTest {
   }
 
   @Test
-  public void shouldIncludeTransitiveDependencies() throws MacroException {
+  public void shouldIncludeTransitiveDependencies() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
@@ -102,7 +102,7 @@ public class ClasspathMacroExpanderTest {
   }
 
   @Test(expected = MacroException.class)
-  public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws MacroException {
+  public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -115,7 +115,7 @@ public class ClasspathMacroExpanderTest {
   }
 
   @Test
-  public void shouldExpandTransitiveDependencies() throws MacroException {
+  public void shouldExpandTransitiveDependencies() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
@@ -140,7 +140,7 @@ public class ClasspathMacroExpanderTest {
   }
 
   @Test
-  public void extractRuleKeyAppendables() throws MacroException {
+  public void extractRuleKeyAppendables() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =

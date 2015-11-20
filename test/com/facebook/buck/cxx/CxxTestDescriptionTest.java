@@ -27,12 +27,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -43,31 +43,28 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class CxxTestDescriptionTest {
 
   private CxxTestBuilder createTestBuilder(
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
-      Collection<TargetNode<?>> targetNodes) {
+      ProjectFilesystem filesystem) throws NoSuchBuildTargetException {
     BuildRule frameworkRule =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:framwork_rule"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:framework_rule"))
             .setOut("out")
-            .build(resolver, filesystem, targetNodes);
+            .build(resolver, filesystem);
     return new CxxTestBuilder(
         BuildTargetFactory.newInstance("//:test"),
         new CxxBuckConfig(
@@ -123,17 +120,16 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void environmentIsPropagated() {
+  public void environmentIsPropagated() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
             .setOut("someRule")
             .build(resolver);
     CxxTest cxxTest =
-        (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+        (CxxTest) createTestBuilder(resolver, filesystem)
             .setEnv(ImmutableMap.of("TEST", "value $(location //:some_rule)"))
             .build(resolver);
     TestRunningOptions options =
@@ -158,17 +154,16 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void testArgsArePropagated() {
+  public void testArgsArePropagated() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
             .setOut("someRule")
             .build(resolver);
     CxxTest cxxTest =
-        (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+        (CxxTest) createTestBuilder(resolver, filesystem)
             .setArgs(ImmutableList.of("value $(location //:some_rule)"))
             .build(resolver);
     TestRunningOptions testOptions =
@@ -191,14 +186,13 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void runTestSeparately() {
+  public void runTestSeparately() throws Exception {
     for (CxxTestType framework : CxxTestType.values()) {
       ProjectFilesystem filesystem = new FakeProjectFilesystem();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-      Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
       CxxTest cxxTest =
-          (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+          (CxxTest) createTestBuilder(resolver, filesystem)
               .setRunTestSeparately(true)
               .setUseDefaultTestMain(true)
               .setFramework(framework)
@@ -208,39 +202,38 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() {
+  public void runtimeDepOnDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget cxxBinaryTarget = BuildTargetFactory.newInstance("//:dep");
+    BuildTarget cxxLibraryTarget = BuildTargetFactory.newInstance("//:lib");
+    CxxBinaryBuilder cxxBinaryBuilder = new CxxBinaryBuilder(cxxBinaryTarget);
+    CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(cxxLibraryTarget)
+        .setDeps(ImmutableSortedSet.of(cxxBinaryTarget));
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
-    BuildRule cxxBinary =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .build(resolver, filesystem, targetNodes);
-    BuildRule cxxLibrary =
-        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
-            .build(resolver, filesystem, targetNodes);
-    CxxTest cxxTest =
-        (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
-            .setDeps(ImmutableSortedSet.of(cxxLibrary.getBuildTarget()))
-            .build(resolver, filesystem, targetNodes);
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule cxxBinary = cxxBinaryBuilder.build(resolver, filesystem);
+    cxxLibraryBuilder.build(resolver, filesystem);
+    CxxTestBuilder cxxTestBuilder = createTestBuilder(resolver, filesystem)
+        .setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
+    CxxTest cxxTest = (CxxTest) cxxTestBuilder.build(resolver, filesystem);
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(cxxTest),
         Matchers.hasItem(cxxBinary));
   }
 
   @Test
-  public void locationMacro() {
+  public void locationMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxTestBuilder builder =
-        (CxxTestBuilder) createTestBuilder(resolver, filesystem, targetNodes)
+        createTestBuilder(resolver, filesystem)
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
     assertThat(
         builder.findImplicitDeps(),
@@ -259,17 +252,16 @@ public class CxxTestDescriptionTest {
 
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithMatch() {
+  public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxTestBuilder builder =
-        (CxxTestBuilder) createTestBuilder(resolver, filesystem, targetNodes)
+        createTestBuilder(resolver, filesystem)
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<String>>()
                     .add(
@@ -294,17 +286,16 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithoutMatch() {
+  public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxTestBuilder builder =
-        (CxxTestBuilder) createTestBuilder(resolver, filesystem, targetNodes)
+        createTestBuilder(resolver, filesystem)
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<String>>()
                     .add(

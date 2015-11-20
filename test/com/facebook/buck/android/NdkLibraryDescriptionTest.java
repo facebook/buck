@@ -68,7 +68,6 @@ public class NdkLibraryDescriptionTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return NativeLinkableInput.builder()
@@ -83,7 +82,6 @@ public class NdkLibraryDescriptionTest {
 
     @Override
     public ImmutableMap<String, SourcePath> getSharedLibraries(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform) {
       return ImmutableMap.of();
     }
@@ -91,7 +89,7 @@ public class NdkLibraryDescriptionTest {
   }
 
   @Test
-  public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() {
+  public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

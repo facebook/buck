@@ -24,6 +24,7 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -66,7 +67,6 @@ public class CxxPreprocessablesTest {
 
     @Override
     public CxxPreprocessorInput getCxxPreprocessorInput(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         HeaderVisibility headerVisibility) {
       return input;
@@ -74,18 +74,16 @@ public class CxxPreprocessablesTest {
 
     @Override
     public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
-        HeaderVisibility headerVisibility) {
+        HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
       ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
       builder.put(
           getBuildTarget(),
-          getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
+          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
       for (BuildRule dep : getDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(
               ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
-                  targetGraph,
                   cxxPlatform,
                   headerVisibility));
           }
@@ -193,14 +191,13 @@ public class CxxPreprocessablesTest {
     ImmutableList<CxxPreprocessorInput> expected = ImmutableList.of(nothing, input1, input2);
     ImmutableList<CxxPreprocessorInput> actual = ImmutableList.copyOf(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.<BuildRule>of(dep3)));
     assertEquals(expected, actual);
   }
 
   @Test
-  public void createHeaderSymlinkTreeBuildRuleHasNoDeps() {
+  public void createHeaderSymlinkTreeBuildRuleHasNoDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -273,7 +270,6 @@ public class CxxPreprocessablesTest {
     // in the bottom input.
     CxxPreprocessorInput totalInput = CxxPreprocessorInput.concat(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.of(top)));
     assertTrue(bottomInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
@@ -326,7 +322,6 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput.concat(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.of(top)));
   }
@@ -385,7 +380,6 @@ public class CxxPreprocessablesTest {
         expected,
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                TargetGraph.EMPTY,
                 cxxPlatform,
                 ImmutableList.of(top))));
   }

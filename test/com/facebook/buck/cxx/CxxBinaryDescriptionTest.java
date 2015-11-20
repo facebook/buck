@@ -27,6 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
@@ -41,7 +42,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -50,20 +50,19 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class CxxBinaryDescriptionTest {
@@ -81,7 +80,7 @@ public class CxxBinaryDescriptionTest {
 
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
-  public void createBuildRule() {
+  public void createBuildRule() throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -115,7 +114,6 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
-          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
@@ -128,12 +126,11 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return ImmutableMap.of(
             getBuildTarget(),
-            getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
+            getCxxPreprocessorInput(cxxPlatform, headerVisibility));
       }
 
       @Override
@@ -150,7 +147,6 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
@@ -169,7 +165,6 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(
-          TargetGraph targetGraph,
           PythonPlatform pythonPlatform,
           CxxPlatform cxxPlatform) {
         return PythonPackageComponents.of(
@@ -190,7 +185,6 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(
-          TargetGraph targetGraph,
           CxxPlatform cxxPlatform) {
         return ImmutableMap.of();
       }
@@ -205,18 +199,18 @@ public class CxxBinaryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxBinaryBuilder cxxBinaryBuilder =
-        (CxxBinaryBuilder) new CxxBinaryBuilder(target)
-              .setSrcs(
-                  ImmutableSortedSet.of(
-                      SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
-                      SourceWithFlags.of(
-                          new BuildTargetSourcePath(
-                              genSource.getBuildTarget()))))
-              .setHeaders(
-                  ImmutableSortedSet.<SourcePath>of(
-                      new FakeSourcePath("test/bar.h"),
-                      new BuildTargetSourcePath(genHeader.getBuildTarget())))
-              .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
+                    SourceWithFlags.of(
+                        new BuildTargetSourcePath(
+                            genSource.getBuildTarget()))))
+            .setHeaders(
+                ImmutableSortedSet.<SourcePath>of(
+                    new FakeSourcePath("test/bar.h"),
+                    new BuildTargetSourcePath(genHeader.getBuildTarget())))
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
     CxxBinary binRule = (CxxBinary) cxxBinaryBuilder.build(resolver);
     CxxLink rule = binRule.getRule();
     CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -315,7 +309,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void staticPicLinkStyle() {
+  public void staticPicLinkStyle() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -328,29 +322,38 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() {
+  public void runtimeDepOnDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildTarget leafBinaryTarget = BuildTargetFactory.newInstance("//:dep");
+    CxxBinaryBuilder leafCxxBinaryBuilder = new CxxBinaryBuilder(leafBinaryTarget);
+
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(libraryTarget).setDeps(ImmutableSortedSet.of(leafBinaryTarget));
+
+    BuildTarget topLevelBinaryTarget = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder topLevelCxxBinaryBuilder = new CxxBinaryBuilder(topLevelBinaryTarget)
+        .setDeps(ImmutableSortedSet.of(libraryTarget));
+
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
-    BuildRule leafCxxBinary =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .build(resolver, filesystem, targetNodes);
-    BuildRule cxxLibrary =
-        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .setDeps(ImmutableSortedSet.of(leafCxxBinary.getBuildTarget()))
-            .build(resolver, filesystem, targetNodes);
-    CxxBinary topLevelCxxBinary =
-        (CxxBinary) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:bin"))
-            .setDeps(ImmutableSortedSet.of(cxxLibrary.getBuildTarget()))
-            .build(resolver, filesystem, targetNodes);
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                leafCxxBinaryBuilder.build(),
+                cxxLibraryBuilder.build(),
+                topLevelCxxBinaryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule leafCxxBinary = leafCxxBinaryBuilder.build(resolver, filesystem);
+    cxxLibraryBuilder.build(resolver, filesystem);
+    CxxBinary topLevelCxxBinary = (CxxBinary) topLevelCxxBinaryBuilder.build(resolver, filesystem);
+
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary),
         Matchers.hasItem(leafCxxBinary));
   }
 
   @Test
-  public void linkerFlagsLocationMacro() {
+  public void linkerFlagsLocationMacro() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule dep =
@@ -358,7 +361,7 @@ public class CxxBinaryDescriptionTest {
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
-        (CxxBinaryBuilder) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
     assertThat(
         builder.findImplicitDeps(),
@@ -373,7 +376,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithMatch() {
+  public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule dep =
@@ -381,7 +384,7 @@ public class CxxBinaryDescriptionTest {
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
-        (CxxBinaryBuilder) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<String>>()
                     .add(
@@ -403,7 +406,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithoutMatch() {
+  public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Genrule dep =
@@ -411,7 +414,7 @@ public class CxxBinaryDescriptionTest {
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
-        (CxxBinaryBuilder) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<String>>()
                     .add(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2012-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,15 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.python;
+package com.facebook.buck.util;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+/**
+ * An exception that should only be used to wrap and immediately unwrap exceptions in anonymous
+ * classes that represent closures, such as {@link com.google.common.base.Function} and
+ * {@link com.google.common.base.Predicate}
+ */
+public class ClosureException extends RuntimeException {
 
-public interface PythonPackagable {
+  private final Exception exception;
 
-  PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException;
+  public ClosureException(Exception exception) {
+    this.exception = exception;
+  }
+
+  public Exception getException() {
+    return exception;
+  }
 
 }
+

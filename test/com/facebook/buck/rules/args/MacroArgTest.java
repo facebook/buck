@@ -60,7 +60,7 @@ public class MacroArgTest {
   }
 
   @Test
-  public void getDeps() {
+  public void getDeps() throws Exception {
     MacroHandler macroHandler =
         new MacroHandler(
             ImmutableMap.<String, MacroExpander>of("loc", new LocationMacroExpander()));
