@@ -44,6 +44,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   public static final Flavor FLAVOR = ImmutableFlavor.of("apple-asset-catalog");
 
   private static final String BUNDLE_DIRECTORY_EXTENSION = ".bundle";
+  private static final String XCASSETS_DIRECTORY_EXTENSION = ".xcassets";
 
   @AddToRuleKey
   private final String applePlatformName;
@@ -71,7 +72,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             new Predicate<Path>() {
               @Override
               public boolean apply(Path input) {
-                return input.toString().endsWith(AppleDescriptions.XCASSETS_DIRECTORY_EXTENSION);
+                return input.toString().endsWith(XCASSETS_DIRECTORY_EXTENSION);
               }
             }));
     this.applePlatformName = applePlatformName;

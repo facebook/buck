@@ -19,23 +19,38 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Either;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +58,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,8 +73,6 @@ public class AppleDescriptions {
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
-
-  static final String XCASSETS_DIRECTORY_EXTENSION = ".xcassets";
   private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
 
   /** Utility class: do not instantiate. */
@@ -325,4 +341,255 @@ public class AppleDescriptions {
             MERGED_ASSET_CATALOG_NAME));
   }
 
+  /** Only works with thin binaries. */
+  static CxxPlatform getCxxPlatformForBuildTarget(
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      BuildTarget target) {
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatformFlavorDomain
+          .getValue(target.getFlavors())
+          .or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+
+    return cxxPlatform;
+  }
+
+  private static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      BuildTarget target) {
+    Optional<FatBinaryInfo> fatBinaryInfo =
+        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, target);
+    AppleCxxPlatform appleCxxPlatform;
+    if (fatBinaryInfo.isPresent()) {
+      appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
+    } else {
+      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          target);
+      appleCxxPlatform =
+          platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
+      if (appleCxxPlatform == null) {
+        throw new HumanReadableException(
+            "%s: Apple bundle requires an Apple platform, found '%s'",
+            target,
+            cxxPlatform.getFlavor().getName());
+      }
+    }
+
+    return appleCxxPlatform;
+  }
+
+  static AppleBundle createAppleBundle(
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CodeSignIdentityStore codeSignIdentityStore,
+      ProvisioningProfileStore provisioningProfileStore,
+      BuildTarget binary,
+      Either<AppleBundleExtension, String> extension,
+      Optional<String> productName,
+      SourcePath infoPlist,
+      Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
+      ImmutableSortedSet<BuildTarget> tests)
+      throws NoSuchBuildTargetException {
+    AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
+        cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
+        params.getBuildTarget());
+    AppleBundleDestinations destinations =
+        AppleBundleDestinations.platformDestinations(
+            appleCxxPlatform.getAppleSdk().getApplePlatform());
+
+    ImmutableSet.Builder<SourcePath> bundleDirsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> dirsContainingResourceDirsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> bundleFilesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> bundleVariantFilesBuilder = ImmutableSet.builder();
+    AppleResources.collectResourceDirsAndFiles(
+        targetGraph,
+        Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())),
+        bundleDirsBuilder,
+        dirsContainingResourceDirsBuilder,
+        bundleFilesBuilder,
+        bundleVariantFilesBuilder);
+    ImmutableSet<SourcePath> bundleDirs = bundleDirsBuilder.build();
+    ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
+    ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
+    ImmutableSet<SourcePath> bundleVariantFiles = bundleVariantFilesBuilder.build();
+
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+
+    Optional<AppleAssetCatalog> assetCatalog =
+        createBuildRuleForTransitiveAssetCatalogDependencies(
+            targetGraph,
+            params,
+            sourcePathResolver,
+            appleCxxPlatform.getAppleSdk().getApplePlatform(),
+            appleCxxPlatform.getActool());
+
+    // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with
+    // binary being optional.
+    BuildRule flavoredBinaryRule = getFlavoredBinaryRule(
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        targetGraph,
+        params,
+        resolver,
+        binary);
+    BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithUpdatedDeps(
+        params,
+        binary,
+        ImmutableSet.<BuildRule>builder()
+            .add(flavoredBinaryRule)
+            .addAll(assetCatalog.asSet())
+            .addAll(
+                BuildRules.toBuildRulesFor(
+                    params.getBuildTarget(),
+                    resolver,
+                    SourcePaths.filterBuildTargetSourcePaths(
+                        Iterables.concat(
+                            bundleFiles,
+                            bundleDirs,
+                            dirsContainingResourceDirs,
+                            bundleVariantFiles))))
+            .build());
+
+    ImmutableMap<SourcePath, String> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
+        params.getDeps(),
+        destinations);
+
+    return new AppleBundle(
+        bundleParamsWithFlavoredBinaryDep,
+        sourcePathResolver,
+        extension,
+        productName,
+        infoPlist,
+        infoPlistSubstitutions.get(),
+        Optional.of(flavoredBinaryRule),
+        destinations,
+        bundleDirs,
+        bundleFiles,
+        dirsContainingResourceDirs,
+        extensionBundlePaths,
+        Optional.of(bundleVariantFiles),
+        appleCxxPlatform.getIbtool(),
+        appleCxxPlatform.getDsymutil(),
+        appleCxxPlatform.getCxxPlatform().getStrip(),
+        appleCxxPlatform.getLldb(),
+        assetCatalog,
+        tests,
+        appleCxxPlatform.getAppleSdk(),
+        codeSignIdentityStore,
+        appleCxxPlatform.getCodesignAllocatePath(),
+        provisioningProfileStore,
+        AppleBundle.DebugInfoFormat.DSYM);
+  }
+
+  private static BuildRule getFlavoredBinaryRule(
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      TargetGraph targetGraph,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      BuildTarget binary) throws NoSuchBuildTargetException {
+    // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
+    ImmutableSet<Flavor> flavors = params.getBuildTarget()
+        .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
+        .getFlavors();
+    if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
+      flavors = new ImmutableSet.Builder<Flavor>()
+          .addAll(flavors)
+          .add(defaultCxxPlatform.getFlavor())
+          .build();
+    }
+
+    final TargetNode<?> binaryTargetNode = Preconditions.checkNotNull(targetGraph.get(binary));
+    // If the binary target of the AppleBundle is an AppleLibrary then the build flavor
+    // must be specified.
+    if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription &&
+        (Sets.intersection(
+            AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS,
+            binaryTargetNode.getBuildTarget().getFlavors()).size() != 1)) {
+      throw new HumanReadableException(
+          "AppleExtension bundle [%s] must have exactly one of these flavors: [%s].",
+          binaryTargetNode.getBuildTarget().toString(),
+          Joiner.on(", ").join(AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS));
+    }
+
+    return resolver.requireRule(
+        BuildTarget.of(
+            binary.getUnflavoredBuildTarget(),
+            ImmutableSet.<Flavor>builder()
+                .addAll(flavors)
+                .addAll(binary.getFlavors())
+                .build()));
+  }
+
+  private static BuildRuleParams getBundleParamsWithUpdatedDeps(
+      final BuildRuleParams params,
+      final BuildTarget originalBinaryTarget,
+      final Set<BuildRule> newDeps) {
+    // Remove the unflavored binary rule and add the flavored one instead.
+    final Predicate<BuildRule> notOriginalBinaryRule = Predicates.not(
+        BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
+    return params.copyWithDeps(
+        Suppliers.ofInstance(
+            FluentIterable
+                .from(params.getDeclaredDeps().get())
+                .filter(notOriginalBinaryRule)
+                .append(newDeps)
+                .toSortedSet(Ordering.natural())),
+        Suppliers.ofInstance(
+            FluentIterable
+                .from(params.getExtraDeps().get())
+                .filter(notOriginalBinaryRule)
+                .toSortedSet(Ordering.natural())));
+  }
+
+  private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(
+      ImmutableSortedSet<BuildRule> deps,
+      AppleBundleDestinations destinations) {
+    ImmutableMap.Builder<SourcePath, String> extensionBundlePaths = ImmutableMap.builder();
+    // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
+    // do not get pulled in to the top-level Bundle.
+    for (BuildRule rule : deps) {
+      if (rule instanceof AppleBundle) {
+        AppleBundle appleBundle = (AppleBundle) rule;
+        if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension()) ||
+            AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
+          Path outputPath = Preconditions.checkNotNull(
+              appleBundle.getPathToOutput(),
+              "Path cannot be null for AppleBundle [%s].",
+              appleBundle);
+          SourcePath sourcePath = new BuildTargetSourcePath(
+              appleBundle.getBuildTarget(),
+              outputPath);
+
+          Path destinationPath;
+
+          String platformName = appleBundle.getPlatformName();
+
+          if ((platformName.equals(ApplePlatform.Name.WATCHOS) ||
+              platformName.equals(ApplePlatform.Name.WATCHSIMULATOR)) &&
+              appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
+            destinationPath = destinations.getWatchAppPath();
+          } else {
+            destinationPath = destinations.getPlugInsPath();
+          }
+
+          extensionBundlePaths.put(sourcePath, destinationPath.toString());
+        }
+      }
+    }
+
+    return extensionBundlePaths.build();
+  }
 }
