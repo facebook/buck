@@ -91,8 +91,11 @@ public class FetchCommand extends BuildCommand {
     }
 
     int exitCode;
-    try (CommandThreadManager pool =
-             new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
+    try (
+        CommandThreadManager pool = new CommandThreadManager(
+            "Fetch",
+            params.getBuckConfig().getWorkQueueExecutionOrder(),
+            getConcurrencyLimit(params.getBuckConfig()));
          Build build = createBuild(
              params.getBuckConfig(),
              actionGraphAndResolver.getFirst(),

@@ -265,6 +265,18 @@ This section includes settings that control build engine behavior.
   # and the rule can dynamically determine a subset of dependencies it
   # actually needs.  Enabled by default.
   depfiles = true
+
+  # Configures order in which the build engine executes scheduled jobs.
+  # Supported values:
+  #   LIFO     : Last in, first out. This mode will prefer building all
+  #              dependencies of a target before building other targets.
+  #              Jobs at different depths in the dependency graph are
+  #              likely to be evenly spread throughout the build.
+  #   FIFO     : First in, first out. In this mode all jobs will first
+  #              check the cache before building their dependencies.
+  #              Execution order of jobs is likely to be mostly ordered
+  #              by their depth in the dependency graph.
+  work_queue_execution_order = LIFO
 </pre>{/literal}
 
 

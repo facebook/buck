@@ -380,9 +380,11 @@ public class BuildCommand extends AbstractCommand {
       artifactCache = new NoopArtifactCache();
     }
 
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Build",
-        getConcurrencyLimit(params.getBuckConfig()));
+    try (
+        CommandThreadManager pool = new CommandThreadManager(
+            "Build",
+            params.getBuckConfig().getWorkQueueExecutionOrder(),
+            getConcurrencyLimit(params.getBuckConfig()));
          Build build = createBuild(
              params.getBuckConfig(),
              actionGraphAndResolver.getFirst(),

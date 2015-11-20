@@ -277,8 +277,11 @@ public class TestCommand extends BuildCommand {
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
         getNumTestThreads(params.getBuckConfig()),
         params.getBuckConfig().getLoadLimit());
-    try (CommandThreadManager testPool =
-             new CommandThreadManager("Test-Run", concurrencyLimit)) {
+    try (
+        CommandThreadManager testPool = new CommandThreadManager(
+            "Test-Run",
+            params.getBuckConfig().getWorkQueueExecutionOrder(),
+            concurrencyLimit)) {
       return TestRunning.runTests(
           params,
           testRules,
@@ -487,8 +490,11 @@ public class TestCommand extends BuildCommand {
       printMatchingTestRules(params.getConsole(), testRules);
     }
 
-    try (CommandThreadManager pool =
-             new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
+    try (
+        CommandThreadManager pool = new CommandThreadManager(
+            "Test",
+            params.getBuckConfig().getWorkQueueExecutionOrder(),
+            getConcurrencyLimit(params.getBuckConfig()))) {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),

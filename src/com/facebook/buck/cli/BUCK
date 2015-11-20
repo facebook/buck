@@ -36,6 +36,7 @@ java_library(
 CONFIG_SRCS = [
   'BuckConfig.java',
   'DownloadConfig.java',
+  'WorkQueueExecutionOrder.java',
 ]
 java_library(
   name = 'config',
@@ -54,6 +55,7 @@ java_library(
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

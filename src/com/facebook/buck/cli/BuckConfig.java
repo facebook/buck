@@ -651,6 +651,17 @@ public class BuckConfig {
   }
 
   /**
+   * @return the selected execution order of the build work queue.
+   */
+  public WorkQueueExecutionOrder getWorkQueueExecutionOrder() {
+    return getEnum(
+        "build",
+        "work_queue_execution_order",
+        WorkQueueExecutionOrder.class)
+        .or(WorkQueueExecutionOrder.LIFO);
+  }
+
+  /**
    * @return the path for the given section and property.
    */
   public Optional<Path> getPath(String sectionName, String name) {
