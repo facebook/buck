@@ -277,6 +277,22 @@ This section includes settings that control build engine behavior.
   #              Execution order of jobs is likely to be mostly ordered
   #              by their depth in the dependency graph.
   work_queue_execution_order = LIFO
+
+  # Determines whether dependencies will be scheduled in deterministic
+  # or random order.
+  # Supported values:
+  #   RANDOM   : Randomly shuffle dependencies before scheduling them.
+  #              This mode should improve the cache hits if multiple
+  #              machines that use the same cache start building the
+  #              same target at the same time. It might also help
+  #              surface issues with rules depending on side effects
+  #              of other rules they don't depend on.
+  #   SORTED   : Sort dependencies in stable order before scheduling
+  #              them. Note this does not mean that jobs will always
+  #              be executed in the same order because that also
+  #              depends on the number of running threads and races
+  #              between them.
+  dependency_scheduling_order = RANDOM
 </pre>{/literal}
 
 

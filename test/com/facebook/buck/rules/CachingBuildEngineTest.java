@@ -199,6 +199,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -310,6 +311,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             service,
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
@@ -430,6 +432,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
@@ -515,6 +518,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
@@ -575,6 +579,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -680,6 +685,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.DEEP,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -823,6 +829,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -972,6 +979,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -1016,6 +1024,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -1068,6 +1077,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1159,6 +1169,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1262,6 +1273,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1350,6 +1362,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1451,6 +1464,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1572,6 +1586,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1673,6 +1688,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -1722,6 +1738,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -1807,6 +1824,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             service,
             fileHashCache,
             CachingBuildEngine.BuildMode.DEEP,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -1910,6 +1928,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             service,
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
@@ -1965,6 +1984,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -2028,6 +2048,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -2083,6 +2104,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             pathResolver,
             Functions.constant(
@@ -2140,6 +2162,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             new NullFileHashCache(),
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 

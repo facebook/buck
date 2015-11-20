@@ -105,6 +105,7 @@ public class FetchCommand extends BuildCommand {
                  pool.getExecutor(),
                  params.getFileHashCache(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+                 params.getBuckConfig().getDependencySchedulingOrder(),
                  params.getBuckConfig().getBuildDepFiles(),
                  actionGraphAndResolver.getSecond()),
              params.getArtifactCache(),

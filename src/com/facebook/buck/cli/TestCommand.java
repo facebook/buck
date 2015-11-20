@@ -500,6 +500,7 @@ public class TestCommand extends BuildCommand {
               pool.getExecutor(),
               params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+              params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
               actionGraphAndResolver.getSecond());
       try (Build build = createBuild(

@@ -74,6 +74,8 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,6 +114,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private final ListeningExecutorService service;
   private final BuildMode buildMode;
+  private final DependencySchedulingOrder dependencySchedulingOrder;
   private final DepFiles depFiles;
   private final SourcePathResolver pathResolver;
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
@@ -121,10 +124,12 @@ public class CachingBuildEngine implements BuildEngine {
       ListeningExecutorService service,
       final FileHashCache fileHashCache,
       BuildMode buildMode,
+      DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       final BuildRuleResolver resolver) {
     this.service = service;
     this.buildMode = buildMode;
+    this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.pathResolver = new SourcePathResolver(resolver);
 
@@ -146,11 +151,13 @@ public class CachingBuildEngine implements BuildEngine {
       ListeningExecutorService service,
       FileHashCache fileHashCache,
       BuildMode buildMode,
+      DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
     this.service = service;
     this.buildMode = buildMode;
+    this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.pathResolver = pathResolver;
 
@@ -211,10 +218,25 @@ public class CachingBuildEngine implements BuildEngine {
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
     List<ListenableFuture<BuildResult>> depResults =
         Lists.newArrayListWithExpectedSize(rule.getDeps().size());
-    for (BuildRule dep : rule.getDeps()) {
+    Iterable<BuildRule> deps = rule.getDeps();
+    switch (dependencySchedulingOrder) {
+      case SORTED:
+        deps = ImmutableSortedSet.copyOf(deps);
+        break;
+      case RANDOM:
+        deps = shuffled(deps);
+        break;
+    }
+    for (BuildRule dep : deps) {
       depResults.add(getBuildRuleResultWithRuntimeDeps(dep, context, asyncCallbacks));
     }
     return Futures.allAsList(depResults);
+  }
+
+  private static List<BuildRule> shuffled(Iterable<BuildRule> rules) {
+    ArrayList<BuildRule> rulesList = Lists.newArrayList(rules);
+    Collections.shuffle(rulesList);
+    return rulesList;
   }
 
   private ListenableFuture<BuildResult> processBuildRule(
@@ -1130,6 +1152,18 @@ public class CachingBuildEngine implements BuildEngine {
     // the top-level build targets from the remote cache, without building missing or changed
     // dependencies locally.
     POPULATE_FROM_REMOTE_CACHE,
+  }
+
+  /**
+   * The order in which to schedule dependency execution.
+   */
+  public enum DependencySchedulingOrder {
+
+    // Schedule dependencies based on their natural ordering.
+    SORTED,
+
+    // Schedule dependencies in random order.
+    RANDOM,
   }
 
   /**

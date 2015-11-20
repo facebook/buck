@@ -394,6 +394,7 @@ public class BuildCommand extends AbstractCommand {
                  pool.getExecutor(),
                  params.getFileHashCache(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+                 params.getBuckConfig().getDependencySchedulingOrder(),
                  params.getBuckConfig().getBuildDepFiles(),
                  actionGraphAndResolver.getSecond()),
              artifactCache,
