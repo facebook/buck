@@ -142,6 +142,10 @@ public class InputBasedRuleKeyBuilderFactory
       throw new IllegalStateException("Input-based rule key builders cannot process build rules");
     }
 
+    protected ImmutableSet<SourcePath> getInputsSoFar() {
+      return inputs.build();
+    }
+
     // Build the rule key and the list of deps found from this builder.
     protected Result buildResult() {
       return new Result(super.build(), deps.build(), inputs.build());

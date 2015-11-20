@@ -16,26 +16,19 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.collect.ImmutableList;
 
-/**
- * A variant of {@link InputBasedRuleKeyBuilderFactory} which ignores inputs when calculating the
- * {@link RuleKey}, allowing them to specified explicitly.
- */
-public class DependencyFileRuleKeyBuilderFactory extends InputBasedRuleKeyBuilderFactory {
+import java.io.IOException;
+import java.nio.file.Path;
 
-  public DependencyFileRuleKeyBuilderFactory(
-      FileHashCache hashCache,
-      SourcePathResolver pathResolver,
-      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
-    super(
-        hashCache,
-        pathResolver,
-        defaultRuleKeyBuilderFactory,
-        InputHandling.IGNORE);
-  }
+public interface DependencyFileRuleKeyBuilderFactory {
+
+  /**
+   * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
+   *     {@code inputs}.
+   */
+  RuleKey build(BuildRule rule, ImmutableList<Path> inputs) throws IOException;
 
 }

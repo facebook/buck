@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -1096,26 +1097,20 @@ public class CachingBuildEngine implements BuildEngine {
       return Optional.absent();
     }
 
-    RuleKeyFactories cellData = ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
-    Preconditions.checkNotNull(cellData);
-
-    // Add in the inputs explicitly listed in the dep file.  If any inputs are no longer on disk,
-    // this means something changed and a dep-file based rule key can't be calculated.
+    // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
+    // changed and a dep-file based rule key can't be calculated.
     ImmutableList<Path> inputs =
         FluentIterable.from(depFile.get()).transform(MorePaths.TO_PATH).toList();
-    RuleKeyBuilder builder = cellData.depFileRuleKeyBuilderFactory.newInstance(rule);
-    for (Path input : inputs) {
-      try {
-        builder.setPath(rule.getProjectFilesystem().resolve(input), input);
-      } catch (NoSuchFileException e) {
-        if (!allowMissingInputs) {
-          throw e;
-        }
-        return Optional.absent();
+    try {
+      return Optional.of(
+          this.ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
+              .depFileRuleKeyBuilderFactory.build(rule, inputs));
+    } catch (NoSuchFileException e) {
+      if (!allowMissingInputs) {
+        throw e;
       }
+      return Optional.absent();
     }
-
-    return Optional.of(builder.build());
   }
 
   /**
@@ -1150,7 +1145,7 @@ public class CachingBuildEngine implements BuildEngine {
     public final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
     public final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
     public final RuleKeyBuilderFactory abiRuleKeyBuilderFactory;
-    public final RuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
+    public final DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
 
     public static RuleKeyFactories build(
         FileHashCache fileHashCache,
@@ -1170,7 +1165,7 @@ public class CachingBuildEngine implements BuildEngine {
               fileHashCache,
               pathResolver,
               defaultRuleKeyBuilderFactory),
-          new DependencyFileRuleKeyBuilderFactory(
+          new DefaultDependencyFileRuleKeyBuilderFactory(
               fileHashCache,
               pathResolver,
               defaultRuleKeyBuilderFactory));
@@ -1181,7 +1176,7 @@ public class CachingBuildEngine implements BuildEngine {
         RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
         RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
         RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
-        RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
+        DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
       this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
       this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
       this.abiRuleKeyBuilderFactory = abiRuleKeyBuilderFactory;

@@ -48,9 +48,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -122,6 +124,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       new DefaultRuleKeyBuilderFactory(
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER);
+  private static final DependencyFileRuleKeyBuilderFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
+      new DefaultDependencyFileRuleKeyBuilderFactory(
+          new NullFileHashCache(),
+          DEFAULT_SOURCE_PATH_RESOLVER,
+          NOOP_RULE_KEY_FACTORY);
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -1070,7 +1077,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                         rule.getBuildTarget(),
                         inputRuleKey)),
                     NOOP_RULE_KEY_FACTORY,
-                    NOOP_RULE_KEY_FACTORY)));
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1160,7 +1167,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     new FakeRuleKeyBuilderFactory(
                         ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
                     NOOP_RULE_KEY_FACTORY,
-                    NOOP_RULE_KEY_FACTORY)));
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1263,7 +1270,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     new FakeRuleKeyBuilderFactory(
                         ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
                     NOOP_RULE_KEY_FACTORY,
-                    NOOP_RULE_KEY_FACTORY)));
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1490,8 +1497,19 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            factory);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
 
     // Create a simple rule which just writes a file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1499,10 +1517,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    final Path input = Paths.get("input_file");
     final Path output = Paths.get("output");
     BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
           @Override
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
@@ -1525,12 +1544,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepare an input file that should appear in the dep file.
     filesystem.writeContentsToPath("something", input);
-    DependencyFileRuleKeyBuilderFactory factory =
-        new DependencyFileRuleKeyBuilderFactory(
-            fileHashCache,
-            pathResolver,
-            ruleKeyBuilderFactory);
-    RuleKey depFileRuleKey = factory.newInstance(rule).setPath(input).build();
+    RuleKey depFileRuleKey = depFilefactory.build(rule, ImmutableList.of(input));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -1562,16 +1576,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
-                    ruleKeyBuilderFactory,
-                    NOOP_RULE_KEY_FACTORY,
-                    NOOP_RULE_KEY_FACTORY,
-                    new DependencyFileRuleKeyBuilderFactory(
-                        fileHashCache,
-                        pathResolver,
-                        ruleKeyBuilderFactory))));
-
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
-    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
   }
 
   @Test
@@ -1588,8 +1598,19 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
 
     // Create a simple rule which just writes a file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1597,10 +1618,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    final Path input = Paths.get("input_file");
     final Path output = Paths.get("output");
     BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
           @Override
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
@@ -1623,12 +1645,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepare an input file that should appear in the dep file.
     filesystem.writeContentsToPath("something", input);
-    DependencyFileRuleKeyBuilderFactory factory =
-        new DependencyFileRuleKeyBuilderFactory(
-            fileHashCache,
-            pathResolver,
-            ruleKeyBuilderFactory);
-    RuleKey depFileRuleKey = factory.newInstance(rule).setPath(input).build();
+    RuleKey depFileRuleKey = depFilefactory.build(rule, ImmutableList.of(input));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -1660,16 +1677,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
-                    ruleKeyBuilderFactory,
-                    NOOP_RULE_KEY_FACTORY,
-                    NOOP_RULE_KEY_FACTORY,
-                    new DependencyFileRuleKeyBuilderFactory(
-                        fileHashCache,
-                        pathResolver,
-                        ruleKeyBuilderFactory))));
-
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
-    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
   }
 
   @Test
@@ -1962,7 +1975,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                         fileHashCache,
                         pathResolver,
                         ruleKeyBuilderFactory),
-                    NOOP_RULE_KEY_FACTORY)));
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -2022,7 +2035,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     ruleKeyBuilderFactory,
                     NOOP_RULE_KEY_FACTORY,
                     abiRuleKeyBuilderFactory,
-                    NOOP_RULE_KEY_FACTORY)));
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -2077,7 +2090,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     NOOP_RULE_KEY_FACTORY,
                     NOOP_RULE_KEY_FACTORY,
                     abiRuleKeyBuilderFactory,
-                    NOOP_RULE_KEY_FACTORY)));
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -2168,6 +2181,19 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         pathToOutputFile,
         buildSteps,
         postBuildSteps);
+  }
+
+  private BuildRuleSuccessType getSuccess(BuildResult result) {
+    switch (result.getStatus()) {
+      case FAIL:
+        throw Throwables.propagate(Preconditions.checkNotNull(result.getFailure()));
+      case CANCELED:
+        throw new RuntimeException("result is canceled");
+      case SUCCESS:
+        return result.getSuccess();
+      default:
+        throw new IllegalStateException();
+    }
   }
 
   private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
