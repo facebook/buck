@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -62,11 +62,11 @@ public class ExportFileDescription implements
    */
   @Override
   public Iterable<Path> inferInputsFromConstructorArgs(
-      BuildTarget buildTarget,
+      UnflavoredBuildTarget buildTarget,
       ExportFileDescription.Arg constructorArg) {
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
     if (!constructorArg.src.isPresent()) {
-      String name = buildTarget.getBasePathWithSlash() + buildTarget.getShortNameAndFlavorPostfix();
+      String name = buildTarget.getBasePathWithSlash() + buildTarget.getShortName();
       inputs.add(Paths.get(name));
     }
     return inputs.build();

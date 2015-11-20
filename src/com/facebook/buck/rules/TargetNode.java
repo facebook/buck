@@ -99,7 +99,9 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       paths
           .addAll(
               ((ImplicitInputsInferringDescription<T>) description)
-                  .inferInputsFromConstructorArgs(params.target, constructorArg));
+                  .inferInputsFromConstructorArgs(
+                      params.target.getUnflavoredBuildTarget(),
+                      constructorArg));
     }
 
     this.extraDeps = ImmutableSortedSet.copyOf(Sets.difference(extraDeps.build(), declaredDeps));
