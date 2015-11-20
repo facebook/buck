@@ -108,7 +108,6 @@ class PerBuildState implements AutoCloseable {
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     Cell owningCell = getCell(target);
     target = target.withoutCell();
-    Path buildFile = owningCell.getAbsolutePathToBuildFile(target);
 
     ProjectBuildFileParser parser = getBuildFileParser(owningCell);
 
@@ -116,7 +115,6 @@ class PerBuildState implements AutoCloseable {
         eventBus,
         owningCell,
         parser,
-        buildFile,
         target,
         symlinkCheckers);
   }

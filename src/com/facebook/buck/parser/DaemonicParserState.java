@@ -198,10 +198,8 @@ class DaemonicParserState {
       final BuckEventBus eventBus,
       final Cell cell,
       final ProjectBuildFileParser parser,
-      final Path buildFile,
       final BuildTarget target,
       final TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
-    Preconditions.checkState(buildFile.isAbsolute());
     invalidateIfProjectBuildFileParserStateChanged(cell);
     try {
       return allTargetNodes.get(
@@ -209,6 +207,8 @@ class DaemonicParserState {
           new Callable<TargetNode<?>>() {
             @Override
             public TargetNode<?> call() throws Exception {
+              Path buildFile = cell.getAbsolutePathToBuildFile(target);
+              Preconditions.checkState(buildFile.isAbsolute());
               List<Map<String, Object>> rawNodes = loadRawNodes(cell, buildFile, parser);
 
               for (Map<String, Object> rawNode : rawNodes) {
