@@ -1,0 +1,6 @@
+Project: Java Objective-C Bridge
+Version: Git revision c22107743c2751f1fbaef3f509d59683f16adb60
+Release Date: 2014-08-06
+Website: https://github.com/shannah/Java-Objective-C-Bridge/
+License: Apache 2.0
+Description: JNA library to allow Java programs to invoke Objective-C APIs

@@ -1,0 +1,16 @@
+prebuilt_jar(
+  name = 'ObjCBridge',
+  binary_jar = 'ObjCBridge.jar',
+  deps = [
+    '//third-party/java/jna:jna',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+export_file(
+  name = 'libjcocoa.dylib',
+  src = 'libjcocoa.dylib',
+  visibility = [
+    'PUBLIC',
+  ],
+)

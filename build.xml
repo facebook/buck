@@ -76,6 +76,7 @@
   </fileset>
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
+    <include name="ObjCBridge/ObjCBridge.jar" />
     <include name="android/sdk-common-24.2.3.jar" />
     <include name="android/common-24.2.3.jar" />
     <include name="android/layoutlib-api-24.2.3.jar" />

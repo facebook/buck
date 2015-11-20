@@ -358,6 +358,11 @@ class BuckTool(object):
                     "-Dbuck.{0}={1}".format(
                     resource.name, self._get_resource(resource)))
 
+        if sys.platform == "darwin":
+            java_args.append("-Djava.library.path=" + os.path.dirname(
+                self._get_resource(
+                    Resource("libjcocoa.dylib"))))
+
         if os.environ.get("BUCK_DEBUG_MODE"):
             java_args.append("-agentlib:jdwp=transport=dt_socket,"
                              "server=y,suspend=y,address=8888")

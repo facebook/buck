@@ -43,6 +43,8 @@ BUCK_CORE_RESOURCES = {
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
     'dx': '//third-party/java/dx:etc_dx',
     'jacoco_agent_jar': '//third-party/java/jacoco:agent',
+    # The name of this resource is important, since it needs to have this filename in the PEX.
+    "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
     'logging_config_file': '//config:logging.properties',
     'native_exopackage_fake_path': '//assets/android:native-exopackage-fakes.apk',
     'path_to_asm_jar': '//third-party/java/asm:asm',
