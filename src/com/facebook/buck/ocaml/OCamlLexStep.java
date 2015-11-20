@@ -16,6 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -28,12 +30,12 @@ import java.nio.file.Path;
 public class OCamlLexStep extends ShellStep {
 
   public static class Args {
-    public final Path lexCompiler;
+    public final Tool lexCompiler;
     public final Path output;
     public final Path input;
 
     public Args(
-      Path lexCompiler,
+      Tool lexCompiler,
       Path output,
       Path input) {
       this.lexCompiler = lexCompiler;
@@ -42,10 +44,12 @@ public class OCamlLexStep extends ShellStep {
     }
   }
 
+  private final SourcePathResolver resolver;
   private final Args args;
 
-  public OCamlLexStep(Path workingDirectory, Args args) {
+  public OCamlLexStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
     super(workingDirectory);
+    this.resolver = resolver;
     this.args = args;
   }
 
@@ -57,7 +61,7 @@ public class OCamlLexStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(args.lexCompiler.toString())
+        .addAll(args.lexCompiler.getCommandPrefix(resolver))
         .add("-o", args.output.toString())
         .add(args.input.toString())
         .build();

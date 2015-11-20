@@ -18,7 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -68,6 +68,7 @@ public class OCamlBuildStep implements Step {
 
     this.depToolStep = new OCamlDepToolStep(
         filesystem.getRootPath(),
+        this.ocamlContext.getSourcePathResolver(),
         this.ocamlContext.getOcamlDepTool().get(),
         ocamlContext.getMLInput(),
         this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true)
@@ -150,6 +151,7 @@ public class OCamlBuildStep implements Step {
     if (!ocamlContext.isLibrary()) {
       Step debugLauncher = new OCamlDebugLauncherStep(
           filesystem,
+          resolver,
           new OCamlDebugLauncherStep.Args(
               ocamlContext.getOcamlDebug().get(),
               ocamlContext.getBytecodeOutput(),
@@ -173,8 +175,8 @@ public class OCamlBuildStep implements Step {
 
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
-    for (Path cSrc : ocamlContext.getCInput()) {
-      Path outputPath = ocamlContext.getCOutput(cSrc);
+    for (SourcePath cSrc : ocamlContext.getCInput()) {
+      Path outputPath = ocamlContext.getCOutput(resolver.getAbsolutePath(cSrc));
       linkerInputs.add(outputPath.toString());
       Step compileStep = new OCamlCCompileStep(
           resolver,
@@ -184,7 +186,7 @@ public class OCamlBuildStep implements Step {
               cCompiler,
               ocamlContext.getOcamlCompiler().get(),
               outputPath,
-              new PathSourcePath(filesystem, cSrc),
+              cSrc,
               cCompileFlags.build(),
               ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       int compileExitCode = compileStep.execute(context);
@@ -205,6 +207,7 @@ public class OCamlBuildStep implements Step {
 
     OCamlLinkStep linkStep = new OCamlLinkStep(
         filesystem.getRootPath(),
+        resolver,
         new OCamlLinkStep.Args(
             cxxCompilerEnvironment,
             cxxCompiler,
@@ -229,6 +232,7 @@ public class OCamlBuildStep implements Step {
 
     OCamlLinkStep linkStep = new OCamlLinkStep(
         filesystem.getRootPath(),
+        resolver,
         new OCamlLinkStep.Args(
             cxxCompilerEnvironment,
             cxxCompiler,
@@ -282,7 +286,9 @@ public class OCamlBuildStep implements Step {
           /* excludeDeps */ false);
       Step compileStep = new OCamlMLCompileStep(
           workingDirectory,
+          resolver,
           new OCamlMLCompileStep.Args(
+              filesystem.getAbsolutifier(),
               cCompilerEnvironment,
               cCompiler,
               ocamlContext.getOcamlCompiler().get(),
@@ -323,12 +329,15 @@ public class OCamlBuildStep implements Step {
           /* excludeDeps */ false);
       Step compileBytecodeStep = new OCamlMLCompileStep(
           workingDirectory,
+          resolver,
           new OCamlMLCompileStep.Args(
-              cCompilerEnvironment, cCompiler,
-            ocamlContext.getOcamlBytecodeCompiler().get(),
-            outputPath,
-            Paths.get(inputOutput),
-            compileFlags));
+              filesystem.getAbsolutifier(),
+              cCompilerEnvironment,
+              cCompiler,
+              ocamlContext.getOcamlBytecodeCompiler().get(),
+              outputPath,
+              Paths.get(inputOutput),
+              compileFlags));
       int compileExitCode = compileBytecodeStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;
@@ -346,27 +355,29 @@ public class OCamlBuildStep implements Step {
     if (mkDirExitCode != 0) {
       return mkDirExitCode;
     }
-    for (Path yaccSource : ocamlContext.getYaccInput()) {
-      Path output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
+    for (SourcePath yaccSource : ocamlContext.getYaccInput()) {
+      SourcePath output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
       OCamlYaccStep yaccStep = new OCamlYaccStep(
           workingDirectory,
+          resolver,
           new OCamlYaccStep.Args(
             ocamlContext.getYaccCompiler().get(),
-            output,
-            yaccSource));
+            resolver.getAbsolutePath(output),
+            resolver.getAbsolutePath(yaccSource)));
       int yaccExitCode = yaccStep.execute(context);
       if (yaccExitCode != 0) {
         return yaccExitCode;
       }
     }
-    for (Path lexSource : ocamlContext.getLexInput()) {
-      Path output = ocamlContext.getLexOutput(ImmutableSet.of(lexSource)).get(0);
+    for (SourcePath lexSource : ocamlContext.getLexInput()) {
+      SourcePath output = ocamlContext.getLexOutput(ImmutableSet.of(lexSource)).get(0);
       OCamlLexStep lexStep = new OCamlLexStep(
           workingDirectory,
+          resolver,
           new OCamlLexStep.Args(
             ocamlContext.getLexCompiler().get(),
-            output,
-            lexSource));
+            resolver.getAbsolutePath(output),
+            resolver.getAbsolutePath(lexSource)));
       int lexExitCode = lexStep.execute(context);
       if (lexExitCode != 0) {
         return lexExitCode;

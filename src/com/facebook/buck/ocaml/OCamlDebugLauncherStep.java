@@ -19,6 +19,8 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.Shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -42,10 +44,15 @@ import java.util.List;
 public class OCamlDebugLauncherStep implements Step {
 
   private final ProjectFilesystem filesystem;
+  private final SourcePathResolver resolver;
   private final Args args;
 
-  public OCamlDebugLauncherStep(ProjectFilesystem filesystem, Args args) {
+  public OCamlDebugLauncherStep(
+      ProjectFilesystem filesystem,
+      SourcePathResolver resolver,
+      Args args) {
     this.filesystem = filesystem;
+    this.resolver = resolver;
     this.args = args;
   }
 
@@ -79,7 +86,7 @@ public class OCamlDebugLauncherStep implements Step {
   private String getDebugCmd() {
     ImmutableList.Builder<String> debugCmd = ImmutableList.builder();
     debugCmd.add("rlwrap");
-    debugCmd.add(args.ocamlDebug.toString());
+    debugCmd.addAll(args.ocamlDebug.getCommandPrefix(resolver));
 
     Iterable<String> includesBytecodeDirs = FluentIterable.from(args.ocamlInput)
         .transformAndConcat(new Function<OCamlLibrary, Iterable<String>>() {
@@ -112,13 +119,13 @@ public class OCamlDebugLauncherStep implements Step {
   }
 
   public static class Args implements RuleKeyAppendable {
-    public final Path ocamlDebug;
+    public final Tool ocamlDebug;
     public final Path bytecodeOutput;
     public final ImmutableList<OCamlLibrary> ocamlInput;
     public final ImmutableList<String> bytecodeIncludeFlags;
 
     public Args(
-        Path ocamlDebug,
+        Tool ocamlDebug,
         Path bytecodeOutput,
         List<OCamlLibrary> ocamlInput,
         List<String> bytecodeIncludeFlags) {
@@ -135,7 +142,7 @@ public class OCamlDebugLauncherStep implements Step {
     @Override
     public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       return builder
-          .setReflectively("ocamlDebug", ocamlDebug.toString())
+          .setReflectively("ocamlDebug", ocamlDebug)
           .setReflectively("bytecodeOutput", bytecodeOutput.toString())
           .setReflectively("flags", bytecodeIncludeFlags);
     }

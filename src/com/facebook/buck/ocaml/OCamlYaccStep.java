@@ -16,6 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -27,15 +29,16 @@ import java.nio.file.Path;
  */
 public class OCamlYaccStep extends ShellStep {
 
+  private final SourcePathResolver resolver;
+
   public static class Args {
-    public final Path yaccCompiler;
+    public final Tool yaccCompiler;
     public final Path output;
     public final Path input;
     public Args(
-        Path yaccCompiler,
+        Tool yaccCompiler,
         Path output,
-        Path input
-    ) {
+        Path input) {
       this.yaccCompiler = yaccCompiler;
       this.output = output;
       this.input = input;
@@ -44,8 +47,9 @@ public class OCamlYaccStep extends ShellStep {
 
   private final Args args;
 
-  public OCamlYaccStep(Path workingDirectory, Args args) {
+  public OCamlYaccStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
     super(workingDirectory);
+    this.resolver = resolver;
     this.args = args;
   }
 
@@ -57,7 +61,7 @@ public class OCamlYaccStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(args.yaccCompiler.toString())
+        .addAll(args.yaccCompiler.getCommandPrefix(resolver))
         .add("-b", OCamlUtil.stripExtension(args.output.toString()))
         .add(args.input.toString())
         .build();

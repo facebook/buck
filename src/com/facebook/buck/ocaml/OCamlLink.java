@@ -56,7 +56,7 @@ public class OCamlLink extends AbstractBuildRule {
     }
     return ImmutableList.of(
       new MkdirStep(getProjectFilesystem(), args.output.getParent()),
-      new OCamlLinkStep(getProjectFilesystem().getRootPath(), args));
+      new OCamlLinkStep(getProjectFilesystem().getRootPath(), getResolver(), args));
   }
 
   @Override

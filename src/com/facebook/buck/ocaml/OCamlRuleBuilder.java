@@ -253,6 +253,8 @@ public class OCamlRuleBuilder {
     }
     OCamlBuildContext ocamlContext =
         OCamlBuildContext.builder(ocamlBuckConfig)
+            .setProjectFilesystem(params.getProjectFilesystem())
+            .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
             .setIncludes(includes)
             .setBytecodeIncludes(bytecodeIncludes)
@@ -262,7 +264,7 @@ public class OCamlRuleBuilder {
             .setBuildTarget(buildTarget.getUnflavoredBuildTarget())
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
-            .setInput(pathResolver.deprecatedAllPaths(getInput(srcs)))
+            .setInput(getInput(srcs))
             .setCompileDeps(compileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
@@ -383,6 +385,8 @@ public class OCamlRuleBuilder {
     }
     OCamlBuildContext ocamlContext =
         OCamlBuildContext.builder(ocamlBuckConfig)
+            .setProjectFilesystem(params.getProjectFilesystem())
+            .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
             .setIncludes(includes)
             .setBytecodeIncludes(bytecodeIncludes)
@@ -392,7 +396,7 @@ public class OCamlRuleBuilder {
             .setBuildTarget(buildTarget.getUnflavoredBuildTarget())
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
-            .setInput(pathResolver.deprecatedAllPaths(getInput(srcs)))
+            .setInput(getInput(srcs))
             .setCompileDeps(compileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
@@ -466,6 +470,7 @@ public class OCamlRuleBuilder {
       OCamlBuildContext ocamlContext) {
     OCamlDepToolStep depToolStep = new OCamlDepToolStep(
         baseDir,
+        ocamlContext.getSourcePathResolver(),
         ocamlContext.getOcamlDepTool().get(),
         ocamlContext.getMLInput(),
         ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
@@ -486,7 +491,7 @@ public class OCamlRuleBuilder {
     if (depsString.isPresent()) {
       OCamlDependencyGraphGenerator graphGenerator = new OCamlDependencyGraphGenerator();
       return filterCurrentRuleInput(
-          ocamlContext.getMLInput(),
+          ocamlContext.getSourcePathResolver().getAllAbsolutePaths(ocamlContext.getMLInput()),
           graphGenerator.generateDependencyMap(depsString.get()));
     } else {
       throw new HumanReadableException("ocamldep execution failed");

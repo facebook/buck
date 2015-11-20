@@ -18,6 +18,8 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.rules.args.Arg;
@@ -38,7 +40,7 @@ public class OCamlLinkStep extends ShellStep {
 
   public static class Args implements RuleKeyAppendable {
     public final ImmutableMap<String, String> environment;
-    public final Path ocamlCompiler;
+    public final Tool ocamlCompiler;
     public final ImmutableList<String> cxxCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
@@ -51,7 +53,7 @@ public class OCamlLinkStep extends ShellStep {
     public Args(
         ImmutableMap<String, String> environment,
         ImmutableList<String> cxxCompiler,
-        Path ocamlCompiler,
+        Tool ocamlCompiler,
         Path output,
         ImmutableList<Arg> depInput,
         ImmutableList<Arg> nativeDepInput,
@@ -75,7 +77,7 @@ public class OCamlLinkStep extends ShellStep {
     public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       return builder
           .setReflectively("cxxCompiler", cxxCompiler.toString())
-          .setReflectively("ocamlCompiler", ocamlCompiler.toString())
+          .setReflectively("ocamlCompiler", ocamlCompiler)
           .setReflectively("output", output.toString())
           .setReflectively("depInput", depInput)
           .setReflectively("nativeDepInput", nativeDepInput)
@@ -101,12 +103,14 @@ public class OCamlLinkStep extends ShellStep {
     }
   }
 
+  private final SourcePathResolver resolver;
   private final Args args;
 
   private final ImmutableList<String> ocamlInput;
 
-  public OCamlLinkStep(Path workingDirectory, Args args) {
+  public OCamlLinkStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
     super(workingDirectory);
+    this.resolver = resolver;
     this.args = args;
 
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
@@ -135,7 +139,7 @@ public class OCamlLinkStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(args.ocamlCompiler.toString())
+        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
         .add("-cc", args.cxxCompiler.get(0))
         .addAll(

@@ -472,6 +472,7 @@ public class OCamlBuildRulesGenerator {
         compileParams,
         pathResolver,
         new OCamlMLCompileStep.Args(
+            params.getProjectFilesystem().getAbsolutifier(),
             cCompiler.getEnvironment(pathResolver),
             cCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlCompiler().get(),
@@ -568,6 +569,7 @@ public class OCamlBuildRulesGenerator {
         compileParams,
         pathResolver,
         new OCamlMLCompileStep.Args(
+            params.getProjectFilesystem().getAbsolutifier(),
             cCompiler.getEnvironment(pathResolver),
             cCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlBytecodeCompiler().get(),

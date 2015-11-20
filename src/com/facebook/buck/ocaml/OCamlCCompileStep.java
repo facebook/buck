@@ -20,6 +20,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
@@ -51,7 +52,7 @@ public class OCamlCCompileStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(args.ocamlCompiler.toString())
+        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
         .add("-cc", args.cCompiler.get(0))
         .addAll(
@@ -77,7 +78,7 @@ public class OCamlCCompileStep extends ShellStep {
 
   public static class Args implements RuleKeyAppendable {
     public final ImmutableMap<String, String> environment;
-    public final Path ocamlCompiler;
+    public final Tool ocamlCompiler;
     public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
@@ -87,7 +88,7 @@ public class OCamlCCompileStep extends ShellStep {
     public Args(
         ImmutableMap<String, String> environment,
         ImmutableList<String> cCompiler,
-        Path ocamlCompiler,
+        Tool ocamlCompiler,
         Path output,
         SourcePath input,
         ImmutableList<String> flags,
@@ -108,7 +109,7 @@ public class OCamlCCompileStep extends ShellStep {
       builder.setReflectively("output", output.toString());
       builder.setReflectively("input", input);
       builder.setReflectively("flags", flags);
-      builder.setReflectively("includes", includes);
+      builder.setReflectively("includes", includes.values());
       return builder;
     }
   }
