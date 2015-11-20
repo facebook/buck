@@ -2975,7 +2975,7 @@ public class ProjectGeneratorTest {
             .setFiles(ImmutableSet.<SourcePath>of(new FakeSourcePath("bar.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
-    TargetNode<AppleNativeTargetDescriptionArg> testLibDepLib =
+    TargetNode<AppleLibraryDescription.Arg> testLibDepLib =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//libs", "deplib").build())
             .setFrameworks(
                 Optional.of(
@@ -2989,7 +2989,7 @@ public class ProjectGeneratorTest {
             .setSrcs(
                 Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
             .build();
-    TargetNode<AppleNativeTargetDescriptionArg> dep1 =
+    TargetNode<AppleLibraryDescription.Arg> dep1 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep1").build())
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepLib.getBuildTarget())))
             .setSrcs(
@@ -3003,7 +3003,7 @@ public class ProjectGeneratorTest {
                                 Paths.get("DeclaredInTestLib.framework"),
                                 Optional.<String>absent())))))
             .build();
-    TargetNode<AppleNativeTargetDescriptionArg> dep2 =
+    TargetNode<AppleLibraryDescription.Arg> dep2 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep2").build())
             .setSrcs(
                 Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
@@ -3131,7 +3131,7 @@ public class ProjectGeneratorTest {
         .newExportFileBuilder(headerTarget)
         .build();
 
-    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(libTarget)
         .setConfigs(
             Optional.of(

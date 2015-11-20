@@ -164,7 +164,12 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_APPLE_FLAVOR_DOMAIN);
+        DEFAULT_APPLE_FLAVOR_DOMAIN,
+        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+        DEFAULT_PLATFORM,
+        CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+        ProvisioningProfileStore.fromProvisioningProfiles(
+            ImmutableList.<ProvisioningProfileMetadata>of()));
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.

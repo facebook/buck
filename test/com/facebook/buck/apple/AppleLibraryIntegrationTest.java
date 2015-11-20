@@ -16,6 +16,9 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -142,6 +145,34 @@ public class AppleLibraryIntegrationTest {
     assertIsSymbolicLink(
         outputPath.resolve("PublicHeader.h"),
         inputPath.resolve("PublicHeader.h"));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsFramework() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
+        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+    result.assertSuccess();
+
+    Path frameworkPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve(
+            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64/TestLibrary.framework");
+    assertThat(Files.exists(frameworkPath), is(true));
+    assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
+    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(libraryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
   }
 
   @Test

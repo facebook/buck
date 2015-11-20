@@ -66,7 +66,7 @@ public class AppleResourcesTest {
             .setDirs(ImmutableSet.<SourcePath>of())
             .setVariants(Optional.of(variants))
             .build();
-    TargetNode<AppleNativeTargetDescriptionArg> libNode = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> libNode = AppleLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:lib"))
         .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
         .build();
@@ -74,7 +74,7 @@ public class AppleResourcesTest {
         resourceNode,
         libNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleNativeTargetDescriptionArg>> targetNodes = ImmutableSet.of(
+    ImmutableSet<TargetNode<AppleLibraryDescription.Arg>> targetNodes = ImmutableSet.of(
         libNode);
 
     assertThat(
@@ -93,7 +93,7 @@ public class AppleResourcesTest {
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<AppleNativeTargetDescriptionArg> fooLibNode = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooResourceTarget)))
         .build();
@@ -103,7 +103,7 @@ public class AppleResourcesTest {
             .setFiles(ImmutableSet.<SourcePath>of(new FakeSourcePath("bar.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
-    TargetNode<AppleNativeTargetDescriptionArg> barLibNode = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> barLibNode = AppleLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//bar:lib"))
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget, barResourceTarget)))
         .build();
@@ -113,7 +113,7 @@ public class AppleResourcesTest {
         barResourceNode,
         barLibNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleNativeTargetDescriptionArg>> targetNodes = ImmutableSet.of(
+    ImmutableSet<TargetNode<AppleLibraryDescription.Arg>> targetNodes = ImmutableSet.of(
         barLibNode);
 
     assertThat(

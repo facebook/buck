@@ -415,7 +415,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder(ROOT, "//foo", "lib").build();
-    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
@@ -466,7 +466,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder(ROOT, "//foo", "lib").build();
-    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
@@ -645,7 +645,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
-    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(BuildTarget.builder(ROOT, "//foo", "lib").build())
         .setTests(
             Optional.of(
@@ -1213,17 +1213,17 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void targetsForWorkspaceWithExtraTargets() throws IOException {
     BuildTarget fooLibTarget = BuildTarget.builder(ROOT, "//foo", "FooLib").build();
-    TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .build();
 
     BuildTarget barLibTarget = BuildTarget.builder(ROOT, "//bar", "BarLib").build();
-    TargetNode<AppleNativeTargetDescriptionArg> barLib = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> barLib = AppleLibraryBuilder
         .createBuilder(barLibTarget)
         .build();
 
     BuildTarget bazLibTarget = BuildTarget.builder(ROOT, "//baz", "BazLib").build();
-    TargetNode<AppleNativeTargetDescriptionArg> bazLib = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> bazLib = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .build();
@@ -1316,7 +1316,7 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void enablingParallelizeBuild() throws IOException {
     BuildTarget fooLibTarget = BuildTarget.builder(ROOT, "//foo", "FooLib").build();
-    TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
+    TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .build();
 

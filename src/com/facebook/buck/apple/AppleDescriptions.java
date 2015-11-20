@@ -29,6 +29,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -70,6 +71,8 @@ import java.util.Set;
  * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
  */
 public class AppleDescriptions {
+
+  public static final Flavor FRAMEWORK_FLAVOR = ImmutableFlavor.of("framework");
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
@@ -502,7 +505,10 @@ public class AppleDescriptions {
       BuildTarget binary) throws NoSuchBuildTargetException {
     // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
     ImmutableSet<Flavor> flavors = params.getBuildTarget()
-        .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
+        .withoutFlavors(
+            ImmutableSet.of(
+                ReactNativeFlavors.DO_NOT_BUNDLE,
+                AppleDescriptions.FRAMEWORK_FLAVOR))
         .getFlavors();
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
