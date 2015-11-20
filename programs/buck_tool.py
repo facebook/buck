@@ -359,6 +359,7 @@ class BuckTool(object):
                     resource.name, self._get_resource(resource)))
 
         if sys.platform == "darwin":
+            java_args.append("-Dbuck.enable_objc=true")
             java_args.append("-Djava.library.path=" + os.path.dirname(
                 self._get_resource(
                     Resource("libjcocoa.dylib"))))

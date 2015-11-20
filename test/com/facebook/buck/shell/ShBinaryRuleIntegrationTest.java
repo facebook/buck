@@ -28,7 +28,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
@@ -111,7 +110,6 @@ public class ShBinaryRuleIntegrationTest {
     List<String> lines = Files.readAllLines(outputFile, US_ASCII);
     ExecutionEnvironment executionEnvironment =
         new DefaultExecutionEnvironment(
-            new FakeProcessExecutor(),
             ImmutableMap.copyOf(System.getenv()),
             System.getProperties());
     String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();

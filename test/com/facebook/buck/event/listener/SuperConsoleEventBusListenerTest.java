@@ -68,7 +68,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -159,7 +158,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -438,7 +436,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -582,7 +579,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -859,7 +855,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -1135,7 +1130,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             noisySummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -1421,7 +1415,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -1587,7 +1580,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -1612,7 +1604,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -1667,7 +1658,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
@@ -1722,7 +1712,6 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());

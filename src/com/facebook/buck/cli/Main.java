@@ -677,7 +677,6 @@ public final class Main {
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
-        processExecutor,
         clientEnvironment,
         // TODO(t4854620): Thread through properties from client environment.
         System.getProperties());
