@@ -57,7 +57,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   // We should upate the Python test rule to account for this.
   @AddToRuleKey
   private final Supplier<String> script;
-  @AddToRuleKey
   private final SymlinkTree linkTree;
   @AddToRuleKey
   private final PythonPackageComponents components;
