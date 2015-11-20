@@ -116,7 +116,7 @@ public class CopyResourcesStep implements Step {
 
 
       Optional<BuildRule> underlyingRule = resolver.getRule(rawResource);
-      Path pathToResource = resolver.deprecatedGetPath(rawResource);
+      Path relativePathToResource = resolver.getRelativePath(rawResource);
 
       String resource = null;
 
@@ -126,7 +126,7 @@ public class CopyResourcesStep implements Step {
                 ((HasOutputName) underlyingRule.get()).getOutputName()));
       }
       if (resource == null) {
-        resource = MorePaths.pathWithUnixSeparators(pathToResource);
+        resource = MorePaths.pathWithUnixSeparators(relativePathToResource);
       }
 
       Matcher matcher;
@@ -139,7 +139,7 @@ public class CopyResourcesStep implements Step {
       if ("".equals(javaPackageAsPath.toString())) {
         // In this case, the project root is acting as the default package, so the resource path
         // works fine.
-        relativeSymlinkPath = pathToResource.getFileName();
+        relativeSymlinkPath = relativePathToResource.getFileName();
       } else {
         int lastIndex = resource.lastIndexOf(
             MorePaths.pathWithUnixSeparatorsAndTrailingSlash(javaPackageAsPath));
@@ -147,7 +147,7 @@ public class CopyResourcesStep implements Step {
           Preconditions.checkState(
               rawResource instanceof BuildTargetSourcePath,
               "If resource path %s does not contain %s, then it must be a BuildTargetSourcePath.",
-              pathToResource,
+              relativePathToResource,
               javaPackageAsPath);
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
@@ -156,7 +156,7 @@ public class CopyResourcesStep implements Step {
                   "%s%s%s",
                   targetPackageDir,
                   targetPackageDir.isEmpty() ? "" : "/",
-                  resolver.deprecatedGetPath(rawResource).getFileName()));
+                  resolver.getRelativePath(rawResource).getFileName()));
         } else {
           relativeSymlinkPath = Paths.get(resource.substring(lastIndex));
         }
@@ -164,7 +164,7 @@ public class CopyResourcesStep implements Step {
       Path target = outputDirectory.resolve(relativeSymlinkPath);
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
           filesystem,
-          pathToResource,
+          resolver.getAbsolutePath(rawResource),
           target);
       allSteps.add(link);
     }

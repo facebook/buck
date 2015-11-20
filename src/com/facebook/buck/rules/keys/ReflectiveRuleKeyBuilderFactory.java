@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -31,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder>
     implements RuleKeyBuilderFactory {
+
+  private static final Logger LOG = Logger.get(ReflectiveRuleKeyBuilderFactory.class);
 
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
@@ -82,7 +85,12 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder>
 
   @Override
   public final RuleKey build(BuildRule buildRule) {
-    return knownRules.getUnchecked(buildRule);
+    try {
+      return knownRules.getUnchecked(buildRule);
+    } catch (RuntimeException e) {
+      LOG.warn(e, "When building %s", buildRule);
+      throw e;
+    }
   }
 
 }

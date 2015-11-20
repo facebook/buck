@@ -122,6 +122,7 @@ public class InputBasedRuleKeyBuilderFactory
     protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
         deps.addAll(pathResolver.getRule(sourcePath).asSet());
+
         try {
           setPath(
               pathResolver.getAbsolutePath(sourcePath),

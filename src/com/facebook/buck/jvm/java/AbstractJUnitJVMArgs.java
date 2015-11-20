@@ -40,7 +40,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractJUnitJVMArgs {
+abstract class AbstractJUnitJvmArgs {
   private static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
   private static final String MODULE_BASE_PATH_PROPERTY = "com.facebook.buck.moduleBasePath";
   private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";

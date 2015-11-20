@@ -38,8 +38,8 @@ public class BuildTargetSourcePathTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new FakeBuildRule(target, pathResolver);
-
+    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    rule.setOutputFile(null);
     resolver.addToIndex(rule);
     BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 

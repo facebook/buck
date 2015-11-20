@@ -113,7 +113,11 @@ public class SourcePathResolver {
   public Path getRelativePath(SourcePath sourcePath) {
     Path toReturn = getPathPrivateImpl(sourcePath);
 
-    Preconditions.checkState(!toReturn.isAbsolute());
+    Preconditions.checkState(
+        !toReturn.isAbsolute(),
+        "Expected path to be relative, not absolute: %s (from %s)",
+        toReturn,
+        sourcePath);
 
     return toReturn;
   }

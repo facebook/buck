@@ -224,7 +224,7 @@ public class JavaTest
         this.vmArgs,
         executionContext.getTargetDeviceOptional());
 
-    JUnitJVMArgs args = JUnitJVMArgs.builder()
+    JUnitJvmArgs args = JUnitJvmArgs.builder()
         .setTestType(testType)
         .setDirectoryForTestResults(outDir)
         .setTmpDirectory(tempDir)

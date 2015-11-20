@@ -26,14 +26,12 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -204,15 +202,11 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
           }
         } else if (rule instanceof HasClasspathEntries) {
           HasClasspathEntries hasClasspathEntries = (HasClasspathEntries) rule;
-          ImmutableSetMultimap<JavaLibrary, Path> entries =
-              hasClasspathEntries.getTransitiveClasspathEntries();
-          for (Map.Entry<JavaLibrary, Path> entry : entries.entries()) {
-            inputs.add(
-                new BuildTargetSourcePath(
-                    entry.getKey().getBuildTarget(),
-                    entry.getValue()));
+          ImmutableSet<JavaLibrary> entries = hasClasspathEntries.getTransitiveClasspathDeps();
+          for (JavaLibrary entry : entries) {
+            inputs.add(new BuildTargetSourcePath(entry.getBuildTarget()));
           }
-          searchPathElements.addAll(entries.values());
+          searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +

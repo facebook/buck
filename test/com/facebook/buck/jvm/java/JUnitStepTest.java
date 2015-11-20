@@ -68,7 +68,7 @@ public class JUnitStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
-    JUnitJVMArgs args = JUnitJVMArgs.builder()
+    JUnitJvmArgs args = JUnitJvmArgs.builder()
         .setTmpDirectory(directoryForTemp)
         .setBuildId(pretendBuildId)
         .setBuckModuleBaseSourceCodePath(modulePath)
@@ -142,7 +142,7 @@ public class JUnitStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
-    JUnitJVMArgs args = JUnitJVMArgs.builder()
+    JUnitJvmArgs args = JUnitJvmArgs.builder()
         .setTmpDirectory(directoryForTemp)
         .setClasspathFile(classpathFile)
         .setBuildId(pretendBuildId)

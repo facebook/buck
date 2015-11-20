@@ -74,8 +74,8 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     return outputFile;
   }
 
-  public void setOutputFile(String outputFile) {
-    this.outputFile = Paths.get(outputFile);
+  public void setOutputFile(@Nullable String outputFile) {
+    this.outputFile = outputFile == null ? null : Paths.get(outputFile);
   }
 
   @Override

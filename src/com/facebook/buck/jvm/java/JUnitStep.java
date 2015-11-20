@@ -41,7 +41,7 @@ public class JUnitStep extends ShellStep {
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> nativeLibsEnvironment;
   private final Optional<Long> testRuleTimeoutMs;
-  private final JUnitJVMArgs junitJVMArgs;
+  private final JUnitJvmArgs junitJvmArgs;
 
   // Set when the junit command times out.
   private boolean hasTimedOut = false;
@@ -50,12 +50,12 @@ public class JUnitStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
-      JUnitJVMArgs junitJVMArgs) {
+      JUnitJvmArgs junitJvmArgs) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
-    this.junitJVMArgs = junitJVMArgs;
+    this.junitJvmArgs = junitJvmArgs;
   }
 
   @Override
@@ -68,13 +68,13 @@ public class JUnitStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
 
-    junitJVMArgs.formatCommandLineArgsToList(
+    junitJvmArgs.formatCommandLineArgsToList(
         args,
         filesystem,
         context.getVerbosity(),
         context.getDefaultTestTimeoutMillis());
 
-    if (junitJVMArgs.isDebugEnabled()) {
+    if (junitJvmArgs.isDebugEnabled()) {
       warnUser(context,
           "Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.");
     }
@@ -85,8 +85,8 @@ public class JUnitStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
-    if (junitJVMArgs.getTmpDirectory().isPresent()) {
-      env.put("TMP", junitJVMArgs.getTmpDirectory().get().toString());
+    if (junitJvmArgs.getTmpDirectory().isPresent()) {
+      env.put("TMP", junitJvmArgs.getTmpDirectory().get().toString());
     }
     env.putAll(nativeLibsEnvironment);
     return env.build();

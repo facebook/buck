@@ -148,7 +148,7 @@ public class JavaBinary extends AbstractBuildRule
     }
 
     Path outputFile = getPathToOutput();
-    Path manifestPath = manifestFile == null ? null : getResolver().deprecatedGetPath(manifestFile);
+    Path manifestPath = manifestFile == null ? null : getResolver().getAbsolutePath(manifestFile);
     Step jar = new JarDirectoryStep(
         getProjectFilesystem(),
         outputFile,
