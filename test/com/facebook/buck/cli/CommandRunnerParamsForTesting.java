@@ -26,8 +26,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserNg;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -72,11 +71,9 @@ public class CommandRunnerParamsForTesting {
             eventBus),
         artifactCache,
         eventBus,
-        Parser.createBuildFileParser(
-            cell,
+        new ParserNg(
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            ParserConfig.AllowSymlinks.ALLOW),
+            new ConstructorArgMarshaller(typeCoercerFactory)),
         platform,
         environment,
         javaPackageFinder,

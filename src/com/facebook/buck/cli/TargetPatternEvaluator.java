@@ -16,14 +16,13 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryFileTarget;
+import com.facebook.buck.query.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,7 +36,6 @@ import java.util.Set;
 public class TargetPatternEvaluator {
   private final boolean enableProfiling;
   private final CommandRunnerParams params;
-  private final ParserConfig parserConfig;
   private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
 
@@ -46,7 +44,6 @@ public class TargetPatternEvaluator {
   public TargetPatternEvaluator(CommandRunnerParams params, boolean enableProfiling) {
     this.enableProfiling = enableProfiling;
     this.params = params;
-    this.parserConfig = new ParserConfig(params.getBuckConfig());
     this.projectRoot = params.getCell().getFilesystem().getRootPath();
     this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
         params.getBuckConfig(),
@@ -101,12 +98,10 @@ public class TargetPatternEvaluator {
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Set<BuildTarget> buildTargets = params.getParser()
         .resolveTargetSpec(
-            targetNodeSpecParser.parse(params.getCell().getCellRoots(), pattern),
-            parserConfig,
             params.getBuckEventBus(),
-            params.getConsole(),
-            params.getEnvironment(),
-            enableProfiling);
+            params.getCell(),
+            enableProfiling,
+            targetNodeSpecParser.parse(params.getCell().getCellRoots(), pattern));
     // Sorting to have predictable results across different java libraries implementations.
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     for (BuildTarget target : buildTargets) {

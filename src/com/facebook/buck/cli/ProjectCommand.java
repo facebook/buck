@@ -339,14 +339,12 @@ public class ProjectCommand extends BuildCommand {
     try {
        traversalResult = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  getArguments()),
-              new ParserConfig(params.getBuckConfig()),
-              params.getBuckEventBus(),
-              params.getConsole(),
-              params.getEnvironment(),
-              getEnableProfiling());
+                  getArguments()));
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -356,10 +354,8 @@ public class ProjectCommand extends BuildCommand {
     ImmutableSet<BuildTarget> passedInTargetsSet = traversalResult.getFirst();
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         params.getParser(),
-        new ParserConfig(params.getBuckConfig()),
+        params.getCell(),
         params.getBuckEventBus(),
-        params.getConsole(),
-        params.getEnvironment(),
         getEnableProfiling());
 
     Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();

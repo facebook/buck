@@ -81,7 +81,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * Persistent parsing data, that can exist between invocations of the {@link Parser}. All public
+ * Persistent parsing data, that can exist between invocations of the {@link ParserNg}. All public
  * methods that cause build files to be read must be guarded by calls to
  * {@link #invalidateIfProjectBuildFileParserStateChanged(Cell)} in order to ensure that state is maintained correctly.
  */

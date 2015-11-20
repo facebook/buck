@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEngine;
@@ -399,7 +398,6 @@ public class TestCommand extends BuildCommand {
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
-    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     TargetGraph targetGraph;
     ImmutableSet<BuildTarget> explicitBuildTargets;
 
@@ -409,6 +407,9 @@ public class TestCommand extends BuildCommand {
       // test rules.
       if (isRunAllTests()) {
         targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableProfiling(),
             ImmutableList.of(
                 TargetNodePredicateSpec.of(
                     new Predicate<TargetNode<?>>() {
@@ -417,12 +418,7 @@ public class TestCommand extends BuildCommand {
                         return input.getType().isTestRule();
                       }
                     },
-                    BuildFileSpec.fromRecursivePath(Paths.get("")))),
-            parserConfig,
-            params.getBuckEventBus(),
-            params.getConsole(),
-            params.getEnvironment(),
-            getEnableProfiling()).getSecond();
+                    BuildFileSpec.fromRecursivePath(Paths.get(""))))).getSecond();
         explicitBuildTargets = ImmutableSet.of();
 
         // Otherwise, the user specified specific test targets to build and run, so build a graph
@@ -431,14 +427,12 @@ public class TestCommand extends BuildCommand {
         LOG.debug("Parsing graph for arguments %s", getArguments());
         Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
+                params.getBuckEventBus(),
+                params.getCell(),
+                getEnableProfiling(),
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
-                    getArguments()),
-                parserConfig,
-                params.getBuckEventBus(),
-                params.getConsole(),
-                params.getEnvironment(),
-                getEnableProfiling());
+                    getArguments()));
         targetGraph = result.getSecond();
         explicitBuildTargets = result.getFirst();
 
@@ -454,15 +448,13 @@ public class TestCommand extends BuildCommand {
         ImmutableSet<BuildTarget> testTargets = testTargetsBuilder.build();
         if (!testTargets.isEmpty()) {
           LOG.debug("Got related test targets %s, building new target graph...", testTargets);
-          targetGraph = params.getParser().buildTargetGraphForBuildTargets(
+          targetGraph = params.getParser().buildTargetGraph(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
               Iterables.concat(
                   explicitBuildTargets,
-                  testTargets),
-              parserConfig,
-              params.getBuckEventBus(),
-              params.getConsole(),
-              params.getEnvironment(),
-              getEnableProfiling());
+                  testTargets));
           LOG.debug("Finished building new target graph with tests.");
         }
       }

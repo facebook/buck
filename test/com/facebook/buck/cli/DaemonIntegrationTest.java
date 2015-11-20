@@ -33,7 +33,6 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.testutil.TestConsole;
@@ -488,7 +487,6 @@ public class DaemonIntegrationTest {
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -500,7 +498,6 @@ public class DaemonIntegrationTest {
                     .build())
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
 
     assertNotEquals(
@@ -513,7 +510,6 @@ public class DaemonIntegrationTest {
                         ImmutableMap.of("somename", "someothervalue"))).build())
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
 
@@ -554,7 +550,6 @@ public class DaemonIntegrationTest {
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
 
     assertNotEquals(
@@ -568,7 +563,6 @@ public class DaemonIntegrationTest {
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
 }
