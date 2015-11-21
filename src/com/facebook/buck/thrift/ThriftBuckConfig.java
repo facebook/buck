@@ -79,6 +79,10 @@ public class ThriftBuckConfig {
     return delegate.getRequiredBuildTarget(SECTION, "cpp2_library");
   }
 
+  public BuildTarget getCpp2FatalDep() {
+    return delegate.getRequiredBuildTarget(SECTION, "cpp2_fatal_library");
+  }
+
   public BuildTarget getCppAyncDep() {
     return delegate.getRequiredBuildTarget(SECTION, "cpp_async_library");
   }

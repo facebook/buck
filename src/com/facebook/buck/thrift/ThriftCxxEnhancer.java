@@ -87,6 +87,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     final boolean templates = cpp2 || options.contains("templates");
     final boolean perfhash = !cpp2 && options.contains("perfhash");
     final boolean separateProcessmap = cpp2 && options.contains("separate_processmap");
+    final boolean fatal = cpp2 && options.contains("fatal");
 
     ImmutableSortedSet.Builder<String> sources = ImmutableSortedSet.naturalOrder();
 
@@ -108,6 +109,17 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     if (!bootstrap && !cpp2) {
       sources.add(base + "_reflection.h");
       sources.add(base + "_reflection.cpp");
+    }
+
+    if (fatal) {
+      final String[] suffixes = new String[] {
+        "", "_enum", "_union", "_struct", "_constant", "_service"
+      };
+
+      for (String suffix : suffixes) {
+        sources.add(base + "_fatal" + suffix + ".h");
+        sources.add(base + "_fatal" + suffix + ".cpp");
+      }
     }
 
     if (cpp2) {
@@ -303,6 +315,10 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (!cpp2 && options.contains("cob_style")) {
       implicitDeps.add(thriftBuckConfig.getCppAyncDep());
+    }
+
+    if (options.contains("fatal")) {
+      implicitDeps.add(thriftBuckConfig.getCpp2FatalDep());
     }
 
     return implicitDeps.build();
