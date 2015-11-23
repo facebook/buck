@@ -517,7 +517,11 @@ public class CxxLibraryDescription implements
         params,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            new SourcePathResolver(resolver),
+            cxxPlatform,
+            args),
         HeaderVisibility.PRIVATE);
   }
 
@@ -533,7 +537,11 @@ public class CxxLibraryDescription implements
         params,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(
+            params.getBuildTarget(),
+            new SourcePathResolver(resolver),
+            cxxPlatform,
+            args),
         HeaderVisibility.PUBLIC);
   }
 
@@ -547,10 +555,11 @@ public class CxxLibraryDescription implements
       A args,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return createStaticLibrary(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        sourcePathResolver,
         cxxPlatform,
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
@@ -563,13 +572,25 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             cxxPlatform),
         args.prefixHeader,
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
+        CxxDescriptionEnhancer.parseExportedHeaders(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
             cxxPlatform),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         preprocessMode,
         pic);
@@ -602,10 +623,11 @@ public class CxxLibraryDescription implements
             args.exportedPlatformLinkerFlags,
             cxxPlatform));
 
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return createSharedLibrary(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        sourcePathResolver,
         cxxPlatform,
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
@@ -618,13 +640,25 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             cxxPlatform),
         args.prefixHeader,
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
+        CxxDescriptionEnhancer.parseExportedHeaders(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
             cxxPlatform),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         linkerFlags.build(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.soname,
@@ -645,10 +679,11 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       A args,
       CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return createCompilationDatabase(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        sourcePathResolver,
         cxxPlatform,
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
@@ -661,13 +696,25 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             cxxPlatform),
         args.prefixHeader,
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
+        CxxDescriptionEnhancer.parseExportedHeaders(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
             cxxPlatform),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         preprocessMode);
   }

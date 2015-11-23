@@ -121,12 +121,17 @@ public class CxxPythonExtensionDescription implements
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
-        CxxDescriptionEnhancer.parseCxxSources(params, ruleResolver, cxxPlatform, args);
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            pathResolver,
+            cxxPlatform,
+            args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            params,
-            ruleResolver,
-            cxxPlatform, args);
+            params.getBuildTarget(),
+            pathResolver,
+            cxxPlatform,
+            args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.

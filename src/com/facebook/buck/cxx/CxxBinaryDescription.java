@@ -78,7 +78,11 @@ public class CxxBinaryDescription implements
         params,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            new SourcePathResolver(resolver),
+            cxxPlatform,
+            args),
         HeaderVisibility.PRIVATE);
   }
 

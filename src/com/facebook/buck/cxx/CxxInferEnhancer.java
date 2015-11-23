@@ -119,8 +119,8 @@ public final class CxxInferEnhancer {
     BuildRuleParams paramsWithoutInferFlavor = params.withoutFlavor(INFER_ANALYZE);
 
     ImmutableMap<Path, SourcePath> headers = CxxDescriptionEnhancer.parseHeaders(
-        paramsWithoutInferFlavor,
-        resolver,
+        paramsWithoutInferFlavor.getBuildTarget(),
+        pathResolver,
         cxxPlatform,
         args);
 
@@ -160,8 +160,8 @@ public final class CxxInferEnhancer {
         paramsWithoutInferFlavor.getDeps());
 
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
-        paramsWithoutInferFlavor,
-        resolver,
+        paramsWithoutInferFlavor.getBuildTarget(),
+        pathResolver,
         cxxPlatform,
         args);
 
@@ -273,7 +273,11 @@ public final class CxxInferEnhancer {
                 args.exportedPlatformPreprocessorFlags,
                 args.exportedLangPreprocessorFlags,
                 cxxPlatform),
-            CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
+            CxxDescriptionEnhancer.parseExportedHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                cxxPlatform,
+                args),
             args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
   }
 

@@ -165,8 +165,8 @@ public class HalideLibraryDescription implements
 
     // Otherwise create the rule and record it in the rule resolver.
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
-      params,
-      ruleResolver,
+      params.getBuildTarget(),
+      pathResolver,
       cxxPlatform,
       halideSources,
       PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
