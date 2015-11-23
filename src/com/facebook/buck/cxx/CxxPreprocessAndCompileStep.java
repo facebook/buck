@@ -24,11 +24,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.FunctionLineProcessorThread;
 import com.facebook.buck.util.LineProcessorThread;
 import com.facebook.buck.util.ManagedThread;
 import com.facebook.buck.util.MoreThrowables;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -50,8 +48,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -75,13 +71,6 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final ImmutableMap<Path, Path> replacementPaths;
   private final DebugPathSanitizer sanitizer;
   private final Optional<Function<String, Iterable<String>>> extraLineProcessor;
-
-  // N.B. These include paths are special to GCC. They aren't real files and there is no remapping
-  // needed, so we can just ignore them everywhere.
-  private static final ImmutableSet<String> SPECIAL_INCLUDE_PATHS = ImmutableSet.of(
-      "<built-in>",
-      "<command-line>"
-  );
 
   public CxxPreprocessAndCompileStep(
       ProjectFilesystem filesystem,
@@ -126,48 +115,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       fileType = "unknown";
     }
     return fileType + " " + operation.toString().toLowerCase();
-  }
-
-  @VisibleForTesting
-  Function<String, Iterable<String>> createPreprocessOutputLineProcessor(final Path workingDir) {
-    return new Function<String, Iterable<String>>() {
-
-      private final Pattern lineMarkers =
-          Pattern.compile("^# (?<num>\\d+) \"(?<path>[^\"]+)\"(?<rest>.*)?$");
-
-      @Override
-      public Iterable<String> apply(String line) {
-        if (line.startsWith("# ")) {
-          Matcher m = lineMarkers.matcher(line);
-
-          if (m.find() && !SPECIAL_INCLUDE_PATHS.contains(m.group("path"))) {
-            String originalPath = m.group("path");
-            String replacementPath = originalPath;
-
-            replacementPath = Optional
-                .fromNullable(replacementPaths.get(Paths.get(replacementPath)))
-                .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
-                .or(replacementPath);
-
-            replacementPath = sanitizer.sanitize(Optional.of(workingDir), replacementPath);
-
-            if (!originalPath.equals(replacementPath)) {
-              String num = m.group("num");
-              String rest = m.group("rest");
-              return ImmutableList.of("# " + num + " \"" + replacementPath + "\"" + rest);
-            }
-          }
-
-          return ImmutableList.of(line);
-        }
-
-        if (extraLineProcessor.isPresent()) {
-          return extraLineProcessor.get().apply(line);
-        }
-
-        return ImmutableList.of(line);
-      }
-    };
   }
 
   /**
@@ -300,11 +247,8 @@ public class CxxPreprocessAndCompileStep implements Step {
           compileError);
       errorProcessorCompile.start();
 
-      lineDirectiveMunger =
-          new FunctionLineProcessorThread(
-              preprocess.getInputStream(),
-              compile.getOutputStream(),
-              createPreprocessOutputLineProcessor(filesystem.getRootPath()));
+      lineDirectiveMunger = createPreprocessorOutputTransformerFactory()
+          .createTransformerThread(preprocess.getInputStream(), compile.getOutputStream());
       lineDirectiveMunger.start();
 
       int compileStatus = compile.waitFor();
@@ -405,11 +349,9 @@ public class CxxPreprocessAndCompileStep implements Step {
         if (operation == Operation.PREPROCESS) {
           try (OutputStream output =
                    filesystem.newFileOutputStream(this.output);
-               FunctionLineProcessorThread outputProcessor =
-                   new FunctionLineProcessorThread(
-                       process.getInputStream(),
-                       output,
-                       createPreprocessOutputLineProcessor(filesystem.getRootPath()))) {
+               LineProcessorThread outputProcessor =
+                   createPreprocessorOutputTransformerFactory()
+                       .createTransformerThread(process.getInputStream(), output)) {
             outputProcessor.start();
             outputProcessor.waitFor();
           } catch (Throwable thrown) {
@@ -438,6 +380,14 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
 
     return exitCode;
+  }
+
+  private CxxPreprocessorOutputTransformerFactory createPreprocessorOutputTransformerFactory() {
+    return new CxxPreprocessorOutputTransformerFactory(
+        filesystem.getRootPath(),
+        replacementPaths,
+        sanitizer,
+        extraLineProcessor);
   }
 
   private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {

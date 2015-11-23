@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -33,63 +33,46 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CxxPreprocessAndCompileStepTest {
-
+public class CxxPreprocessorOutputTransformerFactoryTest {
   @Test
-  public void outputProcessor() {
+  public void shouldRewriteLineMarkers() {
     Path original = Paths.get("buck-out/foo#bar/world.h");
     ImmutableMap<Path, Path> replacementPaths =
         ImmutableMap.of(original, Paths.get("hello/////world.h"));
     Path finalPath = Paths.get("SANITIZED/world.h");
 
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
-    ImmutableList<String> compiler = ImmutableList.of("compiler");
-    Path output = Paths.get("test.ii");
-    Path depFile = Paths.get("test.dep");
-    Path input = Paths.get("test.cpp");
-
-    Path compilationDirectory = Paths.get("compDir");
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         9,
         File.separatorChar,
         Paths.get("PWD"),
         ImmutableBiMap.of(Paths.get("hello"), Paths.get("SANITIZED")));
+    FakeProjectFilesystem fakeProjectFilesystem = new FakeProjectFilesystem();
 
-    // Create our CxxPreprocessAndCompileStep to test.
-    CxxPreprocessAndCompileStep cxxPreprocessStep =
-        new CxxPreprocessAndCompileStep(
-            new FakeProjectFilesystem(),
-            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-            output,
-            depFile,
-            input,
-            CxxSource.Type.CXX,
-            Optional.<ImmutableMap<String, String>>absent(),
-            Optional.of(compiler),
-            Optional.<ImmutableMap<String, String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
+    CxxPreprocessorOutputTransformerFactory transformer =
+        new CxxPreprocessorOutputTransformerFactory(
+            fakeProjectFilesystem.getRootPath(),
             replacementPaths,
             sanitizer,
             Optional.<Function<String, Iterable<String>>>absent());
-
-    Function<String, Iterable<String>> processor =
-        cxxPreprocessStep.createPreprocessOutputLineProcessor(compilationDirectory);
 
     // Fixup line marker lines properly.
     assertThat(
         ImmutableList.of(
             String.format("# 12 \"%s\"", Escaper.escapePathForCIncludeString(finalPath))),
-        equalTo(processor.apply(String.format("# 12 \"%s\"", original))));
+        equalTo(transformer.transformLine(String.format("# 12 \"%s\"", original))));
     assertThat(
         ImmutableList.of(
             String.format("# 12 \"%s\" 2 1", Escaper.escapePathForCIncludeString(finalPath))),
-        equalTo(processor.apply(String.format("# 12 \"%s\" 2 1", original))));
+        equalTo(transformer.transformLine(String.format("# 12 \"%s\" 2 1", original))));
 
     // test.h isn't in the replacement map, so shouldn't be replaced.
-    assertThat(ImmutableList.of("# 4 \"test.h\""), equalTo(processor.apply("# 4 \"test.h\"")));
+    assertThat(
+        ImmutableList.of("# 4 \"test.h\""),
+        equalTo(transformer.transformLine("# 4 \"test.h\"")));
 
     // Don't modify non-line-marker lines.
-    assertThat(ImmutableList.of("int main() {"), equalTo(processor.apply("int main() {")));
+    assertThat(
+        ImmutableList.of("int main() {"),
+        equalTo(transformer.transformLine("int main() {")));
   }
-
 }
