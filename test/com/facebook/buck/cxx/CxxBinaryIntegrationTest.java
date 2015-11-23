@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -38,6 +39,9 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
@@ -45,7 +49,9 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -420,6 +426,38 @@ public class CxxBinaryIntegrationTest {
         "3 bugs expected in " + reportPath + " not found",
         bugs.size(),
         Matchers.equalTo(3));
+  }
+
+  @Test
+  public void testInferCxxBinaryWritesSpecsListFilesOfTransitiveDependencies() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
+    String inputBuildTargetName =
+        inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
+
+    //Build the given target and check that it succeeds.
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    String specsPathList =
+        "buck-out/gen/foo/infer-analysis-binary_with_chain_deps#infer-analyze/specs_path_list.txt";
+    String out = workspace.getFileContents(specsPathList);
+
+    ImmutableList<Path> paths = FluentIterable.of(out.split("\n")).transform(
+        new Function<String, Path>() {
+          @Override
+          public Path apply(String input) {
+            return new File(input).toPath();
+          }
+        }).toList();
+
+    assertSame("There must be 2 paths in total", paths.size(), 2);
+
+    for (Path path : paths) {
+      assertTrue("Path must be absolute", path.isAbsolute());
+      assertTrue("Path must exist", Files.exists(path));
+    }
   }
 
   public void doTestSimpleCxxBinaryBuilds(

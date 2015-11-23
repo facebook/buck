@@ -27,6 +27,8 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.DefaultShellStep;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymCopyStep;
@@ -37,6 +39,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class CxxInferAnalyze extends AbstractBuildRule {
@@ -46,6 +49,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private final Path resultsDir;
   private final Path reportFile;
   private final Path specsDir;
+  private final Path specsPathList;
 
   @AddToRuleKey
   private final CxxInferTools inferTools;
@@ -62,6 +66,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
         "infer-analysis-%s");
     this.reportFile = this.resultsDir.resolve("report.json");
     this.specsDir = this.resultsDir.resolve("specs");
+    this.specsPathList = this.resultsDir.resolve("specs_path_list.txt");
     this.inferTools = inferTools;
   }
 
@@ -87,16 +92,13 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     return captureAndAnalyzeRules.allAnalyzeRules;
   }
 
-  private ImmutableList<String> getAnalyzeCommand(ImmutableSortedSet<SourcePath> specsDirs) {
+  private ImmutableList<String> getAnalyzeCommand() {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder
         .addAll(inferTools.topLevel.getCommandPrefix(getResolver()))
         .add("--project_root", getProjectFilesystem().getRootPath().toString())
-        .add("--out", resultsDir.toString());
-
-    for (SourcePath specDir : specsDirs) {
-      commandBuilder.add("--specs-dir", getResolver().getAbsolutePath(specDir).toString());
-    }
+        .add("--out", resultsDir.toString())
+        .add("--specs-dir-list-file", specsPathList.toString());
 
     commandBuilder.add("--", "analyze");
 
@@ -124,9 +126,31 @@ public class CxxInferAnalyze extends AbstractBuildRule {
                         }).toList(),
                 resultsDir))
         .add(
+            new AbstractExecutionStep("write_specs_path_list") {
+              @Override
+              public int execute(ExecutionContext context) throws IOException {
+                try {
+                  ImmutableList<String> specsDirsWithAbsolutePath =
+                      FluentIterable.from(getSpecsOfAllDeps()).transform(
+                          new Function<SourcePath, String>() {
+                            @Override
+                            public String apply(SourcePath input) {
+                              return getResolver().getAbsolutePath(input).toString();
+                            }
+                          }
+                      ).toList();
+                  getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
+                } catch (IOException e) {
+                  context.logError(e, "Error while writing specs path list file for the analyzer");
+                  return 1;
+                }
+                return 0;
+              }
+            })
+        .add(
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
-                getAnalyzeCommand(getSpecsOfAllDeps()),
+                getAnalyzeCommand(),
                 inferTools.topLevel.getEnvironment(getResolver())))
         .build();
   }
