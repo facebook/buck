@@ -520,7 +520,7 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
             new SourcePathResolver(resolver),
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         HeaderVisibility.PRIVATE);
   }
@@ -540,7 +540,7 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),
             new SourcePathResolver(resolver),
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         HeaderVisibility.PUBLIC);
   }
@@ -575,12 +575,12 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
             sourcePathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),
             sourcePathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         CxxFlags.getFlags(
             args.compilerFlags,
@@ -643,12 +643,12 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
             sourcePathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),
             sourcePathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         CxxFlags.getFlags(
             args.compilerFlags,
@@ -699,12 +699,12 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
             sourcePathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),
             sourcePathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args),
         CxxFlags.getFlags(
             args.compilerFlags,

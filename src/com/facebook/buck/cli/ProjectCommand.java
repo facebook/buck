@@ -53,7 +53,6 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ProjectConfig;
@@ -76,6 +75,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -751,6 +755,31 @@ public class ProjectCommand extends BuildCommand {
       targets = passedInTargetsSet;
     }
 
+    final Supplier<TargetGraphToActionGraph> targetGraphToActionGraphSupplier = Suppliers.memoize(
+        new Supplier<TargetGraphToActionGraph>() {
+          @Override
+          public TargetGraphToActionGraph get() {
+            return new TargetGraphToActionGraph(
+                params.getBuckEventBus(),
+                new BuildTargetNodeToBuildRuleTransformer());
+          }
+        });
+    final LoadingCache<TargetNode<?>, SourcePathResolver>
+        sourcePathResolverCache =
+            CacheBuilder.newBuilder().build(
+                new CacheLoader<TargetNode<?>, SourcePathResolver>() {
+                  @Override
+                  public SourcePathResolver load(TargetNode<?> targetNode) {
+                    TargetGraphToActionGraph targetGraphToActionGraph =
+                        targetGraphToActionGraphSupplier.get();
+                    TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
+                        ImmutableSet.of(targetNode));
+                    BuildRuleResolver buildRuleResolver =
+                        targetGraphToActionGraph.apply(subgraph).getSecond();
+                    return new SourcePathResolver(buildRuleResolver);
+                  }
+                });
+
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
     ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = combineTestBundles
@@ -792,21 +821,10 @@ public class ProjectCommand extends BuildCommand {
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
           params.getCell().getKnownBuildRuleTypes().getDefaultCxxPlatforms(),
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),
-          new Function<TargetNode<?>, Path>() {
-            @Nullable
+          new Function<TargetNode<?>, SourcePathResolver>() {
             @Override
-            public Path apply(TargetNode<?> input) {
-              TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
-                  params.getBuckEventBus(),
-                  new BuildTargetNodeToBuildRuleTransformer());
-              TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
-                  ImmutableSet.of(
-                      input));
-              ActionGraph actionGraph =
-                  Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getFirst();
-              BuildRule rule = Preconditions.checkNotNull(
-                  actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
-              return rule.getPathToOutput();
+            public SourcePathResolver apply(TargetNode<?> input) {
+              return sourcePathResolverCache.getUnchecked(input);
             }
           },
           params.getBuckEventBus());

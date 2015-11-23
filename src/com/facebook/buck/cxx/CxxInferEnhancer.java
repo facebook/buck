@@ -121,7 +121,7 @@ public final class CxxInferEnhancer {
     ImmutableMap<Path, SourcePath> headers = CxxDescriptionEnhancer.parseHeaders(
         paramsWithoutInferFlavor.getBuildTarget(),
         pathResolver,
-        cxxPlatform,
+        Optional.of(cxxPlatform),
         args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
@@ -276,7 +276,7 @@ public final class CxxInferEnhancer {
             CxxDescriptionEnhancer.parseExportedHeaders(
                 params.getBuildTarget(),
                 pathResolver,
-                cxxPlatform,
+                Optional.of(cxxPlatform),
                 args),
             args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
   }

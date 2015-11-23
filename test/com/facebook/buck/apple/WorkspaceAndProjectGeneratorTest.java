@@ -49,10 +49,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -92,8 +92,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
 
 public class WorkspaceAndProjectGeneratorTest {
 
@@ -243,7 +241,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -312,7 +310,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -365,7 +363,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -447,7 +445,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -498,7 +496,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -531,7 +529,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -593,7 +591,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -687,7 +685,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
@@ -1103,7 +1101,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -1255,7 +1253,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -1345,7 +1343,7 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -1403,22 +1401,20 @@ public class WorkspaceAndProjectGeneratorTest {
         });
   }
 
-  private Function<TargetNode<?>, Path> getOutputPathOfNodeFunction(final TargetGraph targetGraph) {
-    return new Function<TargetNode<?>, Path>() {
-      @Nullable
+  private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
+      final TargetGraph targetGraph) {
+    return new Function<TargetNode<?>, SourcePathResolver>() {
       @Override
-      public Path apply(TargetNode<?> input) {
+      public SourcePathResolver apply(TargetNode<?> input) {
         TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
             BuckEventBusFactory.newInstance(),
             new BuildTargetNodeToBuildRuleTransformer());
         TargetGraph subgraph = targetGraph.getSubgraph(
             ImmutableSet.of(
                 input));
-        ActionGraph actionGraph =
-            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getFirst();
-        BuildRule rule = Preconditions.checkNotNull(
-            actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
-        return rule.getPathToOutput();
+        BuildRuleResolver ruleResolver =
+            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getSecond();
+        return new SourcePathResolver(ruleResolver);
       }
     };
   }

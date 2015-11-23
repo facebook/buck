@@ -30,6 +30,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -81,7 +82,7 @@ public class WorkspaceAndProjectGenerator {
   private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.absent();
   private Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
-  private final Function<TargetNode<?>, Path> outputPathOfNode;
+  private final Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
   private final BuckEventBus buckEventBus;
   private final boolean attemptToDetermineBestCxxPlatform;
 
@@ -104,7 +105,7 @@ public class WorkspaceAndProjectGenerator {
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       String buildFileName,
-      Function<TargetNode<?>, Path> outputPathOfNode,
+      Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
       BuckEventBus buckEventBus) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
@@ -120,7 +121,7 @@ public class WorkspaceAndProjectGenerator {
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildFileName = buildFileName;
-    this.outputPathOfNode = outputPathOfNode;
+    this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
     this.combinedProjectGenerator = Optional.absent();
     this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
@@ -250,7 +251,7 @@ public class WorkspaceAndProjectGenerator {
           environment,
           cxxPlatforms,
           defaultCxxPlatform,
-          outputPathOfNode,
+          sourcePathResolverForNode,
           buckEventBus,
           attemptToDetermineBestCxxPlatform)
           .setAdditionalCombinedTestTargets(groupedTests)
@@ -320,7 +321,7 @@ public class WorkspaceAndProjectGenerator {
               environment,
               cxxPlatforms,
               defaultCxxPlatform,
-              outputPathOfNode,
+              sourcePathResolverForNode,
               buckEventBus,
               attemptToDetermineBestCxxPlatform)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
@@ -355,7 +356,7 @@ public class WorkspaceAndProjectGenerator {
             environment,
             cxxPlatforms,
             defaultCxxPlatform,
-            outputPathOfNode,
+            sourcePathResolverForNode,
             buckEventBus,
             attemptToDetermineBestCxxPlatform);
         combinedTestsProjectGenerator

@@ -130,7 +130,7 @@ public class CxxPythonExtensionDescription implements
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
             pathResolver,
-            cxxPlatform,
+            Optional.of(cxxPlatform),
             args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule

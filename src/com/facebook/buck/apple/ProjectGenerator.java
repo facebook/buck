@@ -67,6 +67,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -240,7 +241,7 @@ public class ProjectGenerator {
       ImmutableSet.builder();
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
-  private final Function<? super TargetNode<?>, Path> outputPathOfNode;
+  private final Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
   private final BuckEventBus buckEventBus;
   private boolean attemptToDetermineBestCxxPlatform;
 
@@ -266,7 +267,7 @@ public class ProjectGenerator {
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      Function<? super TargetNode<?>, Path> outputPathOfNode,
+      Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
       BuckEventBus buckEventBus,
       boolean attemptToDetermineBestCxxPlatform) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
@@ -289,7 +290,7 @@ public class ProjectGenerator {
     this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.outputPathOfNode = outputPathOfNode;
+    this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
     this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
 
@@ -1151,23 +1152,14 @@ public class ProjectGenerator {
         appendedConfig);
 
     // -- phases
-    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(
-        arg,
-        targetNode.getBuildTarget());
     createHeaderSymlinkTree(
         sourcePathResolver,
-        AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
-            sourcePathResolver,
-            headerPathPrefix,
-            arg),
+        getPublicCxxHeaders(targetNode),
         AppleDescriptions.getPathToHeaderSymlinkTree(targetNode,
             HeaderVisibility.PUBLIC));
     createHeaderSymlinkTree(
         sourcePathResolver,
-        AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
-            sourcePathResolver,
-            headerPathPrefix,
-            arg),
+        getPrivateCxxHeaders(targetNode),
         AppleDescriptions.getPathToHeaderSymlinkTree(targetNode,
             HeaderVisibility.PRIVATE));
 
@@ -1182,6 +1174,63 @@ public class ProjectGenerator {
   public static String getProductName(TargetNode<?> buildTargetNode, BuildTarget buildTarget) {
     return getProductNameForTargetNode(buildTargetNode).or(
         getProductNameForBuildTarget(buildTarget));
+  }
+
+  private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(
+      TargetNode<? extends CxxLibraryDescription.Arg> targetNode) {
+    CxxLibraryDescription.Arg arg = targetNode.getConstructorArg();
+    if (arg instanceof AppleNativeTargetDescriptionArg) {
+      Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(
+          (AppleNativeTargetDescriptionArg) arg,
+          targetNode.getBuildTarget());
+      ImmutableSortedMap<String, SourcePath> cxxHeaders =
+          AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
+              sourcePathResolver,
+              headerPathPrefix,
+              arg);
+      return convertMapKeysToPaths(cxxHeaders);
+    } else {
+      SourcePathResolver sourcePathResolver = sourcePathResolverForNode.apply(targetNode);
+      return ImmutableSortedMap.copyOf(
+          CxxDescriptionEnhancer.parseExportedHeaders(
+              targetNode.getBuildTarget(),
+              sourcePathResolver,
+              Optional.<CxxPlatform>absent(),
+              arg));
+    }
+  }
+
+  private ImmutableSortedMap<Path, SourcePath> getPrivateCxxHeaders(
+      TargetNode<? extends CxxLibraryDescription.Arg> targetNode) {
+    CxxLibraryDescription.Arg arg = targetNode.getConstructorArg();
+    if (arg instanceof AppleNativeTargetDescriptionArg) {
+      Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(
+          (AppleNativeTargetDescriptionArg) arg,
+          targetNode.getBuildTarget());
+      ImmutableSortedMap<String, SourcePath> cxxHeaders =
+          AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
+              sourcePathResolver,
+              headerPathPrefix,
+              arg);
+      return convertMapKeysToPaths(cxxHeaders);
+    } else {
+      SourcePathResolver sourcePathResolver = sourcePathResolverForNode.apply(targetNode);
+      return ImmutableSortedMap.copyOf(
+          CxxDescriptionEnhancer.parseHeaders(
+              targetNode.getBuildTarget(),
+              sourcePathResolver,
+              Optional.<CxxPlatform>absent(),
+              arg));
+    }
+  }
+
+  private ImmutableSortedMap<Path, SourcePath> convertMapKeysToPaths(
+      ImmutableSortedMap<String, SourcePath> input) {
+    ImmutableSortedMap.Builder<Path, SourcePath> output = ImmutableSortedMap.naturalOrder();
+    for (Map.Entry<String, SourcePath> entry : input.entrySet()) {
+      output.put(Paths.get(entry.getKey()), entry.getValue());
+    }
+    return output.build();
   }
 
   private Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>>
@@ -1467,7 +1516,7 @@ public class ProjectGenerator {
 
   private void createHeaderSymlinkTree(
       Function<SourcePath, Path> pathResolver,
-      Map<String, SourcePath> contents,
+      Map<Path, SourcePath> contents,
       Path headerSymlinkTreeRoot) throws IOException {
     LOG.verbose(
         "Building header symlink tree at %s with contents %s",
@@ -1475,7 +1524,7 @@ public class ProjectGenerator {
         contents);
     ImmutableSortedMap.Builder<Path, Path> resolvedContentsBuilder =
         ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<String, SourcePath> entry : contents.entrySet()) {
+    for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
       Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
       Path existing = projectFilesystem.resolve(pathResolver.apply(entry.getValue()));
       resolvedContentsBuilder.put(link, existing);
@@ -1509,9 +1558,9 @@ public class ProjectGenerator {
       projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
 
       HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
-      for (Map.Entry<String, SourcePath> entry : contents.entrySet()) {
+      for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
         headerMapBuilder.add(
-            entry.getKey(),
+            entry.getKey().toString(),
             BuckConstant.BUCK_OUTPUT_PATH
                 .relativize(headerSymlinkTreeRoot)
                 .resolve(entry.getKey()));
@@ -2308,7 +2357,8 @@ public class ProjectGenerator {
     Optional<TargetNode<ExportFileDescription.Arg>> exportFileNode = node.castArg(
         ExportFileDescription.Arg.class);
     if (!exportFileNode.isPresent()) {
-      Path output = outputPathOfNode.apply(node);
+      SourcePathResolver sourcePathResolver = sourcePathResolverForNode.apply(node);
+      Path output = sourcePathResolver.getRelativePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.",

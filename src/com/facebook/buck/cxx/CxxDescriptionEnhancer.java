@@ -209,6 +209,7 @@ public class CxxDescriptionEnhancer {
         createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
         "%s.hmap");
   }
+
   /**
    * @return a map of header locations to input {@link SourcePath} objects formed by parsing the
    *    input {@link SourcePath} objects for the "headers" parameter.
@@ -216,18 +217,20 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseHeaders(
       BuildTarget buildTarget,
       SourcePathResolver resolver,
-      CxxPlatform cxxPlatform,
+      Optional<CxxPlatform> cxxPlatform,
       CxxConstructorArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     putAllHeaders(args.headers.get(), headers, resolver, "headers", buildTarget);
-    for (SourceList sourceList :
-        args.platformHeaders.get().getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      putAllHeaders(
-          sourceList,
-          headers,
-          resolver,
-          "platform_headers",
-          buildTarget);
+    if (cxxPlatform.isPresent()) {
+      for (SourceList sourceList : args.platformHeaders.get().getMatchingValues(
+          cxxPlatform.get().getFlavor().toString())) {
+        putAllHeaders(
+            sourceList,
+            headers,
+            resolver,
+            "platform_headers",
+            buildTarget);
+      }
     }
     return CxxPreprocessables.resolveHeaderMap(
         args.headerNamespace.transform(MorePaths.TO_PATH)
@@ -242,7 +245,7 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseExportedHeaders(
       BuildTarget buildTarget,
       SourcePathResolver resolver,
-      CxxPlatform cxxPlatform,
+      Optional<CxxPlatform> cxxPlatform,
       CxxLibraryDescription.Arg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     putAllHeaders(
@@ -251,14 +254,16 @@ public class CxxDescriptionEnhancer {
         resolver,
         "exported_headers",
         buildTarget);
-    for (SourceList sourceList :
-        args.exportedPlatformHeaders.get().getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      putAllHeaders(
-          sourceList,
-          headers,
-          resolver,
-          "exported_platform_headers",
-          buildTarget);
+    if (cxxPlatform.isPresent()) {
+      for (SourceList sourceList : args.exportedPlatformHeaders.get().getMatchingValues(
+          cxxPlatform.get().getFlavor().toString())) {
+        putAllHeaders(
+            sourceList,
+            headers,
+            resolver,
+            "exported_platform_headers",
+            buildTarget);
+      }
     }
     return CxxPreprocessables.resolveHeaderMap(
         args.headerNamespace.transform(MorePaths.TO_PATH)
@@ -273,7 +278,7 @@ public class CxxDescriptionEnhancer {
   public static void putAllHeaders(
       SourceList sourceList,
       ImmutableMap.Builder<String, SourcePath> sources,
-      SourcePathResolver pathResolver,
+      SourcePathResolver sourcePathResolver,
       String parameterName,
       BuildTarget buildTarget) {
     switch (sourceList.getType()) {
@@ -282,7 +287,7 @@ public class CxxDescriptionEnhancer {
         break;
       case UNNAMED:
         sources.putAll(
-            pathResolver.getSourcePathNames(
+            sourcePathResolver.getSourcePathNames(
                 buildTarget,
                 parameterName,
                 sourceList.getUnnamedSources().get()));
@@ -327,7 +332,6 @@ public class CxxDescriptionEnhancer {
       ImmutableMap.Builder<String, SourceWithFlags> sources,
       SourcePathResolver pathResolver,
       BuildTarget buildTarget) {
-
     sources.putAll(
         pathResolver.getSourcePathNames(
             buildTarget,
@@ -535,7 +539,7 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<Path, SourcePath> headers = parseHeaders(
         params.getBuildTarget(),
         new SourcePathResolver(resolver),
-        cxxPlatform,
+        Optional.of(cxxPlatform),
         args);
     return createBuildRulesForCxxBinary(
         params,

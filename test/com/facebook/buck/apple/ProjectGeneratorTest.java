@@ -56,6 +56,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -78,10 +79,13 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -95,7 +99,6 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -127,8 +130,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
 
 public class ProjectGeneratorTest {
 
@@ -267,7 +268,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
+  public void testAppleLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -344,7 +345,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testLibraryHeaderGroupsWithMappedHeaders() throws IOException {
+  public void testAppleLibraryHeaderGroupsWithMappedHeaders() throws IOException {
     BuildTarget privateGeneratedTarget =
         BuildTarget.builder(rootPath, "//foo", "generated1.h").build();
     BuildTarget publicGeneratedTarget =
@@ -437,6 +438,196 @@ public class ProjectGeneratorTest {
             "any/name.h", "HeaderGroup1/foo.h",
             "different/name.h", "HeaderGroup2/baz.h",
             "one/more/name.h", "foo/generated1.h"));
+  }
+
+  @Test
+  public void testCxxLibraryWithListsOfHeaders() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new FakeSourcePath("foo/dir1/bar.h")))
+        .setHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new FakeSourcePath("foo/dir1/foo.h"),
+                new FakeSourcePath("foo/dir2/baz.h")))
+        .setSrcs(ImmutableSortedSet.<SourceWithFlags>of())
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/foo/lib-public-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-public-header-symlink-tree"),
+        ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(),
+        is(equalTo("buck-out/gen/foo/lib-private-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/foo.h", "foo/dir1/foo.h")
+            .put("foo/dir2/baz.h", "foo/dir2/baz.h")
+            .build());
+  }
+
+  @Test
+  public void testCxxLibraryWithListsOfHeadersAndCustomNamespace() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new FakeSourcePath("foo/dir1/bar.h")))
+        .setHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new FakeSourcePath("foo/dir1/foo.h"),
+                new FakeSourcePath("foo/dir2/baz.h")))
+        .setSrcs(ImmutableSortedSet.<SourceWithFlags>of())
+        .setHeaderNamespace("name/space")
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/foo/lib-public-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-public-header-symlink-tree"),
+        ImmutableMap.of("name/space/dir1/bar.h", "foo/dir1/bar.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(),
+        is(equalTo("buck-out/gen/foo/lib-private-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.<String, String>builder()
+            .put("name/space/dir1/foo.h", "foo/dir1/foo.h")
+            .put("name/space/dir2/baz.h", "foo/dir2/baz.h")
+            .build());
+  }
+
+  @Test
+  public void testCxxLibraryHeaderGroupsWithMapsOfHeaders() throws IOException {
+    BuildTarget privateGeneratedTarget =
+        BuildTarget.builder(rootPath, "//foo", "generated1.h").build();
+    BuildTarget publicGeneratedTarget =
+        BuildTarget.builder(rootPath, "//foo", "generated2.h").build();
+
+    TargetNode<?> privateGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?> publicGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedHeaders(
+            ImmutableSortedMap.<String, SourcePath>of(
+                "yet/another/name.h", new FakeSourcePath("foo/dir1/bar.h"),
+                "and/one/more.h", new BuildTargetSourcePath(publicGeneratedTarget)))
+        .setHeaders(
+            ImmutableSortedMap.<String, SourcePath>of(
+                "any/name.h", new FakeSourcePath("foo/dir1/foo.h"),
+                "different/name.h", new FakeSourcePath("foo/dir2/baz.h"),
+                "one/more/name.h", new BuildTargetSourcePath(privateGeneratedTarget)))
+        .setSrcs(ImmutableSortedSet.<SourceWithFlags>of())
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/foo/lib-public-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-public-header-symlink-tree"),
+        ImmutableMap.of(
+            "foo/yet/another/name.h", "foo/dir1/bar.h",
+            "foo/and/one/more.h", "foo/generated2.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(),
+        is(equalTo("buck-out/gen/foo/lib-private-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.of(
+            "foo/any/name.h", "foo/dir1/foo.h",
+            "foo/different/name.h", "foo/dir2/baz.h",
+            "foo/one/more/name.h", "foo/generated1.h"));
+  }
+
+  @Test
+  public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndCustomNamespace() throws IOException {
+    BuildTarget privateGeneratedTarget =
+        BuildTarget.builder(rootPath, "//foo", "generated1.h").build();
+    BuildTarget publicGeneratedTarget =
+        BuildTarget.builder(rootPath, "//foo", "generated2.h").build();
+
+    TargetNode<?> privateGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?> publicGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedHeaders(
+            ImmutableSortedMap.<String, SourcePath>of(
+                "yet/another/name.h", new FakeSourcePath("foo/dir1/bar.h"),
+                "and/one/more.h", new BuildTargetSourcePath(publicGeneratedTarget)))
+        .setHeaders(
+            ImmutableSortedMap.<String, SourcePath>of(
+                "any/name.h", new FakeSourcePath("foo/dir1/foo.h"),
+                "different/name.h", new FakeSourcePath("foo/dir2/baz.h"),
+                "one/more/name.h", new BuildTargetSourcePath(privateGeneratedTarget)))
+        .setSrcs(ImmutableSortedSet.<SourceWithFlags>of())
+        .setHeaderNamespace("name/space")
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/foo/lib-public-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-public-header-symlink-tree"),
+        ImmutableMap.of(
+            "name/space/yet/another/name.h", "foo/dir1/bar.h",
+            "name/space/and/one/more.h", "foo/generated2.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(),
+        is(equalTo("buck-out/gen/foo/lib-private-header-symlink-tree")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.of(
+            "name/space/any/name.h", "foo/dir1/foo.h",
+            "name/space/different/name.h", "foo/dir2/baz.h",
+            "name/space/one/more/name.h", "foo/generated1.h"));
   }
 
   @Test
@@ -3029,14 +3220,17 @@ public class ProjectGeneratorTest {
             .setDeps(Optional.of(ImmutableSortedSet.of(dep2.getBuildTarget())))
             .build();
 
-    ProjectGenerator projectGenerator = new ProjectGenerator(
+    final TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             testLibDepResource,
             testLibDepLib,
             dep1,
             dep2,
             xctest1,
-            xctest2),
+            xctest2);
+
+    ProjectGenerator projectGenerator = new ProjectGenerator(
+        targetGraph,
         ImmutableSet.<BuildTarget>of(),
         projectFilesystem,
         OUTPUT_DIRECTORY,
@@ -3049,13 +3243,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        new Function<TargetNode<?>, Path>() {
-          @Nullable
-          @Override
-          public Path apply(TargetNode<?> input) {
-            return null;
-          }
-        },
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
@@ -3241,8 +3429,9 @@ public class ProjectGeneratorTest {
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(bundleNode, binaryNode);
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
-        TargetGraphFactory.newInstance(nodes),
+        targetGraph,
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
         projectFilesystem,
         OUTPUT_DIRECTORY,
@@ -3255,7 +3444,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        Functions.<Path>constant(null),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false);
     projectGenerator.createXcodeProjects();
@@ -3315,8 +3504,9 @@ public class ProjectGeneratorTest {
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(binaryNode);
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
-        TargetGraphFactory.newInstance(nodes),
+        targetGraph,
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
         projectFilesystem,
         OUTPUT_DIRECTORY,
@@ -3329,7 +3519,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        Functions.<Path>constant(null),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false);
     projectGenerator.createXcodeProjects();
@@ -3380,8 +3570,9 @@ public class ProjectGeneratorTest {
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(binaryNode);
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
-        TargetGraphFactory.newInstance(nodes),
+        targetGraph,
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
         projectFilesystem,
         OUTPUT_DIRECTORY,
@@ -3394,7 +3585,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        Functions.<Path>constant(null),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false);
     projectGenerator.createXcodeProjects();
@@ -3748,8 +3939,9 @@ public class ProjectGeneratorTest {
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();
 
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
     return new ProjectGenerator(
-        TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
+        targetGraph,
         initialBuildTargets,
         projectFilesystem,
         OUTPUT_DIRECTORY,
@@ -3762,9 +3954,22 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        Functions.<Path>constant(null),
+        getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false);
+  }
+
+  private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
+      final TargetGraph targetGraph) {
+    return new Function<TargetNode<?>, SourcePathResolver>() {
+      @Override
+      public SourcePathResolver apply(TargetNode<?> input) {
+        return new SourcePathResolver(
+            new BuildRuleResolver(
+                targetGraph,
+                new BuildTargetNodeToBuildRuleTransformer()));
+      }
+    };
   }
 
   private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(
