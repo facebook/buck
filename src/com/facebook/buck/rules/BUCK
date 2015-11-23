@@ -205,6 +205,7 @@ java_immutables_library(
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',
+    'Manifest.java',
     'NoopBuildRule.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
