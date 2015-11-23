@@ -879,7 +879,7 @@ public class CxxSourceRuleFactoryTest {
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     String prefixHeaderName = "test.pch";
-    SourcePath prefixHeaderSourcePath = new FakeSourcePath(prefixHeaderName);
+    SourcePath prefixHeaderSourcePath = new FakeSourcePath(filesystem, prefixHeaderName);
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -905,7 +905,7 @@ public class CxxSourceRuleFactoryTest {
             CxxPreprocessMode.SEPARATE);
 
     ImmutableList<String> explicitPrefixHeaderRelatedFlags = ImmutableList.of(
-        "-include", prefixHeaderName);
+        "-include", filesystem.resolve(prefixHeaderName).toString());
 
     CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep();
     assertContains(step.getCommand(), explicitPrefixHeaderRelatedFlags);

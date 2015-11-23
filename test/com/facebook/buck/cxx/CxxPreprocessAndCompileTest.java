@@ -492,6 +492,7 @@ public class CxxPreprocessAndCompileTest {
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableList<String> platformFlags = ImmutableList.of("-Dtest=blah");
     ImmutableList<String> ruleFlags = ImmutableList.of("-Dfoo=bar");
     Path output = Paths.get("test.ii");
@@ -513,7 +514,7 @@ public class CxxPreprocessAndCompileTest {
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
                 DEFAULT_FRAMEWORK_ROOTS,
-                Optional.<SourcePath>of(new FakeSourcePath(prefixHeader.toString())),
+                Optional.<SourcePath>of(new FakeSourcePath(filesystem, prefixHeader.toString())),
                 ImmutableList.of(CxxHeaders.builder().build())),
             output,
             new FakeSourcePath(input.toString()),
@@ -526,7 +527,7 @@ public class CxxPreprocessAndCompileTest {
         .add("-Dtest=blah")
         .add("-Dfoo=bar")
         .add("-include")
-        .add(prefixHeader.toString())
+        .add(filesystem.resolve(prefixHeader).toString())
         .add("-x", "c++")
         .add("-E")
         .add("-MD")

@@ -164,7 +164,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
                 FluentIterable.from(prefixHeader.asSet())
-                    .transform(resolver.deprecatedPathFunction())
+                    .transform(resolver.getAbsolutePathFunction())
                     .transform(Functions.toStringFunction())))
         .addAll(
             MoreIterables.zipAndConcat(
