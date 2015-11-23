@@ -80,17 +80,13 @@ def get_clean_buck_version(dirpath, allow_dirty=False):
 
 
 def get_dirty_buck_version(dirpath):
-    git_tree_in = check_output(
-        ['git', 'log', '-n1', '--pretty=format:%T', 'HEAD', '--'],
-        cwd=dirpath).strip()
-
     with EmptyTempFile(prefix='buck-git-index') as index_file:
+        subprocess.check_call(
+            ['git', 'read-tree', '--index-output', index_file.name, '--reset', 'HEAD'],
+            cwd=dirpath)
+
         new_environ = os.environ.copy()
         new_environ['GIT_INDEX_FILE'] = index_file.name
-        subprocess.check_call(
-            ['git', 'read-tree', git_tree_in],
-            cwd=dirpath,
-            env=new_environ)
 
         subprocess.check_call(
             ['git', 'add', '-u'],
