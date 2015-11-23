@@ -16,19 +16,15 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
@@ -38,89 +34,51 @@ import java.nio.file.Path;
  */
 public class OCamlLinkStep extends ShellStep {
 
-  public static class Args implements RuleKeyAppendable {
-    public final ImmutableMap<String, String> environment;
-    public final Tool ocamlCompiler;
-    public final ImmutableList<String> cxxCompiler;
-    public final ImmutableList<String> flags;
-    public final Path output;
-    public final ImmutableList<Arg> depInput;
-    public final ImmutableList<Arg> nativeDepInput;
-    public final ImmutableList<String> input;
-    public final boolean isLibrary;
-    public final boolean isBytecode;
-
-    public Args(
-        ImmutableMap<String, String> environment,
-        ImmutableList<String> cxxCompiler,
-        Tool ocamlCompiler,
-        Path output,
-        ImmutableList<Arg> depInput,
-        ImmutableList<Arg> nativeDepInput,
-        ImmutableList<String> input,
-        ImmutableList<String> flags,
-        boolean isLibrary,
-        boolean isBytecode) {
-      this.environment = environment;
-      this.isLibrary = isLibrary;
-      this.isBytecode = isBytecode;
-      this.ocamlCompiler = ocamlCompiler;
-      this.cxxCompiler = cxxCompiler;
-      this.flags = flags;
-      this.output = output;
-      this.depInput = depInput;
-      this.nativeDepInput = nativeDepInput;
-      this.input = input;
-    }
-
-    @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder
-          .setReflectively("cxxCompiler", cxxCompiler.toString())
-          .setReflectively("ocamlCompiler", ocamlCompiler)
-          .setReflectively("output", output.toString())
-          .setReflectively("depInput", depInput)
-          .setReflectively("nativeDepInput", nativeDepInput)
-          .setReflectively("input", input)
-          .setReflectively("flags", flags)
-          .setReflectively("isLibrary", isLibrary)
-          .setReflectively("isBytecode", isBytecode);
-    }
-
-    public ImmutableSet<Path> getAllOutputs() {
-      if (isLibrary) {
-        if (!isBytecode) {
-          return OCamlUtil.getExtensionVariants(
-              output,
-              OCamlCompilables.OCAML_A,
-              OCamlCompilables.OCAML_CMXA);
-        } else {
-          return ImmutableSet.of(output);
-        }
-      } else {
-        return ImmutableSet.of(output);
-      }
-    }
-  }
-
-  private final SourcePathResolver resolver;
-  private final Args args;
+  public final ImmutableMap<String, String> environment;
+  public final ImmutableList<String> cxxCompiler;
+  public final ImmutableList<String> ocamlCompilerCommandPrefix;
+  public final ImmutableList<String> flags;
+  public final Path output;
+  public final ImmutableList<Arg> depInput;
+  public final ImmutableList<Arg> nativeDepInput;
+  public final ImmutableList<Path> input;
+  public final boolean isLibrary;
+  public final boolean isBytecode;
 
   private final ImmutableList<String> ocamlInput;
 
-  public OCamlLinkStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
+  public OCamlLinkStep(
+      Path workingDirectory,
+      ImmutableMap<String, String> environment,
+      ImmutableList<String> cxxCompiler,
+      ImmutableList<String> ocamlCompilerCommandPrefix,
+      ImmutableList<String> flags,
+      Path output,
+      ImmutableList<Arg> depInput,
+      ImmutableList<Arg> nativeDepInput,
+      ImmutableList<Path> input,
+      boolean isLibrary,
+      boolean isBytecode) {
     super(workingDirectory);
-    this.resolver = resolver;
-    this.args = args;
+    this.environment = environment;
+    this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
+    this.cxxCompiler = cxxCompiler;
+    this.flags = flags;
+    this.output = output;
+    this.depInput = depInput;
+    this.nativeDepInput = nativeDepInput;
+    this.input = input;
+    this.isLibrary = isLibrary;
+    this.isBytecode = isBytecode;
 
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-    for (Arg linkInputArg : this.args.depInput) {
+    for (Arg linkInputArg : depInput) {
       String linkInput = linkInputArg.stringify();
-      if (this.args.isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA)) {
+      if (isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA)) {
         continue;
       }
-      if (this.args.isBytecode) {
+      if (isBytecode) {
         linkInput = linkInput.replaceAll(
             OCamlCompilables.OCAML_CMXA_REGEX,
             OCamlCompilables.OCAML_CMA);
@@ -128,7 +86,7 @@ public class OCamlLinkStep extends ShellStep {
       ocamlInputBuilder.add(linkInput);
     }
 
-    this.ocamlInput = ocamlInputBuilder.build();
+    ocamlInput = ocamlInputBuilder.build();
   }
 
   @Override
@@ -139,32 +97,32 @@ public class OCamlLinkStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
+        .addAll(ocamlCompilerCommandPrefix)
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
-        .add("-cc", args.cxxCompiler.get(0))
+        .add("-cc", cxxCompiler.get(0))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-ccopt"),
-                args.cxxCompiler.subList(1, args.cxxCompiler.size())))
-        .addAll((args.isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
+                cxxCompiler.subList(1, cxxCompiler.size())))
+        .addAll((isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
         .addAll(
-            (!args.isLibrary && args.isBytecode ?
+            (!isLibrary && isBytecode ?
                 Optional.of("-custom") :
                 Optional.<String>absent()).asSet())
-        .add("-o", args.output.toString())
-        .addAll(args.flags)
+        .add("-o", output.toString())
+        .addAll(flags)
         .addAll(ocamlInput)
-        .addAll(args.input)
+        .addAll(FluentIterable.from(input).transform(Functions.toStringFunction()))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),
-                FluentIterable.from(args.nativeDepInput)
+                FluentIterable.from(nativeDepInput)
                     .transform(Arg.stringifyFunction())))
         .build();
   }
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return args.environment;
+    return environment;
   }
 }

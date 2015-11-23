@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -243,11 +242,6 @@ public class OCamlBuildRulesGenerator {
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of()));
 
-    ImmutableList<String> linkerInputs = FluentIterable.from(allInputs)
-        .transform(pathResolver.deprecatedPathFunction())
-        .transform(Functions.toStringFunction())
-        .toList();
-
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(ocamlContext.getCommonCLinkerFlags());
@@ -256,17 +250,15 @@ public class OCamlBuildRulesGenerator {
         linkParams,
         pathResolver,
         allInputs,
-        new OCamlLinkStep.Args(
-            cxxCompiler.getEnvironment(pathResolver),
-            cxxCompiler.getCommandPrefix(pathResolver),
-            ocamlContext.getOcamlCompiler().get(),
-            ocamlContext.getOutput(),
-            ocamlContext.getLinkableInput().getArgs(),
-            ocamlContext.getNativeLinkableInput().getArgs(),
-            linkerInputs,
-            flags.build(),
-            ocamlContext.isLibrary(),
-            /* isBytecode */ false));
+        cxxCompiler.getEnvironment(pathResolver),
+        cxxCompiler.getCommandPrefix(pathResolver),
+        ocamlContext.getOcamlCompiler().get(),
+        flags.build(),
+        ocamlContext.getOutput(),
+        ocamlContext.getLinkableInput().getArgs(),
+        ocamlContext.getNativeLinkableInput().getArgs(),
+        ocamlContext.isLibrary(),
+        /* isBytecode */ false);
     resolver.addToIndex(link);
     return link;
   }
@@ -292,11 +284,6 @@ public class OCamlBuildRulesGenerator {
                 .build()),
     Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    ImmutableList<String> linkerInputs = FluentIterable.from(allInputs)
-        .transform(pathResolver.deprecatedPathFunction())
-        .transform(Functions.toStringFunction())
-        .toList();
-
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(ocamlContext.getCommonCLinkerFlags());
@@ -305,17 +292,15 @@ public class OCamlBuildRulesGenerator {
         linkParams,
         pathResolver,
         allInputs,
-        new OCamlLinkStep.Args(
-            cxxCompiler.getEnvironment(pathResolver),
-            cxxCompiler.getCommandPrefix(pathResolver),
-            ocamlContext.getOcamlBytecodeCompiler().get(),
-            ocamlContext.getBytecodeOutput(),
-            ocamlContext.getLinkableInput().getArgs(),
-            ocamlContext.getNativeLinkableInput().getArgs(),
-            linkerInputs,
-            flags.build(),
-            ocamlContext.isLibrary(),
-          /* isBytecode */ true));
+        cxxCompiler.getEnvironment(pathResolver),
+        cxxCompiler.getCommandPrefix(pathResolver),
+        ocamlContext.getOcamlBytecodeCompiler().get(),
+        flags.build(),
+        ocamlContext.getBytecodeOutput(),
+        ocamlContext.getLinkableInput().getArgs(),
+        ocamlContext.getNativeLinkableInput().getArgs(),
+        ocamlContext.isLibrary(),
+        /* isBytecode */ true);
     resolver.addToIndex(link);
     return link;
   }

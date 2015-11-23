@@ -23,44 +23,107 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
 public class OCamlLink extends AbstractBuildRule {
 
-  @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final ImmutableList<SourcePath> inputs;
   @AddToRuleKey
-  private final OCamlLinkStep.Args args;
+  private final ImmutableMap<String, String> cxxCompilerEnvironment;
+  @AddToRuleKey
+  private final ImmutableList<String> cxxCompiler;
+  @AddToRuleKey
+  private final Tool ocamlCompiler;
+  @AddToRuleKey
+  private final ImmutableList<String> flags;
+  @AddToRuleKey(stringify = true)
+  private final Path outputRelativePath;
+  @AddToRuleKey
+  private final ImmutableList<Arg> depInput;
+  @AddToRuleKey
+  private final ImmutableList<Arg> nativeDepInput;
+  @AddToRuleKey
+  private final boolean isLibrary;
+  @AddToRuleKey
+  private final boolean isBytecode;
 
   public OCamlLink(
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableList<SourcePath> inputs,
-      OCamlLinkStep.Args args) {
+      ImmutableMap<String, String> cxxCompilerEnvironment,
+      ImmutableList<String> cxxCompiler,
+      Tool ocamlCompiler,
+      ImmutableList<String> flags,
+      Path outputRelativePath,
+      ImmutableList<Arg> depInput,
+      ImmutableList<Arg> nativeDepInput,
+      boolean isLibrary,
+      boolean isBytecode) {
     super(params, resolver);
+
     this.inputs = inputs;
-    this.args = args;
+    this.cxxCompilerEnvironment = cxxCompilerEnvironment;
+    this.cxxCompiler = cxxCompiler;
+    this.ocamlCompiler = ocamlCompiler;
+    this.flags = flags;
+    this.outputRelativePath = outputRelativePath;
+    this.depInput = depInput;
+    this.nativeDepInput = nativeDepInput;
+    this.isLibrary = isLibrary;
+    this.isBytecode = isBytecode;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    for (Path artifact : args.getAllOutputs()) {
+    for (Path artifact : getAllOutputs()) {
       buildableContext.recordArtifact(artifact);
     }
+
     return ImmutableList.of(
-      new MkdirStep(getProjectFilesystem(), args.output.getParent()),
-      new OCamlLinkStep(getProjectFilesystem().getRootPath(), getResolver(), args));
+        new MkdirStep(getProjectFilesystem(), outputRelativePath.getParent()),
+        new OCamlLinkStep(
+            getProjectFilesystem().getRootPath(),
+            cxxCompilerEnvironment,
+            cxxCompiler,
+            ocamlCompiler.getCommandPrefix(getResolver()),
+            flags,
+            getProjectFilesystem().resolve(outputRelativePath),
+            depInput,
+            nativeDepInput,
+            FluentIterable.from(inputs)
+                .transform(getResolver().getAbsolutePathFunction())
+                .toList(),
+            isLibrary,
+            isBytecode)
+    );
+  }
+
+  private ImmutableSet<Path> getAllOutputs() {
+    if (isLibrary && !isBytecode) {
+      return OCamlUtil.getExtensionVariants(
+          outputRelativePath,
+          OCamlCompilables.OCAML_A,
+          OCamlCompilables.OCAML_CMXA);
+    } else {
+      return ImmutableSet.of(outputRelativePath);
+    }
   }
 
   @Override
   public Path getPathToOutput() {
-    return args.output;
+    return outputRelativePath;
   }
 }
