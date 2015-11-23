@@ -55,5 +55,5 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Tool getLipo();
   public abstract Optional<Path> getStubBinary();
   public abstract Tool getLldb();
-  public abstract Optional<Path> getCodesignAllocatePath();
+  public abstract Optional<Tool> getCodesignAllocate();
 }

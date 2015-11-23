@@ -148,7 +148,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final CodeSignIdentityStore codeSignIdentityStore;
 
   @AddToRuleKey
-  private final Optional<Path> codesignAllocatePath;
+  private final Optional<Tool> codesignAllocatePath;
 
   @AddToRuleKey
   private final DebugInfoFormat debugInfoFormat;
@@ -188,7 +188,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
-      Optional<Path> codesignAllocatePath,
+      Optional<Tool> codesignAllocatePath,
       ProvisioningProfileStore provisioningProfileStore,
       DebugInfoFormat debugInfoFormat) {
     super(params, resolver);
@@ -509,6 +509,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
           new CodeSignStep(
               getProjectFilesystem().getRootPath(),
+              getResolver(),
               bundleDestinationPath,
               signingEntitlementsTempPath,
               codeSignIdentitySupplier,

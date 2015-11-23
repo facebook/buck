@@ -562,7 +562,7 @@ public class NewNativeTargetProjectMutator {
     }
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
-      resourceDirsBuilder.addAll(arg.dirs);
+      resourceDirsBuilder.addAll(Iterables.transform(arg.dirs, sourcePathResolver));
     }
   }
 

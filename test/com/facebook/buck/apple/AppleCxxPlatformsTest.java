@@ -76,9 +76,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * Unit tests for {@link AppleCxxPlatforms}.
- */
 public class AppleCxxPlatformsTest {
 
   @Rule
@@ -152,8 +149,8 @@ public class AppleCxxPlatformsTest {
         ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
     assertEquals(
-        Optional.of(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate")),
-        appleCxxPlatform.getCodesignAllocatePath());
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"),
+        appleCxxPlatform.getCodesignAllocate().get().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableList.of("usr/bin/xctest"),

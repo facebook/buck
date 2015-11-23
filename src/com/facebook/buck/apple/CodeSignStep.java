@@ -16,11 +16,14 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -33,18 +36,21 @@ import java.util.Set;
 
 public class CodeSignStep implements Step {
   private final Path workingDirectory;
+  private final SourcePathResolver resolver;
   private final Path pathToSign;
   private final Path pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
-  private final Optional<Path> codesignAllocatePath;
+  private final Optional<Tool> codesignAllocatePath;
 
   public CodeSignStep(
       Path workingDirectory,
+      SourcePathResolver resolver,
       Path pathToSign,
       Path pathToSigningEntitlements,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
-      Optional<Path> codesignAllocatePath) {
+      Optional<Tool> codesignAllocatePath) {
     this.workingDirectory = workingDirectory;
+    this.resolver = resolver;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
@@ -55,8 +61,9 @@ public class CodeSignStep implements Step {
   public int execute(ExecutionContext context) throws InterruptedException {
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
     if (codesignAllocatePath.isPresent()) {
+      ImmutableList<String> commandPrefix = codesignAllocatePath.get().getCommandPrefix(resolver);
       paramsBuilder.setEnvironment(
-          ImmutableMap.of("CODESIGN_ALLOCATE", codesignAllocatePath.get().toString()));
+          ImmutableMap.of("CODESIGN_ALLOCATE", Joiner.on(" ").join(commandPrefix)));
     }
     ProcessExecutorParams processExecutorParams =
         paramsBuilder

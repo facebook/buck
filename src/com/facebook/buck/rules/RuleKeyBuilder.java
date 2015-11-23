@@ -22,13 +22,13 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
@@ -218,10 +218,6 @@ public class RuleKeyBuilder {
     }
   }
 
-  public RuleKeyBuilder setPath(Path path) throws IOException {
-    return setPath(path, path);
-  }
-
   // Paths get added as a combination of the file name and file hash. If the path is absolute
   // then we only include the file name (assuming that it represents a tool of some kind
   // that's being used for compilation or some such). This does mean that if a user renames a
@@ -283,11 +279,8 @@ public class RuleKeyBuilder {
         throw new RuntimeException(("Unhandled number type: " + val.getClass()));
       }
     } else if (val instanceof Path) {
-      try {
-        setPath((Path) val);
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
-      }
+      throw new HumanReadableException(
+          "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
     } else if (val instanceof String) {
       if (logElms != null) {
         logElms.add(String.format("string(\"%s\"):", val));

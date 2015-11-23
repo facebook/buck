@@ -275,8 +275,8 @@ public class AppleCxxPlatforms {
         .setLipo(lipo)
         .setStubBinary(stubBinaryPath)
         .setLldb(lldb)
-        .setCodesignAllocatePath(
-            getOptionalToolPath("codesign_allocate", toolSearchPaths, executableFinder))
+        .setCodesignAllocate(
+            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version))
         .build();
   }
 

@@ -2602,7 +2602,7 @@ public class ProjectGeneratorTest {
         BuildTarget.builder(rootPath, "//foo", "asset_catalog").build();
     TargetNode<?> assetCatalogNode = AppleAssetCatalogBuilder
         .createBuilder(assetCatalogTarget)
-        .setDirs(ImmutableSortedSet.of(Paths.get("AssetCatalog.xcassets")))
+        .setDirs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("AssetCatalog.xcassets")))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
@@ -3544,7 +3544,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> assetCatalogNode = AppleAssetCatalogBuilder
         .createBuilder(assetCatalogTarget)
-        .setDirs(ImmutableSortedSet.of(Paths.get("AssetCatalog.xcassets")))
+        .setDirs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("AssetCatalog.xcassets")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(

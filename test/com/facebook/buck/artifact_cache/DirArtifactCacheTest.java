@@ -28,7 +28,9 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -555,7 +557,7 @@ public class DirArtifactCacheTest {
 
     @SuppressWarnings("PMD.UnusedPrivateField")
     @AddToRuleKey
-    private final Path file;
+    private final SourcePath file;
 
     private BuildRuleForTest(Path file) {
       super(
@@ -564,7 +566,7 @@ public class DirArtifactCacheTest {
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
                   new BuildTargetNodeToBuildRuleTransformer())));
-      this.file = file;
+      this.file = new PathSourcePath(new FakeProjectFilesystem(), file);
     }
   }
 }

@@ -316,7 +316,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void assetCatalogsBuildPhaseBuildsAssetCatalogs()
       throws NoSuchBuildTargetException {
     AppleAssetCatalogDescription.Arg arg = new AppleAssetCatalogDescription.Arg();
-    arg.dirs = ImmutableSortedSet.of(Paths.get("AssetCatalog1.xcassets"));
+    arg.dirs = ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("AssetCatalog1.xcassets"));
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setRecursiveAssetCatalogs(

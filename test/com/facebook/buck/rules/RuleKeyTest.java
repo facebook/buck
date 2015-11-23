@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +51,16 @@ public class RuleKeyTest {
   public void testRuleKeyFromHashString() {
     RuleKey ruleKey = new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208");
     assertEquals("19d2558a6bd3a34fb3f95412de9da27ed32fe208", ruleKey.toString());
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void shouldNotAllowPathsInRuleKeysWhenSetReflectively() {
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKeyBuilder builder = createEmptyRuleKey(resolver);
+
+    builder.setReflectively("path", Paths.get("some/path"));
   }
 
   /**
@@ -103,13 +114,13 @@ public class RuleKeyTest {
     RuleKey reflective = createEmptyRuleKey(resolver)
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
-        .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
+        .setReflectively("path", new FakeSourcePath("location/of/the/rebel/plans"))
         .build();
 
     RuleKey manual = createEmptyRuleKey(resolver)
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
-        .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
+        .setReflectively("path", new FakeSourcePath("location/of/the/rebel/plans"))
         .build();
 
     assertEquals(manual, reflective);
@@ -376,7 +387,7 @@ public class RuleKeyTest {
   public void canAddMapsToRuleKeys() {
     ImmutableMap<String, ?> map = ImmutableMap.of(
         "path",
-        Paths.get("some/path"),
+        new FakeSourcePath("some/path"),
         "boolean",
         true);
 
@@ -391,7 +402,7 @@ public class RuleKeyTest {
   @Test
   public void keysOfMapsAddedToRuleKeysDoNotNeedToBeStrings() {
     ImmutableMap<?, ?> map = ImmutableMap.of(
-        Paths.get("some/path"), "woohoo!",
+        new FakeSourcePath("some/path"), "woohoo!",
         42L, "life, the universe and everything");
 
     SourcePathResolver resolver =

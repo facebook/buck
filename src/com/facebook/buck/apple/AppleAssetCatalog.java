@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -53,26 +54,28 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   private final Tool actool;
 
   @AddToRuleKey
-  private final ImmutableSortedSet<Path> assetCatalogDirs;
+  private final ImmutableSortedSet<SourcePath> assetCatalogDirs;
 
   @AddToRuleKey(stringify = true)
   private final Path outputDir;
 
   AppleAssetCatalog(
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      final SourcePathResolver resolver,
       String applePlatformName,
       Tool actool,
-      SortedSet<Path> assetCatalogDirs,
+      SortedSet<SourcePath> assetCatalogDirs,
       String bundleName) {
     super(params, resolver);
     Preconditions.checkArgument(
         Iterables.all(
             assetCatalogDirs,
-            new Predicate<Path>() {
+            new Predicate<SourcePath>() {
               @Override
-              public boolean apply(Path input) {
-                return input.toString().endsWith(XCASSETS_DIRECTORY_EXTENSION);
+              public boolean apply(SourcePath input) {
+                return resolver.getAbsolutePath(input)
+                    .toString()
+                    .endsWith(XCASSETS_DIRECTORY_EXTENSION);
               }
             }));
     this.applePlatformName = applePlatformName;
@@ -93,7 +96,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         ImmutableSortedSet.copyOf(
             Iterables.transform(
                 assetCatalogDirs,
-                getProjectFilesystem().getAbsolutifier()));
+                getResolver().getAbsolutePathFunction()));
     stepsBuilder.add(
         new ActoolStep(
             getProjectFilesystem().getRootPath(),
@@ -117,5 +120,4 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   public Path getOutputDir() {
     return outputDir;
   }
-
 }

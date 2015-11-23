@@ -313,14 +313,14 @@ public class AppleDescriptions {
     ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode));
 
-    ImmutableSortedSet.Builder<Path> assetCatalogDirsBuilder =
+    ImmutableSortedSet.Builder<SourcePath> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
       assetCatalogDirsBuilder.addAll(arg.dirs);
     }
 
-    ImmutableSortedSet<Path> assetCatalogDirs =
+    ImmutableSortedSet<SourcePath> assetCatalogDirs =
         assetCatalogDirsBuilder.build();
 
     if (assetCatalogDirs.isEmpty()) {
@@ -491,7 +491,7 @@ public class AppleDescriptions {
         tests,
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
-        appleCxxPlatform.getCodesignAllocatePath(),
+        appleCxxPlatform.getCodesignAllocate(),
         provisioningProfileStore,
         AppleBundle.DebugInfoFormat.DSYM);
   }
