@@ -429,6 +429,7 @@ public class AppleDescriptions {
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
+    resolver.addAllToIndex(assetCatalog.asSet());
 
     // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with
     // binary being optional.
@@ -479,7 +480,7 @@ public class AppleDescriptions {
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
         appleCxxPlatform.getLldb(),
-        assetCatalog,
+        assetCatalog.transform(SourcePaths.getToBuildTargetSourcePath()),
         tests,
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,

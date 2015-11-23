@@ -298,6 +298,7 @@ public class AppleTestDescription implements
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
+    resolver.addAllToIndex(assetCatalog.asSet());
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
@@ -339,7 +340,7 @@ public class AppleTestDescription implements
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
         appleCxxPlatform.getLldb(),
-        assetCatalog,
+        assetCatalog.transform(SourcePaths.getToBuildTargetSourcePath()),
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,

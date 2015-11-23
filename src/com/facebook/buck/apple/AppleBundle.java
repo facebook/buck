@@ -157,7 +157,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   @AddToRuleKey
   private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
-  private final Optional<AppleAssetCatalog> assetCatalog;
+  @AddToRuleKey
+  private final Optional<SourcePath> assetCatalog;
 
   private final String binaryName;
   private final Path bundleRoot;
@@ -184,7 +185,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Tool dsymutil,
       Tool strip,
       Tool lldb,
-      Optional<AppleAssetCatalog> assetCatalog,
+      Optional<SourcePath> assetCatalog,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
@@ -434,7 +435,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     }
 
     if (assetCatalog.isPresent()) {
-      Path bundleDir = assetCatalog.get().getOutputDir();
+      Path bundleDir = getResolver().getAbsolutePath(assetCatalog.get());
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
