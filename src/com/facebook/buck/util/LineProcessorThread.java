@@ -34,7 +34,7 @@ public abstract class LineProcessorThread extends ManagedThread {
     this.outputStream = Preconditions.checkNotNull(outputStream);
   }
 
-  public abstract Iterable<String> process(String line);
+  protected abstract Iterable<String> process(String line);
 
   @Override
   protected void run() throws Exception {

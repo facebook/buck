@@ -44,7 +44,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -701,37 +700,6 @@ public class CxxDescriptionEnhancer {
         cxxLink,
         ImmutableSortedSet.copyOf(objects.keySet()),
         executableBuilder.build());
-  }
-
-  /**
-   * @return a {@link Function} object which transforms path names from the output of a compiler
-   *     or preprocessor using {@code pathProcessor}.
-   */
-  public static Function<String, Iterable<String>> createErrorMessagePathProcessor(
-      final Function<String, String> pathProcessor) {
-    return new Function<String, Iterable<String>>() {
-
-      private final ImmutableList<Pattern> patterns =
-          ImmutableList.of(
-              Pattern.compile(
-                  "(?<=^(?:In file included |\\s+)from )" +
-                  "(?<path>[^:]+)" +
-                  "(?=[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
-              Pattern.compile(
-                  "^(?<path>[^:]+)(?=:(?:\\d+:(?:\\d+:)?)? )"));
-
-      @Override
-      public Iterable<String> apply(String line) {
-        for (Pattern pattern : patterns) {
-          Matcher m = pattern.matcher(line);
-          if (m.find()) {
-            return ImmutableList.of(m.replaceAll(pathProcessor.apply(m.group("path"))));
-          }
-        }
-        return ImmutableList.of(line);
-      }
-
-    };
   }
 
   /**

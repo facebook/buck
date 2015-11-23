@@ -25,6 +25,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FunctionLineProcessorThread;
+import com.facebook.buck.util.LineProcessorThread;
+import com.facebook.buck.util.ManagedThread;
 import com.facebook.buck.util.MoreThrowables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -168,35 +170,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     };
   }
 
-  @VisibleForTesting
-  Function<String, Iterable<String>> createErrorLineProcessor(
-      final Path workingDir,
-      final boolean shouldReportAbsolutePaths) {
-    return CxxDescriptionEnhancer.createErrorMessagePathProcessor(
-        new Function<String, String>() {
-          @Override
-          public String apply(String original) {
-            Path path = Paths.get(original);
-
-            // If we're compiling, we also need to restore the original working directory in the
-            // error output.
-            if (operation == Operation.COMPILE) {
-              path = Paths.get(sanitizer.restore(Optional.of(workingDir), original));
-            }
-
-            // And, of course, we need to fixup any replacement paths.
-            String result = Optional
-                .fromNullable(replacementPaths.get(path))
-                .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
-                .or(Escaper.escapePathForCIncludeString(path));
-            if (shouldReportAbsolutePaths) {
-              result = filesystem.getAbsolutifier().apply(Paths.get(result)).toString();
-            }
-            return result;
-          }
-        });
-  }
-
   /**
    * Apply common settings for our subprocesses.
    *
@@ -266,7 +239,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
-  private void safeCloseProcessor(@Nullable FunctionLineProcessorThread processor) {
+  private void safeCloseProcessor(@Nullable ManagedThread processor) {
     if (processor != null) {
       try {
         processor.waitFor();
@@ -301,9 +274,12 @@ public class CxxPreprocessAndCompileStep implements Step {
 
     Process preprocess = null;
     Process compile = null;
-    FunctionLineProcessorThread errorProcessorPreprocess = null;
-    FunctionLineProcessorThread errorProcessorCompile = null;
-    FunctionLineProcessorThread lineDirectiveMunger = null;
+    LineProcessorThread errorProcessorPreprocess = null;
+    LineProcessorThread errorProcessorCompile = null;
+    LineProcessorThread lineDirectiveMunger = null;
+
+    CxxErrorTransformerFactory errorStreamTransformerFactory =
+        createErrorTransformerFactory(context);
 
     try {
       LOG.debug(
@@ -314,22 +290,14 @@ public class CxxPreprocessAndCompileStep implements Step {
       preprocess = preprocessBuilder.start();
       compile = compileBuilder.start();
 
-      errorProcessorPreprocess =
-          new FunctionLineProcessorThread(
-              preprocess.getErrorStream(),
-              preprocessError,
-              createErrorLineProcessor(
-                  filesystem.getRootPath(),
-                  context.shouldReportAbsolutePaths()));
+      errorProcessorPreprocess = errorStreamTransformerFactory.createTransformerThread(
+          preprocess.getErrorStream(),
+          preprocessError);
       errorProcessorPreprocess.start();
 
-      errorProcessorCompile =
-          new FunctionLineProcessorThread(
-              compile.getErrorStream(),
-              compileError,
-              createErrorLineProcessor(
-                  filesystem.getRootPath(),
-                  context.shouldReportAbsolutePaths()));
+      errorProcessorCompile = errorStreamTransformerFactory.createTransformerThread(
+          compile.getErrorStream(),
+          compileError);
       errorProcessorCompile.start();
 
       lineDirectiveMunger =
@@ -427,13 +395,9 @@ public class CxxPreprocessAndCompileStep implements Step {
     // to process the stdout and stderr lines from the preprocess command.
     int exitCode;
     try {
-      try (FunctionLineProcessorThread errorProcessor =
-               new FunctionLineProcessorThread(
-                   process.getErrorStream(),
-                   error,
-                   createErrorLineProcessor(
-                       filesystem.getRootPath(),
-                       context.shouldReportAbsolutePaths()))) {
+      try (LineProcessorThread errorProcessor =
+               createErrorTransformerFactory(context)
+                   .createTransformerThread(process.getErrorStream(), error)) {
         errorProcessor.start();
 
         // If we're preprocessing, we pipe the output through a processor to sanitize the line
@@ -474,6 +438,20 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
 
     return exitCode;
+  }
+
+  private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {
+    return new CxxErrorTransformerFactory(
+        // If we're compiling, we also need to restore the original working directory in the
+        // error output.
+        operation == Operation.COMPILE ?
+            Optional.of(filesystem.getRootPath()) :
+            Optional.<Path>absent(),
+        context.shouldReportAbsolutePaths() ?
+            Optional.of(filesystem.getAbsolutifier()) :
+            Optional.<Function<Path, Path>>absent(),
+        replacementPaths,
+        sanitizer);
   }
 
   @Override
