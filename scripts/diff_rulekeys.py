@@ -2,11 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import argparse
 import collections
 import os
 import re
-import sys
 
 RULE_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+RuleKey\s+(.*)')
 LOGGER_NAME = 'com.facebook.buck.rules.RuleKeyBuilder'
@@ -105,6 +105,7 @@ class RuleKeyStructureInfo(object):
             result[name] = top_key
         return result
 
+
     @staticmethod
     def _parseRuleKeyLine(match):
         rule_key = match.groups()[1]
@@ -116,8 +117,14 @@ class RuleKeyStructureInfo(object):
         # so we can cheat and split on ): instead
         structure_entries = structure.split('):')
         structure_entries = [e + ')' for e in structure_entries if len(e) > 0]
-        structure_map = collections.defaultdict(list)
+        structure_map = collections.OrderedDict()
         last_key = None
+
+        def appendValue(map, key, val):
+            if key in map:
+                map[key].append(val)
+            else:
+                map[key] = [val]
 
         for e in reversed(structure_entries):
             if len(e) == 0:
@@ -125,10 +132,11 @@ class RuleKeyStructureInfo(object):
             elif e.startswith('key('):
                 last_key = e[4:-1]
             else:
-                structure_map[last_key].append(e)
+                appendValue(structure_map, last_key, e)
                 last_key = None
 
         return (top_key, structure_map)
+
 
     @staticmethod
     def _parseBuckOut(file_path):
