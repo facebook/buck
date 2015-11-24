@@ -49,9 +49,11 @@ public class DiffRuleKeysScriptIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
   private Logger ruleKeyBuilderLogger;
   private Level previousRuleKeyBuilderLevel;
+  private int lastPositionInLog;
 
   @Before
   public void enableVerboseRuleKeys() throws Exception {
+    lastPositionInLog = 0;
     ruleKeyBuilderLogger = Logger.getLogger(RuleKeyBuilder.class.getName());
     previousRuleKeyBuilderLevel = ruleKeyBuilderLogger.getLevel();
     ruleKeyBuilderLogger.setLevel(Level.FINER);
@@ -191,8 +193,10 @@ public class DiffRuleKeysScriptIntegrationTest {
         "--show-rulekey",
         "//:java_lib_2");
     buckCommandResult.assertSuccess();
-    workspace.copyFile(LOG_FILE_PATH.toString(), logOut);
-    workspace.writeContentsToPath("", LOG_FILE_PATH.toString());
+    String fullLogContents = workspace.getFileContents(LOG_FILE_PATH.toString());
+    String logContentsForThisInvocation = fullLogContents.substring(lastPositionInLog);
+    lastPositionInLog += logContentsForThisInvocation.length();
+    workspace.writeContentsToPath(logContentsForThisInvocation, logOut);
   }
 
 }
