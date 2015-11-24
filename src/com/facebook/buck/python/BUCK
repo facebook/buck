@@ -4,6 +4,9 @@ CONFIG_SRCS = [
 java_library(
   name = 'config',
   srcs = CONFIG_SRCS,
+  resources = [
+      '__test_main__.py',
+  ],
   deps = [
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
@@ -12,6 +15,7 @@ java_library(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
     '//third-party/java/guava:guava',
     ':support',
   ],

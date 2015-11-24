@@ -33,10 +33,15 @@ import javax.annotation.Nullable;
 
 public class SymlinkTree
     extends AbstractBuildRule
-    implements RuleKeyAppendable, HasPostBuildSteps, SupportsInputBasedRuleKey {
+    implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
   private final Path root;
+
+  @AddToRuleKey
+  private final ImmutableSortedMap<String, NonHashableSourcePathContainer> linksForRuleKey;
+
   private final ImmutableSortedMap<Path, SourcePath> links;
+
   private final ImmutableMap<Path, SourcePath> fullLinks;
 
   public SymlinkTree(
@@ -63,6 +68,7 @@ public class SymlinkTree
       fullLinks.put(root.resolve(entry.getKey()), entry.getValue());
     }
     this.fullLinks = fullLinks.build();
+    this.linksForRuleKey = getLinksForRuleKey(links);
   }
 
   /**
@@ -85,14 +91,16 @@ public class SymlinkTree
 
   // Put the link map into the rule key, as if it changes at all, we need to
   // re-run it.
-  @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  private ImmutableSortedMap<String, NonHashableSourcePathContainer> getLinksForRuleKey(
+      ImmutableMap<Path, SourcePath> links) {
+    ImmutableSortedMap.Builder<String, NonHashableSourcePathContainer> linksForRuleKeyBuilder =
+        ImmutableSortedMap.naturalOrder();
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
-      builder.setReflectively(
-          "link(" + entry.getKey().toString() + ")",
-          getResolver().getRelativePath(entry.getValue()).toString());
+      linksForRuleKeyBuilder.put(
+          entry.getKey().toString(),
+          new NonHashableSourcePathContainer(entry.getValue()));
     }
-    return builder;
+    return linksForRuleKeyBuilder.build();
   }
 
   // Since we produce a directory tree of symlinks, rather than a single file, return
@@ -143,4 +151,7 @@ public class SymlinkTree
     }
   }
 
+  public ImmutableSortedMap<String, NonHashableSourcePathContainer> getLinksForRuleKey() {
+    return linksForRuleKey;
+  }
 }

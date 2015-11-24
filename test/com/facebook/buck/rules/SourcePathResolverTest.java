@@ -30,18 +30,25 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PackagedResource;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SourcePathResolverTest {
+  @Rule
+  public final ExpectedException exception = ExpectedException.none();
+
 
   @Test
   public void resolvePathSourcePath() {
@@ -69,6 +76,35 @@ public class SourcePathResolverTest {
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
     assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
+  }
+
+  @Test
+  public void resolveResourceSourceAbsolutePathSuccess() {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    PackagedResource packagedResource = PackagedResourceTestUtil.getPackagedResource(
+        "testdata/packaged_resource_one");
+    ResourceSourcePath resourceSourcePathOne =
+        new ResourceSourcePath(
+            packagedResource);
+
+    assertEquals(packagedResource.get(), pathResolver.getAbsolutePath(resourceSourcePathOne));
+  }
+
+  @Test
+  public void resolveResourceSourceRelativePathThrowsIllegalStateException() {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    ResourceSourcePath resourceSourcePathOne =
+        new ResourceSourcePath(
+            PackagedResourceTestUtil.getPackagedResource("testdata/packaged_resource_one"));
+
+    exception.expect(IllegalStateException.class);
+    pathResolver.getRelativePath(resourceSourcePathOne);
   }
 
   @Test

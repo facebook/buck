@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -258,9 +257,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
             .put(
                 getTestMainName(),
-                new PathSourcePath(
-                    params.getProjectFilesystem(),
-                    pythonBuckConfig.getPathToTestMain()))
+                pythonBuckConfig.getPathToTestMain())
             .putAll(srcs)
             .build(),
         resources,

@@ -24,8 +24,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.ResourceSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -63,12 +66,10 @@ public class PythonBuckConfig {
               "src/com/facebook/buck/python/pex.py"))
           .toAbsolutePath();
 
-  private static final Path DEFAULT_PATH_TO_TEST_MAIN =
-      Paths.get(
-          System.getProperty(
-              "buck.path_to_python_test_main",
-              "src/com/facebook/buck/python/__test_main__.py"))
-          .toAbsolutePath();
+  private static final SourcePath PATH_TO_TEST_MAIN =
+      new ResourceSourcePath(
+          new PackagedResource(
+              PythonBuckConfig.class, "__test_main__.py"));
 
   private final BuckConfig delegate;
   private final ExecutableFinder exeFinder;
@@ -189,8 +190,8 @@ public class PythonBuckConfig {
     return getPythonEnvironment(processExecutor, configPath);
   }
 
-  public Path getPathToTestMain() {
-    return delegate.getPath(SECTION, "path_to_python_test_main").or(DEFAULT_PATH_TO_TEST_MAIN);
+  public SourcePath getPathToTestMain() {
+    return PATH_TO_TEST_MAIN;
   }
 
   public Tool getPexTool(BuildRuleResolver resolver) {

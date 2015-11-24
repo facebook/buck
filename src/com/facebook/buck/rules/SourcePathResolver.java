@@ -48,6 +48,9 @@ public class SourcePathResolver {
    * depending on your needs.
    */
   public Path deprecatedGetPath(SourcePath sourcePath) {
+    Preconditions.checkState(
+        !(sourcePath instanceof ResourceSourcePath),
+        "ResourceSourcePath is not supported by deprecatedGetPath.");
     return getPathPrivateImpl(sourcePath);
   }
 
@@ -68,7 +71,11 @@ public class SourcePathResolver {
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
     ImmutableMap.Builder<T, Path> paths = ImmutableMap.builder();
     for (ImmutableMap.Entry<T, SourcePath> entry : sourcePathMap.entrySet()) {
-      paths.put(entry.getKey(), deprecatedGetPath(entry.getValue()));
+      if (entry.getValue() instanceof ResourceSourcePath) {
+        paths.put(entry.getKey(), getAbsolutePath(entry.getValue()));
+      } else {
+        paths.put(entry.getKey(), deprecatedGetPath(entry.getValue()));
+      }
     }
     return paths.build();
   }
@@ -78,6 +85,10 @@ public class SourcePathResolver {
    *     {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getAbsolutePath(SourcePath sourcePath) {
+    if (sourcePath instanceof ResourceSourcePath) {
+      return ((ResourceSourcePath) sourcePath).getAbsolutePath();
+    }
+
     Path relative = getPathPrivateImpl(sourcePath);
 
     if (relative.isAbsolute()) {
@@ -111,6 +122,8 @@ public class SourcePathResolver {
    * {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getRelativePath(SourcePath sourcePath) {
+    Preconditions.checkState(!(sourcePath instanceof ResourceSourcePath));
+
     Path toReturn = getPathPrivateImpl(sourcePath);
 
     Preconditions.checkState(
@@ -165,10 +178,9 @@ public class SourcePathResolver {
    *         {@link BuildRule}.
    */
   public Optional<BuildRule> getRule(SourcePath sourcePath) {
-    if (sourcePath instanceof PathSourcePath) {
+    if (!(sourcePath instanceof BuildTargetSourcePath)) {
       return Optional.absent();
     }
-    Preconditions.checkState(sourcePath instanceof BuildTargetSourcePath);
     return Optional.of(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
   }
 

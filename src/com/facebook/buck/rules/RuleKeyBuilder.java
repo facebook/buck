@@ -119,6 +119,22 @@ public class RuleKeyBuilder {
     }
   }
 
+  protected RuleKeyBuilder setNonHashingSourcePath(SourcePath sourcePath) {
+    String pathForKey;
+    if (sourcePath instanceof ResourceSourcePath) {
+      pathForKey = ((ResourceSourcePath) sourcePath).getResourceIdentifier();
+    } else {
+      pathForKey = resolver.getRelativePath(sourcePath).toString();
+    }
+
+    if (logElms != null) {
+      logElms.add(String.format("path(%s):", pathForKey));
+    }
+
+    feed(pathForKey.getBytes());
+    return this;
+  }
+
   protected RuleKeyBuilder setBuildRule(BuildRule rule) {
     return setSingleValue(defaultRuleKeyBuilderFactory.build(rule));
   }
@@ -312,6 +328,10 @@ public class RuleKeyBuilder {
       }
     } else if (val instanceof SourcePath) {
       return setSourcePath((SourcePath) val);
+    } else if (val instanceof NonHashableSourcePathContainer) {
+      NonHashableSourcePathContainer nonHashableSourcePathContainer =
+          (NonHashableSourcePathContainer) val;
+      return setNonHashingSourcePath(nonHashableSourcePathContainer.getSourcePath());
     } else if (val instanceof SourceRoot) {
       if (logElms != null) {
         logElms.add(String.format("sourceroot(%s):", val));

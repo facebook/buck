@@ -49,7 +49,9 @@ public class PackagedResource implements Supplier<Path> {
   private final Path filename;
   private final Supplier<Path> supplier;
 
-  public PackagedResource(Class<?> relativeTo, String pathRelativeToClass) {
+
+  public PackagedResource(
+      Class<?> relativeTo, String pathRelativeToClass) {
     this.relativeTo = relativeTo;
     // We could magically detect the class we're relative to by examining the stacktrace but that
     // would be incredibly fragile. So we won't.
@@ -72,6 +74,23 @@ public class PackagedResource implements Supplier<Path> {
     return supplier.get();
   }
 
+  /**
+   * Use this as unique ID for resource when hashing is not enabled
+   * @return Class name followed by relative file path.
+   * E.g. com.facebook.buck.MyClass#some_resource_file.abc
+   */
+  public String getResourceIdentifier() {
+    return relativeTo.getName() + "#" + name;
+  }
+
+  /**
+   * Use this combined with file hash as unique ID when hashing is enabled.
+   * @return {@link Path} representing filename of packaged resource
+   */
+  public Path getFilenamePath() {
+    return filename;
+  }
+
   private Path unpack() {
     try (
         InputStream inner = Preconditions.checkNotNull(
@@ -79,23 +98,27 @@ public class PackagedResource implements Supplier<Path> {
             "Unable to find: %s", name).openStream();
         BufferedInputStream stream = new BufferedInputStream(inner)) {
 
-      // Copy the zip to a temporary file, and mark that for deletion once the VM exits.
-      Path zip = Files.createTempFile(filename.toString(), "zip");
-      // Ensure we tidy up
-      Cleaner.addRoot(zip);
-      Files.copy(stream, zip, REPLACE_EXISTING);
+      Path outputDir = Files.createTempDirectory("buck-resource");
+      Cleaner.addRoot(outputDir);
 
-      // Now unzip the resource in place
-      Path output = Files.createTempDirectory("buck-resource");
-      Cleaner.addRoot(output);
-      Unzip.extractZipFile(zip, output, OVERWRITE);
-
-      return output;
+      String extension = com.google.common.io.Files.getFileExtension(filename.toString());
+      if (extension.equals("zip")) {
+        // Copy the zip to a temporary file, and mark that for deletion once the VM exits.
+        Path zip = Files.createTempFile(filename.toString(), ".zip");
+        // Ensure we tidy up
+        Cleaner.addRoot(zip);
+        Files.copy(stream, zip, REPLACE_EXISTING);
+        Unzip.extractZipFile(zip, outputDir, OVERWRITE);
+        return outputDir;
+      } else {
+        Path tempFilePath = Files.createFile(outputDir.resolve(filename));
+        Cleaner.addRoot(tempFilePath);
+        Files.copy(stream, tempFilePath, REPLACE_EXISTING);
+        return tempFilePath;
+      }
     } catch (IOException ioe) {
       throw new RuntimeException("Unable to unpack " + name, ioe);
     }
-
-
   }
 
   private static class Cleaner implements Runnable {
