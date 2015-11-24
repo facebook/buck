@@ -1,0 +1,22 @@
+cxx_library(
+  name = 'lib',
+  srcs = [
+    'lib.cpp',
+  ],
+  deps = [
+    # empty
+  ],
+  visibility = ['PUBLIC'],
+)
+
+cxx_binary(
+  name = 'bin',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    # Transitively pulls in :lib above
+    '@parent//xplat:xplat-lib',
+  ],
+)
+

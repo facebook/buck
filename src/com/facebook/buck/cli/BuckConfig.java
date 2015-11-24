@@ -109,7 +109,8 @@ public class BuckConfig {
                 cellName.get(),
                 projectFilesystem.getRootPath());
           }
-          return root.get().toAbsolutePath().normalize();
+          Path path = MorePaths.expandHomeDir(root.get());
+          return projectFilesystem.resolve(path).normalize();
         }
       };
 

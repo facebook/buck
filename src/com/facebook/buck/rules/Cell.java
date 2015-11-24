@@ -48,7 +48,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -92,10 +91,9 @@ public class Cell {
     ImmutableMap<String, String> allCells = getBuckConfig().getEntriesForSection("repositories");
     ImmutableSet.Builder<Path> roots = ImmutableSet.builder();
     roots.add(filesystem.getRootPath());
-    for (String path : allCells.values()) {
+    for (String cellName : allCells.keySet()) {
       // Added the precondition check, though the resolve call can never return null.
-      Path cellRoot = Preconditions.checkNotNull(
-          getBuckConfig().resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(path)));
+      Path cellRoot = Preconditions.checkNotNull(getCellRoots().apply(Optional.of(cellName)));
       roots.add(cellRoot);
     }
     this.knownRoots = roots.build();

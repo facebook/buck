@@ -23,11 +23,15 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.martiansoftware.nailgun.NGContext;
 
 import org.ini4j.Ini;
 import org.junit.Ignore;
@@ -112,6 +116,26 @@ public class InterCellIntegrationTest {
   @Ignore
   public void allOutputsShouldBePlacedInTheSameRootOutputFolder() {
 
+  }
+
+  @Test
+  public void circularCellReferencesAreAllowed() throws IOException {
+    ProjectWorkspace mainRepo = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "inter-cell/circular",
+        primaryTmp);
+    mainRepo.setUp();
+    Path primary = mainRepo.getPath("primary");
+
+    ProjectWorkspace.ProcessResult result = mainRepo.runBuckCommandWithEnvironmentAndContext(
+        primary,
+        Optional.<NGContext>absent(),
+        Optional.<BuckEventListener>absent(),
+        Optional.<ImmutableMap<String, String>>absent(),
+        "build",
+        "//:bin");
+
+    result.assertSuccess();
   }
 
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
