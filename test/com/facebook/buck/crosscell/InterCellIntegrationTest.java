@@ -16,13 +16,18 @@
 
 package com.facebook.buck.crosscell;
 
+import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
 import org.ini4j.Ini;
 import org.junit.Ignore;
@@ -73,6 +78,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void shouldBeAbleToUseACxxLibraryXCell() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
     Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
         "inter-cell/export-file/primary",
         "inter-cell/export-file/secondary");
