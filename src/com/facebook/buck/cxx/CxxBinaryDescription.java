@@ -254,8 +254,7 @@ public class CxxBinaryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends CxxConstructorArg {
-    public Optional<Linker.LinkableDepType> linkStyle;
+  public static class Arg extends LinkableCxxConstructorArg {
   }
 
   public FlavorDomain<CxxPlatform> getCxxPlatforms() { return cxxPlatforms; }

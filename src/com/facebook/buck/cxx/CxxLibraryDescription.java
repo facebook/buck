@@ -975,7 +975,7 @@ public class CxxLibraryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends CxxConstructorArg {
+  public static class Arg extends LinkableCxxConstructorArg {
     public Optional<SourceList> exportedHeaders;
     public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
@@ -991,7 +991,6 @@ public class CxxLibraryDescription implements
     public Optional<Boolean> forceStatic;
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> canBeAsset;
-    public Optional<Linker.LinkableDepType> linkStyle;
   }
 
 }
