@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -85,7 +86,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmd,
         bash,
         cmdExe,
-        (InstallableApk) installableApk);
+        new BuildTargetSourcePath(args.apk));
   }
 
   @SuppressFieldNotInitialized

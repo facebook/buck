@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -76,8 +77,9 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder>
       for (AlterRuleKey alterRuleKey : knownFields.get(buildRule.getClass())) {
         alterRuleKey.amendKey(builder, buildRule);
       }
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e);
+    } catch (ExecutionException | RuntimeException e) {
+      LOG.warn(e, "Error creating rule key for %s (%s)", buildRule, buildRule.getType());
+      throw Throwables.propagate(e);
     }
 
     return builder;

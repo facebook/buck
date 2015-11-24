@@ -140,7 +140,11 @@ public class InputBasedRuleKeyBuilderFactory
     // that contract, so check for that.
     @Override
     protected RuleKeyBuilder setBuildRule(BuildRule rule) {
-      throw new IllegalStateException("Input-based rule key builders cannot process build rules");
+      throw new IllegalStateException(
+          String.format(
+              "Input-based rule key builders cannot process build rules. " +
+                  "Was given %s to add to rule key.",
+              rule));
     }
 
     protected ImmutableSet<SourcePath> getInputsSoFar() {
