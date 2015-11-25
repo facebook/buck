@@ -260,11 +260,15 @@ This section includes settings that control build engine behavior.
   # The default is shallow.
   engine_mode = shallow
 
-  # Enable/disable use of dependency files for rules that support them.
-  # This is an optimization useful when dependencies are overspecified
-  # and the rule can dynamically determine a subset of dependencies it
-  # actually needs.  Enabled by default.
-  depfiles = true
+  # Configures use of dependency files for rules that support them. This
+  # is an optimization useful when dependencies are overspecified and the
+  # rule can dynamically determine a subset of dependencies it actually
+  # needs.  Enabled by default.
+  #   disabled : Don't use dependency files for rebuild detection.
+  #   enabled  : Use dependency files locally to avoid rebuilds locally.
+  #   cache    : Use dependency files locally and to store/fetch artifacts
+  #              to/from the cache.
+  depfiles = enabled
 
   # Configures order in which the build engine executes scheduled jobs.
   # Supported values:

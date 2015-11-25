@@ -27,6 +27,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -41,6 +42,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -56,6 +58,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -70,12 +73,15 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,7 +143,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleKeyFactories = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
           @Override
-          public RuleKeyFactories load(ProjectFilesystem filesystem) throws Exception {
+          public RuleKeyFactories load(@Nonnull  ProjectFilesystem filesystem) throws Exception {
             return RuleKeyFactories.build(fileHashCaches.get(filesystem), resolver);
           }
         });
@@ -165,7 +171,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.ruleKeyFactories = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
           @Override
-          public RuleKeyFactories load(ProjectFilesystem filesystem) throws Exception {
+          public RuleKeyFactories load(@Nonnull  ProjectFilesystem filesystem) throws Exception {
             return ruleKeyFactoriesFunction.apply(filesystem);
           }
         });
@@ -176,7 +182,7 @@ public class CachingBuildEngine implements BuildEngine {
     return CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
           @Override
-          public FileHashCache load(ProjectFilesystem filesystem) {
+          public FileHashCache load(@Nonnull  ProjectFilesystem filesystem) {
             FileHashCache cellCache = new DefaultFileHashCache(filesystem);
             FileHashCache buckOutCache = new DefaultFileHashCache(
                 new ProjectFilesystem(
@@ -344,14 +350,26 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
-            RuleKeyFactories cellData = ruleKeyFactories.get(rule.getProjectFilesystem());
-            Preconditions.checkNotNull(cellData);
+            // Manifest caching
+            if (useManifestCaching(rule)) {
+
+              // Perform a manifest base cache lookup.
+              CacheResult cacheResult =
+                  performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
+              if (cacheResult.getType().isSuccess()) {
+                return Futures.immediateFuture(
+                    BuildResult.success(
+                        rule,
+                        BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
+                        cacheResult));
+              }
+            }
 
             // Input-based rule keys.
             if (rule instanceof SupportsInputBasedRuleKey) {
 
               // Calculate the input-based rule key and record it in the metadata.
-              RuleKey inputRuleKey = cellData.inputBasedRuleKeyBuilderFactory.build(rule);
+              RuleKey inputRuleKey = ruleKeyFactory.inputBasedRuleKeyBuilderFactory.build(rule);
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
                   inputRuleKey.toString());
@@ -408,7 +426,7 @@ public class CachingBuildEngine implements BuildEngine {
             // rebuilt, which is slow. Fortunately, we limit the effects of this when building Java
             // code when checking the ABI of deps instead of the RuleKey for deps.
             if (rule instanceof AbiRule) {
-              RuleKey abiRuleKey = cellData.abiRuleKeyBuilderFactory.build(rule);
+              RuleKey abiRuleKey = ruleKeyFactory.abiRuleKeyBuilderFactory.build(rule);
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
                   abiRuleKey.toString());
@@ -562,6 +580,15 @@ public class CachingBuildEngine implements BuildEngine {
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
                   depFileRuleKey.get().toString());
+
+              // Push an updated manifest to the cache.
+              if (useManifestCaching(rule)) {
+                updateAndStoreManifest(
+                    rule,
+                    depFileRuleKey.get(),
+                    ImmutableSet.copyOf(inputs),
+                    context.getArtifactCache());
+              }
             }
 
             // Make sure that all of the local files have the same values they would as if the
@@ -639,6 +666,15 @@ public class CachingBuildEngine implements BuildEngine {
                   ruleKeys.add(
                       onDiskBuildInfo.getRuleKey(
                           BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY).get());
+                }
+
+                // If the manifest-based rule key has changed, we need to push the artifact to cache
+                // using the new key.
+                if (useManifestCaching(rule) &&
+                    success.shouldUploadResultingArtifactManifestBased()) {
+                  ruleKeys.add(
+                      onDiskBuildInfo.getRuleKey(
+                          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get());
                 }
 
                 // If we have any rule keys to push to the cache with, do the upload now.
@@ -1101,7 +1137,13 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   private boolean useDependencyFileRuleKey(BuildRule rule) {
-    return depFiles == DepFiles.ENABLED &&
+    return depFiles != DepFiles.DISABLED &&
+        rule instanceof SupportsDependencyFileRuleKey &&
+        ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
+  }
+
+  private boolean useManifestCaching(BuildRule rule) {
+    return depFiles == DepFiles.CACHE &&
         rule instanceof SupportsDependencyFileRuleKey &&
         ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
   }
@@ -1133,6 +1175,127 @@ public class CachingBuildEngine implements BuildEngine {
       }
       return Optional.absent();
     }
+  }
+
+  @VisibleForTesting
+  protected Path getManifestPath(BuildRule rule) {
+    return BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget()).resolve(BuildInfo.MANIFEST);
+  }
+
+  @VisibleForTesting
+  protected RuleKey getManifestRuleKey(BuildRule rule) {
+    return ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
+        .depFileRuleKeyBuilderFactory.buildManifestKey(rule).getFirst();
+  }
+
+  // Update the on-disk manifest with the new dep-file rule key and push it to the cache.
+  private void updateAndStoreManifest(
+      BuildRule rule,
+      RuleKey key,
+      ImmutableSet<SourcePath> inputs,
+      ArtifactCache cache)
+      throws IOException, InterruptedException {
+
+    Preconditions.checkState(useManifestCaching(rule));
+
+    Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey =
+        ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
+            .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
+    Path manifestPath = getManifestPath(rule);
+    Manifest manifest = new Manifest();
+
+    // If we already have a manifest downloaded, use that.
+    if (rule.getProjectFilesystem().exists(manifestPath)) {
+      try (InputStream inputStream =
+               rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
+        manifest = new Manifest(inputStream);
+      }
+    }
+
+    // Update the manifest with the new output rule key.
+    manifest.addEntry(
+        fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
+        key,
+        pathResolver,
+        manifestKey.getSecond(),
+        inputs);
+
+    // Serialize the manifest to disk.
+    try (OutputStream outputStream =
+             rule.getProjectFilesystem().newFileOutputStream(manifestPath)) {
+      manifest.serialize(outputStream);
+    }
+
+    // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
+    // `ArtifactCache` interface uses raw paths.
+    try (NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest")) {
+      try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
+        Files.copy(inputStream, tempFile.get(), StandardCopyOption.REPLACE_EXISTING);
+      }
+      cache.store(
+          ImmutableSet.of(manifestKey.getFirst()),
+          ImmutableMap.<String, String>of(),
+          tempFile.get());
+    }
+  }
+
+  // Fetch an artifact from the cache using manifest-based caching.
+  private CacheResult performManifestBasedCacheFetch(
+      BuildRule rule,
+      BuildContext context,
+      BuildInfoRecorder buildInfoRecorder)
+      throws IOException, InterruptedException {
+
+    Preconditions.checkState(useManifestCaching(rule));
+
+    Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey =
+        ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
+            .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
+    Path manifestPath = getManifestPath(rule);
+
+    // Clear out any existing manifest.
+    rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
+
+    // Now, fetch an existing manifest from the cache.
+    rule.getProjectFilesystem().createParentDirs(manifestPath);
+    try (NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest")) {
+      CacheResult manifestResult =
+          context.getArtifactCache().fetch(manifestKey.getFirst(), tempFile.get());
+      if (!manifestResult.getType().isSuccess()) {
+        return CacheResult.miss();
+      }
+      try (OutputStream outputStream =
+               rule.getProjectFilesystem().newFileOutputStream(manifestPath)) {
+        Files.copy(tempFile.get(), outputStream);
+      }
+    }
+
+    // Deserialize the manifest.
+    Manifest manifest;
+    try (InputStream input =
+             rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
+      manifest = new Manifest(input);
+    }
+
+    // Lookup the rule for the current state of our inputs.
+    Optional<RuleKey> ruleKey =
+        manifest.lookup(
+            fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
+            pathResolver,
+            manifestKey.getSecond());
+    if (!ruleKey.isPresent()) {
+      return CacheResult.miss();
+    }
+
+    // Do another cache fetch using the rule key we found above.
+    return tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+        rule,
+        ruleKey.get(),
+        buildInfoRecorder,
+        context.getArtifactCache(),
+        // TODO(shs96c): This should be shared between all tests, not one per cell
+        rule.getProjectFilesystem(),
+        context);
   }
 
   /**
@@ -1172,6 +1335,7 @@ public class CachingBuildEngine implements BuildEngine {
   public enum DepFiles {
     ENABLED,
     DISABLED,
+    CACHE,
   }
 
   @VisibleForTesting

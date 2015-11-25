@@ -657,9 +657,8 @@ public class BuckConfig {
    * @return the mode with which to run the build engine.
    */
   public CachingBuildEngine.DepFiles getBuildDepFiles() {
-    return getBooleanValue("build", "depfiles", true) ?
-        CachingBuildEngine.DepFiles.ENABLED :
-        CachingBuildEngine.DepFiles.DISABLED;
+    return getEnum("build", "depfiles", CachingBuildEngine.DepFiles.class)
+        .or(CachingBuildEngine.DepFiles.ENABLED);
   }
 
   /**

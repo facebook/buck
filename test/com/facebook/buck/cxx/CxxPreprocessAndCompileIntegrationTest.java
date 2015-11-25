@@ -83,7 +83,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         "  cxxppflags = -g\n" +
         "  cxxflags = -g\n" +
         "[build]\n" +
-        "  depfiles = false\n",
+        "  depfiles = disabled\n",
         ".buckconfig");
   }
 
@@ -327,7 +327,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
             AbstractCxxSource.Type.CXX);
 
     // Run the build and verify that the C++ source was preprocessed.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry firstRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -341,7 +341,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Run the build again and verify that we recompiled as the header caused the depfile rule key
     // to change.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry secondRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -370,7 +370,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
             AbstractCxxSource.Type.CXX);
 
     // Run the build and verify that the C++ source was preprocessed.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry firstRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -384,7 +384,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Run the build again and verify that we recompiled as the header caused the depfile rule key
     // to change.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry secondRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -412,7 +412,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
             AbstractCxxSource.Type.CXX);
 
     // Run the build and verify that the C++ source was preprocessed.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry firstRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -426,13 +426,158 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Run the build again and verify that got a matching depfile rule key, and therefore
     // didn't recompile.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString()).assertSuccess();
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry secondRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
         secondRunEntry.getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
 
+
+    // Also, make sure the original rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void manifestCachingRebuildsAfterChangeToUsedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
+    String usedHeaderName = "source_full_header.h";
+    String sourceName = "source_full_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Enable caching for manifest-based caching.
+    workspace.enableDirCache();
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Clean the build directory, so that we need to go to cache.
+    workspace.runBuckCommand("clean");
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void manifestCachingRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
+      throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
+    String usedHeaderName = "source_relative_header.h";
+    String sourceName = "source_relative_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Enable caching for manifest-based caching.
+    workspace.enableDirCache();
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Clean the build directory, so that we need to go to cache.
+    workspace.runBuckCommand("clean");
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void manifestCachingGetsHitAfterChangeToUnusedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
+    String unusedHeaderName = "unused_header.h";
+    String sourceName = "source.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Enable caching for manifest-based caching.
+    workspace.enableDirCache();
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Clean the build directory, so that we need to go to cache.
+    workspace.runBuckCommand("clean");
+
+    // Now modify the unused header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        unusedHeaderName);
+
+    // Run the build again and verify that got a matching depfile rule key, and therefore
+    // didn't recompile.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
 
     // Also, make sure the original rule keys are actually different.
     assertThat(

@@ -72,6 +72,12 @@ class BuildInfo {
    */
   static final String METADATA_KEY_FOR_DEPS = "DEPS";
 
+  /**
+   * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based
+   * caching.
+   */
+  static final String MANIFEST = "MANIFEST";
+
   /** Utility class: do not instantiate. */
   private BuildInfo() {}
 

@@ -96,8 +96,11 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
@@ -1316,17 +1319,25 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
             .build();
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            factory);
 
-    // Prepare an input file that should appear in the dep file.
-    final Path input = Paths.get("input_file");
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
     filesystem.writeContentsToPath("contents", input);
 
     // Create a simple rule which just writes a file.
@@ -1335,10 +1346,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    final RuleKey depFileRuleKey = new RuleKey("aaaa");
     final Path output = Paths.get("output");
     final BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
           @Override
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
@@ -1367,16 +1379,15 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
-                    ruleKeyBuilderFactory,
-                    NOOP_RULE_KEY_FACTORY,
-                    NOOP_RULE_KEY_FACTORY,
-                    new FakeRuleKeyBuilderFactory(
-                        ImmutableMap.of(rule.getBuildTarget(), depFileRuleKey),
-                        fileHashCache))));
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
 
     // Run the build.
+    RuleKey depFileRuleKey = depFilefactory.build(rule, ImmutableList.of(input));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
-    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
 
     // Verify the dep file rule key and dep file contents were written to disk.
     OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
@@ -1390,7 +1401,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Verify that the dep file rule key and dep file were written to the cached artifact.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     CacheResult cacheResult =
-        cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact);
+        cache.fetch(factory.build(rule), fetchedArtifact);
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1699,6 +1710,349 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     depFilefactory)));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
+  }
+
+  @Test
+  public void manifestIsWrittenWhenBuiltLocally() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+    OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+    RuleKey depFileRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
+
+    // Verify that the manifest written to the cache is correct.
+    Path fetchedManifest = tmp.newFile("manifest").toPath();
+    CacheResult cacheResult =
+        cache.fetch(
+            cachingBuildEngine.getManifestRuleKey(rule),
+            fetchedManifest);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+    Manifest manifest = loadManifest(fetchedManifest);
+    assertThat(
+        manifest.toMap(),
+        equalTo(
+            ImmutableMap.of(
+                depFileRuleKey,
+                ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+
+    // Verify that the artifact is also cached via the dep file rule key.
+    Path fetchedArtifact = tmp.newFile("artifact").toPath();
+    cacheResult =
+        cache.fetch(
+            depFileRuleKey,
+            fetchedArtifact);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+  }
+
+  @Test
+  public void manifestIsUpdatedWhenBuiltLocally() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Seed the cache with an existing manifest with a dummy entry.
+    Manifest manifest = Manifest.fromMap(
+        ImmutableMap.of(new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    manifest.serialize(byteArrayOutputStream);
+    cache.store(
+        ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
+        ImmutableMap.<String, String>of(),
+        byteArrayOutputStream.toByteArray());
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+    OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+    RuleKey depFileRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
+
+    // Verify that the manifest written to the cache is correct.
+    Path fetchedManifest = tmp.newFile("manifest").toPath();
+    CacheResult cacheResult =
+        cache.fetch(
+            cachingBuildEngine.getManifestRuleKey(rule),
+            fetchedManifest);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+    manifest = loadManifest(fetchedManifest);
+    assertThat(
+        manifest.toMap(),
+        equalTo(
+            ImmutableMap.of(
+                depFileRuleKey,
+                ImmutableMap.of(input.toString(), fileHashCache.get(input)),
+                new RuleKey("abcd"),
+                ImmutableMap.of("some/path.h", HashCode.fromInt(12)))));
+
+    // Verify that the artifact is also cached via the dep file rule key.
+    Path fetchedArtifact = tmp.newFile("artifact").toPath();
+    cacheResult =
+        cache.fetch(
+            depFileRuleKey,
+            fetchedArtifact);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+  }
+
+  @Test
+  public void manifestBasedCacheHit() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Prepare an input file that should appear in the dep file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Seed the cache with the manifest and a referenced artifact.
+    RuleKey artifactKey = new RuleKey("bbbb");
+    Manifest manifest = new Manifest();
+    manifest.addEntry(
+        fileHashCache,
+        artifactKey,
+        pathResolver,
+        ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, input)),
+        ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, input)));
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    manifest.serialize(byteArrayOutputStream);
+    cache.store(
+        ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
+        ImmutableMap.<String, String>of(),
+        byteArrayOutputStream.toByteArray());
+    Path artifact = tmp.newFile("artifact.zip").toPath();
+    writeEntriesToZip(
+        artifact,
+        ImmutableMap.of(
+            BuildInfo.getPathToMetadataDirectory(target)
+                .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
+            new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+            output.toString(),
+            "stuff"));
+    cache.store(
+        ImmutableSet.of(artifactKey),
+        ImmutableMap.<String, String>of(),
+        artifact);
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED));
   }
 
   @Test
@@ -2204,6 +2558,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         pathToOutputFile,
         buildSteps,
         postBuildSteps);
+  }
+
+  private Manifest loadManifest(Path path) throws IOException {
+    try (InputStream inputStream = Files.newInputStream(path)) {
+      return new Manifest(inputStream);
+    }
   }
 
   private BuildRuleSuccessType getSuccess(BuildResult result) {

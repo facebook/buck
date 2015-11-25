@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -99,6 +100,14 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
     }
 
     return builder.build();
+  }
+
+  @Override
+  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule) {
+    Builder builder = newInstance(rule);
+    builder.setReflectively("buck.key_type", "manifest");
+    ImmutableSet<SourcePath> inputs = builder.getInputsSoFar();
+    return new Pair<>(builder.build(), inputs);
   }
 
 }

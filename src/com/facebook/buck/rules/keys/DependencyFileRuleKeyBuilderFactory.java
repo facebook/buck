@@ -16,9 +16,12 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,5 +33,11 @@ public interface DependencyFileRuleKeyBuilderFactory {
    *     {@code inputs}.
    */
   RuleKey build(BuildRule rule, ImmutableList<Path> inputs) throws IOException;
+
+  /**
+   * @return the {@link RuleKey} used to index the manifest database and the universe of inputs
+   *     used by the {@code rule}.
+   */
+  Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule);
 
 }
