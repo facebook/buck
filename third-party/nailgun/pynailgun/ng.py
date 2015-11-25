@@ -87,8 +87,9 @@ class NailgunConnection(object):
             server_port=None,
             stdin=sys.stdin,
             stdout=sys.stdout,
-            stderr=sys.stderr):
-        self.socket = make_nailgun_socket(server_name, server_port)
+            stderr=sys.stderr,
+            cwd=None):
+        self.socket = make_nailgun_socket(server_name, server_port, cwd)
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
@@ -425,7 +426,7 @@ def process_nailgun_stream(nailgun_connection):
             NailgunException.UNEXPECTED_CHUNKTYPE)
 
 
-def make_nailgun_socket(nailgun_server, nailgun_port=None):
+def make_nailgun_socket(nailgun_server, nailgun_port=None, cwd=None):
     '''
     Creates and returns a socket connection to the nailgun server.
     '''
@@ -438,12 +439,18 @@ def make_nailgun_socket(nailgun_server, nailgun_port=None):
                 'Could not create local socket connection to server: {0}'.format(msg),
                 NailgunException.SOCKET_FAILED)
         socket_addr = nailgun_server[6:]
+        prev_cwd = os.getcwd()
         try:
+            if cwd is not None:
+                os.chdir(cwd)
             s.connect(socket_addr)
         except socket.error as msg:
             raise NailgunException(
                 'Could not connect to local server at {0}: {1}'.format(socket_addr, msg),
                 NailgunException.CONNECT_FAILED)
+        finally:
+            if cwd is not None:
+                os.chdir(prev_cwd)
     else:
         socket_addr = nailgun_server
         socket_family = socket.AF_UNSPEC

@@ -139,7 +139,7 @@ class BuckTool(object):
             if use_buckd and self._is_buckd_running() and \
                     os.path.exists(buck_socket_path):
                 with Tracing('buck', args={'command': sys.argv[1:]}):
-                    with NailgunConnection('local:.buckd/sock') as c:
+                    with NailgunConnection('local:.buckd/sock', cwd=self._buck_project.root) as c:
                         exit_code = c.send_command(
                             'com.facebook.buck.cli.Main',
                             sys.argv[1:],
@@ -281,7 +281,7 @@ class BuckTool(object):
             if os.path.exists(buckd_socket_path):
                 print("Shutting down nailgun server...", file=sys.stderr)
                 try:
-                    with NailgunConnection('local:.buckd/sock') as c:
+                    with NailgunConnection('local:.buckd/sock', cwd=self._buck_project.root) as c:
                         c.send_command('ng-stop')
                 except NailgunException as e:
                     if e.code not in (NailgunException.CONNECT_FAILED,
@@ -319,7 +319,8 @@ class BuckTool(object):
                         'local:.buckd/sock',
                         stdin=None,
                         stdout=None,
-                        stderr=None) as c:
+                        stderr=None,
+                        cwd=self._buck_project.root) as c:
                     c.send_command('ng-stats')
             except NailgunException as e:
                 if e.code == NailgunException.CONNECT_FAILED:
