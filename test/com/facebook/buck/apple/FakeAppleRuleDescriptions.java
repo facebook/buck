@@ -170,7 +170,8 @@ public class FakeAppleRuleDescriptions {
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
-            ImmutableList.<ProvisioningProfileMetadata>of()));
+            ImmutableList.<ProvisioningProfileMetadata>of()),
+        AppleBundle.DebugInfoFormat.DWARF_AND_DSYM);
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -196,7 +197,8 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_PLATFORM,
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
-              ImmutableList.<ProvisioningProfileMetadata>of()));
+              ImmutableList.<ProvisioningProfileMetadata>of()),
+          AppleBundle.DebugInfoFormat.DWARF_AND_DSYM);
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.

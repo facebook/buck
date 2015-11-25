@@ -213,6 +213,16 @@ This section includes settings that control settings that are specific to Apple 
 </pre>{/literal}
 
 <p>
+  <code>default_debug_info_format</code> setting controls the default debug info format. If you 
+  don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug data 
+  by specifying <code>NONE</code> value. 
+</p>
+{literal}<pre class = "prettyprint lang-ini">
+[apple]
+  default_debug_info_format = DWARF_AND_DSYM
+</pre>{/literal}
+
+<p>
   If you want to have Buck be able to install to devices, you need to provide the path to the
   {sp}<a href="https://github.com/samdmarshall/SDMMobileDevice"><code>iOSConsole</code></a> binary.
 </p>

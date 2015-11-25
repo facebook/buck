@@ -27,6 +27,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -75,6 +78,11 @@ import java.util.Set;
  */
 public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps, NativeTestable {
 
+  public static final Flavor DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR =
+      ImmutableFlavor.of("dwarf-and-dsym");
+  public static final Flavor DEBUG_INFO_FORMAT_NONE_FLAVOR =
+      ImmutableFlavor.of("no-debug");
+
   public enum DebugInfoFormat {
     /**
      * Produces a binary with the debug map stripped.
@@ -84,8 +92,16 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     /**
      * Generate a .dSYM file from the binary and its constituent object files.
      */
-    DSYM,
+    DWARF_AND_DSYM,
   }
+
+  public static final FlavorDomain<DebugInfoFormat> DEBUG_INFO_FORMAT_FLAVOR_DOMAIN =
+      new FlavorDomain<>(
+          "Debug Info Format Type",
+          ImmutableMap.<Flavor, DebugInfoFormat>builder()
+              .put(DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR, DebugInfoFormat.DWARF_AND_DSYM)
+              .put(DEBUG_INFO_FORMAT_NONE_FLAVOR, DebugInfoFormat.NONE)
+              .build());
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
@@ -333,7 +349,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               getProjectFilesystem(),
               binaryOutputPath,
               bundleBinaryPath));
-      if (debugInfoFormat == DebugInfoFormat.DSYM) {
+      if (debugInfoFormat == DebugInfoFormat.DWARF_AND_DSYM) {
         buildableContext.recordArtifact(dsymPath);
         stepsBuilder.add(
             new DsymStep(

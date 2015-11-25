@@ -237,4 +237,12 @@ public class AppleConfig {
         "test_log_level")
         .or(DEFAULT_TEST_LOG_LEVEL);
   }
+
+  public AppleBundle.DebugInfoFormat getDebugInfoFormat() {
+    return delegate.getEnum(
+        "apple",
+        "default_debug_info_format",
+        AppleBundle.DebugInfoFormat.class)
+        .or(AppleBundle.DebugInfoFormat.DWARF_AND_DSYM);
+  }
 }

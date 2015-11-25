@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -32,6 +33,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -221,6 +223,78 @@ public class AppleBinaryIntegrationTest {
         lipoVerifyResult.getStderr().or(""),
         0,
         lipoVerifyResult.getExitCode());
+  }
+
+  @Test
+  public void testFlavoredAppleBundleBuildsAndDsymFileCreated() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=none",
+        "//:DemoApp#dwarf-and-dsym")
+        .assertSuccess();
+    Path output = getGenDir()
+        .resolve("DemoApp#dwarf-and-dsym/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+    assertThat(Files.exists(output), Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testFlavoredAppleBundleBuildsAndDsymFileIsNotCreated() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=dwarf_and_dsym",
+        "//:DemoApp#no-debug")
+        .assertSuccess();
+    assertThat(
+        Files.exists(
+            getGenDir().resolve("DemoApp#no-debug/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+    assertThat(Files.exists(
+            getGenDir()
+                .resolve("DemoApp#dwarf-and-dsym/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+    assertThat(Files.exists(
+            getGenDir().resolve("DemoApp/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+  }
+
+  @Test
+  public void testAppleBundldDebugFormatRespectsDefaultConfigSettingDSYM() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=dwarf_and_dsym",
+        "//:DemoApp")
+        .assertSuccess();
+    assertThat(Files.exists(
+            getGenDir().resolve("DemoApp/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testAppleBundldDebugFormatRespectsDefaultConfigSettingNoDebug() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=none",
+        "//:DemoApp")
+        .assertSuccess();
+    assertThat(Files.exists(
+            getGenDir().resolve("DemoApp/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
   }
 
   private Path getGenDir() {

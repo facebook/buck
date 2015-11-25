@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -65,6 +67,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
+  private final AppleBundle.DebugInfoFormat defaultDebugInfoFormat;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -73,7 +76,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore) {
+      ProvisioningProfileStore provisioningProfileStore,
+      AppleBundle.DebugInfoFormat defaultDebugInfoFormat) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -82,6 +86,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
+    this.defaultDebugInfoFormat = defaultDebugInfoFormat;
   }
 
   @Override
@@ -101,7 +106,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     }
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
     for (Flavor flavor : flavors) {
-      if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE)) {
+      if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE) ||
+          flavor.equals(AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR) ||
+          flavor.equals(AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR)) {
         continue;
       }
       flavorBuilder.add(flavor);
@@ -116,6 +123,14 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    Optional<AppleBundle.DebugInfoFormat> flavoredDebugInfoFormat;
+    try {
+      flavoredDebugInfoFormat = AppleBundle.DEBUG_INFO_FORMAT_FLAVOR_DOMAIN.getValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
@@ -130,7 +145,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions,
-        args.getTests());
+        args.getTests(),
+        flavoredDebugInfoFormat.or(defaultDebugInfoFormat));
   }
 
   /**

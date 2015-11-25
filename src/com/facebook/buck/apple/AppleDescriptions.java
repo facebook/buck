@@ -395,7 +395,8 @@ public class AppleDescriptions {
       Optional<String> productName,
       SourcePath infoPlist,
       Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
-      ImmutableSortedSet<BuildTarget> tests)
+      ImmutableSortedSet<BuildTarget> tests,
+      AppleBundle.DebugInfoFormat debugInfoFormat)
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
@@ -485,7 +486,7 @@ public class AppleDescriptions {
         codeSignIdentityStore,
         appleCxxPlatform.getCodesignAllocate(),
         provisioningProfileStore,
-        AppleBundle.DebugInfoFormat.DSYM);
+        debugInfoFormat);
   }
 
   private static BuildRule getFlavoredBinaryRule(
@@ -500,7 +501,9 @@ public class AppleDescriptions {
         .withoutFlavors(
             ImmutableSet.of(
                 ReactNativeFlavors.DO_NOT_BUNDLE,
-                AppleDescriptions.FRAMEWORK_FLAVOR))
+                AppleDescriptions.FRAMEWORK_FLAVOR,
+                AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR,
+                AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR))
         .getFlavors();
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
