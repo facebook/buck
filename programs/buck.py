@@ -8,6 +8,7 @@ import zipfile
 
 from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
+from pynailgun.ng import NailgunException
 from tracing import Tracing
 from subprocutils import propagate_failure
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         propagate_failure(main(sys.argv))
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
-    except (BuckToolException, NoBuckConfigFoundException) as e:
+    except (BuckToolException, NailgunException, NoBuckConfigFoundException) as e:
         print(str(e), file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
