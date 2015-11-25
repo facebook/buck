@@ -29,9 +29,12 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.annotation.Nonnull;
 
@@ -88,7 +91,9 @@ public class InputBasedRuleKeyBuilderFactory
       @Override
       public RuleKey build() {
         Result result = buildResult();
-        Preconditions.checkState(rule.getDeps().containsAll(result.getDeps()));
+        for (BuildRule usedDep : result.getDeps()) {
+          Preconditions.checkState(rule.getDeps().contains(usedDep));
+        }
         return result.getRuleKey();
       }
 
@@ -97,8 +102,8 @@ public class InputBasedRuleKeyBuilderFactory
 
   public class Builder extends RuleKeyBuilder {
 
-    private final ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
-    private final ImmutableSet.Builder<SourcePath> inputs = ImmutableSet.builder();
+    private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
+    private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
 
     private Builder() {
       super(pathResolver, fileHashCache, defaultRuleKeyBuilderFactory);
@@ -110,8 +115,8 @@ public class InputBasedRuleKeyBuilderFactory
         FileHashCache hashCache,
         RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
-      deps.addAll(result.getDeps());
-      inputs.addAll(result.getInputs());
+      deps.add(result.getDeps());
+      inputs.add(result.getInputs());
       return result.getRuleKey();
     }
 
@@ -121,7 +126,7 @@ public class InputBasedRuleKeyBuilderFactory
     @Override
     protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
-        deps.addAll(pathResolver.getRule(sourcePath).asSet());
+        deps.add(pathResolver.getRule(sourcePath).asSet());
 
         try {
           setPath(
@@ -131,7 +136,7 @@ public class InputBasedRuleKeyBuilderFactory
           throw Throwables.propagate(e);
         }
       }
-      inputs.add(sourcePath);
+      inputs.add(Collections.singleton(sourcePath));
       return this;
     }
 
@@ -148,12 +153,15 @@ public class InputBasedRuleKeyBuilderFactory
     }
 
     protected ImmutableSet<SourcePath> getInputsSoFar() {
-      return inputs.build();
+      return ImmutableSet.copyOf(Iterables.concat(inputs.build()));
     }
 
     // Build the rule key and the list of deps found from this builder.
     protected Result buildResult() {
-      return new Result(super.build(), deps.build(), inputs.build());
+      return new Result(
+          super.build(),
+          Iterables.concat(deps.build()),
+          Iterables.concat(inputs.build()));
     }
 
   }
@@ -179,13 +187,13 @@ public class InputBasedRuleKeyBuilderFactory
   protected static class Result {
 
     private final RuleKey ruleKey;
-    private final ImmutableSet<BuildRule> deps;
-    private final ImmutableSet<SourcePath> inputs;
+    private final Iterable<BuildRule> deps;
+    private final Iterable<SourcePath> inputs;
 
     public Result(
         RuleKey ruleKey,
-        ImmutableSet<BuildRule> deps,
-        ImmutableSet<SourcePath> inputs) {
+        Iterable<BuildRule> deps,
+        Iterable<SourcePath> inputs) {
       this.ruleKey = ruleKey;
       this.deps = deps;
       this.inputs = inputs;
@@ -195,11 +203,11 @@ public class InputBasedRuleKeyBuilderFactory
       return ruleKey;
     }
 
-    public ImmutableSet<BuildRule> getDeps() {
+    public Iterable<BuildRule> getDeps() {
       return deps;
     }
 
-    public ImmutableSet<SourcePath> getInputs() {
+    public Iterable<SourcePath> getInputs() {
       return inputs;
     }
 
