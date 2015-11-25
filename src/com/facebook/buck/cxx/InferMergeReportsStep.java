@@ -21,19 +21,14 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 
@@ -86,72 +81,97 @@ class InferMergeReportsStep implements Step {
   class InferReportMerger {
 
     private ImmutableSortedSet<Path> reportsToMerge;
-    private JsonWriter destinationWriter;
+
     private OutputStreamWriter destinationOutputStreamWriter;
     private BufferedWriter destinationBufferedWriter;
     private FileOutputStream destinationFileOutputStream;
-    private Gson gson;
-    private static final String JSON_ENCODING = "UTF-8";
+    private boolean stillEmpty;
+
+
+    @VisibleForTesting
+    static final String JSON_ENCODING = "UTF-8";
 
     public InferReportMerger(
         ImmutableSortedSet<Path> reportsToMerge,
         Path destination) throws IOException {
+      this.reportsToMerge = reportsToMerge;
+      this.stillEmpty = true;
       try {
-        this.reportsToMerge = reportsToMerge;
-        this.gson = new Gson();
         this.destinationFileOutputStream = new FileOutputStream(destination.toFile());
         this.destinationOutputStreamWriter = new OutputStreamWriter(
             destinationFileOutputStream, JSON_ENCODING);
         this.destinationBufferedWriter = new BufferedWriter(destinationOutputStreamWriter);
-        this.destinationWriter = new JsonWriter(destinationBufferedWriter);
-        this.destinationWriter.beginArray();
       } catch (IOException e) {
         closeAll();
         throw e;
       }
     }
 
-    public void merge() throws IOException {
-      for (Path report : reportsToMerge) {
-        mergeReport(report);
-      }
-      closeAll();
-    }
-
     private void closeAll() throws IOException {
-      try {
-        if (destinationWriter != null) { destinationWriter.endArray(); }
-      } finally {
-        if (destinationWriter != null) {
-          destinationWriter.close();
-        } else if (destinationBufferedWriter != null) {
-          destinationBufferedWriter.close();
-        } else if (destinationOutputStreamWriter != null) {
-          destinationOutputStreamWriter.close();
-        } else if (destinationFileOutputStream != null) {
-          destinationFileOutputStream.close();
-        }
+      if (destinationBufferedWriter != null) {
+        destinationBufferedWriter.close();
+      } else if (destinationOutputStreamWriter != null) {
+        destinationOutputStreamWriter.close();
+      } else if (destinationFileOutputStream != null) {
+        destinationFileOutputStream.close();
       }
     }
 
-    private void mergeReport(Path report) throws IOException {
-      try (FileInputStream reportInputStream =
-               new FileInputStream(report.toFile());
-           InputStreamReader reportStreamReader =
-               new InputStreamReader(reportInputStream, JSON_ENCODING);
-           BufferedReader reportBufferedReader =
-               new BufferedReader(reportStreamReader);
-           JsonReader reportReader =
-               new JsonReader(reportBufferedReader)) {
-        reportReader.beginArray();
-        while (reportReader.hasNext()) {
-          gson.toJson(
-              gson.fromJson(reportReader, Object.class),
-              Object.class,
-              destinationWriter);
+    public void merge() throws IOException {
+      try {
+        initializeReport();
+        for (Path report : reportsToMerge) {
+          appendReport(loadJsonReportFromFile(report));
         }
-        reportReader.endArray();
+      } finally {
+        finalizeReport();
       }
     }
+
+    @VisibleForTesting
+    void initializeReport() throws IOException {
+      destinationBufferedWriter.write("[");
+    }
+
+    @VisibleForTesting
+    void appendReport(String report) throws IOException {
+      if (isReportEmpty(report)) {
+        return;
+      }
+      if (!stillEmpty) {
+        destinationBufferedWriter.write(",");
+      }
+      destinationBufferedWriter.write(stripArrayTokens(report));
+      stillEmpty = false;
+    }
+
+    @VisibleForTesting
+    void finalizeReport() throws IOException {
+      try {
+        destinationBufferedWriter.write("]");
+      } finally {
+        closeAll();
+      }
+    }
+
+    private String loadJsonReportFromFile(Path report) throws IOException {
+      Optional<String> result = filesystem.readFileIfItExists(report);
+      if (result.isPresent()) {
+        return result.get();
+      } else {
+        throw new IOException("Error loading " + report.toString());
+      }
+    }
+
+    @VisibleForTesting
+    boolean isReportEmpty(String report) {
+      return report.matches("(\\s)*\\[(\\s)*\\](\\s)*");
+    }
+    @VisibleForTesting
+    String stripArrayTokens(String report) {
+      return report.replaceAll("^(\\s)*\\[", "").replaceAll("\\](\\s)*$", "");
+    }
+
+
   }
 }
