@@ -57,7 +57,8 @@ HEARTBEAT_TIMEOUT_NANOS = NSEC_PER_SEC / 2
 HEARTBEAT_TIMEOUT_SECS = HEARTBEAT_TIMEOUT_NANOS / (NSEC_PER_SEC * 1.0)
 
 # We need to support Python 2.6 hosts which lack memoryview().
-HAS_MEMORYVIEW = 'memoryview' in dir(__builtins__)
+import __builtin__
+HAS_MEMORYVIEW = 'memoryview' in dir(__builtin__)
 
 EVENT_STDIN_CHUNK = 0
 EVENT_STDIN_CLOSED = 1
