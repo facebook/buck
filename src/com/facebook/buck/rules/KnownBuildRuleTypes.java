@@ -564,6 +564,7 @@ public class KnownBuildRuleTypes {
             pyConfig,
             pythonPlatforms,
             defaultCxxPlatform,
+            defaultTestRuleTimeoutMs,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(

@@ -36,6 +36,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -47,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.base.Function;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -61,6 +63,7 @@ public class PythonTest
   private final PythonBinary binary;
   private final ImmutableSortedSet<BuildRule> additionalDeps;
   private final ImmutableSet<Label> labels;
+  private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
 
@@ -72,6 +75,7 @@ public class PythonTest
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
+      Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
 
     super(params, resolver);
@@ -90,12 +94,15 @@ public class PythonTest
     this.additionalDeps = additionalDeps;
     this.sourceUnderTest = sourceUnderTest;
     this.labels = labels;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.contacts = contacts;
   }
 
   private Step getRunTestStep() {
     // TODO(shs96c): I'm not convinced this is the right root path
     return new ShellStep(getProjectFilesystem().getRootPath()) {
+
+      boolean timedOut = false;
 
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
@@ -115,6 +122,35 @@ public class PythonTest
         return "pyunit";
       }
 
+      @Override
+      public int execute(ExecutionContext context) throws InterruptedException {
+        int exitCode = super.execute(context);
+        if (timedOut) {
+          throw new HumanReadableException(
+              "Following test case timed out: " +
+                  getBuildTarget().getFullyQualifiedName() +
+                  ", with exitCode: " + exitCode);
+        }
+        return exitCode;
+      }
+
+      @Override
+      protected Optional<Function<Process, Void>> getTimeoutHandler(
+          final ExecutionContext context) {
+        return Optional.<Function<Process, Void>>of(
+            new Function<Process, Void>() {
+              @Override
+              public Void apply(Process process) {
+                timedOut = true;
+                return null;
+              }
+            });
+      }
+
+      @Override
+      protected Optional<Long> getTimeout() {
+        return testRuleTimeoutMs;
+      }
     };
   }
 

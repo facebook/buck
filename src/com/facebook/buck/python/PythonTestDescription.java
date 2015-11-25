@@ -70,6 +70,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   private final PythonBuckConfig pythonBuckConfig;
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxPlatform defaultCxxPlatform;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
@@ -77,11 +78,13 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
+      Optional<Long> defaultTestRuleTimeoutMs,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
     this.pythonPlatforms = pythonPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatforms = cxxPlatforms;
   }
 
@@ -319,6 +322,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), binaryParams.getDeps())),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.contacts.or(ImmutableSet.<String>of()));
   }
 
@@ -332,6 +336,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     public Optional<ImmutableList<String>> buildArgs;
 
     public Optional<ImmutableMap<String, String>> env;
+    public Optional<Long> testRuleTimeoutMs;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

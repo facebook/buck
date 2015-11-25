@@ -28,3 +28,11 @@ python_test(
     'PYTHON_TEST_ENV_VAR': '42',
   },
 )
+
+python_test(
+  name='test-spinning',
+  srcs=[
+    'test_spinning.py',
+  ],
+  test_rule_timeout_ms = 100,
+)

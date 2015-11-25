@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -78,6 +79,14 @@ public class PythonTestIntegrationTest {
     assumePythonVersionIsAtLeast("2.7", "unittest skip support was added in Python-2.7");
     ProcessResult result = workspace.runBuckCommand("test", "//:test-skip").assertSuccess();
     assertThat(result.getStderr(), containsString("1 Skipped"));
+  }
+
+  @Test
+  public void testPythonTestTimeout() throws IOException {
+      ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
+      String stderr = result.getStderr();
+      result.assertSpecialExitCode("test should fail", 42);
+      assertTrue(stderr, stderr.contains("Following test case timed out: //:test-spinning"));
   }
 
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
