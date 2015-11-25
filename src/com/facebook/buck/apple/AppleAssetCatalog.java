@@ -38,6 +38,8 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.SortedSet;
 
+import javax.annotation.Nullable;
+
 public class AppleAssetCatalog extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = ImmutableFlavor.of("apple-asset-catalog");
@@ -104,13 +106,18 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             absoluteAssetCatalogDirs,
             getProjectFilesystem().resolve(outputDir)));
 
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(getOutputDir());
 
     return stepsBuilder.build();
   }
 
+  @Nullable
   @Override
   public Path getPathToOutput() {
+    return null;
+  }
+
+  public Path getOutputDir() {
     return outputDir;
   }
 }
