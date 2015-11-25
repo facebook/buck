@@ -30,6 +30,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
@@ -45,6 +46,8 @@ public class ArchiveTest {
 
   private static final Path AR = Paths.get("ar");
   private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(new HashedFileTool(AR));
+  private static final Path RANLIB = Paths.get("ranlib");
+  private static final Tool DEFAULT_RANLIB = new HashedFileTool(RANLIB);
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
@@ -60,12 +63,15 @@ public class ArchiveTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            AR.toString(), Strings.repeat("0", 40),
-            "a.o", Strings.repeat("a", 40),
-            "b.o", Strings.repeat("b", 40),
-            "c.o", Strings.repeat("c", 40),
-            Paths.get("different").toString(), Strings.repeat("d", 40)));
+        ImmutableMap.<String, String>builder()
+            .put(AR.toString(), Strings.repeat("0", 40))
+            .put(RANLIB.toString(), Strings.repeat("1", 40))
+            .put("a.o", Strings.repeat("a", 40))
+            .put("b.o", Strings.repeat("b", 40))
+            .put("c.o", Strings.repeat("c", 40))
+            .put(Paths.get("different").toString(), Strings.repeat("d", 40))
+            .build()
+    );
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
@@ -73,6 +79,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
 
@@ -82,6 +89,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             new GnuArchiver(new HashedFileTool(Paths.get("different"))),
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverChange);
@@ -92,6 +100,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
             Paths.get("different"),
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, outputChange);
@@ -102,6 +111,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(new FakeSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
@@ -112,6 +122,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             new BsdArchiver(new HashedFileTool(AR)),
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);

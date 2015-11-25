@@ -307,6 +307,7 @@ public class CxxLibraryDescription implements
         staticTarget,
         params,
         cxxPlatform.getAr(),
+        cxxPlatform.getRanlib(),
         staticLibraryPath,
         ImmutableList.copyOf(objects.values()));
   }

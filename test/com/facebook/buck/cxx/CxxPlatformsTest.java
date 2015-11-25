@@ -62,6 +62,7 @@ public class CxxPlatformsTest {
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
           .setStrip(new HashedFileTool(Paths.get("borland")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
+          .setRanlib(new HashedFileTool(Paths.get("borland")))
           .setSharedLibraryExtension(".so")
           .setSharedLibraryVersionedExtensionFormat(".so.%s")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)

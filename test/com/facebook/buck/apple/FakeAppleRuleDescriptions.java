@@ -88,6 +88,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
+          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),

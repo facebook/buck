@@ -44,6 +44,7 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   @VisibleForTesting
@@ -71,6 +72,7 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       Archiver ar,
+      Tool ranlib,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
@@ -97,6 +99,7 @@ public class CxxPlatforms {
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
+        .setRanlib(getTool(flavor, "ranlib", config).or(ranlib))
         .setStrip(getTool(flavor, "strip", config).or(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
@@ -152,6 +155,7 @@ public class CxxPlatforms {
         .setAr(getTool(flavor, "ar", config)
                 .transform(getArchiver(defaultPlatform.getAr().getClass(), config))
                 .or(defaultPlatform.getAr()))
+        .setRanlib(getTool(flavor, "ranlib", config).or(defaultPlatform.getRanlib()))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
         .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
         .setSharedLibraryVersionedExtensionFormat(
@@ -244,7 +248,8 @@ public class CxxPlatforms {
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
         .addAllCxxppflags(cxxflags)
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
-        .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS));
+        .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
+        .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));
   }
 
   public static void addToolFlagsFromCxxPlatform(
@@ -261,7 +266,8 @@ public class CxxPlatforms {
         .addAllCxxppflags(platform.getCxxflags())
         .addAllCxxppflags(platform.getCxxppflags())
         .addAllLdflags(platform.getLdflags())
-        .addAllArflags(platform.getArflags());
+        .addAllArflags(platform.getArflags())
+        .addAllRanlibflags(platform.getRanlibflags());
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(

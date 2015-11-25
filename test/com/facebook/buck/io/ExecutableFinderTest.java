@@ -103,6 +103,21 @@ public class ExecutableFinderTest {
   }
 
   @Test
+  public void testSearchPathsSymlinkToExecutableInsidePathReturnsPath() throws IOException {
+    Path dir2 = tmp.newFolder("bar");
+    createExecutable("bar/blech_target");
+    Path file1 = dir2.resolve("blech");
+    Files.createSymbolicLink(file1, Paths.get("blech_target"));
+
+    assertEquals(
+        Optional.of(file1),
+        new ExecutableFinder().getOptionalExecutable(
+            Paths.get("blech"),
+            ImmutableList.of(dir2),
+            ImmutableList.<String>of()));
+  }
+
+  @Test
   public void testSearchPathsSymlinkToExecutableOutsideSearchPathReturnsPath() throws IOException {
     Path dir1 = tmp.newFolder("foo");
     Path dir2 = tmp.newFolder("bar");

@@ -149,6 +149,12 @@ public class AppleCxxPlatforms {
         "apple-ar",
         version);
 
+    Tool ranlib = new VersionedTool(
+        getToolPath("ranlib", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of("-s"),
+        "apple-ranlib",
+        version);
+
     Tool strip = new VersionedTool(
         getToolPath("strip", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
@@ -254,6 +260,7 @@ public class AppleCxxPlatforms {
             .build(),
         strip,
         new BsdArchiver(ar),
+        ranlib,
         asflags,
         ImmutableList.<String>of(),
         cflags,

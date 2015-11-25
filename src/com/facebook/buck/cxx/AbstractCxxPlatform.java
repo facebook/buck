@@ -63,6 +63,9 @@ interface AbstractCxxPlatform {
   Archiver getAr();
   List<String> getArflags();
 
+  Tool getRanlib();
+  List<String> getRanlibflags();
+
   String getSharedLibraryExtension();
   String getSharedLibraryVersionedExtensionFormat();
 

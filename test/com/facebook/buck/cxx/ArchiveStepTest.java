@@ -66,7 +66,7 @@ public class ArchiveStepTest {
     // Verify that the shell command is correct.
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(archiver)
-        .add("rcs")
+        .add("qc")
         .add(output.toString())
         .addAll(Iterables.transform(inputs, Functions.toStringFunction()))
         .build();

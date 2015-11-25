@@ -510,6 +510,9 @@ It also configures configures the default flags to pass to all invocations of sa
 
   # Flags to pass to the archiver
   arflags =
+
+  # Flags to pass to the archive indexer
+  ranlibflags =
 </pre>{/literal}
 
 Adding a section with header [cxx#<i>flavor</i>] to the .buckconfig will add
@@ -759,7 +762,7 @@ build C/C++ for NDK platforms:
 {call .section}{param title: 'project' /}{/call}
 
 <code>ide</code> setting defines the IDE for which the project files should be generated.
-Sometimes Buck determine the type of IDE (e.g. for {call buck.apple_library /} it will generate Xcode workspace), 
+Sometimes Buck determine the type of IDE (e.g. for {call buck.apple_library /} it will generate Xcode workspace),
 but for x-platform types of libraries (like {call buck.cxx_library /}) it is not possible. You may specify the default ide setting here.
 
 {literal}<pre class="prettyprint lang-ini">

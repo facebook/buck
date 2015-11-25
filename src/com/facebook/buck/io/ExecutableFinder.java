@@ -153,12 +153,20 @@ public class ExecutableFinder {
       return false;
     }
 
+    if (Files.isSymbolicLink(exe)) {
+      try {
+        Path target = Files.readSymbolicLink(exe);
+        return isExecutable(exe.resolveSibling(target).normalize());
+      } catch (IOException | SecurityException e) { // NOPMD
+      }
+    }
+
     if (Files.isDirectory(exe)) {
       LOG.debug("Found potential executable, but is a directory: %s", exe);
       return false;
     }
 
-    if (!Files.isExecutable(exe)) {
+    if (!Files.isExecutable(exe) && !Files.isSymbolicLink(exe)) {
       LOG.debug("Found potential executable, but not actually executable: %s", exe);
       return false;
     }

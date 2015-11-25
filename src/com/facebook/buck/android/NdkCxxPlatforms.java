@@ -408,6 +408,8 @@ public class NdkCxxPlatforms {
         .setAr(
             new GnuArchiver(
                 getGccTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder)))
+        .setRanlib(
+            getGccTool(ndkRoot, targetConfiguration, host, "ranlib", version, executableFinder))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setDebugPathSanitizer(
             new DebugPathSanitizer(

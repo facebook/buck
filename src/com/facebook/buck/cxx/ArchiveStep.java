@@ -52,7 +52,7 @@ public class ArchiveStep extends CompositeStep {
 
     ImmutableList<String> archiveCommandPrefix = ImmutableList.<String>builder()
         .addAll(archiver)
-        .add("rcs")
+        .add("qc")
         .add(output.toString())
         .build();
     CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);

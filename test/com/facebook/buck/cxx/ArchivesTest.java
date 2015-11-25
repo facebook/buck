@@ -32,6 +32,7 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +47,8 @@ public class ArchivesTest {
 
   private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(
       new HashedFileTool(Paths.get("ar")));
+  private static final Tool DEFAULT_RANLIB = new HashedFileTool(Paths.get("ranlib"));
+
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new FakeSourcePath("a.o"),
@@ -75,6 +78,7 @@ public class ArchivesTest {
         target,
         params,
         DEFAULT_ARCHIVER,
+        DEFAULT_RANLIB,
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new FakeSourcePath("simple.o"),
@@ -111,6 +115,7 @@ public class ArchivesTest {
         target,
         params,
         DEFAULT_ARCHIVER,
+        DEFAULT_RANLIB,
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS);
 
