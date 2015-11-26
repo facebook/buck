@@ -16,6 +16,8 @@
 
 package com.facebook.buck.thrift;
 
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
@@ -27,10 +29,16 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.ParserNg;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -43,9 +51,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -79,8 +91,8 @@ public class ThriftLibraryIntegrationTest {
             "[thrift]",
             "compiler = " + compiler,
             "compiler2 = " + compiler,
-            "cpp_library = //:fake",
-            "cpp_reflection_library = //:fake")
+            "cpp_library = //thrift:fake",
+            "cpp_reflection_library = //thrift:fake")
         .build();
 
     Cell cell = new Cell(
@@ -94,7 +106,7 @@ public class ThriftLibraryIntegrationTest {
             Optional.<Path>absent()),
         new FakeAndroidDirectoryResolver(),
         new DefaultClock());
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//:exe");
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//thrift:exe");
     TargetGraph targetGraph = parser.buildTargetGraph(
         eventBus,
         cell,
@@ -103,11 +115,29 @@ public class ThriftLibraryIntegrationTest {
 
     TargetNodeToBuildRuleTransformer transformer = new BuildTargetNodeToBuildRuleTransformer();
 
-    // It's enough to know that the action graph can be generated. There was a case where the cxx
-    // library being generated wouldn't put the header into the tree with the right flavour. This
-    // catches this case without us needing to stick a working thrift compiler into buck's own
-    // source.
-    new TargetGraphToActionGraph(eventBus, transformer).apply(targetGraph);
+    // There was a case where the cxx library being generated wouldn't put the header into the tree
+    // with the right flavour. This catches this case without us needing to stick a working thrift
+    // compiler into buck's own source.
+    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+        new TargetGraphToActionGraph(eventBus, transformer)
+        .apply(targetGraph);
+
+    // This is to cover the case where we weren't passing flavors around correctly, which ended
+    // making the binary depend 'placeholder' BuildRules instead of real ones. This is the
+    // regression test for that case.
+    BuildRuleResolver ruleResolver = actionGraphAndResolver.getSecond();
+    BuildTarget binaryFlavor = target.withFlavors(ImmutableFlavor.of("binary"));
+    ImmutableSortedSet<BuildRule> deps = ruleResolver.getRule(binaryFlavor).getDeps();
+    assertThat(
+        FluentIterable.from(deps)
+            .anyMatch(
+                new Predicate<BuildRule>() {
+                  @Override
+                  public boolean apply(BuildRule input) {
+                    return input instanceof NoopBuildRule;
+                  }
+                }),
+        Matchers.is(false));
   }
 
 }

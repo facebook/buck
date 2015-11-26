@@ -223,7 +223,11 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {
-    return ruleResolver.requireRule(getBuildTarget().withFlavors(flavors));
+    BuildTarget requiredBuildTarget =
+        BuildTarget.builder(getBuildTarget())
+            .addFlavors(flavors)
+            .build();
+    return ruleResolver.requireRule(requiredBuildTarget);
   }
 
   @Override
