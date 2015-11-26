@@ -1,0 +1,29 @@
+
+thrift_library(
+  name='actions',
+  srcs = {
+      "actions.thrift": [
+      ],
+    },
+    cpp2_options = [
+      "compatibility",
+    ],
+    cpp_options = [
+      "templates",
+    ],
+)
+
+cxx_library(
+  name = 'fake',
+  srcs = [ 'fake.cpp' ],
+)
+
+cxx_binary(
+  name = 'exe',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':actions#cpp',
+  ],
+)

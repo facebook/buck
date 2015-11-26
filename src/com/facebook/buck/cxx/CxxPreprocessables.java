@@ -184,10 +184,16 @@ public class CxxPreprocessables {
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Iterable<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
     BuildRule rule = ruleResolver.requireRule(
-        params.getBuildTarget().withFlavors(
-            flavor,
-            CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility)));
-    Preconditions.checkState(rule instanceof HeaderSymlinkTree);
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(flavor, CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility))
+            .build());
+    Preconditions.checkState(
+        rule instanceof HeaderSymlinkTree,
+        "Attempt to add %s of type %s and class %s to %s",
+        rule.getFullyQualifiedName(),
+        rule.getType(),
+        rule.getClass(),
+        params.getBuildTarget());
     HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder()
         .addRules(symlinkTree.getBuildTarget())
