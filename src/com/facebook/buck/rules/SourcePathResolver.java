@@ -71,11 +71,7 @@ public class SourcePathResolver {
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
     ImmutableMap.Builder<T, Path> paths = ImmutableMap.builder();
     for (ImmutableMap.Entry<T, SourcePath> entry : sourcePathMap.entrySet()) {
-      if (entry.getValue() instanceof ResourceSourcePath) {
-        paths.put(entry.getKey(), getAbsolutePath(entry.getValue()));
-      } else {
-        paths.put(entry.getKey(), deprecatedGetPath(entry.getValue()));
-      }
+      paths.put(entry.getKey(), getAbsolutePath(entry.getValue()));
     }
     return paths.build();
   }

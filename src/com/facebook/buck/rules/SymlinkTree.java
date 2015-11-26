@@ -71,17 +71,6 @@ public class SymlinkTree
     this.linksForRuleKey = getLinksForRuleKey(links);
   }
 
-  /**
-   * Resolve {@link com.facebook.buck.rules.SourcePath} references in the link map.
-   */
-  private ImmutableMap<Path, Path> resolveLinks() {
-    ImmutableMap.Builder<Path, Path> resolvedLinks = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
-      resolvedLinks.put(entry.getKey(), getResolver().deprecatedGetPath(entry.getValue()));
-    }
-    return resolvedLinks.build();
-  }
-
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -120,7 +109,7 @@ public class SymlinkTree
       BuildableContext buildableContext) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), root),
-        new SymlinkTreeStep(getProjectFilesystem(), root, resolveLinks()));
+        new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
   }
 
   public Path getRoot() {
