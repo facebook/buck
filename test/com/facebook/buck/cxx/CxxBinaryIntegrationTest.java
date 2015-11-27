@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -40,6 +41,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -63,7 +65,10 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryDepsCaching() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
     workspace.enableDirCache(); // enable the cache
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
@@ -127,7 +132,10 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithoutDeps() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
@@ -209,7 +217,10 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithDeps() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
@@ -360,9 +371,81 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testInferCxxBinarySkipsBlacklistedFiles() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.of(".*one\\.c"));
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
+    String inputBuildTargetName =
+        inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
+
+    // Build the given target and check that it succeeds.
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    // Check that the cfg associated with chain_dep_one.c does not exist
+    assertFalse(
+        "Cfg file for chain_dep_one.c should not exist",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-chain_dep_one#default,infer-capture-chain_dep_one.c.o/" +
+                "captured/chain_dep_one.c_captured/chain_dep_one.c.cfg").toFile().exists());
+
+    // Check that the remaining files still have their cfgs
+    assertTrue(
+        "Expected cfg for chain_dep_two.c not found",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-chain_dep_two#default,infer-capture-chain_dep_two.c.o/" +
+                "captured/chain_dep_two.c_captured/chain_dep_two.c.cfg").toFile().exists());
+    assertTrue(
+        "Expected cfg for top_chain.c not found",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-analysis-binary_with_chain_deps#infer-analyze/captured/" +
+                "top_chain.c_captured/top_chain.c.cfg").toFile().exists());
+  }
+
+  @Test
+  public void testInferCxxBinaryRunsOnAllFilesWhenBlacklistIsNotSpecified() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
+    String inputBuildTargetName =
+        inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
+
+    // Build the given target and check that it succeeds.
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    // Check that all cfgs have been created
+    assertTrue(
+        "Expected cfg for chain_dep_one.c not found",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-chain_dep_one#default,infer-capture-chain_dep_one.c.o/" +
+                "captured/chain_dep_one.c_captured/chain_dep_one.c.cfg").toFile().exists());
+
+    assertTrue(
+        "Expected cfg for chain_dep_two.c not found",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-chain_dep_two#default,infer-capture-chain_dep_two.c.o/" +
+                "captured/chain_dep_two.c_captured/chain_dep_two.c.cfg").toFile().exists());
+    assertTrue(
+        "Expected cfg for top_chain.c not found",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-analysis-binary_with_chain_deps#infer-analyze/captured/" +
+                "top_chain.c_captured/top_chain.c.cfg").toFile().exists());
+  }
+
+  @Test
   public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
     workspace.enableDirCache(); // enable the cache
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
@@ -406,7 +489,10 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryMergesAllReportsOfDependencies() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
@@ -431,7 +517,10 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWritesSpecsListFilesOfTransitiveDependencies() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =

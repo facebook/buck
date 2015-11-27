@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil.integration;
 
 
+import com.google.common.base.Optional;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
@@ -37,7 +38,8 @@ public class InferHelper {
 
   public static ProjectWorkspace setupCxxInferWorkspace(
       Object testCase,
-      DebuggableTemporaryFolder temporaryFolder) throws IOException {
+      DebuggableTemporaryFolder temporaryFolder,
+      Optional<String> rawBlacklistRegex) throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         testCase, "infertest", temporaryFolder);
     workspace.setUp();
@@ -47,15 +49,23 @@ public class InferHelper {
 
     // create .buckconfig with the right path to the tools
     workspace.setUp();
+
+    String blacklistRegexConfig = "";
+    if (rawBlacklistRegex.isPresent()) {
+      blacklistRegexConfig = "blacklist_regex = " + rawBlacklistRegex.get() + "\n";
+    }
+
     workspace.writeContentsToPath(
         String.format(
             "[infer]\n" +
                 "infer_bin = %s\n" +
                 "clang_compiler = %s\n" +
-                "clang_plugin = %s\n",
+                "clang_plugin = %s\n" +
+                "%s",
             inferBin.toString(),
             facebookClangPluginsRoot.resolve("fake-clang"),
-            facebookClangPluginsRoot.resolve("fake-plugin")),
+            facebookClangPluginsRoot.resolve("fake-plugin"),
+            blacklistRegexConfig),
         ".buckconfig");
 
     return workspace;

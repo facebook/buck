@@ -16,27 +16,24 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cli.BuckConfig;
 import com.google.common.base.Optional;
 
-import java.nio.file.Path;
+import java.util.regex.Pattern;
 
-public class InferBuckConfig {
+public class CxxInferSourceFilter {
 
-  private static final String INFER_SECTION_PREFIX = "infer";
+  private final Optional<Pattern> blacklistRegex;
 
-  private final BuckConfig delegate;
+  CxxInferSourceFilter(InferBuckConfig config) {
+    Optional<String> rawFilterRegex = config.getValue("blacklist_regex");
 
-  public InferBuckConfig(BuckConfig delegate) {
-    this.delegate = delegate;
+    blacklistRegex = rawFilterRegex.isPresent() ?
+        Optional.of(Pattern.compile(rawFilterRegex.get())) : Optional.<Pattern>absent();
   }
 
-  public Optional<Path> getPath(String name) {
-    return delegate.getPath(INFER_SECTION_PREFIX, name);
-  }
-
-  public Optional<String> getValue(String name) {
-    return delegate.getValue(INFER_SECTION_PREFIX, name);
+  public boolean isBlacklisted(CxxSource source) {
+    return blacklistRegex.isPresent() &&
+        blacklistRegex.get().matcher(source.getPath().toString()).matches();
   }
 
 }

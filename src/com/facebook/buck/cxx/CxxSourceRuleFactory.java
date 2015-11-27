@@ -687,7 +687,8 @@ public class CxxSourceRuleFactory {
   public ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
       PicType pic,
-      CxxInferTools inferTools) {
+      CxxInferTools inferTools,
+      CxxInferSourceFilter sourceFilter) {
 
     ImmutableSet.Builder<CxxInferCapture> objects = ImmutableSet.builder();
 
@@ -698,6 +699,10 @@ public class CxxSourceRuleFactory {
       Preconditions.checkState(
           CxxSourceTypes.isPreprocessableType(source.getType()),
           "Only preprocessable source types are currently supported");
+
+      if (sourceFilter.isBlacklisted(source)) {
+        continue;
+      }
 
       CxxInferCapture rule = requireInferCaptureBuildRule(
           name,

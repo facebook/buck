@@ -24,6 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -36,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+
 public class InferMergeReportsStepTest {
 
   @Rule
@@ -47,7 +49,7 @@ public class InferMergeReportsStepTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.<String>absent());
 
     Path report1 = Paths.get("report1");
     Path report2 = Paths.get("report2");

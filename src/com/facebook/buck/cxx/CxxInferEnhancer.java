@@ -75,7 +75,8 @@ public final class CxxInferEnhancer {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
-      CxxInferTools inferTools) throws NoSuchBuildTargetException {
+      CxxInferTools inferTools,
+      CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
     Optional<CxxInferReport> existingRule = resolver.getRuleOptionalWithType(
         params.getBuildTarget(), CxxInferReport.class);
     if (existingRule.isPresent()) {
@@ -92,7 +93,8 @@ public final class CxxInferEnhancer {
         pathResolver,
         cxxPlatform,
         args,
-        inferTools);
+        inferTools,
+        sourceFilter);
     return createInferReportRule(
         params,
         resolver,
@@ -106,7 +108,8 @@ public final class CxxInferEnhancer {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
-      CxxInferTools inferTools) throws NoSuchBuildTargetException {
+      CxxInferTools inferTools,
+      CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
 
     BuildTarget inferAnalyzeBuildTarget = createInferAnalyzeBuildTarget(params.getBuildTarget());
 
@@ -179,7 +182,8 @@ public final class CxxInferEnhancer {
                   args.compilerFlags,
                   args.platformCompilerFlags,
                   cxxPlatform),
-              args.prefixHeader),
+              args.prefixHeader,
+              sourceFilter),
             transitiveDepsLibraryRules);
 
     return createInferAnalyzeRule(
@@ -290,7 +294,8 @@ public final class CxxInferEnhancer {
       CxxInferTools inferTools,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputs,
       ImmutableList<String> compilerFlags,
-      Optional<SourcePath> prefixHeader) {
+      Optional<SourcePath> prefixHeader,
+      CxxInferSourceFilter sourceFilter) {
 
     CxxSourceRuleFactory factory =
         new CxxSourceRuleFactory(
@@ -304,7 +309,8 @@ public final class CxxInferEnhancer {
     return factory.createInferCaptureBuildRules(
         sources,
         picType,
-        inferTools);
+        inferTools,
+        sourceFilter);
   }
 
   private static CxxInferAnalyze createInferAnalyzeRule(

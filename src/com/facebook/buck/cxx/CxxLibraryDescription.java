@@ -789,7 +789,8 @@ public class CxxLibraryDescription implements
               ? platform.get().getValue()
               : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
-          new CxxInferTools(inferBuckConfig));
+          new CxxInferTools(inferBuckConfig),
+          new CxxInferSourceFilter(inferBuckConfig));
     }
 
     if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER_ANALYZE)) {
@@ -801,7 +802,8 @@ public class CxxLibraryDescription implements
               ? platform.get().getValue()
               : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
-          new CxxInferTools(inferBuckConfig));
+          new CxxInferTools(inferBuckConfig),
+          new CxxInferSourceFilter(inferBuckConfig));
     }
 
     Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
