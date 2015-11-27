@@ -457,7 +457,14 @@ public class KnownBuildRuleTypes {
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription =
-        new AppleBinaryDescription(cxxBinaryDescription, platformFlavorsToAppleCxxPlatforms);
+        new AppleBinaryDescription(
+            cxxBinaryDescription,
+            cxxPlatforms,
+            platformFlavorsToAppleCxxPlatforms,
+            defaultCxxPlatform,
+            codeSignIdentityStore,
+            provisioningProfileStore,
+            defaultDebugInfoFormat);
     builder.register(appleBinaryDescription);
 
     // Create an executor service exclusively for the smart dexing step.

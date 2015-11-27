@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 
 public class AppleBinaryBuilder
-    extends AbstractAppleNativeTargetBuilder<AppleNativeTargetDescriptionArg, AppleBinaryBuilder> {
+    extends AbstractAppleNativeTargetBuilder<AppleBinaryDescription.Arg, AppleBinaryBuilder> {
 
   @Override
   protected AppleBinaryBuilder getThis() {

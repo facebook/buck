@@ -183,7 +183,13 @@ public class FakeAppleRuleDescriptions {
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
+        DEFAULT_APPLE_FLAVOR_DOMAIN,
+        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+        DEFAULT_PLATFORM,
+        CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+        ProvisioningProfileStore.fromProvisioningProfiles(
+            ImmutableList.<ProvisioningProfileMetadata>of()),
+        AppleBundle.DebugInfoFormat.DWARF_AND_DSYM);
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.

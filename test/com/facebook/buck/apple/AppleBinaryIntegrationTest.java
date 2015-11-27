@@ -16,8 +16,10 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -47,7 +49,7 @@ public class AppleBinaryIntegrationTest {
   public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testAppleBinaryBuildsSomething() throws IOException {
+  public void testAppleBinaryBuildsBinary() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_builds_something", tmp);
@@ -55,7 +57,31 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
 
-    assertTrue(Files.exists(getGenDir()));
+    assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
+    assertThat(
+        workspace.runCommand("file", getGenDir().resolve("Apps/TestApp/TestApp").toString())
+            .getStdout()
+            .get(),
+        containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryAppBuildsApp() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_builds_something", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#app").assertSuccess();
+
+    assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
+    Path appPath = getGenDir().resolve("Apps/TestApp/TestApp#app/TestApp.app/");
+    assertThat(Files.exists(appPath.resolve("Info.plist")), is(true));
+    assertThat(
+        workspace.runCommand("file", appPath.resolve("TestApp").toString())
+            .getStdout()
+            .get(),
+        containsString("executable"));
   }
 
   @Test

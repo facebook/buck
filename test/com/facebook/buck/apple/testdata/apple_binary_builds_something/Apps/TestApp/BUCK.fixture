@@ -1,4 +1,5 @@
 apple_binary(
   name = 'TestApp',
+  info_plist = 'Info.plist',
   srcs = ['main.c', 'answer.s'],
 )

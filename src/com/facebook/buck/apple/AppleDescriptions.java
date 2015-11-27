@@ -503,7 +503,8 @@ public class AppleDescriptions {
                 ReactNativeFlavors.DO_NOT_BUNDLE,
                 AppleDescriptions.FRAMEWORK_FLAVOR,
                 AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR,
-                AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR))
+                AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR,
+                AppleBinaryDescription.APP_FLAVOR))
         .getFlavors();
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
