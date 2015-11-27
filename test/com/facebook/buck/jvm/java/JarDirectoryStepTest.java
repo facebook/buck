@@ -18,10 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
 import static java.util.jar.Attributes.Name.MANIFEST_VERSION;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -86,6 +89,39 @@ public class JarDirectoryStepTest {
     // "example.txt" "Main.class" and the MANIFEST.MF.
     assertZipFileCountIs(3, zip);
     assertZipContains(zip, "example.txt");
+  }
+
+  @Test
+  public void shouldNotifyEventBusWhenDuplicateClassesAreFound() throws IOException {
+    Path jarDirectory = folder.newFolder("jarDir");
+
+    Path first = createZip(
+        jarDirectory.resolve("a.jar"),
+        "com/example/Main.class",
+        "com/example/common/Helper.class");
+    Path second = createZip(
+        jarDirectory.resolve("b.jar"),
+        "com/example/common/Helper.class");
+
+    final Path outputPath = Paths.get("output.jar");
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(jarDirectory),
+        outputPath,
+        ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
+        "com.example.Main",
+        /* manifest file */ null);
+    ExecutionContext context = TestExecutionContext.newInstance();
+
+    final BuckEventBusFactory.CapturingConsoleEventListener listener =
+        new BuckEventBusFactory.CapturingConsoleEventListener();
+    context.getBuckEventBus().register(listener);
+
+    step.execute(context);
+    final String expectedMessage = String.format(
+        "Duplicate found when adding 'com/example/common/Helper.class' to '%s' from '%s'",
+        outputPath.toAbsolutePath(),
+        second.toAbsolutePath());
+    assertThat(listener.getLogMessages(), hasItem(expectedMessage));
   }
 
   @Test
