@@ -19,23 +19,12 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.jvm.core.JavaNativeLinkable;
 import com.facebook.buck.python.PythonPackagable;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 
-public abstract class AbstractCxxLibrary
-    extends NoopBuildRule
-    implements
-        CxxPreprocessorDep,
-        NativeLinkable,
-        NativeTestable,
-        PythonPackagable,
-        JavaNativeLinkable,
-        AndroidPackageable {
-
-  public AbstractCxxLibrary(
-      BuildRuleParams params,
-      SourcePathResolver pathResolver) {
-    super(params, pathResolver);
-  }
+public interface AbstractCxxLibrary extends
+    CxxPreprocessorDep,
+    NativeLinkable,
+    NativeTestable,
+    PythonPackagable,
+    JavaNativeLinkable,
+    AndroidPackageable {
 }

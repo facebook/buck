@@ -20,31 +20,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
@@ -54,164 +43,84 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 public class CxxBinaryDescriptionTest {
 
-  private static FakeBuildRule createFakeBuildRule(
-      String target,
-      SourcePathResolver resolver,
-      BuildRule... deps) {
-    return new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
-            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-            .build(),
-        resolver);
-  }
-
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
-  public void createBuildRule() throws NoSuchBuildTargetException {
+  public void createBuildRule() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxPlatform cxxPlatform = CxxBinaryBuilder.createDefaultPlatform();
 
     // Setup a genrule the generates a header we'll list.
     String genHeaderName = "test/foo.h";
     BuildTarget genHeaderTarget = BuildTargetFactory.newInstance("//:genHeader");
-    Genrule genHeader = (Genrule) GenruleBuilder
-        .newGenruleBuilder(genHeaderTarget)
-        .setOut(genHeaderName)
-        .build(resolver);
+    GenruleBuilder genHeaderBuilder =
+        GenruleBuilder
+            .newGenruleBuilder(genHeaderTarget)
+            .setOut(genHeaderName);
 
     // Setup a genrule the generates a source we'll list.
     String genSourceName = "test/foo.cpp";
     BuildTarget genSourceTarget = BuildTargetFactory.newInstance("//:genSource");
-    Genrule genSource = (Genrule) GenruleBuilder
-        .newGenruleBuilder(genSourceTarget)
-        .setOut(genSourceName)
-        .build(resolver);
+    GenruleBuilder genSourceBuilder =
+        GenruleBuilder
+            .newGenruleBuilder(genSourceTarget)
+            .setOut(genSourceName);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
-    final BuildRule header = createFakeBuildRule("//:header", pathResolver);
-    final BuildRule headerSymlinkTree = createFakeBuildRule("//:symlink", pathResolver);
-    final Path headerSymlinkTreeRoot = Paths.get("symlink/tree/root");
-    final BuildRule archive = createFakeBuildRule("//:archive", pathResolver);
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
-    BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
-    AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
-
-      @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(
-          CxxPlatform cxxPlatform,
-          HeaderVisibility headerVisibility) {
-        return CxxPreprocessorInput.builder()
-            .addRules(
-                header.getBuildTarget(),
-                headerSymlinkTree.getBuildTarget())
-            .addIncludeRoots(headerSymlinkTreeRoot)
-            .build();
-      }
-
-      @Override
-      public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform,
-          HeaderVisibility headerVisibility) {
-        return ImmutableMap.of(
-            getBuildTarget(),
-            getCxxPreprocessorInput(cxxPlatform, headerVisibility));
-      }
-
-      @Override
-      public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-        return FluentIterable.from(getDeclaredDeps())
-            .filter(NativeLinkable.class);
-      }
-
-      @Override
-      public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
-        return FluentIterable.from(getDeclaredDeps())
-            .filter(NativeLinkable.class);
-      }
-
-      @Override
-      public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform,
-          Linker.LinkableDepType type) {
-        return NativeLinkableInput.of(
-            ImmutableList.<Arg>of(
-                new SourcePathArg(
-                    getResolver(),
-                    new BuildTargetSourcePath(archive.getBuildTarget()))),
-            ImmutableSet.<FrameworkPath>of(),
-            ImmutableSet.<FrameworkPath>of());
-      }
-
-      @Override
-      public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return Linkage.ANY;
-      }
-
-      @Override
-      public PythonPackageComponents getPythonPackageComponents(
-          PythonPlatform pythonPlatform,
-          CxxPlatform cxxPlatform) {
-        return PythonPackageComponents.of(
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableSet.<SourcePath>of(),
-            Optional.<Boolean>absent());
-      }
-
-      @Override
-      public Iterable<AndroidPackageable> getRequiredPackageables() {
-        return ImmutableList.of();
-      }
-
-      @Override
-      public void addToCollector(AndroidPackageableCollector collector) {}
-
-      @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(
-          CxxPlatform cxxPlatform) {
-        return ImmutableMap.of();
-      }
-
-      @Override
-      public boolean isTestedBy(BuildTarget buildTarget) {
-        return false;
-      }
-    };
-    resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive, dep));
+    CxxLibraryBuilder depBuilder = new CxxLibraryBuilder(depTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
+    BuildTarget archiveTarget = BuildTarget.builder(depTarget)
+        .addFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR)
+        .addFlavors(cxxPlatform.getFlavor())
+        .build();
+    BuildTarget headerSymlinkTreeTarget = BuildTarget.builder(depTarget)
+        .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
+        .addFlavors(cxxPlatform.getFlavor())
+        .build();
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxBinaryBuilder cxxBinaryBuilder =
         new CxxBinaryBuilder(target)
-            .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
-                    SourceWithFlags.of(
-                        new BuildTargetSourcePath(
-                            genSource.getBuildTarget()))))
-            .setHeaders(
-                ImmutableSortedSet.<SourcePath>of(
-                    new FakeSourcePath("test/bar.h"),
-                    new BuildTargetSourcePath(genHeader.getBuildTarget())))
-            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
-    CxxBinary binRule = (CxxBinary) cxxBinaryBuilder.build(resolver);
+              .setSrcs(
+                  ImmutableSortedSet.of(
+                      SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
+                      SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
+              .setHeaders(
+                  ImmutableSortedSet.<SourcePath>of(
+                      new FakeSourcePath("test/bar.h"),
+                      new BuildTargetSourcePath(genHeaderTarget)))
+              .setDeps(ImmutableSortedSet.of(depTarget));
+
+    // Create the target graph.
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            genHeaderBuilder.build(),
+            genSourceBuilder.build(),
+            depBuilder.build(),
+            cxxBinaryBuilder.build());
+
+    // Create the build rules.
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    genHeaderBuilder.build(resolver, projectFilesystem, targetGraph);
+    genSourceBuilder.build(resolver, projectFilesystem, targetGraph);
+    depBuilder.build(resolver, projectFilesystem, targetGraph);
+    CxxBinary binRule =
+        (CxxBinary) cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
+
     CxxLink rule = binRule.getRule();
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -233,7 +142,7 @@ public class CxxBinaryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget(
                 genSourceName,
                 CxxSourceRuleFactory.PicType.PDC),
-            archive.getBuildTarget()),
+            archiveTarget),
         FluentIterable.from(rule.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -248,8 +157,7 @@ public class CxxBinaryDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             genHeaderTarget,
-            headerSymlinkTree.getBuildTarget(),
-            header.getBuildTarget(),
+            headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
                 cxxPlatform.getFlavor(),
@@ -283,8 +191,7 @@ public class CxxBinaryDescriptionTest {
         ImmutableSet.of(
             genHeaderTarget,
             genSourceTarget,
-            headerSymlinkTree.getBuildTarget(),
-            header.getBuildTarget(),
+            headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
                 cxxPlatform.getFlavor(),

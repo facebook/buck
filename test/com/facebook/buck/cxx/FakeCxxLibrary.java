@@ -25,6 +25,7 @@ import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,9 +43,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Fake implementation of {@link AbstractCxxLibrary} for testing.
+ * Fake implementation of {@link CxxLibrary} for testing.
  */
-public final class FakeCxxLibrary extends AbstractCxxLibrary {
+public final class FakeCxxLibrary extends NoopBuildRule implements AbstractCxxLibrary {
   private final BuildTarget publicHeaderTarget;
   private final BuildTarget publicHeaderSymlinkTreeTarget;
   private final Path publicHeaderSymlinkTreeRoot;

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -56,7 +57,7 @@ import java.util.regex.Pattern;
  * An action graph representation of a C/C++ library from the target graph, providing the
  * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
+public class CxxLibrary extends NoopBuildRule implements AbstractCxxLibrary, HasRuntimeDeps {
 
   @AddToRuleKey
   private final boolean canBeAsset;
