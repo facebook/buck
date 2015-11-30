@@ -63,6 +63,7 @@ public class ShTest
   private final SourcePath test;
   @AddToRuleKey
   private final ImmutableList<Arg> args;
+  private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<Label> labels;
 
   protected ShTest(
@@ -70,10 +71,12 @@ public class ShTest
       SourcePathResolver resolver,
       SourcePath test,
       ImmutableList<Arg> args,
+      Optional<Long> testRuleTimeoutMs,
       Set<Label> labels) {
     super(params, resolver);
     this.test = test;
     this.args = args;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.labels = ImmutableSet.copyOf(labels);
   }
 
@@ -119,6 +122,8 @@ public class ShTest
             getProjectFilesystem(),
             getResolver().getAbsolutePath(test),
             Arg.stringify(args),
+            testRuleTimeoutMs,
+            getBuildTarget().getFullyQualifiedName(),
             getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);

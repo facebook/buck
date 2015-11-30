@@ -21,9 +21,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,15 +41,21 @@ public class RunShTestAndRecordResultStep implements Step {
   private final Path pathToShellScript;
   private final ImmutableList<String> args;
   private final Path pathToTestResultFile;
+  private final Optional<Long> testRuleTimeoutMs;
+  private final String testCaseName;
 
   public RunShTestAndRecordResultStep(
       ProjectFilesystem filesystem,
       Path pathToShellScript,
       ImmutableList<String> args,
+      Optional<Long> testRuleTimeoutMs,
+      String testCaseName,
       Path pathToTestResultFile) {
     this.filesystem = filesystem;
     this.pathToShellScript = pathToShellScript;
     this.args = args;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.testCaseName = testCaseName;
     this.pathToTestResultFile = pathToTestResultFile;
   }
 
@@ -76,6 +85,8 @@ public class RunShTestAndRecordResultStep implements Step {
           /* stderr */ null);
     } else {
       ShellStep test = new ShellStep(filesystem.getRootPath()) {
+        boolean timedOut = false;
+
         @Override
         public String getShortName() {
           return pathToShellScript.toString();
@@ -99,6 +110,34 @@ public class RunShTestAndRecordResultStep implements Step {
         protected boolean shouldPrintStderr(Verbosity verbosity) {
           // Do not stream this output because we want to capture it.
           return false;
+        }
+
+        @Override
+        public int execute(ExecutionContext context) throws InterruptedException {
+          int exitCode = super.execute(context);
+          if (timedOut) {
+            throw new HumanReadableException(
+                "Timed out running test: " + testCaseName + ", with exitCode: " + exitCode);
+          }
+          return exitCode;
+        }
+
+        @Override
+        protected Optional<Function<Process, Void>> getTimeoutHandler(
+            final ExecutionContext context) {
+          return Optional.<Function<Process, Void>>of(
+              new Function<Process, Void>() {
+                @Override
+                public Void apply(Process process) {
+                  timedOut = true;
+                  return null;
+                }
+              });
+        }
+
+        @Override
+        protected Optional<Long> getTimeout() {
+          return testRuleTimeoutMs;
         }
 
         @Override

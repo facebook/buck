@@ -47,6 +47,13 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
           ImmutableMap.<String, MacroExpander>of(
               "location", new LocationMacroExpander()));
 
+  private final Optional<Long> defaultTestRuleTimeoutMs;
+
+  public ShTestDescription(
+      Optional<Long> defaultTestRuleTimeoutMs) {
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+  }
+
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
@@ -87,6 +94,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
         pathResolver,
         args.test,
         testArgs,
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.labels.get());
   }
 
@@ -95,7 +103,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
     public SourcePath test;
     public Optional<ImmutableList<String>> args;
     public Optional<ImmutableSortedSet<Label>> labels;
-
+    public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

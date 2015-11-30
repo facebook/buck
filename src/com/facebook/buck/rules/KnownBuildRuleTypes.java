@@ -592,7 +592,7 @@ public class KnownBuildRuleTypes {
     builder.register(new RustBinaryDescription(rustBuckConfig));
     builder.register(new RustLibraryDescription(rustBuckConfig));
     builder.register(new ShBinaryDescription());
-    builder.register(new ShTestDescription());
+    builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
     builder.register(
         new ThriftLibraryDescription(

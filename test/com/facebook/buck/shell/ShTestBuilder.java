@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
 
   public ShTestBuilder(BuildTarget target) {
-    super(new ShTestDescription(), target);
+    super(new ShTestDescription(Optional.<Long>absent()), target);
   }
 
   public ShTestBuilder setTest(SourcePath path) {

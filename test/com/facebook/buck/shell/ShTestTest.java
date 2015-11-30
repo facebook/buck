@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,6 +64,7 @@ public class ShTestTest extends EasyMockSupport {
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
+        Optional.<Long>absent(),
         /* labels */ ImmutableSet.<Label>of());
 
     EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);
@@ -94,6 +96,7 @@ public class ShTestTest extends EasyMockSupport {
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
+        Optional.<Long>absent(),
         /* labels */ ImmutableSet.<Label>of());
 
     assertThat(
