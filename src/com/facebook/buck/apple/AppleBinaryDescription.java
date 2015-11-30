@@ -166,6 +166,7 @@ public class AppleBinaryDescription
           Optional.<String>absent(),
           args.infoPlist.get(),
           args.infoPlistSubstitutions,
+          args.deps.get(),
           args.getTests(),
           flavoredDebugInfoFormat.or(defaultDebugInfoFormat));
     }

@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxConstructorArg;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
@@ -73,6 +74,7 @@ import java.util.Set;
 public class AppleDescriptions {
 
   public static final Flavor FRAMEWORK_FLAVOR = ImmutableFlavor.of("framework");
+  public static final Flavor FRAMEWORK_SHALLOW_FLAVOR = ImmutableFlavor.of("framework-shallow");
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
@@ -393,8 +395,9 @@ public class AppleDescriptions {
       BuildTarget binary,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
-      SourcePath infoPlist,
+      final SourcePath infoPlist,
       Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
+      ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
       AppleBundle.DebugInfoFormat debugInfoFormat)
       throws NoSuchBuildTargetException {
@@ -420,6 +423,22 @@ public class AppleDescriptions {
     ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
     ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
     ImmutableSet<SourcePath> bundleVariantFiles = bundleVariantFilesBuilder.build();
+    ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
+    if (!params.getBuildTarget().getFlavors().contains(FRAMEWORK_SHALLOW_FLAVOR)) {
+      for (BuildTarget dep : deps) {
+        Optional<FrameworkDependencies> frameworkDependencies =
+            resolver.requireMetadata(
+                BuildTarget.builder(dep)
+                    .addFlavors(FRAMEWORK_SHALLOW_FLAVOR)
+                    .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
+                    .build(),
+                FrameworkDependencies.class);
+        if (frameworkDependencies.isPresent()) {
+          frameworksBuilder.addAll(frameworkDependencies.get().getSourcePaths());
+        }
+      }
+    }
+    ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
@@ -437,7 +456,7 @@ public class AppleDescriptions {
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         targetGraph,
-        params,
+        params.getBuildTarget().getFlavors(),
         resolver,
         binary);
     BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithUpdatedDeps(
@@ -452,10 +471,12 @@ public class AppleDescriptions {
                     resolver,
                     SourcePaths.filterBuildTargetSourcePaths(
                         Iterables.concat(
-                            bundleFiles,
-                            bundleDirs,
-                            dirsContainingResourceDirs,
-                            bundleVariantFiles))))
+                            ImmutableList.of(
+                                bundleFiles,
+                                bundleDirs,
+                                dirsContainingResourceDirs,
+                                bundleVariantFiles,
+                                frameworks)))))
             .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
@@ -476,6 +497,7 @@ public class AppleDescriptions {
         dirsContainingResourceDirs,
         extensionBundlePaths,
         Optional.of(bundleVariantFiles),
+        frameworks,
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
@@ -493,19 +515,28 @@ public class AppleDescriptions {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       TargetGraph targetGraph,
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      ImmutableSet<Flavor> flavors,
+      BuildRuleResolver resolver,
       BuildTarget binary) throws NoSuchBuildTargetException {
     // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
-    ImmutableSet<Flavor> flavors = params.getBuildTarget()
-        .withoutFlavors(
-            ImmutableSet.of(
-                ReactNativeFlavors.DO_NOT_BUNDLE,
-                AppleDescriptions.FRAMEWORK_FLAVOR,
-                AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR,
-                AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR,
-                AppleBinaryDescription.APP_FLAVOR))
-        .getFlavors();
+    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR) ||
+        flavors.contains(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR)) {
+      flavors = ImmutableSet.<Flavor>builder()
+          .addAll(flavors)
+          .add(CxxDescriptionEnhancer.SHARED_FLAVOR)
+          .build();
+    }
+    flavors =
+        ImmutableSet.copyOf(
+            Sets.difference(
+                flavors,
+                ImmutableSet.of(
+                    ReactNativeFlavors.DO_NOT_BUNDLE,
+                    AppleDescriptions.FRAMEWORK_FLAVOR,
+                    AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR,
+                    AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR,
+                    AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR,
+                    AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
           .addAll(flavors)
@@ -513,26 +544,36 @@ public class AppleDescriptions {
           .build();
     }
 
-    final TargetNode<?> binaryTargetNode = Preconditions.checkNotNull(targetGraph.get(binary));
+    BuildTarget.Builder buildTargetBuilder =
+        BuildTarget.builder(binary.getUnflavoredBuildTarget()).addAllFlavors(flavors);
+    try {
+      if (!(AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent())) {
+        buildTargetBuilder.addAllFlavors(binary.getFlavors());
+      } else {
+        buildTargetBuilder.addAllFlavors(
+            Sets.difference(
+                binary.getFlavors(),
+                AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
+      }
+    } catch (FlavorDomainException e) {
+      throw new RuntimeException(e);
+    }
+    BuildTarget buildTarget = buildTargetBuilder.build();
+
+    final TargetNode<?> binaryTargetNode = Preconditions.checkNotNull(targetGraph.get(buildTarget));
     // If the binary target of the AppleBundle is an AppleLibrary then the build flavor
     // must be specified.
     if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription &&
         (Sets.intersection(
             AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS,
-            binaryTargetNode.getBuildTarget().getFlavors()).size() != 1)) {
+            buildTarget.getFlavors()).size() != 1)) {
       throw new HumanReadableException(
           "AppleExtension bundle [%s] must have exactly one of these flavors: [%s].",
           binaryTargetNode.getBuildTarget().toString(),
           Joiner.on(", ").join(AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS));
     }
 
-    return resolver.requireRule(
-        BuildTarget.of(
-            binary.getUnflavoredBuildTarget(),
-            ImmutableSet.<Flavor>builder()
-                .addAll(flavors)
-                .addAll(binary.getFlavors())
-                .build()));
+    return resolver.requireRule(buildTarget);
   }
 
   private static BuildRuleParams getBundleParamsWithUpdatedDeps(

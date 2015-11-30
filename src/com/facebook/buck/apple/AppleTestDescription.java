@@ -301,7 +301,7 @@ public class AppleTestDescription implements
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
-    AppleBundle bundle = new AppleBundle(
+    BuildRule bundle = new AppleBundle(
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
             // We have to add back the original deps here, since they're likely
@@ -335,6 +335,7 @@ public class AppleTestDescription implements
         dirsContainingResourceDirsBuilder.build(),
         ImmutableMap.<SourcePath, String>of(),
         Optional.of(resourceVariantFiles),
+        ImmutableSet.<SourcePath>of(),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),

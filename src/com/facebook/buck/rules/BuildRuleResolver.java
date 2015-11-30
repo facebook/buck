@@ -17,16 +17,21 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -39,6 +44,7 @@ public class BuildRuleResolver {
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
+  private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
 
   public BuildRuleResolver(
       TargetGraph targetGraph,
@@ -46,6 +52,36 @@ public class BuildRuleResolver {
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
     this.buildRuleIndex = new ConcurrentHashMap<>();
+    this.metadataCache = CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
+              @Override
+              public Optional<?> load(Pair<BuildTarget, Class<?>> key) throws Exception {
+                TargetNode<?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
+                Preconditions.checkNotNull(
+                    node,
+                    "Required target for rule '%s' was not found in the target graph.",
+                    key);
+
+                return load(node, key.getSecond());
+              }
+
+              @SuppressWarnings("unchecked")
+              private <T, U> Optional<U> load(TargetNode<T> node, Class<U> metadataClass)
+                  throws NoSuchBuildTargetException {
+                Description<T> description = node.getDescription();
+                if (!(description instanceof MetadataProvidingDescription)) {
+                  return Optional.absent();
+                }
+                MetadataProvidingDescription<T> metadataProvidingDescription =
+                    (MetadataProvidingDescription<T>) description;
+                return metadataProvidingDescription.createMetadata(
+                    node.getBuildTarget(),
+                    BuildRuleResolver.this,
+                    node.getConstructorArg(),
+                    metadataClass);
+              }
+            });
   }
 
   /**
@@ -93,6 +129,21 @@ public class BuildRuleResolver {
         rule,
         oldRule);
     return rule;
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass)
+      throws NoSuchBuildTargetException {
+    try {
+      return (Optional<T>) metadataCache.get(
+          new Pair<BuildTarget, Class<?>>(target, metadataClass));
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof NoSuchBuildTargetException) {
+        throw (NoSuchBuildTargetException) cause;
+      }
+      throw new RuntimeException(e);
+    }
   }
 
   @SuppressWarnings("unchecked")

@@ -137,6 +137,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final Optional<ImmutableSet<SourcePath>> resourceVariantFiles;
 
   @AddToRuleKey
+  private final Set<SourcePath> frameworks;
+
+  @AddToRuleKey
   private final Tool ibtool;
 
   @AddToRuleKey
@@ -196,6 +199,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<SourcePath> dirsContainingResourceDirs,
       ImmutableMap<SourcePath, String> extensionBundlePaths,
       Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
+      Set<SourcePath> frameworks,
       Tool ibtool,
       Tool dsymutil,
       Tool strip,
@@ -221,6 +225,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.dirsContainingResourceDirs = dirsContainingResourceDirs;
     this.extensionBundlePaths = extensionBundlePaths;
     this.resourceVariantFiles = resourceVariantFiles;
+    this.frameworks = frameworks;
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
     this.strip = strip;
@@ -398,31 +403,33 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       );
     }
 
-    Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-    for (SourcePath dir : resourceDirs) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              getResolver().getAbsolutePath(dir),
-              bundleDestinationPath,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-    }
-    for (SourcePath dir : dirsContainingResourceDirs) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              getResolver().getAbsolutePath(dir),
-              bundleDestinationPath,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
-    for (SourcePath file : resourceFiles) {
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
-      // TODO(shs96c): Check that this work cross-cell
-      Path resolvedFilePath = getResolver().getRelativePath(file);
-      Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
-      addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
+    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
+    if (
+        !Iterables.isEmpty(
+            Iterables.concat(resourceDirs, dirsContainingResourceDirs, resourceFiles))) {
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
+      for (SourcePath dir : resourceDirs) {
+        stepsBuilder.add(
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                getResolver().getAbsolutePath(dir),
+                resourcesDestinationPath,
+                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+      }
+      for (SourcePath dir : dirsContainingResourceDirs) {
+        stepsBuilder.add(
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                getResolver().getAbsolutePath(dir),
+                resourcesDestinationPath,
+                CopyStep.DirectoryMode.CONTENTS_ONLY));
+      }
+      for (SourcePath file : resourceFiles) {
+        // TODO(shs96c): Check that this work cross-cell
+        Path resolvedFilePath = getResolver().getRelativePath(file);
+        Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
+        addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
+      }
     }
 
     addStepsToCopyExtensionBundlesDependencies(stepsBuilder);
@@ -441,11 +448,24 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         }
 
         Path bundleVariantDestinationPath =
-            bundleDestinationPath.resolve(variantDirectory.getFileName());
+            resourcesDestinationPath.resolve(variantDirectory.getFileName());
         stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleVariantDestinationPath));
 
         Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
         addResourceProcessingSteps(variantFilePath, destinationPath, stepsBuilder);
+      }
+    }
+
+    if (!frameworks.isEmpty()) {
+      Path frameworksDestinationPath = bundleRoot.resolve(this.destinations.getFrameworksPath());
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), frameworksDestinationPath));
+      for (SourcePath framework : frameworks) {
+        stepsBuilder.add(
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                getResolver().getAbsolutePath(framework),
+                frameworksDestinationPath,
+                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       }
     }
 
@@ -488,7 +508,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               Optional.<String>absent(),  // Provisioning profile UUID -- find automatically.
               entitlementsPlist,
               provisioningProfileStore,
-              bundleDestinationPath.resolve("embedded.mobileprovision"),
+              resourcesDestinationPath.resolve("embedded.mobileprovision"),
               signingEntitlementsTempPath);
       stepsBuilder.add(provisioningProfileCopyStep);
 
@@ -526,7 +546,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
           new CodeSignStep(
               getProjectFilesystem().getRootPath(),
               getResolver(),
-              bundleDestinationPath,
+              resourcesDestinationPath,
               signingEntitlementsTempPath,
               codeSignIdentitySupplier,
               codesignAllocatePath));

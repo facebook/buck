@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
@@ -52,7 +53,8 @@ import java.util.Map;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>,
     Flavored,
-    ImplicitDepsInferringDescription<AppleBundleDescription.Arg> {
+    ImplicitDepsInferringDescription<AppleBundleDescription.Arg>,
+    MetadataProvidingDescription<AppleBundleDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
   public static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxDescriptionEnhancer.STATIC_FLAVOR,
@@ -145,6 +147,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions,
+        args.deps.get(),
         args.getTests(),
         flavoredDebugInfoFormat.or(defaultDebugInfoFormat));
   }
@@ -152,7 +155,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   /**
    * Propagate the bundle's platform flavors to its dependents.
    */
-
   @Override
   public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
@@ -227,6 +229,14 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         .build();
   }
 
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      Class<U> metadataClass) throws NoSuchBuildTargetException {
+    return resolver.requireMetadata(args.binary, metadataClass);
+  }
 
   @SuppressFieldNotInitialized
   public static class Arg implements HasAppleBundleFields, HasTests {
