@@ -20,6 +20,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -88,6 +89,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
+  private final HalideBuckConfig halideBuckConfig;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
@@ -106,7 +108,8 @@ public class WorkspaceAndProjectGenerator {
       CxxPlatform defaultCxxPlatform,
       String buildFileName,
       Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      HalideBuckConfig halideBuckConfig) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
@@ -125,6 +128,7 @@ public class WorkspaceAndProjectGenerator {
     this.buckEventBus = buckEventBus;
     this.combinedProjectGenerator = Optional.absent();
     this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
+    this.halideBuckConfig = halideBuckConfig;
   }
 
   @VisibleForTesting
@@ -253,7 +257,8 @@ public class WorkspaceAndProjectGenerator {
           defaultCxxPlatform,
           sourcePathResolverForNode,
           buckEventBus,
-          attemptToDetermineBestCxxPlatform)
+          attemptToDetermineBestCxxPlatform,
+          halideBuckConfig)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
@@ -323,7 +328,8 @@ public class WorkspaceAndProjectGenerator {
               defaultCxxPlatform,
               sourcePathResolverForNode,
               buckEventBus,
-              attemptToDetermineBestCxxPlatform)
+              attemptToDetermineBestCxxPlatform,
+              halideBuckConfig)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
@@ -358,7 +364,8 @@ public class WorkspaceAndProjectGenerator {
             defaultCxxPlatform,
             sourcePathResolverForNode,
             buckEventBus,
-            attemptToDetermineBestCxxPlatform);
+            attemptToDetermineBestCxxPlatform,
+            halideBuckConfig);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
             .createXcodeProjects();

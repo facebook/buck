@@ -22,11 +22,16 @@ import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessMode;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class HalideLibraryBuilder extends
     AbstractCxxSourceBuilder<HalideLibraryDescription.Arg, HalideLibraryBuilder> {
@@ -42,12 +47,26 @@ public class HalideLibraryBuilder extends
       target);
   }
 
-  public HalideLibraryBuilder(BuildTarget target) {
-    this(target, createDefaultHalideConfig(), createDefaultPlatforms());
+  public HalideLibraryBuilder(BuildTarget target) throws IOException {
+    this(
+      target,
+      createDefaultHalideConfig(new FakeProjectFilesystem()),
+      createDefaultPlatforms());
   }
 
-  public static HalideBuckConfig createDefaultHalideConfig() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+  public static HalideBuckConfig createDefaultHalideConfig(
+      ProjectFilesystem filesystem) throws IOException {
+    Path path = Paths.get("fake_compile_script.sh");
+    filesystem.touch(path);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+      .setSections(
+        ImmutableMap.of(
+          HalideBuckConfig.HALIDE_SECTION_NAME,
+          ImmutableMap.of(
+            HalideBuckConfig.HALIDE_XCODE_COMPILE_SCRIPT_KEY,
+            path.toString())))
+      .setFilesystem(filesystem)
+      .build();
     return new HalideBuckConfig(buckConfig);
   }
 

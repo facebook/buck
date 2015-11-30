@@ -28,6 +28,7 @@ import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -804,6 +805,7 @@ public class ProjectCommand extends BuildCommand {
       }
 
       AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+      HalideBuckConfig halideBuckConfig = new HalideBuckConfig(params.getBuckConfig());
 
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           params.getCell().getFilesystem(),
@@ -827,7 +829,8 @@ public class ProjectCommand extends BuildCommand {
               return sourcePathResolverCache.getUnchecked(input);
             }
           },
-          params.getBuckEventBus());
+          params.getBuckEventBus(),
+          halideBuckConfig);
       generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =

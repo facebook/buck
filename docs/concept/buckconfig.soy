@@ -62,6 +62,7 @@ The following sections are recognized by Buck:
     'cxx',
     'download',
     'go',
+    'halide',
     'java',
     'httpserver',
     'log',
@@ -213,9 +214,9 @@ This section includes settings that control settings that are specific to Apple 
 </pre>{/literal}
 
 <p>
-  <code>default_debug_info_format</code> setting controls the default debug info format. If you 
-  don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug data 
-  by specifying <code>NONE</code> value. 
+  <code>default_debug_info_format</code> setting controls the default debug info format. If you
+  don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug data
+  by specifying <code>NONE</code> value.
 </p>
 {literal}<pre class = "prettyprint lang-ini">
 [apple]
@@ -584,6 +585,30 @@ This section defines the go <code>compiler</code> and <code>linker</code> used b
 [go]
   compiler = /usr/local/libexec/go/pkg/tool/darwin_amd64/compile
   linker = /usr/local/libexec/go/pkg/tool/darwin_amd64/link
+</pre>{/literal}
+
+{call .section}{param title: 'halide' /}{/call}
+
+<p>
+  This section defines the C++ platform flavor to Halide target mapping. Each
+  key should begin with the prefix <code>target_</code>, followed by the flavor
+  name. The corresponding value should be the Halide target string to use when
+  building for that flavor. For example:
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[halide]
+  target_iphonesimulator-x86_64 = x86-64-osx
+  target_iphoneos-arm64         = arm-64-ios
+</pre>{/literal}
+
+<p>
+  This section may also include an optional path to a shell script which should
+  be used for invoking the Halide AOT "compiler" when building projects that
+  include Halide targets in Xcode. For example:
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[halide]
+  xcode_compile_script = //path/to/script.sh
 </pre>{/literal}
 
 {call .section}{param title: 'java' /}{/call}

@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
@@ -144,7 +145,6 @@ public class ProjectGenerator {
   public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME = "--config";
   public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE =
       "cxx.default_platform=$PLATFORM_NAME-$arch";
-  private static final String HALIDE_COMPILER_TEMPLATE = "halide-compiler.st";
   public static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   public enum Option {
@@ -252,6 +252,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
   private final Map<String, String> gidsToTargetNames;
+  private final HalideBuckConfig halideBuckConfig;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -269,7 +270,8 @@ public class ProjectGenerator {
       CxxPlatform defaultCxxPlatform,
       Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
       BuckEventBus buckEventBus,
-      boolean attemptToDetermineBestCxxPlatform) {
+      boolean attemptToDetermineBestCxxPlatform,
+      HalideBuckConfig halideBuckConfig) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -319,6 +321,7 @@ public class ProjectGenerator {
 
     targetConfigNamesBuilder = ImmutableSet.builder();
     gidsToTargetNames = new HashMap<>();
+    this.halideBuckConfig = halideBuckConfig;
   }
 
   /**
@@ -685,20 +688,11 @@ public class ProjectGenerator {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
     String productName = getProductNameForBuildTarget(buildTarget);
     Path outputPath = getHalideOutputPath(buildTarget);
-    BuildTarget compilerTarget =
-      HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
-    Path compilerPath = BuildTargets.getGenPath(compilerTarget, "%s");
 
+    Path scriptPath = halideBuckConfig.getXcodeCompileScriptPath();
+    Optional<String> script = projectFilesystem.readFileIfItExists(scriptPath);
     PBXShellScriptBuildPhase scriptPhase = new PBXShellScriptBuildPhase();
-    ST template = new ST(
-      Resources.toString(
-        Resources.getResource(ProjectGenerator.class, HALIDE_COMPILER_TEMPLATE),
-        Charsets.UTF_8));
-    template.add("repo_root", projectFilesystem.getRootPath());
-    template.add("path_to_compiler", compilerPath);
-    template.add("output_dir", outputPath);
-    template.add("func_name", buildTarget.getShortName());
-    scriptPhase.setShellScript(template.render());
+    scriptPhase.setShellScript(script.or(""));
 
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
       pathRelativizer,
@@ -715,6 +709,9 @@ public class ProjectGenerator {
       throw new HumanReadableException(e);
     }
 
+    BuildTarget compilerTarget =
+      HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
+    Path compilerPath = BuildTargets.getGenPath(compilerTarget, "%s");
     ImmutableMap<String, String> appendedConfig = ImmutableMap.<String, String>of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.<String, String>of();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder =
@@ -722,6 +719,9 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put(
       "REPO_ROOT",
       projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+    defaultSettingsBuilder.put("HALIDE_COMPILER_PATH", compilerPath.toString());
+    defaultSettingsBuilder.put("HALIDE_OUTPUT_PATH", outputPath.toString());
+    defaultSettingsBuilder.put("HALIDE_FUNC_NAME", buildTarget.getShortName());
     defaultSettingsBuilder.put(PRODUCT_NAME, productName);
 
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =

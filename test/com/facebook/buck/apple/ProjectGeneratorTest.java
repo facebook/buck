@@ -65,6 +65,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
@@ -147,6 +148,7 @@ public class ProjectGeneratorTest {
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
+  private HalideBuckConfig halideBuckConfig;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -168,6 +170,7 @@ public class ProjectGeneratorTest {
         "",
         Paths.get("bar.png"));
     fakeProjectFilesystem.touch(Paths.get("Base.lproj", "Bar.storyboard"));
+    halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(fakeProjectFilesystem);
   }
 
   @Test
@@ -3245,7 +3248,8 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false)
+        false,
+        halideBuckConfig)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -3446,7 +3450,8 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false);
+        false,
+        halideBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3521,7 +3526,8 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false);
+        false,
+        halideBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3587,7 +3593,8 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false);
+        false,
+        halideBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3956,7 +3963,8 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false);
+        false,
+        halideBuckConfig);
   }
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
