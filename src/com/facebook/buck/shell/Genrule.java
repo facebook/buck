@@ -41,6 +41,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -261,6 +262,18 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     }
   }
 
+  private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {
+    return arg
+        .transform(Arg.stringListFunction())
+        .transform(
+            new Function<ImmutableList<String>, String>() {
+              @Override
+              public String apply(ImmutableList<String> input) {
+                return Joiner.on(' ').join(input);
+              }
+            });
+  }
+
   public AbstractGenruleStep createGenruleStep() {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -269,9 +282,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     return new AbstractGenruleStep(
         getBuildTarget(),
         new CommandString(
-            cmd.transform(Arg.stringifyFunction()),
-            bash.transform(Arg.stringifyFunction()),
-            cmdExe.transform(Arg.stringifyFunction())),
+            flattenToSpaceSeparatedString(cmd),
+            flattenToSpaceSeparatedString(bash),
+            flattenToSpaceSeparatedString(cmdExe)),
         absolutePathToSrcDirectory) {
       @Override
       protected void addEnvironmentVariables(

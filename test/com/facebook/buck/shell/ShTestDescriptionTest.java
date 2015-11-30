@@ -27,7 +27,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -53,8 +52,7 @@ public class ShTestDescriptionTest {
         shTest.getDeps(),
         Matchers.contains(dep));
     assertThat(
-        FluentIterable.from(shTest.getArgs())
-            .transform(Arg.stringifyFunction()),
+        Arg.stringify(shTest.getArgs()),
         Matchers.contains(
             pathResolver.getAbsolutePath(
                 new BuildTargetSourcePath(dep.getBuildTarget())).toString()));

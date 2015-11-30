@@ -33,8 +33,8 @@ public class StringArg extends Arg {
   }
 
   @Override
-  public String stringify() {
-    return arg;
+  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    builder.add(arg);
   }
 
   @Override

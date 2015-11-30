@@ -73,8 +73,7 @@ public class OCamlLinkStep extends ShellStep {
 
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-    for (Arg linkInputArg : depInput) {
-      String linkInput = linkInputArg.stringify();
+    for (String linkInput : Arg.stringify(depInput)) {
       if (isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA)) {
         continue;
       }
@@ -117,7 +116,7 @@ public class OCamlLinkStep extends ShellStep {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),
                 FluentIterable.from(nativeDepInput)
-                    .transform(Arg.stringifyFunction())))
+                    .transformAndConcat(Arg.stringListFunction())))
         .build();
   }
 

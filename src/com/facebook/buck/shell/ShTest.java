@@ -118,9 +118,7 @@ public class ShTest
         new RunShTestAndRecordResultStep(
             getProjectFilesystem(),
             getResolver().getAbsolutePath(test),
-            FluentIterable.from(args)
-                .transform(Arg.stringifyFunction())
-                .toList(),
+            Arg.stringify(args),
             getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);
@@ -206,10 +204,7 @@ public class ShTest
         .setTarget(getBuildTarget())
         .setType("custom")
         .addCommand(getResolver().getAbsolutePath(test).toString())
-        .addAllCommand(
-            FluentIterable.from(args)
-                .transform(Arg.stringifyFunction())
-                .toList())
+        .addAllCommand(Arg.stringify(args))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

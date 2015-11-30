@@ -654,10 +654,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CXX_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC);
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList()
-            .get(0),
+        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
         Matchers.endsWith(getStaticLibraryPath(libBuilder.build().getConstructorArg()).toString()));
   }
 
@@ -675,10 +672,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         CXX_PLATFORM,
         Linker.LinkableDepType.STATIC_PIC);
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList()
-            .get(0),
+        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
         Matchers.endsWith(
             getStaticPicLibraryPath(
                 libBuilder.build().getConstructorArg()).toString()));
@@ -698,10 +692,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED);
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList()
-            .get(0),
+        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
         Matchers.endsWith(".a"));
     assertThat(
         prebuiltCxxLibrary.getSharedLibraries(

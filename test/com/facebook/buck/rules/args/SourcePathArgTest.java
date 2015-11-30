@@ -42,7 +42,9 @@ public class SourcePathArgTest {
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     SourcePathArg arg = new SourcePathArg(resolver, path);
-    assertThat(arg.stringify(), Matchers.equalTo(resolver.getAbsolutePath(path).toString()));
+    assertThat(
+        Arg.stringListFunction().apply(arg),
+        Matchers.contains(resolver.getAbsolutePath(path).toString()));
   }
 
   @Test

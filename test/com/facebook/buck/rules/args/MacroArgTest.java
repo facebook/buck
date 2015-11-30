@@ -56,7 +56,7 @@ public class MacroArgTest {
             resolver,
             filesystem,
             "$(macro)");
-    assertThat(arg.stringify(), Matchers.equalTo("expanded"));
+    assertThat(Arg.stringListFunction().apply(arg), Matchers.contains("expanded"));
   }
 
   @Test

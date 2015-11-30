@@ -482,14 +482,10 @@ public class CxxLinkableEnhancerTest {
             Linker.LinkableDepType.STATIC,
             Predicates.instanceOf(NativeLinkable.class));
     assertThat(
-        FluentIterable.from(bottomInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(bottomInput.getArgs()),
         hasItem(sentinel));
     assertThat(
-        FluentIterable.from(totalInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(totalInput.getArgs()),
         not(hasItem(sentinel)));
   }
 

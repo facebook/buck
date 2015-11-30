@@ -39,8 +39,8 @@ public class SourcePathArg extends Arg {
   }
 
   @Override
-  public String stringify() {
-    return pathResolver.getAbsolutePath(path).toString();
+  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    builder.add(pathResolver.getAbsolutePath(path).toString());
   }
 
   @Override

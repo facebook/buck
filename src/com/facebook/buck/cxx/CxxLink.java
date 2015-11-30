@@ -30,7 +30,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -70,9 +69,7 @@ public class CxxLink
         new CxxPrepareForLinkStep(
             argFilePath,
             output,
-            FluentIterable.from(args)
-                .transform(Arg.stringifyFunction())
-                .toList()),
+            Arg.stringify(args)),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getEnvironment(getResolver()),
@@ -99,8 +96,6 @@ public class CxxLink
 
   @VisibleForTesting
   protected ImmutableList<String> getArgs() {
-    return FluentIterable.from(args)
-        .transform(Arg.stringifyFunction())
-        .toList();
+    return Arg.stringify(args);
   }
 }

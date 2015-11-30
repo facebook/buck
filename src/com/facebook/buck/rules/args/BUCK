@@ -1,13 +1,7 @@
 java_library(
   name = 'args',
   visibility = [ 'PUBLIC' ],
-  srcs = [
-    'Arg.java',
-    'MacroArg.java',
-    'SanitizedArg.java',
-    'SourcePathArg.java',
-    'StringArg.java',
-  ],
+  srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/io:io',

@@ -394,7 +394,7 @@ public class CxxLibraryDescriptionTest {
     Linker linker = cxxPlatform.getLd();
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
-            .transform(Arg.stringifyFunction())
+            .transformAndConcat(Arg.stringListFunction())
             .filter(Predicates.not(Predicates.equalTo("sentinel")))
             .toList();
 
@@ -418,9 +418,7 @@ public class CxxLibraryDescriptionTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC);
     assertThat(
-        FluentIterable.from(input.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(input.getArgs()),
         Matchers.not(Matchers.hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
 
     // Create a cxx library using link whole.
@@ -446,9 +444,7 @@ public class CxxLibraryDescriptionTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC);
     assertThat(
-        FluentIterable.from(linkWholeInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(linkWholeInput.getArgs()),
         Matchers.hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
   }
 
@@ -851,10 +847,7 @@ public class CxxLibraryDescriptionTest {
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.STATIC_PIC);
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList()
-            .get(0),
+        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
         Matchers.containsString("static-pic"));
   }
 
@@ -1031,9 +1024,7 @@ public class CxxLibraryDescriptionTest {
             .toSet(),
         Matchers.hasItem(loc));
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(nativeLinkableInput.getArgs()),
         Matchers.hasItem(
             Matchers.containsString(
                 Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
@@ -1083,9 +1074,7 @@ public class CxxLibraryDescriptionTest {
             .toSet(),
         Matchers.hasItem(loc));
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(nativeLinkableInput.getArgs()),
         Matchers.hasItem(
             Matchers.containsString(
                 Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
@@ -1138,9 +1127,7 @@ public class CxxLibraryDescriptionTest {
             .toSet(),
         Matchers.not(Matchers.hasItem(loc)));
     assertThat(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .transform(Arg.stringifyFunction())
-            .toList(),
+        Arg.stringify(nativeLinkableInput.getArgs()),
         Matchers.not(
             Matchers.hasItem(
                 Matchers.containsString(

@@ -52,8 +52,8 @@ public class SanitizedArg extends Arg {
   }
 
   @Override
-  public String stringify() {
-    return unsanitzed;
+  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    builder.add(unsanitzed);
   }
 
   @Override

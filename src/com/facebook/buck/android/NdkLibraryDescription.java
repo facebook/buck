@@ -226,9 +226,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // NDK build.
       String localLdflags =
           Joiner.on(' ').join(
-              escapeForMakefile(
-                  FluentIterable.from(nativeLinkableInput.getArgs())
-                      .transform(com.facebook.buck.rules.args.Arg.stringifyFunction())));
+              escapeForMakefile(com.facebook.buck.rules.args.Arg.stringify(
+                      nativeLinkableInput.getArgs())));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {

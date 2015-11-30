@@ -50,8 +50,8 @@ public class SanitizedArgTest {
   public void stringify() {
     SanitizedArg arg = new SanitizedArg(Functions.constant("sanitized"), "unsanitized");
     assertThat(
-        arg.stringify(),
-        Matchers.equalTo("unsanitized"));
+        Arg.stringListFunction().apply(arg),
+        Matchers.contains("unsanitized"));
   }
 
   @Test

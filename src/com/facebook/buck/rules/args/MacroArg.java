@@ -60,9 +60,9 @@ public class MacroArg extends Arg {
   }
 
   @Override
-  public String stringify() {
+  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
     try {
-      return expander.expand(target, cellNames, resolver, filesystem, unexpanded);
+      builder.add(expander.expand(target, cellNames, resolver, filesystem, unexpanded));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
