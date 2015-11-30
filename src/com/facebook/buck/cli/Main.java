@@ -1314,7 +1314,31 @@ public final class Main {
     }
   }
 
+  private static void installUncaughtExceptionHandler(final Optional<NGContext> context) {
+    // Override the default uncaught exception handler for background threads to log
+    // to java.util.logging then exit the JVM with an error code.
+    //
+    // (We do this because the default is to just print to stderr and not exit the JVM,
+    // which is not safe in a multithreaded environment if the thread held a lock or
+    // resource which other threads need.)
+    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+          LOG.error(e, "Uncaught exception from thread %s", t);
+          if (context.isPresent()) {
+            // Shut down the Nailgun server and make sure it stops trapping System.exit().
+            //
+            // We pass false for exitVM because otherwise Nailgun exits with code 0.
+            context.get().getNGServer().shutdown(/* exitVM */ false);
+          }
+          System.exit(FAIL_EXIT_CODE);
+        }
+    });
+  }
+
   private void runMainThenExit(String[] args, Optional<NGContext> context) {
+    installUncaughtExceptionHandler(context);
+
     Path projectRoot = Paths.get(".");
     int exitCode = FAIL_EXIT_CODE;
     BuildId buildId = getBuildId(context);
