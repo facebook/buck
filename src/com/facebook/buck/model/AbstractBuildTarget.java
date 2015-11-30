@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -160,12 +161,15 @@ abstract class AbstractBuildTarget
   }
 
   @Override
-  public int compareTo(AbstractBuildTarget target) {
-    if (this == target) {
+  public int compareTo(AbstractBuildTarget o) {
+    if (this == o) {
       return 0;
     }
 
-    return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
+    return ComparisonChain.start()
+        .compare(getUnflavoredBuildTarget(), o.getUnflavoredBuildTarget())
+        .compare(getFlavors(), o.getFlavors(), Ordering.<Flavor>natural().lexicographical())
+        .result();
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 
 import org.immutables.value.Value;
 
@@ -141,12 +142,20 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   }
 
   @Override
-  public int compareTo(AbstractUnflavoredBuildTarget target) {
-    if (this == target) {
+  public int compareTo(AbstractUnflavoredBuildTarget o) {
+    if (this == o) {
       return 0;
     }
 
-    return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
+    ComparisonChain comparison = ComparisonChain.start()
+        .compareTrueFirst(getCell().isPresent(), o.getCell().isPresent());
+    if (getCell().isPresent() && o.getCell().isPresent()) {
+      comparison = comparison.compare(getCell().get(), o.getCell().get());
+    }
+    return comparison
+        .compare(getBaseName(), o.getBaseName())
+        .compare(getShortName(), o.getShortName())
+        .result();
   }
 
 }
