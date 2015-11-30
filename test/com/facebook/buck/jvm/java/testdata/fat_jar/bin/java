@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import sys
+import subprocess
+
+print("Running java wrapper")
+sys.stdout.flush()
+sys.exit(subprocess.call(["java"] + sys.argv[1:]))

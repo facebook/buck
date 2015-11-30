@@ -72,8 +72,10 @@ public class FatJarMain {
   private static List<String> getCommand(Path jar, String[] args) throws Exception {
     List<String> cmd = new ArrayList<String>();
 
-    // Lookup the Java binary used to start us.
-    cmd.add(Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java").toString());
+    // Look for the Java binary given in an alternate location if given,
+    // otherwise use the Java binary that started us
+    String javaHome = System.getProperty("buck.fatjar.java.home", System.getProperty("java.home"));
+    cmd.add(Paths.get(javaHome).resolve("bin").resolve("java").toString());
     // Pass through any VM arguments to the child process
     cmd.addAll(getJVMArguments());
     cmd.add("-jar");

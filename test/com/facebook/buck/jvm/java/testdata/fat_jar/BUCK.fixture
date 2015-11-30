@@ -79,7 +79,24 @@ java_library(
   srcs = [
     'LibJvmArgs.java',
   ],
+)
+
+java_binary(
+  name = 'bin-alternate-java',
+  main_class = 'LibAlternateJava',
+  deps = [
+    ':lib-alternate-java',
+  ],
+)
+
+java_library(
+  name = 'lib-alternate-java',
+  srcs = [
+    'LibAlternateJava.java',
+  ],
   deps = [
     ':lib',
   ],
 )
+
+

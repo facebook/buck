@@ -237,8 +237,8 @@ public class ProjectWorkspace {
       String... args)  throws IOException, InterruptedException {
     List<String> command = ImmutableList.<String>builder()
         .add("java")
-        .add("-jar")
         .addAll(vmArgs)
+        .add("-jar")
         .add(jar.toString())
         .addAll(ImmutableList.copyOf(args))
         .build();

@@ -86,4 +86,15 @@ public class JavaBinaryIntegrationTest {
     ProcessExecutor.Result result = workspace.runJar(jar, args);
     assertEquals(expected, result.getStdout().get().trim());
   }
+
+  @Test
+  public void fatJarWithAlternateJavaBin() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
+    workspace.setUp();
+    Path jar = workspace.buildAndReturnOutput("//:bin-alternate-java");
+    String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRootPath().toString();
+    ProcessExecutor.Result result = workspace.runJar(jar, ImmutableList.of(javaHomeArg));
+    assertEquals("Running java wrapper\nRunning inner jar", result.getStdout().get().trim());
+  }
 }
