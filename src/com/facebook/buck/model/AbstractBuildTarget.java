@@ -44,6 +44,9 @@ abstract class AbstractBuildTarget
     Comparable<AbstractBuildTarget>,
     HasBuildTarget {
 
+  private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
+      Ordering.<Flavor>natural().lexicographical();
+
   @Value.Parameter
   public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
 
@@ -168,7 +171,7 @@ abstract class AbstractBuildTarget
 
     return ComparisonChain.start()
         .compare(getUnflavoredBuildTarget(), o.getUnflavoredBuildTarget())
-        .compare(getFlavors(), o.getFlavors(), Ordering.<Flavor>natural().lexicographical())
+        .compare(getFlavors(), o.getFlavors(), LEXICOGRAPHICAL_ORDERING)
         .result();
   }
 

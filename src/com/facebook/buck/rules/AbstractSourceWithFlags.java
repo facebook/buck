@@ -33,6 +33,9 @@ import java.util.List;
 @BuckStyleImmutable
 abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithFlags> {
 
+  private static final Ordering<Iterable<String>> LEXICOGRAPHICAL_ORDERING =
+      Ordering.<String>natural().lexicographical();
+
   @Value.Parameter
   public abstract SourcePath getSourcePath();
 
@@ -47,7 +50,7 @@ abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithF
 
     return ComparisonChain.start()
         .compare(this.getSourcePath(), that.getSourcePath())
-        .compare(this.getFlags(), that.getFlags(), Ordering.<String>natural().lexicographical())
+        .compare(this.getFlags(), that.getFlags(), LEXICOGRAPHICAL_ORDERING)
         .result();
   }
 
