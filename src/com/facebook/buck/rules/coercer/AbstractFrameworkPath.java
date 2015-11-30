@@ -112,40 +112,6 @@ abstract class AbstractFrameworkPath implements
     };
   }
 
-  public static Function<FrameworkPath, Path> getExpandedSearchPathFunction(
-      final Function<SourcePath, Path> sourcePathResolver,
-      final Function<SourceTreePath, Path> sourceTreePathResolver) {
-    return new Function<FrameworkPath, Path>() {
-      @Override
-      public Path apply(FrameworkPath input) {
-        return getExpandFunction(
-            sourcePathResolver,
-            sourceTreePathResolver
-        ).apply(input).getParent();
-      }
-    };
-  }
-
-  public static Function<FrameworkPath, Path> getExpandFunction(
-      final Function<SourcePath, Path> sourcePathResolver,
-      final Function<SourceTreePath, Path> sourceTreePathResolver) {
-    return new Function<FrameworkPath, Path>() {
-      @Override
-      public Path apply(FrameworkPath input) {
-        switch (input.getType()) {
-          case SOURCE_TREE_PATH:
-            return Preconditions.checkNotNull(
-                sourceTreePathResolver.apply(input.getSourceTreePath().get()));
-          case SOURCE_PATH:
-            return Preconditions
-                .checkNotNull(sourcePathResolver.apply(input.getSourcePath().get()));
-          default:
-            throw new RuntimeException("Unhandled type: " + input.getType());
-        }
-      }
-    };
-  }
-
   @Value.Check
   protected void check() {
     switch (getType()) {
