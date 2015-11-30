@@ -21,3 +21,9 @@ go_test(
   srcs = ['panic_test.go'],
   deps = [':lib'],
 )
+
+go_test(
+  name = 'test-spinning',
+  srcs = ['test_spinning.go'],
+  test_rule_timeout_ms = 500,
+)

@@ -37,6 +37,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -55,6 +56,7 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
   private ImmutableSortedSet<Label> labels;
   private ImmutableSet<BuildRule> sourceUnderTest;
   private final Path testBinary;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public DTest(
       BuildRuleParams params,
@@ -62,11 +64,13 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
       Path testBinary,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
+      Optional<Long> testRuleTimeoutMs,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver);
     this.contacts = contacts;
     this.labels = labels;
     this.sourceUnderTest = sourceUnderTest;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testBinary = testBinary;
   }
 
@@ -210,6 +214,7 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
               getProjectFilesystem(),
               getShellCommand(),
               getPathToTestExitCode(),
+              testRuleTimeoutMs,
               getPathToTestOutput()));
     }
   }

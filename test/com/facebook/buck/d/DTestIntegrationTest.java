@@ -59,6 +59,21 @@ public class DTestIntegrationTest {
   }
 
   @Test
+  public void testDTestTimeout() throws Exception {
+    Assumptions.assumeDCompilerUsable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "test", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:test-spinning");
+    result.assertSpecialExitCode("test should fail", 42);
+    String stderr = result.getStderr();
+    assertTrue(stderr, stderr.contains("Timed out running test command"));
+  }
+
+  @Test
   public void withCxx() throws Exception {
     Assumptions.assumeDCompilerUsable();
 

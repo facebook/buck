@@ -39,11 +39,14 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxPlatform cxxPlatform;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public DTestDescription(
       DBuckConfig dBuckConfig,
+      Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
   }
 
@@ -87,6 +90,7 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
         binaryRule.getPathToOutput(),
         args.contacts.get(),
         args.labels.get(),
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         buildRuleResolver.getAllRules(
             args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())));
   }
@@ -97,6 +101,7 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
   }
 }

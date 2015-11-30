@@ -534,13 +534,18 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs));
     builder.register(new DBinaryDescription(dBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig));
-    builder.register(new DTestDescription(dBuckConfig, defaultCxxPlatform));
+    builder.register(new DTestDescription(
+            dBuckConfig, defaultTestRuleTimeoutMs, defaultCxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
     builder.register(new GoBinaryDescription(goBuckConfig, defaultCxxPlatform));
     builder.register(new GoLibraryDescription(goBuckConfig));
-    builder.register(new GoTestDescription(goBuckConfig, defaultCxxPlatform));
+    builder.register(
+        new GoTestDescription(
+            goBuckConfig,
+            defaultTestRuleTimeoutMs,
+            defaultCxxPlatform));
     builder.register(new GwtBinaryDescription());
     builder.register(
       new HalideLibraryDescription(

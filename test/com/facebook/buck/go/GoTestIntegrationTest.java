@@ -18,11 +18,11 @@ package com.facebook.buck.go;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,6 +61,14 @@ public class GoTestIntegrationTest {
         "`buck test` should fail because TestAdd2() failed.",
         result2.getStderr(),
         containsString("TestAdd2"));
+  }
+
+  @Test
+  public void testGoTestTimeout() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
+    result.assertSpecialExitCode("test should fail", 42);
+    String stderr = result.getStderr();
+    assertTrue(stderr, stderr.contains("Timed out running test command"));
   }
 
   @Test

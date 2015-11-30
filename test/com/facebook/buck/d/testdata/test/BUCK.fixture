@@ -19,6 +19,17 @@ d_test(
 )
 
 d_test(
+  name='test-spinning',
+  srcs=[
+    'test_spinning.d',
+  ],
+  deps=[
+    ':lib',
+  ],
+  test_rule_timeout_ms = 500,
+)
+
+d_test(
   name='with_cxx',
   srcs=[
     'with_cxx.d',

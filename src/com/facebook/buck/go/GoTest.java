@@ -67,6 +67,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   private final GoBinary testMain;
 
   private final ImmutableSet<Label> labels;
+  private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   @AddToRuleKey
   private final boolean runTestsSeparately;
@@ -77,11 +78,13 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       GoBinary testMain,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
+      Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately) {
     super(buildRuleParams, resolver);
     this.testMain = testMain;
     this.labels = labels;
     this.contacts = contacts;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestsSeparately = runTestsSeparately;
   }
 
@@ -96,6 +99,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
+
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
         new GoTestStep(
@@ -107,6 +111,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
                 .build(),
             testMain.getExecutableCommand().getEnvironment(getResolver()),
             getPathToTestExitCode(),
+            testRuleTimeoutMs,
             getPathToTestResults()));
   }
 

@@ -46,11 +46,15 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
   private static final BuildRuleType TYPE = BuildRuleType.of("go_test");
 
   private final GoBuckConfig goBuckConfig;
-
+  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
 
-  public GoTestDescription(GoBuckConfig goBuckConfig, CxxPlatform cxxPlatform) {
+  public GoTestDescription(
+      GoBuckConfig goBuckConfig,
+      Optional<Long> defaultTestRuleTimeoutMs,
+      CxxPlatform cxxPlatform) {
     this.goBuckConfig = goBuckConfig;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
   }
 
@@ -150,6 +154,7 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
         testMain,
         args.labels.get(),
         args.contacts.get(),
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.runTestSeparately.or(false));
   }
 
@@ -162,6 +167,7 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
+    public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;
   }
 }

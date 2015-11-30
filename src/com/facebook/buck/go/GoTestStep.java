@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
@@ -45,17 +46,20 @@ public class GoTestStep implements Step {
   private final ImmutableMap<String, String> env;
   private final Path exitCode;
   private final Path output;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public GoTestStep(
       ProjectFilesystem filesystem,
       ImmutableList<String> command,
       ImmutableMap<String, String> env,
       Path exitCode,
+      Optional<Long> testRuleTimeoutMs,
       Path output) {
     this.filesystem = filesystem;
     this.command = command;
     this.env = env;
     this.exitCode = exitCode;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.output = output;
   }
 
@@ -91,8 +95,12 @@ public class GoTestStep implements Step {
         process,
         options,
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutMs */ testRuleTimeoutMs,
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+
+    if (result.isTimedOut()) {
+      throw new HumanReadableException("Timed out running test command %s", command);
+    }
 
     // Since test binaries return a non-zero exit code when unittests fail, save the exit code
     // to a file rather than signalling a step failure.
