@@ -195,6 +195,7 @@ java_immutables_library(
     'CalculateAbiStep.java',
     'CopyResourcesStep.java',
     'GenerateCodeCoverageReportStep.java',
+    'JavacOptionsAmender.java',
     'JavacStepFactory.java',
     'JacocoConstants.java',
     'JarDirectoryStep.java',
