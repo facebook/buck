@@ -8,9 +8,10 @@
       <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Plugins SDK" jdkType="IDEA JDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="jetty-all-9.2.10.v20150310" level="project" />
+    <orderEntry type="library" exported="" name="jetty-all-9.2.10.v20150310" level="project" />
   </component>
 </module>
