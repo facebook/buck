@@ -16,6 +16,8 @@
 
 package com.facebook.buck.model;
 
+import com.google.common.collect.ComparisonChain;
+
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -71,11 +73,14 @@ public class Pair<FIRST, SECOND> {
     return new Comparator<Pair<FIRST, SECOND>>() {
       @Override
       public int compare(Pair<FIRST, SECOND> o1, Pair<FIRST, SECOND> o2) {
-        int res = o1.first.compareTo(o2.first);
-        if (res != 0) {
-          return res;
+        if (o1 == o2) {
+          return 0;
         }
-        return o1.second.compareTo(o2.second);
+
+        return ComparisonChain.start()
+            .compare(o1.first, o2.first)
+            .compare(o1.second, o2.second)
+            .result();
       }
     };
   }
