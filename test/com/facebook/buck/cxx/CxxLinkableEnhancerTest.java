@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -579,12 +578,9 @@ public class CxxLinkableEnhancerTest {
     SourcePathResolver resolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
-    Function<
-        ImmutableSortedSet<FrameworkPath>,
-        ImmutableList<String>> frameworksToLinkerFlagsTransformer =
-        CxxLinkableEnhancer.frameworksToLinkerFlagsFunction(resolver);
 
-    ImmutableList<String> linkerFlags = frameworksToLinkerFlagsTransformer.apply(
+    Arg linkerFlags = CxxLinkableEnhancer.frameworksToLinkerArg(
+        resolver,
         ImmutableSortedSet.of(
             FrameworkPath.ofSourceTreePath(
                 new SourceTreePath(
@@ -598,6 +594,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.of(
             "-framework", "XCTest",
             "-framework", "Bar"),
-        linkerFlags);
+        Arg.stringListFunction().apply(linkerFlags));
   }
 }

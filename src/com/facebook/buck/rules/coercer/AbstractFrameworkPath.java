@@ -17,9 +17,12 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -34,7 +37,9 @@ import java.nio.file.Paths;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath> {
+abstract class AbstractFrameworkPath implements
+    Comparable<AbstractFrameworkPath>,
+    RuleKeyAppendable {
   /**
    * The type of framework entry this object represents.
    */
@@ -175,6 +180,15 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
       default:
         throw new RuntimeException("Unhandled type: " + getType());
     }
+  }
+
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    builder.setReflectively("sourcePath", getSourcePath());
+    builder.setReflectively(
+        "sourceTree",
+        getSourceTreePath().transform(Functions.toStringFunction()));
+    return builder;
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {

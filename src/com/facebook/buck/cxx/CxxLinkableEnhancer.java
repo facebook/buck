@@ -34,11 +34,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -190,9 +190,8 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allLibraries,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    Optional<ImmutableSortedSet<FrameworkPath>> libraries = Optional.of(allLibraries);
     ImmutableSet<Path> librarySearchPaths = CxxDescriptionEnhancer.getFrameworkSearchPaths(
-        libraries,
+        Optional.of(allLibraries),
         cxxPlatform,
         resolver);
 
@@ -205,12 +204,7 @@ public class CxxLinkableEnhancer {
     }
 
     // Add all libraries link args
-    ImmutableList<String> librariesStringArgs = libraries
-        .transform(librariesToLinkerFlagsFunction(resolver))
-        .get();
-    for (String libraryStringArg : librariesStringArgs) {
-      argsBuilder.add(new StringArg(libraryStringArg));
-    }
+    argsBuilder.add(librariesToLinkerArg(resolver, allLibraries));
   }
 
   private static ImmutableSet<Path> getLibrarySearchDirectories(ImmutableSet<Path> libraries) {
@@ -233,10 +227,9 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allFrameworks,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    Optional<ImmutableSortedSet<FrameworkPath>> frameworks = Optional.of(allFrameworks);
     // Add all framework search path args
     ImmutableSet<Path> frameworkSearchPaths = CxxDescriptionEnhancer.getFrameworkSearchPaths(
-        frameworks,
+        Optional.of(allFrameworks),
         cxxPlatform,
         resolver);
     for (Path unsanitizedFrameworkSearchPath : frameworkSearchPaths) {
@@ -248,74 +241,45 @@ public class CxxLinkableEnhancer {
     }
 
     // Add all framework link args
-    ImmutableList<String> frameworkStringArgs = frameworks
-        .transform(frameworksToLinkerFlagsFunction(resolver))
-        .get();
-    for (String frameworkStringArg : frameworkStringArgs) {
-      argsBuilder.add(new StringArg(frameworkStringArg));
-    }
+    argsBuilder.add(frameworksToLinkerArg(resolver, allFrameworks));
   }
 
-  public static final Predicate<String> CONTAINS_LIBRARY_NAME =
-      new Predicate<String>() {
-        @Override
-        public boolean apply(@Nullable String input) {
-          return (input != null && !input.equals("-l"));
+  @VisibleForTesting
+  static Arg librariesToLinkerArg(
+      final SourcePathResolver resolver,
+      ImmutableSortedSet<FrameworkPath> frameworkPaths) {
+    return new FrameworkPathArg(resolver, frameworkPaths) {
+      @Override
+      public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+        for (FrameworkPath frameworkPath : frameworkPaths) {
+
+          String libName = MorePaths.stripPathPrefixAndExtension(
+              frameworkPath.getFileName(resolver.getAbsolutePathFunction()),
+              "lib");
+          // libraries set can contain path-qualified libraries, or just library
+          // search paths.
+          // Assume these end in '../lib' and filter out here.
+          if (libName.isEmpty()) {
+            continue;
+          }
+          builder.add("-l" + libName);
         }
-      };
-
-  @VisibleForTesting
-  static Function<
-      ImmutableSortedSet<FrameworkPath>,
-      ImmutableList<String>> librariesToLinkerFlagsFunction(final SourcePathResolver resolver) {
-    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
-      @Override
-      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
-        return FluentIterable
-            .from(input)
-            .transform(linkerFlagsForLibraryFunction(resolver.deprecatedPathFunction()))
-            // libraries set can contain path-qualified libraries, or just library search paths.
-            // Assume these end in '../lib' and filter out here.
-            .filter(CONTAINS_LIBRARY_NAME)
-            .toList();
-      }
-    };
-  }
-
-  private static Function<FrameworkPath, String> linkerFlagsForLibraryFunction(
-      final Function<SourcePath, Path> resolver) {
-    return new Function<FrameworkPath, String>() {
-      @Override
-      public String apply(FrameworkPath input) {
-        return "-l" + MorePaths.stripPathPrefixAndExtension(input.getFileName(resolver), "lib");
       }
     };
   }
 
   @VisibleForTesting
-  static Function<
-      ImmutableSortedSet<FrameworkPath>,
-      ImmutableList<String>> frameworksToLinkerFlagsFunction(final SourcePathResolver resolver) {
-    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
+  static Arg frameworksToLinkerArg(
+      final SourcePathResolver resolver,
+      ImmutableSortedSet<FrameworkPath> frameworkPaths) {
+    return new FrameworkPathArg(resolver, frameworkPaths) {
       @Override
-      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
-        return FluentIterable
-            .from(input)
-            .transformAndConcat(
-                linkerFlagsForFrameworkPathFunction(resolver.deprecatedPathFunction()))
-            .toList();
+      public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+        for (FrameworkPath frameworkPath : frameworkPaths) {
+          builder.add("-framework");
+          builder.add(frameworkPath.getName(resolver.getAbsolutePathFunction()));
+        }
       }
     };
   }
-
-  private static Function<FrameworkPath, Iterable<String>> linkerFlagsForFrameworkPathFunction(
-      final Function<SourcePath, Path> resolver) {
-    return new Function<FrameworkPath, Iterable<String>>() {
-      @Override
-      public Iterable<String> apply(FrameworkPath input) {
-        return ImmutableList.of("-framework", input.getName(resolver));
-      }
-    };
-  }
-
 }
