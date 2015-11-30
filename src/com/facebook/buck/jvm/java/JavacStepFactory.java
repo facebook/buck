@@ -18,61 +18,72 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class JavacStepFactory {
-  private Path outputDirectory;
-  private Optional<Path> workingDirectory;
-  private ImmutableSortedSet<Path> javaSourceFilePaths;
-  private Optional<Path> pathToSrcsList;
-  private ImmutableSortedSet<Path> declaredClasspathEntries;
-  private JavacOptions javacOptions;
-  private BuildTarget invokingRule;
-  private Optional<JavacStep.SuggestBuildRules> suggestBuildRules;
-  private SourcePathResolver resolver;
-  private ProjectFilesystem filesystem;
+public class JavacStepFactory implements RuleKeyAppendable {
+  private final JavacOptions javacOptions;
+  private final JavacOptionsAmender amender;
 
-  public JavacStepFactory(
-      Path outputDirectory,
-      Optional<Path> workingDirectory,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      JavacOptions javacOptions,
-      BuildTarget invokingRule,
-      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem
-  ) {
-    this.outputDirectory = outputDirectory;
-    this.workingDirectory = workingDirectory;
-    this.javaSourceFilePaths = javaSourceFilePaths;
-    this.pathToSrcsList = pathToSrcsList;
-    this.declaredClasspathEntries = declaredClasspathEntries;
+  public JavacStepFactory(JavacOptions javacOptions, JavacOptionsAmender amender) {
     this.javacOptions = javacOptions;
-    this.invokingRule = invokingRule;
-    this.suggestBuildRules = suggestBuildRules;
-    this.resolver = resolver;
-    this.filesystem = filesystem;
+    this.amender = amender;
   }
 
-  Step createCompileStep() {
-    return new JavacStep(
-        outputDirectory,
-        workingDirectory,
-        javaSourceFilePaths,
-        pathToSrcsList,
-        declaredClasspathEntries,
-        javacOptions.getJavac(),
-        javacOptions,
-        invokingRule,
-        suggestBuildRules,
-        resolver,
-        filesystem);
+  void createCompileStep(
+      BuildContext context,
+      ImmutableSortedSet<Path> sourceFilePaths,
+      BuildTarget invokingRule,
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
+      Path outputDirectory,
+      Optional<Path> workingDirectory,
+      Optional<Path> pathToSrcsList,
+      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
+      /* output params */
+      ImmutableList.Builder<Step> steps,
+      BuildableContext buildableContext) {
+
+    final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
+
+    // Javac requires that the root directory for generated sources already exist.
+    Optional<Path> annotationGenFolder =
+        buildTimeOptions.getGeneratedSourceFolderName();
+    if (annotationGenFolder.isPresent()) {
+      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder.get()));
+      buildableContext.recordArtifact(annotationGenFolder.get());
+    }
+
+    steps.add(
+        new JavacStep(
+            outputDirectory,
+            workingDirectory,
+            sourceFilePaths,
+            pathToSrcsList,
+            declaredClasspathEntries,
+            buildTimeOptions.getJavac(),
+            buildTimeOptions,
+            invokingRule,
+            suggestBuildRules,
+            resolver,
+            filesystem));
+  }
+
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    builder.setReflectively("javacOptions", javacOptions);
+    builder.setReflectively("amender", amender);
+    return builder;
   }
 }

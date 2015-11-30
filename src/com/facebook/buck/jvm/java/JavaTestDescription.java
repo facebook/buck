@@ -127,6 +127,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                 JavaLibraryDescription.validateResources(
                     pathResolver,
                     args, params.getProjectFilesystem()),
+                javacOptions.getGeneratedSourceFolderName(),
                 args.labels.get(),
                 args.contacts.get(),
                 args.proguardConfig.transform(
@@ -134,7 +135,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                 new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.testType.or(TestType.JUNIT),
-                javacOptions,
+                new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.vmArgs.get(),
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 validateAndGetSourcesUnderTest(

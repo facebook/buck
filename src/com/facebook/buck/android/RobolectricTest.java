@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacStepFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
@@ -122,13 +123,14 @@ public class RobolectricTest extends JavaTest {
         resolver,
         srcs,
         resources,
+        javacOptions.getGeneratedSourceFolderName(),
         labels,
         contacts,
         proguardConfig,
         abiJar,
         additionalClasspathEntries,
         TestType.JUNIT,
-        javacOptions,
+        new JavacStepFactory(javacOptions, new BootClasspathAppender()),
         vmArgs,
         nativeLibsEnvironment,
         sourceTargetsUnderTest,

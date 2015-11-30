@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -70,13 +71,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         resolver,
         srcs,
         resources,
+        javacOptions.getGeneratedSourceFolderName(),
         proguardConfig,
         postprocessClassesCommands,
         exportedDeps,
         providedDeps,
         abiJar,
         additionalClasspathEntries,
-        javacOptions,
+        new JavacStepFactory(javacOptions, new BootClasspathAppender()),
         resourcesRoot,
         mavenCoords,
         tests);
