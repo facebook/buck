@@ -23,7 +23,7 @@ import java.nio.file.Path;
 /**
  * {@link SourcePath} that wraps a resource embedded inside a JAR.
  */
-public class ResourceSourcePath extends AbstractSourcePath {
+public class ResourceSourcePath extends AbstractSourcePath<ResourceSourcePath> {
   private final PackagedResource resource;
 
   public ResourceSourcePath(PackagedResource resource) {
@@ -42,9 +42,17 @@ public class ResourceSourcePath extends AbstractSourcePath {
     return resource.get();
   }
 
-
   @Override
   protected Object asReference() {
     return getResourceIdentifier();
+  }
+
+  @Override
+  protected int compareReferences(ResourceSourcePath o) {
+    if (o == this) {
+      return 0;
+    }
+
+    return getResourceIdentifier().compareTo(o.getResourceIdentifier());
   }
 }

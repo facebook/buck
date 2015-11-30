@@ -17,10 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.collect.ComparisonChain;
 
 import java.nio.file.Path;
 
-public class PathSourcePath extends AbstractSourcePath {
+public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
 
   private final ProjectFilesystem filesystem;
   private final Path relativePath;
@@ -33,6 +34,18 @@ public class PathSourcePath extends AbstractSourcePath {
   @Override
   protected Object asReference() {
     return filesystem.getRootPath().resolve(relativePath).toString();
+  }
+
+  @Override
+  protected int compareReferences(PathSourcePath o) {
+    if (o == this) {
+      return 0;
+    }
+
+    return ComparisonChain.start()
+        .compare(filesystem.getRootPath(), o.filesystem.getRootPath())
+        .compare(relativePath, o.relativePath)
+        .result();
   }
 
   public ProjectFilesystem getFilesystem() {
