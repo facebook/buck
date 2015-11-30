@@ -33,8 +33,6 @@ import com.google.common.collect.Iterables;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
-import javax.annotation.Nullable;
-
 /**
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
  * represents. Once parsing is complete, instances of this class can be considered immutable.
@@ -91,18 +89,15 @@ public class BuildRuleResolver {
     return Iterables.unmodifiableIterable(buildRuleIndex.values());
   }
 
-  private <T> T requireRule(BuildTarget target, @Nullable T rule) {
-    if (rule == null) {
-      throw new HumanReadableException("Rule for target '%s' could not be resolved.", target);
-    }
-    return rule;
-  }
-
   /**
    * Returns the {@link BuildRule} with the {@code buildTarget}.
    */
   public BuildRule getRule(BuildTarget buildTarget) {
-    return requireRule(buildTarget, buildRuleIndex.get(buildTarget));
+    BuildRule rule = buildRuleIndex.get(buildTarget);
+    if (rule == null) {
+      throw new HumanReadableException("Rule for target '%s' could not be resolved.", buildTarget);
+    }
+    return rule;
   }
 
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
@@ -163,19 +158,6 @@ public class BuildRuleResolver {
       }
     }
     return Optional.absent();
-  }
-
-  public <T> T getRuleWithType(BuildTarget target, Class<T> clazz) {
-    return requireRule(target, getRuleOptionalWithType(target, clazz).orNull());
-  }
-
-  public <T> Function<BuildTarget, T> getRuleWithTypeFunction(final Class<T> clazz) {
-    return new Function<BuildTarget, T>() {
-      @Override
-      public T apply(BuildTarget input) {
-        return getRuleWithType(input, clazz);
-      }
-    };
   }
 
   public Function<BuildTarget, BuildRule> getRuleFunction() {
