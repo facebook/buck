@@ -26,8 +26,6 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.annotation.Nullable;
-
 @BuckStyleImmutable
 @Value.Immutable
 abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnflavoredBuildTarget> {
@@ -143,8 +141,11 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   }
 
   @Override
-  public int compareTo(@Nullable AbstractUnflavoredBuildTarget target) {
-    Preconditions.checkNotNull(target);
+  public int compareTo(AbstractUnflavoredBuildTarget target) {
+    if (this == target) {
+      return 0;
+    }
+
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
   }
 

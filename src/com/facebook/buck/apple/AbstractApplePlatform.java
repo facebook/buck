@@ -52,6 +52,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
 
   @Override
   public int compareTo(AbstractApplePlatform other) {
+    if (this == other) {
+      return 0;
+    }
+
     return getName().compareTo(other.getName());
   }
 }

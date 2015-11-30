@@ -32,8 +32,6 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.SortedSet;
 
-import javax.annotation.Nullable;
-
 @JsonAutoDetect(
     fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -162,8 +160,11 @@ abstract class AbstractBuildTarget
   }
 
   @Override
-  public int compareTo(@Nullable AbstractBuildTarget target) {
-    Preconditions.checkNotNull(target);
+  public int compareTo(AbstractBuildTarget target) {
+    if (this == target) {
+      return 0;
+    }
+
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
   }
 

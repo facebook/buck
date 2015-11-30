@@ -559,6 +559,10 @@ public class Resolver {
 
     @Override
     public int compareTo(Prebuilt that) {
+      if (this == that) {
+        return 0;
+      }
+
       return this.name.compareTo(that.name);
     }
   }

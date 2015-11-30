@@ -124,6 +124,10 @@ public class IjDependencyListBuilder {
 
     @Override
     public int compareTo(AbstractDependencyEntry o) {
+      if (this == o) {
+        return 0;
+      }
+
       int sortComparison = getSortOrder().compareTo(o.getSortOrder());
       if (sortComparison != 0) {
         return sortComparison;

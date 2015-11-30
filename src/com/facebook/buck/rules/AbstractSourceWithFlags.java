@@ -41,6 +41,10 @@ abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithF
 
   @Override
   public int compareTo(AbstractSourceWithFlags that) {
+    if (this == that) {
+      return 0;
+    }
+
     return ComparisonChain.start()
         .compare(this.getSourcePath(), that.getSourcePath())
         .compare(this.getFlags(), that.getFlags(), Ordering.<String>natural().lexicographical())

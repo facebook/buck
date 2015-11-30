@@ -223,6 +223,10 @@ public class BuildSimulator {
 
     @Override
     public int compareTo(RunningNode o) {
+      if (this == o) {
+        return 0;
+      }
+
       return (int) (this.expectedFinishMillis - o.expectedFinishMillis);
     }
   }

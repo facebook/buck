@@ -80,6 +80,10 @@ class AnnotationMirror extends AnnotationVisitor implements Comparable<Annotatio
 
   @Override
   public int compareTo(AnnotationMirror o) {
+    if (this == o) {
+      return 0;
+    }
+
     return desc.compareTo(o.desc);
   }
 

@@ -187,6 +187,10 @@ public class IjProjectTemplateDataPreparer {
 
     @Override
     public int compareTo(IjSourceFolder o) {
+      if (this == o) {
+        return 0;
+      }
+
       return getUrl().compareTo(o.getUrl());
     }
   }
@@ -199,6 +203,10 @@ public class IjProjectTemplateDataPreparer {
 
     @Override
     public int compareTo(ContentRoot o) {
+      if (this == o) {
+        return 0;
+      }
+
       return getUrl().compareTo(o.getUrl());
     }
   }
@@ -342,6 +350,10 @@ public class IjProjectTemplateDataPreparer {
 
     @Override
     public int compareTo(ModuleIndexEntry o) {
+      if (this == o) {
+        return 0;
+      }
+
       return getFilePath().compareTo(o.getFilePath());
     }
   }

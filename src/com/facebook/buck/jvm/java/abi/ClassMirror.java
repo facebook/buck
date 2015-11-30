@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Sets;
@@ -147,6 +146,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
   @Override
   public int compareTo(ClassMirror o) {
+    if (this == o) {
+      return 0;
+    }
+
     return fileName.compareTo(o.fileName);
   }
 
@@ -204,7 +207,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
     @Override
     public int compareTo(InnerClass o) {
-      Preconditions.checkNotNull(o);
+      if (this == o) {
+        return 0;
+      }
+
       return ComparisonChain.start()
           .compare(name, o.name)
           .compare(Strings.nullToEmpty(outerName), Strings.nullToEmpty(o.outerName))
@@ -227,7 +233,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
     @Override
     public int compareTo(OuterClass o) {
-      Preconditions.checkNotNull(o);
+      if (this == o) {
+        return 0;
+      }
+
       return ComparisonChain.start()
           .compare(owner, o.owner)
           .compare(name, o.name)

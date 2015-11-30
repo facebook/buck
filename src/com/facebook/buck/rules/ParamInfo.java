@@ -177,6 +177,10 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
    */
   @Override
   public int compareTo(ParamInfo<T> that) {
+    if (this == that) {
+      return 0;
+    }
+
     return this.name.compareTo(that.name);
   }
 

@@ -121,6 +121,10 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
 
   @Override
   public int compareTo(MethodMirror o) {
+    if (this == o) {
+      return 0;
+    }
+
     return key.compareTo(o.key);
   }
 

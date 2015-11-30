@@ -183,6 +183,10 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
    */
   @Override
   public int compareTo(RDotTxtEntry that) {
+    if (this == that) {
+      return 0;
+    }
+
     return ComparisonChain.start()
         .compare(this.type, that.type)
         .compare(this.name, that.name)

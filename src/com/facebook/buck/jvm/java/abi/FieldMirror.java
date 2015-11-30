@@ -35,6 +35,10 @@ class FieldMirror extends FieldNode implements Comparable<FieldMirror> {
 
   @Override
   public int compareTo(FieldMirror o) {
+    if (this == o) {
+      return 0;
+    }
+
     return key.compareTo(o.key);
   }
 }

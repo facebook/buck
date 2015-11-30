@@ -92,6 +92,10 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final int compareTo(BuildRule that) {
+    if (this == that) {
+      return 0;
+    }
+
     return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
 

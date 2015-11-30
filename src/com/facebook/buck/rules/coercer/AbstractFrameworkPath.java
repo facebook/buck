@@ -159,6 +159,10 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
 
   @Override
   public int compareTo(AbstractFrameworkPath o) {
+    if (this == o) {
+      return 0;
+    }
+
     int typeComparisonResult = getType().ordinal() - o.getType().ordinal();
     if (typeComparisonResult != 0) {
       return typeComparisonResult;
