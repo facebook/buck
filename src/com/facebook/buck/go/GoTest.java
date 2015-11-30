@@ -63,6 +63,8 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       "^=== RUN\\s+(?<name>.*)$");
   private static final Pattern TEST_FINISHED_PATTERN = Pattern.compile(
       "^--- (?<status>PASS|FAIL|SKIP): (?<name>.+) \\((?<duration>\\d+\\.\\d+)(?: seconds|s)\\)$");
+  // Extra time to wait for the process to exit on top of the test timeout
+  private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
 
   private final GoBinary testMain;
 
@@ -99,19 +101,25 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
+    Optional<Long> processTimeoutMs = testRuleTimeoutMs.isPresent() ?
+        Optional.of(testRuleTimeoutMs.get() + PROCESS_TIMEOUT_EXTRA_MS) :
+        Optional.<Long>absent();
+
+    ImmutableList.Builder<String> args = ImmutableList.<String>builder();
+    args.addAll(testMain.getExecutableCommand().getCommandPrefix(getResolver()));
+    args.add("-test.v");
+    if (testRuleTimeoutMs.isPresent()) {
+      args.add("-test.timeout", testRuleTimeoutMs.get() + "ms");
+    }
 
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
         new GoTestStep(
             getProjectFilesystem(),
-            ImmutableList.<String>builder()
-                .addAll(testMain.getExecutableCommand().getCommandPrefix(getResolver()))
-                .add("-test.v")
-                .add("-test.timeout", executionContext.getDefaultTestTimeoutMillis() + "ms")
-                .build(),
+            args.build(),
             testMain.getExecutableCommand().getEnvironment(getResolver()),
             getPathToTestExitCode(),
-            testRuleTimeoutMs,
+            processTimeoutMs,
             getPathToTestResults()));
   }
 
