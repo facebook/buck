@@ -117,10 +117,10 @@ class DaemonicParserState {
   private ImmutableMap<String, String> cachedEnvironment;
 
   /**
-   * The default includes used by the previous run of the parser. If this value changes, then we
-   * need to invalidate all the caches.
+   * The default includes used by the previous run of the parser in each cell (the key is the
+   * cell's root path). If this value changes, then we need to invalidate all the caches.
    */
-  private Map<Cell, Iterable<String>> cachedIncludes;
+  private Map<Path, Iterable<String>> cachedIncludes;
 
   /**
    * The set of {@link Cell} instances that have been seen by this state. This information is used
@@ -584,7 +584,7 @@ class DaemonicParserState {
   private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
     ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getEnvironment();
     Iterable<String> defaultIncludes = new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
-    Iterable<String> expected = cachedIncludes.get(cell);
+    Iterable<String> expected = cachedIncludes.get(cell.getRoot());
 
     boolean invalidateCaches = false;
 
@@ -605,7 +605,7 @@ class DaemonicParserState {
     invalidateAllCaches();
 
     cachedEnvironment = cellEnv;
-    cachedIncludes.put(cell, defaultIncludes);
+    cachedIncludes.put(cell.getRoot(), defaultIncludes);
     knownCells.add(cell);
   }
 
