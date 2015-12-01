@@ -176,7 +176,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       ProjectFilesystem inputFilesystem = preprocessRule.or(compileRule).getProjectFilesystem();
 
       String fileToCompile = inputFilesystem
-          .resolve(getResolver().deprecatedGetPath(inputSourcePath))
+          .resolve(getResolver().getAbsolutePath(inputSourcePath))
           .toString();
       ImmutableList<String> arguments = compileRule.getCommand(preprocessRule);
       return CxxCompilationDatabaseEntry.of(

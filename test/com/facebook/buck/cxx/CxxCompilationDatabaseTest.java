@@ -134,7 +134,7 @@ public class CxxCompilationDatabaseTest {
                     Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
               Paths.get("test.ii"),
-              new FakeSourcePath("test.cpp"),
+              new FakeSourcePath(filesystem, "test.cpp"),
               CxxSource.Type.CXX,
               CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
@@ -150,7 +150,7 @@ public class CxxCompilationDatabaseTest {
                 ImmutableList.<String>of(),
                 ImmutableList.<String>of(),
                 Paths.get("test.o"),
-                new FakeSourcePath("test.ii"),
+                new FakeSourcePath(filesystem, "test.ii"),
                 CxxSource.Type.CXX_CPP_OUTPUT,
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
         break;
@@ -192,7 +192,7 @@ public class CxxCompilationDatabaseTest {
                 ImmutableList.<String>of(),
                 ImmutableList.<String>of(),
                 Paths.get("test.o"),
-                new FakeSourcePath("test.cpp"),
+                new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy));
