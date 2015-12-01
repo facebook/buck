@@ -208,6 +208,18 @@ public class PythonBinaryIntegrationTest {
         not(equalTo("")));
   }
 
+  @Test
+  public void binaryIsCachedProperly() throws IOException {
+    // Verify that the flow of build, upload to cache, clean, then re-build (and potentially
+    // fetching from cache) results in a usable binary.
+    workspace.writeContentsToPath("print('hello world')", "main.py");
+    workspace.enableDirCache();
+    workspace.runBuckBuild(":bin").assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    String stdout = workspace.runBuckCommand("run", ":bin").assertSuccess().getStdout().trim();
+    assertThat(stdout, equalTo("hello world"));
+  }
+
   private void assertPackageStyle(PythonBuckConfig.PackageStyle style) throws IOException {
     Config rawConfig = Config.createDefaultConfig(
         tmp.getRootPath(),

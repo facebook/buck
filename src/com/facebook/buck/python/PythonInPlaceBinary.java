@@ -126,8 +126,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    Path binPath = getBinPath();
+    buildableContext.recordArtifact(binPath);
     return ImmutableList.<Step>of(
-        new WriteFileStep(getProjectFilesystem(), script, getBinPath(), /* executable */ true));
+        new WriteFileStep(getProjectFilesystem(), script, binPath, /* executable */ true));
   }
 
   @Override
