@@ -24,6 +24,7 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
@@ -203,11 +204,13 @@ public class Build implements Closeable {
             .transform(new Function<HasBuildTarget, BuildRule>() {
                          @Override
                          public BuildRule apply(HasBuildTarget hasBuildTarget) {
-                           return Preconditions.checkNotNull(
-                               actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()),
-                               "No build rule found for target %s in %s",
-                               hasBuildTarget.getBuildTarget(),
-                               actionGraph);
+                           try {
+                             return getRuleResolver().requireRule(hasBuildTarget.getBuildTarget());
+                           } catch (NoSuchBuildTargetException e) {
+                             throw new HumanReadableException(
+                                 "No build rule found for target %s",
+                                 hasBuildTarget.getBuildTarget());
+                           }
                          }
                        })
             .toSet());
