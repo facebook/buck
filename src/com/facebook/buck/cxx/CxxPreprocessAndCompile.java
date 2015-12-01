@@ -319,7 +319,7 @@ public class CxxPreprocessAndCompile
     cmd.add("-x", preprocessRule.inputType.getLanguage());
     cmd.add("-c");
     cmd.add("-o", output.toString());
-    cmd.add(getResolver().deprecatedGetPath(preprocessRule.input).toString());
+    cmd.add(getResolver().getAbsolutePath(preprocessRule.input).toString());
     return cmd.build();
   }
 

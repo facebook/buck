@@ -267,7 +267,7 @@ public class CxxCompilationDatabaseTest {
             "-c",
             "-o",
             "test.o",
-            "test.cpp"));
+            "/Users/user/src/test.cpp"));
   }
 
   @Test
@@ -283,6 +283,6 @@ public class CxxCompilationDatabaseTest {
             "-c",
             "-o",
             "test.o",
-            "test.cpp"));
+            "/Users/user/src/test.cpp"));
   }
 }
