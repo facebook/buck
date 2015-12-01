@@ -20,6 +20,8 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -33,6 +35,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -48,11 +51,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final Preprocessor preprocessor;
   private final Optional<SourcePath> prefixHeader;
   private final ImmutableList<CxxHeaders> includes;
+  private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
 
   // Fields that added to the rule key with some processing.
   private final ImmutableList<String> platformPreprocessorFlags;
   private final ImmutableList<String> rulePreprocessorFlags;
-  private final ImmutableSet<Path> frameworkRoots;
+  private final ImmutableSet<FrameworkPath> frameworkRoots;
 
   // Fields that are not added to the rule key.
   private final ImmutableSet<Path> includeRoots;
@@ -80,7 +84,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       Set<Path> includeRoots,
       Set<Path> systemIncludeRoots,
       Set<Path> headerMaps,
-      Set<Path> frameworkRoots,
+      Set<FrameworkPath> frameworkRoots,
+      RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SourcePath> prefixHeader,
       List<CxxHeaders> includes) {
     this.preprocessor = preprocessor;
@@ -94,6 +99,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.headerMaps = ImmutableSet.copyOf(headerMaps);
     this.sanitizer = sanitizer;
     this.resolver = resolver;
+    this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
   }
 
   @Override
@@ -101,6 +107,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     builder.setReflectively("preprocessor", preprocessor);
     builder.setReflectively("prefixHeader", prefixHeader);
     builder.setReflectively("includes", includes);
+    builder.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
 
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
@@ -111,10 +118,6 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         "rulePreprocessorFlags",
         sanitizer.sanitizeFlags(Optional.of(rulePreprocessorFlags)));
 
-    ImmutableList<String> frameworkRoots = FluentIterable.from(this.frameworkRoots)
-        .transform(Functions.toStringFunction())
-        .transform(sanitizer.sanitize(Optional.<Path>absent()))
-        .toList();
     builder.setReflectively("frameworkRoots", frameworkRoots);
     return builder;
   }
@@ -193,7 +196,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
-                Iterables.transform(frameworkRoots, Functions.toStringFunction())))
+                FluentIterable.from(frameworkRoots)
+                    .transform(frameworkPathSearchPathFunction)
+                    .transform(Functions.toStringFunction())
+                    .toSortedSet(Ordering.natural())))
         .build();
   }
 

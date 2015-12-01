@@ -32,11 +32,14 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -86,9 +89,22 @@ public class CxxPreprocessAndCompileTest {
   private static final ImmutableSet<Path> DEFAULT_HEADER_MAPS = ImmutableSet.of(
       Paths.get("some/thing.hmap"),
       Paths.get("another/file.hmap"));
-  private static final ImmutableSet<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of();
+  private static final ImmutableSet<FrameworkPath> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of();
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
+  private static final
+  RuleKeyAppendableFunction<FrameworkPath, Path> DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
+      new RuleKeyAppendableFunction<FrameworkPath, Path>() {
+        @Override
+        public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+          return builder;
+        }
+
+        @Override
+        public Path apply(FrameworkPath input) {
+          return Paths.get("test", "framework", "path", input.toString());
+        }
+      };
 
   @Test
   public void inputChangesCauseRuleKeyChangesForCompilation() {
@@ -154,6 +170,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES
             ),
@@ -244,6 +261,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES
             ),
@@ -269,6 +287,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
@@ -294,6 +313,7 @@ public class CxxPreprocessAndCompileTest {
                 ImmutableSet.of(Paths.get("different")),
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
@@ -319,6 +339,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 ImmutableSet.of(Paths.get("different")),
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
@@ -342,7 +363,8 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
-                ImmutableSet.of(Paths.get("different")),
+                ImmutableSet.of(FrameworkPath.ofSourcePath(new FakeSourcePath("different"))),
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
@@ -405,6 +427,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
@@ -430,6 +453,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
@@ -514,6 +538,7 @@ public class CxxPreprocessAndCompileTest {
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>of(new FakeSourcePath(filesystem, prefixHeader.toString())),
                 ImmutableList.of(CxxHeaders.builder().build())),
             output,
@@ -576,6 +601,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
                 DEFAULT_FRAMEWORK_ROOTS,
+                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
                 DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,

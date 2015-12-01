@@ -16,13 +16,12 @@
 
 package com.facebook.buck.cxx;
 
-import static com.google.common.base.Predicates.notNull;
-
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -47,8 +46,6 @@ import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
-
-import javax.annotation.Nullable;
 
 public class CxxLinkableEnhancer {
 
@@ -190,69 +187,43 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allLibraries,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    ImmutableSet<Path> librarySearchPaths = CxxDescriptionEnhancer.getFrameworkSearchPaths(
-        Optional.of(allLibraries),
-        cxxPlatform,
-        resolver);
+    final Function<FrameworkPath, Path> frameworkPathToSearchPath =
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
-    for (Path unsanitizedLibrarySearchPath : getLibrarySearchDirectories(librarySearchPaths)) {
-      argsBuilder.add(new StringArg("-L"));
-      argsBuilder.add(
-          new SanitizedArg(
-              cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
-              unsanitizedLibrarySearchPath.toString()));
-    }
+    argsBuilder.add(
+        new FrameworkPathArg(resolver, allLibraries) {
+
+          @Override
+          public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+            return super.appendToRuleKey(builder)
+                .setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
+          }
+
+          @Override
+          public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+            ImmutableSortedSet<Path> searchPaths = FluentIterable.from(frameworkPaths)
+                .transform(frameworkPathToSearchPath)
+                .transform(
+                    new Function<Path, Path>() {
+                      @Override
+                      public Path apply(Path input) {
+                        return input.getParent();
+                      }
+                    })
+                .filter(Predicates.notNull())
+                .toSortedSet(Ordering.natural());
+            for (Path searchPath : searchPaths) {
+              builder.add("-L");
+              builder.add(searchPath.toString());
+            }
+          }
+        });
 
     // Add all libraries link args
-    argsBuilder.add(librariesToLinkerArg(resolver, allLibraries));
-  }
-
-  private static ImmutableSet<Path> getLibrarySearchDirectories(ImmutableSet<Path> libraries) {
-    return FluentIterable.from(libraries)
-        .transform(
-            new Function<Path, Path>() {
-              @Nullable
-              @Override
-              public Path apply(Path input) {
-                return input.getParent();
-              }
-            }
-        ).filter(notNull())
-        .toSet();
-  }
-
-  private static void addFrameworkLinkerArgs(
-      CxxPlatform cxxPlatform,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<FrameworkPath> allFrameworks,
-      ImmutableList.Builder<Arg> argsBuilder) {
-
-    // Add all framework search path args
-    ImmutableSet<Path> frameworkSearchPaths = CxxDescriptionEnhancer.getFrameworkSearchPaths(
-        Optional.of(allFrameworks),
-        cxxPlatform,
-        resolver);
-    for (Path unsanitizedFrameworkSearchPath : frameworkSearchPaths) {
-      argsBuilder.add(new StringArg("-F"));
-      argsBuilder.add(
-          new SanitizedArg(
-              cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
-              unsanitizedFrameworkSearchPath.toString()));
-    }
-
-    // Add all framework link args
-    argsBuilder.add(frameworksToLinkerArg(resolver, allFrameworks));
-  }
-
-  @VisibleForTesting
-  static Arg librariesToLinkerArg(
-      final SourcePathResolver resolver,
-      ImmutableSortedSet<FrameworkPath> frameworkPaths) {
-    return new FrameworkPathArg(resolver, frameworkPaths) {
+    argsBuilder.add(new FrameworkPathArg(resolver, allLibraries) {
       @Override
       public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
         for (FrameworkPath frameworkPath : frameworkPaths) {
-
           String libName = MorePaths.stripPathPrefixAndExtension(
               frameworkPath.getFileName(resolver.getAbsolutePathFunction()),
               "lib");
@@ -265,7 +236,40 @@ public class CxxLinkableEnhancer {
           builder.add("-l" + libName);
         }
       }
-    };
+    });
+  }
+
+  private static void addFrameworkLinkerArgs(
+      CxxPlatform cxxPlatform,
+      SourcePathResolver resolver,
+      ImmutableSortedSet<FrameworkPath> allFrameworks,
+      ImmutableList.Builder<Arg> argsBuilder) {
+
+    final Function<FrameworkPath, Path> frameworkPathToSearchPath =
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
+
+    argsBuilder.add(
+        new FrameworkPathArg(resolver, allFrameworks) {
+          @Override
+          public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+            return super.appendToRuleKey(builder)
+                .setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
+          }
+
+          @Override
+          public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+            ImmutableSortedSet<Path> searchPaths = FluentIterable.from(frameworkPaths)
+                .transform(frameworkPathToSearchPath)
+                .toSortedSet(Ordering.natural());
+            for (Path searchPath : searchPaths) {
+              builder.add("-F");
+              builder.add(searchPath.toString());
+            }
+          }
+        });
+
+    // Add all framework link args
+    argsBuilder.add(frameworksToLinkerArg(resolver, allFrameworks));
   }
 
   @VisibleForTesting

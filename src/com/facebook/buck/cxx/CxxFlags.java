@@ -16,29 +16,45 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 public class CxxFlags {
 
   private CxxFlags() {}
 
-  public static Function<String, String> getTranslateMacrosFn(final CxxPlatform cxxPlatform) {
-    return new Function<String, String>() {
+  public static RuleKeyAppendableFunction<String, String> getTranslateMacrosFn(
+      final CxxPlatform cxxPlatform) {
+
+    final ImmutableMap<String, String> flagMacros = cxxPlatform.getFlagMacros();
+
+    return new RuleKeyAppendableFunction<String, String>() {
+
+      @Override
+      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+        Map<String, String> sanitizedMap = Maps.transformValues(
+            flagMacros,
+            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()));
+        return builder.setReflectively("flagMacros", sanitizedMap);
+      }
+
       @Override
       public String apply(String flag) {
         // TODO(agallager): We're currently tied to `$VARIABLE` style of macros as much of the apple
         // support relies on this.  Long-term though, we should make this consistent with the
         // `$(macro ...)` style we use in the rest of the codebase.
-        for (Map.Entry<String, String> entry : cxxPlatform.getFlagMacros().entrySet()) {
+        for (Map.Entry<String, String> entry : flagMacros.entrySet()) {
           flag = flag.replace("$" + entry.getKey(), entry.getValue());
         }
         return flag;

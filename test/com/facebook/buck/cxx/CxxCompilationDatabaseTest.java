@@ -33,9 +33,12 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -116,7 +119,18 @@ public class CxxCompilationDatabaseTest {
                         filesystem.resolve("test")),
                     ImmutableSet.<Path>of(),
                     ImmutableSet.<Path>of(),
-                    ImmutableSet.<Path>of(),
+                    ImmutableSet.<FrameworkPath>of(),
+                    new RuleKeyAppendableFunction<FrameworkPath, Path>() {
+                      @Override
+                      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+                        return builder;
+                      }
+
+                      @Override
+                      public Path apply(FrameworkPath input) {
+                        throw new UnsupportedOperationException("should not be called");
+                      }
+                    },
                     Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
               Paths.get("test.ii"),
@@ -160,7 +174,18 @@ public class CxxCompilationDatabaseTest {
                         filesystem.resolve("test")),
                     ImmutableSet.<Path>of(),
                     ImmutableSet.<Path>of(),
-                    ImmutableSet.<Path>of(),
+                    ImmutableSet.<FrameworkPath>of(),
+                    new RuleKeyAppendableFunction<FrameworkPath, Path>() {
+                      @Override
+                      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+                        return builder;
+                      }
+
+                      @Override
+                      public Path apply(FrameworkPath input) {
+                        throw new UnsupportedOperationException("should not be called");
+                      }
+                    },
                     Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
                 new DefaultCompiler(new HashedFileTool(Paths.get("compiler"))),

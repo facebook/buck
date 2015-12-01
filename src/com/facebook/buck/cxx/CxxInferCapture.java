@@ -26,6 +26,8 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -58,7 +60,10 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   private final ImmutableSet<Path> includeRoots;
   private final ImmutableSet<Path> systemIncludeRoots;
   private final ImmutableSet<Path> headerMaps;
-  private final ImmutableSet<Path> frameworkRoots;
+  @AddToRuleKey
+  private final ImmutableSet<FrameworkPath> frameworkRoots;
+  @AddToRuleKey
+  private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
   @AddToRuleKey
   private final Optional<SourcePath> prefixHeader;
 
@@ -78,7 +83,8 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
       ImmutableSet<Path> includeRoots,
       ImmutableSet<Path> systemIncludeRoots,
       ImmutableSet<Path> headerMaps,
-      ImmutableSet<Path> frameworkRoots,
+      ImmutableSet<FrameworkPath> frameworkRoots,
+      RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SourcePath> prefixHeader,
       CxxInferTools inferTools,
       DebugPathSanitizer sanitizer) {
@@ -94,6 +100,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     this.systemIncludeRoots = systemIncludeRoots;
     this.headerMaps = headerMaps;
     this.frameworkRoots = frameworkRoots;
+    this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.prefixHeader = prefixHeader;
     this.inferTools = inferTools;
     this.resultsDir = BuildTargets.getGenPath(this.getBuildTarget(), "infer-out-%s");
@@ -142,7 +149,10 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
-                Iterables.transform(frameworkRoots, Functions.toStringFunction())))
+                Iterables.transform(frameworkRoots,
+                    Functions.compose(
+                        Functions.toStringFunction(),
+                        frameworkPathSearchPathFunction))))
         .build();
   }
 
@@ -202,12 +212,6 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     builder.setReflectively(
         "ruleCompilerFlags",
         sanitizer.sanitizeFlags(ruleCompilerFlags));
-
-    ImmutableList<String> frameworkRoots = FluentIterable.from(this.frameworkRoots)
-        .transform(Functions.toStringFunction())
-        .transform(sanitizer.sanitize(Optional.<Path>absent()))
-        .toList();
-    builder.setReflectively("frameworkRoots", frameworkRoots);
 
     return builder;
   }

@@ -29,11 +29,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -44,6 +46,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -460,9 +463,10 @@ public class CxxDescriptionEnhancer {
     if (version == null) {
       return match.replaceFirst(sharedLibraryExtension);
     }
-    return match.replaceFirst(String.format(
-        sharedLibraryVersionedExtensionFormat,
-        version));
+    return match.replaceFirst(
+        String.format(
+            sharedLibraryVersionedExtensionFormat,
+            version));
   }
 
   public static String getDefaultSharedLibrarySoname(BuildTarget target, CxxPlatform platform) {
@@ -502,25 +506,31 @@ public class CxxDescriptionEnhancer {
   }
 
   /**
-   * @return the framework search paths with any embedded macros expanded.
+   * @return a function that transforms the {@link FrameworkPath} to search paths with any embedded
+   * macros expanded.
    */
-  static ImmutableSet<Path> getFrameworkSearchPaths(
-      Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
-      CxxPlatform cxxPlatform,
-      SourcePathResolver resolver) {
+  static RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath(
+      final CxxPlatform cxxPlatform,
+      final SourcePathResolver resolver) {
+    return new RuleKeyAppendableFunction<FrameworkPath, Path>() {
+      private RuleKeyAppendableFunction<String, String> translateMacrosFn =
+          CxxFlags.getTranslateMacrosFn(cxxPlatform);
 
-    ImmutableSet<Path> searchPaths = FluentIterable.from(frameworks.get())
-        .transform(
+      @Override
+      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+        return builder.setReflectively("translateMacrosFn", translateMacrosFn);
+      }
+
+      @Override
+      public Path apply(FrameworkPath input) {
+        Function<FrameworkPath, Path> convertToPath =
             FrameworkPath.getUnexpandedSearchPathFunction(
-                resolver.deprecatedPathFunction(),
-                Functions.<Path>identity()))
-        .toSet();
-
-   return FluentIterable.from(Optional.of(searchPaths).or(ImmutableSet.<Path>of()))
-        .transform(Functions.toStringFunction())
-        .transform(CxxFlags.getTranslateMacrosFn(cxxPlatform))
-       .transform(MorePaths.TO_PATH)
-       .toSet();
+                resolver.getAbsolutePathFunction(),
+                Functions.<Path>identity());
+        String pathAsString = convertToPath.apply(input).toString();
+        return Paths.get(translateMacrosFn.apply(pathAsString));
+      }
+    };
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(

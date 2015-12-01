@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 abstract class AbstractFrameworkPath implements
     Comparable<AbstractFrameworkPath>,
     RuleKeyAppendable {
+
   /**
    * The type of framework entry this object represents.
    */

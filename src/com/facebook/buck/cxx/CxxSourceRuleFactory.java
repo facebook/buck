@@ -598,10 +598,8 @@ public class CxxSourceRuleFactory {
         includeRoots.get(),
         systemIncludeRoots.get(),
         headerMaps.get(),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            Optional.of(ImmutableSortedSet.<FrameworkPath>copyOf(frameworks.get())),
-            cxxPlatform,
-            pathResolver),
+        frameworks.get(),
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         prefixHeader,
         inferTools,
         cxxPlatform.getDebugPathSanitizer());
@@ -840,12 +838,8 @@ public class CxxSourceRuleFactory {
           includeRoots.get(),
           systemIncludeRoots.get(),
           headerMaps.get(),
-          CxxDescriptionEnhancer.getFrameworkSearchPaths(
-              Optional.of(
-                  ImmutableSortedSet.copyOf(
-                      frameworks.get())),
-              cxxPlatform,
-              pathResolver),
+          frameworks.get(),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
           prefixHeader,
           includes.get());
     }
