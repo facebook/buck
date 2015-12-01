@@ -25,12 +25,14 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -100,6 +102,15 @@ public class IjProject {
         });
     IjModuleFactory.IjModuleFactoryResolver moduleFactoryResolver =
         new IjModuleFactory.IjModuleFactoryResolver() {
+
+          private Function<SourcePath, Path> getAbsolutePathAndRecordRuleFunction =
+              new Function<SourcePath, Path>() {
+                @Override
+                public Path apply(SourcePath input) {
+                  return getAbsolutePathAndRecordRule(input);
+                }
+              };
+
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
             BuildTarget dummyRDotJavaTarget = AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
@@ -124,7 +135,7 @@ public class IjProject {
             return targetNode
                 .getConstructorArg()
                 .proguardConfig
-                .transform(sourcePathResolver.getAbsolutePathFunction());
+                .transform(getAbsolutePathAndRecordRuleFunction);
           }
 
           @Override
@@ -133,7 +144,7 @@ public class IjProject {
             return targetNode
                 .getConstructorArg()
                 .res
-                .transform(sourcePathResolver.getAbsolutePathFunction());
+                .transform(getAbsolutePathAndRecordRuleFunction);
           }
 
           @Override
@@ -142,7 +153,15 @@ public class IjProject {
             return targetNode
                 .getConstructorArg()
                 .assets
-                .transform(sourcePathResolver.getAbsolutePathFunction());
+                .transform(getAbsolutePathAndRecordRuleFunction);
+          }
+
+          private Path getAbsolutePathAndRecordRule(SourcePath sourcePath) {
+            requiredBuildTargets.addAll(
+                sourcePathResolver.getRule(sourcePath)
+                    .transform(HasBuildTarget.TO_TARGET)
+                    .asSet());
+            return sourcePathResolver.getAbsolutePath(sourcePath);
           }
         };
     IjModuleGraph moduleGraph = IjModuleGraph.from(
