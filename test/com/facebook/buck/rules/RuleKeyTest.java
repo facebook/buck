@@ -299,13 +299,19 @@ public class RuleKeyTest {
 
   @Test
   public void setDifferentResourceSourcePaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     ResourceSourcePath resourceSourcePathOne =
         new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource("testdata/packaged_resource_one"));
+            PackagedResourceTestUtil.getPackagedResource(
+                filesystem,
+                "testdata/packaged_resource_one"));
 
     ResourceSourcePath resourceSourcePathTwo =
         new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource("testdata/packaged_resource_two"));
+            PackagedResourceTestUtil.getPackagedResource(
+                filesystem,
+                "testdata/packaged_resource_two"));
 
     // Changing the file name should change the rule key
     assertNotEquals(
@@ -325,13 +331,19 @@ public class RuleKeyTest {
 
   @Test
   public void setDifferentNonHashingResourceSourcePaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     ResourceSourcePath resourceSourcePathOne =
         new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource("testdata/packaged_resource_one"));
+            PackagedResourceTestUtil.getPackagedResource(
+                filesystem,
+                "testdata/packaged_resource_one"));
 
     ResourceSourcePath resourceSourcePathTwo =
         new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource("testdata/packaged_resource_two"));
+            PackagedResourceTestUtil.getPackagedResource(
+                filesystem,
+                "testdata/packaged_resource_two"));
 
     // Changing the resource identifier should change the rule key
     assertNotEquals(

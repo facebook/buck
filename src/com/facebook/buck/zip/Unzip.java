@@ -32,7 +32,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Enumeration;
 import java.util.Set;
@@ -53,6 +52,7 @@ public class Unzip {
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
       ProjectFilesystem filesystem,
+      Path relativePath,
       ExistingFileMode existingFileMode) throws IOException {
 
     ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
@@ -61,7 +61,7 @@ public class Unzip {
       while (entries.hasMoreElements()) {
         ZipArchiveEntry entry = entries.nextElement();
         String fileName = entry.getName();
-        Path target = Paths.get(fileName);
+        Path target = relativePath.resolve(fileName);
         if (filesystem.exists(target)) {
           switch (existingFileMode) {
             case OVERWRITE:
@@ -177,12 +177,28 @@ public class Unzip {
 
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
+      ProjectFilesystem filesystem,
+      ExistingFileMode existingFileMode) throws IOException {
+    return extractZipFile(
+        zipFile,
+        filesystem,
+        filesystem.getRootPath().getFileSystem().getPath(""),
+        existingFileMode);
+  }
+
+  public static ImmutableList<Path> extractZipFile(
+      Path zipFile,
       final Path destination,
       ExistingFileMode existingFileMode) throws IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
     return FluentIterable
-        .from(extractZipFile(zipFile, new ProjectFilesystem(destination), existingFileMode))
+        .from(
+            extractZipFile(
+                zipFile,
+                new ProjectFilesystem(destination),
+                destination.getFileSystem().getPath(""),
+                existingFileMode))
         .transform(
             new Function<Path, Path>() {
               @Override

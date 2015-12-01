@@ -16,12 +16,13 @@
 
 package com.facebook.buck.testutil.packaged_resource;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.PackagedResource;
 
 public class PackagedResourceTestUtil {
   private PackagedResourceTestUtil() {}
 
-  public static PackagedResource getPackagedResource(String file) {
-    return new PackagedResource(PackagedResourceTestUtil.class, file);
+  public static PackagedResource getPackagedResource(ProjectFilesystem filesystem, String file) {
+    return new PackagedResource(filesystem, PackagedResourceTestUtil.class, file);
   }
 }

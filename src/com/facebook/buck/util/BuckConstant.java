@@ -44,6 +44,8 @@ public class BuckConstant {
   public static final String GEN_DIR = BUCK_OUTPUT_DIRECTORY + "/gen";
   public static final Path GEN_PATH = BUCK_OUTPUT_PATH.resolve("gen");
 
+  public static final Path RES_PATH = BUCK_OUTPUT_PATH.resolve("res");
+
   public static final String SCRATCH_DIR = BUCK_OUTPUT_DIRECTORY + "/bin";
   public static final Path SCRATCH_PATH = BUCK_OUTPUT_PATH.resolve("bin");
 

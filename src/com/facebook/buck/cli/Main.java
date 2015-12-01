@@ -607,6 +607,7 @@ public final class Main {
         filesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);
         filesystem.deleteRecursivelyIfExists(BuckConstant.GEN_PATH);
         filesystem.deleteRecursivelyIfExists(BuckConstant.SCRATCH_PATH);
+        filesystem.deleteRecursivelyIfExists(BuckConstant.RES_PATH);
         filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
         filesystem.writeContentsToPath(BuckVersion.getVersion(), BuckConstant.CURRENT_VERSION_FILE);
       }

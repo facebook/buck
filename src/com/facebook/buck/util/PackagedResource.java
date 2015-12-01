@@ -19,21 +19,21 @@ package com.facebook.buck.util;
 import static com.facebook.buck.zip.Unzip.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 
 /**
  * Represents a zip that has been packaged as a resource with Buck, but which should be expanded at
@@ -41,17 +41,18 @@ import java.util.Set;
  */
 public class PackagedResource implements Supplier<Path> {
 
-  static {
-    Runtime.getRuntime().addShutdownHook(new Thread(new Cleaner(), "packaged-resource-cleanup"));
-  }
+  private final ProjectFilesystem filesystem;
   private final String name;
   private final Class<?> relativeTo;
   private final Path filename;
   private final Supplier<Path> supplier;
 
-
   public PackagedResource(
-      Class<?> relativeTo, String pathRelativeToClass) {
+      ProjectFilesystem filesystem,
+      Class<?> relativeTo,
+      String pathRelativeToClass) {
+    this.filesystem = filesystem;
+
     this.relativeTo = relativeTo;
     // We could magically detect the class we're relative to by examining the stacktrace but that
     // would be incredibly fragile. So we won't.
@@ -98,47 +99,38 @@ public class PackagedResource implements Supplier<Path> {
             "Unable to find: %s", name).openStream();
         BufferedInputStream stream = new BufferedInputStream(inner)) {
 
-      Path outputDir = Files.createTempDirectory("buck-resource");
-      Cleaner.addRoot(outputDir);
+      Path outputPath =
+          BuckConstant.RES_PATH.resolve(relativeTo.getCanonicalName()).resolve(filename);
+
+      // If the path already exists, delete it.
+      if (filesystem.exists(outputPath)) {
+        filesystem.deleteRecursivelyIfExists(outputPath);
+      }
 
       String extension = com.google.common.io.Files.getFileExtension(filename.toString());
       if (extension.equals("zip")) {
+        filesystem.mkdirs(outputPath);
         // Copy the zip to a temporary file, and mark that for deletion once the VM exits.
         Path zip = Files.createTempFile(filename.toString(), ".zip");
         // Ensure we tidy up
-        Cleaner.addRoot(zip);
         Files.copy(stream, zip, REPLACE_EXISTING);
-        Unzip.extractZipFile(zip, outputDir, OVERWRITE);
-        return outputDir;
+        Unzip.extractZipFile(zip, filesystem, outputPath, OVERWRITE);
+        Files.delete(zip);
       } else {
-        Path tempFilePath = Files.createFile(outputDir.resolve(filename));
-        Cleaner.addRoot(tempFilePath);
-        Files.copy(stream, tempFilePath, REPLACE_EXISTING);
-        return tempFilePath;
+        filesystem.createParentDirs(outputPath);
+        Path tempFilePath =
+            filesystem.createTempFile(
+                outputPath.getParent(),
+                outputPath.getFileName().toString() + ".", ".tmp");
+        try (OutputStream outputStream = filesystem.newFileOutputStream(tempFilePath)) {
+          ByteStreams.copy(stream, outputStream);
+        }
+        filesystem.move(tempFilePath, outputPath);
       }
+      return outputPath;
     } catch (IOException ioe) {
       throw new RuntimeException("Unable to unpack " + name, ioe);
     }
   }
 
-  private static class Cleaner implements Runnable {
-    private static final Set<Path> ROOTS_TO_DELETE = Sets.newConcurrentHashSet();
-
-    static void addRoot(Path root) {
-      ROOTS_TO_DELETE.add(root);
-    }
-
-    @Override
-    @SuppressWarnings("PMD.EmptyCatchBlock")
-    public void run() {
-      for (Path root : ROOTS_TO_DELETE) {
-        try {
-          MoreFiles.deleteRecursively(root);
-        } catch (IOException e) {
-          // Ignore and carry on. The JVM is shutting down and we wrote files to a temp dir, which
-          // should get cleaned up at some point anyway.
-        }
-      }
-    }
-  }
 }

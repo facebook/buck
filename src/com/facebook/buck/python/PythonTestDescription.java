@@ -260,7 +260,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
             .put(
                 getTestMainName(),
-                pythonBuckConfig.getPathToTestMain())
+                pythonBuckConfig.getPathToTestMain(params.getProjectFilesystem()))
             .putAll(srcs)
             .build(),
         resources,

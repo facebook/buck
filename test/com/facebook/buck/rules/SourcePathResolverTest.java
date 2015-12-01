@@ -83,9 +83,12 @@ public class SourcePathResolverTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    PackagedResource packagedResource = PackagedResourceTestUtil.getPackagedResource(
-        "testdata/packaged_resource_one");
+    PackagedResource packagedResource =
+        PackagedResourceTestUtil.getPackagedResource(
+            filesystem,
+            "testdata/packaged_resource_one");
     ResourceSourcePath resourceSourcePathOne =
         new ResourceSourcePath(
             packagedResource);
@@ -98,10 +101,13 @@ public class SourcePathResolverTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     ResourceSourcePath resourceSourcePathOne =
         new ResourceSourcePath(
-            PackagedResourceTestUtil.getPackagedResource("testdata/packaged_resource_one"));
+            PackagedResourceTestUtil.getPackagedResource(
+                filesystem,
+                "testdata/packaged_resource_one"));
 
     exception.expect(IllegalStateException.class);
     pathResolver.getRelativePath(resourceSourcePathOne);

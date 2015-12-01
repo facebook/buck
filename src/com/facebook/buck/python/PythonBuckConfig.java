@@ -19,12 +19,13 @@ package com.facebook.buck.python;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ResourceSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -35,6 +36,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -44,6 +48,8 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nonnull;
 
 public class PythonBuckConfig {
 
@@ -66,10 +72,18 @@ public class PythonBuckConfig {
               "src/com/facebook/buck/python/pex.py"))
           .toAbsolutePath();
 
-  private static final SourcePath PATH_TO_TEST_MAIN =
-      new ResourceSourcePath(
-          new PackagedResource(
-              PythonBuckConfig.class, "__test_main__.py"));
+  private static final LoadingCache<ProjectFilesystem, PathSourcePath> PATH_TO_TEST_MAIN =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<ProjectFilesystem, PathSourcePath>() {
+                @Override
+                public PathSourcePath load(@Nonnull ProjectFilesystem filesystem) {
+                  return new PathSourcePath(
+                      filesystem,
+                      PythonBuckConfig.class + "/__test_main__.py",
+                      new PackagedResource(filesystem, PythonBuckConfig.class, "__test_main__.py"));
+                }
+              });
 
   private final BuckConfig delegate;
   private final ExecutableFinder exeFinder;
@@ -190,8 +204,8 @@ public class PythonBuckConfig {
     return getPythonEnvironment(processExecutor, configPath);
   }
 
-  public SourcePath getPathToTestMain() {
-    return PATH_TO_TEST_MAIN;
+  public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
+    return PATH_TO_TEST_MAIN.getUnchecked(filesystem);
   }
 
   public Tool getPexTool(BuildRuleResolver resolver) {
