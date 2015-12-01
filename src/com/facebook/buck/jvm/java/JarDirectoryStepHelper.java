@@ -84,6 +84,7 @@ public class JarDirectoryStepHelper {
         // Assume the file is a ZIP/JAR file.
         copyZipEntriesToJar(
             file,
+            pathToOutputFile,
             outputFile,
             manifest,
             alreadyAddedEntries,
@@ -178,19 +179,21 @@ public class JarDirectoryStepHelper {
   }
 
   /**
-   * @param file is assumed to be a zip file.
-   * @param jar is the file being written.
+   * @param inputFile is assumed to be a zip
+   * @param outputFile the path where output is being written to
+   * @param jar is the stream to write to
    * @param manifest that should get a copy of (@code jar}'s manifest entries.
    * @param alreadyAddedEntries is used to avoid duplicate entries.
    */
   private static void copyZipEntriesToJar(
-      Path file,
+      Path inputFile,
+      Path outputFile,
       final CustomZipOutputStream jar,
       Manifest manifest,
       Set<String> alreadyAddedEntries,
       BuckEventBus eventBus,
       Iterable<Pattern> blacklist) throws IOException {
-    try (ZipFile zip = new ZipFile(file.toFile())) {
+    try (ZipFile zip = new ZipFile(inputFile.toFile())) {
       zipEntryLoop:
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
         ZipEntry entry = entries.nextElement();
@@ -212,9 +215,11 @@ public class JarDirectoryStepHelper {
           // Duplicate entries. Skip.
           eventBus.post(ConsoleEvent.create(
                   determineSeverity(entry),
-                  "Duplicate found when adding file '%s' to jar '%s'",
+                  "Duplicate found when adding '%s' to '%s' from '%s'",
                   entryName,
-                  file.toString()));
+                  outputFile.toAbsolutePath(),
+                  inputFile.toAbsolutePath()
+              ));
           continue;
         }
 
@@ -249,7 +254,8 @@ public class JarDirectoryStepHelper {
         jar.closeEntry();
       }
     } catch (ZipException e) {
-      throw new IOException("Failed to process zip file " + file + ": " + e.getMessage(), e);
+      throw new IOException(
+          "Failed to process zip file " + inputFile + ": " + e.getMessage(), e);
     }
   }
 
