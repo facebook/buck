@@ -220,6 +220,33 @@ public class PythonBinaryIntegrationTest {
     assertThat(stdout, equalTo("hello world"));
   }
 
+  @Test
+  public void externalPexToolAffectsRuleKey() throws IOException {
+    assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.STANDALONE));
+
+    ProjectWorkspace.ProcessResult firstResult =
+        workspace.runBuckCommand(
+            "targets",
+            "-c",
+            "python.path_to_pex=//:pex_tool",
+            "--show-rulekey",
+            "//:bin");
+    String firstRuleKey = firstResult.assertSuccess().getStdout().trim();
+
+    workspace.writeContentsToPath("changes", "pex_tool.sh");
+
+    ProjectWorkspace.ProcessResult secondResult =
+        workspace.runBuckCommand(
+            "targets",
+            "-c",
+            "python.path_to_pex=//:pex_tool",
+            "--show-rulekey",
+            "//:bin");
+    String secondRuleKey = secondResult.assertSuccess().getStdout().trim();
+
+    assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
+  }
+
   private void assertPackageStyle(PythonBuckConfig.PackageStyle style) throws IOException {
     Config rawConfig = Config.createDefaultConfig(
         tmp.getRootPath(),

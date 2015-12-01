@@ -54,6 +54,11 @@ python_binary(
   ],
 )
 
+sh_binary(
+  name = 'pex_tool',
+  main = 'pex_tool.sh',
+)
+
 genrule(
   name = 'extra',
   out = 'out',

@@ -33,12 +33,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +54,9 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
+public class PythonBinaryDescription implements
+    Description<PythonBinaryDescription.Arg>,
+    ImplicitDepsInferringDescription<PythonBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
@@ -320,6 +324,20 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         mainModule,
         allPackageComponents,
         args.buildArgs.or(ImmutableList.<String>of()));
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
+
+    if (pythonBuckConfig.getPackageStyle() == PythonBuckConfig.PackageStyle.STANDALONE) {
+      targets.addAll(pythonBuckConfig.getPexTarget().asSet());
+    }
+
+    return targets.build();
   }
 
   @SuppressFieldNotInitialized

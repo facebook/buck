@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -206,6 +207,14 @@ public class PythonBuckConfig {
 
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
     return PATH_TO_TEST_MAIN.getUnchecked(filesystem);
+  }
+
+  public Optional<BuildTarget> getPexTarget() {
+    try {
+      return delegate.getBuildTarget(SECTION, "path_to_pex");
+    } catch (BuildTargetParseException e) {
+      return Optional.absent();
+    }
   }
 
   public Tool getPexTool(BuildRuleResolver resolver) {
