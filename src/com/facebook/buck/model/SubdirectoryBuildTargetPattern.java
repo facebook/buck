@@ -16,7 +16,8 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
+
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -25,17 +26,17 @@ import javax.annotation.Nullable;
  */
 public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
 
-  private final String basePathWithSlash;
+  private final Path cellPath;
+  private final Path pathWithinCell;
 
   /**
-   * @param basePathWithSlash The base path of the build target in the ancestor directory. It is
-   *     expected to match the value returned from a {@link BuildTarget#getBasePathWithSlash()}
+   * @param pathWithinCell The base path of the build target in the ancestor directory. It is
+   *     expected to match the value returned from a {@link BuildTarget#getBasePath()}
    *     call.
    */
-  public SubdirectoryBuildTargetPattern(String basePathWithSlash) {
-    Preconditions.checkArgument(basePathWithSlash.isEmpty() || basePathWithSlash.endsWith("/"),
-        "basePathWithSlash must either be the empty string or end with a slash");
-    this.basePathWithSlash = basePathWithSlash;
+  public SubdirectoryBuildTargetPattern(Path cellPath, Path pathWithinCell) {
+    this.cellPath = cellPath;
+    this.pathWithinCell = pathWithinCell;
   }
 
   /**
@@ -47,9 +48,19 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
   public boolean apply(@Nullable BuildTarget target) {
     if (target == null) {
       return false;
-    } else {
-      return target.getBasePathWithSlash().startsWith(basePathWithSlash);
     }
+
+    if (!cellPath.equals(target.getCellPath())) {
+      return false;
+    }
+
+    if (target.getBasePath().startsWith(pathWithinCell)) {
+      return true;
+    }
+
+    // If the pathWithinCell is empty, we match the top level directory in the cell. _Everything_ is
+    // a subdirectory of that.
+    return "".equals(pathWithinCell.toString());
   }
 
   @Override
@@ -58,11 +69,12 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
       return false;
     }
     SubdirectoryBuildTargetPattern that = (SubdirectoryBuildTargetPattern) o;
-    return Objects.equal(this.basePathWithSlash, that.basePathWithSlash);
+    return Objects.equal(this.cellPath, that.cellPath) &&
+        Objects.equal(this.pathWithinCell, that.pathWithinCell);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(basePathWithSlash);
+    return Objects.hashCode(cellPath, pathWithinCell);
   }
 }

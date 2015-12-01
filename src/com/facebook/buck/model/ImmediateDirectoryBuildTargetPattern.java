@@ -16,7 +16,8 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
+
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -25,16 +26,16 @@ import javax.annotation.Nullable;
  */
 public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern {
 
-  private final String basePathWithSlash;
+  private final Path cellPath;
+  private final Path pathWithinCell;
 
   /**
-   * @param basePathWithSlash The base path of all valid build targets. It is expected to
-   *     match the value returned from a {@link BuildTarget#getBasePathWithSlash()} call.
+   * @param pathWithinCell The base path of all valid build targets. It is expected to
+   *     match the value returned from a {@link BuildTarget#getBasePath()} call.
    */
-  public ImmediateDirectoryBuildTargetPattern(String basePathWithSlash) {
-    Preconditions.checkArgument(basePathWithSlash.isEmpty() || basePathWithSlash.endsWith("/"),
-        "basePathWithSlash must either be the empty string or end with a slash");
-    this.basePathWithSlash = basePathWithSlash;
+  public ImmediateDirectoryBuildTargetPattern(Path cellPath, Path pathWithinCell) {
+    this.cellPath = cellPath;
+    this.pathWithinCell = pathWithinCell;
   }
 
   /**
@@ -45,9 +46,11 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
   public boolean apply(@Nullable BuildTarget target) {
     if (target == null) {
       return false;
-    } else {
-      return Objects.equal(this.basePathWithSlash, target.getBasePathWithSlash());
     }
+
+    return
+        Objects.equal(this.cellPath, target.getCellPath()) &&
+        Objects.equal(this.pathWithinCell, target.getBasePath());
   }
 
   @Override
@@ -56,12 +59,14 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
       return false;
     }
     ImmediateDirectoryBuildTargetPattern that = (ImmediateDirectoryBuildTargetPattern) o;
-    return Objects.equal(this.basePathWithSlash, that.basePathWithSlash);
+    return
+        Objects.equal(this.cellPath, that.cellPath) &&
+        Objects.equal(this.pathWithinCell, that.pathWithinCell);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(basePathWithSlash);
+    return Objects.hashCode(cellPath, pathWithinCell);
   }
 
 }

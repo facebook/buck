@@ -42,17 +42,17 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
-            BuildFileSpec.fromRecursivePath(Paths.get("hello"))),
+            BuildFileSpec.fromRecursivePath(Paths.get("hello").toAbsolutePath())),
         PARSER.parse(createCellRoots(null), "//hello/..."));
     assertEquals(
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
-            BuildFileSpec.fromRecursivePath(Paths.get(""))),
+            BuildFileSpec.fromRecursivePath(Paths.get("").toAbsolutePath())),
         PARSER.parse(createCellRoots(null), "//..."));
     assertEquals(
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
-            BuildFileSpec.fromRecursivePath(Paths.get(""))),
+            BuildFileSpec.fromRecursivePath(Paths.get("").toAbsolutePath())),
         PARSER.parse(createCellRoots(null), "..."));
     assertEquals(
         BuildTargetSpec.from(BuildTargetFactory.newInstance("//hello:...")),
@@ -64,7 +64,7 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
-            BuildFileSpec.fromPath(Paths.get("hello"))),
+            BuildFileSpec.fromPath(Paths.get("hello").toAbsolutePath())),
         PARSER.parse(createCellRoots(null), "//hello:"));
   }
 

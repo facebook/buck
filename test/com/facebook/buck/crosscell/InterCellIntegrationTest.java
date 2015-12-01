@@ -21,20 +21,33 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.ParserNg;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.martiansoftware.nailgun.NGContext;
@@ -168,6 +181,65 @@ public class InterCellIntegrationTest {
   @Ignore
   public void buildFileNamesCanBeDifferentCrossCell() {
 
+  }
+
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  @Test
+  public void xCellVisibilityShouldWorkAsExpected()
+      throws IOException, InterruptedException, BuildFileParseException {
+    try {
+      parseTargetForXCellVisibility("//:not-visible-target");
+      fail("Did not expect parsing to succeed");
+    } catch (HumanReadableException expected) {
+      // Everything is as it should be.
+    }
+  }
+
+  @Test
+  public void xCellVisibilityPatternsBasedOnExplicitBuildTargetsWork()
+      throws InterruptedException, BuildFileParseException, IOException {
+    parseTargetForXCellVisibility("//:visible-target");
+  }
+
+  @Test
+  public void xCellSingleDirectoryVisibilityPatternsWork()
+      throws InterruptedException, BuildFileParseException, IOException {
+    parseTargetForXCellVisibility("//sub2:directory");
+  }
+
+  @Test
+  public void xCellSubDirectoryVisibilityPatternsWork()
+      throws InterruptedException, BuildFileParseException, IOException {
+    parseTargetForXCellVisibility("//sub:wild-card");
+  }
+
+  private void parseTargetForXCellVisibility(String targetName)
+      throws IOException, InterruptedException, BuildFileParseException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/visibility/primary",
+        "inter-cell/visibility/secondary");
+
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+
+    registerCell(secondary, "primary", primary);
+
+    // We could just do a build, but that's a little extreme since all we need is the target graph
+    TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
+    ParserNg parser = new ParserNg(coercerFactory, new ConstructorArgMarshaller(coercerFactory));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+
+    Cell primaryCell = primary.asCell();
+    BuildTarget namedTarget = BuildTargetFactory.newInstance(
+        primaryCell.getFilesystem(),
+        targetName);
+
+    // It's enough that this parses cleanly.
+    parser.buildTargetGraph(
+        eventBus,
+        primaryCell,
+        false,
+        ImmutableSet.of(namedTarget));
   }
 
   @Test

@@ -107,7 +107,7 @@ public class Cell {
         new CacheLoader<Path, Cell>() {
           @Override
           public Cell load(Path cellPath) throws Exception {
-            cellPath = cellPath.toRealPath();
+            cellPath = cellPath.toRealPath().normalize();
 
             if (!knownRoots.contains(cellPath)) {
               throw new HumanReadableException(

@@ -205,16 +205,20 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> directoryTargetNode = createTargetNode(
         libTarget,
         ImmutableSet.<BuildTargetPattern>of(
-            new SubdirectoryBuildTargetPattern("src/com/facebook/")));
+            new SubdirectoryBuildTargetPattern(
+                filesystem.getRootPath(),
+                filesystem.getRootPath().getFileSystem().getPath("src/com/facebook/"))));
     assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
     assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
     assertFalse(directoryTargetNode.isVisibleTo(targetInOtherDirectory));
     assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
 
-    // Build rule that visible to all targets, equals to PUBLIC.
+    // Build rule that's visible to all targets, equals to PUBLIC.
     TargetNode<?> pubicTargetNode = createTargetNode(
         libTarget,
-        ImmutableSet.<BuildTargetPattern>of(new SubdirectoryBuildTargetPattern("")));
+        ImmutableSet.<BuildTargetPattern>of(new SubdirectoryBuildTargetPattern(
+            filesystem.getRootPath(),
+            filesystem.getRootPath().getFileSystem().getPath(""))));
     assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));

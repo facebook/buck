@@ -25,7 +25,6 @@ import com.google.common.collect.ComparisonChain;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @BuckStyleImmutable
 @Value.Immutable
@@ -74,6 +73,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava/".
    */
+  @Value.Derived
   public String getBaseNameWithSlash() {
     return getBaseNameWithSlash(getBaseName());
   }
@@ -89,12 +89,14 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   }
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "third_party/java/guava". This does not contain the "//" prefix so that it can be appended to
-   * a file path.
+   * If this build target were //third_party/java/guava:guava-latest, then this would return the
+   * {@link Path} "third_party/java/guava". This does not contain the "//" prefix so that it can be
+   * appended to a file path.
    */
+  @Value.Derived
   public Path getBasePath() {
-    return Paths.get(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
+    return getCellPath().getFileSystem().getPath(
+        getBaseName().substring(BUILD_TARGET_PREFIX.length()));
   }
 
   /**
@@ -102,6 +104,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    *     {@link #getBasePath()} returns the empty string, in which case this also returns the empty
    *     string
    */
+  @Value.Derived
   public String getBasePathWithSlash() {
     String basePath = MorePaths.pathWithUnixSeparators(getBasePath());
     return basePath.isEmpty() ? "" : basePath + "/";
@@ -114,6 +117,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * If this build target is //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
+  @Value.Derived
   public String getFullyQualifiedName() {
     return (getCell().isPresent() ? "@" + getCell().get() : "") +
         getBaseName() + ":" + getShortName();

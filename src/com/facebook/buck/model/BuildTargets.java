@@ -98,7 +98,8 @@ public class BuildTargets {
       BuildTarget other) {
 
     // Targets in the same build file are always visible to each other.
-    if (target.getBaseName().equals(other.getBaseName())) {
+    if (target.getCellPath().equals(other.getCellPath()) &&
+        target.getBaseName().equals(other.getBaseName())) {
       return true;
     }
 

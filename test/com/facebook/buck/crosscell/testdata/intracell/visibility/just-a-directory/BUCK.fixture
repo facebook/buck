@@ -1,0 +1,6 @@
+
+genrule(
+  name = 'rule',
+  out = 'bar.txt',
+  cmd = 'echo "$(location //:top)" > $OUT',
+)

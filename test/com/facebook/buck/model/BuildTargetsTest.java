@@ -16,13 +16,18 @@
 
 package com.facebook.buck.model;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -128,4 +133,19 @@ public class BuildTargetsTest {
     }
   }
 
+  @Test
+  public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
+    ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
+    ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
+
+    BuildTarget targetOne = BuildTargetFactory.newInstance(rootOne, "//foo:bar");
+    BuildTarget targetTwo = BuildTargetFactory.newInstance(rootTwo, "//foo:bar");
+
+    BuildTargetPattern pattern = new SingletonBuildTargetPattern(
+        rootOne.getRootPath(),
+        "//foo:other");
+    boolean isVisible = BuildTargets.isVisibleTo(targetTwo, ImmutableSet.of(pattern), targetOne);
+
+    assertThat(isVisible, is(false));
+  }
 }

@@ -47,7 +47,13 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    */
   @Override
   public boolean apply(@Nullable BuildTarget target) {
-    return target != null && this.target.equals(target.getUnflavoredBuildTarget());
+    if (target == null) {
+      return false;
+    }
+
+    return
+        this.target.getCellPath().equals(target.getCellPath()) &&
+        this.target.equals(target.getUnflavoredBuildTarget());
   }
 
   @Override

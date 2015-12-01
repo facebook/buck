@@ -24,6 +24,9 @@ import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSObject;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;
@@ -32,13 +35,20 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -515,6 +525,31 @@ public class ProjectWorkspace {
     return BuckBuildLog.fromLogContents(
         getDestPath(),
         Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
+  }
+
+  public Cell asCell() throws IOException, InterruptedException {
+    Config config = Config.createDefaultConfig(
+        getDestPath(),
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(getDestPath(), config);
+    TestConsole console = new TestConsole();
+    ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
+    DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
+        filesystem,
+        Optional.<String>absent(),
+        new DefaultPropertyFinder(filesystem, env));
+    return new Cell(
+        filesystem,
+        console,
+        Watchman.NULL_WATCHMAN,
+        new BuckConfig(config, filesystem, Architecture.detect(), Platform.detect(), env),
+        new KnownBuildRuleTypesFactory(
+            new ProcessExecutor(console),
+            directoryResolver,
+            Optional.<Path>absent()),
+        directoryResolver,
+        new DefaultClock());
   }
 
   /** The result of running {@code buck} from the command line. */
