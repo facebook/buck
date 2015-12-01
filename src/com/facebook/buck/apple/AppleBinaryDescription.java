@@ -79,7 +79,7 @@ public class AppleBinaryDescription
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleBundle.DebugInfoFormat defaultDebugInfoFormat;
+  private final AppleDebugFormat defaultDebugInfoFormat;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
@@ -88,7 +88,7 @@ public class AppleBinaryDescription
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleBundle.DebugInfoFormat defaultDebugInfoFormat) {
+      AppleDebugFormat defaultDebugInfoFormat) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
@@ -144,9 +144,9 @@ public class AppleBinaryDescription
             "No value specified for 'info_plist' attribute.",
             params.getBuildTarget().getUnflavoredBuildTarget());
       }
-      Optional<AppleBundle.DebugInfoFormat> flavoredDebugInfoFormat;
+      Optional<AppleDebugFormat> flavoredDebugInfoFormat;
       try {
-        flavoredDebugInfoFormat = AppleBundle.DEBUG_INFO_FORMAT_FLAVOR_DOMAIN.getValue(
+        flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
             ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
       } catch (FlavorDomainException e) {
         throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());

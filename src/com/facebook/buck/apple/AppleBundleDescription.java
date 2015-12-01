@@ -69,7 +69,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleBundle.DebugInfoFormat defaultDebugInfoFormat;
+  private final AppleDebugFormat defaultDebugInfoFormat;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -79,7 +79,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleBundle.DebugInfoFormat defaultDebugInfoFormat) {
+      AppleDebugFormat defaultDebugInfoFormat) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -109,8 +109,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
     for (Flavor flavor : flavors) {
       if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE) ||
-          flavor.equals(AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR) ||
-          flavor.equals(AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR)) {
+          flavor.equals(AppleDebugFormat.DWARF_AND_DSYM_FLAVOR) ||
+          flavor.equals(AppleDebugFormat.NO_DEBUG_FLAVOR)) {
         continue;
       }
       flavorBuilder.add(flavor);
@@ -125,9 +125,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    Optional<AppleBundle.DebugInfoFormat> flavoredDebugInfoFormat;
+    Optional<AppleDebugFormat> flavoredDebugInfoFormat;
     try {
-      flavoredDebugInfoFormat = AppleBundle.DEBUG_INFO_FORMAT_FLAVOR_DOMAIN.getValue(
+      flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
           ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());

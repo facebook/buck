@@ -68,8 +68,8 @@ public class AppleLibraryDescription implements
       CxxDescriptionEnhancer.SHARED_FLAVOR,
       AppleDescriptions.FRAMEWORK_FLAVOR,
       AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR,
-      AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR,
-      AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR,
+      AppleDebugFormat.DWARF_AND_DSYM_FLAVOR,
+      AppleDebugFormat.NO_DEBUG_FLAVOR,
       ImmutableFlavor.of("default"));
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -141,7 +141,7 @@ public class AppleLibraryDescription implements
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleBundle.DebugInfoFormat debugInfoFormat;
+  private final AppleDebugFormat debugInfoFormat;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -150,7 +150,7 @@ public class AppleLibraryDescription implements
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleBundle.DebugInfoFormat debugInfoFormat) {
+      AppleDebugFormat debugInfoFormat) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
@@ -183,11 +183,11 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, Type>> type;
-    Optional<AppleBundle.DebugInfoFormat> flavoredDebugInfoFormat;
+    Optional<AppleDebugFormat> flavoredDebugInfoFormat;
     try {
       type = LIBRARY_TYPE.getFlavorAndValue(
           ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-      flavoredDebugInfoFormat = AppleBundle.DEBUG_INFO_FORMAT_FLAVOR_DOMAIN.getValue(
+      flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
           ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());

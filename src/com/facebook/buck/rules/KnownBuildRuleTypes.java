@@ -39,7 +39,6 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.SmartDexingStep;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatform;
@@ -281,7 +280,6 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
-    final AppleBundle.DebugInfoFormat defaultDebugInfoFormat = appleConfig.getDebugInfoFormat();
 
     ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatformsBuilder =
         ImmutableMap.builder();
@@ -453,7 +451,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            defaultDebugInfoFormat);
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription =
@@ -464,7 +462,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            defaultDebugInfoFormat);
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleBinaryDescription);
 
     // Create an executor service exclusively for the smart dexing step.
@@ -506,7 +504,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            defaultDebugInfoFormat);
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(

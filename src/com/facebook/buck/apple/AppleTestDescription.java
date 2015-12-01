@@ -346,7 +346,7 @@ public class AppleTestDescription implements
         codeSignIdentityStore,
         appleCxxPlatform.getCodesignAllocate(),
         provisioningProfileStore,
-        AppleBundle.DebugInfoFormat.NONE);
+        AppleDebugFormat.NONE);
 
 
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which

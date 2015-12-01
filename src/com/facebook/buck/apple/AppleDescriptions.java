@@ -399,7 +399,7 @@ public class AppleDescriptions {
       Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
-      AppleBundle.DebugInfoFormat debugInfoFormat)
+      AppleDebugFormat debugInfoFormat)
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
@@ -534,8 +534,8 @@ public class AppleDescriptions {
                     ReactNativeFlavors.DO_NOT_BUNDLE,
                     AppleDescriptions.FRAMEWORK_FLAVOR,
                     AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR,
-                    AppleBundle.DEBUG_INFO_FORMAT_DWARF_AND_DSYM_FLAVOR,
-                    AppleBundle.DEBUG_INFO_FORMAT_NONE_FLAVOR,
+                    AppleDebugFormat.DWARF_AND_DSYM_FLAVOR,
+                    AppleDebugFormat.NO_DEBUG_FLAVOR,
                     AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
