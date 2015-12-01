@@ -1,21 +1,4 @@
 java_library(
-  name = 'nativelinkable',
-  srcs = [
-    'JavaNativeLinkable.java',
-  ],
-  deps = [
-    '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:rule_pattern',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//third-party/java/guava:guava',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-java_library(
   name = 'classhash',
   srcs = [
     'HasJavaClassHashes.java',

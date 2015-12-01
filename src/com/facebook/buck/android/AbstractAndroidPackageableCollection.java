@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.core.JavaNativeLinkable;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -29,7 +29,6 @@ import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -84,12 +83,12 @@ interface AbstractAndroidPackageableCollection {
   /**
    * Native libraries.
    */
-  List<JavaNativeLinkable> getNativeLinkables();
+  ImmutableList<NativeLinkable> getNativeLinkables();
 
   /**
    * Native libraries to be packaged as assets.
    */
-  List<JavaNativeLinkable> getNativeLinkablesAssets();
+  ImmutableList<NativeLinkable> getNativeLinkablesAssets();
 
   /**
    * Directories containing native libraries.

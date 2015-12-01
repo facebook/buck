@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.jvm.core.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -103,15 +103,15 @@ public class JavaLibraryRules {
       new AbstractBreadthFirstTraversal<BuildRule>(deps) {
         @Override
         public ImmutableSet<BuildRule> visit(BuildRule rule) {
-          if (rule instanceof JavaNativeLinkable) {
-            JavaNativeLinkable linkable = (JavaNativeLinkable) rule;
+          if (rule instanceof NativeLinkable) {
+            NativeLinkable linkable = (NativeLinkable) rule;
             try {
               libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
             } catch (NoSuchBuildTargetException e) {
               throw new ClosureException(e);
             }
           }
-          if (rule instanceof JavaNativeLinkable ||
+          if (rule instanceof NativeLinkable ||
               rule instanceof JavaLibrary) {
             return rule.getDeps();
           } else {

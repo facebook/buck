@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.core.JavaNativeLinkable;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -74,14 +74,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   // Populates an immutable map builder with all given linkables set to the given cpu type.
   // Returns true iff linkables is not empty.
   private boolean populateMapWithLinkables(
-      List<JavaNativeLinkable> linkables,
+      List<NativeLinkable> linkables,
       ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> builder,
       NdkCxxPlatforms.TargetCpuType targetCpuType,
       NdkCxxPlatform platform) throws NoSuchBuildTargetException {
 
     boolean hasNativeLibs = false;
 
-    for (JavaNativeLinkable nativeLinkable : linkables) {
+    for (NativeLinkable nativeLinkable : linkables) {
       ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
           platform.getCxxPlatform());
       for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
