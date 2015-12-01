@@ -154,7 +154,8 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         BuildTarget.builder(params.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("link-tree"))
             .build();
-    Path linkTreeRoot = BuildTargets.getGenPath(linkTreeTarget, "%s");
+    Path linkTreeRoot = params.getProjectFilesystem().resolve(
+        BuildTargets.getGenPath(linkTreeTarget, "%s"));
     SymlinkTree linkTree;
     try {
       linkTree =

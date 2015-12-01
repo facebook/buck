@@ -88,16 +88,18 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
     String pathToPrivateHeaders =
         String.format(
-            "buck-out/gen/Libraries/EXExample/EXExample#iphonesimulator-x86_64,%s.hmap",
+            "%s/buck-out/gen/Libraries/EXExample/EXExample#iphonesimulator-x86_64,%s.hmap",
+            workspace.getDestPath(),
             CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     String pathToPublicHeaders =
         String.format(
-            "buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
+            "%s/buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
+            workspace.getDestPath(),
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        BuckConstant.BUCK_OUTPUT_DIRECTORY);
+        tmp.getRoot().resolve(BuckConstant.BUCK_OUTPUT_DIRECTORY).toString());
 
     // Verify the entries in the compilation database.
     assertFlags(
@@ -146,16 +148,18 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
     String pathToPrivateHeaders =
         String.format(
-            "buck-out/gen/Apps/Weather/Weather#iphonesimulator-x86_64,%s.hmap",
+            "%s/buck-out/gen/Apps/Weather/Weather#iphonesimulator-x86_64,%s.hmap",
+            workspace.getDestPath(),
             CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     String pathToPublicHeaders =
         String.format(
-            "buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
+            "%s/buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
+            workspace.getDestPath(),
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        BuckConstant.BUCK_OUTPUT_DIRECTORY);
+        tmp.getRoot().resolve(BuckConstant.BUCK_OUTPUT_DIRECTORY).toString());
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",

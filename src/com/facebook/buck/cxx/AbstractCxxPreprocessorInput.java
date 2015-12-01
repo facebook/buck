@@ -21,6 +21,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -107,6 +108,28 @@ abstract class AbstractCxxPreprocessorInput {
   // Framework paths.
   @Value.Parameter
   public abstract Set<FrameworkPath> getFrameworks();
+
+  @Value.Check
+  protected void validateAssumptions() {
+    for (Path root : getIncludeRoots()) {
+      Preconditions.checkState(
+          root.isAbsolute(),
+          "Expected include root to be absolute: %s",
+          root);
+    }
+    for (Path root : getSystemIncludeRoots()) {
+      Preconditions.checkState(
+          root.isAbsolute(),
+          "Expected system include root to be absolute: %s",
+          root);
+    }
+    for (Path map : getHeaderMaps()) {
+      Preconditions.checkState(
+          map.isAbsolute(),
+          "Expected header map path to be absolute: %s",
+          map);
+    }
+  }
 
   public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 

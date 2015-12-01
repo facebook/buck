@@ -62,9 +62,9 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory) {
+  public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
     return ImmutableList.of(
-        new OsoSymbolsScrubber(linkingDirectory),
+        new OsoSymbolsScrubber(cellRoots),
         new LcUuidScrubber());
   }
 

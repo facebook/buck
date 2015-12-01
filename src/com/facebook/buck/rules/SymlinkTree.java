@@ -22,6 +22,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -50,6 +51,12 @@ public class SymlinkTree
       Path root,
       ImmutableMap<Path, SourcePath> links) throws InvalidSymlinkTreeException {
     super(params, resolver);
+
+    Preconditions.checkState(
+        root.isAbsolute(),
+        "Expected symlink tree root to be absolute: %s",
+        root);
+
     this.root = root;
     this.links = ImmutableSortedMap.copyOf(links);
 
@@ -101,8 +108,9 @@ public class SymlinkTree
   }
 
   // We generate the symlinks using post-build steps to avoid the cache because:
-  // 1) We don't currently support caching symlinks
+  // 1) We don't currently support caching symlinks.
   // 2) It's almost certainly always more expensive to cache them rather than just re-create them.
+  // 3) The symlinks are absolute.
   @Override
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context,

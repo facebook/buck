@@ -112,8 +112,8 @@ public class CxxCompilationDatabaseTest {
                     ImmutableList.<String>of(),
                     ImmutableList.<String>of(),
                     ImmutableSet.of(
-                        Paths.get("foo/bar"),
-                        Paths.get("test")),
+                        filesystem.resolve("foo/bar"),
+                        filesystem.resolve("test")),
                     ImmutableSet.<Path>of(),
                     ImmutableSet.<Path>of(),
                     ImmutableSet.<Path>of(),
@@ -156,8 +156,8 @@ public class CxxCompilationDatabaseTest {
                     ImmutableList.<String>of(),
                     ImmutableList.<String>of(),
                     ImmutableSet.of(
-                        Paths.get("foo/bar"),
-                        Paths.get("test")),
+                        filesystem.resolve("foo/bar"),
+                        filesystem.resolve("test")),
                     ImmutableSet.<Path>of(),
                     ImmutableSet.<Path>of(),
                     ImmutableSet.<Path>of(),
@@ -214,9 +214,9 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.of(
             "compiler",
             "-I",
-            "foo/bar",
+            "/Users/user/src/foo/bar",
             "-I",
-            "test",
+            "/Users/user/src/test",
             "-x",
             "c++",
             "-c",
@@ -234,9 +234,9 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.of(
             "compiler",
             "-I",
-            "foo/bar",
+            "/Users/user/src/foo/bar",
             "-I",
-            "test",
+            "/Users/user/src/test",
             "-x",
             "c++",
             "-c",
@@ -250,8 +250,8 @@ public class CxxCompilationDatabaseTest {
     runCombinedTest(CxxPreprocessMode.SEPARATE,
         ImmutableList.of(
             "compiler",
-            "-I", "foo/bar",
-            "-I", "test",
+            "-I", "/Users/user/src/foo/bar",
+            "-I", "/Users/user/src/test",
             // compdb will present a single command despite this being two commands under the hood,
             // hence, this is compiling a cpp file, not cpp preprocessed output.
             "-x", "c++",

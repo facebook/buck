@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -29,7 +30,7 @@ import java.nio.file.Path;
  */
 public interface Linker extends Tool {
 
-  ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory);
+  ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots);
 
   /**
    * @return the platform-specific way to specify that the library represented by the

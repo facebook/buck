@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -31,6 +32,7 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -64,6 +66,16 @@ public class CxxLink
     buildableContext.recordArtifact(output);
     Path argFilePath = getProjectFilesystem().getRootPath().resolve(
         BuildTargets.getScratchPath(getBuildTarget(), "%s__argfile.txt"));
+
+    // Try to find all the cell roots used during the link.  This isn't technically correct since,
+    // in theory not all inputs need to come from build rules, but it probably works in practice.
+    // One way that we know would work is exposing every known cell root paths, since the only rules
+    // that we built (and therefore need to scrub) will be in one of those roots.
+    ImmutableSet.Builder<Path> cellRoots = ImmutableSet.builder();
+    for (BuildRule dep : getDeps()) {
+      cellRoots.add(dep.getProjectFilesystem().getRootPath());
+    }
+
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new CxxPrepareForLinkStep(
@@ -78,7 +90,7 @@ public class CxxLink
         new FileScrubberStep(
             getProjectFilesystem(),
             output,
-            linker.getScrubbers(getProjectFilesystem().getRootPath())));
+            linker.getScrubbers(cellRoots.build())));
   }
 
   @Override

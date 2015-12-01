@@ -54,10 +54,7 @@ public class CxxCompilationDatabaseIntegrationTest {
           ImmutableList.<String>of();
   private static final boolean PREPROCESSOR_SUPPORTS_HEADER_MAPS =
       Platform.detect() == Platform.MACOS;
-  private static final ImmutableList<String> EXTRA_FLAGS_FOR_HEADER_MAPS =
-      PREPROCESSOR_SUPPORTS_HEADER_MAPS ?
-          ImmutableList.of("-I", BuckConstant.BUCK_OUTPUT_DIRECTORY) :
-          ImmutableList.<String>of();
+
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -109,7 +106,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreeIncludePath(binaryHeaderSymlinkTreeFolder))
             .add("-I")
             .add(headerSymlinkTreeIncludePath(binaryExportedHeaderSymlinkTreeFoler))
-            .addAll(EXTRA_FLAGS_FOR_HEADER_MAPS)
+            .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
@@ -159,7 +156,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreeIncludePath(headerSymlinkTreeFolder))
             .add("-I")
             .add(headerSymlinkTreeIncludePath(exportedHeaderSymlinkTreeFoler))
-            .addAll(EXTRA_FLAGS_FOR_HEADER_MAPS)
+            .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
@@ -170,11 +167,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             .build());
   }
 
-  private static String headerSymlinkTreeIncludePath(String headerSymlinkTreePath) {
+  private String headerSymlinkTreeIncludePath(String headerSymlinkTreePath) throws IOException {
+    Path root = tmp.getRootPath().toRealPath().toAbsolutePath();
+
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
-      return headerSymlinkTreePath + ".hmap";
+      return String.format("%s/%s.hmap", root, headerSymlinkTreePath);
     } else {
-      return headerSymlinkTreePath;
+      return String.format("%s/%s", root, headerSymlinkTreePath);
     }
   }
 
@@ -191,5 +190,13 @@ public class CxxCompilationDatabaseIntegrationTest {
                 command,
                 Escaper.SHELL_ESCAPER)),
         entry.getCommand());
+  }
+
+  private ImmutableList<String> getExtraFlagsForHeaderMaps() throws IOException {
+    // This works around OS X being amusing about the location of temp directories.
+    Path root = tmp.getRootPath().toRealPath().toAbsolutePath().normalize();
+    return PREPROCESSOR_SUPPORTS_HEADER_MAPS ?
+        ImmutableList.of("-I", root.resolve(BuckConstant.BUCK_OUTPUT_DIRECTORY).toString()) :
+        ImmutableList.<String>of();
   }
 }

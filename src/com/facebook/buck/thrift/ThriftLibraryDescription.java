@@ -291,7 +291,7 @@ public class ThriftLibraryDescription
       ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
 
       // Create the symlink tree build rule and add it to the resolver.
-      Path includeRoot = getIncludeRoot(target);
+      Path includeRoot = params.getProjectFilesystem().resolve(getIncludeRoot(target));
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       HeaderSymlinkTree symlinkTree;
       try {

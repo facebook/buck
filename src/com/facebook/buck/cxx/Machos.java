@@ -18,7 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.primitives.Ints;
 
 import java.io.IOException;
@@ -78,9 +80,11 @@ public class Machos {
         Arrays.equals(MH_MAGIC_64, magic) || Arrays.equals(MH_CIGAM_64, magic);
   }
 
-  static void relativizeOsoSymbols(FileChannel file, Path linkingDirectory)
+  static void relativizeOsoSymbols(FileChannel file, ImmutableCollection<Path> cellRoots)
       throws IOException, MachoException {
-    Preconditions.checkState(linkingDirectory.isAbsolute());
+    for (Path root : cellRoots) {
+      Preconditions.checkState(root.isAbsolute());
+    }
 
     long size = file.size();
     MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
@@ -187,7 +191,6 @@ public class Machos {
     map.position(symbolTableOffset);
 
     Map<Integer, Integer> strings = new HashMap<>();
-    String prefix = linkingDirectory.toString() + "/";
     for (int i = 0; i < symbolTableCount; i++) {
       int stringTableIndexPosition = map.position();
       int stringTableIndex = ObjectFileScrubbers.getLittleEndianInt(map);
@@ -213,16 +216,24 @@ public class Machos {
           stringTable.position(stringTableIndex);
           String string = ObjectFileScrubbers.getAsciiString(stringTable);
           if (type == N_OSO) {
-            string = MoreStrings
-                .stripPrefix(string, prefix)
-                .transform(
-                    new Function<String, String>() {
-                      @Override
-                      public String apply(String input) {
-                        return "./" + input;
-                      }
-                    })
-                .or(string);
+            for (Path root : cellRoots) {
+              String rootPrefix = root + "/";
+              Optional<String> fixed =
+                  MoreStrings
+                      .stripPrefix(string, rootPrefix)
+                      .transform(
+                          new Function<String, String>() {
+                            @Override
+                            public String apply(String input) {
+                              return "./" + input;
+                            }
+                          });
+              if (fixed.isPresent()) {
+                string = fixed.get();
+                break;
+              }
+            }
+
             map.position(valuePosition);
             if (header.getIs64Bit()) {
               ObjectFileScrubbers.putLittleEndianLong(map, 0);

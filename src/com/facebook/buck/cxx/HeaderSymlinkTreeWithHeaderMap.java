@@ -57,9 +57,15 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    Path buckOut = getProjectFilesystem().resolve(BuckConstant.BUCK_OUTPUT_PATH);
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
     for (Path key : getLinks().keySet()) {
-      headerMapEntries.put(key, BuckConstant.BUCK_OUTPUT_PATH.relativize(getRoot().resolve(key)));
+      // The key is the path that will be referred to in headers. It can be anything. However, the
+      // value given in the headerMapEntries is the path of that entry in the generated symlink
+      // tree. Because "reasons", we don't want to cache that value, so we need to relativize the
+      // path to the output directory of this current rule. We then rely on magic and the stars
+      // aligning in order to get this to work. May we find peace in another life.
+      headerMapEntries.put(key, buckOut.relativize(getRoot().resolve(key)));
     }
     return ImmutableList.<Step>builder()
         .addAll(super.getPostBuildSteps(context, buildableContext))
@@ -69,12 +75,12 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   @Override
   public Path getIncludePath() {
-    return BuckConstant.BUCK_OUTPUT_PATH;
+    return getProjectFilesystem().resolve(BuckConstant.BUCK_OUTPUT_PATH);
   }
 
   @Override
   public Optional<Path> getHeaderMap() {
-    return Optional.of(headerMapPath);
+    return Optional.of(getProjectFilesystem().resolve(headerMapPath));
   }
 
 }

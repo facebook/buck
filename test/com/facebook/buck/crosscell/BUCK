@@ -3,8 +3,11 @@ java_test(
   srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util/environment:platform',
+    '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

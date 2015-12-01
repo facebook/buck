@@ -26,6 +26,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -248,7 +249,7 @@ public class ThriftLibraryDescriptionTest {
         rule.getDeps());
 
     // Lets do this again, but pass in a ThriftLibrary deps, wrapping some includes we need.
-    Path includeRoot = desc.getIncludeRoot(unflavoredTarget);
+    Path includeRoot = filesystem.resolve(desc.getIncludeRoot(unflavoredTarget));
     HeaderSymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
         pathResolver,
@@ -359,6 +360,7 @@ public class ThriftLibraryDescriptionTest {
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
         new FakeBuildRuleParamsBuilder(unflavoredTarget).build();
+    ProjectFilesystem filesystem = unflavoredParams.getProjectFilesystem();
 
     // Setup an empty thrift buck config, missing the compiler.
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
@@ -373,7 +375,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Create a dep and verify it gets attached.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
-    Path depIncludeRoot = desc.getIncludeRoot(depTarget);
+    Path depIncludeRoot = filesystem.resolve(desc.getIncludeRoot(depTarget));
     HeaderSymlinkTree depIncludeSymlinkTree =
         createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
@@ -399,7 +401,7 @@ public class ThriftLibraryDescriptionTest {
         ImmutableSortedSet.of(dep),
         me.getThriftDeps());
     assertEquals(
-        desc.getIncludeRoot(unflavoredTarget),
+        filesystem.resolve(desc.getIncludeRoot(unflavoredTarget)),
         me.getIncludeTreeRule().getIncludePath());
   }
 

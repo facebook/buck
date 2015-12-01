@@ -288,7 +288,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void createBuildRuleIncludeDirs() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
-        .setIncludeDirs(ImmutableList.of("test"));
+        .setIncludeDirs(ImmutableList.of(filesystem.resolve("test").toString()));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());

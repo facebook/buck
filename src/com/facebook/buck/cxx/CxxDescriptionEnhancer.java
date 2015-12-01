@@ -175,15 +175,16 @@ public class CxxDescriptionEnhancer {
   }
 
   /**
-   * @return the {@link Path} to use for the symlink tree of headers.
+   * @return the absolute {@link Path} to use for the symlink tree of headers.
    */
   public static Path getHeaderSymlinkTreePath(
       BuildTarget target,
       Flavor platform,
       HeaderVisibility headerVisibility) {
-    return BuildTargets.getGenPath(
+    return target.getCellPath().resolve(
+        BuildTargets.getGenPath(
         createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
-        "%s");
+        "%s"));
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -656,6 +657,10 @@ public class CxxDescriptionEnhancer {
                   Predicates.instanceOf(NativeLinkable.class)));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
+      // The shared libraries root is absolute. Also need an absolute path to the linkOutput
+
+      Path absLinkOut = params.getBuildTarget().getCellPath().resolve(linkOutput);
+
       argsBuilder.addAll(
           StringArg.from(
               Linkers.iXlinker(
@@ -663,7 +668,7 @@ public class CxxDescriptionEnhancer {
                   String.format(
                       "%s/%s",
                       cxxPlatform.getLd().origin(),
-                      linkOutput.getParent().relativize(sharedLibraries.getRoot()).toString()))));
+                      absLinkOut.getParent().relativize(sharedLibraries.getRoot()).toString()))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
@@ -722,9 +727,9 @@ public class CxxDescriptionEnhancer {
   public static Path getSharedLibrarySymlinkTreePath(
       BuildTarget target,
       Flavor platform) {
-    return BuildTargets.getGenPath(
+    return target.getCellPath().resolve(BuildTargets.getGenPath(
         createSharedLibrarySymlinkTreeTarget(target, platform),
-        "%s");
+        "%s"));
   }
 
   /**

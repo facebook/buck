@@ -41,8 +41,8 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
   abstract Map<Path, SourcePath> getNameToPathMap();
 
   /**
-   * Maps the full of the header (e.g. the path to the header that appears in error messages) to
-   * the real location of the header.
+   * Maps the full path of the header (e.g. the path to the header that appears in error messages)
+   * to the real location of the header.
    */
   abstract Map<Path, SourcePath> getFullNameToPathMap();
 

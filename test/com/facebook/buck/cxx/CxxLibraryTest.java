@@ -75,11 +75,12 @@ public class CxxLibraryTest {
     // Setup some dummy values for the header info.
     final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");
     final BuildTarget publicHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance("//:symlink");
-    final Path publicHeaderSymlinkTreeRoot = Paths.get("symlink/tree/root");
+    final Path publicHeaderSymlinkTreeRoot = projectFilesystem.resolve("symlink/tree/root");
     final BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//:privateheader");
     final BuildTarget privateHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance(
         "//:privatesymlink");
-    final Path privateHeaderSymlinkTreeRoot = Paths.get("private/symlink/tree/root");
+    final Path privateHeaderSymlinkTreeRoot =
+        projectFilesystem.resolve("private/symlink/tree/root");
 
     // Setup some dummy values for the library archive info.
     final BuildRule archive = new FakeBuildRule("//:archive", pathResolver);

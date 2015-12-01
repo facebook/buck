@@ -24,6 +24,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +60,16 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final ImmutableSet<Path> headerMaps;
   private final DebugPathSanitizer sanitizer;
   private final SourcePathResolver resolver;
+  private static final Function<Path, String> ENSURE_ABSOLUTE_PATH = new Function<Path, String>() {
+    @Override
+    public String apply(Path path) {
+      Preconditions.checkState(
+          path.isAbsolute(),
+          "Expected preprocessor suffix to be absolute: %s",
+          path);
+      return path.toString();
+    }
+  };
 
   public PreprocessorDelegate(
       SourcePathResolver resolver,
@@ -158,6 +169,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    * This is important when there are flags that overwrite previous flags.
    */
   public ImmutableList<String> getPreprocessorSuffix() {
+
     return ImmutableList.<String>builder()
         .addAll(rulePreprocessorFlags)
         .addAll(
@@ -169,11 +181,11 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
-                Iterables.transform(headerMaps, Functions.toStringFunction())))
+                Iterables.transform(headerMaps, ENSURE_ABSOLUTE_PATH)))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
-                Iterables.transform(includeRoots, Functions.toStringFunction())))
+                Iterables.transform(includeRoots, ENSURE_ABSOLUTE_PATH)))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-isystem"),

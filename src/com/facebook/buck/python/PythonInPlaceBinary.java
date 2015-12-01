@@ -80,7 +80,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
             cxxPlatform,
             mainModule,
             components,
-            getBinPath().getParent().relativize(linkTree.getRoot()));
+            getProjectFilesystem()
+                .resolve(getBinPath())
+                .getParent()
+                .relativize(linkTree.getRoot()));
     this.linkTree = linkTree;
     this.components = components;
     this.python = python;

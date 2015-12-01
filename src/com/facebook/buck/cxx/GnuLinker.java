@@ -62,7 +62,7 @@ public class GnuLinker implements Linker {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory) {
+  public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
     return ImmutableList.of();
   }
 

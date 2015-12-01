@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -58,15 +59,16 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    ProjectFilesystem filesystem = libParams.getProjectFilesystem();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
-        Paths.get("symlink/tree/lib"),
+        filesystem.resolve("symlink/tree/lib"),
         BuildTargetFactory.newInstance("//:privateheader"),
         BuildTargetFactory.newInstance("//:privatesymlink"),
-        Paths.get("private/symlink/tree/lib"),
+        filesystem.resolve("private/symlink/tree/lib"),
         new FakeBuildRule("//:archive", pathResolver),
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
@@ -95,8 +97,8 @@ public class CxxDescriptionEnhancerTest {
         "Test of library should include both public and private headers",
         CxxPreprocessorInput.concat(combinedInput).getIncludeRoots(),
         hasItems(
-            Paths.get("symlink/tree/lib"),
-            Paths.get("private/symlink/tree/lib")));
+            filesystem.resolve("symlink/tree/lib"),
+            filesystem.resolve("private/symlink/tree/lib")));
   }
 
   @Test
@@ -108,15 +110,16 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    ProjectFilesystem filesystem = libParams.getProjectFilesystem();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
-        Paths.get("symlink/tree/lib"),
+        filesystem.resolve("symlink/tree/lib"),
         BuildTargetFactory.newInstance("//:privateheader"),
         BuildTargetFactory.newInstance("//:privatesymlink"),
-        Paths.get("private/symlink/tree/lib"),
+        filesystem.resolve("private/symlink/tree/lib"),
         new FakeBuildRule("//:archive", pathResolver),
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
@@ -146,8 +149,8 @@ public class CxxDescriptionEnhancerTest {
         "Non-test rule with library dep should include public and not private headers",
         CxxPreprocessorInput.concat(otherInput).getIncludeRoots(),
         allOf(
-            hasItem(Paths.get("symlink/tree/lib")),
-            not(hasItem(Paths.get("private/symlink/tree/lib")))));
+            hasItem(filesystem.resolve("symlink/tree/lib")),
+            not(hasItem(filesystem.resolve("private/symlink/tree/lib")))));
   }
 
   @Test

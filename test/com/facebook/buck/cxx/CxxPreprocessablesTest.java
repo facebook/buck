@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -149,38 +150,39 @@ public class CxxPreprocessablesTest {
 
   @Test
   public void getTransitiveCxxPreprocessorInput() throws Exception {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()));
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
-    BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
+    BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance(filesystem, "//:cpp1");
     CxxPreprocessorInput input1 = CxxPreprocessorInput.builder()
         .addRules(cppDepTarget1)
         .putPreprocessorFlags(CxxSource.Type.C, "-Dtest=yes")
         .putPreprocessorFlags(CxxSource.Type.CXX, "-Dtest=yes")
-        .addIncludeRoots(Paths.get("foo/bar"), Paths.get("hello"))
+        .addIncludeRoots(filesystem.resolve("foo/bar"), filesystem.resolve("hello"))
         .addSystemIncludeRoots(Paths.get("/usr/include"))
         .build();
-    BuildTarget depTarget1 = BuildTargetFactory.newInstance("//:dep1");
+    BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem, "//:dep1");
     FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, pathResolver, input1);
 
     // Setup another simple CxxPreprocessorDep which contributes components to preprocessing.
-    BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance("//:cpp2");
+    BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance(filesystem, "//:cpp2");
     CxxPreprocessorInput input2 = CxxPreprocessorInput.builder()
         .addRules(cppDepTarget2)
         .putPreprocessorFlags(CxxSource.Type.C, "-DBLAH")
         .putPreprocessorFlags(CxxSource.Type.CXX, "-DBLAH")
-        .addIncludeRoots(Paths.get("goodbye"))
-        .addSystemIncludeRoots(Paths.get("test"))
+        .addIncludeRoots(filesystem.resolve("goodbye"))
+        .addSystemIncludeRoots(filesystem.resolve("test"))
         .build();
     BuildTarget depTarget2 = BuildTargetFactory.newInstance("//:dep2");
     FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, pathResolver, input2);
 
     // Create a normal dep which depends on the two CxxPreprocessorDep rules above.
-    BuildTarget depTarget3 = BuildTargetFactory.newInstance("//:dep3");
+    BuildTarget depTarget3 = BuildTargetFactory.newInstance(filesystem, "//:dep3");
     CxxPreprocessorInput nothing = CxxPreprocessorInput.EMPTY;
     FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3,
         pathResolver,
@@ -201,21 +203,25 @@ public class CxxPreprocessablesTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     // Setup up the main build target and build params, which some random dep.  We'll make
     // sure the dep doesn't get propagated to the symlink rule below.
     FakeBuildRule dep = createFakeBuildRule(
-        BuildTargetFactory.newInstance("//random:dep"),
+        BuildTargetFactory.newInstance(filesystem, "//random:dep"),
         pathResolver);
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
         .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setProjectFilesystem(filesystem)
         .build();
-    Path root = Paths.get("root");
+    Path root = filesystem.resolve("root");
 
     // Setup a simple genrule we can wrap in a BuildTargetSourcePath to model a input source
     // that is built by another rule.
     Genrule genrule = (Genrule) GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+        .newGenruleBuilder(BuildTargetFactory.newInstance(filesystem, "//:genrule"))
         .setOut("foo/bar.o")
         .build(resolver);
 
