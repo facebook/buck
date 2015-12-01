@@ -29,10 +29,10 @@ from all transitive {call buck.python_library /} dependencies.
 {/call}
 
 {call buck.arg}
-  {param name: 'main' /}
+  {param name: 'main_module' /}
   {param desc}
-  A <code>.py</code> source serving as the entry point for this rule.
-  This source will be executed by the interpreter when the PEX file is run.
+  The module which serves as the entry point for this rule.
+  The <code>__main__.py</code> file of this module will be executed by the interpreter when the PEX file is run.
   {/param}
 {/call}
 
