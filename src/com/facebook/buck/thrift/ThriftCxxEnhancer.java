@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -37,11 +38,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
@@ -235,8 +238,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Create language specific build params by using the deps we formed above.
     BuildRuleParams langParams = params.copyWithDeps(
-        Suppliers.ofInstance(allDeps),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(allDeps));
 
     // Merge the thrift generated headers with the ones passed in via the description.
     ImmutableSortedMap.Builder<String, SourcePath> headersBuilder =
@@ -280,6 +283,13 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.srcs = Optional.of(ImmutableSortedSet.copyOf(srcs.values()));
     langArgs.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
     langArgs.canBeAsset = Optional.absent();
+
+    // Since thrift generated C/C++ code uses lots of templates, just use exported deps throughout.
+    langArgs.exportedDeps =
+        Optional.of(
+            FluentIterable.from(allDeps)
+                .transform(HasBuildTarget.TO_TARGET)
+                .toSortedSet(Ordering.<BuildTarget>natural()));
 
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);
   }

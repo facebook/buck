@@ -23,11 +23,14 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
@@ -551,18 +554,24 @@ public class ThriftCxxEnhancerTest {
             Paths.get("output2")));
 
     // Create a dummy implicit dep to pass in.
-    BuildRule dep = createFakeBuildRule("//:dep", pathResolver);
-    resolver.addToIndex(dep);
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(dep);
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(dep);
 
     // Run the enhancer to create the language specific build rule.
-    ENHANCER_CPP2.createBuildRule(
-        TargetGraph.EMPTY,
-        flavoredParams,
-        resolver,
-        arg,
-        sources,
-        deps);
+    CxxLibrary rule =
+        (CxxLibrary) ENHANCER_CPP2.createBuildRule(
+            TargetGraph.EMPTY,
+            flavoredParams,
+            resolver,
+            arg,
+            sources,
+            deps);
+
+    assertThat(
+        ImmutableList.copyOf(rule.getNativeLinkableExportedDeps(CXX_PLATFORM)),
+        Matchers.<NativeLinkable>hasItem(dep));
   }
 
   @Test
