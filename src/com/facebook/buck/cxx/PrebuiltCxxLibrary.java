@@ -22,8 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -48,7 +46,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibrary {
@@ -268,31 +265,6 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return linkage;
-  }
-
-  @Override
-  public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    String resolvedSoname =
-        PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
-
-    // Build up the shared library list to contribute to a python executable package.
-    ImmutableMap.Builder<Path, SourcePath> nativeLibrariesBuilder = ImmutableMap.builder();
-    if (!headerOnly && !provided && linkage != Linkage.STATIC) {
-      SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
-      nativeLibrariesBuilder.put(
-          Paths.get(resolvedSoname),
-          sharedLibrary);
-    }
-    ImmutableMap<Path, SourcePath> nativeLibraries = nativeLibrariesBuilder.build();
-
-    return PythonPackageComponents.of(
-        /* modules */ ImmutableMap.<Path, SourcePath>of(),
-        /* resources */ ImmutableMap.<Path, SourcePath>of(),
-        nativeLibraries,
-        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
-        /* zipSafe */ Optional.<Boolean>absent());
   }
 
   @Override

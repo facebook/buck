@@ -28,8 +28,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -51,12 +49,10 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -747,22 +743,6 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(sharedCompileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
-
-    // Check the python interface returning by this C++ library.
-    PythonPackageComponents expectedPythonPackageComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(
-                CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-                    target,
-                    cxxPlatform)),
-            new BuildTargetSourcePath(sharedRule.getBuildTarget())),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedPythonPackageComponents,
-        rule.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, cxxPlatform));
   }
 
   @Test
@@ -785,14 +765,6 @@ public class CxxLibraryDescriptionTest {
         Matchers.not(empty()));
     assertThat(
         cxxLibrary
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORM)
-            .getNativeLibraries()
-            .entrySet(),
-        Matchers.not(empty()));
-    assertThat(
-        cxxLibrary
             .getNativeLinkableInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.SHARED)
@@ -808,14 +780,6 @@ public class CxxLibraryDescriptionTest {
         .build(resolver2, filesystem, targetGraph2);
     assertThat(
         cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
-        empty());
-    assertThat(
-        cxxLibrary
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORM)
-            .getNativeLibraries()
-            .entrySet(),
         empty());
     assertThat(
         cxxLibrary

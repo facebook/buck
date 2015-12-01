@@ -22,8 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -48,8 +46,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -234,38 +230,6 @@ public class CxxLibrary extends NoopBuildRule implements AbstractCxxLibrary, Has
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return linkage;
-  }
-
-  @Override
-  public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    if (headerOnly.apply(cxxPlatform)) {
-      return PythonPackageComponents.of();
-    }
-    if (linkage == Linkage.STATIC) {
-      return PythonPackageComponents.of();
-    }
-    if (!isPlatformSupported(cxxPlatform)) {
-      return PythonPackageComponents.of();
-    }
-    ImmutableMap.Builder<Path, SourcePath> libs = ImmutableMap.builder();
-    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        soname,
-        getBuildTarget(),
-        cxxPlatform);
-    BuildRule sharedLibraryBuildRule = requireBuildRule(
-        cxxPlatform.getFlavor(),
-        CxxDescriptionEnhancer.SHARED_FLAVOR);
-    libs.put(
-        Paths.get(sharedLibrarySoname),
-        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
-    return PythonPackageComponents.of(
-        /* modules */ ImmutableMap.<Path, SourcePath>of(),
-        /* resources */ ImmutableMap.<Path, SourcePath>of(),
-        /* nativeLibraries */ libs.build(),
-        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
-        /* zipSafe */ Optional.<Boolean>absent());
   }
 
   @Override

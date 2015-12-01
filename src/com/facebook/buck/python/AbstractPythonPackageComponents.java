@@ -166,6 +166,16 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
       return add("resource", resources, resourceSources, sources, from);
     }
 
+    public Builder addNativeLibraries(Path destination, SourcePath source, BuildTarget from) {
+      return add(
+          "native library",
+          nativeLibraries,
+          nativeLibrarySources,
+          destination,
+          source,
+          from);
+    }
+
     public Builder addNativeLibraries(Map<Path, SourcePath> sources, BuildTarget from) {
       return add("native library", nativeLibraries, nativeLibrarySources, sources, from);
     }

@@ -20,8 +20,6 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -32,7 +30,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +37,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Fake implementation of {@link CxxLibrary} for testing.
@@ -163,20 +159,6 @@ public final class FakeCxxLibrary extends NoopBuildRule implements AbstractCxxLi
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) {
-    return PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(sharedLibrarySoname),
-            new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-  }
-
-  @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return ImmutableList.of();
   }
@@ -186,7 +168,9 @@ public final class FakeCxxLibrary extends NoopBuildRule implements AbstractCxxLi
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-    return ImmutableMap.of();
+    return ImmutableMap.<String, SourcePath>of(
+        sharedLibrarySoname,
+        new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput));
   }
 
   @Override

@@ -17,12 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.python.PythonPackagable;
 
 public interface AbstractCxxLibrary extends
     CxxPreprocessorDep,
     NativeLinkable,
     NativeTestable,
-    PythonPackagable,
     AndroidPackageable {
 }

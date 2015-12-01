@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
@@ -29,11 +30,15 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.ClosureException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class PythonUtil {
 
@@ -126,7 +131,9 @@ public class PythonUtil {
             }
 
             // Return all our deps to recurse on them.
-            return rule.getDeps();
+            return FluentIterable.from(rule.getDeps())
+                .filter(Predicates.instanceOf(PythonPackagable.class))
+                .toSortedSet(Ordering.natural());
           }
 
           // Don't recurse on anything from other rules.
@@ -135,6 +142,18 @@ public class PythonUtil {
       }.start();
     } catch (ClosureException e) {
       throw (NoSuchBuildTargetException) e.getException();
+    }
+
+    ImmutableMap<String, SourcePath> sharedLibs =
+        NativeLinkables.getTransitiveSharedLibraries(
+            cxxPlatform,
+            params.getDeps(),
+            Predicates.instanceOf(PythonPackagable.class));
+    for (Map.Entry<String, SourcePath> ent : sharedLibs.entrySet()) {
+      components.addNativeLibraries(
+          Paths.get(ent.getKey()),
+          ent.getValue(),
+          params.getBuildTarget());
     }
 
     return components.build();

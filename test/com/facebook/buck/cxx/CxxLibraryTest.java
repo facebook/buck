@@ -25,16 +25,12 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -47,7 +43,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -158,21 +153,6 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED));
 
-    // Verify that we return the expected output for python packages.
-    PythonPackageComponents expectedPythonPackageComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(sharedLibrarySoname),
-            new PathSourcePath(projectFilesystem, sharedLibraryOutput)),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedPythonPackageComponents,
-        cxxLibrary.getPythonPackageComponents(
-            PythonTestUtils.PYTHON_PLATFORM,
-            cxxPlatform));
-
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
     assertNull(cxxLibrary.getPathToOutput());
@@ -220,14 +200,6 @@ public class CxxLibraryTest {
 
     assertThat(
         cxxLibrary.getSharedLibraries(cxxPlatform).entrySet(),
-        Matchers.empty());
-    assertThat(
-        cxxLibrary
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM,
-                cxxPlatform)
-            .getNativeLibraries()
-            .entrySet(),
         Matchers.empty());
 
     // Verify that

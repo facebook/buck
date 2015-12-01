@@ -25,8 +25,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -53,7 +51,6 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PrebuiltCxxLibraryDescriptionTest {
 
@@ -170,19 +167,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -224,17 +208,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -271,17 +244,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -330,19 +292,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -501,19 +450,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -564,19 +500,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -625,19 +548,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-
-    // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
-        ImmutableSet.<SourcePath>of(),
-        Optional.<Boolean>absent());
-    assertEquals(
-        expectedComponents,
-        lib.getPythonPackageComponents(PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -697,13 +607,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         prebuiltCxxLibrary.getSharedLibraries(
             CxxPlatformUtils.DEFAULT_PLATFORM)
-            .entrySet(),
-        Matchers.empty());
-    assertThat(
-        prebuiltCxxLibrary.getPythonPackageComponents(
-            PythonTestUtils.PYTHON_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORM)
-            .getNativeLibraries()
             .entrySet(),
         Matchers.empty());
   }
