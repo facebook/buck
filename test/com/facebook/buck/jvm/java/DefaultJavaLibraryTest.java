@@ -36,13 +36,11 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -416,15 +414,8 @@ public class DefaultJavaLibraryTest {
         .addDep(libraryOne.getBuildTarget())
         .build(ruleResolver);
 
-    BuildContext buildContext = EasyMock.createMock(BuildContext.class);
-    JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
-    expect(buildContext.getJavaPackageFinder()).andReturn(javaPackageFinder);
-
-    replay(buildContext, javaPackageFinder);
-
-    List<Step> steps = libraryTwo.getBuildSteps(buildContext, new FakeBuildableContext());
-
-    EasyMock.verify(buildContext, javaPackageFinder);
+    List<Step> steps =
+        libraryTwo.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
 
     ImmutableList<JavacStep> javacSteps = FluentIterable
         .from(steps)
@@ -1070,67 +1061,6 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
-  public void testSuggsetDepsReverseTopoSortRespected() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-
-    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    BuildRule libraryOne = JavaLibraryBuilder
-        .createBuilder(libraryOneTarget)
-        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-        .build(ruleResolver);
-
-    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    BuildRule libraryTwo = JavaLibraryBuilder
-        .createBuilder(libraryTwoTarget)
-        .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
-        .addDep(libraryOne.getBuildTarget())
-        .build(ruleResolver);
-
-    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    BuildRule parent = JavaLibraryBuilder
-        .createBuilder(parentTarget)
-        .addSrc(Paths.get("java/src/com/parent/Meh.java"))
-        .addDep(libraryTwo.getBuildTarget())
-        .build(ruleResolver);
-
-    BuildTarget grandparentTarget = BuildTargetFactory.newInstance("//:grandparent");
-    BuildRule grandparent = JavaLibraryBuilder
-        .createBuilder(grandparentTarget)
-        .addSrc(Paths.get("java/src/com/parent/OldManRiver.java"))
-        .addDep(parent.getBuildTarget())
-        .build(ruleResolver);
-
-    BuildContext context = createSuggestContext(ruleResolver);
-
-    ImmutableSetMultimap<JavaLibrary, Path> transitive =
-        ((HasClasspathEntries) parent).getTransitiveClasspathEntries();
-
-    ImmutableMap<Path, String> classToSymbols = ImmutableMap.of(
-        Iterables.getFirst(transitive.get((JavaLibrary) parent), null),
-        "com.facebook.Foo",
-        Iterables.getFirst(transitive.get((JavaLibrary) libraryOne), null),
-        "com.facebook.Bar",
-        Iterables.getFirst(transitive.get((JavaLibrary) libraryTwo), null),
-        "com.facebook.Foo");
-
-    Optional<SuggestBuildRules> suggestFn =
-        ((DefaultJavaLibrary) grandparent).createSuggestBuildFunction(
-            context,
-            /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, Path>of(),
-            createJarResolver(classToSymbols));
-
-    assertTrue(suggestFn.isPresent());
-    assertEquals(ImmutableSet.of("//:parent", "//:libone"),
-                 suggestFn.get().suggest(
-                     projectFilesystem,
-                     ImmutableSet.of("com.facebook.Foo", "com.facebook.Bar")));
-
-    EasyMock.verify(context);
-  }
-
-  @Test
   public void testRuleKeyIsOrderInsensitiveForSourcesAndResources() throws Exception {
     // Note that these filenames were deliberately chosen to have identical hashes to maximize
     // the chance of order-sensitivity when being inserted into a HashMap.  Just using
@@ -1269,44 +1199,6 @@ public class DefaultJavaLibraryTest {
   // Utilities
   private JavaLibrary getJavaLibrary(BuildRule rule) {
     return (JavaLibrary) rule;
-  }
-
-  private DefaultJavaLibrary.JarResolver createJarResolver(
-      final ImmutableMap<Path, String> classToSymbols) {
-
-    ImmutableSetMultimap.Builder<Path, String> resolveMapBuilder =
-        ImmutableSetMultimap.builder();
-
-    for (Map.Entry<Path, String> entry : classToSymbols.entrySet()) {
-      String fullyQualified = entry.getValue();
-      String packageName = fullyQualified.substring(0, fullyQualified.lastIndexOf('.'));
-      String className = fullyQualified.substring(fullyQualified.lastIndexOf('.'));
-      resolveMapBuilder.putAll(entry.getKey(), fullyQualified, packageName, className);
-    }
-
-    final ImmutableSetMultimap<Path, String> resolveMap = resolveMapBuilder.build();
-
-    return new DefaultJavaLibrary.JarResolver() {
-      @Override
-      public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
-        if (resolveMap.containsKey(relativeClassPath)) {
-          return resolveMap.get(relativeClassPath);
-        } else {
-          return ImmutableSet.of();
-        }
-      }
-    };
-  }
-
-  private BuildContext createSuggestContext(BuildRuleResolver ruleResolver) {
-    ActionGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
-
-    BuildContext context = EasyMock.createMock(BuildContext.class);
-    expect(context.getActionGraph()).andReturn(graph).anyTimes();
-
-    replay(context);
-
-    return context;
   }
 
   // TODO(bolinfest): Eliminate the bootclasspath parameter, as it is completely misused in this
