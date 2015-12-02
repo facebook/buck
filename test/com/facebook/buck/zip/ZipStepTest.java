@@ -245,6 +245,14 @@ public class ZipStepTest {
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("", "foo/", "bar/"), zip.getDirNames());
     }
+
+    // Directories should be stored, not deflated as this sometimes causes issues
+    // (e.g. installing an .ipa over the air in iOS 9.1)
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(out.toFile()))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertEquals(entry.getName(), ZipEntry.STORED, entry.getMethod());
+      }
+    }
   }
 
   /**

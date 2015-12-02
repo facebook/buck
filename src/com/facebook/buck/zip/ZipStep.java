@@ -139,7 +139,7 @@ public class ZipStep implements Step {
 
         CustomZipEntry entry = new CustomZipEntry(entryName);
         entry.setTime(0);  // We want deterministic ZIP files, so avoid mtimes.
-        entry.setCompressionLevel(compressionLevel);
+        entry.setCompressionLevel(isDirectory ? MIN_COMPRESSION_LEVEL : compressionLevel);
         // If we're using STORED files, we must manually set the CRC, size, and compressed size.
         if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
           entry.setSize(attr.size());
