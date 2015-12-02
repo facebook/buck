@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -50,7 +51,7 @@ public class JavacStepFactory implements RuleKeyAppendable {
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
-      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
+      Optional<SuggestBuildRules> suggestBuildRules,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -94,10 +95,6 @@ public class JavacStep implements Step {
 
   @Nullable
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-
-  public interface SuggestBuildRules {
-    ImmutableSet<String> suggest(ProjectFilesystem filesystem, ImmutableSet<String> failedImports);
-  }
 
   public JavacStep(
       Path outputDirectory,
