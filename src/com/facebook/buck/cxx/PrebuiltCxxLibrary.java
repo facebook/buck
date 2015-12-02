@@ -284,8 +284,4 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
     return false;
   }
 
-  @Override
-  public boolean isTestedBy(BuildTarget buildTarget) {
-    return false;
-  }
 }

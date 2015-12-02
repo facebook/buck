@@ -39,7 +39,9 @@ import java.nio.file.Path;
 /**
  * Fake implementation of {@link CxxLibrary} for testing.
  */
-public final class FakeCxxLibrary extends NoopBuildRule implements AbstractCxxLibrary {
+public final class FakeCxxLibrary
+    extends NoopBuildRule
+    implements AbstractCxxLibrary, NativeTestable {
   private final BuildTarget publicHeaderTarget;
   private final BuildTarget publicHeaderSymlinkTreeTarget;
   private final Path publicHeaderSymlinkTreeRoot;
@@ -172,4 +174,5 @@ public final class FakeCxxLibrary extends NoopBuildRule implements AbstractCxxLi
   public boolean isTestedBy(BuildTarget testTarget) {
     return tests.contains(testTarget);
   }
+
 }

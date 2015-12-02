@@ -16,8 +16,5 @@
 
 package com.facebook.buck.cxx;
 
-public interface AbstractCxxLibrary extends
-    CxxPreprocessorDep,
-    NativeLinkable,
-    NativeTestable {
+public interface AbstractCxxLibrary extends CxxPreprocessorDep, NativeLinkable {
 }

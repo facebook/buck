@@ -51,7 +51,9 @@ import java.util.regex.Pattern;
  * An action graph representation of a C/C++ library from the target graph, providing the
  * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibrary extends NoopBuildRule implements AbstractCxxLibrary, HasRuntimeDeps {
+public class CxxLibrary
+    extends NoopBuildRule
+    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable {
 
   @AddToRuleKey
   private final boolean canBeAsset;
