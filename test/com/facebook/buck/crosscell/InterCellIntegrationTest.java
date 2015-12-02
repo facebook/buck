@@ -180,9 +180,17 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  @Ignore
-  public void buildFileNamesCanBeDifferentCrossCell() {
+  public void buildFileNamesCanBeDifferentCrossCell() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/build-file-names/primary",
+        "inter-cell/build-file-names/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
 
+    Path output = primary.buildAndReturnOutput("//:export");
+    String expected = secondary.getFileContents("hello-world.txt");
+
+    assertEquals(expected, new String(Files.readAllBytes(output), UTF_8));
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
