@@ -167,14 +167,16 @@ public class InterCellIntegrationTest {
 
   @Test
   @Ignore
-  public void shouldBeAbleToUseAJavaLibraryTargetXCell() {
+  public void shouldBeAbleToUseAJavaLibraryTargetXCell() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/java/primary",
+        "inter-cell/java/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    registerCell(cells.getSecond(), "primary", primary);
 
-  }
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:java-binary", "-v", "5");
 
-  @Test
-  @Ignore
-  public void javaVersionsSetInACellShouldBeRespectedForXCellBuilds() {
-
+    result.assertSuccess();
   }
 
   @Test

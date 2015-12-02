@@ -122,7 +122,9 @@ public class JavaLibraryClasspathProvider {
         javaLibraryRule.getDepsForTransitiveClasspathEntries());
 
     for (JavaLibrary rule : javaLibraryDeps) {
-      classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
+      for (Path path : rule.getOutputClasspathEntries().values()) {
+        classpathEntries.put(rule, rule.getProjectFilesystem().resolve(path));
+      }
     }
     return classpathEntries.build();
   }

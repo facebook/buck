@@ -435,12 +435,12 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The classpath to use when compiling //:libtwo according to getDeclaredClasspathEntries()" +
             " should contain only bar.jar.",
-        ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar")),
+        ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),
         ImmutableSet.copyOf(
             ((JavaLibrary) libraryTwo).getDeclaredClasspathEntries().values()));
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
-        ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar")),
+        ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),
         javacStep.getClasspathEntries());
   }
 
