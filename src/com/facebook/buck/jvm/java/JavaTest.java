@@ -141,7 +141,7 @@ public class JavaTest
       SourcePath abiJar,
       ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
-      JavacStepFactory javacStepFactory,
+      CompileStepFactory compileStepFactory,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       ImmutableSet<BuildRule> sourceUnderTest,
@@ -164,7 +164,7 @@ public class JavaTest
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         abiJar,
         addtionalClasspathEntries,
-        javacStepFactory,
+        compileStepFactory,
         resourcesRoot,
         mavenCoords,
         /* tests */ ImmutableSortedSet.<BuildTarget>of());
