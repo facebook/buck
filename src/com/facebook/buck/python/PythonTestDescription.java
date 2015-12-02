@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,6 +43,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -55,7 +57,9 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class PythonTestDescription implements Description<PythonTestDescription.Arg> {
+public class PythonTestDescription implements
+    Description<PythonTestDescription.Arg>,
+    ImplicitDepsInferringDescription<PythonTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("python_test");
 
@@ -324,6 +328,20 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         args.labels.or(ImmutableSet.<Label>of()),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.contacts.or(ImmutableSet.<String>of()));
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
+
+    if (pythonBuckConfig.getPackageStyle() == PythonBuckConfig.PackageStyle.STANDALONE) {
+      targets.addAll(pythonBuckConfig.getPexTarget().asSet());
+    }
+
+    return targets.build();
   }
 
   @SuppressFieldNotInitialized
