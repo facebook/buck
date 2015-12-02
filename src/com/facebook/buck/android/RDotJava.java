@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
@@ -76,7 +77,7 @@ public class RDotJava {
             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
             .build(),
         buildTarget,
-        Optional.<JavacStep.SuggestBuildRules>absent(),
+        Optional.<SuggestBuildRules>absent(),
         resolver,
         filesystem);
   }

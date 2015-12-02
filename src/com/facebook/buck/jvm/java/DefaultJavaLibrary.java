@@ -25,6 +25,7 @@ import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
@@ -137,7 +138,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Optional<Path> generatedSourceFolder;
 
   @AddToRuleKey
-  private final JavacStepFactory javacStepFactory;
+  private final CompileStepFactory compileStepFactory;
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
@@ -192,7 +193,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
       ImmutableSet<Path> additionalClasspathEntries,
-      JavacStepFactory javacStepFactory,
+      CompileStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -215,7 +216,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             }),
         additionalClasspathEntries,
-        javacStepFactory,
+        compileStepFactory,
         resourcesRoot,
         mavenCoords,
         tests);
@@ -234,7 +235,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePath abiJar,
       final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
-      JavacStepFactory javacStepFactory,
+      CompileStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -247,7 +248,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             }),
         resolver);
-    this.javacStepFactory = javacStepFactory;
+    this.compileStepFactory = compileStepFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -423,7 +424,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     Path outputDirectory = getClassesDir(target);
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
-    Optional<JavacStep.SuggestBuildRules> suggestBuildRule =
+    Optional<SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(
             context,
             declaredClasspathEntries,
@@ -480,7 +481,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
-      javacStepFactory.createCompileStep(
+      compileStepFactory.createCompileStep(
           context,
           getJavaSrcs(),
           target,
@@ -589,7 +590,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    *    set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
-  Optional<JavacStep.SuggestBuildRules> createSuggestBuildFunction(
+  Optional<SuggestBuildRules> createSuggestBuildFunction(
       final BuildContext context,
       final ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
       final JarResolver jarResolver) {
@@ -623,8 +624,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             });
 
-    JavacStep.SuggestBuildRules suggestBuildRuleFn =
-        new JavacStep.SuggestBuildRules() {
+    SuggestBuildRules suggestBuildRuleFn =
+        new SuggestBuildRules() {
       @Override
       public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
           ImmutableSet<String> failedImports) {
