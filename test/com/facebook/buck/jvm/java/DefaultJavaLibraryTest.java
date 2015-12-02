@@ -36,6 +36,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -1114,7 +1115,7 @@ public class DefaultJavaLibraryTest {
         Iterables.getFirst(transitive.get((JavaLibrary) libraryTwo), null),
         "com.facebook.Foo");
 
-    Optional<JavacStep.SuggestBuildRules> suggestFn =
+    Optional<SuggestBuildRules> suggestFn =
         ((DefaultJavaLibrary) grandparent).createSuggestBuildFunction(
             context,
             /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, Path>of(),

@@ -25,6 +25,7 @@ import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
@@ -423,7 +424,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     Path outputDirectory = getClassesDir(target);
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
-    Optional<JavacStep.SuggestBuildRules> suggestBuildRule =
+    Optional<SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(
             context,
             declaredClasspathEntries,
@@ -589,7 +590,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    *    set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
-  Optional<JavacStep.SuggestBuildRules> createSuggestBuildFunction(
+  Optional<SuggestBuildRules> createSuggestBuildFunction(
       final BuildContext context,
       final ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
       final JarResolver jarResolver) {
@@ -623,8 +624,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             });
 
-    JavacStep.SuggestBuildRules suggestBuildRuleFn =
-        new JavacStep.SuggestBuildRules() {
+    SuggestBuildRules suggestBuildRuleFn =
+        new SuggestBuildRules() {
       @Override
       public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
           ImmutableSet<String> failedImports) {

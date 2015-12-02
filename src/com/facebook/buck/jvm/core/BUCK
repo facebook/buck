@@ -21,3 +21,15 @@ java_library(
   ],
   visibility = ['PUBLIC'],
 )
+
+java_library(
+  name = 'suggestbuildrules',
+  srcs = [
+    'SuggestBuildRules.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
