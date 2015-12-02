@@ -52,33 +52,42 @@ public class BuildSimulator {
       long currentTimeMillis,
       ImmutableList<BuildTarget> buildTargets) {
     Preconditions.checkArgument(buildTargets.size() > 0, "No targets provided for the simulation.");
-    SimulateReport.Builder report = SimulateReport.builder()
-        .setTimestampMillis(currentTimeMillis)
-        .setBuildTargets(FluentIterable.from(buildTargets).transform(Functions.toStringFunction()))
-        .setSimulateTimesFile(times.getFile())
-        .setTimeAggregate(times.getTimeAggregate())
-        .setRuleFallbackTimeMillis(times.getRuleFallbackTimeMillis())
-        .setTotalActionGraphNodes(Iterables.size(actionGraph.getNodes()))
-        .setNumberOfThreads(numberOfThreads);
+    SimulateReport.Builder simulateReport = SimulateReport.builder();
 
-    // Setup the build order.
-    Map<BuildTarget, NodeState> reverseDependencies = Maps.newHashMap();
-    Queue<BuildTarget> leafNodes = Queues.newArrayDeque();
-    int totalDagEdges = 0;
-    for (BuildTarget target : buildTargets) {
-      BuildRule rule = Preconditions.checkNotNull(actionGraph.findBuildRuleByTarget(target));
-      totalDagEdges += recursiveTraversal(rule, reverseDependencies, leafNodes);
+    for (String timeAggregate : times.getTimeAggregates()) {
+      SingleRunReport.Builder report = SingleRunReport.builder()
+          .setTimestampMillis(currentTimeMillis)
+          .setBuildTargets(FluentIterable.from(buildTargets)
+              .transform(Functions.toStringFunction()))
+          .setSimulateTimesFile(times.getFile())
+          .setRuleFallbackTimeMillis(times.getRuleFallbackTimeMillis())
+          .setTotalActionGraphNodes(Iterables.size(actionGraph.getNodes()))
+          .setTimeAggregate(timeAggregate)
+          .setNumberOfThreads(numberOfThreads);
+
+      // Setup the build order.
+      Map<BuildTarget, NodeState> reverseDependencies = Maps.newHashMap();
+      Queue<BuildTarget> leafNodes = Queues.newArrayDeque();
+      int totalDagEdges = 0;
+      for (BuildTarget target : buildTargets) {
+        BuildRule rule = Preconditions.checkNotNull(actionGraph.findBuildRuleByTarget(target));
+        totalDagEdges += recursiveTraversal(rule, reverseDependencies, leafNodes);
+      }
+      report.setTotalDependencyDagEdges(totalDagEdges);
+
+      // Run the simulation.
+      simulateReport.addRunReports(
+          runSimulation(report, reverseDependencies, leafNodes, timeAggregate));
     }
-    report.setTotalDependencyDagEdges(totalDagEdges);
 
-    // Run the simulation.
-    return runSimulation(report, reverseDependencies, leafNodes);
+    return simulateReport.build();
   }
 
-  private SimulateReport runSimulation(
-      SimulateReport.Builder report,
+  private SingleRunReport runSimulation(
+      SingleRunReport.Builder report,
       Map<BuildTarget, NodeState> reverseDependencies,
-      Queue<BuildTarget> buildableNodes) {
+      Queue<BuildTarget> buildableNodes,
+      String timeAggregate) {
 
     // Start simulation.
     long simulationCurrentMillis = 0;
@@ -107,10 +116,10 @@ public class BuildSimulator {
           buildableNodes.size() > 0) {
         BuildTarget target = buildableNodes.remove();
         long expectedFinishMillis = simulationCurrentMillis +
-            times.getMillisForTarget(target.toString());
+            times.getMillisForTarget(target.toString(), timeAggregate);
         targetsRunning.add(new RunningNode(expectedFinishMillis, target));
 
-        if (!times.hasMillisForTarget(target.toString())) {
+        if (!times.hasMillisForTarget(target.toString(), timeAggregate)) {
           ++targetsThatUsedTheFallbackTimeMillis;
         }
       }

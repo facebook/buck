@@ -20,37 +20,54 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
  * Contains the times to be used for each BuildTarget during the simulation.
  */
 public class SimulateTimes {
-  private final ImmutableMap<String, Long> buildTargetTimes;
+  private static final String DEFAULT_TIME_AGGREGATE_KEY = "default";
+
+  /**
+   * The first map key corresponds to the [buildTarget] id and the second map key corresponds
+   * to the [timeAggregate]. The value is the [timeMillis].
+   */
+  private final ImmutableMap<String, ImmutableMap<String, Long>> buildTargetTimes;
   private final String file;
-  private final String timeAggregate;
+  private final ImmutableSortedSet<String> timeAggregates;
   private final long ruleFallbackTimeMillis;
 
   private SimulateTimes(
-      ImmutableMap<String, Long> buildTargetTimes,
+      ImmutableMap<String, ImmutableMap<String, Long>> buildTargetTimes,
+      ImmutableSortedSet<String> timeAggregates,
       String file,
-      String timeType,
       long defaultMillis) {
     this.buildTargetTimes = buildTargetTimes;
     this.file = file;
-    this.timeAggregate = timeType;
+    Preconditions.checkState(
+        !timeAggregates.contains(DEFAULT_TIME_AGGREGATE_KEY),
+        "Time aggregate key '%s' is reserved and should not be used.",
+        DEFAULT_TIME_AGGREGATE_KEY);
+    this.timeAggregates = ImmutableSortedSet.<String>naturalOrder()
+        .addAll(timeAggregates)
+        .add(DEFAULT_TIME_AGGREGATE_KEY)
+        .build();
     this.ruleFallbackTimeMillis = defaultMillis;
   }
 
   public static SimulateTimes createEmpty(long defaultMillis) {
     return new SimulateTimes(
-        ImmutableMap.<String, Long>of(),
-        "",
+        ImmutableMap.<String, ImmutableMap<String, Long>>of(),
+        ImmutableSortedSet.<String>of(),
         "",
         defaultMillis);
   }
@@ -58,25 +75,27 @@ public class SimulateTimes {
   public static SimulateTimes createFromJsonFile(
       ObjectMapper jsonConverter,
       String fileName,
-      String timeType,
       long defaultMillis)
       throws IOException {
     File file = new File(fileName);
     JsonFileContent fileContent = new JsonFileContent();
     jsonConverter.readerForUpdating(fileContent).readValue(file);
-    Map<String, Long> timings = Maps.newHashMap();
+    LinkedHashSet<String> timeAggregates = Sets.newLinkedHashSet();
+    Map<String, ImmutableMap<String, Long>> immutableTimeAggregates = Maps.newHashMap();
     Map<String, Map<String, Long>> allTimings = fileContent.getBuildTargetTimes();
-    for (String key : allTimings.keySet()) {
-      Map<String, Long> timesForKey = Preconditions.checkNotNull(allTimings.get(key));
-      if (timesForKey.containsKey(timeType)) {
-        timings.put(key, timesForKey.get(timeType));
+    for (String targetName : allTimings.keySet()) {
+      Map<String, Long> timesForKey = Preconditions.checkNotNull(allTimings.get(targetName));
+      for (String timeAggregate : timesForKey.keySet()) {
+        timeAggregates.add(timeAggregate);
       }
+
+      immutableTimeAggregates.put(targetName, ImmutableMap.copyOf(timesForKey));
     }
 
     SimulateTimes times = new SimulateTimes(
-        ImmutableMap.copyOf(timings),
+        ImmutableMap.copyOf(immutableTimeAggregates),
+        ImmutableSortedSet.copyOf(timeAggregates),
         file.getName(),
-        timeType,
         defaultMillis);
     return times;
   }
@@ -86,9 +105,9 @@ public class SimulateTimes {
    * @return the specific millis duration for the buildTarget argument or the default value if
    *         this is not present.
    */
-  public long getMillisForTarget(String buildTarget) {
-    if (buildTargetTimes.containsKey(buildTarget)) {
-      return buildTargetTimes.get(buildTarget);
+  public long getMillisForTarget(String buildTarget, String timeAggregate) {
+    if (hasMillisForTarget(buildTarget, timeAggregate)) {
+      return Preconditions.checkNotNull(buildTargetTimes.get(buildTarget).get(timeAggregate));
     }
 
     return getRuleFallbackTimeMillis();
@@ -98,16 +117,24 @@ public class SimulateTimes {
     return ruleFallbackTimeMillis;
   }
 
-  public boolean hasMillisForTarget(String buildTarget) {
-    return buildTargetTimes.containsKey(buildTarget);
+  public boolean hasMillisForTarget(String buildTarget, String timeAggregate) {
+    if (buildTargetTimes.containsKey(buildTarget)) {
+      ImmutableMap<String, Long> timesForRule = Preconditions.checkNotNull(
+          buildTargetTimes.get(buildTarget));
+      if (timesForRule.containsKey(timeAggregate)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public String getFile() {
     return file;
   }
 
-  public String getTimeAggregate() {
-    return timeAggregate;
+  public ImmutableList<String> getTimeAggregates() {
+    return ImmutableList.copyOf(timeAggregates);
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)

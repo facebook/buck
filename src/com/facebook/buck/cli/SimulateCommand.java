@@ -45,7 +45,6 @@ public class SimulateCommand extends AbstractCommand {
   private static final Logger LOG = Logger.get(SimulateCommand.class);
 
   private static final String TIMES_FILE_STRING_ARG = "--times-file";
-  private static final String TIME_AGGREGATE_ARG = "--time-aggregate";
   private static final String REPORT_FILE_STRING_ARG = "--report-file";
   private static final String RULE_FALLBACK_TIME_MILLIS_ARG = "--rule-fallback-time-millis";
 
@@ -64,11 +63,6 @@ public class SimulateCommand extends AbstractCommand {
       usage = "If the duration of a given rule cannot be found in the supplied JSON file, " +
           "this value will be used instead. default=10ms")
   private long ruleFallbackTimeMillis = 10;
-
-  @Option(
-      name = TIME_AGGREGATE_ARG,
-      usage = "The time aggregate measurement to use (eg avg, p90, p95, p99). default=avg")
-  private String simulateTimeAggregate = "avg";
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -89,7 +83,6 @@ public class SimulateCommand extends AbstractCommand {
         SimulateTimes.createFromJsonFile(
             params.getObjectMapper(),
             simulateTimesFile,
-            simulateTimeAggregate,
             ruleFallbackTimeMillis);
 
     // Run the simulation with the generated ActionGraph.
@@ -147,11 +140,6 @@ public class SimulateCommand extends AbstractCommand {
     if (simulateReportFile != null) {
       builder.add(REPORT_FILE_STRING_ARG);
       builder.add(simulateReportFile);
-    }
-
-    if (simulateTimeAggregate != null) {
-      builder.add(TIME_AGGREGATE_ARG);
-      builder.add(simulateTimeAggregate);
     }
 
     builder.add(RULE_FALLBACK_TIME_MILLIS_ARG);

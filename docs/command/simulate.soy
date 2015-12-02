@@ -72,27 +72,6 @@ with runtime statistics.
 {/call}
 
 {call buck.param}
-  {param name: 'time-aggregate' /}
-  {param desc}
-  <p>
-    The time aggregate we want to use for each BuildTarget defined in the
-    --simulate-times-files. This string value should match the key names used
-    in the --times-file found in JSON path
-    {literal}'$.build_targets.${RULE_NAME}.${TIME_AGGREGATE}'{/literal}.
-    Defaults to 'avg'.
-  </p>
-  <p>
-    Example values from the JSON example below are: 'avg', 'p50', 'p95'.
-  </p>
-
-  <p>
-    If the value is not found in the file, then the
-    --simulate-default-millis value is used.
-  </p>
- {/param}
-{/call}
-
-{call buck.param}
   {param name: 'times-file' /}
   {param desc}
   A JSON file containing simulation times in millis for each BuildTarget node

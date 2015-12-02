@@ -56,9 +56,25 @@ public class BuildSimulatorTest {
     SimulateReport report = sim.simulateBuild(
         System.currentTimeMillis(),
         ImmutableList.of(BuildTargetFactory.newInstance((ROOT_NODE))));
-    Assert.assertEquals(1, report.getBuildTargets().size());
-    Assert.assertEquals(1, report.getActionGraphNodesWithoutSimulateTime());
-    Assert.assertEquals(times.getRuleFallbackTimeMillis(), report.getBuildDurationMillis());
+    Assert.assertEquals(1, report.getRunReports().size());
+    SingleRunReport runReport = report.getRunReports().get(0);
+    Assert.assertEquals(1, runReport.getActionGraphNodesWithoutSimulateTime());
+    Assert.assertEquals(times.getRuleFallbackTimeMillis(), runReport.getBuildDurationMillis());
+  }
+
+  @Test
+  public void testMultipleTimeAggregates() throws IOException {
+    SimulateTimes times = SimulateTimesTest.createDefaultTestInstance();
+    BuildSimulator sim = new BuildSimulator(
+        times,
+        createOneNodeGraph(),
+        NUMBER_OF_THREADS);
+    SimulateReport report = sim.simulateBuild(
+        System.currentTimeMillis(),
+        ImmutableList.of(BuildTargetFactory.newInstance((ROOT_NODE))));
+    Assert.assertEquals(
+        times.getTimeAggregates().size(),
+        report.getRunReports().size());
   }
 
   @Test
@@ -145,8 +161,10 @@ public class BuildSimulatorTest {
     SimulateReport report = sim.simulateBuild(
         System.currentTimeMillis(),
         ImmutableList.of(BuildTargetFactory.newInstance(ROOT_NODE)));
-    Assert.assertEquals(1, report.getBuildTargets().size());
-    Assert.assertEquals(expectedDurationMillis, report.getBuildDurationMillis());
+    Assert.assertEquals(1, report.getRunReports().size());
+    SingleRunReport runReport = report.getRunReports().get(0);
+    Assert.assertEquals(1, runReport.getBuildTargets().size());
+    Assert.assertEquals(expectedDurationMillis, runReport.getBuildDurationMillis());
   }
 
   private static ActionGraph createWideGraph() {

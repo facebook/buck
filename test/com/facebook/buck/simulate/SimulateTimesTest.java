@@ -29,20 +29,23 @@ public class SimulateTimesTest {
   private static final long DEFAULT_MILLIS = 42;
   private static final String TEST_FILE = "simulate_times.json";
   private static final String KNOWN_TARGET = "//lovely/target";
-  private static final String KNOWN_TIME_TYPE = "avg";
+  private static final String KNOWN_TIME_AGGREGATE = "avg";
+  private static final String ANOTHER_KNOWN_TIME_AGGREGATE = "p50";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   @Test
   public void testReadingFileWithExistingTimeType() throws IOException {
     SimulateTimes times = createDefaultTestInstance();
-    Assert.assertTrue(times.hasMillisForTarget(KNOWN_TARGET));
+    Assert.assertTrue(times.hasMillisForTarget(KNOWN_TARGET, KNOWN_TIME_AGGREGATE));
+    Assert.assertTrue(times.hasMillisForTarget(KNOWN_TARGET, ANOTHER_KNOWN_TIME_AGGREGATE));
+    Assert.assertFalse(times.hasMillisForTarget(KNOWN_TARGET, "random non-existent"));
   }
 
   @Test
   public void testCreateWithoutFile() {
     SimulateTimes times = SimulateTimes.createEmpty(DEFAULT_MILLIS);
-    Assert.assertFalse(times.hasMillisForTarget(KNOWN_TARGET));
+    Assert.assertFalse(times.hasMillisForTarget(KNOWN_TARGET, KNOWN_TIME_AGGREGATE));
   }
 
   private static String getTestDataFile() throws IOException {
@@ -50,11 +53,10 @@ public class SimulateTimesTest {
     return testDataDir.resolve(TEST_FILE).toString();
   }
 
-  private static SimulateTimes createDefaultTestInstance() throws IOException {
+  public static SimulateTimes createDefaultTestInstance() throws IOException {
     return SimulateTimes.createFromJsonFile(
         OBJECT_MAPPER,
         getTestDataFile(),
-        KNOWN_TIME_TYPE,
         DEFAULT_MILLIS);
   }
 }
