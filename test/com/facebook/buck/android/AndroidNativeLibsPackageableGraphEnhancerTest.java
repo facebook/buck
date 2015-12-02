@@ -41,6 +41,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -149,9 +150,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         target,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTarget>of());
-    collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(
-            ImmutableSet.<BuildRule>of(cxxLibrary)));
+    collector.addNativeLinkableRoots(ImmutableList.of(cxxLibrary));
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =

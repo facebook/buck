@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
@@ -233,17 +231,8 @@ public class CxxLibrary extends NoopBuildRule implements AbstractCxxLibrary, Has
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(params.getDeps());
-  }
-
-  @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
-    if (canBeAsset) {
-      collector.addNativeLinkableAsset(this);
-    } else {
-      collector.addNativeLinkable(this);
-    }
+  public boolean canBeAsset() {
+    return canBeAsset;
   }
 
   @Override

@@ -86,6 +86,11 @@ public class NdkLibraryDescriptionTest {
       return ImmutableMap.of();
     }
 
+    @Override
+    public boolean canBeAsset() {
+      return false;
+    }
+
   }
 
   @Test

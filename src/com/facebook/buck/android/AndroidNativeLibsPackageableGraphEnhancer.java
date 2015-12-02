@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -39,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.List;
 import java.util.Map;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
@@ -74,23 +74,32 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   // Populates an immutable map builder with all given linkables set to the given cpu type.
   // Returns true iff linkables is not empty.
   private boolean populateMapWithLinkables(
-      List<NativeLinkable> linkables,
-      ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> builder,
+      Iterable<NativeLinkable> nativeLinkableRoots,
       NdkCxxPlatforms.TargetCpuType targetCpuType,
-      NdkCxxPlatform platform) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform,
+      ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> builder,
+      ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> assetsBuilder)
+      throws NoSuchBuildTargetException {
 
     boolean hasNativeLibs = false;
 
-    for (NativeLinkable nativeLinkable : linkables) {
-      ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
-          platform.getCxxPlatform());
-      for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
-        builder.put(
-            new Pair<>(targetCpuType, entry.getKey()),
-            entry.getValue());
-        hasNativeLibs = true;
+    ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+        NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, nativeLinkableRoots);
+    for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
+      NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
+      if (linkage != NativeLinkable.Linkage.STATIC) {
+        ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(cxxPlatform);
+        for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
+          hasNativeLibs = true;
+          if (nativeLinkable.canBeAsset()) {
+            assetsBuilder.put(new Pair<>(targetCpuType, entry.getKey()), entry.getValue());
+          } else {
+            builder.put(new Pair<>(targetCpuType, entry.getKey()), entry.getValue());
+          }
+        }
       }
     }
+
     return hasNativeLibs;
   }
 
@@ -112,24 +121,20 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableSet<NdkCxxPlatforms.TargetCpuType> filters =
         cpuFilters.isEmpty() ? nativePlatforms.keySet() : cpuFilters;
     for (NdkCxxPlatforms.TargetCpuType targetCpuType : filters) {
-      NdkCxxPlatform platform = Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
 
       // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
-      boolean hasNativeLibs = populateMapWithLinkables(
-          packageableCollection.getNativeLinkables(),
-          nativeLinkableLibsBuilder,
-          targetCpuType,
-          platform);
-      boolean hasNativeLibsAssets = populateMapWithLinkables(
-          packageableCollection.getNativeLinkablesAssets(),
-          nativeLinkableLibsAssetsBuilder,
-          targetCpuType,
-          platform);
+      boolean hasNativeLibs =
+          populateMapWithLinkables(
+              packageableCollection.getNativeLinkableRoots(),
+              targetCpuType,
+              Preconditions.checkNotNull(nativePlatforms.get(targetCpuType)).getCxxPlatform(),
+              nativeLinkableLibsBuilder,
+              nativeLinkableLibsAssetsBuilder);
 
       // If we're using a C/C++ runtime other than the system one, add it to the APK.
+      NdkCxxPlatform platform = Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
       NdkCxxPlatforms.CxxRuntime cxxRuntime = platform.getCxxRuntime();
-      if ((hasNativeLibs || hasNativeLibsAssets) &&
-          !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
+      if (hasNativeLibs && !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
         nativeLinkableLibsBuilder.put(
             new Pair<>(
                 targetCpuType,
@@ -235,4 +240,5 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     }
     return result.build();
   }
+
 }

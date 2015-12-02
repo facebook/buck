@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,6 +46,11 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule implements Andr
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(getDeps());
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getRequiredNativeLinkables() {
+    return AndroidPackageableCollector.getNativeLinkableRules(getDeps());
   }
 
   @Override

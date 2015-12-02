@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -709,7 +710,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(ImmutableSortedSet.copyOf(
+    return AndroidPackageableCollector.getPackageableRules(
+        ImmutableSortedSet.copyOf(
+            Sets.difference(
+                Sets.union(getDeclaredDeps(), exportedDeps),
+                providedDeps)));
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getRequiredNativeLinkables() {
+    return AndroidPackageableCollector.getNativeLinkableRules(
+        ImmutableSortedSet.copyOf(
             Sets.difference(
                 Sets.union(getDeclaredDeps(), exportedDeps),
                 providedDeps)));

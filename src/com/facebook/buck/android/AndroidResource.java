@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.aapt.MiniAapt;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -399,6 +400,11 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getRequiredNativeLinkables() {
+    return AndroidPackageableCollector.getNativeLinkableRules(deps);
   }
 
   @Override

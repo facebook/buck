@@ -97,6 +97,11 @@ public class NativeLinkablesTest {
       return sharedLibraries;
     }
 
+    @Override
+    public boolean canBeAsset() {
+      return false;
+    }
+
   }
 
   @Test

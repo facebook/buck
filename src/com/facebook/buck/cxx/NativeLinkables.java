@@ -174,7 +174,7 @@ public class NativeLinkables {
       final CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkable> inputs) {
 
-    final Map<BuildTarget, NativeLinkable> nativeLinkables = Maps.newHashMap();
+    final Map<BuildTarget, NativeLinkable> nativeLinkables = Maps.newLinkedHashMap();
     for (NativeLinkable nativeLinkable : inputs) {
       nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
     }

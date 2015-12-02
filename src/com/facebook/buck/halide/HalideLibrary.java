@@ -211,6 +211,11 @@ public class HalideLibrary
     return ImmutableMap.<String, SourcePath>of();
   }
 
+  @Override
+  public boolean canBeAsset() {
+    return false;
+  }
+
   private String getLibraryName() {
     return getBuildTarget().getShortName() + ".o";
   }

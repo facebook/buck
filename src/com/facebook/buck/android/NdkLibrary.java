@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -219,6 +220,11 @@ public class NdkLibrary extends AbstractBuildRule
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(getDeps());
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getRequiredNativeLinkables() {
+    return AndroidPackageableCollector.getNativeLinkableRules(getDeps());
   }
 
   @Override

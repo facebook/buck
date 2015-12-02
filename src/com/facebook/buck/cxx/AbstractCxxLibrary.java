@@ -16,11 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.android.AndroidPackageable;
-
 public interface AbstractCxxLibrary extends
     CxxPreprocessorDep,
     NativeLinkable,
-    NativeTestable,
-    AndroidPackageable {
+    NativeTestable {
 }

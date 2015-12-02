@@ -99,4 +99,10 @@ public class DLibrary extends DCompileBuildRule implements NativeLinkable {
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
+
+  @Override
+  public boolean canBeAsset() {
+    return false;
+  }
+
 }

@@ -98,7 +98,12 @@ public class AndroidPackageableCollector {
     for (AndroidPackageable dep : packageable.getRequiredPackageables()) {
       postOrderTraverse(dep, explored);
     }
+    addNativeLinkableRoots(packageable.getRequiredNativeLinkables());
     packageable.addToCollector(this);
+  }
+
+  public void addNativeLinkableRoots(Iterable<? extends NativeLinkable> nativeLinkables) {
+    collectionBuilder.addAllNativeLinkableRoots(nativeLinkables);
   }
 
   /**
@@ -110,6 +115,11 @@ public class AndroidPackageableCollector {
     return FluentIterable.from(rules)
         .filter(AndroidPackageable.class)
         .toList();
+  }
+
+  public static Iterable<NativeLinkable> getNativeLinkableRules(Iterable<BuildRule> rules) {
+    return FluentIterable.from(rules)
+        .filter(NativeLinkable.class);
   }
 
   public AndroidPackageableCollector addStringWhitelistedResourceDirectory(
@@ -145,16 +155,6 @@ public class AndroidPackageableCollector {
       SourcePath nativeLibDir) {
     collectionBuilder.addNativeLibsTargets(owner);
     collectionBuilder.addNativeLibsDirectories(nativeLibDir);
-    return this;
-  }
-
-  public AndroidPackageableCollector addNativeLinkable(NativeLinkable nativeLinkable) {
-    collectionBuilder.addNativeLinkables(nativeLinkable);
-    return this;
-  }
-
-  public AndroidPackageableCollector addNativeLinkableAsset(NativeLinkable nativeLinkable) {
-    collectionBuilder.addNativeLinkablesAssets(nativeLinkable);
     return this;
   }
 
