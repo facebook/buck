@@ -669,4 +669,22 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Matchers.<NativeLinkable>contains(dep));
   }
 
+  @Test
+  public void includesDirs() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
+            .setIncludeDirs(ImmutableList.of("include"));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
+    assertThat(
+        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
+            .getSystemIncludeRoots(),
+        Matchers.hasItem(filesystem.resolve("include")));
+  }
+
 }

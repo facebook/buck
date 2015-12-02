@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
@@ -172,7 +172,8 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
                     exportedPreprocessorFlags.apply(cxxPlatform),
                     /* frameworks */ ImmutableList.<FrameworkPath>of()))
             // Just pass the include dirs as system includes.
-            .addAllSystemIncludeRoots(ImmutableSortedSet.copyOf(includeDirs))
+            .addAllSystemIncludeRoots(
+                Iterables.transform(includeDirs, getProjectFilesystem().getAbsolutifier()))
             .build();
       case PRIVATE:
         return CxxPreprocessorInput.EMPTY;
