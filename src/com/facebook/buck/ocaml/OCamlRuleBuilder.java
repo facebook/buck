@@ -292,7 +292,7 @@ public class OCamlRuleBuilder {
           linkerFlags,
           FluentIterable.from(srcs)
               .transform(OCamlSource.TO_SOURCE_PATH)
-              .transform(pathResolver.deprecatedPathFunction())
+              .transform(pathResolver.getAbsolutePathFunction())
               .filter(OCamlUtil.ext(OCamlCompilables.OCAML_C))
               .transform(ocamlContext.toCOutput())
               .transform(SourcePaths.getToBuildTargetSourcePath(compileParams.getBuildTarget()))
