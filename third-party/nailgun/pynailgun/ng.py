@@ -119,8 +119,19 @@ class NailgunConnection(object):
             env=os.environ,
             cwd=os.getcwd()):
         '''
-        Sends the command and environment to the nailgun server.
+        Sends the command and environment to the nailgun server, then loops forever
+        reading the response until the server sends an exit chunk.
+
+        Returns the exit value, or raises NailgunException on error.
         '''
+        try:
+            return self._send_command_and_read_response(cmd, cmd_args, filearg, env, cwd)
+        except socket.error as e:
+            raise NailgunException(
+                'Server disconnected unexpectedly: {0}'.format(e),
+                NailgunException.CONNECTION_BROKEN)
+
+    def _send_command_and_read_response(self, cmd, cmd_args, filearg, env, cwd):
         if filearg:
             send_file_arg(filearg, self)
         for cmd_arg in cmd_args:
@@ -180,7 +191,10 @@ class NailgunConnection(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.socket.close()
+        try:
+            self.socket.close()
+        except socket.error:
+            pass
 
 
 def monotonic_time_nanos():
