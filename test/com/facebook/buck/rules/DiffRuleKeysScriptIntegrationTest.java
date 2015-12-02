@@ -105,7 +105,7 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     String expectedResult = Joiner.on('\n').join(
         "Change details for " +
-            "[//:java_lib_1->javacStepFactory.appendableSubKey->javacOptions.appendableSubKey]",
+            "[//:java_lib_2->javacStepFactory.appendableSubKey->javacOptions.appendableSubKey]",
         "  (sourceLevel):",
         "    -[string(\"6\")]",
         "    +[string(\"7\")]",

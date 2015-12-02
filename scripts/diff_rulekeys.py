@@ -178,6 +178,8 @@ def diffInternal(
         verbose):
     keys = set(left_s.keys()).union(set(right_s.keys()))
     changed_key_pairs_with_labels = set()
+    changed_key_pairs_with_values = []
+    changed_key_pairs_with_labels_for_key = set()
     report = []
     for key in keys:
         if key is None:
@@ -188,7 +190,6 @@ def diffInternal(
         left_with_keys = extractRuleKeyRefs(left_values, left_info)
         right_with_keys = extractRuleKeyRefs(right_values, right_info)
 
-        changed_key_pairs_with_labels_for_key = set()
         both_with_keys = zip(left_with_keys, right_with_keys)
         for (left_v, left_key), (right_v, right_key) in both_with_keys:
             if left_v == right_v:
@@ -209,18 +210,21 @@ def diffInternal(
                         (q_label, (left_key, right_key)))
                     continue
 
-            report.append('  (' + key + '):\n' +
-                          '    -[' + left_v + ']\n' +
-                          '    +[' + right_v + ']')
+            changed_key_pairs_with_values.append([key, left_v, right_v])
 
-        changed_key_pairs_with_labels.update(
-            changed_key_pairs_with_labels_for_key)
-        if len(changed_key_pairs_with_labels_for_key) > 0:
-            changed_labels = [label for (label, _) in
-                              changed_key_pairs_with_labels_for_key]
-            if verbose:
-                report.append('  (' + key + ') : changed because of ' +
-                              ','.join(changed_labels))
+    for key, left_v, right_v in sorted(changed_key_pairs_with_values):
+        report.append('  (' + key + '):\n' +
+                      '    -[' + left_v + ']\n' +
+                      '    +[' + right_v + ']')
+
+    changed_key_pairs_with_labels.update(
+        changed_key_pairs_with_labels_for_key)
+    if len(changed_key_pairs_with_labels_for_key) > 0:
+        changed_labels = [label for (label, _) in
+                          changed_key_pairs_with_labels_for_key]
+        if verbose:
+            report.append('  (' + key + ') : changed because of ' +
+                          ','.join(sorted(changed_labels)))
 
     if len(report) > 0:
         report = ['Change details for [' + label + ']'] + report
