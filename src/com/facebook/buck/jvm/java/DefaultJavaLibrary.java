@@ -138,7 +138,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Optional<Path> generatedSourceFolder;
 
   @AddToRuleKey
-  private final JavacStepFactory javacStepFactory;
+  private final CompileStepFactory compileStepFactory;
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
@@ -193,7 +193,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
       ImmutableSet<Path> additionalClasspathEntries,
-      JavacStepFactory javacStepFactory,
+      CompileStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -216,7 +216,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             }),
         additionalClasspathEntries,
-        javacStepFactory,
+        compileStepFactory,
         resourcesRoot,
         mavenCoords,
         tests);
@@ -235,7 +235,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePath abiJar,
       final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
-      JavacStepFactory javacStepFactory,
+      CompileStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -248,7 +248,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             }),
         resolver);
-    this.javacStepFactory = javacStepFactory;
+    this.compileStepFactory = compileStepFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -481,7 +481,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
-      javacStepFactory.createCompileStep(
+      compileStepFactory.createCompileStep(
           context,
           getJavaSrcs(),
           target,
