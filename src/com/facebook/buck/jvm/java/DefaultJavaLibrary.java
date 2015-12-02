@@ -21,8 +21,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.graph.DirectedAcyclicGraph;
-import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
@@ -34,7 +32,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -57,7 +54,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -145,17 +141,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return tests;
   }
 
-  /**
-   * Function for opening a JAR and returning all symbols that can be referenced from inside of that
-   * jar.
-   */
-  @VisibleForTesting
-  interface JarResolver {
-    ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
-  }
-
-  private static final JarResolver JAR_RESOLVER =
-      new JarResolver() {
+  private static final SuggestBuildRules.JarResolver JAR_RESOLVER =
+      new SuggestBuildRules.JarResolver() {
     @Override
     public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
       ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
@@ -424,11 +411,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     Path outputDirectory = getClassesDir(target);
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
-    Optional<SuggestBuildRules> suggestBuildRule =
-        createSuggestBuildFunction(
-            context,
-            declaredClasspathEntries,
-            JAR_RESOLVER);
+    SuggestBuildRules suggestBuildRule =
+        DefaultSuggestBuildRules.createSuggestBuildFunction(
+            JAR_RESOLVER, declaredClasspathEntries,
+            ImmutableSetMultimap.<JavaLibrary, Path>builder()
+                .putAll(getTransitiveClasspathEntries())
+                .putAll(this, additionalClasspathEntries)
+                .build(),
+            context.getActionGraph().getNodes());
 
     // We don't want to add these to the declared or transitive deps, since they're only used at
     // compile time.
@@ -491,7 +481,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           outputDirectory,
           workingDirectory,
           Optional.of(pathToSrcsList),
-          suggestBuildRule,
+          Optional.of(suggestBuildRule),
           steps,
           buildableContext);
 
@@ -542,113 +532,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
     return steps.build();
-  }
-
-  /**
-   *  @param transitiveNotDeclaredRule A {@link BuildRule} that is contained in the transitive
-   *      dependency list but is not declared as a dependency.
-   *  @param failedImports A Set of remaining failed imports.  This function will mutate this set
-   *      and remove any imports satisfied by {@code transitiveNotDeclaredDep}.
-   *  @return whether or not adding {@code transitiveNotDeclaredDep} as a dependency to this build
-   *      rule would have satisfied one of the {@code failedImports}.
-   */
-  private boolean isMissingBuildRule(ProjectFilesystem filesystem,
-      BuildRule transitiveNotDeclaredRule,
-      Set<String> failedImports,
-      JarResolver jarResolver) {
-    if (!(transitiveNotDeclaredRule instanceof JavaLibrary)) {
-      return false;
-    }
-
-    ImmutableSet<Path> classPaths =
-        ImmutableSet.copyOf(
-            ((JavaLibrary) transitiveNotDeclaredRule).getOutputClasspathEntries().values());
-    boolean containsMissingBuildRule = false;
-    // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
-    // the exception of rules that export their dependencies, this will result in a single
-    // classpath.
-    for (Path classPath : classPaths) {
-      ImmutableSet<String> topLevelSymbols = jarResolver.resolve(filesystem, classPath);
-
-      for (String symbolName : topLevelSymbols) {
-        if (failedImports.contains(symbolName)) {
-          failedImports.remove(symbolName);
-          containsMissingBuildRule = true;
-
-          // If we've found all of the missing imports, bail out early.
-          if (failedImports.isEmpty()) {
-            return true;
-          }
-        }
-      }
-    }
-    return containsMissingBuildRule;
-  }
-
-  /**
-   * @return A function that takes a list of failed imports from a javac invocation and returns a
-   *    set of rules to suggest that the developer import to satisfy those imports.
-   */
-  @VisibleForTesting
-  Optional<SuggestBuildRules> createSuggestBuildFunction(
-      final BuildContext context,
-      final ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
-      final JarResolver jarResolver) {
-
-    final Supplier<ImmutableList<JavaLibrary>> sortedTransitiveNotDeclaredDeps =
-        Suppliers.memoize(
-            new Supplier<ImmutableList<JavaLibrary>>() {
-              @Override
-              public ImmutableList<JavaLibrary> get() {
-                ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
-                    ImmutableSetMultimap.<JavaLibrary, Path>builder()
-                        .putAll(getTransitiveClasspathEntries())
-                        .putAll(
-                            DefaultJavaLibrary.this,
-                            DefaultJavaLibrary.this.additionalClasspathEntries)
-                        .build();
-                Set<JavaLibrary> transitiveNotDeclaredDeps = Sets.difference(
-                    transitiveClasspathEntries.keySet(),
-                    Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
-                DirectedAcyclicGraph<BuildRule> graph =
-                    BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-                        context.getActionGraph().getNodes(),
-                        Predicates.instanceOf(JavaLibrary.class),
-                        Predicates.instanceOf(JavaLibrary.class));
-                return FluentIterable
-                    .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()))
-                    .filter(JavaLibrary.class)
-                    .filter(Predicates.in(transitiveNotDeclaredDeps))
-                    .toList()
-                    .reverse();
-              }
-            });
-
-    SuggestBuildRules suggestBuildRuleFn =
-        new SuggestBuildRules() {
-      @Override
-      public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
-          ImmutableSet<String> failedImports) {
-        ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
-
-        Set<String> remainingImports = Sets.newHashSet(failedImports);
-
-        for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps.get()) {
-          if (isMissingBuildRule(filesystem,
-                  transitiveNotDeclaredDep,
-                  remainingImports,
-                  jarResolver)) {
-            suggestedDeps.add(transitiveNotDeclaredDep.getFullyQualifiedName());
-          }
-          // If we've wiped out all remaining imports, break the loop looking for them.
-          if (remainingImports.isEmpty()) {
-            break;
-          }
-        }
-        return suggestedDeps.build();
-      }
-    };
-    return Optional.of(suggestBuildRuleFn);
   }
 
   /**

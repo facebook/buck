@@ -18,6 +18,15 @@ package com.facebook.buck.jvm.core;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
+
 public interface SuggestBuildRules {
   ImmutableSet<String> suggest(ProjectFilesystem filesystem, ImmutableSet<String> failedImports);
+
+  /**
+   * Given a jar, open it, and return all the symbols within.
+   */
+  interface JarResolver {
+    ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
+  }
 }
