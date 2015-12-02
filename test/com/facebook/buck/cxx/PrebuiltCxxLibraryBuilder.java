@@ -54,6 +54,11 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setLinkWithoutSoname(boolean linkWithoutSoname) {
+    arg.linkWithoutSoname = Optional.of(linkWithoutSoname);
+    return this;
+  }
+
   public PrebuiltCxxLibraryBuilder setExportedHeaders(SourceList exportedHeaders) {
     arg.exportedHeaders = Optional.of(exportedHeaders);
     return this;

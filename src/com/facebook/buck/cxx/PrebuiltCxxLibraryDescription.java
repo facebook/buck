@@ -390,6 +390,7 @@ public class PrebuiltCxxLibraryDescription
           }
         },
         args.soname,
+        args.linkWithoutSoname.or(false),
         args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.headerOnly.or(false),
         args.linkWhole.or(false),
@@ -416,6 +417,7 @@ public class PrebuiltCxxLibraryDescription
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
+    public Optional<Boolean> linkWithoutSoname;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   }

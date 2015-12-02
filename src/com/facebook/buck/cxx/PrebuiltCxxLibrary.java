@@ -32,6 +32,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -58,6 +59,7 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<String> soname;
+  private final boolean linkWithoutSoname;
   private final Linkage linkage;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -79,6 +81,7 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<String> soname,
+      boolean linkWithoutSoname,
       Linkage linkage,
       boolean headerOnly,
       boolean linkWhole,
@@ -93,6 +96,7 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.soname = soname;
+    this.linkWithoutSoname = linkWithoutSoname;
     this.linkage = linkage;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -230,8 +234,18 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
         StringArg.from(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform))));
     if (!headerOnly) {
       if (provided || (type == Linker.LinkableDepType.SHARED && linkage != Linkage.STATIC)) {
-        linkerArgsBuilder.add(
-            new SourcePathArg(getResolver(), requireSharedLibrary(cxxPlatform)));
+        final SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+        if (linkWithoutSoname) {
+          if (!(sharedLibrary instanceof PathSourcePath)) {
+            throw new HumanReadableException(
+                "%s: can only link prebuilt DSOs without sonames",
+                getBuildTarget());
+          }
+          linkerArgsBuilder.add(new RelativeLinkArg((PathSourcePath) sharedLibrary));
+        } else {
+          linkerArgsBuilder.add(
+              new SourcePathArg(getResolver(), requireSharedLibrary(cxxPlatform)));
+        }
       } else {
         Path staticLibraryPath =
             type == Linker.LinkableDepType.STATIC_PIC ?

@@ -687,4 +687,25 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Matchers.hasItem(filesystem.resolve("include")));
   }
 
+  @Test
+  public void linkWithoutSoname() throws Exception {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setLinkWithoutSoname(true);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
+    NativeLinkableInput input =
+        rule.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED);
+    assertThat(
+        Arg.stringify(input.getArgs()),
+        Matchers.contains(
+            "-L" + filesystem.resolve(rule.getBuildTarget().getBasePath()).resolve("lib"),
+            "-lrule"));
+  }
+
 }
