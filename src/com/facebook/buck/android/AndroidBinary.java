@@ -375,11 +375,9 @@ public class AndroidBinary
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
     ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
-    boolean hasNativeLibraryAssets = false;
     if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
         enhancementResult.getCopyNativeLibraries().isPresent()) {
       CopyNativeLibraries copyNativeLibraries = enhancementResult.getCopyNativeLibraries().get();
-      hasNativeLibraryAssets = copyNativeLibraries.hasAssetLibraries();
 
       if (packageAssetLibraries.or(Boolean.FALSE)) {
         nativeLibraryDirectories = ImmutableSet.of(copyNativeLibraries.getPathToNativeLibsDir());
@@ -393,7 +391,8 @@ public class AndroidBinary
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
     ImmutableSet<Path> nativeLibraryAsAssetDirectories;
     if ((!packageableCollection.getNativeLibAssetsDirectories().isEmpty()) ||
-        (hasNativeLibraryAssets && packageAssetLibraries.or(Boolean.FALSE))) {
+        (!packageableCollection.getNativeLinkablesAssets().isEmpty() &&
+            packageAssetLibraries.or(Boolean.FALSE))) {
       Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
       final Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), libSubdirectory));

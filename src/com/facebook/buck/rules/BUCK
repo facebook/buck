@@ -11,7 +11,6 @@ java_library(
   deps = [
     ':build_rule',
     ':rules',
-    '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/android:utils',

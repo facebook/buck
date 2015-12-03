@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -96,11 +95,6 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
-  }
-
-  @Override
-  public Iterable<NativeLinkable> getRequiredNativeLinkables() {
-    return AndroidPackageableCollector.getNativeLinkableRules(getDeclaredDeps());
   }
 
   @Override

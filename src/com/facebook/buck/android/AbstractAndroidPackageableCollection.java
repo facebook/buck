@@ -81,9 +81,14 @@ interface AbstractAndroidPackageableCollection {
   Set<BuildTarget> getNativeLibsTargets();
 
   /**
-   * Roots of native linkable dependencies.
+   * Native libraries.
    */
-  ImmutableSet<NativeLinkable> getNativeLinkableRoots();
+  ImmutableList<NativeLinkable> getNativeLinkables();
+
+  /**
+   * Native libraries to be packaged as assets.
+   */
+  ImmutableList<NativeLinkable> getNativeLinkablesAssets();
 
   /**
    * Directories containing native libraries.

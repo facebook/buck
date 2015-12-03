@@ -343,9 +343,4 @@ public class CopyNativeLibraries extends AbstractBuildRule {
           .setReflectively("targetCpuType", getTargetCpuType());
     }
   }
-
-  public boolean hasAssetLibraries() {
-    return !stripLibAssetRules.isEmpty();
-  }
-
 }

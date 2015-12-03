@@ -160,8 +160,6 @@ public class AndroidBinaryGraphEnhancer {
             buildTargetsToExcludeFromDex,
             resourcesToExclude);
     collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
-    collector.addNativeLinkableRoots(
-        AndroidPackageableCollector.getNativeLinkableRules(originalDeps));
     AndroidPackageableCollection packageableCollection = collector.build();
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
@@ -370,7 +368,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableList.Builder<DexProducedFromJavaLibrary> preDexRules,
       ImmutableList.Builder<Path> buildConfigJarFilesBuilder) {
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
-        ImmutableList.of(
+        ImmutableList.<BuildConfigFields.Field>of(
             BuildConfigFields.Field.of(
                 "boolean",
                 BuildConfigs.DEBUG_CONSTANT,

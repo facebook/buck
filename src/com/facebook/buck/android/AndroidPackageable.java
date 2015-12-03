@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.HasBuildTarget;
 
 /**
@@ -40,14 +39,6 @@ public interface AndroidPackageable extends HasBuildTarget {
    * @return All {@link AndroidPackageable}s that must be included along with this one.
    */
   Iterable<AndroidPackageable> getRequiredPackageables();
-
-  /**
-   * Return the all native code dependencies required by this packageable.
-   *
-   * @return All {@link NativeLinkable}s that must be included along with this
-   *     {@link AndroidPackageable}.
-   */
-  Iterable<NativeLinkable> getRequiredNativeLinkables();
 
   /**
    * Add concrete resources to the given collector.

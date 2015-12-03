@@ -19,10 +19,8 @@ java_library(
 
 PACKAGEABLE_SOURCES = [
   'AbstractAndroidPackageableCollection.java',
-  'AbstractNdkCxxPlatform.java',
   'AndroidPackageable.java',
   'AndroidPackageableCollector.java',
-  'NdkCxxPlatforms.java',
 ]
 java_immutables_library(
   name = 'packageable',
@@ -37,13 +35,10 @@ java_immutables_library(
   ],
   deps = [
     '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules/coercer:coercer',
-    '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:exceptions',
     '//third-party/java/guava:guava',
   ],
@@ -290,7 +285,6 @@ java_immutables_library(
   ],
   deps = [
     ':exceptions',
-    ':packageable',
     ':split_dex',
     ':utils',
     '//src/com/facebook/buck/cxx:platform',

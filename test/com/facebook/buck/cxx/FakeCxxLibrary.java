@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -159,15 +161,18 @@ public final class FakeCxxLibrary
   }
 
   @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {}
+
+  @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.<String, SourcePath>of(
         sharedLibrarySoname,
         new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput));
-  }
-
-  @Override
-  public boolean canBeAsset() {
-    return false;
   }
 
   @Override

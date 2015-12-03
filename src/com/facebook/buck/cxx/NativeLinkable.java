@@ -36,8 +36,6 @@ public interface NativeLinkable extends HasBuildTarget {
 
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 
-  boolean canBeAsset();
-
   /**
    * @return a map of shared library SONAME to shared library path for the given
    *     {@link CxxPlatform}.

@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -254,11 +253,6 @@ public class PrebuiltJar extends AbstractBuildRule
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
-  }
-
-  @Override
-  public Iterable<NativeLinkable> getRequiredNativeLinkables() {
-    return AndroidPackageableCollector.getNativeLinkableRules(getDeclaredDeps());
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
@@ -287,6 +289,16 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   }
 
   @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(params.getDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addNativeLinkable(this);
+  }
+
+  @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     String resolvedSoname =
@@ -297,11 +309,6 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
       solibs.put(resolvedSoname, sharedLibrary);
     }
     return solibs.build();
-  }
-
-  @Override
-  public boolean canBeAsset() {
-    return false;
   }
 
 }

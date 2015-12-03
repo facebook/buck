@@ -127,11 +127,6 @@ public class CxxLinkableEnhancerTest {
       return ImmutableMap.of();
     }
 
-    @Override
-    public boolean canBeAsset() {
-      return false;
-    }
-
   }
 
   private static FakeNativeLinkable createNativeLinkable(
