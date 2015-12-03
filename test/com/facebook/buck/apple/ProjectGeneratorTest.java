@@ -3408,7 +3408,8 @@ public class ProjectGeneratorTest {
         "//foo:AppTest");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
-    assertEquals("$BUILT_PRODUCTS_DIR/./HostApp.app/HostApp", settings.get("BUNDLE_LOADER"));
+    // Check starts with as the remainder depends on the bundle style at build time.
+    assertTrue(settings.get("BUNDLE_LOADER").startsWith("$BUILT_PRODUCTS_DIR/./HostApp.app/"));
     assertEquals("$(BUNDLE_LOADER)", settings.get("TEST_HOST"));
   }
 

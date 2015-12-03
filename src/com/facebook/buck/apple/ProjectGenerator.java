@@ -1040,15 +1040,54 @@ public class ProjectGenerator {
     if (bundleLoaderNode.isPresent()) {
       TargetNode<AppleBundleDescription.Arg> bundleLoader = bundleLoaderNode.get();
       String bundleLoaderProductName = getProductNameForBuildTarget(bundleLoader.getBuildTarget());
-      String bundleName = bundleLoaderProductName + "." +
+      String bundleLoaderBundleName = bundleLoaderProductName + "." +
           getExtensionString(bundleLoader.getConstructorArg().getExtension());
-      String bundleLoaderOutputPath = Joiner.on('/').join(
+      // NOTE(grp): This is a hack. We need to support both deep (OS X) and flat (iOS)
+      // style bundles for the bundle loader, but at this point we don't know what platform
+      // the bundle loader (or current target) is going to be built for. However, we can be
+      // sure that it's the same as the target (presumably a test) we're building right now.
+      //
+      // Using that knowledge, we can do build setting tricks to defer choosing the bundle
+      // loader path until Xcode build time, when the platform is known. There's no build
+      // setting that conclusively says whether the current platform uses deep bundles:
+      // that would be too easy. But in the cases we care about (unit test bundles), the
+      // current bundle will have a style matching the style of the bundle loader app, so
+      // we can take advantage of that to do the determination.
+      //
+      // Unfortunately, the build setting for the bundle structure (CONTENTS_FOLDER_PATH)
+      // includes the WRAPPER_NAME, so we can't just interpolate that in. Instead, we have
+      // to use another trick with build setting operations and evaluation. By using the
+      // $(:file) operation, we can extract the last component of the contents path: either
+      // "Contents" or the current bundle name. Then, we can interpolate with that expected
+      // result in the build setting name to conditionally choose a different loader path.
+
+      // The conditional that decdies which path is used. This is a complex Xcode build setting
+      // expression that expands to one of two values, depending on the last path component of
+      // the CONTENTS_FOLDER_PATH variable. As described above, this will be either "Contents"
+      // for deep bundles or the bundle file name itself for flat bundles. Finally, to santiize
+      // the potentially invalid build setting names from the bundle file name, it converts that
+      // to an identifier. We rely on BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_<bundle file name>
+      // being undefined (and thus expanding to nothing) for the path resolution to work.
+      //
+      // The operations on the CONTENTS_FOLDER_PATH are documented here:
+      // http://codeworkshop.net/posts/xcode-build-setting-transformations
+      String bundleLoaderOutputPathConditional =
+            "$(BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_$(CONTENTS_FOLDER_PATH:file:identifier))";
+
+      // If the $(CONTENTS_FOLDER_PATH:file:identifier) expands to this, we add the deep bundle
+      // path into the bundle loader. See above for the case when it will expand to this value.
+      String bundleLoaderOutputPathDeepSetting = "BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_Contents";
+      String bundleLoaderOutputPathDeepValue = "Contents/MacOS/";
+
+      String bundleLoaderOutputPathValue = Joiner.on('/').join(
           getTargetOutputPath(bundleLoader),
-          bundleName,
-          // TODO(bhamiltoncx): How do we handle the "Contents" sub-directory for OS X app tests?
+          bundleLoaderBundleName,
+          bundleLoaderOutputPathConditional,
           bundleLoaderProductName);
+
       extraSettingsBuilder
-          .put("BUNDLE_LOADER", bundleLoaderOutputPath)
+          .put(bundleLoaderOutputPathDeepSetting, bundleLoaderOutputPathDeepValue)
+          .put("BUNDLE_LOADER", bundleLoaderOutputPathValue)
           .put("TEST_HOST", "$(BUNDLE_LOADER)");
     }
     if (infoPlistOptional.isPresent()) {
