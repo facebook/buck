@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -63,21 +64,26 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final ImmutableSet<Path> systemIncludeRoots;
   private final ImmutableSet<Path> headerMaps;
   private final DebugPathSanitizer sanitizer;
+  private final Path workingDir;
   private final SourcePathResolver resolver;
-  private static final Function<Path, String> ENSURE_ABSOLUTE_PATH = new Function<Path, String>() {
+  private final Function<Path, Path> minLengthPathRepresentation = new Function<Path, Path>() {
     @Override
-    public String apply(Path path) {
+    public Path apply(Path path) {
       Preconditions.checkState(
           path.isAbsolute(),
           "Expected preprocessor suffix to be absolute: %s",
           path);
-      return path.toString();
+      String absoluteString = path.toString();
+      Path relativePath = MorePaths.relativize(workingDir, path);
+      String relativeString = relativePath.toString();
+      return absoluteString.length() > relativeString.length() ? relativePath : path;
     }
   };
 
   public PreprocessorDelegate(
       SourcePathResolver resolver,
       DebugPathSanitizer sanitizer,
+      Path workingDir,
       Preprocessor preprocessor,
       List<String> platformPreprocessorFlags,
       List<String> rulePreprocessorFlags,
@@ -98,6 +104,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.systemIncludeRoots = ImmutableSet.copyOf(systemIncludeRoots);
     this.headerMaps = ImmutableSet.copyOf(headerMaps);
     this.sanitizer = sanitizer;
+    this.workingDir = workingDir;
     this.resolver = resolver;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
   }
@@ -135,7 +142,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       // just use relative paths.  The consequence here is that debug paths and error/warning
       // messages may be incorrect when referring to headers in another cell.
       replacementPathsBuilder.put(
-          entry.getKey(),
+          Preconditions.checkNotNull(minLengthPathRepresentation.apply(entry.getKey())),
           resolver.getRelativePath(entry.getValue()));
     }
     return replacementPathsBuilder.build();
@@ -184,11 +191,15 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
-                Iterables.transform(headerMaps, ENSURE_ABSOLUTE_PATH)))
+                Iterables.transform(
+                    headerMaps,
+                    Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
-                Iterables.transform(includeRoots, ENSURE_ABSOLUTE_PATH)))
+                Iterables.transform(
+                    includeRoots,
+                    Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-isystem"),

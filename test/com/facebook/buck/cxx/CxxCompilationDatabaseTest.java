@@ -111,6 +111,7 @@ public class CxxCompilationDatabaseTest {
                 new PreprocessorDelegate(
                     testSourcePathResolver,
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler"))),
                     ImmutableList.<String>of(),
                     ImmutableList.<String>of(),
@@ -166,6 +167,7 @@ public class CxxCompilationDatabaseTest {
                 new PreprocessorDelegate(
                     testSourcePathResolver,
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
                     ImmutableList.<String>of(),
                     ImmutableList.<String>of(),
@@ -239,9 +241,9 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.of(
             "compiler",
             "-I",
-            "/Users/user/src/foo/bar",
+            "foo/bar",
             "-I",
-            "/Users/user/src/test",
+            "test",
             "-x",
             "c++",
             "-c",
@@ -259,9 +261,9 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.of(
             "compiler",
             "-I",
-            "/Users/user/src/foo/bar",
+            "foo/bar",
             "-I",
-            "/Users/user/src/test",
+            "test",
             "-x",
             "c++",
             "-c",
@@ -275,8 +277,8 @@ public class CxxCompilationDatabaseTest {
     runCombinedTest(CxxPreprocessMode.SEPARATE,
         ImmutableList.of(
             "compiler",
-            "-I", "/Users/user/src/foo/bar",
-            "-I", "/Users/user/src/test",
+            "-I", "foo/bar",
+            "-I", "test",
             // compdb will present a single command despite this being two commands under the hood,
             // hence, this is compiling a cpp file, not cpp preprocessed output.
             "-x", "c++",

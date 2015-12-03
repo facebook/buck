@@ -832,6 +832,7 @@ public class CxxSourceRuleFactory {
       return new PreprocessorDelegate(
           pathResolver,
           cxxPlatform.getDebugPathSanitizer(),
+          params.getProjectFilesystem().getRootPath(),
           CxxSourceTypes.getPreprocessor(cxxPlatform, getSourceType(key)),
           getPlatformPreprocessorFlags(key),
           getRulePreprocessorFlags(key),

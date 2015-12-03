@@ -92,6 +92,7 @@ public class CxxPreprocessAndCompileTest {
   private static final ImmutableSet<FrameworkPath> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of();
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
+  private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
   private static final
   RuleKeyAppendableFunction<FrameworkPath, Path> DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
       new RuleKeyAppendableFunction<FrameworkPath, Path>() {
@@ -163,6 +164,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 DEFAULT_PLATFORM_FLAGS,
                 DEFAULT_RULE_FLAGS,
@@ -172,8 +174,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_FRAMEWORK_ROOTS,
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.<SourcePath>absent(),
-                DEFAULT_INCLUDES
-            ),
+                DEFAULT_INCLUDES),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -254,6 +255,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
                 DEFAULT_PREPROCESOR_RULE_FLAGS,
@@ -280,6 +282,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
                 DEFAULT_PREPROCESOR_RULE_FLAGS,
@@ -306,6 +309,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
                 DEFAULT_PREPROCESOR_RULE_FLAGS,
@@ -332,6 +336,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
                 DEFAULT_PREPROCESOR_RULE_FLAGS,
@@ -357,6 +362,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
                 DEFAULT_PREPROCESOR_RULE_FLAGS,
@@ -420,6 +426,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 sanitizer1,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 platformFlags1,
                 ruleFlags1,
@@ -446,6 +453,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 sanitizer2,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 platformFlags2,
                 ruleFlags2,
@@ -531,6 +539,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
                 platformFlags,
                 ruleFlags,
@@ -594,6 +603,7 @@ public class CxxPreprocessAndCompileTest {
             new PreprocessorDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
+                DEFAULT_WORKING_DIR,
                 new DefaultPreprocessor(preprocessorTool),
                 ImmutableList.<String>of(),
                 ImmutableList.<String>of(),

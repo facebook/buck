@@ -170,12 +170,10 @@ public class CxxCompilationDatabaseIntegrationTest {
   }
 
   private String headerSymlinkTreeIncludePath(String headerSymlinkTreePath) throws IOException {
-    Path root = tmp.getRootPath().toRealPath().toAbsolutePath();
-
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
-      return String.format("%s/%s.hmap", root, headerSymlinkTreePath);
+      return String.format("%s.hmap", headerSymlinkTreePath);
     } else {
-      return String.format("%s/%s", root, headerSymlinkTreePath);
+      return String.format("%s", headerSymlinkTreePath);
     }
   }
 
@@ -196,9 +194,8 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   private ImmutableList<String> getExtraFlagsForHeaderMaps() throws IOException {
     // This works around OS X being amusing about the location of temp directories.
-    Path root = tmp.getRootPath().toRealPath().toAbsolutePath().normalize();
     return PREPROCESSOR_SUPPORTS_HEADER_MAPS ?
-        ImmutableList.of("-I", root.resolve(BuckConstant.BUCK_OUTPUT_DIRECTORY).toString()) :
+        ImmutableList.of("-I", BuckConstant.BUCK_OUTPUT_DIRECTORY) :
         ImmutableList.<String>of();
   }
 }

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
 import com.facebook.buck.cxx.CxxCompilationDatabaseUtils;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -88,18 +89,16 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
     String pathToPrivateHeaders =
         String.format(
-            "%s/buck-out/gen/Libraries/EXExample/EXExample#iphonesimulator-x86_64,%s.hmap",
-            workspace.getDestPath(),
+            "buck-out/gen/Libraries/EXExample/EXExample#iphonesimulator-x86_64,%s.hmap",
             CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     String pathToPublicHeaders =
         String.format(
-            "%s/buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
-            workspace.getDestPath(),
+            "buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        tmp.getRoot().resolve(BuckConstant.BUCK_OUTPUT_DIRECTORY).toString());
+        BuckConstant.BUCK_OUTPUT_DIRECTORY);
 
     // Verify the entries in the compilation database.
     assertFlags(
@@ -148,18 +147,16 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
     String pathToPrivateHeaders =
         String.format(
-            "%s/buck-out/gen/Apps/Weather/Weather#iphonesimulator-x86_64,%s.hmap",
-            workspace.getDestPath(),
+            "buck-out/gen/Apps/Weather/Weather#iphonesimulator-x86_64,%s.hmap",
             CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     String pathToPublicHeaders =
         String.format(
-            "%s/buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
-            workspace.getDestPath(),
+            "buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        tmp.getRoot().resolve(BuckConstant.BUCK_OUTPUT_DIRECTORY).toString());
+        BuckConstant.BUCK_OUTPUT_DIRECTORY);
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",
@@ -261,8 +258,6 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);
-    MoreAsserts.assertIterablesEquals(
-        commandArgs,
-        ImmutableList.copyOf(entry.getCommand().split(" ")));
+    assertThat(ImmutableList.copyOf(entry.getCommand().split(" ")), equalTo(commandArgs));
   }
 }
