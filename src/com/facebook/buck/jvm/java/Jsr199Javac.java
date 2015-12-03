@@ -177,21 +177,24 @@ public abstract class Jsr199Javac implements Javac {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new BuckTracingEventBusBridge(context.getBuckEventBus(), invokingRule));
     try {
-      TranslatingJavacPhaseTracer.setupTracing(
-          invokingRule,
-          context.getClassLoaderCache(),
-          context.getBuckEventBus(),
-          compilationTask);
+      try (
+          // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
+          // in some unusual situations
+          TranslatingJavacPhaseTracer tracer = TranslatingJavacPhaseTracer.setupTracing(
+              invokingRule,
+              context.getClassLoaderCache(),
+              context.getBuckEventBus(),
+              compilationTask);
 
-      // Ensure annotation processors are loaded from their own classloader. If we don't do this,
-      // then the evidence suggests that they get one polluted with Buck's own classpath, which
-      // means that libraries that have dependencies on different versions of Buck's deps may choke
-      // with novel errors that don't occur on the command line.
-      try (ProcessorBundle bundle = prepareProcessors(
-          context.getBuckEventBus(),
-          compiler.getClass().getClassLoader(),
-          invokingRule,
-          options)) {
+          // Ensure annotation processors are loaded from their own classloader. If we don't do
+          // this, then the evidence suggests that they get one polluted with Buck's own classpath,
+          // which means that libraries that have dependencies on different versions of Buck's deps
+          // may choke with novel errors that don't occur on the command line.
+          ProcessorBundle bundle = prepareProcessors(
+              context.getBuckEventBus(),
+              compiler.getClass().getClassLoader(),
+              invokingRule,
+              options)) {
         compilationTask.setProcessors(bundle.processors);
 
         // Invoke the compilation and inspect the result.

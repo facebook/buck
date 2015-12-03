@@ -61,11 +61,13 @@ import javax.tools.JavaCompiler;
  *   the first analyze phase</li>
  *   <li>Annotation processing is traced from the beginning of the first round to
  *   the end of the last</li>
+ *   <li>If compilation ends during annotation processing (as can happen with -proc:only), it
+ *   detects this (via being closed by its caller) and emits appropriate tracing</li>
  * </ul>
  * In this way, the time attributed to annotation processing is always time
  * that would not have been spent if annotation processors were not present.
  */
-public class TranslatingJavacPhaseTracer implements JavacPhaseTracer {
+public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoCloseable {
   private static final Logger LOG = Logger.get(TranslatingJavacPhaseTracer.class);
   private static final String JAVAC_TRACING_JAR_RESOURCE_PATH = "javac-tracing-compiler-plugin.jar";
   @Nullable
@@ -107,13 +109,14 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer {
     }
   }
 
-  public static void setupTracing(
+  @Nullable
+  public static TranslatingJavacPhaseTracer setupTracing(
       BuildTarget invokingTarget,
       ClassLoaderCache classLoaderCache,
       BuckEventBus buckEventBus,
       JavaCompiler.CompilationTask task) {
     if (JAVAC_TRACING_JAR_URL == null) {
-      return;
+      return null;
     }
 
     try {
@@ -136,15 +139,20 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer {
           "setupTracing",
           JavaCompiler.CompilationTask.class,
           JavacPhaseTracer.class);
+      final TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(
+          new JavacPhaseEventLogger(invokingTarget, buckEventBus));
       setupTracingMethod.invoke(
           null,
           task,
-          new TranslatingJavacPhaseTracer(new JavacPhaseEventLogger(invokingTarget, buckEventBus)));
+          tracer);
+
+      return tracer;
     } catch (ReflectiveOperationException e) {
       LOG.warn(
           e,
           "Failed loading TracingTaskListener. " +
               "Perhaps using a compiler that doesn't support com.sun.source.util.JavaTask?");
+      return null;
     }
   }
 
@@ -215,5 +223,17 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer {
   @Override
   public void endGenerate() {
     logger.endGenerate();
+  }
+
+  @Override
+  public void close() {
+    if (isProcessingAnnotations) {
+      // If javac is invoked with -proc:only, the last thing we'll hear from it is the end of
+      // the annotation processing round. We won't get a beginAnalyze (or even a beginEnter) after
+      // the annotation processors run for the last time.
+      logger.endAnnotationProcessingRound(true);
+      logger.endAnnotationProcessing();
+      isProcessingAnnotations = false;
+    }
   }
 }

@@ -73,6 +73,7 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endAnalyze();
     tracer.beginGenerate("file2", "type2");
     tracer.endGenerate();
+    tracer.close();
 
     verify(mockLogger);
   }
@@ -144,7 +145,74 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endAnalyze();
     tracer.beginGenerate("generatedFile1", "generatedType1");
     tracer.endGenerate();
+    tracer.close();
 
     verify(mockLogger);
+  }
+
+  /** Tests the event stream as it would be for compilation with the -proc:only option. */
+  @Test
+  public void testProcOnlyCompilation() {
+    logDesiredEventStreamForProcOnly(mockLogger);
+
+    replay(mockLogger);
+
+    traceProcOnlyEvents(tracer);
+
+    verify(mockLogger);
+  }
+
+  /** Tests the event stream as it would be for compilation with the -proc:only option. */
+  @Test
+  public void testProcOnlyCompilationDoubleClose() {
+    logDesiredEventStreamForProcOnly(mockLogger);
+
+    replay(mockLogger);
+
+    traceProcOnlyEvents(tracer);
+    tracer.close();
+
+    verify(mockLogger);
+  }
+
+  private void traceProcOnlyEvents(final TranslatingJavacPhaseTracer tracer) {
+    tracer.beginParse("file1");
+    tracer.endParse();
+    tracer.beginParse("file2");
+    tracer.endParse();
+    tracer.beginEnter();
+    tracer.endEnter(ImmutableList.of("file1", "file2"));
+    tracer.beginAnnotationProcessingRound();
+    tracer.endAnnotationProcessingRound();
+    tracer.beginParse("generatedFile1");
+    tracer.endParse();
+    tracer.beginEnter();
+    tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
+    tracer.beginAnnotationProcessingRound();
+    tracer.endAnnotationProcessingRound();
+    tracer.close();
+  }
+
+  private void logDesiredEventStreamForProcOnly(final JavacPhaseEventLogger logger) {
+    logger.beginParse("file1");
+    logger.endParse();
+    logger.beginParse("file2");
+    logger.endParse();
+    logger.beginEnter();
+    logger.endEnter(ImmutableList.of("file1", "file2"));
+    logger.beginAnnotationProcessing();
+    logger.beginAnnotationProcessingRound(1);
+    logger.beginRunAnnotationProcessors();
+    logger.endRunAnnotationProcessors();
+    logger.beginParse("generatedFile1");
+    logger.endParse();
+    logger.beginEnter();
+    logger.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
+    logger.endAnnotationProcessingRound(false);
+    logger.beginAnnotationProcessingRound(2);
+    logger.beginRunAnnotationProcessors();
+    logger.endRunAnnotationProcessors();
+    logger.endAnnotationProcessingRound(true);
+    logger.endAnnotationProcessing();
   }
 }
