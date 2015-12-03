@@ -580,7 +580,7 @@ public class ProjectGenerator {
     Path resolvedBundleSource = projectFilesystem.resolve(
         AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app"));
     Path resolvedDsymSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "dSYM"));
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app.dSYM"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
     String fixUUIDScriptPath = getFixUUIDScriptPath();

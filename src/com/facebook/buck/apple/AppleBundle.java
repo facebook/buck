@@ -213,10 +213,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.sdkName = sdk.getName();
     this.debugInfoFormat = debugInfoFormat;
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
-    dsymPath = bundleBinaryPath
+    dsymPath = bundleRoot
         .getParent()
-        .getParent()
-        .resolve(bundleBinaryPath.getFileName().toString() + ".dSYM");
+        .resolve(bundleRoot.getFileName().toString() + ".dSYM");
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
 
     if (needCodeSign()) {

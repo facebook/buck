@@ -263,7 +263,7 @@ public class AppleBinaryIntegrationTest {
         "//:DemoApp#dwarf-and-dsym")
         .assertSuccess();
     Path output = getGenDir()
-        .resolve("DemoApp#dwarf-and-dsym/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+        .resolve("DemoApp#dwarf-and-dsym/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp");
     assertThat(Files.exists(output), Matchers.equalTo(true));
   }
 
@@ -280,14 +280,16 @@ public class AppleBinaryIntegrationTest {
         .assertSuccess();
     assertThat(
         Files.exists(
-            getGenDir().resolve("DemoApp#no-debug/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+            getGenDir().resolve(
+                "DemoApp#no-debug/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(false));
     assertThat(Files.exists(
             getGenDir()
-                .resolve("DemoApp#dwarf-and-dsym/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+                .resolve(
+                    "DemoApp#dwarf-and-dsym/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(false));
     assertThat(Files.exists(
-            getGenDir().resolve("DemoApp/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+            getGenDir().resolve("DemoApp/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(false));
   }
 
@@ -303,7 +305,7 @@ public class AppleBinaryIntegrationTest {
         "//:DemoApp")
         .assertSuccess();
     assertThat(Files.exists(
-            getGenDir().resolve("DemoApp/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+            getGenDir().resolve("DemoApp/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(true));
   }
 
@@ -319,7 +321,7 @@ public class AppleBinaryIntegrationTest {
         "//:DemoApp")
         .assertSuccess();
     assertThat(Files.exists(
-            getGenDir().resolve("DemoApp/DemoApp.dSYM/Contents/Resources/DWARF/DemoApp")),
+            getGenDir().resolve("DemoApp/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(false));
   }
 
