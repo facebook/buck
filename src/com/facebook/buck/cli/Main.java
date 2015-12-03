@@ -666,7 +666,7 @@ public final class Main {
         androidDirectoryResolver,
         testTempDirOverride);
 
-    Cell rootCell = new Cell(
+    Cell rootCell = Cell.createCell(
         filesystem,
         console,
         watchman,

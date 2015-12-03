@@ -32,9 +32,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
+
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
 
 public class TestCellBuilder {
 
@@ -82,7 +87,7 @@ public class TestCellBuilder {
         Optional.<Path>absent());
 
     if (parserFactory == null) {
-      return new Cell(
+      return Cell.createCell(
           filesystem,
           new TestConsole(),
           NULL_WATCHMAN,
@@ -92,19 +97,24 @@ public class TestCellBuilder {
           new FakeClock(0));
     }
 
-    return new Cell(
-        filesystem,
-        new TestConsole(),
-        NULL_WATCHMAN,
-        config,
-        typesFactory,
-        androidDirectoryResolver,
-        new FakeClock(0)) {
+    // The constructor for `Cell` is private, and it's in such a central location I don't really
+    // want to make it public. Brace yourselves.
+
+    Enhancer enhancer = new Enhancer();
+    enhancer.setSuperclass(Cell.class);
+    enhancer.setCallback(new MethodInterceptor() {
       @Override
-      protected ProjectBuildFileParserFactory createBuildFileParserFactory(boolean watchmanGlob) {
-        return parserFactory;
+      public Object intercept(
+          Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        if ("createBuildFileParserFactory".equals(method.getName())) {
+          return parserFactory;
+        }
+
+        return proxy.invokeSuper(obj, args);
       }
-    };
+    });
+
+    return (Cell) enhancer.create();
   }
 
   public static Function<Optional<String>, Path> createCellRoots(

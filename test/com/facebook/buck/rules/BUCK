@@ -65,6 +65,7 @@ java_library(
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/util:testutil',
+    '//third-party/java/cglib:cglib',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',

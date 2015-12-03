@@ -95,7 +95,7 @@ public class ThriftLibraryIntegrationTest {
             "cpp_reflection_library = //thrift:fake")
         .build();
 
-    Cell cell = new Cell(
+    Cell cell = Cell.createCell(
         filesystem,
         new TestConsole(),
         Watchman.NULL_WATCHMAN,

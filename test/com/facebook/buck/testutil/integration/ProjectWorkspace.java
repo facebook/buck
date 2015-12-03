@@ -539,7 +539,7 @@ public class ProjectWorkspace {
         filesystem,
         Optional.<String>absent(),
         new DefaultPropertyFinder(filesystem, env));
-    return new Cell(
+    return Cell.createCell(
         filesystem,
         console,
         Watchman.NULL_WATCHMAN,
