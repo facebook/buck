@@ -39,6 +39,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -68,6 +70,14 @@ public class Cell {
   private final String buildFileName;
   private final boolean enforceBuckPackageBoundaries;
   private final ImmutableSet<Pattern> tempFilePatterns;
+
+  private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
+      new Supplier<Integer>() {
+        @Override
+        public Integer get() {
+          return Objects.hash(filesystem, config, directoryResolver);
+        }
+      });
 
   public Cell(
       final ProjectFilesystem filesystem,
@@ -282,7 +292,7 @@ public class Cell {
 
   @Override
   public int hashCode() {
-    return Objects.hash(filesystem, config, directoryResolver);
+    return hashCodeSupplier.get();
   }
 
   public Iterable<Pattern> getTempFilePatterns() {
