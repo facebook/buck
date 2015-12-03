@@ -49,8 +49,8 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
     // via a SourcePath.
     BuildRuleParams params = new BuildRuleParams(
         targetNode.getBuildTarget(),
-        Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getDeclaredDeps())),
-        Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
+        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
+        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
         targetNode.getCellNames());
     return description.createBuildRule(targetGraph, params, ruleResolver, arg);

@@ -123,8 +123,16 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    Optional<AppleDebugFormat> flavoredDebugInfoFormat =
-        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    AppleDebugFormat flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN
+        .getValue(params.getBuildTarget())
+        .or(defaultDebugInfoFormat);
+    Flavor debugFormatFlavor = flavoredDebugInfoFormat.getFlavor();
+    if (!params.getBuildTarget().getFlavors().contains(debugFormatFlavor)) {
+      return (AppleBundle) resolver.requireRule(
+          BuildTarget.builder(params.getBuildTarget())
+              .addFlavors(debugFormatFlavor)
+              .build());
+    }
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
@@ -141,7 +149,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.infoPlistSubstitutions,
         args.deps.get(),
         args.getTests(),
-        flavoredDebugInfoFormat.or(defaultDebugInfoFormat));
+        flavoredDebugInfoFormat);
   }
 
   /**

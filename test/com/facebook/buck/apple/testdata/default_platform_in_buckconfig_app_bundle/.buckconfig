@@ -1,2 +1,4 @@
 [cxx]
   default_platform = iphonesimulator-x86_64
+[apple]
+  default_debug_info_format = NONE

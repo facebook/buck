@@ -25,12 +25,22 @@ public enum AppleDebugFormat {
   /**
    * Produces a binary with the debug map stripped.
    */
-  NONE,
+  NONE {
+    @Override
+    public Flavor getFlavor() {
+      return NO_DEBUG_FLAVOR;
+    }
+  },
 
   /**
    * Generate a .dSYM file from the binary and its constituent object files.
    */
-  DWARF_AND_DSYM;
+  DWARF_AND_DSYM {
+    @Override
+    public Flavor getFlavor() {
+      return DWARF_AND_DSYM_FLAVOR;
+    }
+  };
 
   public static final Flavor DWARF_AND_DSYM_FLAVOR = ImmutableFlavor.of("dwarf-and-dsym");
   public static final Flavor NO_DEBUG_FLAVOR = ImmutableFlavor.of("no-debug");
@@ -41,5 +51,7 @@ public enum AppleDebugFormat {
           .put(DWARF_AND_DSYM_FLAVOR, AppleDebugFormat.DWARF_AND_DSYM)
           .put(NO_DEBUG_FLAVOR, AppleDebugFormat.NONE)
           .build());
+
+  public abstract Flavor getFlavor();
 }
 

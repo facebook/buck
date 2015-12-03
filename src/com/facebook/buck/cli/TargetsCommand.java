@@ -258,7 +258,13 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
-      return doShowRules(params);
+      try {
+        return doShowRules(params);
+      } catch (NoSuchBuildTargetException e) {
+        throw new HumanReadableException(
+            "Error getting rules: %s",
+            e.getHumanReadableErrorMessage());
+      }
     }
 
     // Verify the --type argument.
@@ -586,7 +592,8 @@ public class TargetsCommand extends AbstractCommand {
    * specified targets, followed by the rule key, output path, and/or
    * target hash, depending on what flags are passed in.
    */
-  private int doShowRules(CommandRunnerParams params) throws IOException, InterruptedException {
+  private int doShowRules(CommandRunnerParams params)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
     if (getArguments().isEmpty()) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           "Must specify at least one build target."));
@@ -618,6 +625,7 @@ public class TargetsCommand extends AbstractCommand {
       // We only need the action graph if we're showing the output or the keys, and the
       // RuleKeyBuilderFactory if we're showing the keys.
       Optional<ActionGraph> actionGraph = Optional.absent();
+      Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
       Optional<RuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
       if (isShowRuleKey() || isShowOutput()) {
         TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
@@ -626,6 +634,7 @@ public class TargetsCommand extends AbstractCommand {
         Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
             targetGraphTransformer.apply(targetGraph));
         actionGraph = Optional.of(result.getFirst());
+        buildRuleResolver = Optional.of(result.getSecond());
         if (isShowRuleKey()) {
           ruleKeyBuilderFactory = Optional.<RuleKeyBuilderFactory>of(
               new DefaultRuleKeyBuilderFactory(
@@ -638,8 +647,7 @@ public class TargetsCommand extends AbstractCommand {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         builder.add(target.getFullyQualifiedName());
         if (actionGraph.isPresent()) {
-          BuildRule rule = Preconditions.checkNotNull(
-              actionGraph.get().findBuildRuleByTarget(target));
+          BuildRule rule = buildRuleResolver.get().requireRule(target);
           if (isShowRuleKey()) {
             builder.add(ruleKeyBuilderFactory.get().build(rule).toString());
           }

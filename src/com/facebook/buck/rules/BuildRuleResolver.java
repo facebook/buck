@@ -126,6 +126,15 @@ public class BuildRuleResolver {
     return rule;
   }
 
+  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets)
+      throws NoSuchBuildTargetException {
+    ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget target : buildTargets) {
+      rules.add(requireRule(target));
+    }
+    return rules.build();
+  }
+
   @SuppressWarnings("unchecked")
   public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass)
       throws NoSuchBuildTargetException {

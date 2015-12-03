@@ -235,7 +235,7 @@ public class AppleBinaryIntegrationTest {
   public void testAppleBinaryBuildsFatBinaries() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle", tmp);
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
     workspace.setUp();
     workspace.runBuckCommand(
         "build",
@@ -255,7 +255,7 @@ public class AppleBinaryIntegrationTest {
   public void testFlavoredAppleBundleBuildsAndDsymFileCreated() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle", tmp);
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
     workspace.setUp();
     workspace.runBuckCommand("build",
         "--config",
@@ -271,7 +271,7 @@ public class AppleBinaryIntegrationTest {
   public void testFlavoredAppleBundleBuildsAndDsymFileIsNotCreated() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle", tmp);
+        this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
     workspace.runBuckCommand("build",
         "--config",
@@ -294,10 +294,10 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testAppleBundldDebugFormatRespectsDefaultConfigSettingDSYM() throws Exception {
+  public void testAppleBundleDebugFormatRespectsDefaultConfigSettingDSYM() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle", tmp);
+        this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
     workspace.runBuckCommand("build",
         "--config",
@@ -305,15 +305,16 @@ public class AppleBinaryIntegrationTest {
         "//:DemoApp")
         .assertSuccess();
     assertThat(Files.exists(
-            getGenDir().resolve("DemoApp/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+            getGenDir().resolve(
+                "DemoApp#dwarf-and-dsym/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(true));
   }
 
   @Test
-  public void testAppleBundldDebugFormatRespectsDefaultConfigSettingNoDebug() throws Exception {
+  public void testAppleBundleDebugFormatRespectsDefaultConfigSettingNoDebug() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle", tmp);
+        this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
     workspace.runBuckCommand("build",
         "--config",
@@ -321,7 +322,8 @@ public class AppleBinaryIntegrationTest {
         "//:DemoApp")
         .assertSuccess();
     assertThat(Files.exists(
-            getGenDir().resolve("DemoApp/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+            getGenDir().resolve(
+                "DemoApp#no-debug/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
         Matchers.equalTo(false));
   }
 

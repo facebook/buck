@@ -52,29 +52,32 @@ public class ApplePackageIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "simple_application_bundle",
+        "simple_application_bundle_no_debug",
         tmp);
     workspace.setUp();
 
     workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoApp");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoApp#no-debug");
 
     workspace.runBuckCommand("clean").assertSuccess();
 
     workspace.runBuckCommand("build", "//:DemoAppPackage").assertSuccess();
 
-    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:DemoApp");
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:DemoApp#no-debug");
     workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
 
-    Path templateDir = TestDataHelper.getTestDataScenario(this, "simple_application_bundle");
+    Path templateDir = TestDataHelper.getTestDataScenario(
+        this,
+        "simple_application_bundle_no_debug");
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath("buck-out/gen/DemoAppPackage.ipa"));
     zipInspector.assertFileExists(("Payload/DemoApp.app/DemoApp"));
     zipInspector.assertFileContents("Payload/DemoApp.app/PkgInfo", new String(Files.readAllBytes(
             templateDir.resolve(
-                "buck-out/gen/DemoApp#iphonesimulator-x86_64/DemoApp.app/PkgInfo.expected")),
+                "buck-out/gen/DemoApp#iphonesimulator-x86_64,no-debug" +
+                    "/DemoApp.app/PkgInfo.expected")),
             UTF_8));
 
   }
@@ -84,7 +87,7 @@ public class ApplePackageIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "simple_application_bundle",
+        "simple_application_bundle_no_debug",
         tmp);
     workspace.setUp();
 
