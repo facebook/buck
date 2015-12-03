@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -125,14 +123,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    Optional<AppleDebugFormat> flavoredDebugInfoFormat;
-    try {
-      flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+    Optional<AppleDebugFormat> flavoredDebugInfoFormat =
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,

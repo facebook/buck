@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -50,7 +49,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -221,17 +219,8 @@ public class HalideLibraryDescription implements
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
     BuildTarget target = params.getBuildTarget();
-    Optional<Map.Entry<Flavor, Type>> type;
-    Optional<Map.Entry<Flavor, CxxPlatform>> cxxPlatform;
-    try {
-      type = LIBRARY_TYPE.getFlavorAndValue(
-        ImmutableSet.copyOf(target.getFlavors()));
-      cxxPlatform = cxxPlatforms.getFlavorAndValue(
-        ImmutableSet.copyOf(target.getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(target);
+    Optional<Map.Entry<Flavor, CxxPlatform>> cxxPlatform = cxxPlatforms.getFlavorAndValue(target);
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     if (type.isPresent()) {
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
@@ -255,16 +244,7 @@ public class HalideLibraryDescription implements
         // We always want to build the halide "compiler" for the host platform, so
         // we use the "default" flavor here, regardless of the flavors on the build
         // target.
-        CxxPlatform hostCxxPlatform;
-        try {
-          hostCxxPlatform = cxxPlatforms.getValue(ImmutableFlavor.of("default"));
-        } catch (FlavorDomainException e) {
-          throw new HumanReadableException(
-            "%s: %s",
-            params.getBuildTarget(),
-            e.getMessage());
-        }
-
+        CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(ImmutableFlavor.of("default"));
         Preconditions.checkState(args.srcs.isPresent());
         final ImmutableSortedSet<BuildTarget> compilerDeps =
           args.compilerDeps.or(ImmutableSortedSet.<BuildTarget>of());

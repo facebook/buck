@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -162,13 +161,7 @@ public class BuildTargets {
 
       // First verify that our deps are not already flavored for our given domains.
       for (BuildTarget dep : deps) {
-        Optional<Flavor> depFlavor;
-        try {
-          depFlavor = domain.getFlavor(ImmutableSet.copyOf(dep.getFlavors()));
-        } catch (FlavorDomainException e) {
-          throw new HumanReadableException("%s: dep %s: %s", target, dep, e.getMessage());
-        }
-        if (depFlavor.isPresent()) {
+        if (domain.getFlavor(dep).isPresent()) {
           throw new HumanReadableException(
               "%s: dep %s already has flavor for \"%s\" : %s",
               target,

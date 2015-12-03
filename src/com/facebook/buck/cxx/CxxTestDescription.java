@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -90,18 +89,7 @@ public class CxxTestDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
-
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Generate the link rule that builds the test binary.

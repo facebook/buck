@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -343,16 +342,7 @@ public class AppleDescriptions {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       BuildTarget target) {
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatformFlavorDomain
-          .getValue(target.getFlavors())
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-
-    return cxxPlatform;
+    return cxxPlatformFlavorDomain.getValue(target).or(defaultCxxPlatform);
   }
 
   private static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
@@ -546,17 +536,13 @@ public class AppleDescriptions {
 
     BuildTarget.Builder buildTargetBuilder =
         BuildTarget.builder(binary.getUnflavoredBuildTarget()).addAllFlavors(flavors);
-    try {
-      if (!(AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent())) {
-        buildTargetBuilder.addAllFlavors(binary.getFlavors());
-      } else {
-        buildTargetBuilder.addAllFlavors(
-            Sets.difference(
-                binary.getFlavors(),
-                AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
-      }
-    } catch (FlavorDomainException e) {
-      throw new RuntimeException(e);
+    if (!(AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent())) {
+      buildTargetBuilder.addAllFlavors(binary.getFlavors());
+    } else {
+      buildTargetBuilder.addAllFlavors(
+          Sets.difference(
+              binary.getFlavors(),
+              AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
     }
     BuildTarget buildTarget = buildTargetBuilder.build();
 

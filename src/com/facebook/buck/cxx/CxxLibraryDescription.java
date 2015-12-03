@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -725,16 +724,8 @@ public class CxxLibraryDescription implements
       FlavorDomain<CxxPlatform> platforms) {
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    Optional<Map.Entry<Flavor, Type>> type;
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform;
-    try {
-      type = LIBRARY_TYPE.getFlavorAndValue(
-          ImmutableSet.copyOf(buildTarget.getFlavors()));
-      platform = platforms.getFlavorAndValue(
-          ImmutableSet.copyOf(buildTarget.getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
-    }
+    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = platforms.getFlavorAndValue(buildTarget);
     return TypeAndPlatform.of(type, platform);
   }
 

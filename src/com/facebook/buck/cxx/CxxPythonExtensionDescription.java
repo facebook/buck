@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonUtil;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -225,19 +223,12 @@ public class CxxPythonExtensionDescription implements
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
-    final Optional<Map.Entry<Flavor, Type>> type;
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform;
-    final Optional<Map.Entry<Flavor, PythonPlatform>> pythonPlatform;
-    try {
-      type = LIBRARY_TYPE.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-      platform = cxxPlatforms.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-      pythonPlatform = pythonPlatforms.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
+    final Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
+        params.getBuildTarget());
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(
+        params.getBuildTarget());
+    final Optional<Map.Entry<Flavor, PythonPlatform>> pythonPlatform =
+        pythonPlatforms.getFlavorAndValue(params.getBuildTarget());
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the

@@ -57,7 +57,7 @@ public class FlavorDomain<T> {
     return !Sets.intersection(translation.keySet(), flavors).isEmpty();
   }
 
-  public Optional<Flavor> getFlavor(ImmutableSet<Flavor> flavors) throws FlavorDomainException {
+  public Optional<Flavor> getFlavor(ImmutableSet<Flavor> flavors) {
     Sets.SetView<Flavor> match = Sets.intersection(translation.keySet(), flavors);
     if (match.size() > 1) {
       throw new FlavorDomainException(
@@ -70,11 +70,17 @@ public class FlavorDomain<T> {
     return Optional.fromNullable(Iterables.getFirst(match, null));
   }
 
-  public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(ImmutableSet<Flavor> flavors)
-      throws FlavorDomainException {
+  public Optional<Flavor> getFlavor(BuildTarget buildTarget) {
+    try {
+      return getFlavor(buildTarget.getFlavors());
+    } catch (FlavorDomainException e) {
+      throw new FlavorDomainException(
+          String.format("In build target %s: %s", buildTarget, e.getHumanReadableErrorMessage()));
+    }
+  }
 
+  public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(ImmutableSet<Flavor> flavors) {
     Optional<Flavor> flavor = getFlavor(flavors);
-
     if (!flavor.isPresent()) {
       return Optional.absent();
     }
@@ -85,12 +91,30 @@ public class FlavorDomain<T> {
             translation.get(flavor.get())));
   }
 
-  public Optional<T> getValue(ImmutableSet<Flavor> flavors) throws FlavorDomainException {
+  public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(BuildTarget buildTarget) {
+    try {
+      return getFlavorAndValue(buildTarget.getFlavors());
+    } catch (FlavorDomainException e) {
+      throw new FlavorDomainException(
+          String.format("In build target %s: %s", buildTarget, e.getHumanReadableErrorMessage()));
+    }
+  }
+
+  public Optional<T> getValue(ImmutableSet<Flavor> flavors) {
     Optional<Flavor> flavor = getFlavor(flavors);
     return flavor.transform(Functions.forMap(translation));
   }
 
-  public T getValue(Flavor flavor) throws FlavorDomainException {
+  public Optional<T> getValue(BuildTarget buildTarget) {
+    try {
+      return getValue(buildTarget.getFlavors());
+    } catch (FlavorDomainException e) {
+      throw new FlavorDomainException(
+          String.format("In build target %s: %s", buildTarget, e.getHumanReadableErrorMessage()));
+    }
+  }
+
+  public T getValue(Flavor flavor) {
     T result = translation.get(flavor);
     if (result == null) {
       throw new FlavorDomainException(

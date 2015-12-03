@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -172,31 +170,13 @@ public class PythonTestDescription implements
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
 
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    PythonPlatform pythonPlatform;
-    try {
-      pythonPlatform = pythonPlatforms
-          .getValue(params.getBuildTarget().getFlavors())
-          .or(pythonPlatforms.getValue(
-                  args.platform
-                      .transform(Flavor.TO_FLAVOR)
-                      .or(pythonPlatforms.getFlavors().iterator().next())));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+    PythonPlatform pythonPlatform = pythonPlatforms
+        .getValue(params.getBuildTarget())
+        .or(pythonPlatforms.getValue(
+            args.platform
+                .transform(Flavor.TO_FLAVOR)
+                .or(pythonPlatforms.getFlavors().iterator().next())));
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 

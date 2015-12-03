@@ -61,7 +61,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleType;
@@ -555,15 +554,8 @@ public class ProjectGenerator {
           "There was an error loading '" + FIX_UUID_TEMPLATE + "' template", e);
     }
 
-    CxxPlatform cxxPlatform;
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(flavors)
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
-    }
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).or(defaultCxxPlatform);
     String compDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
     // Use the hostname for padding instead of the directory, this way the directory matches without
     // having to resolve it.

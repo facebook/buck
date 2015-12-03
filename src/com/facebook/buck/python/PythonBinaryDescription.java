@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -250,43 +249,16 @@ public class PythonBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    PythonPlatform pythonPlatform;
-    try {
-      pythonPlatform = pythonPlatforms
-          .getValue(params.getBuildTarget().getFlavors())
-          .or(pythonPlatforms.getValue(
-                  args.platform
-                      .transform(Flavor.TO_FLAVOR)
-                      .or(pythonPlatforms.getFlavors().iterator().next())));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
     if (!(args.main.isPresent() ^ args.mainModule.isPresent())) {
       throw new HumanReadableException(
           "%s: must set exactly one of `main_module` and `main`",
           params.getBuildTarget());
     }
-
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
@@ -301,7 +273,6 @@ public class PythonBinaryDescription implements
     } else {
       mainModule = args.mainModule.get();
     }
-
     // Build up the list of all components going into the python binary.
     PythonPackageComponents binaryPackageComponents = PythonPackageComponents.of(
         modules.build(),
@@ -309,12 +280,20 @@ public class PythonBinaryDescription implements
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(),
         /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
         /* zipSafe */ args.zipSafe);
+    // Extract the platforms from the flavor, falling back to the default platforms if none are
+    // found.
+    PythonPlatform pythonPlatform = pythonPlatforms
+        .getValue(params.getBuildTarget())
+        .or(pythonPlatforms.getValue(
+            args.platform
+                .transform(Flavor.TO_FLAVOR)
+                .or(pythonPlatforms.getFlavors().iterator().next())));
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
         params,
         binaryPackageComponents,
         pythonPlatform,
         cxxPlatform);
-
     return createPackageRule(
         params,
         resolver,

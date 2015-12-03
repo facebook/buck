@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -177,14 +176,9 @@ public class AppleTestDescription implements
       extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
     }
 
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatformFlavorDomain
-          .getValue(params.getBuildTarget().getFlavors())
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
-    }
+    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain
+        .getValue(params.getBuildTarget())
+        .or(defaultCxxPlatform);
 
     Optional<AppleBundle> testHostApp;
     Optional<SourcePath> testHostAppBinarySourcePath;

@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -260,13 +259,8 @@ public class ThriftLibraryDescription
     BuildTarget target = params.getBuildTarget();
 
     // Extract the thrift language we're using from our build target.
-    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
-    try {
-      enhancerFlavor = enhancers.getFlavorAndValue(ImmutableSet.copyOf(target.getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", target, e.getMessage());
-    }
-
+    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor =
+        enhancers.getFlavorAndValue(target);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, SourcePath> namedSources =
         pathResolver.getSourcePathNames(target, "srcs", args.srcs.keySet());
@@ -426,13 +420,8 @@ public class ThriftLibraryDescription
       BuildTarget buildTarget,
       Function<Optional<String>, Path> cellRoots,
       ThriftConstructorArg arg) {
-    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
-    try {
-      enhancerFlavor = enhancers.getFlavorAndValue(ImmutableSet.copyOf(buildTarget.getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
-    }
-
+    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor =
+        enhancers.getFlavorAndValue(buildTarget);
     // The unflavored target represents the actual thrift library, which doesn't need
     // any implicit deps.
     if (!enhancerFlavor.isPresent()) {

@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -100,16 +99,10 @@ public class CxxBinaryDescription implements
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
-    CxxPlatform cxxPlatform;
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(flavors)
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+    CxxPlatform cxxPlatform = cxxPlatforms
+        .getValue(flavors)
+        .or(defaultCxxPlatform);
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       flavors = ImmutableSet.copyOf(
           Sets.difference(

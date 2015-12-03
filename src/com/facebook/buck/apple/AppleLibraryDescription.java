@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -182,16 +181,10 @@ public class AppleLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    Optional<Map.Entry<Flavor, Type>> type;
-    Optional<AppleDebugFormat> flavoredDebugInfoFormat;
-    try {
-      type = LIBRARY_TYPE.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-      flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
+    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
+        params.getBuildTarget());
+    Optional<AppleDebugFormat> flavoredDebugInfoFormat =
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
 
     if (type.isPresent() && type.get().getValue().isFramework()) {
       if (!args.infoPlist.isPresent()) {
@@ -278,12 +271,7 @@ public class AppleLibraryDescription implements
     if (!buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR)) {
       return Optional.absent();
     }
-    Optional<Flavor> cxxPlatformFlavor;
-    try {
-      cxxPlatformFlavor = cxxPlatformFlavorDomain.getFlavor(buildTarget.getFlavors());
-    } catch (FlavorDomainException e) {
-      throw new RuntimeException(e);
-    }
+    Optional<Flavor> cxxPlatformFlavor = cxxPlatformFlavorDomain.getFlavor(buildTarget);
     Preconditions.checkState(
         cxxPlatformFlavor.isPresent(),
         "Could not find cxx platform in:\n%s",

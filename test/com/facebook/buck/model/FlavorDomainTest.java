@@ -29,17 +29,17 @@ import org.junit.Test;
 public class FlavorDomainTest {
 
   @Test
-  public void getFlavor() throws FlavorDomainException {
+  public void getFlavor() {
     Flavor flavor = ImmutableFlavor.of("hello");
     FlavorDomain<String> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(flavor, "something"));
     BuildTarget target = BuildTargetFactory.newInstance("//:test#hello");
-    assertEquals(Optional.of(flavor), domain.getFlavor(ImmutableSet.copyOf(target.getFlavors())));
+    assertEquals(Optional.of(flavor), domain.getFlavor(target));
     target = BuildTargetFactory.newInstance("//:test#invalid");
     assertEquals(
         Optional.<Flavor>absent(),
-        domain.getFlavor(ImmutableSet.copyOf(target.getFlavors())));
+        domain.getFlavor(target));
   }
 
   @Test
@@ -56,7 +56,7 @@ public class FlavorDomainTest {
         .addAllFlavors(ImmutableSet.of(hello, goodbye))
         .build();
     try {
-      domain.getFlavor(ImmutableSet.copyOf(target.getFlavors()));
+      domain.getFlavor(target);
       fail("should have thrown");
     } catch (FlavorDomainException e) {
       assertTrue(e.getMessage().contains("multiple \"test\" flavors"));
