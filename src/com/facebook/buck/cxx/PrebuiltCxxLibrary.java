@@ -57,6 +57,7 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   private final Optional<String> libName;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
+  private final Function<CxxPlatform, Boolean> hasHeaders;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<String> soname;
   private final boolean linkWithoutSoname;
@@ -85,7 +86,8 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
       Linkage linkage,
       boolean headerOnly,
       boolean linkWhole,
-      boolean provided) {
+      boolean provided,
+      Function<CxxPlatform, Boolean> hasHeaders) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
@@ -94,6 +96,7 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
     this.libDir = libDir;
     this.libName = libName;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
+    this.hasHeaders = hasHeaders;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.soname = soname;
     this.linkWithoutSoname = linkWithoutSoname;
@@ -161,24 +164,27 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+
     switch (headerVisibility) {
       case PUBLIC:
-        return CxxPreprocessorInput.builder()
-            .from(
-                CxxPreprocessables.getCxxPreprocessorInput(
-                    params,
-                    ruleResolver,
-                    cxxPlatform.getFlavor(),
-                    headerVisibility,
-                    CxxPreprocessables.IncludeType.SYSTEM,
-                    exportedPreprocessorFlags.apply(cxxPlatform),
-                    /* frameworks */ ImmutableList.<FrameworkPath>of()))
-            // Just pass the include dirs as system includes.
-            .addAllSystemIncludeRoots(
-                Iterables.transform(includeDirs, getProjectFilesystem().getAbsolutifier()))
-            .build();
+        if (Preconditions.checkNotNull(hasHeaders.apply(cxxPlatform))) {
+          CxxPreprocessables.addHeaderSymlinkTree(
+              builder,
+              getBuildTarget(),
+              ruleResolver,
+              cxxPlatform.getFlavor(),
+              headerVisibility,
+              CxxPreprocessables.IncludeType.SYSTEM);
+        }
+        builder.putAllPreprocessorFlags(
+            Preconditions.checkNotNull(exportedPreprocessorFlags.apply(cxxPlatform)));
+        // Just pass the include dirs as system includes.
+        builder.addAllSystemIncludeRoots(
+            Iterables.transform(includeDirs, getProjectFilesystem().getAbsolutifier()));
+        return builder.build();
       case PRIVATE:
-        return CxxPreprocessorInput.EMPTY;
+        return builder.build();
     }
 
     // We explicitly don't put this in a default statement because we

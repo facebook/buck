@@ -173,6 +173,49 @@ public class CxxPreprocessables {
   }
 
   /**
+   * @return adds a the header {@link SymlinkTree} for the given rule to the
+   *     {@link CxxPreprocessorInput}.
+   */
+  public static CxxPreprocessorInput.Builder addHeaderSymlinkTree(
+      CxxPreprocessorInput.Builder builder,
+      BuildTarget target,
+      BuildRuleResolver ruleResolver,
+      Flavor flavor,
+      HeaderVisibility headerVisibility,
+      IncludeType includeType) throws NoSuchBuildTargetException {
+    BuildRule rule = ruleResolver.requireRule(
+        BuildTarget.builder(target)
+            .addFlavors(flavor, CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility))
+            .build());
+    Preconditions.checkState(
+        rule instanceof HeaderSymlinkTree,
+        "Attempt to add %s of type %s and class %s to %s",
+        rule.getFullyQualifiedName(),
+        rule.getType(),
+        rule.getClass(),
+        target);
+    HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
+    builder
+        .addRules(symlinkTree.getBuildTarget())
+        .setIncludes(
+            CxxHeaders.builder()
+                .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
+                .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
+                .build());
+    switch(includeType) {
+      case LOCAL:
+        builder.addIncludeRoots(symlinkTree.getIncludePath());
+        builder.addAllHeaderMaps(symlinkTree.getHeaderMap().asSet());
+        break;
+      case SYSTEM:
+        builder.addSystemIncludeRoots(symlinkTree.getSystemIncludePath());
+        break;
+    }
+    return builder;
+
+  }
+
+  /**
    * Builds a {@link CxxPreprocessorInput} for a rule.
    */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
@@ -183,36 +226,18 @@ public class CxxPreprocessables {
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Iterable<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
-    BuildRule rule = ruleResolver.requireRule(
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(flavor, CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility))
-            .build());
-    Preconditions.checkState(
-        rule instanceof HeaderSymlinkTree,
-        "Attempt to add %s of type %s and class %s to %s",
-        rule.getFullyQualifiedName(),
-        rule.getType(),
-        rule.getClass(),
-        params.getBuildTarget());
-    HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
-    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder()
-        .addRules(symlinkTree.getBuildTarget())
+    CxxPreprocessorInput.Builder builder =
+        addHeaderSymlinkTree(
+            CxxPreprocessorInput.builder(),
+            params.getBuildTarget(),
+            ruleResolver,
+            flavor,
+            headerVisibility,
+            includeType);
+    return builder
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
-        .setIncludes(
-            CxxHeaders.builder()
-                .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
-                .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
-                .build())
-        .addAllFrameworks(frameworks);
-    switch(includeType) {
-      case LOCAL:
-        builder.addIncludeRoots(symlinkTree.getIncludePath());
-        builder.addAllHeaderMaps(symlinkTree.getHeaderMap().asSet());
-        break;
-      case SYSTEM:
-        builder.addSystemIncludeRoots(symlinkTree.getSystemIncludePath());
-        break;
-    }
-    return builder.build();
+        .addAllFrameworks(frameworks)
+        .build();
   }
+
 }

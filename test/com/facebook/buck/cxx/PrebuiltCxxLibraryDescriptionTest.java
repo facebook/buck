@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -44,13 +46,14 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryDescriptionTest {
 
@@ -97,27 +100,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .toList();
   }
 
-  private static Iterable<BuildTarget> getInputRules(BuildRule buildRule) {
-    return ImmutableList.of(
+  private static ImmutableSet<BuildTarget> getInputRules(BuildRule buildRule) {
+    return ImmutableSet.of(
         BuildTarget.builder()
             .from(buildRule.getBuildTarget())
             .addFlavors(CXX_PLATFORM.getFlavor())
             .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
             .build());
-  }
-
-  private static Iterable<Path> getIncludeRoots(BuildRule buildRule) {
-    return Iterables.transform(
-        getInputRules(buildRule),
-        new Function<BuildTarget, Path>() {
-          @Override
-          public Path apply(BuildTarget target) {
-            return CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                target,
-                CXX_PLATFORM.getFlavor(),
-                HeaderVisibility.PUBLIC);
-          }
-        });
   }
 
   @Test
@@ -134,9 +123,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeRoots(lib))
         .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
         .build();
     assertThat(
         lib.getCxxPreprocessorInput(
@@ -170,7 +157,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleHeaderOnly() throws Exception {
+  public void headerOnly() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setHeaderOnly(true);
@@ -182,11 +169,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeRoots(lib))
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
-        .build();
+    CxxPreprocessorInput expectedCxxPreprocessorInput =
+        CxxPreprocessorInput.builder()
+            .addAllSystemIncludeRoots(getIncludeDirs(arg))
+            .build();
     assertThat(
         lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
@@ -225,61 +211,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeRoots(lib))
         .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
         .build();
     assertThat(
         lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
         Matchers.equalTo(expectedCxxPreprocessorInput));
-
-    // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
-  }
-
-  @Test
-  public void createBuildRuleIncludeDirs() throws Exception {
-    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
-        .setIncludeDirs(ImmutableList.of(filesystem.resolve("test").toString()));
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
-        .build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
-
-    // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeRoots(lib))
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
-        .build();
-    assertThat(
-        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
-
-    // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getStaticLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
@@ -403,151 +339,101 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleExportedHeaders() throws Exception {
+  public void exportedHeaders() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
-        .setExportedHeaders(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+        .setExportedHeaders(
+            SourceList.ofNamedSources(
+                ImmutableSortedMap.<String, SourcePath>of(
+                    "foo.h",
+                    new FakeSourcePath("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
-        .setSystemIncludeRoots(getIncludeRoots(lib))
-        .build();
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        lib.getCxxPreprocessorInput(
-            CXX_PLATFORM,
-            HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
-
-    // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getStaticLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
-
-    // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        input.getIncludes().getNameToPathMap().keySet(),
+        Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
+    assertThat(
+        input.getRules(),
+        Matchers.equalTo(getInputRules(lib)));
+    assertThat(
+        input.getSystemIncludeRoots(),
+        Matchers.hasItem(
+            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                lib.getBuildTarget(),
+                CXX_PLATFORM.getFlavor(),
+                HeaderVisibility.PUBLIC)));
   }
 
   @Test
-  public void createBuildRuleExportedPlatformHeaders() throws Exception {
+  public void exportedPlatformHeaders() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setExportedPlatformHeaders(
-            CXX_PLATFORM,
-            SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+            PatternMatchedCollection.<SourceList>builder()
+                .add(
+                    Pattern.compile(CXX_PLATFORM.getFlavor().toString()),
+                    SourceList.ofNamedSources(
+                        ImmutableSortedMap.<String, SourcePath>of(
+                            "foo.h",
+                            new FakeSourcePath("foo.h"))))
+                .add(
+                    Pattern.compile("DO NOT MATCH ANYTNING"),
+                    SourceList.ofNamedSources(
+                        ImmutableSortedMap.<String, SourcePath>of(
+                            "bar.h",
+                            new FakeSourcePath("bar.h"))))
+                .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeRoots(lib))
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
-        .build();
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
-
-    // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getStaticLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
-
-    // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        input.getIncludes().getNameToPathMap().keySet(),
+        Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
+    assertThat(
+        input.getIncludes().getNameToPathMap().keySet(),
+        Matchers.not(Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("bar.h"))));
+    assertThat(
+        input.getRules(),
+        Matchers.equalTo(getInputRules(lib)));
+    assertThat(
+        input.getSystemIncludeRoots(),
+        Matchers.hasItem(
+            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                lib.getBuildTarget(),
+                CXX_PLATFORM.getFlavor(),
+                HeaderVisibility.PUBLIC)));
   }
 
   @Test
-  public void createBuildRuleHeaderNamespace() throws Exception {
+  public void headerNamespace() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
-        .setHeaderNamespace("hello");
+        .setHeaderNamespace("hello")
+        .setExportedHeaders(
+            SourceList.ofUnnamedSources(
+                ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addAllSystemIncludeRoots(getIncludeRoots(lib))
-        .addAllSystemIncludeRoots(getIncludeDirs(arg))
-        .setRules(getInputRules(lib))
-        .build();
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC),
-        Matchers.equalTo(expectedCxxPreprocessorInput));
-
-    // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getStaticLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
-
-    // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
-            new SourcePathArg(
-                pathResolver,
-                new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        input.getIncludes().getNameToPathMap().keySet(),
+        Matchers.contains(filesystem.getRootPath().getFileSystem().getPath("hello", "foo.h")));
   }
 
   @Test
@@ -684,7 +570,33 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
             .getSystemIncludeRoots(),
-        Matchers.hasItem(filesystem.resolve("include")));
+        Matchers.hasItem(
+            filesystem.resolve(rule.getBuildTarget().getBasePath()).resolve("include")));
+  }
+
+  @Test
+  public void ruleWithoutHeadersDoesNotUseSymlinkTree() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setIncludeDirs(ImmutableList.<String>of());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
+    CxxPreprocessorInput input =
+        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
+    assertThat(
+        input.getIncludes().getNameToPathMap().keySet(),
+        Matchers.<Path>empty());
+    assertThat(
+        input.getSystemIncludeRoots(),
+        Matchers.<Path>empty());
+    assertThat(
+        input.getRules(),
+        Matchers.<BuildTarget>empty());
   }
 
   @Test

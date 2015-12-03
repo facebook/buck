@@ -65,12 +65,18 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setExportedPlatformHeaders(
-      CxxPlatform cxxPlatform,
-      SourceList exportedHeaders) {
-    arg.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>builder()
-            .add(Pattern.compile(cxxPlatform.getFlavor().toString()), exportedHeaders)
-            .build());
+      PatternMatchedCollection<SourceList> collection) {
+    arg.exportedPlatformHeaders = Optional.of(collection);
     return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedPlatformHeaders(
+      String cxxPlatform,
+      SourceList exportedHeaders) {
+    return setExportedPlatformHeaders(
+        PatternMatchedCollection.<SourceList>builder()
+            .add(Pattern.compile(cxxPlatform), exportedHeaders)
+            .build());
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderNamespace(String headerNamespace) {

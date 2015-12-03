@@ -394,7 +394,25 @@ public class PrebuiltCxxLibraryDescription
         args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.headerOnly.or(false),
         args.linkWhole.or(false),
-        args.provided.or(false));
+        args.provided.or(false),
+        new Function<CxxPlatform, Boolean>() {
+          @Override
+          public Boolean apply(CxxPlatform cxxPlatform) {
+            if (args.exportedHeaders.isPresent() && !args.exportedHeaders.get().isEmpty()) {
+              return true;
+            }
+            if (args.exportedPlatformHeaders.isPresent()) {
+              for (SourceList sourceList :
+                   args.exportedPlatformHeaders.get()
+                       .getMatchingValues(cxxPlatform.getFlavor().toString())) {
+                if (!sourceList.isEmpty()) {
+                  return true;
+                }
+              }
+            }
+            return false;
+          }
+        });
   }
 
   @SuppressFieldNotInitialized
