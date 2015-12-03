@@ -667,8 +667,11 @@ public class ProjectWorkspace {
   /**
    * For every file in the template directory whose name ends in {@code .expected}, checks that an
    * equivalent file has been written in the same place under the destination directory.
+   *
+   * @param subDirectory An optional subdirectory to check. Only files in this directory will be
+   *                     compared.
    */
-  public void verify() throws IOException {
+  public void verify(final Optional<Path> subDirectory) throws IOException {
     SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -737,6 +740,16 @@ public class ProjectWorkspace {
         return FileVisitResult.CONTINUE;
       }
     };
-    Files.walkFileTree(templatePath, copyDirVisitor);
+
+    Path root = subDirectory.isPresent() ? templatePath.resolve(subDirectory.get()) : templatePath;
+    Files.walkFileTree(root, copyDirVisitor);
+  }
+
+  public void verify() throws IOException {
+    verify(Optional.<Path>absent());
+  }
+
+  public void verify(Path subDirectory) throws IOException {
+    verify(Optional.of(subDirectory));
   }
 }

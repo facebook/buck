@@ -51,6 +51,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   private final SourcePath entryPath;
 
   @AddToRuleKey
+  private final boolean isUnbundle;
+
+  @AddToRuleKey
   private final boolean isDevMode;
 
   @AddToRuleKey
@@ -73,6 +76,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       BuildRuleParams ruleParams,
       SourcePathResolver resolver,
       SourcePath entryPath,
+      boolean isUnbundle,
       boolean isDevMode,
       String bundleName,
       Optional<String> packagerFlags,
@@ -81,6 +85,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       ReactNativeDeps depsFinder) {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
+    this.isUnbundle = isUnbundle;
     this.isDevMode = isDevMode;
     this.bundleName = bundleName;
     this.packagerFlags = packagerFlags;
@@ -116,6 +121,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
                 getResolver().getAbsolutePath(jsPackager),
                 getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
                 platform,
+                isUnbundle,
                 isDevMode,
                 packagerFlags,
                 getProjectFilesystem().resolve(jsOutput).toString(),
@@ -164,6 +170,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       Path jsPackager,
       Path absoluteEntryPath,
       ReactNativePlatform platform,
+      boolean isUnbundle,
       boolean isDevMode,
       Optional<String> packagerFlags,
       String absoluteBundleOutputPath,
@@ -173,14 +180,18 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
 
     builder.add(
       jsPackager.toString(),
-      "bundle",
+      isUnbundle ? "unbundle" : "bundle",
       "--entry-file", absoluteEntryPath.toString(),
       "--platform", platform.toString(),
       "--dev", isDevMode ? "true" : "false",
       "--bundle-output", absoluteBundleOutputPath,
-      "--assets-dest", absoluteResourceOutputPath,
-      "--sourcemap-output", absoluteSourceMapOutputPath
+      "--assets-dest", absoluteResourceOutputPath
     );
+
+    if (!isUnbundle) {
+      builder.add("--sourcemap-output", absoluteSourceMapOutputPath);
+    }
+
 
     if (packagerFlags.isPresent()) {
       builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));

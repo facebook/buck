@@ -46,6 +46,10 @@ public class IosReactNativeLibraryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
   }
 
+  private Path createPath(String first, String... more) {
+    return tmpFolder.getRootPath().getFileSystem().getPath(first, more);
+  }
+
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
@@ -56,7 +60,14 @@ public class IosReactNativeLibraryIntegrationTest {
   public void testBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64").assertSuccess();
 
-    workspace.verify();
+    workspace.verify(createPath("buck-out", "gen", "DemoApp#iphonesimulator-x86_64"));
+  }
+
+  @Test
+  public void testUnbundleOutputContainsJSAndResources() throws IOException {
+    workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64").assertSuccess();
+
+    workspace.verify(createPath("buck-out", "gen", "DemoApp-Unbundle#iphonesimulator-x86_64"));
   }
 
   @Test

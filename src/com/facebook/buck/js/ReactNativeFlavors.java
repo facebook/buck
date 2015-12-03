@@ -26,12 +26,18 @@ public class ReactNativeFlavors {
   // Utility class, do not instantiate.
   private ReactNativeFlavors() { }
 
+  public static final Flavor UNBUNDLE = ImmutableFlavor.of("unbundle");
+
   public static final Flavor DEV = ImmutableFlavor.of("dev");
 
   public static final Flavor DO_NOT_BUNDLE = ImmutableFlavor.of("rn_no_bundle");
 
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
-    return flavors.isEmpty() || flavors.equals(ImmutableSet.of(DEV));
+    return ImmutableSet.of(DEV, UNBUNDLE).containsAll(flavors);
+  }
+
+  public static boolean useUnbundling(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(UNBUNDLE);
   }
 
   public static boolean isDevMode(BuildTarget buildTarget) {

@@ -61,6 +61,18 @@ public class AndroidReactNativeLibraryIntegrationTest {
   }
 
   @Test
+  public void testApkContainsJSAssetAndDrawablesForUnbundle() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app-unbundle").assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath("buck-out/gen/apps/sample/app-unbundle.apk"));
+    zipInspector.assertFileExists("assets/SampleBundle.js");
+    zipInspector.assertFileExists("assets/js/helpers.js");
+    zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
+    zipInspector.assertFileExists("res/drawable-hdpi-v4/image.png");
+    zipInspector.assertFileExists("res/drawable-xhdpi-v4/image.png");
+  }
+
+  @Test
   public void testAaptPackageDependsOnReactNativeBundle() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app-without-rn-res").assertSuccess();
