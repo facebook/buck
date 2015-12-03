@@ -18,7 +18,7 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacStepFactory;
@@ -93,7 +93,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private Path getSourceZipOutputPath(UnflavoredBuildTarget target, String name) {
     BuildTarget flavoredTarget = getSourceZipBuildTarget(target, name);
-    return BuildTargets.getScratchPath(flavoredTarget, "%s" + Javac.SRC_ZIP);
+    return BuildTargets.getScratchPath(flavoredTarget, "%s" + JavaLibrary.SOURCE_ZIP);
   }
 
   @Override

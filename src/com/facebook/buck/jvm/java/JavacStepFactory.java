@@ -23,12 +23,15 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.step.CompositeStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class JavacStepFactory implements CompileStepFactory {
@@ -41,7 +44,7 @@ public class JavacStepFactory implements CompileStepFactory {
   }
 
   @Override
-  public void createCompileStep(
+  public int compile(
       BuildContext context,
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
@@ -52,21 +55,19 @@ public class JavacStepFactory implements CompileStepFactory {
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
-      /* output params */
-      ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
+      ExecutionContext eContext) throws IOException, InterruptedException {
 
+    final ImmutableList.Builder<Step> stepBuilder = ImmutableList.builder();
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
     // Javac requires that the root directory for generated sources already exist.
     Optional<Path> annotationGenFolder =
         buildTimeOptions.getGeneratedSourceFolderName();
     if (annotationGenFolder.isPresent()) {
-      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder.get()));
-      buildableContext.recordArtifact(annotationGenFolder.get());
+      stepBuilder.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder.get()));
     }
 
-    steps.add(
+    stepBuilder.add(
         new JavacStep(
             outputDirectory,
             workingDirectory,
@@ -79,6 +80,17 @@ public class JavacStepFactory implements CompileStepFactory {
             suggestBuildRules,
             resolver,
             filesystem));
+
+    return new CompositeStep(stepBuilder.build()).execute(eContext);
+  }
+
+  @Override
+  public void installArtifacts(BuildableContext buildableContext) {
+    Optional<Path> annotationGenFolder =
+        javacOptions.getGeneratedSourceFolderName();
+    if (annotationGenFolder.isPresent()) {
+      buildableContext.recordArtifact(annotationGenFolder.get());
+    }
   }
 
   @Override

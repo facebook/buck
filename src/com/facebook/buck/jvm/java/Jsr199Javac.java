@@ -51,12 +51,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 import javax.annotation.processing.Processor;
@@ -125,8 +122,7 @@ public abstract class Jsr199Javac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
-      Optional<Path> workingDirectory) {
+      Optional<Path> pathToSrcsList) {
     JavaCompiler compiler = createCompiler(context, resolver);
 
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
@@ -349,28 +345,9 @@ public abstract class Jsr199Javac implements Javac {
       String pathString = path.toString();
       if (pathString.endsWith(".java")) {
         // For an ordinary .java file, create a corresponding JavaFileObject.
-        Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
-            absolutifier.apply(path).toFile());
+        Iterable<? extends JavaFileObject> javaFileObjects =
+            fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
-        boolean hasZipFileBeenUsed = false;
-        for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
-             entries.hasMoreElements();
-            ) {
-          ZipEntry entry = entries.nextElement();
-          if (!entry.getName().endsWith(".java")) {
-            continue;
-          }
-
-          hasZipFileBeenUsed = true;
-          compilationUnits.add(new ZipEntryJavaFileObject(zipFile, entry));
-        }
-
-        if (!hasZipFileBeenUsed) {
-          zipFile.close();
-        }
       }
     }
     return compilationUnits;

@@ -26,16 +26,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -43,7 +40,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.ByteArrayOutputStream;
@@ -173,29 +169,15 @@ public class ExternalJavac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException {
+      Optional<Path> pathToSrcsList) throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(pathToJavac.toString());
     command.addAll(options);
 
-    ImmutableList<Path> expandedSources;
-    try {
-      expandedSources = getExpandedSourcePaths(
-          filesystem,
-          invokingRule,
-          javaSourceFilePaths,
-          workingDirectory);
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          "Unable to expand sources for %s into %s",
-          invokingRule,
-          workingDirectory);
-    }
     if (pathToSrcsList.isPresent()) {
       try {
         filesystem.writeLinesToPath(
-            FluentIterable.from(expandedSources)
+            FluentIterable.from(javaSourceFilePaths)
                 .transform(Functions.toStringFunction())
                 .transform(ARGFILES_ESCAPER),
             pathToSrcsList.get());
@@ -208,7 +190,7 @@ public class ExternalJavac implements Javac {
         return 1;
       }
     } else {
-      for (Path source : expandedSources) {
+      for (Path source : javaSourceFilePaths) {
         command.add(source.toString());
       }
     }
@@ -235,44 +217,5 @@ public class ExternalJavac implements Javac {
     }
 
     return exitCode;
-  }
-
-  private ImmutableList<Path> getExpandedSourcePaths(
-      ProjectFilesystem projectFilesystem,
-      BuildTarget invokingRule,
-      ImmutableSet<Path> javaSourceFilePaths,
-      Optional<Path> workingDirectory) throws IOException {
-
-    // Add sources file or sources list to command
-    ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
-      String pathString = path.toString();
-      if (pathString.endsWith(".java")) {
-        sources.add(path);
-      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        if (!workingDirectory.isPresent()) {
-          throw new HumanReadableException(
-              "Attempting to compile target %s which specified a .src.zip input %s but no " +
-                  "working directory was specified.",
-              invokingRule.toString(),
-              path);
-        }
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ImmutableList<Path> zipPaths = Unzip.extractZipFile(
-            projectFilesystem.resolve(path),
-            projectFilesystem.resolve(workingDirectory.get()),
-            Unzip.ExistingFileMode.OVERWRITE);
-        sources.addAll(
-            FluentIterable.from(zipPaths)
-                .filter(
-                    new Predicate<Path>() {
-                      @Override
-                      public boolean apply(Path input) {
-                        return input.toString().endsWith(".java");
-                      }
-                    }));
-      }
-    }
-    return sources.build();
   }
 }

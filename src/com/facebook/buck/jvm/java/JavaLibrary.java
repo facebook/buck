@@ -31,6 +31,8 @@ import java.nio.file.Path;
 
 public interface JavaLibrary extends BuildRule, HasClasspathEntries,
     HasJavaAbi, HasJavaClassHashes, HasMavenCoordinates, HasSources {
+  String SOURCE_ZIP = ".src.zip";
+  String SOURCE_JAR = "-sources.jar";
 
   /**
    * This Buildable is expected to support the GWT flavor, which is a {@link BuildRule} whose output

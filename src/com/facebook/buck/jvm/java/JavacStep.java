@@ -142,8 +142,8 @@ public class JavacStep implements Step {
           invokingRule,
           getOptions(context, declaredClasspathEntries),
           javaSourceFilePaths,
-          pathToSrcsList,
-          workingDirectory);
+          pathToSrcsList
+      );
 
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);

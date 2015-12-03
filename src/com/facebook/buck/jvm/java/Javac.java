@@ -40,8 +40,6 @@ public interface Javac extends RuleKeyAppendable, Tool {
       Escaper.escaper(
           Escaper.Quoter.DOUBLE,
           CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
-  String SRC_ZIP = ".src.zip";
-  String SRC_JAR = "-sources.jar";
 
   JavacVersion getVersion();
 
@@ -52,8 +50,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException;
+      Optional<Path> pathToSrcsList) throws InterruptedException;
 
   String getDescription(
       ImmutableList<String> options,

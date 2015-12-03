@@ -23,16 +23,16 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public interface CompileStepFactory extends RuleKeyAppendable {
 
-  void createCompileStep(
+  int compile(
       BuildContext context,
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
@@ -44,6 +44,7 @@ public interface CompileStepFactory extends RuleKeyAppendable {
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       /* output params */
-      ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext);
+      ExecutionContext eContext) throws IOException, InterruptedException;
+
+  void installArtifacts(BuildableContext buildableContext);
 }

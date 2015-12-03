@@ -66,7 +66,7 @@ public class JavaSourceJarTest {
     Path output = rule.getPathToOutput();
 
     assertNotNull(output);
-    assertTrue(output.toString().endsWith(Javac.SRC_JAR));
+    assertTrue(output.toString().endsWith(JavaLibrary.SOURCE_JAR));
   }
 
   @Test
