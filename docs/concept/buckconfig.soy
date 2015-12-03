@@ -149,12 +149,22 @@ This section includes settings that control settings that are specific to Apple 
 
 <p>
   By default, Buck will use the output of <code>xcode-select --print-path</code> to determine where
-  Xcode's developer directory is.  However, you can specificy a directory in the config to override
+  Xcode's developer directory is.  However, you can specify a directory in the config to override
   whatever value that would return.
 </p>
 {literal}<pre class="prettyprint lang-ini">
 [apple]
   xcode_developer_dir = path/to/developer/directory
+</pre>{/literal}
+
+<p>
+  Optionally override the Xcode developer directory for running tests, if you want them to be run
+  with a different Xcode version than the version used for building.  If absent, falls back
+  to <code>xcode_developer_dir</code> and finally <code>xcode-select --print-path</code>.
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[apple]
+  xcode_developer_dir_for_tests = path/to/developer/directory/for_tests
 </pre>{/literal}
 
 <p>

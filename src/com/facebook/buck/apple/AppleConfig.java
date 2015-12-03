@@ -66,6 +66,25 @@ public class AppleConfig {
     }
   }
 
+  /**
+   * If specified, the value of {@code [apple] xcode_developer_dir_for_tests} wrapped in a
+   * {@link Supplier}.
+   * Otherwise, this falls back to {@code [apple] xcode_developer_dir} and finally
+   * {@code xcode-select --print-path}.
+   */
+  public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplierForTests(
+      ProcessExecutor processExecutor) {
+    Optional<String> xcodeDeveloperDirectory =
+        delegate.getValue("apple", "xcode_developer_dir_for_tests");
+    if (xcodeDeveloperDirectory.isPresent()) {
+      Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+          Paths.get(xcodeDeveloperDirectory.get()));
+      return Suppliers.ofInstance(Optional.of(developerDirectory));
+    } else {
+      return getAppleDeveloperDirectorySupplier(processExecutor);
+    }
+  }
+
   public ImmutableList<Path> getExtraToolchainPaths() {
     ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
         "apple",
