@@ -16,11 +16,18 @@
 
 package com.facebook.buck.zip;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,9 +49,23 @@ public class ZipRuleIntegrationTest {
 
     Path zip = workspace.buildAndReturnOutput("//example:ziptastic");
 
-    ZipInspector inspector = new ZipInspector(zip);
-    inspector.assertFileExists("cake.txt");
-    inspector.assertFileExists("beans/cheesy.txt");
+    // Make sure we have the right files and attributes.
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipArchiveEntry cake = zipFile.getEntry("cake.txt");
+      assertThat(cake, Matchers.notNullValue());
+      assertFalse(cake.isUnixSymlink());
+      assertFalse(cake.isDirectory());
+
+      ZipArchiveEntry beans = zipFile.getEntry("beans/");
+      assertThat(beans, Matchers.notNullValue());
+      assertFalse(beans.isUnixSymlink());
+      assertTrue(beans.isDirectory());
+
+      ZipArchiveEntry cheesy = zipFile.getEntry("beans/cheesy.txt");
+      assertThat(cheesy, Matchers.notNullValue());
+      assertFalse(cheesy.isUnixSymlink());
+      assertFalse(cheesy.isDirectory());
+    }
   }
 
   @Test

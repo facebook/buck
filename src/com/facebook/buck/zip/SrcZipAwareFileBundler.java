@@ -22,11 +22,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,8 +51,6 @@ public class SrcZipAwareFileBundler {
       Iterable<SourcePath> toCopy,
       boolean junkPaths) {
 
-    ImmutableMap.Builder<Path, Path> links = ImmutableMap.builder();
-
     for (SourcePath sourcePath : toCopy) {
       Path absolute = resolver.getAbsolutePath(sourcePath);
 
@@ -73,8 +71,11 @@ public class SrcZipAwareFileBundler {
       } else {
         destination = absolute.getFileName();
       }
-      links.put(destination, absolute);
+      destination = destinationDir.resolve(destination);
+      if (destination.getParent() != null) {
+        steps.add(new MkdirStep(filesystem, destination.getParent()));
+      }
+      steps.add(CopyStep.forFile(filesystem, absolute, destination));
     }
-    steps.add(new SymlinkTreeStep(filesystem, destinationDir, links.build()));
   }
 }
