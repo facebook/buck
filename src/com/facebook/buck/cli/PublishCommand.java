@@ -22,8 +22,10 @@ import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetSpec;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -103,8 +105,12 @@ public class PublishCommand extends BuildCommand {
    * @return whether successful
    */
   private boolean publishTarget(BuildTarget buildTarget, CommandRunnerParams params) {
-    BuildRule buildRule = Preconditions.checkNotNull(
-        getBuild().getActionGraph().findBuildRuleByTarget(buildTarget));
+    BuildRule buildRule;
+    try {
+      buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    }
 
     if (!(buildRule instanceof MavenPublishable)) {
       params.getBuckEventBus().post(ConsoleEvent.severe(

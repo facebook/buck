@@ -40,6 +40,8 @@ import com.facebook.buck.jvm.java.intellij.SerializableModule.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InMemoryBuildFileTree;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -90,7 +92,7 @@ public class ProjectTest {
    * The ActionGraph also includes three project_config rules: one for the android_library, and one
    * for each of the android_binary rules.
    */
-  public ProjectWithModules createActionGraphForTesting(
+  public Pair<ProjectWithModules, BuildRuleResolver> createActionGraphForTesting(
       @Nullable JavaPackageFinder javaPackageFinder) throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
@@ -208,7 +210,7 @@ public class ProjectTest {
         .setSrcRule(barAppBuildRule.getBuildTarget())
         .build(ruleResolver);
 
-    return getModulesForActionGraph(
+    return new Pair<>(getModulesForActionGraph(
         ruleResolver,
         ImmutableSortedSet.of(
             projectConfigForExportLibrary,
@@ -216,7 +218,8 @@ public class ProjectTest {
             projectConfigForResource,
             projectConfigUsingNoDx,
             projectConfig),
-        javaPackageFinder);
+        javaPackageFinder),
+        ruleResolver);
   }
 
   @Test
@@ -243,10 +246,11 @@ public class ProjectTest {
         .andReturn("");
     EasyMock.replay(javaPackageFinder);
 
-    ProjectWithModules projectWithModules = createActionGraphForTesting(javaPackageFinder);
-    Project project = projectWithModules.project;
-    ActionGraph actionGraph = project.getActionGraph();
-    List<SerializableModule> modules = projectWithModules.modules;
+    Pair<ProjectWithModules, BuildRuleResolver> projectWithModules =
+        createActionGraphForTesting(javaPackageFinder);
+    Project project = projectWithModules.getFirst().project;
+    BuildRuleResolver resolver = projectWithModules.getSecond();
+    List<SerializableModule> modules = projectWithModules.getFirst().modules;
 
     assertEquals("Should be one module for the java_library, one for the android_library, " +
                  "one module for the android_resource, and one for each android_binary",
@@ -255,7 +259,8 @@ public class ProjectTest {
 
     // Check the values of the module that corresponds to the android_library.
     SerializableModule javaLibraryModule = modules.get(4);
-    assertSame(getRuleById("//java/src/com/facebook/exportlib:exportlib", actionGraph),
+    assertSame(
+        getRuleByBuildTarget("//java/src/com/facebook/exportlib:exportlib", resolver),
         javaLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_exportlib", javaLibraryModule.name);
     assertEquals(
@@ -280,7 +285,8 @@ public class ProjectTest {
 
     // Check the values of the module that corresponds to the android_library.
     SerializableModule androidLibraryModule = modules.get(3);
-    assertSame(getRuleById("//java/src/com/facebook/base:base", actionGraph),
+    assertSame(
+        getRuleByBuildTarget("//java/src/com/facebook/base:base", resolver),
         androidLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_base", androidLibraryModule.name);
     assertEquals(
@@ -323,13 +329,15 @@ public class ProjectTest {
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
     SerializableModule androidResourceModule = modules.get(0);
-    assertSame(getRuleById("//android_res/base:res", actionGraph), androidResourceModule.srcRule);
+    assertSame(
+        getRuleByBuildTarget("//android_res/base:res", resolver),
+        androidResourceModule.srcRule);
 
     assertEquals(Paths.get("res"), androidResourceModule.resFolder);
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
     SerializableModule androidBinaryModuleNoDx = modules.get(2);
-    assertSame(getRuleById("//foo:app", actionGraph), androidBinaryModuleNoDx.srcRule);
+    assertSame(getRuleByBuildTarget("//foo:app", resolver), androidBinaryModuleNoDx.srcRule);
     assertEquals("module_foo", androidBinaryModuleNoDx.name);
     assertEquals(Paths.get("foo/module_foo.iml"), androidBinaryModuleNoDx.pathToImlFile);
 
@@ -363,7 +371,7 @@ public class ProjectTest {
 
     // Check the values of the module that corresponds to the android_binary with an empty no_dx.
     SerializableModule androidBinaryModuleEmptyNoDx = modules.get(1);
-    assertSame(getRuleById("//bar:app", actionGraph), androidBinaryModuleEmptyNoDx.srcRule);
+    assertSame(getRuleByBuildTarget("//bar:app", resolver), androidBinaryModuleEmptyNoDx.srcRule);
     assertEquals("module_bar", androidBinaryModuleEmptyNoDx.name);
     assertEquals(Paths.get("bar/module_bar.iml"), androidBinaryModuleEmptyNoDx.pathToImlFile);
     assertListEquals(
@@ -394,7 +402,7 @@ public class ProjectTest {
         androidBinaryModuleEmptyNoDx.getDependencies());
 
     // Check that the correct data was extracted to populate the .idea/libraries directory.
-    BuildRule guava = getRuleById("//third_party/guava:guava", actionGraph);
+    BuildRule guava = getRuleByBuildTarget("//third_party/guava:guava", resolver);
     assertSame(guava, Iterables.getOnlyElement(project.getLibraryJars()));
   }
 
@@ -784,10 +792,10 @@ public class ProjectTest {
     return new ProjectWithModules(project, ImmutableList.copyOf(modules));
   }
 
-  private static BuildRule getRuleById(String id, ActionGraph actionGraph) {
-    BuildRule rule = actionGraph.findBuildRuleByTarget(
-        BuildTargetFactory.newInstance(id));
-    Preconditions.checkNotNull(rule, "No rule for %s", id);
+  private static BuildRule getRuleByBuildTarget(String buildTarget, BuildRuleResolver resolver)
+      throws NoSuchBuildTargetException {
+    BuildRule rule = resolver.requireRule(BuildTargetFactory.newInstance(buildTarget));
+    Preconditions.checkNotNull(rule, "No rule for %s", buildTarget);
     return rule;
   }
 

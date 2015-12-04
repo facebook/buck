@@ -17,9 +17,12 @@
 package com.facebook.buck.simulate;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -37,14 +40,17 @@ import java.util.Queue;
 public class BuildSimulator {
   private final SimulateTimes times;
   private final ActionGraph actionGraph;
+  private final BuildRuleResolver resolver;
   private final int numberOfThreads;
 
   public BuildSimulator(
       SimulateTimes times,
       ActionGraph actionGraph,
+      BuildRuleResolver resolver,
       int numberOfThreads) {
     this.times = times;
     this.actionGraph = actionGraph;
+    this.resolver = resolver;
     this.numberOfThreads = numberOfThreads;
   }
 
@@ -55,6 +61,21 @@ public class BuildSimulator {
     SimulateReport.Builder simulateReport = SimulateReport.builder();
 
     for (String timeAggregate : times.getTimeAggregates()) {
+      // Setup the build order.
+      Map<BuildTarget, NodeState> reverseDependencies = Maps.newHashMap();
+      Queue<BuildTarget> leafNodes = Queues.newArrayDeque();
+      int totalDagEdges = 0;
+      for (BuildTarget target : buildTargets) {
+        BuildRule rule;
+        try {
+          rule = resolver.requireRule(target);
+        } catch (NoSuchBuildTargetException e) {
+          throw new HumanReadableException(e.getHumanReadableErrorMessage());
+        }
+
+        totalDagEdges += recursiveTraversal(rule, reverseDependencies, leafNodes);
+      }
+
       SingleRunReport.Builder report = SingleRunReport.builder()
           .setTimestampMillis(currentTimeMillis)
           .setBuildTargets(FluentIterable.from(buildTargets)
@@ -65,14 +86,6 @@ public class BuildSimulator {
           .setTimeAggregate(timeAggregate)
           .setNumberOfThreads(numberOfThreads);
 
-      // Setup the build order.
-      Map<BuildTarget, NodeState> reverseDependencies = Maps.newHashMap();
-      Queue<BuildTarget> leafNodes = Queues.newArrayDeque();
-      int totalDagEdges = 0;
-      for (BuildTarget target : buildTargets) {
-        BuildRule rule = Preconditions.checkNotNull(actionGraph.findBuildRuleByTarget(target));
-        totalDagEdges += recursiveTraversal(rule, reverseDependencies, leafNodes);
-      }
       report.setTotalDependencyDagEdges(totalDagEdges);
 
       // Run the simulation.

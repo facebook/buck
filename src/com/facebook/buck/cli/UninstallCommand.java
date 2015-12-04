@@ -22,8 +22,9 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -101,7 +103,7 @@ public class UninstallCommand extends AbstractCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     // Parse all of the build targets specified by the user.
-    ActionGraph actionGraph;
+    BuildRuleResolver resolver;
     ImmutableSet<BuildTarget> buildTargets;
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
@@ -116,8 +118,8 @@ public class UninstallCommand extends AbstractCommand {
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
           new BuildTargetNodeToBuildRuleTransformer());
-      actionGraph =
-          Preconditions.checkNotNull(targetGraphTransformer.apply(result.getSecond())).getFirst();
+      resolver =
+          Preconditions.checkNotNull(targetGraphTransformer.apply(result.getSecond())).getSecond();
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -133,8 +135,12 @@ public class UninstallCommand extends AbstractCommand {
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 
     // Find the android_binary() rule from the parse.
-    BuildRule buildRule = Preconditions.checkNotNull(
-        actionGraph.findBuildRuleByTarget(buildTarget));
+    BuildRule buildRule;
+    try {
+      buildRule = resolver.requireRule(buildTarget);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    }
     if (!(buildRule instanceof InstallableApk)) {
       params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",

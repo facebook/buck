@@ -89,6 +89,7 @@ public class SimulateCommand extends AbstractCommand {
     BuildSimulator simulator = new BuildSimulator(
         times,
         actionGraphAndResolver.getFirst(),
+        actionGraphAndResolver.getSecond(),
         params.getBuckConfig().getNumThreads());
     SimulateReport report = simulator.simulateBuild(
         params.getClock().currentTimeMillis(),

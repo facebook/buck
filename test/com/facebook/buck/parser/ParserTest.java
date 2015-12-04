@@ -41,8 +41,8 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetGraph;
@@ -159,8 +159,7 @@ public class ParserTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testParseBuildFilesForTargetsWithOverlappingTargets()
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+  public void testParseBuildFilesForTargetsWithOverlappingTargets() throws Exception {
     // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
     // build file.
     BuildTarget fooTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
@@ -176,10 +175,10 @@ public class ParserTest {
         cell,
         false,
         buildTargets);
-    ActionGraph actionGraph = buildActionGraph(eventBus, targetGraph);
-    BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
+    BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
+    BuildRule fooRule = resolver.requireRule(fooTarget);
     assertNotNull(fooRule);
-    BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
+    BuildRule barRule = resolver.requireRule(barTarget);
     assertNotNull(barRule);
 
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
@@ -1067,8 +1066,7 @@ public class ParserTest {
   }
 
   @Test
-  public void testGeneratedDeps()
-      throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
+  public void testGeneratedDeps() throws Exception {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "generateddeps");
 
@@ -1095,11 +1093,11 @@ public class ParserTest {
         cell,
         false,
         buildTargets);
-    ActionGraph graph = buildActionGraph(eventBus, targetGraph);
+    BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
-    BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
+    BuildRule fooRule = resolver.requireRule(fooTarget);
     assertNotNull(fooRule);
-    BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
+    BuildRule barRule = resolver.requireRule(barTarget);
     assertNotNull(barRule);
 
     assertEquals(ImmutableSet.of(barRule), fooRule.getDeps());
@@ -1461,9 +1459,9 @@ public class ParserTest {
           cell,
           false,
           buildTargets);
-      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
-      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(ImmutableSet.of(Paths.get("foo/bar/Bar.java")), libRule.getJavaSrcs());
     }
 
@@ -1479,9 +1477,9 @@ public class ParserTest {
           cell,
           false,
           buildTargets);
-      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
-      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
           ImmutableSet.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
           libRule.getJavaSrcs());
@@ -1516,9 +1514,9 @@ public class ParserTest {
           cell,
           false,
           buildTargets);
-      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
-      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
 
       assertEquals(
           ImmutableSortedSet.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
@@ -1537,9 +1535,9 @@ public class ParserTest {
           cell,
           false,
           buildTargets);
-      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
-      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
           ImmutableSet.of(Paths.get("foo/bar/Bar.java")),
           libRule.getJavaSrcs());
@@ -1605,13 +1603,13 @@ public class ParserTest {
     assertNotNull(hashCode);
   }
 
-  private ActionGraph buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
+  private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
         new TargetGraphToActionGraph(
             eventBus,
             new BuildTargetNodeToBuildRuleTransformer())
             .apply(targetGraph))
-        .getFirst();
+        .getSecond();
   }
 
   /**

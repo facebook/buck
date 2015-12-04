@@ -23,8 +23,9 @@ import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
@@ -135,12 +136,16 @@ public class AuditClasspathCommand extends AbstractCommand {
         params.getBuckEventBus(),
         new BuildTargetNodeToBuildRuleTransformer());
 
-    if (shouldGenerateDotOutput()) {
-      return printDotOutput(params, targetGraph);
-    } else if (shouldGenerateJsonOutput()) {
-      return printJsonClasspath(params, targetGraph, targetGraphTransformer, targets);
-    } else {
-      return printClasspath(params, targetGraph, targetGraphTransformer, targets);
+    try {
+      if (shouldGenerateDotOutput()) {
+        return printDotOutput(params, targetGraph);
+      } else if (shouldGenerateJsonOutput()) {
+        return printJsonClasspath(params, targetGraph, targetGraphTransformer, targets);
+      } else {
+        return printClasspath(params, targetGraph, targetGraphTransformer, targets);
+      }
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
   }
 
@@ -174,13 +179,13 @@ public class AuditClasspathCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraph targetGraph,
       TargetGraphTransformer targetGraphTransformer,
-      ImmutableSet<BuildTarget> targets) {
-    ActionGraph graph =
-        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getFirst();
+      ImmutableSet<BuildTarget> targets) throws NoSuchBuildTargetException {
+    BuildRuleResolver resolver =
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getSecond();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
+      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
         classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
@@ -203,13 +208,13 @@ public class AuditClasspathCommand extends AbstractCommand {
       TargetGraph targetGraph,
       TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets)
-      throws IOException {
-    ActionGraph graph =
-        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getFirst();
+      throws IOException, NoSuchBuildTargetException {
+    BuildRuleResolver resolver =
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getSecond();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
+      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
         continue;

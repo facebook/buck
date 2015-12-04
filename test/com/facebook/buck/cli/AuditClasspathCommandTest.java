@@ -66,8 +66,7 @@ public class AuditClasspathCommandTest {
   }
 
   @Test
-  public void testClassPathOutput()
-      throws IOException, InterruptedException {
+  public void testClassPathOutput() throws Exception {
     // Test that no output is created.
     auditClasspathCommand.printClasspath(
         params,
@@ -197,7 +196,7 @@ public class AuditClasspathCommandTest {
       "}");
 
   @Test
-  public void testJsonClassPathOutput() throws IOException {
+  public void testJsonClassPathOutput() throws Exception {
     // Build a DependencyGraph of build rules manually.
 
     BuildTarget javaTarget = BuildTargetFactory.newInstance("//:test-java-library");

@@ -37,14 +37,16 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
@@ -201,30 +203,32 @@ public class InstallCommand extends BuildCommand {
     }
 
     //Install the targets
-    exitCode = install(params);
+    try {
+      exitCode = install(params);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    }
     if (exitCode != 0) {
       return exitCode;
     }
     return exitCode;
   }
 
-  private int install(CommandRunnerParams params) throws IOException, InterruptedException{
+  private int install(CommandRunnerParams params)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
 
     Build build = super.getBuild();
-    ActionGraph graph = build.getActionGraph();
     int exitCode = 0;
 
     for (BuildTarget buildTarget : getBuildTargets()) {
 
-
-      BuildRule buildRule = Preconditions.checkNotNull(
-          graph.findBuildRuleByTarget(buildTarget));
+      BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
 
       if (buildRule instanceof InstallableApk) {
         ExecutionContext.Builder builder = ExecutionContext.builder()
             .setExecutionContext(build.getExecutionContext())
-            .setAdbOptions(Optional.<AdbOptions>of(adbOptions(params.getBuckConfig())))
-            .setTargetDeviceOptions(Optional.<TargetDeviceOptions>of(targetDeviceOptions()));
+            .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
+            .setTargetDeviceOptions(Optional.of(targetDeviceOptions()));
         exitCode = installApk(
             params,
             (InstallableApk) buildRule,
@@ -348,7 +352,8 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor) throws IOException, InterruptedException {
+      ProcessExecutor processExecutor)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
     if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONESIMULATOR.getName())) {
       return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
           processExecutor);
@@ -366,16 +371,16 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor) throws IOException, InterruptedException {
+      ProcessExecutor processExecutor)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
     // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
 
     final Path helperPath;
     Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
     if (helperTarget.isPresent()) {
-      Build build = super.getBuild();
-      ActionGraph graph = build.getActionGraph();
-      BuildRule buildRule = graph.findBuildRuleByTarget(helperTarget.get());
+      BuildRuleResolver resolver = super.getBuild().getRuleResolver();
+      BuildRule buildRule = resolver.requireRule(helperTarget.get());
       if (buildRule == null) {
         params.getConsole().printBuildFailure(
             String.format(
