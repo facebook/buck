@@ -4,7 +4,6 @@
     src_roots = src, test
 [alias]
     buck = //programs:buck
-    buck-win = //programs:buck-no-nailgun
     buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     maven-importer = //src/com/facebook/buck/maven:resolver

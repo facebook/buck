@@ -89,31 +89,6 @@ python_binary(
   ],
 )
 
-python_library(
-  name='bucklib-no-nailgun',
-  srcs=[
-    'buck_project.py',
-    'buck_tool.py',
-    'buck_repo.py',
-    'buck_package.py',
-    'timing.py',
-    'tracing.py',
-  ],
-  resources=BUCK_CORE_RESOURCES,
-  deps = [
-    ':subprocutils',
-    ':buck_version',
-  ],
-)
-
-python_binary(
-  name='buck-no-nailgun',
-  main='buck.py',
-  deps=[
-    ':bucklib-no-nailgun',
-  ],
-)
-
 python_binary(
   name='buckd',
   main='buckd.py',
