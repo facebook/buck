@@ -151,7 +151,7 @@ public class SmartDexingStep implements Step {
   }
 
   public static int determineOptimalThreadCount() {
-    return (int) (1.25 * Runtime.getRuntime().availableProcessors());
+    return Runtime.getRuntime().availableProcessors();
   }
 
   private static void acquireMemory(int xzCompressionLevel) {
