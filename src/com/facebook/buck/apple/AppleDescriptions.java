@@ -606,8 +606,8 @@ public class AppleDescriptions {
 
           String platformName = appleBundle.getPlatformName();
 
-          if ((platformName.equals(ApplePlatform.Name.WATCHOS) ||
-              platformName.equals(ApplePlatform.Name.WATCHSIMULATOR)) &&
+          if ((platformName.equals(ApplePlatform.WATCHOS.getName()) ||
+              platformName.equals(ApplePlatform.WATCHSIMULATOR.getName())) &&
               appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
             destinationPath = destinations.getWatchAppPath();
           } else {

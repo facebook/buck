@@ -186,8 +186,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     final Flavor actualWatchFlavor;
     if (ApplePlatform.isSimulator(platformName)) {
       actualWatchFlavor = ImmutableFlavor.builder().name("watchsimulator-i386").build();
-    } else if (platformName.startsWith(ApplePlatform.Name.IPHONEOS) ||
-        platformName.startsWith(ApplePlatform.Name.WATCHOS)) {
+    } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName()) ||
+        platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
       actualWatchFlavor = ImmutableFlavor.builder().name("watchos-armv7k").build();
     } else {
       actualWatchFlavor = ImmutableFlavor.builder().name(platformName).build();

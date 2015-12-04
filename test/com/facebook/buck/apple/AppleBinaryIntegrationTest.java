@@ -87,8 +87,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testAppleBinaryWithSystemFrameworksBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_with_system_frameworks_builds_something", tmp);
     workspace.setUp();
@@ -101,8 +100,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testAppleBinaryWithLibraryDependencyBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_with_library_dependency_builds_something", tmp);
     workspace.setUp();
@@ -116,8 +114,7 @@ public class AppleBinaryIntegrationTest {
   public void testAppleBinaryWithLibraryDependencyWithSystemFrameworksBuildsSomething()
       throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_with_library_dependency_with_system_frameworks_builds_something", tmp);
     workspace.setUp();

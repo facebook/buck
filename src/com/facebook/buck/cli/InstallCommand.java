@@ -349,18 +349,17 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
-    switch (appleBundle.getPlatformName()) {
-      case ApplePlatform.Name.IPHONESIMULATOR:
-        return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
-            processExecutor);
-      case ApplePlatform.Name.IPHONEOS:
-        return installAppleBundleForDevice(params, appleBundle, projectFilesystem,
-            processExecutor);
-      default:
-        params.getConsole().printBuildFailure("Install not yet supported for platform " +
-            appleBundle.getPlatformName() + ".");
-        return FAILURE;
+    if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONESIMULATOR.getName())) {
+      return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
+          processExecutor);
     }
+    if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONEOS.getName())) {
+      return installAppleBundleForDevice(params, appleBundle, projectFilesystem,
+          processExecutor);
+    }
+    params.getConsole().printBuildFailure("Install not yet supported for platform " +
+        appleBundle.getPlatformName() + ".");
+    return FAILURE;
   }
 
   private InstallResult installAppleBundleForDevice(

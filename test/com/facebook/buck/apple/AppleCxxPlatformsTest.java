@@ -98,8 +98,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setApplePlatform(ApplePlatform.IPHONEOS)
         .setName("iphoneos8.0")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -215,8 +214,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build())
+        .setApplePlatform(ApplePlatform.WATCHOS)
         .setName("watchos2.0")
         .setVersion("2.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -320,8 +318,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setApplePlatform(ApplePlatform.IPHONEOS)
         .setName("iphoneos9.0")
         .setVersion("9.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -387,8 +384,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setApplePlatform(ApplePlatform.IPHONEOS)
         .setName("_(in)+va|id_")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -441,8 +437,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setApplePlatform(ApplePlatform.IPHONEOS)
         .setName("iphoneos8.0")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -512,8 +507,7 @@ AppleSdkPaths appleSdkPaths =
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setApplePlatform(ApplePlatform.IPHONEOS)
         .setName("iphoneos8.0")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -585,8 +579,7 @@ AppleSdkPaths appleSdkPaths =
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setApplePlatform(ApplePlatform.IPHONEOS)
         .setName("iphoneos8.0")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -633,8 +626,7 @@ AppleSdkPaths appleSdkPaths =
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+        .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
         .setName("iphonesimulator8.0")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -692,8 +684,7 @@ AppleSdkPaths appleSdkPaths =
         .build();
 
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build())
+        .setApplePlatform(ApplePlatform.WATCHSIMULATOR)
         .setName("watchsimulator2.0")
         .setVersion("2.0")
         .setToolchains(ImmutableList.of(toolchain))
@@ -849,8 +840,7 @@ AppleSdkPaths appleSdkPaths =
         .setVersion("1")
         .build();
     AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(
-            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+        .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
         .setName("iphonesimulator8.0")
         .setVersion("8.0")
         .setToolchains(ImmutableList.of(toolchain))

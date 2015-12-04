@@ -444,8 +444,7 @@ public class AppleBundleIntegrationTest {
   @Test
   public void watchApplicationBundle() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

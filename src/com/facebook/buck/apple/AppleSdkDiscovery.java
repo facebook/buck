@@ -180,31 +180,6 @@ public class AppleSdkDiscovery {
     return appleSdkPathsBuilder.build();
   }
 
-  private static void addArchitecturesForPlatform(
-      AppleSdk.Builder sdkBuilder,
-      ApplePlatform applePlatform) {
-    // TODO(bhamiltoncx): These need to be read from the SDK, not hard-coded.
-    switch (applePlatform.getName()) {
-      case ApplePlatform.Name.MACOSX:
-        // Fall through.
-      case ApplePlatform.Name.IPHONESIMULATOR:
-        sdkBuilder.addArchitectures("i386", "x86_64");
-        break;
-      case ApplePlatform.Name.IPHONEOS:
-        sdkBuilder.addArchitectures("armv7", "arm64");
-        break;
-      case ApplePlatform.Name.WATCHSIMULATOR:
-        sdkBuilder.addArchitectures("i386");
-        break;
-      case ApplePlatform.Name.WATCHOS:
-        sdkBuilder.addArchitectures("armv7k");
-        break;
-      default:
-        sdkBuilder.addArchitectures("armv7", "arm64", "i386", "x86_64");
-        break;
-    }
-  }
-
   private static boolean buildSdkFromPath(
         Path sdkDir,
         AppleSdk.Builder sdkBuilder,
@@ -245,10 +220,9 @@ public class AppleSdkDiscovery {
         return false;
       } else {
         NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
-        ApplePlatform applePlatform =
-            ApplePlatform.builder().setName(platformName.toString()).build();
+        ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
         sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
-        addArchitecturesForPlatform(sdkBuilder, applePlatform);
+        sdkBuilder.addAllArchitectures(applePlatform.getArchitectures());
         return true;
       }
     } catch (FileNotFoundException e) {

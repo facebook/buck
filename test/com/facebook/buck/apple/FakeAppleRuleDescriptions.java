@@ -64,8 +64,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final AppleSdk DEFAULT_MACOSX_SDK =
       AppleSdk.builder()
-          .setApplePlatform(
-              ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+          .setApplePlatform(ApplePlatform.MACOSX)
           .setName("macosx")
           .setArchitectures(ImmutableList.of("x86_64"))
           .setVersion("10.10")
@@ -74,8 +73,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final AppleSdk DEFAULT_IPHONEOS_SDK =
       AppleSdk.builder()
-          .setApplePlatform(
-              ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+          .setApplePlatform(ApplePlatform.IPHONEOS)
           .setName("iphoneos")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setVersion("8.0")

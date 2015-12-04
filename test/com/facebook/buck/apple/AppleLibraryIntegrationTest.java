@@ -63,8 +63,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsForWatchOS() throws IOException {
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -80,8 +79,8 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsForWatchSimulator() throws IOException {
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build()));
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHSIMULATOR));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -98,8 +97,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -150,8 +148,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryBuildsFramework() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -178,8 +175,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void frameworkContainsFrameworkDependencies() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_library_dependencies", tmp);
@@ -215,8 +211,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void frameworkDependenciesDoNotContainTransitiveDependencies() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_library_dependencies", tmp);
@@ -242,8 +237,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void shallowFrameworkDoesntContainFrameworkDependencies() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_library_dependencies", tmp);

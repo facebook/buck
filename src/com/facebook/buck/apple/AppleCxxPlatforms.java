@@ -32,6 +32,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -75,7 +76,7 @@ public class AppleCxxPlatforms {
       AppleSdk targetSdk,
       String minVersion,
       String targetArchitecture,
-      AppleSdkPaths sdkPaths,
+      final AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       ExecutableFinder executableFinder) {
 
@@ -98,25 +99,7 @@ public class AppleCxxPlatforms {
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
-    switch (targetSdk.getApplePlatform().getName()) {
-      case ApplePlatform.Name.IPHONEOS:
-        cflagsBuilder.add("-mios-version-min=" + minVersion);
-        break;
-      case ApplePlatform.Name.IPHONESIMULATOR:
-        cflagsBuilder.add("-mios-simulator-version-min=" + minVersion);
-        break;
-      case ApplePlatform.Name.WATCHOS:
-        cflagsBuilder.add("-mwatchos-version-min=" + minVersion);
-        break;
-      case ApplePlatform.Name.WATCHSIMULATOR:
-        cflagsBuilder.add("-mwatchos-simulator-version-min=" + minVersion);
-        break;
-      default:
-        // For Mac builds, -mmacosx-version-min=<version>.
-        cflagsBuilder.add(
-            "-m" + targetSdk.getApplePlatform().getName() + "-version-min=" + minVersion);
-        break;
-    }
+    cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
     // Some flags are common to both asm and C.
     ImmutableList<String> asflags = cflagsBuilder.build();
@@ -203,17 +186,13 @@ public class AppleCxxPlatforms {
         "lldb",
         version);
 
-    Optional<Path> stubBinaryPath;
-    switch (targetSdk.getApplePlatform().getName()) {
-      case ApplePlatform.Name.WATCHOS:
-      case ApplePlatform.Name.WATCHSIMULATOR:
-        stubBinaryPath = Optional.of(
-            sdkPaths.getSdkPath().resolve("Library/Application Support/WatchKit/WK"));
-        break;
-      default:
-        stubBinaryPath = Optional.absent();
-        break;
-    }
+    Optional<Path> stubBinaryPath = targetSdk.getApplePlatform().getStubBinaryPath().transform(
+        new Function<Path, Path>() {
+          @Override
+          public Path apply(Path input) {
+            return sdkPaths.getSdkPath().resolve(input);
+          }
+        });
 
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 

@@ -103,7 +103,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addAllToolchains(toolchains.values())
             .build();
@@ -148,7 +148,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addAllToolchains(toolchains.values())
             .build();
@@ -233,7 +233,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -249,7 +249,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.0")
             .setVersion("8.0")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+            .setApplePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -265,8 +265,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -284,7 +283,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("watchos2.0")
             .setVersion("2.0")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build())
+            .setApplePlatform(ApplePlatform.WATCHOS)
             .addArchitectures("armv7k")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -300,8 +299,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("watchsimulator2.0")
             .setVersion("2.0")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build())
+            .setApplePlatform(ApplePlatform.WATCHSIMULATOR)
             .addArchitectures("i386")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -375,7 +373,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -391,7 +389,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.0")
             .setVersion("8.0")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+            .setApplePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -407,8 +405,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -426,7 +423,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.1")
             .setVersion("8.1")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+            .setApplePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -442,8 +439,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.1")
             .setVersion("8.1")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -504,7 +500,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addAllToolchains(toolchains.values())
             .build();
