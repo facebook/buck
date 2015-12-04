@@ -562,25 +562,29 @@ public class ProjectGenerator {
         compDir.length(),
         'f');
 
+    Path pathToBuck = executableFinder.getExecutable(Paths.get("buck"), environment);
     Optional<String> productName = getProductNameForTargetNode(targetNode);
     String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
     Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
     Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get(), binaryName);
-
-    Path resolvedBundleSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app"));
-    Path resolvedDsymSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app.dSYM"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
     String fixUUIDScriptPath = getFixUUIDScriptPath();
 
+    if (attemptToDetermineBestCxxPlatform) {
+      template.add("buck_flavor", XCODE_BUILD_SCRIPT_FLAVOR_VALUE);
+    } else {
+      template.add("buck_flavor", "");
+    }
+    template.add("path_to_buck", pathToBuck);
+    template.add("buck_target", targetToBuildWithBuck.get().getFullyQualifiedName());
+    template.add("root_path", projectFilesystem.getRootPath());
+
     template.add("comp_dir", compDir);
     template.add("source_dir", sourceDir);
-    template.add("resolved_bundle_source", resolvedBundleSource);
+
     template.add("resolved_bundle_destination", resolvedBundleDestination);
     template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
-    template.add("resolved_dsym_source", resolvedDsymSource);
     template.add("resolved_dsym_destination", resolvedDsymDestination);
     template.add("binary_name", binaryName);
     template.add("path_to_fix_uuid_script", fixUUIDScriptPath);
