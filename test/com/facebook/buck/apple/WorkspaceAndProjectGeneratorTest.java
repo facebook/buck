@@ -22,6 +22,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -80,7 +81,6 @@ import com.google.common.collect.Maps;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.AllOf;
 import org.junit.Before;
 import org.junit.Rule;
@@ -623,8 +623,9 @@ public class WorkspaceAndProjectGeneratorTest {
     PBXShellScriptBuildPhase phase = (PBXShellScriptBuildPhase) buildWithBuckTarget
         .getBuildPhases().get(0);
     String script = phase.getShellScript();
-    assertThat(script.contains("--config cxx.default_platform=$PLATFORM_NAME-$arch"),
-        Matchers.equalTo(true));
+    assertThat(
+        script,
+        containsString("$PLATFORM_NAME-$arch"));
   }
 
   @Test
