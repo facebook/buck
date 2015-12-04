@@ -141,9 +141,8 @@ public class ProjectGenerator {
   private static final String FIX_UUID_TEMPLATE = "fix-uuid.st";
   private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
-  public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME = "--config";
-  public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE =
-      "cxx.default_platform=$PLATFORM_NAME-$arch";
+  public static final String XCODE_BUILD_SCRIPT_FLAVOR_VALUE =
+      "#$PLATFORM_NAME-$arch";
   public static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   public enum Option {
@@ -512,10 +511,6 @@ public class ProjectGenerator {
     }
     flags = new ArrayList<String>(
         FluentIterable.<String>from(flags).transform(Escaper.BASH_ESCAPER).toList());
-    if (attemptToDetermineBestCxxPlatform) {
-      flags.add(0, XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME);
-      flags.add(1, XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE);
-    }
     return Joiner.on(' ').join(flags);
   }
 
@@ -535,6 +530,9 @@ public class ProjectGenerator {
     String buildFlags = getBuildFlags();
     String escapedBuildTarget = Escaper.escapeAsBashString(
         targetNode.getBuildTarget().getFullyQualifiedName());
+    if (attemptToDetermineBestCxxPlatform) {
+      escapedBuildTarget += XCODE_BUILD_SCRIPT_FLAVOR_VALUE;
+    }
 
     template.add("repo_root", projectFilesystem.getRootPath());
     template.add("path_to_buck", pathToBuck);
