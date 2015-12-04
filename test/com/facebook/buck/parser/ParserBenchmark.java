@@ -25,16 +25,13 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.Console;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Param;
 import com.google.caliper.api.Macrobenchmark;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,12 +48,9 @@ public class ParserBenchmark {
   public DebuggableTemporaryFolder tempDir = new DebuggableTemporaryFolder();
 
   private ParserNg parser;
-  private Parser legacyParser;
-  private ParserConfig legacyParserConfig;
   private ProjectFilesystem filesystem;
   private Cell cell;
   private BuckEventBus eventBus;
-  private Console console;
 
   @Before
   public void setUpTest() throws Exception {
@@ -104,13 +98,6 @@ public class ParserBenchmark {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
     parser = new ParserNg(typeCoercerFactory, marshaller);
-    legacyParser = Parser.createBuildFileParser(
-        cell,
-        typeCoercerFactory,
-        marshaller,
-        ParserConfig.AllowSymlinks.FORBID);
-    legacyParserConfig = new ParserConfig(config);
-    console = new TestConsole();
   }
 
   @After
@@ -134,24 +121,5 @@ public class ParserBenchmark {
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),
                 BuildFileSpec.fromRecursivePath(Paths.get("")))));
-  }
-
-  @Test
-  public void parseMultipleTargetsLegacyCorrectness() throws Exception {
-    parseMultipleTargetsLegacy();
-  }
-
-  @Macrobenchmark
-  public void parseMultipleTargetsLegacy() throws Exception {
-    legacyParser.buildTargetGraphForTargetNodeSpecs(
-        ImmutableList.of(
-            TargetNodePredicateSpec.of(
-                Predicates.alwaysTrue(),
-                BuildFileSpec.fromRecursivePath(Paths.get("")))),
-        legacyParserConfig,
-        eventBus,
-        console,
-        ImmutableMap.<String, String>of(),
-        /* enableProfiling */ false);
   }
 }
