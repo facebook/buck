@@ -34,8 +34,8 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParserNg;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -801,7 +801,7 @@ public class TargetsCommand extends AbstractCommand {
   String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params,
       String target,
-      ParserNg parser) throws IOException, InterruptedException {
+      Parser parser) throws IOException, InterruptedException {
     BuildTarget buildTarget;
     try {
       buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);

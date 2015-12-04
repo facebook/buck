@@ -47,7 +47,7 @@ public class ParserBenchmark {
 
   public DebuggableTemporaryFolder tempDir = new DebuggableTemporaryFolder();
 
-  private ParserNg parser;
+  private Parser parser;
   private ProjectFilesystem filesystem;
   private Cell cell;
   private BuckEventBus eventBus;
@@ -97,7 +97,7 @@ public class ParserBenchmark {
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
-    parser = new ParserNg(typeCoercerFactory, marshaller);
+    parser = new Parser(typeCoercerFactory, marshaller);
   }
 
   @After

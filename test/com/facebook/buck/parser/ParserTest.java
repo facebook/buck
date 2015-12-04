@@ -84,7 +84,7 @@ import java.nio.file.WatchEvent;
 import java.util.Collections;
 import java.util.SortedMap;
 
-public class ParserNgTest {
+public class ParserTest {
 
   @Rule
   public TemporaryPaths tempDir = new TemporaryPaths();
@@ -95,7 +95,7 @@ public class ParserNgTest {
   private Path includedByIncludeFile;
   private Path includedByBuildFile;
   private Path testBuildFile;
-  private ParserNg parser;
+  private Parser parser;
   private ProjectFilesystem filesystem;
   private Path cellRoot;
   private BuckEventBus eventBus;
@@ -151,7 +151,7 @@ public class ParserNgTest {
         .build();
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = new ParserNg(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    parser = new Parser(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1234,7 +1234,7 @@ public class ParserNgTest {
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = new ParserNg(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    parser = new Parser(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1349,7 +1349,7 @@ public class ParserNgTest {
     HashCode lib2Key = hashes.get(fooLib2Target);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = new ParserNg(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    parser = new Parser(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
@@ -1624,7 +1624,7 @@ public class ParserNgTest {
    * @return The build targets in the project filtered by the given filter.
    */
   public static synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
-      ParserNg parser,
+      Parser parser,
       Cell cell,
       Predicate<TargetNode<?>> filter,
       BuckEventBus buckEventBus)
@@ -1646,7 +1646,7 @@ public class ParserNgTest {
   }
 
   private ImmutableMap<BuildTarget, HashCode> buildTargetGraphAndGetHashCodes(
-      ParserNg parser,
+      Parser parser,
       BuildTarget... buildTargets) throws Exception {
     // Build the target graph so we can access the hash code cache.
 

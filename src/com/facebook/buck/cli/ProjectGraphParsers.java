@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.ParserNg;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
@@ -36,11 +36,11 @@ public class ProjectGraphParsers {
 
   /**
    * Creates a {@link ProjectGraphParser} which calls into a
-   * concrete {@link ParserNg} object to create {@link TargetGraph}s
+   * concrete {@link Parser} object to create {@link TargetGraph}s
    * for a build project.
    */
   public static ProjectGraphParser createProjectGraphParser(
-      final ParserNg parser,
+      final Parser parser,
       final Cell rootCell,
       final BuckEventBus buckEventBus,
       final boolean enableProfiling

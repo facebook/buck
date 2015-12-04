@@ -32,7 +32,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.ParserNg;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -236,7 +236,7 @@ public class InterCellIntegrationTest {
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-    ParserNg parser = new ParserNg(coercerFactory, new ConstructorArgMarshaller(coercerFactory));
+    Parser parser = new Parser(coercerFactory, new ConstructorArgMarshaller(coercerFactory));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     Cell primaryCell = primary.asCell();

@@ -31,7 +31,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.ParserNg;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -75,7 +75,7 @@ public class ThriftLibraryIntegrationTest {
     workspace.setUp();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserNg parser = new ParserNg(
+    Parser parser = new Parser(
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
 

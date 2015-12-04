@@ -26,7 +26,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.parser.ParserNg;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -71,7 +71,7 @@ public class CommandRunnerParamsForTesting {
             eventBus),
         artifactCache,
         eventBus,
-        new ParserNg(
+        new Parser(
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory)),
         platform,

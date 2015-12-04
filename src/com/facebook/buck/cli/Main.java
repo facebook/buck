@@ -51,8 +51,8 @@ import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParserNg;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -217,7 +217,7 @@ public final class Main {
   private static final class Daemon implements Closeable {
 
     private final Cell cell;
-    private final ParserNg parser;
+    private final Parser parser;
     private final DefaultFileHashCache hashCache;
     private final DefaultFileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
@@ -240,7 +240,7 @@ public final class Main {
       this.fileEventBus = new EventBus("file-change-events");
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-      this.parser = new ParserNg(
+      this.parser = new Parser(
           typeCoercerFactory,
           new ConstructorArgMarshaller(typeCoercerFactory));
       fileEventBus.register(parser);
@@ -309,7 +309,7 @@ public final class Main {
       return webServer;
     }
 
-    private ParserNg getParser() {
+    private Parser getParser() {
       return parser;
     }
 
@@ -812,7 +812,7 @@ public final class Main {
       buildEventBus.post(startedEvent);
 
       // Create or get Parser and invalidate cached command parameters.
-      ParserNg parser = null;
+      Parser parser = null;
 
       if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
         try {
@@ -843,7 +843,7 @@ public final class Main {
 
       if (parser == null) {
         TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-        parser = new ParserNg(
+        parser = new Parser(
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory));
       }
@@ -1047,7 +1047,7 @@ public final class Main {
     return EnvironmentFilter.filteredEnvironment(env, Platform.detect());
   }
 
-  private ParserNg getParserFromDaemon(
+  private Parser getParserFromDaemon(
       Optional<NGContext> context,
       Cell cell,
       CommandEvent commandEvent,

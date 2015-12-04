@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 /**
  * A lightweight wrapper over a {@link ConcurrentMap} that imitates the bits of the public API of
- * {@link com.google.common.cache.Cache} that's used by the {@link ParserNg}.
+ * {@link com.google.common.cache.Cache} that's used by the {@link Parser}.
  */
 class OptimisticLoadingCache<K, V> {
 

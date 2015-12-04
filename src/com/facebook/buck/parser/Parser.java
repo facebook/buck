@@ -62,14 +62,14 @@ import javax.annotation.Nullable;
  * {@link TargetGraph} based on a set of targets. Caches build rules to minimise the number of calls
  * to python and processes filesystem WatchEvents to invalidate the cache as files change.
  */
-public class ParserNg {
+public class Parser {
 
-  private static final Logger LOG = Logger.get(ParserNg.class);
+  private static final Logger LOG = Logger.get(Parser.class);
 
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
 
-  public ParserNg(TypeCoercerFactory typeCoercerFactory, ConstructorArgMarshaller marshaller) {
+  public Parser(TypeCoercerFactory typeCoercerFactory, ConstructorArgMarshaller marshaller) {
     this.permState = new DaemonicParserState(typeCoercerFactory, marshaller);
     this.marshaller = marshaller;
   }

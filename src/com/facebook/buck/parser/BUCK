@@ -26,7 +26,7 @@ java_immutables_library(
     'MissingBuildFileException.java',
     'OptimisticLoadingCache.java',
     'ParseEvent.java',
-    'ParserNg.java',
+    'Parser.java',
     'PerBuildState.java',
     'TargetNodeListener.java',
     'TargetNodeSpec.java',
