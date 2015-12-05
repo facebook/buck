@@ -117,8 +117,7 @@ public class CxxTestDescription implements
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
                         params.getCellRoots(),
-                        resolver,
-                        params.getProjectFilesystem())));
+                        resolver)));
           }
         };
 
@@ -132,8 +131,7 @@ public class CxxTestDescription implements
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
                         params.getCellRoots(),
-                        resolver,
-                        params.getProjectFilesystem()))
+                        resolver))
                 .toList();
           }
         };

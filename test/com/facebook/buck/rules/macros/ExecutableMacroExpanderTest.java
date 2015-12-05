@@ -87,7 +87,6 @@ public class ExecutableMacroExpanderTest {
         target,
         createCellRoots(filesystem),
         ruleResolver,
-        filesystem,
         originalCmd);
 
     // Verify that the correct cmd was created.
@@ -117,7 +116,6 @@ public class ExecutableMacroExpanderTest {
         rule.getBuildTarget(),
         createCellRoots(filesystem),
         ruleResolver,
-        filesystem,
         originalCmd);
 
     // Verify that the correct cmd was created.
@@ -147,7 +145,6 @@ public class ExecutableMacroExpanderTest {
         rule.getBuildTarget(),
         createCellRoots(filesystem),
         ruleResolver,
-        filesystem,
         originalCmd);
 
     // Verify that the correct cmd was created.
@@ -198,7 +195,7 @@ public class ExecutableMacroExpanderTest {
             "//:rule"),
         Matchers.containsInAnyOrder(dep1, dep2));
     assertThat(
-        expander.expand(target, createCellRoots(filesystem), ruleResolver, filesystem, "//:rule"),
+        expander.expand(target, createCellRoots(filesystem), ruleResolver, "//:rule"),
         Matchers.equalTo(
             String.format(
                 "%s %s",

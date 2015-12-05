@@ -111,7 +111,7 @@ public class ClasspathMacroExpanderTest {
           .setSrc(new FakeSourcePath("some-file.jar"))
           .build(ruleResolver);
 
-    expander.expand(pathResolver, filesystem, rule);
+    expander.expand(pathResolver, rule);
   }
 
   @Test
@@ -169,12 +169,11 @@ public class ClasspathMacroExpanderTest {
       BuildRule rule,
       BuildRuleResolver buildRuleResolver,
       String expectedClasspath) throws MacroException {
-    String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), filesystem, rule);
+    String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), rule);
     String fileClasspath = expander.expandForFile(
         rule.getBuildTarget(),
         createCellRoots(filesystem),
         buildRuleResolver,
-        filesystem,
         ':' + rule.getBuildTarget().getShortName());
 
     assertEquals(expectedClasspath, classpath);

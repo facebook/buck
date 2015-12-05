@@ -60,7 +60,6 @@ public class MacroHandlerTest {
           target,
           createCellRoots(filesystem),
           resolver,
-          filesystem,
           "$(badmacro hello)");
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
@@ -80,7 +79,6 @@ public class MacroHandlerTest {
         target,
         createCellRoots(filesystem),
         resolver,
-        filesystem,
         raw);
     assertEquals("hello $(notamacro hello)", expanded);
   }
@@ -93,7 +91,6 @@ public class MacroHandlerTest {
         target,
         createCellRoots(filesystem),
         resolver,
-        filesystem,
         "Hello $(@foo //:test)");
 
     assertTrue(expanded, expanded.startsWith("Hello @"));

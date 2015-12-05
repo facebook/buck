@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Function;
@@ -37,7 +36,6 @@ public interface MacroExpanderWithCustomFileOutput {
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String input)
       throws MacroException;
 }

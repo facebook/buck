@@ -77,8 +77,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             MACRO_HANDLER,
             params.getBuildTarget(),
             params.getCellRoots(),
-            resolver,
-            params.getProjectFilesystem());
+            resolver);
     final Optional<com.facebook.buck.rules.args.Arg> cmd = args.cmd.transform(macroArgFunction);
     final Optional<com.facebook.buck.rules.args.Arg> bash = args.bash.transform(macroArgFunction);
     final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
