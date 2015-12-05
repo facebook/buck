@@ -55,7 +55,8 @@ public class JavaLibraryClasspathProvider {
     }
 
     if (outputJar.isPresent()) {
-      outputClasspathBuilder.put(javaLibraryRule, outputJar.get());
+      outputClasspathBuilder.put(javaLibraryRule,
+          javaLibraryRule.getProjectFilesystem().resolve(outputJar.get()));
     }
 
     return outputClasspathBuilder.build();
