@@ -79,6 +79,12 @@ def log(message):
     sys.stdout.flush()
 
 
+def timedelta_total_seconds(timedelta):
+    return (
+        timedelta.microseconds + 0.0 +
+        (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+
+
 class BuildResult():
     def __init__(self, time_delta, cache_results, rule_key_map):
         self.time_delta = time_delta
@@ -107,10 +113,20 @@ def buck_clean(args, cwd):
 
 
 def git_get_revisions(args):
-    return list(reversed(subprocess.check_output(
-        ['git', 'log', '--pretty=format:%H', 'HEAD', '-n',
-         str(args.revisions_to_go_back + 1)],
-        cwd=args.repo_under_test).splitlines()))
+    cmd = [
+        'git', 'log', '--pretty=format:%H', 'HEAD', '-n',
+        str(args.revisions_to_go_back + 1)]
+    proc = subprocess.Popen(
+        cmd,
+        cwd=args.repo_under_test,
+        stdout=subprocess.PIPE)
+    try:
+        return list(reversed(proc.communicate()[0].splitlines()))
+    finally:
+        if proc.wait():
+            raise subprocess.CalledProcessError(
+                proc.returncode,
+                ' '.join(cmd))
 
 
 def git_checkout(revision, cwd):
@@ -214,7 +230,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
                 if not rule_key in rule_debug_map:
                     raise Exception('''ERROR: build.log contains an entry
                         which was not found in buck build -v 5 output.
-                        Rule: {}, rule key: {}'''.format(rule_name, rule_key))
+                        Rule: {0}, rule key: {1}'''.format(rule_name, rule_key))
                 cache_results[match.group('cache_result')].append({
                     'rule_name': rule_name,
                     'rule_key': rule_key,
@@ -228,7 +244,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     for key, value in result.cache_results.iteritems():
         cache_counts[key] = len(value)
     log('Test Build Finished! Elapsed Seconds: %d, Cache Counts: %s' % (
-        result.time_delta.total_seconds(), repr(cache_counts)))
+        timedelta_total_seconds(result.time_delta), repr(cache_counts)))
     return result
 
 
