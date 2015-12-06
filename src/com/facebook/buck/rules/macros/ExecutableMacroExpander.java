@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -56,7 +55,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
+  public String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException {
     // TODO(mikekap): Pass environment variables through.
     return Joiner.on(' ').join(

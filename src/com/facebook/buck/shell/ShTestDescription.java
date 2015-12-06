@@ -78,8 +78,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
                     MACRO_HANDLER,
                     params.getBuildTarget(),
                     params.getCellRoots(),
-                    resolver,
-                    params.getProjectFilesystem()))
+                    resolver))
             .toList();
     return new ShTest(
         params.appendExtraDeps(

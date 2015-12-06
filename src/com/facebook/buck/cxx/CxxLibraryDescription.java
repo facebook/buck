@@ -399,8 +399,7 @@ public class CxxLibraryDescription implements
                             MACRO_HANDLER,
                             params.getBuildTarget(),
                             params.getCellRoots(),
-                            ruleResolver,
-                            params.getProjectFilesystem())))
+                            ruleResolver)))
             .addAll(SourcePathArg.from(pathResolver, objects.values()))
             .build(),
         linkableDepType,
@@ -914,8 +913,7 @@ public class CxxLibraryDescription implements
                         MACRO_HANDLER,
                         params.getBuildTarget(),
                         params.getCellRoots(),
-                        resolver,
-                        params.getProjectFilesystem()))
+                        resolver))
                 .toList();
           }
         },

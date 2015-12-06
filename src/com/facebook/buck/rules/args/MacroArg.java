@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -41,7 +40,6 @@ public class MacroArg extends Arg {
   private final BuildTarget target;
   private final Function<Optional<String>, Path> cellNames;
   private final BuildRuleResolver resolver;
-  private final ProjectFilesystem filesystem;
   private final String unexpanded;
 
   public MacroArg(
@@ -49,20 +47,18 @@ public class MacroArg extends Arg {
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String unexpanded) {
     this.expander = expander;
     this.target = target;
     this.cellNames = cellNames;
     this.resolver = resolver;
-    this.filesystem = filesystem;
     this.unexpanded = unexpanded;
   }
 
   @Override
   public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
     try {
-      builder.add(expander.expand(target, cellNames, resolver, filesystem, unexpanded));
+      builder.add(expander.expand(target, cellNames, resolver, unexpanded));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
@@ -117,12 +113,11 @@ public class MacroArg extends Arg {
       final MacroHandler expander,
       final BuildTarget target,
       final Function<Optional<String>, Path> cellNames,
-      final BuildRuleResolver resolver,
-      final ProjectFilesystem filesystem) {
+      final BuildRuleResolver resolver) {
     return new Function<String, Arg>() {
       @Override
       public MacroArg apply(String unexpanded) {
-        return new MacroArg(expander, target, cellNames, resolver, filesystem, unexpanded);
+        return new MacroArg(expander, target, cellNames, resolver, unexpanded);
       }
     };
   }

@@ -251,8 +251,7 @@ public class AndroidBinaryDescription
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
             params.getCellRoots(),
-            resolver,
-            params.getProjectFilesystem()),
+            resolver),
         args.preprocessJavaClassesBash,
         rulesToExcludeFromDex,
         result,

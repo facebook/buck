@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
@@ -46,13 +45,12 @@ public class MacroHandler {
   public Function<String, String> getExpander(
       final BuildTarget target,
       final Function<Optional<String>, Path> cellNames,
-      final BuildRuleResolver resolver,
-      final ProjectFilesystem filesystem) {
+      final BuildRuleResolver resolver) {
     return new Function<String, String>() {
       @Override
       public String apply(String blob) {
         try {
-          return expand(target, cellNames, resolver, filesystem, blob);
+          return expand(target, cellNames, resolver, blob);
         } catch (MacroException e) {
           throw new HumanReadableException("%s: %s", target, e.getMessage());
         }
@@ -90,7 +88,6 @@ public class MacroHandler {
       final BuildTarget target,
       final Function<Optional<String>, Path> cellNames,
       final BuildRuleResolver resolver,
-      final ProjectFilesystem filesystem,
       String blob)
       throws MacroException {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
@@ -104,7 +101,6 @@ public class MacroHandler {
                   target,
                   cellNames,
                   resolver,
-                  filesystem,
                   input);
             }
           });

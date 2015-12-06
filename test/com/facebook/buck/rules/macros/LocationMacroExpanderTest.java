@@ -81,7 +81,6 @@ public class LocationMacroExpanderTest {
           target,
           createCellRoots(filesystem),
           resolver,
-          filesystem,
           "$(location //cheese:java)");
       fail("Location was null. Expected HumanReadableException with helpful message.");
     } catch (MacroException e) {
@@ -115,7 +114,6 @@ public class LocationMacroExpanderTest {
         javaBinary.getBuildTarget(),
         createCellRoots(filesystem),
         ruleResolver,
-        filesystem,
         originalCmd);
 
     // Verify that the correct cmd was created.

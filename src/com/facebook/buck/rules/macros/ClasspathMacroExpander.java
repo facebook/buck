@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -79,18 +78,17 @@ public class ClasspathMacroExpander
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String input) throws MacroException {
     // javac is the canonical reader of classpaths, and its code for reading classpaths from
     // files is a little weird:
     // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
     // The # characters that might be present in classpaths due to flavoring would be read as
     // comments. As a simple workaround, we quote the entire classpath.
-    return String.format("'%s'", expand(target, cellNames, resolver, filesystem, input));
+    return String.format("'%s'", expand(target, cellNames, resolver, input));
   }
 
   @Override
-  protected String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
+  protected String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException {
     return Joiner.on(File.pathSeparator).join(
         FluentIterable.from(getHasClasspathEntries(rule).getTransitiveClasspathDeps())
@@ -103,7 +101,7 @@ public class ClasspathMacroExpander
                   }
                 })
             .filter(Predicates.notNull())
-            .transform(filesystem.getAbsolutifier())
+            .transform(rule.getProjectFilesystem().getAbsolutifier())
             .transform(Functions.toStringFunction())
             .toSortedSet(Ordering.natural()));
   }

@@ -61,7 +61,6 @@ public class OutputToFileExpanderTest {
         target,
         createCellRoots(filesystem),
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()),
-        filesystem,
         "totally ignored");
 
     assertTrue(result, result.startsWith("@"));

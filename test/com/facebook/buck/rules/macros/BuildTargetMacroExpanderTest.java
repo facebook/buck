@@ -58,14 +58,13 @@ public class BuildTargetMacroExpanderTest {
               @Override
               public String expand(
                   SourcePathResolver resolver,
-                  ProjectFilesystem filesystem,
                   BuildRule rule)
                   throws MacroException {
                 found.add(rule.getBuildTarget());
                 return "";
               }
             }));
-    handler.expand(rule.getBuildTarget(), createCellRoots(filesystem), resolver, filesystem, blob);
+    handler.expand(rule.getBuildTarget(), createCellRoots(filesystem), resolver, blob);
     return Optional.fromNullable(Iterables.getFirst(found, null));
   }
 
