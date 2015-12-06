@@ -69,7 +69,7 @@ public class ClasspathMacroExpanderTest {
     BuildRule rule =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:cake"))
             .addSrc(Paths.get("Example.java"))  // Force a jar to be created
-            .build(buildRuleResolver);
+            .build(buildRuleResolver, filesystem);
 
     assertExpandsTo(rule, buildRuleResolver, ROOT + File.separator + rule.getPathToOutput());
   }
@@ -81,13 +81,13 @@ public class ClasspathMacroExpanderTest {
     BuildRule dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
+            .build(ruleResolver, filesystem);
 
     BuildRule rule =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
             .addDep(dep.getBuildTarget())
-            .build(ruleResolver);
+            .build(ruleResolver, filesystem);
 
     // Alphabetical sorting expected, so "dep" should be before "rule"
     assertExpandsTo(
@@ -111,7 +111,7 @@ public class ClasspathMacroExpanderTest {
           .setSrc(new FakeSourcePath("some-file.jar"))
           .build(ruleResolver);
 
-    expander.expand(pathResolver, filesystem, rule);
+    expander.expand(pathResolver, rule);
   }
 
   @Test
@@ -169,12 +169,11 @@ public class ClasspathMacroExpanderTest {
       BuildRule rule,
       BuildRuleResolver buildRuleResolver,
       String expectedClasspath) throws MacroException {
-    String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), filesystem, rule);
+    String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), rule);
     String fileClasspath = expander.expandForFile(
         rule.getBuildTarget(),
         createCellRoots(filesystem),
         buildRuleResolver,
-        filesystem,
         ':' + rule.getBuildTarget().getShortName());
 
     assertEquals(expectedClasspath, classpath);

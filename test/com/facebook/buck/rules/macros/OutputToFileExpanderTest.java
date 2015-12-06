@@ -23,10 +23,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
@@ -34,7 +36,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,8 +47,7 @@ public class OutputToFileExpanderTest {
   public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void shouldTakeOutputFromOtherMacroAndOutputItToAFile()
-      throws IOException, MacroException {
+  public void shouldTakeOutputFromOtherMacroAndOutputItToAFile() throws Exception {
     File root = tmp.newFolder();
 
     ProjectFilesystem filesystem = new ProjectFilesystem(root.toPath());
@@ -57,11 +57,16 @@ public class OutputToFileExpanderTest {
     StringExpander source = new StringExpander(text);
     OutputToFileExpander expander = new OutputToFileExpander(source);
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
+    JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
+    TargetNode<?> node = builder.build();
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraphFactory.newInstance(node),
+        new BuildTargetNodeToBuildRuleTransformer());
+    builder.build(resolver, filesystem);
     String result = expander.expand(
         target,
         createCellRoots(filesystem),
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()),
-        filesystem,
+        resolver,
         "totally ignored");
 
     assertTrue(result, result.startsWith("@"));

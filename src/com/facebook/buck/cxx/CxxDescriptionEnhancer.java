@@ -651,8 +651,7 @@ public class CxxDescriptionEnhancer {
                     MACRO_HANDLER,
                     params.getBuildTarget(),
                     params.getCellRoots(),
-                    resolver,
-                    params.getProjectFilesystem())));
+                    resolver)));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {

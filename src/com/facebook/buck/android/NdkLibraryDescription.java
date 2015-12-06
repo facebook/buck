@@ -357,8 +357,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
             params.getCellRoots(),
-            resolver,
-            params.getProjectFilesystem()));
+            resolver));
   }
 
   @SuppressFieldNotInitialized

@@ -43,23 +43,26 @@ public class OutputToFileExpander implements MacroExpander {
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String input) throws MacroException {
 
     try {
-      Path tempFile = createTempFile(filesystem, target, input);
       String expanded;
       if (delegate instanceof MacroExpanderWithCustomFileOutput) {
         expanded = ((MacroExpanderWithCustomFileOutput) delegate).expandForFile(
             target,
             cellNames,
             resolver,
-            filesystem,
             input);
       } else {
-        expanded = delegate.expand(target, cellNames, resolver, filesystem, input);
+        expanded = delegate.expand(target, cellNames, resolver, input);
       }
 
+      Optional<BuildRule> rule = resolver.getRuleOptional(target);
+      if (!rule.isPresent()) {
+        throw new MacroException(String.format("no rule %s", target));
+      }
+      ProjectFilesystem filesystem = rule.get().getProjectFilesystem();
+      Path tempFile = createTempFile(filesystem, target, input);
       filesystem.writeContentsToPath(expanded, tempFile);
       return "@" + filesystem.getAbsolutifier().apply(tempFile);
     } catch (IOException e) {

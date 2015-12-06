@@ -54,7 +54,6 @@ public class MacroArgTest {
             BuildTargetFactory.newInstance("//:rule"),
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
-            filesystem,
             "$(macro)");
     assertThat(Arg.stringListFunction().apply(arg), Matchers.contains("expanded"));
   }
@@ -78,7 +77,6 @@ public class MacroArgTest {
             rule.getBuildTarget(),
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
-            filesystem,
             "$(loc //:rule)");
     assertThat(
         arg.getDeps(pathResolver),

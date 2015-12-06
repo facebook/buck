@@ -22,18 +22,17 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.IOException;
 
 public class MacroHandlerTest {
 
@@ -45,11 +44,15 @@ public class MacroHandlerTest {
   private BuildRuleResolver resolver;
 
   @Before
-  public void before() throws IOException {
+  public void before() throws Exception {
     filesystem = new ProjectFilesystem(tmp.newFolder().toPath());
     target = BuildTargetFactory.newInstance("//:test");
+    JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(builder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    builder.build(resolver, filesystem);
   }
 
   @Test
@@ -60,7 +63,6 @@ public class MacroHandlerTest {
           target,
           createCellRoots(filesystem),
           resolver,
-          filesystem,
           "$(badmacro hello)");
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
@@ -80,7 +82,6 @@ public class MacroHandlerTest {
         target,
         createCellRoots(filesystem),
         resolver,
-        filesystem,
         raw);
     assertEquals("hello $(notamacro hello)", expanded);
   }
@@ -93,7 +94,6 @@ public class MacroHandlerTest {
         target,
         createCellRoots(filesystem),
         resolver,
-        filesystem,
         "Hello $(@foo //:test)");
 
     assertTrue(expanded, expanded.startsWith("Hello @"));

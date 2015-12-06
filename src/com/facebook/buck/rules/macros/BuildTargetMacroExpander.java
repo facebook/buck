@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -41,7 +40,6 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
 
   protected abstract String expand(
       SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       BuildRule rule)
       throws MacroException;
 
@@ -73,12 +71,10 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String input)
       throws MacroException {
     return expand(
         new SourcePathResolver(resolver),
-        filesystem,
         resolve(target, cellNames, resolver, input));
   }
 
