@@ -150,7 +150,9 @@ public class AndroidBinaryTest {
                     "gen/java/src/com/facebook/base/lib__libraryOne__output/" +
                     "libraryOne-obfuscated.jar")),
         ImmutableSet.of(
-            GEN_PATH.resolve("java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar")),
+            libraryTwo.getBuildTarget().getUnflavoredBuildTarget().getCellPath().resolve(
+                GEN_PATH.resolve(
+                    "java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"))),
         GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/.proguard"),
         buildableContext,
         expectedSteps);

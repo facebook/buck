@@ -42,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.SortedSet;
@@ -146,10 +147,13 @@ public class AuditClasspathCommandTest {
         ImmutableSet.of(
             testAndroidTarget));
 
+    Path root = javaLibraryTarget.getUnflavoredBuildTarget().getCellPath();
     SortedSet<String> expectedPaths = Sets.newTreeSet(
         Arrays.asList(
-            GEN_DIR + "/lib__test-android-library__output/test-android-library.jar",
-            GEN_DIR + "/lib__test-java-library__output/test-java-library.jar"));
+            root.resolve(GEN_DIR +
+                "/lib__test-android-library__output/test-android-library.jar").toString(),
+            root.resolve(GEN_DIR +
+                "/lib__test-java-library__output/test-java-library.jar").toString()));
     String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
 
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
@@ -176,7 +180,8 @@ public class AuditClasspathCommandTest {
             androidLibraryTarget,
             testJavaTarget));
 
-    expectedPaths.add(GEN_DIR + "/lib__project-tests__output/project-tests.jar");
+    expectedPaths.add(root.resolve(GEN_DIR +
+        "/lib__project-tests__output/project-tests.jar").toString());
     expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
@@ -186,12 +191,12 @@ public class AuditClasspathCommandTest {
       "{",
       "\"//:test-android-library\":",
       "[",
-      "\"buck-out/gen/lib__test-java-library__output/test-java-library.jar\",",
-      "\"buck-out/gen/lib__test-android-library__output/test-android-library.jar\"",
+      "\"%s\",",
+      "\"%s\"",
       "],",
       "\"//:test-java-library\":",
       "[",
-      "\"buck-out/gen/lib__test-java-library__output/test-java-library.jar\"",
+      "\"%s\"",
       "]",
       "}");
 
@@ -223,8 +228,16 @@ public class AuditClasspathCommandTest {
             androidTarget,
             javaTarget));
 
-    assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
+    Path root = javaTarget.getCellPath();
+    String expected = String.format(EXPECTED_JSON,
+        root.resolve(
+            "buck-out/gen/lib__test-java-library__output/test-java-library.jar"),
+        root.resolve(
+            "buck-out/gen/lib__test-android-library__output/test-android-library.jar"),
+        root.resolve(
+            "buck-out/gen/lib__test-java-library__output/test-java-library.jar"));
+    assertEquals(expected, console.getTextWrittenToStdOut());
+
     assertEquals("", console.getTextWrittenToStdErr());
   }
-
 }

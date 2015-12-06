@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
@@ -40,6 +39,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -51,6 +51,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -139,10 +140,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private static final SuggestBuildRules.JarResolver JAR_RESOLVER =
       new SuggestBuildRules.JarResolver() {
     @Override
-    public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
+    public ImmutableSet<String> resolve(Path classPath) {
       ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
       try {
-        Path classPath = filesystem.getPathForRelativePath(relativeClassPath);
         ClassLoader loader = URLClassLoader.newInstance(
             new URL[]{classPath.toUri().toURL()},
           /* parent */ null);
@@ -249,7 +249,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.postprocessClassesCommands = postprocessClassesCommands;
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
-    this.additionalClasspathEntries = additionalClasspathEntries;
+    this.additionalClasspathEntries = FluentIterable
+        .from(additionalClasspathEntries)
+        .transform(getProjectFilesystem().getAbsolutifier())
+        .toSet();
     this.resourcesRoot = resourcesRoot;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
@@ -269,7 +272,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getOutputClasspathEntries(
                 DefaultJavaLibrary.this,
-                outputJar);
+                getResolver(),
+                sourcePathForOutputJar());
           }
         });
 
@@ -279,7 +283,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
                 DefaultJavaLibrary.this,
-                outputJar);
+                getResolver(),
+                sourcePathForOutputJar());
           }
         });
 
@@ -290,7 +295,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               public ImmutableSet<JavaLibrary> get() {
                 return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
                     DefaultJavaLibrary.this,
-                    outputJar);
+                    sourcePathForOutputJar());
               }
             });
 
@@ -313,6 +318,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private static Path getOutputJarDirPath(BuildTarget target) {
     return BuildTargets.getGenPath(target, "lib__%s__output");
+  }
+
+  private Optional<SourcePath> sourcePathForOutputJar() {
+    return outputJar.transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()));
   }
 
   static Path getOutputJarPath(BuildTarget target) {

@@ -316,14 +316,15 @@ public class DefaultJavaLibraryTest {
         .addDep(libraryTwo.getBuildTarget())
         .build(ruleResolver);
 
+    Path root = libraryOne.getProjectFilesystem().getRootPath();
     assertEquals(
         ImmutableSetMultimap.of(
             getJavaLibrary(libraryOne),
-            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            root.resolve("buck-out/gen/lib__libone__output/libone.jar"),
             getJavaLibrary(libraryTwo),
-            Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"),
+            root.resolve("buck-out/gen/lib__libtwo__output/libtwo.jar"),
             getJavaLibrary(parent),
-            Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
+            root.resolve("buck-out/gen/lib__parent__output/parent.jar")),
         ((HasClasspathEntries) parent).getTransitiveClasspathEntries());
   }
 
@@ -522,28 +523,29 @@ public class DefaultJavaLibraryTest {
         .addDep(libraryTwo.getBuildTarget())
         .build(ruleResolver);
 
+    Path root = parent.getProjectFilesystem().getRootPath();
     assertEquals(
         "A java_library that depends on //:libone should include only libone.jar in its " +
             "classpath when compiling itself.",
         ImmutableSetMultimap.of(
             getJavaLibrary(notIncluded),
-            Paths.get("buck-out/gen/lib__not_included__output/not_included.jar")),
+            root.resolve("buck-out/gen/lib__not_included__output/not_included.jar")),
         getJavaLibrary(notIncluded).getOutputClasspathEntries());
 
     assertEquals(
         ImmutableSetMultimap.of(
             getJavaLibrary(included),
-            Paths.get("buck-out/gen/lib__included__output/included.jar")),
+            root.resolve("buck-out/gen/lib__included__output/included.jar")),
         getJavaLibrary(included).getOutputClasspathEntries());
 
     assertEquals(
         ImmutableSetMultimap.of(
             getJavaLibrary(included),
-            Paths.get("buck-out/gen/lib__included__output/included.jar"),
+            root.resolve("buck-out/gen/lib__included__output/included.jar"),
             getJavaLibrary(libraryOne),
-            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            root.resolve("buck-out/gen/lib__libone__output/libone.jar"),
             getJavaLibrary(libraryOne),
-            Paths.get("buck-out/gen/lib__included__output/included.jar")),
+            root.resolve("buck-out/gen/lib__included__output/included.jar")),
         getJavaLibrary(libraryOne).getOutputClasspathEntries());
 
     assertEquals(
@@ -551,15 +553,15 @@ public class DefaultJavaLibraryTest {
             "both libone.jar and libtwo.jar in its classpath when compiling itself.",
         ImmutableSetMultimap.of(
             getJavaLibrary(libraryOne),
-            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            root.resolve("buck-out/gen/lib__libone__output/libone.jar"),
             getJavaLibrary(libraryOne),
-            Paths.get("buck-out/gen/lib__included__output/included.jar"),
+            root.resolve("buck-out/gen/lib__included__output/included.jar"),
             getJavaLibrary(libraryTwo),
-            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            root.resolve("buck-out/gen/lib__libone__output/libone.jar"),
             getJavaLibrary(libraryTwo),
-            Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"),
+            root.resolve("buck-out/gen/lib__libtwo__output/libtwo.jar"),
             getJavaLibrary(libraryTwo),
-            Paths.get("buck-out/gen/lib__included__output/included.jar")),
+            root.resolve("buck-out/gen/lib__included__output/included.jar")),
         getJavaLibrary(libraryTwo).getOutputClasspathEntries());
 
     assertEquals(
@@ -568,21 +570,22 @@ public class DefaultJavaLibraryTest {
         ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .put(
                 getJavaLibrary(included),
-                Paths.get("buck-out/gen/lib__included__output/included.jar"))
+                root.resolve("buck-out/gen/lib__included__output/included.jar"))
             .put(
                 getJavaLibrary(notIncluded),
-                Paths.get("buck-out/gen/lib__not_included__output/not_included.jar"))
+                root.resolve("buck-out/gen/lib__not_included__output/not_included.jar"))
             .putAll(
                 getJavaLibrary(libraryOne),
-                Paths.get("buck-out/gen/lib__included__output/included.jar"),
-                Paths.get("buck-out/gen/lib__libone__output/libone.jar"))
+                root.resolve("buck-out/gen/lib__included__output/included.jar"),
+                root.resolve("buck-out/gen/lib__libone__output/libone.jar"))
             .putAll(
                 getJavaLibrary(libraryTwo),
-                Paths.get("buck-out/gen/lib__included__output/included.jar"),
-                Paths.get("buck-out/gen/lib__not_included__output/not_included.jar"),
-                Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
-                Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"))
-            .put(getJavaLibrary(parent), Paths.get("buck-out/gen/lib__parent__output/parent.jar"))
+                root.resolve("buck-out/gen/lib__included__output/included.jar"),
+                root.resolve("buck-out/gen/lib__not_included__output/not_included.jar"),
+                root.resolve("buck-out/gen/lib__libone__output/libone.jar"),
+                root.resolve("buck-out/gen/lib__libtwo__output/libtwo.jar"))
+            .put(getJavaLibrary(parent),
+                root.resolve("buck-out/gen/lib__parent__output/parent.jar"))
             .build(),
         getJavaLibrary(parent).getTransitiveClasspathEntries());
 
@@ -602,7 +605,7 @@ public class DefaultJavaLibraryTest {
             "-classpath when compiling itself.",
         ImmutableSetMultimap.of(
             getJavaLibrary(parent),
-            Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
+            root.resolve("buck-out/gen/lib__parent__output/parent.jar")),
         getJavaLibrary(parent).getOutputClasspathEntries());
   }
 
