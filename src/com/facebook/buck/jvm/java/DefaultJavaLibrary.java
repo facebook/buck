@@ -273,7 +273,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getOutputClasspathEntries(
                 DefaultJavaLibrary.this,
-                outputJar);
+                getResolver(),
+                sourcePathForOutputJar());
           }
         });
 
@@ -283,7 +284,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
                 DefaultJavaLibrary.this,
-                outputJar);
+                getResolver(),
+                sourcePathForOutputJar());
           }
         });
 
@@ -294,7 +296,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               public ImmutableSet<JavaLibrary> get() {
                 return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
                     DefaultJavaLibrary.this,
-                    outputJar);
+                    sourcePathForOutputJar());
               }
             });
 
@@ -317,6 +319,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private static Path getOutputJarDirPath(BuildTarget target) {
     return BuildTargets.getGenPath(target, "lib__%s__output");
+  }
+
+  private Optional<SourcePath> sourcePathForOutputJar() {
+    return outputJar.isPresent()
+        ? Optional.<SourcePath>of(new BuildTargetSourcePath(getBuildTarget(), outputJar.get()))
+        : Optional.<SourcePath>absent();
   }
 
   static Path getOutputJarPath(BuildTarget target) {
