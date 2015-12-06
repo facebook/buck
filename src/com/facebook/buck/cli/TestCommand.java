@@ -46,6 +46,7 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -55,7 +56,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,9 +66,7 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -337,44 +335,10 @@ public class TestCommand extends BuildCommand {
             .addCommand("--buck-test-info", infoFile.toString())
             .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
             .build();
-    final WritableByteChannel stdout = Channels.newChannel(params.getConsole().getStdOut());
-    final WritableByteChannel stderr = Channels.newChannel(params.getConsole().getStdErr());
-    ListeningProcessExecutor.ProcessListener processListener =
-        new ListeningProcessExecutor.ProcessListener() {
-
-          @Override
-          public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
-          }
-
-          @Override
-          public void onExit(int exitCode) {
-          }
-
-          @Override
-          public void onStdout(ByteBuffer buffer, boolean closed) {
-            try {
-              stdout.write(buffer);
-            } catch (IOException e) {
-              throw Throwables.propagate(e);
-            }
-          }
-
-          @Override
-          public void onStderr(ByteBuffer buffer, boolean closed) {
-            try {
-              stderr.write(buffer);
-            } catch (IOException e) {
-              throw Throwables.propagate(e);
-            }
-          }
-
-          @Override
-          public boolean onStdinReady(ByteBuffer buffer) {
-            buffer.flip();
-            return false;
-          }
-
-        };
+    ForwardingProcessListener processListener =
+        new ForwardingProcessListener(
+            Channels.newChannel(params.getConsole().getStdOut()),
+            Channels.newChannel(params.getConsole().getStdErr()));
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     try {

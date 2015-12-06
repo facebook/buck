@@ -24,14 +24,15 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.shell.DefaultShellStep;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -40,7 +41,9 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.nio.channels.Channels;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RunCommand extends AbstractCommand {
 
@@ -145,24 +148,30 @@ public class RunCommand extends AbstractCommand {
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
     SourcePathResolver resolver = new SourcePathResolver(build.getRuleResolver());
     Tool executable = binaryBuildRule.getExecutableCommand();
-    ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
-        .addAll(executable.getCommandPrefix(resolver))
-        .addAll(getTargetArguments())
-        .build();
-
-    ShellStep step = new DefaultShellStep(
-        params.getCell().getFilesystem().getRootPath(),
-        fullCommand,
-        executable.getEnvironment(resolver)) {
-      // Print the output from the step directly to stdout and stderr rather than buffering it and
-      // printing it as two individual strings. This preserves the expected behavior where output
-      // written to stdout and stderr may be interleaved when displayed in a terminal.
-      @Override
-      protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
-        return true;
-      }
-    };
-    return step.execute(build.getExecutionContext());
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .addAllCommand(executable.getCommandPrefix(resolver))
+            .addAllCommand(getTargetArguments())
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(params.getEnvironment())
+                    .putAll(executable.getEnvironment(resolver))
+                    .build())
+            .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
+            .build();
+    ForwardingProcessListener processListener =
+        new ForwardingProcessListener(
+            Channels.newChannel(params.getConsole().getStdOut()),
+            Channels.newChannel(params.getConsole().getStdErr()));
+    ListeningProcessExecutor.LaunchedProcess process =
+        processExecutor.launchProcess(processExecutorParams, processListener);
+    try {
+      return processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+    } finally {
+      processExecutor.destroyProcess(process, /* force */ false);
+      processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+    }
   }
 
   @Override
