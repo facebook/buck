@@ -162,7 +162,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+            "Libraries/TestLibrary/" +
+                "TestLibrary#framework,include-frameworks,macosx-x86_64,transitive-resources/" +
                 "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
@@ -190,7 +191,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+            "Libraries/TestLibrary/" +
+                "TestLibrary#framework,include-frameworks,macosx-x86_64,transitive-resources/" +
                 "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
@@ -227,7 +229,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+            "Libraries/TestLibrary/" +
+                "TestLibrary#framework,include-frameworks,macosx-x86_64,transitive-resources/" +
                 "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
@@ -254,7 +257,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64,no-include-frameworks/" +
+            "Libraries/TestLibrary/" +
+                "TestLibrary#framework,macosx-x86_64,no-include-frameworks,transitive-resources/" +
                 "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));

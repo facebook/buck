@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 public enum DependencyMode {
+  NONE,
   FIRST_ORDER,
   TRANSITIVE,
 }

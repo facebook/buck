@@ -64,7 +64,7 @@ public class IosReactNativeLibraryIntegrationTest {
         createPath(
             "buck-out",
             "gen",
-            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
+            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks,transitive-resources"));
   }
 
   @Test
@@ -75,7 +75,8 @@ public class IosReactNativeLibraryIntegrationTest {
         createPath(
             "buck-out",
             "gen",
-            "DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
+            "DemoApp-Unbundle#iphonesimulator-x86_64," +
+                "no-debug,no-include-frameworks,transitive-resources"));
   }
 
   @Test
@@ -86,7 +87,8 @@ public class IosReactNativeLibraryIntegrationTest {
 
     Path appDir = workspace.getPath(
         "buck-out/gen/" +
-            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks,rn_no_bundle/" +
+            "DemoApp#iphonesimulator-x86_64," +
+            "no-debug,no-include-frameworks,rn_no_bundle,transitive-resources/" +
             "DemoApp.app");
     assertTrue(Files.isDirectory(appDir));
 
