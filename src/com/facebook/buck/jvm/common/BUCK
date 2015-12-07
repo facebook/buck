@@ -1,0 +1,13 @@
+java_library(
+  name = 'util',
+  srcs = [
+    'ResourceValidator.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)

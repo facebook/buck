@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
+
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
@@ -144,9 +146,10 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                             javacOptions.getInputs(pathResolver)))),
                 pathResolver,
                 args.srcs.get(),
-                JavaLibraryDescription.validateResources(
+                validateResources(
                     pathResolver,
-                    args, params.getProjectFilesystem()),
+                    params.getProjectFilesystem(),
+                    args.resources.get()),
                 args.labels.get(),
                 args.contacts.get(),
                 args.proguardConfig.transform(
