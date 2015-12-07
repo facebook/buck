@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public final class ResourceValidator {
-  // TODO(natthu): Consider adding a validateArg() method on Description which gets called before
-  // createBuildable().
   public static ImmutableSortedSet<SourcePath> validateResources(
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,

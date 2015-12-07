@@ -127,7 +127,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                 args.srcs.get(),
                 ResourceValidator.validateResources(
                     pathResolver,
-                    params.getProjectFilesystem(), args.resources.get()),
+                    params.getProjectFilesystem(),
+                    args.resources.get()),
                 javacOptions.getGeneratedSourceFolderName(),
                 args.labels.get(),
                 args.contacts.get(),
