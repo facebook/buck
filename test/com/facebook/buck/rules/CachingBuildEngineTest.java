@@ -47,8 +47,8 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -64,7 +64,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
@@ -414,7 +413,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = ImmutableBuildContext.builder()
-        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
+        .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
         .setStepRunner(stepRunner)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
@@ -500,7 +499,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuildContext buildContext = ImmutableBuildContext.builder()
-        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
+        .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
         .setStepRunner(stepRunner)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
