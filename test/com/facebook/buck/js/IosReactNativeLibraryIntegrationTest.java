@@ -60,7 +60,11 @@ public class IosReactNativeLibraryIntegrationTest {
   public void testBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
-    workspace.verify(createPath("buck-out", "gen", "DemoApp#iphonesimulator-x86_64,no-debug"));
+    workspace.verify(
+        createPath(
+            "buck-out",
+            "gen",
+            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
   }
 
   @Test
@@ -68,7 +72,10 @@ public class IosReactNativeLibraryIntegrationTest {
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify(
-        createPath("buck-out", "gen", "DemoApp-Unbundle#iphonesimulator-x86_64,no-debug"));
+        createPath(
+            "buck-out",
+            "gen",
+            "DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
   }
 
   @Test
@@ -78,7 +85,9 @@ public class IosReactNativeLibraryIntegrationTest {
         .assertSuccess();
 
     Path appDir = workspace.getPath(
-        "buck-out/gen/DemoApp#iphonesimulator-x86_64,no-debug,rn_no_bundle/DemoApp.app");
+        "buck-out/gen/" +
+            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks,rn_no_bundle/" +
+            "DemoApp.app");
     assertTrue(Files.isDirectory(appDir));
 
     Path bundle = appDir.resolve("Apps/DemoApp/DemoApp.bundle");

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -112,6 +113,24 @@ public class FlavorDomain<T> {
       throw new FlavorDomainException(
           String.format("In build target %s: %s", buildTarget, e.getHumanReadableErrorMessage()));
     }
+  }
+
+  public T getRequiredValue(BuildTarget buildTarget) {
+    Optional<T> value;
+    try {
+      value = getValue(buildTarget.getFlavors());
+    } catch (FlavorDomainException e) {
+      throw new FlavorDomainException(
+          String.format("In build target %s: %s", buildTarget, e.getHumanReadableErrorMessage()));
+    }
+    if (!value.isPresent()) {
+      throw new HumanReadableException(
+          "Build target '%s' did not specify required value for '%s', possible values:\n%s",
+          buildTarget,
+          name,
+          Joiner.on(", ").join(getFlavors()));
+    }
+    return value.get();
   }
 
   public T getValue(Flavor flavor) {

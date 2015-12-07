@@ -39,7 +39,6 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
@@ -66,7 +65,6 @@ public class AppleLibraryDescription implements
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR,
       AppleDescriptions.FRAMEWORK_FLAVOR,
-      AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR,
       AppleDebugFormat.DWARF_AND_DSYM_FLAVOR,
       AppleDebugFormat.NO_DEBUG_FLAVOR,
       ImmutableFlavor.of("default"));
@@ -85,37 +83,8 @@ public class AppleLibraryDescription implements
     STATIC_PIC,
     STATIC,
     MACH_O_BUNDLE,
-    FRAMEWORK {
-      @Override
-      public boolean isFramework() {
-        return true;
-      }
-
-      @Override
-      public Optional<DependencyMode> getDependencyMode() {
-        return Optional.of(DependencyMode.TRANSITIVE);
-      }
-    },
-    FRAMEWORK_SHALLOW {
-      @Override
-      public boolean isFramework() {
-        return true;
-      }
-
-      @Override
-      public Optional<DependencyMode> getDependencyMode() {
-        return Optional.of(DependencyMode.FIRST_ORDER);
-      }
-    }
+    FRAMEWORK,
     ;
-
-    public boolean isFramework() {
-      return false;
-    }
-
-    public Optional<DependencyMode> getDependencyMode() {
-      return Optional.absent();
-    }
   }
 
   public static final FlavorDomain<Type> LIBRARY_TYPE =
@@ -131,7 +100,6 @@ public class AppleLibraryDescription implements
               .put(CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC)
               .put(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR, Type.MACH_O_BUNDLE)
               .put(AppleDescriptions.FRAMEWORK_FLAVOR, Type.FRAMEWORK)
-              .put(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR, Type.FRAMEWORK_SHALLOW)
               .build());
 
   private final CxxLibraryDescription delegate;
@@ -186,19 +154,18 @@ public class AppleLibraryDescription implements
     Optional<AppleDebugFormat> flavoredDebugInfoFormat =
         AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
 
-    if (type.isPresent() && type.get().getValue().isFramework()) {
+    if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       if (!args.infoPlist.isPresent()) {
         throw new HumanReadableException(
             "Cannot create framework for apple_library '%s':\n",
             "No value specified for 'info_plist' attribute.",
             params.getBuildTarget().getUnflavoredBuildTarget());
       }
-      Optional<DependencyMode> dependencyMode = type.get().getValue().getDependencyMode();
-      if (!dependencyMode.isPresent()) {
-        throw new RuntimeException(
-            String.format(
-                "Invalid framework type '%s', missing dependency mode.",
-                type.get().getValue()));
+      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
+        return resolver.requireRule(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                .build());
       }
 
       return AppleDescriptions.createAppleBundle(
@@ -268,7 +235,7 @@ public class AppleLibraryDescription implements
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       return Optional.absent();
     }
-    if (!buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR)) {
+    if (!buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
       return Optional.absent();
     }
     Optional<Flavor> cxxPlatformFlavor = cxxPlatformFlavorDomain.getFlavor(buildTarget);
@@ -281,7 +248,8 @@ public class AppleLibraryDescription implements
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
-                  .addFlavors(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR)
+                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
+                  .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                   .addFlavors(cxxPlatformFlavor.get())
                   .build(),
               FrameworkDependencies.class);
@@ -289,14 +257,10 @@ public class AppleLibraryDescription implements
         sourcePaths.addAll(frameworks.get().getSourcePaths());
       }
     }
-    BuildTarget shallowTarget =
-        BuildTarget.builder(buildTarget)
-            .addFlavors(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR)
-            .build();
     // Not all parts of Buck use require yet, so require the rule here so it's available in the
     // resolver for the parts that don't.
-    resolver.requireRule(shallowTarget);
-    sourcePaths.add(new BuildTargetSourcePath(shallowTarget));
+    resolver.requireRule(buildTarget);
+    sourcePaths.add(new BuildTargetSourcePath(buildTarget));
     return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
   }
 

@@ -58,13 +58,14 @@ public class ApplePackageIntegrationTest {
 
     workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoApp#no-debug");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoApp#no-debug,no-include-frameworks");
 
     workspace.runBuckCommand("clean").assertSuccess();
 
     workspace.runBuckCommand("build", "//:DemoAppPackage").assertSuccess();
 
-    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:DemoApp#no-debug");
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(
+        "//:DemoApp#no-debug,no-include-frameworks");
     workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
 
     Path templateDir = TestDataHelper.getTestDataScenario(
@@ -76,7 +77,7 @@ public class ApplePackageIntegrationTest {
     zipInspector.assertFileExists(("Payload/DemoApp.app/DemoApp"));
     zipInspector.assertFileContents("Payload/DemoApp.app/PkgInfo", new String(Files.readAllBytes(
             templateDir.resolve(
-                "buck-out/gen/DemoApp#iphonesimulator-x86_64,no-debug" +
+                "buck-out/gen/DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks" +
                     "/DemoApp.app/PkgInfo.expected")),
             UTF_8));
 

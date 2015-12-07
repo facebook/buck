@@ -162,7 +162,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64/TestLibrary.framework");
+            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+                "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
     Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
@@ -189,7 +190,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64/TestLibrary.framework");
+            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+                "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
     assertThat(Files.exists(frameworksPath), is(true));
@@ -225,7 +227,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64/TestLibrary.framework");
+            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+                "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
     assertThat(Files.exists(frameworksPath), is(true));
@@ -235,7 +238,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void shallowFrameworkDoesntContainFrameworkDependencies() throws Exception {
+  public void noIncludeFrameworksDoesntContainFrameworkDependencies() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -245,13 +248,13 @@ public class AppleLibraryIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#framework-shallow,macosx-x86_64");
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-include-frameworks");
     result.assertSuccess();
 
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework-shallow,macosx-x86_64/" +
+            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64,no-include-frameworks/" +
                 "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
