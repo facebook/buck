@@ -29,6 +29,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -93,13 +94,13 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
+      final BuildContext context,
       BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path outputDir = getOutputDirectory();
-    Path fatJarDir = outputDir.resolve("fat-jar-directory");
+    final Path fatJarDir = outputDir.resolve("fat-jar-directory");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
 
     // Map of the system-specific shared library name to it's resource name as a string.
@@ -122,7 +123,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     steps.add(writeFatJarInfo(fatJarInfo, sonameToResourceMap));
 
     // Build up the resource and src collections.
-    Set<Path> javaSourceFilePaths = Sets.newHashSet();
+    final Set<Path> javaSourceFilePaths = Sets.newHashSet();
     for (String srcResource : FAT_JAR_SRC_RESOURCES) {
       Path fatJarSource = outputDir.resolve(Paths.get(srcResource).getFileName());
       javaSourceFilePaths.add(fatJarSource);
@@ -157,22 +158,38 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             /* compressionLevel */ 0,
         fatJarDir);
 
-    CompileStepFactory compileStepFactory =
+    final CompileStepFactory compileStepFactory =
         new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY);
 
-    compileStepFactory.createCompileStep(
-        context,
-        ImmutableSortedSet.copyOf(javaSourceFilePaths),
-        getBuildTarget(),
-        getResolver(),
-        getProjectFilesystem(),
+    compileStepFactory.installArtifacts(buildableContext);
+    // FIXME: does fatjar have to support zipped sources?
+    steps.add(new Step() {
+      @Override
+      public int execute(ExecutionContext eContext) throws IOException, InterruptedException {
+        return compileStepFactory.compile(
+            context,
+            ImmutableSortedSet.copyOf(javaSourceFilePaths),
+            getBuildTarget(),
+            getResolver(),
+            getProjectFilesystem(),
         /* classpathEntries */ ImmutableSortedSet.<Path>of(),
-        fatJarDir,
+            fatJarDir,
         /* workingDir */ Optional.<Path>absent(),
         /* pathToSrcsList */ Optional.<Path>absent(),
         /* suggestBuildRule */ Optional.<SuggestBuildRules>absent(),
-        steps,
-        buildableContext);
+            eContext);
+      }
+
+      @Override
+      public String getShortName() {
+        return "woooo";
+      }
+
+      @Override
+      public String getDescription(ExecutionContext context) {
+        return "wooooooooooooo";
+      }
+    });
 
     steps.add(zipStep);
     steps.add(

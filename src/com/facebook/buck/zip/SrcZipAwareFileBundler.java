@@ -17,7 +17,7 @@
 package com.facebook.buck.zip;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -54,8 +54,8 @@ public class SrcZipAwareFileBundler {
     for (SourcePath sourcePath : toCopy) {
       Path absolute = resolver.getAbsolutePath(sourcePath);
 
-      if (absolute.toString().endsWith(Javac.SRC_ZIP) ||
-          absolute.toString().endsWith(Javac.SRC_JAR)) {
+      if (absolute.toString().endsWith(JavaLibrary.SOURCE_ZIP) ||
+          absolute.toString().endsWith(JavaLibrary.SOURCE_JAR)) {
         steps.add(new UnzipStep(filesystem, absolute, destinationDir));
         continue;
       }

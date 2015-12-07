@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -40,7 +40,7 @@ public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
   public static final String JAR = ".jar";
   public static final String POM = ".pom";
-  public static final String SRC_JAR = Javac.SRC_JAR;
+  public static final String SRC_JAR = JavaLibrary.SOURCE_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
   @Rule
@@ -123,7 +123,7 @@ public class PublishCommandIntegrationTest {
     assertTrue(stdOut,
         stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
     assertTrue(stdOut, stdOut.contains("/foo#maven.jar"));
-    assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
+    assertTrue(stdOut, stdOut.contains(JavaLibrary.SOURCE_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 

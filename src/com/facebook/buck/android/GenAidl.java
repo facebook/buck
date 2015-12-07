@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
+import static com.facebook.buck.jvm.java.JavaLibrary.SOURCE_ZIP;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.event.ConsoleEvent;
@@ -84,7 +84,7 @@ public class GenAidl extends AbstractBuildRule {
     BuildTarget buildTarget = params.getBuildTarget();
     this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
     this.output = genPath.resolve(
-        String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
+        String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SOURCE_ZIP));
   }
 
   @Override

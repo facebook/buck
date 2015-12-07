@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -56,7 +56,7 @@ public class FlavoredTargetsParserIntegrationTest {
     // The output of the rule should be a normal jar. Verify that.
     assertEquals("jar", MorePaths.getFileExtension(output));
     // Ensure the output name is not to be confused with a sources jar
-    assertFalse(output.getFileName().toString().endsWith(Javac.SRC_JAR));
+    assertFalse(output.getFileName().toString().endsWith(JavaLibrary.SOURCE_JAR));
   }
 
   @Test
@@ -70,7 +70,7 @@ public class FlavoredTargetsParserIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:example#src");
 
     // The output of the rule should be a src jar. Verify that.
-    assertTrue(output.toString(), output.toString().endsWith(Javac.SRC_JAR));
+    assertTrue(output.toString(), output.toString().endsWith(JavaLibrary.SOURCE_JAR));
   }
 
   @Test

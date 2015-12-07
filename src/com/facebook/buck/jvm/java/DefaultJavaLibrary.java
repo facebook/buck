@@ -42,17 +42,21 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.BashStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -392,9 +396,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    */
   @Override
   public final ImmutableList<Step> getBuildSteps(
-      BuildContext context,
+      final BuildContext context,
       BuildableContext buildableContext) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    final ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Only override the bootclasspath if this rule is supposed to compile Android code.
     ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries =
@@ -406,11 +410,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
-    BuildTarget target = getBuildTarget();
-    Path outputDirectory = getClassesDir(target);
+    final BuildTarget target = getBuildTarget();
+    final Path outputDirectory = getClassesDir(target);
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
-    SuggestBuildRules suggestBuildRule =
+    final SuggestBuildRules suggestBuildRule =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             JAR_RESOLVER, declaredClasspathEntries,
             ImmutableSetMultimap.<JavaLibrary, Path>builder()
@@ -432,7 +436,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .filter(Predicates.notNull())
         .toSet();
 
-    ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
+    final ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(declaredClasspathEntries.values())
         .addAll(provided)
         .build();
@@ -463,26 +467,88 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     if (!getJavaSrcs().isEmpty()) {
       Path output = outputJar.get();
       // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+      final Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
       Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
-      Optional<Path> workingDirectory = Optional.of(scratchDir);
+      final Optional<Path> workingDirectory = Optional.of(scratchDir);
 
-      compileStepFactory.createCompileStep(
-          context,
-          getJavaSrcs(),
-          target,
-          getResolver(),
-          getProjectFilesystem(),
-          declared,
-          outputDirectory,
-          workingDirectory,
-          Optional.of(pathToSrcsList),
-          Optional.of(suggestBuildRule),
-          steps,
-          buildableContext);
+      compileStepFactory.installArtifacts(buildableContext);
+      steps.add(new Step() {
+        @Override
+        public int execute(ExecutionContext eContext) throws IOException, InterruptedException {
+          ImmutableSortedSet<Path> expandedSourcePaths =
+              expandSourcesWithinZips(
+                  getProjectFilesystem(),
+                  target,
+                  getJavaSrcs(),
+                  workingDirectory);
+
+          return compileStepFactory.compile(
+              context,
+              expandedSourcePaths,
+              target,
+              getResolver(),
+              getProjectFilesystem(),
+              declared,
+              outputDirectory,
+              workingDirectory,
+              Optional.of(pathToSrcsList),
+              Optional.of(suggestBuildRule),
+              eContext
+          );
+        }
+
+        @Override
+        public String getShortName() {
+          return "monster";
+        }
+
+        @Override
+        public String getDescription(ExecutionContext context) {
+          return "mmmmonster";
+        }
+
+        private ImmutableSortedSet<Path> expandSourcesWithinZips(
+            ProjectFilesystem projectFilesystem,
+            BuildTarget invokingRule,
+            ImmutableSet<Path> javaSourceFilePaths,
+            Optional<Path> workingDirectory) throws IOException {
+
+          // Add sources file or sources list to command
+          ImmutableSortedSet.Builder<Path> sources = ImmutableSortedSet.naturalOrder();
+          for (Path path : javaSourceFilePaths) {
+            String pathString = path.toString();
+            if (pathString.endsWith(".java")) {
+              sources.add(path);
+            } else if (pathString.endsWith(JavaLibrary.SOURCE_ZIP) || pathString.endsWith(JavaLibrary.SOURCE_JAR)) {
+              if (!workingDirectory.isPresent()) {
+                throw new HumanReadableException(
+                    "Attempting to compile target %s which specified a .src.zip input %s but no " +
+                        "working directory was specified.",
+                    invokingRule.toString(),
+                    path);
+              }
+              // For a Zip of .java files, create a JavaFileObject for each .java entry.
+              ImmutableList<Path> zipPaths = Unzip.extractZipFile(
+                  projectFilesystem.resolve(path),
+                  projectFilesystem.resolve(workingDirectory.get()),
+                  Unzip.ExistingFileMode.OVERWRITE);
+              sources.addAll(
+                  FluentIterable.from(zipPaths)
+                      .filter(
+                          new Predicate<Path>() {
+                            @Override
+                            public boolean apply(Path input) {
+                              return input.toString().endsWith(".java");
+                            }
+                          }));
+            }
+          }
+          return sources.build();
+        }
+      });
 
       steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
               getProjectFilesystem().getRootPath(),
