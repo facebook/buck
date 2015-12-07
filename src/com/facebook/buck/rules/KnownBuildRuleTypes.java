@@ -92,6 +92,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBuckConfig;
+import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -544,6 +546,7 @@ public class KnownBuildRuleTypes {
             goBuckConfig,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
+    builder.register(new GroovyLibraryDescription(new GroovyBuckConfig(config)));
     builder.register(new GwtBinaryDescription());
     builder.register(
       new HalideLibraryDescription(

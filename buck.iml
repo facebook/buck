@@ -30,6 +30,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/gwt/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/js/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/groovy/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ocaml/testdata" />
