@@ -834,11 +834,8 @@ public class CachingBuildEngine implements BuildEngine {
 
   public ListenableFuture<?> walkRule(
       BuildRule rule,
-      final ConcurrentMap<BuildRule, Integer> seen) {
-    ListenableFuture<?> result = Futures.immediateFuture(null);
-    if (seen.putIfAbsent(rule, 0) == null) {
-      result =
-          Futures.transform(
+      final Set<BuildRule> seen) {
+    return Futures.transform(
               getRuleDeps(rule),
               new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
                 @Override
@@ -847,21 +844,23 @@ public class CachingBuildEngine implements BuildEngine {
                   List<ListenableFuture<?>> results =
                       Lists.newArrayListWithExpectedSize(deps.size());
                   for (BuildRule dep : deps) {
-                    results.add(walkRule(dep, seen));
+                    if (seen.add(dep)) {
+                      results.add(walkRule(dep, seen));
+                    }
                   }
                   return Futures.allAsList(results);
                 }
               });
-    }
-    return result;
   }
 
   @Override
   public int getNumRulesToBuild(Iterable<BuildRule> rules) {
-    ConcurrentMap<BuildRule, Integer> seen = Maps.newConcurrentMap();
+    Set<BuildRule> seen = Sets.newConcurrentHashSet();
     ListenableFuture<Void> result = Futures.immediateFuture(null);
     for (BuildRule rule : rules) {
-      result = MoreFutures.chainExceptions(walkRule(rule, seen), result);
+      if (seen.add(rule)) {
+        result = MoreFutures.chainExceptions(walkRule(rule, seen), result);
+      }
     }
     Futures.getUnchecked(result);
     return seen.size();
