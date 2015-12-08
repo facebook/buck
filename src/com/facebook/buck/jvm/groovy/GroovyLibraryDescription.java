@@ -21,8 +21,6 @@ import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -42,11 +40,9 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
-public class GroovyLibraryDescription implements
-    Description<GroovyLibraryDescription.Arg>, Flavored {
+public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("groovy_library");
-  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of();
 
   private final GroovyBuckConfig groovyBuckConfig;
 
@@ -58,11 +54,6 @@ public class GroovyLibraryDescription implements
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
-  }
-
-  @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
   @Override
