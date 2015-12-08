@@ -2164,26 +2164,13 @@ public class ProjectGenerator {
         .append(targetNodes)
         .transformAndConcat(
             new Function<TargetNode<?>, Iterable<? extends String>>() {
-              @Override
-              public Iterable<String> apply(TargetNode<?> input) {
-                if (input.getType() == HalideLibraryDescription.TYPE) {
-                  ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-                  BuildTarget buildTarget = input.getBuildTarget();
-                  if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
-                    String shortName = buildTarget.getShortName();
-                    Path libPath = pathRelativizer
-                      .outputDirToRootRelative(getHalideOutputPath(buildTarget))
-                      .resolve(shortName + ".a");
-                    builder.add(libPath.toString());
-                  }
-                  return builder.build();
-                } else {
-                  return input
-                      .castArg(AppleNativeTargetDescriptionArg.class)
-                      .transform(GET_EXPORTED_LINKER_FLAGS)
-                      .or(ImmutableSet.<String>of());
+                @Override
+                public Iterable<String> apply(TargetNode<?> input) {
+                    return input
+                        .castArg(AppleNativeTargetDescriptionArg.class)
+                        .transform(GET_EXPORTED_LINKER_FLAGS)
+                        .or(ImmutableSet.<String>of());
                 }
-              }
             });
   }
 
@@ -2234,7 +2221,8 @@ public class ProjectGenerator {
     String productOutputName;
 
     if (targetNode.getType().equals(AppleLibraryDescription.TYPE) ||
-        targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
+        targetNode.getType().equals(CxxLibraryDescription.TYPE) ||
+        targetNode.getType().equals(HalideLibraryDescription.TYPE)) {
       String productOutputFormat = AppleBuildRules.getOutputFileNameFormatForLibrary(
           targetNode
               .getBuildTarget()
@@ -2268,7 +2256,8 @@ public class ProjectGenerator {
           .getOrCreateFileReferenceBySourceTreePath(productsPath);
     } else if (targetNode.getType().equals(AppleLibraryDescription.TYPE) ||
         targetNode.getType().equals(AppleBundleDescription.TYPE) ||
-        targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
+        targetNode.getType().equals(CxxLibraryDescription.TYPE) ||
+        targetNode.getType().equals(HalideLibraryDescription.TYPE)) {
       return project.getMainGroup()
           .getOrCreateChildGroupByName("Frameworks")
           .getOrCreateFileReferenceBySourceTreePath(productsPath);
@@ -2413,6 +2402,11 @@ public class ProjectGenerator {
     return new Predicate<TargetNode<?>>() {
       @Override
       public boolean apply(TargetNode<?> input) {
+        if (input.getType() == HalideLibraryDescription.TYPE &&
+            !HalideLibraryDescription.isHalideCompilerTarget(input.getBuildTarget())) {
+          return true;
+        }
+
         Optional<TargetNode<CxxLibraryDescription.Arg>> library =
             getLibraryNode(targetGraph, input);
         if (!library.isPresent()) {
