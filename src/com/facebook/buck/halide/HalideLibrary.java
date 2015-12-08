@@ -74,7 +74,7 @@ public class HalideLibrary
   private final ImmutableSortedSet<SourceWithFlags> srcs;
 
   private final Tool halideCompiler;
-  private final Optional<CxxPlatform> cxxPlatform;
+  private final CxxPlatform cxxPlatform;
   private final HalideBuckConfig halideBuckConfig;
 
   protected HalideLibrary(
@@ -83,7 +83,7 @@ public class HalideLibrary
       SourcePathResolver pathResolver,
       ImmutableSortedSet<SourceWithFlags> srcs,
       Tool halideCompiler,
-      Optional<CxxPlatform> cxxPlatform,
+      CxxPlatform cxxPlatform,
       HalideBuckConfig halideBuckConfig) {
     super(params, pathResolver);
     this.params = params;
@@ -100,27 +100,19 @@ public class HalideLibrary
       BuildableContext buildableContext) {
     Path outputDir = getPathToOutput();
     String shortName = getBuildTarget().getShortName();
-
-    // The unflavored target generates the header, which is the same for all
-    // platforms; our various flavored variants generate the object file for
-    // each platform.
-    if (cxxPlatform.isPresent()) {
-      buildableContext.recordArtifact(outputDir.resolve(getLibraryName()));
-    } else {
-      buildableContext.recordArtifact(outputDir.resolve(shortName + ".h"));
-    }
+    buildableContext.recordArtifact(outputDir.resolve(getLibraryName()));
+    buildableContext.recordArtifact(outputDir.resolve(shortName + ".h"));
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
     commands.add(
-        new HalideCompilerStep(
-            getProjectFilesystem().getRootPath(),
-            halideCompiler.getEnvironment(getResolver()),
-            halideCompiler.getCommandPrefix(getResolver()),
-            outputDir,
-            shortName,
-            halideBuckConfig.getHalideTargetForPlatform(cxxPlatform),
-            /* header-only */ !cxxPlatform.isPresent()));
+      new HalideCompilerStep(
+        getProjectFilesystem().getRootPath(),
+        halideCompiler.getEnvironment(getResolver()),
+        halideCompiler.getCommandPrefix(getResolver()),
+        outputDir,
+        shortName,
+        halideBuckConfig.getHalideTargetForPlatform(cxxPlatform)));
     return commands.build();
   }
 
@@ -191,8 +183,7 @@ public class HalideLibrary
       Linker.LinkableDepType type) {
     // Create a new flavored HalideLibrary rule object for the given platform.
     HalideLibrary rule = (HalideLibrary) requireBuildRule(cxxPlatform);
-    Path libPath = BuildTargets.getGenPath(rule.getBuildTarget(), "%s")
-      .resolve(rule.getLibraryName());
+    Path libPath = getPathToOutput().resolve(rule.getLibraryName());
     return NativeLinkableInput.of(
             SourcePathArg.from(
                     getResolver(),
@@ -237,7 +228,7 @@ public class HalideLibrary
         getResolver(),
         srcs,
         halideCompiler,
-        Optional.of(cxxPlatform),
+        cxxPlatform,
         halideBuckConfig));
       ruleResolver.addToIndex(rule.get());
     }

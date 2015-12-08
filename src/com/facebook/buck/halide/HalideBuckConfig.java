@@ -37,16 +37,13 @@ public class HalideBuckConfig {
     this.delegate = delegate;
   }
 
-  public Optional<String> getHalideTargetForPlatform(Optional<CxxPlatform> cxxPlatform) {
-    Optional<String> target = Optional.absent();
-    if (cxxPlatform.isPresent()) {
-      String flavorName = cxxPlatform.get().getFlavor().toString();
-      ImmutableMap<String, String> targetMap = getHalideTargetMap();
-      if (targetMap.containsKey(flavorName)) {
-        target = Optional.of(targetMap.get(flavorName));
-      }
+  public Optional<String> getHalideTargetForPlatform(CxxPlatform cxxPlatform) {
+    String flavorName = cxxPlatform.getFlavor().toString();
+    ImmutableMap<String, String> targetMap = getHalideTargetMap();
+    if (targetMap.containsKey(flavorName)) {
+      return Optional.of(targetMap.get(flavorName));
     }
-    return target;
+    return Optional.absent();
   }
 
   public ImmutableMap<String, String> getHalideTargetMap() {

@@ -42,38 +42,30 @@ public class HalideCompilerStep extends ShellStep {
   // architecture.
   private final Optional<String> halideTarget;
 
-  // If true, only generate the header file for the compiled shader.
-  private final boolean headerOnly;
-
   public HalideCompilerStep(
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compilerPrefix,
       Path outputDir,
       String funcName,
-      Optional<String> halideTarget,
-      boolean headerOnly) {
+      Optional<String> halideTarget) {
     super(workingDirectory);
     this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
     this.funcName = funcName;
     this.halideTarget = halideTarget;
-    this.headerOnly = headerOnly;
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(compilerPrefix);
+    builder.add("-h");
     builder.add("-o", outputDir.toString());
 
     if (halideTarget.isPresent() && !halideTarget.get().isEmpty()) {
       builder.add("-t", halideTarget.get());
-    }
-
-    if (headerOnly) {
-      builder.add("--header-only");
     }
 
     builder.add(funcName);
