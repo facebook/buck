@@ -52,6 +52,25 @@ of <code>.buckconfig</code> is via <code>.buckconfig.local</code>.
   {/param}
 {/call}
 
+{call buck.param}
+  {param name: 'num-threads' /}
+  {param desc}
+
+  The number of threads that buck should use when executing jobs.
+  This defaults to 1.25 times the number of processors in the
+  system (on systems with hyperthreading, this means that each core is
+  counted twice). The number of threads to use for building can also
+  be set by adding a "<code>threads</code>" key to the{sp}
+  "<code>build</code>" section of the <code>.buckconfig</code> file.
+
+  The order of precedence for setting the number of builds threads
+  (from highest to lowest) is: command line option,{sp}
+  <code>.buckconfig</code> setting, default value.
+
+  The number of active threads may not always be equal to this
+  argument.
+ {/param}
+{/call}
 
 {call buck.param}
   {param name: '@/path/to/commandline-args' /}
