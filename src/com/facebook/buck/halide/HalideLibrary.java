@@ -16,6 +16,7 @@
 
 package com.facebook.buck.halide;
 
+import com.facebook.buck.cxx.ArchiveStep;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -103,6 +104,7 @@ public class HalideLibrary
     buildableContext.recordArtifact(outputDir.resolve(getLibraryName()));
     buildableContext.recordArtifact(outputDir.resolve(shortName + ".h"));
 
+    Tool archiver = cxxPlatform.getAr();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
     commands.add(
@@ -113,6 +115,13 @@ public class HalideLibrary
         outputDir,
         shortName,
         halideBuckConfig.getHalideTargetForPlatform(cxxPlatform)));
+    commands.add(
+      new ArchiveStep(
+        getProjectFilesystem().getRootPath(),
+        archiver.getEnvironment(getResolver()),
+        archiver.getCommandPrefix(getResolver()),
+        outputDir.resolve(getLibraryName()),
+        ImmutableList.of(outputDir.resolve(shortName + ".o"))));
     return commands.build();
   }
 
@@ -203,7 +212,7 @@ public class HalideLibrary
   }
 
   private String getLibraryName() {
-    return getBuildTarget().getShortName() + ".o";
+    return "lib" + getBuildTarget().getShortName() + ".a";
   }
 
   /**
