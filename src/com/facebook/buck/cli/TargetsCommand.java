@@ -621,45 +621,44 @@ public class TargetsCommand extends AbstractCommand {
 
     if (isShowTargetHash()) {
       return doShowTargetHash(params, matchingBuildTargets);
-    } else {
-      // We only need the action graph if we're showing the output or the keys, and the
-      // RuleKeyBuilderFactory if we're showing the keys.
-      Optional<ActionGraph> actionGraph = Optional.absent();
-      Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
-      Optional<RuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
-      if (isShowRuleKey() || isShowOutput()) {
-        TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
-            params.getBuckEventBus(),
-            new BuildTargetNodeToBuildRuleTransformer());
-        Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
-            targetGraphTransformer.apply(targetGraph));
-        actionGraph = Optional.of(result.getFirst());
-        buildRuleResolver = Optional.of(result.getSecond());
-        if (isShowRuleKey()) {
-          ruleKeyBuilderFactory = Optional.<RuleKeyBuilderFactory>of(
-              new DefaultRuleKeyBuilderFactory(
-                  params.getFileHashCache(),
-                  new SourcePathResolver(result.getSecond())));
-        }
+    }
+    // We only need the action graph if we're showing the output or the keys, and the
+    // RuleKeyBuilderFactory if we're showing the keys.
+    Optional<ActionGraph> actionGraph = Optional.absent();
+    Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
+    Optional<RuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
+    if (isShowRuleKey() || isShowOutput()) {
+      TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
+          params.getBuckEventBus(),
+          new BuildTargetNodeToBuildRuleTransformer());
+      Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+          targetGraphTransformer.apply(targetGraph));
+      actionGraph = Optional.of(result.getFirst());
+      buildRuleResolver = Optional.of(result.getSecond());
+      if (isShowRuleKey()) {
+        ruleKeyBuilderFactory = Optional.<RuleKeyBuilderFactory>of(
+            new DefaultRuleKeyBuilderFactory(
+                params.getFileHashCache(),
+                new SourcePathResolver(result.getSecond())));
       }
+    }
 
-      for (BuildTarget target : ImmutableSortedSet.copyOf(matchingBuildTargets)) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        builder.add(target.getFullyQualifiedName());
-        if (actionGraph.isPresent()) {
-          BuildRule rule = buildRuleResolver.get().requireRule(target);
-          if (isShowRuleKey()) {
-            builder.add(ruleKeyBuilderFactory.get().build(rule).toString());
-          }
-          if (isShowOutput()) {
-            Path outputPath = rule.getPathToOutput();
-            if (outputPath != null) {
-              builder.add(outputPath.toString());
-            }
+    for (BuildTarget target : ImmutableSortedSet.copyOf(matchingBuildTargets)) {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      builder.add(target.getFullyQualifiedName());
+      if (actionGraph.isPresent()) {
+        BuildRule rule = buildRuleResolver.get().requireRule(target);
+        if (isShowRuleKey()) {
+          builder.add(ruleKeyBuilderFactory.get().build(rule).toString());
+        }
+        if (isShowOutput()) {
+          Path outputPath = rule.getPathToOutput();
+          if (outputPath != null) {
+            builder.add(outputPath.toString());
           }
         }
-        params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
       }
+      params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
     }
 
     return 0;
