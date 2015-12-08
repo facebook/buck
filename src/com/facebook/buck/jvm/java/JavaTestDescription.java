@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -124,9 +125,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                             javacOptions.getInputs(pathResolver)))),
                 pathResolver,
                 args.srcs.get(),
-                JavaLibraryDescription.validateResources(
+                ResourceValidator.validateResources(
                     pathResolver,
-                    args, params.getProjectFilesystem()),
+                    params.getProjectFilesystem(),
+                    args.resources.get()),
                 javacOptions.getGeneratedSourceFolderName(),
                 args.labels.get(),
                 args.contacts.get(),

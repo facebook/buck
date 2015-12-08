@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -144,10 +145,9 @@ public class AndroidLibraryDescription
                               javacOptions.getInputs(pathResolver)))),
                   pathResolver,
                   args.srcs.get(),
-                  JavaLibraryDescription.validateResources(
+                  ResourceValidator.validateResources(
                       pathResolver,
-                      args,
-                      params.getProjectFilesystem()),
+                      params.getProjectFilesystem(), args.resources.get()),
                   args.proguardConfig.transform(
                       SourcePaths.toSourcePath(params.getProjectFilesystem())),
                   args.postprocessClassesCommands.get(),

@@ -138,6 +138,7 @@ java_immutables_library(
     '//src/com/facebook/buck/file:rules',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/jvm/common:resources',
     '//src/com/facebook/buck/jvm/core:classhash',
     '//src/com/facebook/buck/jvm/core:suggestbuildrules',
     '//src/com/facebook/buck/jvm/java:rules',
