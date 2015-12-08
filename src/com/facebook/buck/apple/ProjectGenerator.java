@@ -140,6 +140,9 @@ public class ProjectGenerator {
   private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
   private static final String FIX_UUID_TEMPLATE = "fix-uuid.st";
   private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
+  private static final String CODESIGN_TEMPLATE = "codesign.st";
+  private static final String CODESIGN_PY_RESOURCE = "codesign.py";
+
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   public static final String XCODE_BUILD_SCRIPT_FLAVOR_VALUE =
       "#$PLATFORM_NAME-$arch";
@@ -359,6 +362,11 @@ public class ProjectGenerator {
         FIX_UUID_PY_RESOURCE).getPath();
   }
 
+  @VisibleForTesting
+  static String getCodesignScriptPath() {
+    return Resources.getResource(ProjectGenerator.class, CODESIGN_PY_RESOURCE).getPath();
+  }
+
   public Path getProjectPath() {
     return projectPath;
   }
@@ -457,6 +465,10 @@ public class ProjectGenerator {
       PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = new PBXShellScriptBuildPhase();
       fixUUIDShellScriptBuildPhase.setShellScript(getFixUUIDShellScript(targetNode));
       buildWithBuckTarget.getBuildPhases().add(fixUUIDShellScriptBuildPhase);
+
+      PBXShellScriptBuildPhase codesignPhase = new PBXShellScriptBuildPhase();
+      codesignPhase.setShellScript(getCodesignShellScript(targetNode));
+      buildWithBuckTarget.getBuildPhases().add(codesignPhase);
     }
 
     TargetNode<CxxLibraryDescription.Arg> node = getAppleNativeNode(targetGraph, targetNode).get();
@@ -588,6 +600,28 @@ public class ProjectGenerator {
     template.add("resolved_dsym_destination", resolvedDsymDestination);
     template.add("binary_name", binaryName);
     template.add("path_to_fix_uuid_script", fixUUIDScriptPath);
+
+    return template.render();
+  }
+
+  private String getCodesignShellScript(TargetNode<?> targetNode) {
+    ST template;
+    try {
+      template = new ST(Resources.toString(
+          Resources.getResource(ProjectGenerator.class, CODESIGN_TEMPLATE), Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException(
+          "There was an error loading '" + CODESIGN_TEMPLATE + "' template", e);
+    }
+
+    Optional<String> productName = getProductNameForTargetNode(targetNode);
+    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
+    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
+    Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
+
+    template.add("root_path", projectFilesystem.getRootPath());
+    template.add("path_to_codesign_script", getCodesignScriptPath());
+    template.add("app_bundle_path", resolvedBundleDestination);
 
     return template.render();
   }

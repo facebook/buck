@@ -9,6 +9,8 @@ java_immutables_library(
   ],
   resources = [
     'build-with-buck.st',
+    'codesign.st',
+    'codesign.py',
     'fix-uuid.st',
     'rn-package.st',
     'fix_uuid.py',

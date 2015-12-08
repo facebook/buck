@@ -3471,7 +3471,7 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         "Should have exact number of build phases",
-        2,
+        3,
         buildWithBuckTarget.getBuildPhases().size());
     PBXBuildPhase buildPhase = Iterables.get(buildWithBuckTarget.getBuildPhases(), 0);
     assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
@@ -3482,7 +3482,7 @@ public class ProjectGeneratorTest {
             "buck build --report-absolute-paths --flag 'value with spaces' " +
                 bundleTarget.getFullyQualifiedName()));
 
-    PBXBuildPhase fixUUIDPhase = Iterables.getLast(buildWithBuckTarget.getBuildPhases());
+    PBXBuildPhase fixUUIDPhase = buildWithBuckTarget.getBuildPhases().get(1);
     assertThat(fixUUIDPhase, instanceOf(PBXShellScriptBuildPhase.class));
     PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = (PBXShellScriptBuildPhase) fixUUIDPhase;
     String fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath();
@@ -3490,6 +3490,15 @@ public class ProjectGeneratorTest {
         fixUUIDShellScriptBuildPhase.getShellScript(),
         containsString(
             "python " + fixUUIDScriptPath + " --verbose"));
+
+    PBXBuildPhase codesignPhase = buildWithBuckTarget.getBuildPhases().get(2);
+    assertThat(codesignPhase, instanceOf(PBXShellScriptBuildPhase.class));
+    PBXShellScriptBuildPhase codesignShellScriptPhase = (PBXShellScriptBuildPhase) codesignPhase;
+    String codesignScriptPath = ProjectGenerator.getCodesignScriptPath();
+    assertThat(
+        codesignShellScriptPhase.getShellScript(),
+        containsString(
+            "python " + codesignScriptPath + " /usr/bin/codesign"));
   }
 
   @Test
