@@ -16,18 +16,18 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import static com.google.common.base.Functions.toStringFunction;
+import static com.google.common.collect.Iterables.transform;
+
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -40,7 +40,6 @@ class GroovycStep implements Step {
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
-  private final BuildTarget invokingRule;
   private final ProjectFilesystem filesystem;
 
   GroovycStep(
@@ -50,7 +49,6 @@ class GroovycStep implements Step {
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       ImmutableSortedSet<Path> declaredClasspathEntries,
-      BuildTarget invokingRule,
       ProjectFilesystem filesystem) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
@@ -58,26 +56,19 @@ class GroovycStep implements Step {
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
     this.declaredClasspathEntries = declaredClasspathEntries;
-    this.invokingRule = invokingRule;
     this.filesystem = filesystem;
   }
 
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
-    ImmutableList.Builder<String> command = createCommandList();
 
-    ProcessBuilder processBuilder = new ProcessBuilder(command.build());
+    ProcessBuilder processBuilder = new ProcessBuilder(createCommand());
 
-    // Set environment to client environment and add additional information.
     Map<String, String> env = processBuilder.environment();
     env.clear();
     env.putAll(context.getEnvironment());
-    env.put("BUCK_INVOKING_RULE", invokingRule.toString());
-    env.put("BUCK_TARGET", invokingRule.toString());
-    env.put("BUCK_DIRECTORY_ROOT", filesystem.getRootPath().toAbsolutePath().toString());
 
     processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
-    // Run the command
     int exitCode = -1;
     try {
       exitCode = context.getProcessExecutor().execute(processBuilder.start()).getExitCode();
@@ -89,32 +80,6 @@ class GroovycStep implements Step {
     return exitCode;
   }
 
-  private ImmutableList.Builder<String> createCommandList() {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.addAll(groovyc.getCommandPrefix(resolver))
-        .add("-cp")
-        .add(Joiner.on(":").join(Iterables.transform(
-            declaredClasspathEntries,
-            new Function<Path, String>() {
-              @Override
-              public String apply(Path input) {
-                return input.toString();
-              }
-            })))
-        .add("-d")
-        .add(outputDirectory.toString())
-        .addAll(extraArguments.or(ImmutableList.<String>of()))
-        .addAll(Iterables.transform(
-            sourceFilePaths,
-            new Function<Path, String>() {
-              @Override
-              public String apply(Path input) {
-                return input.toString();
-              }
-            }));
-    return command;
-  }
-
   @Override
   public String getShortName() {
     return Joiner.on(" ").join(groovyc.getCommandPrefix(resolver));
@@ -122,6 +87,18 @@ class GroovycStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(" ").join(createCommandList().build());
+    return Joiner.on(" ").join(createCommand());
+  }
+
+  private ImmutableList<String> createCommand() {
+    ImmutableList.Builder<String> command = ImmutableList.builder();
+    command.addAll(groovyc.getCommandPrefix(resolver))
+        .add("-cp")
+        .add(Joiner.on(":").join(transform(declaredClasspathEntries, toStringFunction())))
+        .add("-d")
+        .add(outputDirectory.toString())
+        .addAll(extraArguments.or(ImmutableList.<String>of()))
+        .addAll(transform(sourceFilePaths, toStringFunction()));
+    return command.build();
   }
 }

@@ -66,7 +66,6 @@ class GroovycStepFactory implements CompileStepFactory {
             outputDirectory,
             sourceFilePaths,
             declaredClasspathEntries,
-            invokingRule,
             filesystem));
   }
 
