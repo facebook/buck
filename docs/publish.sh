@@ -17,7 +17,12 @@ STATIC_FILES_DIR=/tmp/buck-public-documentation/
 
 # Create a clean checkout of the gh-pages branch with no data:
 rm -rf $STATIC_FILES_DIR
-git clone git@github.com:facebook/buck.git $STATIC_FILES_DIR
+if [ -z "$1" ]
+then
+  git clone git@github.com:facebook/buck.git $STATIC_FILES_DIR
+else
+  cp -r "$1" $STATIC_FILES_DIR
+fi
 cd $STATIC_FILES_DIR
 
 # May need to do this if you are creating gh-pages for the first time.
