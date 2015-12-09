@@ -23,6 +23,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -165,7 +166,8 @@ public class TestCaseSummary {
     return String.format("%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
         status,
         padding,
-        !isCached ? TimeFormat.formatForConsole(totalTime, ansi)
+        // TODO(bhamiltoncx): Refactor this class to pass in the Locale.
+        !isCached ? TimeFormat.formatForConsole(Locale.US, totalTime, ansi)
                   : ansi.asHighlightedStatusText(severityLevel, "CACHED"),
         getPassedCount(),
         skippedCount,

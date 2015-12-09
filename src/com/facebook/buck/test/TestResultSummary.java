@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -139,7 +140,9 @@ public class TestResultSummary {
   public String toString() {
     return String.format("%s %s %s#%s()",
         isSuccess() ? "PASS" : "FAIL",
-        TimeFormat.formatForConsole(getTime(), Ansi.withoutTty()),
+        // Hard-coding US English is not great, but refactoring this class to take in a Locale
+        // is a ton of work (we can't change this API, since toString() is called everywhere).
+        TimeFormat.formatForConsole(Locale.US, getTime(), Ansi.withoutTty()),
         testCaseName,
         getTestName());
   }

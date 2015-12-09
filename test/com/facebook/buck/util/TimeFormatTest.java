@@ -18,6 +18,8 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Locale;
+
 import org.junit.Test;
 
 public class TimeFormatTest {
@@ -26,13 +28,15 @@ public class TimeFormatTest {
   public void testFormatForConsole() {
     Ansi ansi = Ansi.withoutTty();
 
-    assertEquals("<100ms", TimeFormat.formatForConsole(0, ansi));
-    assertEquals("<100ms", TimeFormat.formatForConsole(99, ansi));
+    assertEquals("<100ms", TimeFormat.formatForConsole(Locale.US, 0, ansi));
+    assertEquals("<100ms", TimeFormat.formatForConsole(Locale.US, 99, ansi));
 
-    assertEquals(" 100ms", TimeFormat.formatForConsole(100, ansi));
-    assertEquals(" 999ms", TimeFormat.formatForConsole(999, ansi));
+    assertEquals(" 100ms", TimeFormat.formatForConsole(Locale.US, 100, ansi));
+    assertEquals(" 999ms", TimeFormat.formatForConsole(Locale.US, 999, ansi));
 
-    assertEquals("  1.0s", TimeFormat.formatForConsole(1000, ansi));
-    assertEquals("  1.2s", TimeFormat.formatForConsole(1200, ansi));
+    assertEquals("  1.0s", TimeFormat.formatForConsole(Locale.US, 1000, ansi));
+    assertEquals("  1.2s", TimeFormat.formatForConsole(Locale.US, 1200, ansi));
+
+    assertEquals("  3,4s", TimeFormat.formatForConsole(Locale.GERMAN, 3400, ansi));
   }
 }
