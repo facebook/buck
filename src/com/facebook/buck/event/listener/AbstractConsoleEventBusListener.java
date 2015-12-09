@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.json.ParseBuckFileEvent;
@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +56,13 @@ import javax.annotation.Nullable;
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
   protected static final DecimalFormat TIME_FORMATTER = new DecimalFormat("0.0s");
   protected static final long UNFINISHED_EVENT_PAIR = -1;
+  protected static final Function<Long, String> FORMAT_TIME_FUNCTION =
+      new Function<Long, String>() {
+        @Override
+        public String apply(Long elapsedTimeMs) {
+          return TIME_FORMATTER.format(elapsedTimeMs / 1000.0);
+        }
+      };
   protected final Console console;
   protected final Clock clock;
   protected final Ansi ansi;
@@ -135,7 +143,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
-    return TIME_FORMATTER.format(elapsedTimeMs / 1000.0);
+    return FORMAT_TIME_FUNCTION.apply(elapsedTimeMs);
   }
 
   protected Optional<Double> getApproximateBuildProgress() {

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
@@ -51,9 +51,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -68,16 +66,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * Console that provides rich, updating ansi output about the current build.
  */
 public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListener {
-  /**
-   * Amount of time a rule can run before we render it with as a warning.
-   */
-  private static final long WARNING_THRESHOLD_MS = 15000;
-
-  /**
-   * Amount of time a rule can run before we render it with as an error.
-   */
-  private static final long ERROR_THRESHOLD_MS = 30000;
-
   /**
    * Maximum expected rendered line length so we can start with a decent
    * size of line rendering buffer.
@@ -308,7 +296,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           lines);
 
       if (buildTime == UNFINISHED_EVENT_PAIR) {
-        renderRules(currentTimeMillis, lines);
+        ThreadStateRenderer renderer = new BuildThreadStateRenderer(
+            ansi,
+            FORMAT_TIME_FUNCTION,
+            currentTimeMillis,
+            threadsToRunningBuildRuleEvent,
+            threadsToRunningStep,
+            accumulatedRuleTime);
+        renderLines(renderer, lines);
       }
 
       long testRunTime = logEventPair(
@@ -322,7 +317,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           lines);
 
       if (testRunTime == UNFINISHED_EVENT_PAIR) {
-        renderTestRun(currentTimeMillis, lines);
+        ThreadStateRenderer renderer = new TestThreadStateRenderer(
+            ansi,
+            FORMAT_TIME_FUNCTION,
+            currentTimeMillis,
+            threadsToRunningTestRuleEvent,
+            threadsToRunningTestSummaryEvent,
+            threadsToRunningStep,
+            accumulatedRuleTime);
+        renderLines(renderer, lines);
       }
 
       logEventPair("INSTALLING",
@@ -359,143 +362,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return logEventLinesBuilder.build();
   }
 
-  /**
-   * Adds lines for rendering the rules that are currently running.
-   * @param currentMillis The time in ms to use when computing elapsed times.
-   * @param lines Builder of lines to render this frame.
-   */
-  private void renderRules(long currentMillis, ImmutableList.Builder<String> lines) {
-    // Sort events by thread id.
-    ImmutableList<Map.Entry<Long, Optional<? extends BuildRuleEvent>>> eventsByThread =
-        FluentIterable.from(threadsToRunningBuildRuleEvent.entrySet())
-            .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends BuildRuleEvent>>>() {
-              @Override
-              public int compare(Map.Entry<Long, Optional<? extends BuildRuleEvent>> a,
-                  Map.Entry<Long, Optional<? extends BuildRuleEvent>> b) {
-                return Long.signum(a.getKey() - b.getKey());
-              }
-            });
-
-    // For each thread that has ever run a rule, render information about that thread.
+  public void renderLines(ThreadStateRenderer renderer, ImmutableList.Builder<String> lines) {
     StringBuilder lineBuilder = new StringBuilder(EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH);
-    lineBuilder.append(" |=> ");
-    for (Map.Entry<Long, Optional<? extends BuildRuleEvent>> entry : eventsByThread) {
-      Optional<? extends BuildRuleEvent> startedEvent = entry.getValue();
-
-      AtomicLong accumulatedTime = null;
-      if (startedEvent.isPresent()) {
-        accumulatedTime = accumulatedRuleTime.get(
-            startedEvent.get().getBuildRule().getBuildTarget());
-      }
-
-      if (!startedEvent.isPresent() || accumulatedTime == null) {
-        lineBuilder.append("IDLE");
-        lines.add(ansi.asSubtleText(lineBuilder.toString()));
-      } else {
-        long elapsedTimeMs =
-            currentMillis - startedEvent.get().getTimestamp() + accumulatedTime.get();
-        Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
-
-        lineBuilder.append(startedEvent.get().getBuildRule().getFullyQualifiedName());
-        lineBuilder.append("...  ");
-        lineBuilder.append(formatElapsedTime(elapsedTimeMs));
-
-        if (leafEvent != null && leafEvent.isPresent()) {
-          lineBuilder.append(" (running ");
-          lineBuilder.append(leafEvent.get().getCategory());
-          lineBuilder.append('[');
-          lineBuilder.append(formatElapsedTime(currentMillis - leafEvent.get().getTimestamp()));
-          lineBuilder.append("])");
-
-          if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-            if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-              lines.add(ansi.asErrorText(lineBuilder.toString()));
-            } else {
-              lines.add(ansi.asWarningText(lineBuilder.toString()));
-            }
-          } else {
-            lines.add(lineBuilder.toString());
-          }
-        } else {
-          // If a rule is scheduled on a thread but no steps have been scheduled yet, we are still
-          // in the code checking to see if the rule has been cached locally.
-          // Show "CHECKING LOCAL CACHE" to prevent thrashing the UI with super fast rules.
-          lineBuilder.append(" (checking local cache)");
-          lines.add(ansi.asSubtleText(lineBuilder.toString()));
-        }
-      }
-
-      lineBuilder.delete(5, lineBuilder.length());
-    }
-  }
-
-  /**
-   * Adds lines for rendering the rules that are currently running.
-   * @param currentMillis The time in ms to use when computing elapsed times.
-   * @param lines Builder of lines to render this frame.
-   */
-  private void renderTestRun(long currentMillis, ImmutableList.Builder<String> lines) {
-    // Sort events by thread id.
-    ImmutableList<Map.Entry<Long, Optional<? extends TestRuleEvent>>> eventsByThread =
-        FluentIterable.from(threadsToRunningTestRuleEvent.entrySet())
-            .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends TestRuleEvent>>>() {
-              @Override
-              public int compare(Map.Entry<Long, Optional<? extends TestRuleEvent>> a,
-                  Map.Entry<Long, Optional<? extends TestRuleEvent>> b) {
-                return Long.signum(a.getKey() - b.getKey());
-              }
-            });
-
-    // For each thread that has ever run a rule, render information about that thread.
-    for (Map.Entry<Long, Optional<? extends TestRuleEvent>> entry : eventsByThread) {
-      String threadLine = " |=> ";
-      Optional<? extends TestRuleEvent> startedEvent = entry.getValue();
-
-      if (!startedEvent.isPresent()) {
-        threadLine += "IDLE";
-        threadLine = ansi.asSubtleText(threadLine);
-      } else {
-        AtomicLong accumulatedTime = accumulatedRuleTime.get(
-            startedEvent.get().getBuildTarget());
-        long elapsedTimeMs =
-            (currentMillis - startedEvent.get().getTimestamp()) +
-                (accumulatedTime != null ? accumulatedTime.get() : 0);
-
-        threadLine += String.format("%s...  %s",
-            startedEvent.get().getBuildTarget(),
-            formatElapsedTime(elapsedTimeMs));
-
-        Optional<? extends TestSummaryEvent> summaryEvent = threadsToRunningTestSummaryEvent.get(
-            entry.getKey());
-        Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
-        String eventName;
-        long eventTime;
-        if (summaryEvent != null && summaryEvent.isPresent()) {
-          eventName = summaryEvent.get().getTestName();
-          eventTime = summaryEvent.get().getTimestamp();
-        } else if (leafEvent != null && leafEvent.isPresent()) {
-          eventName = leafEvent.get().getCategory();
-          eventTime = leafEvent.get().getTimestamp();
-        } else {
-          eventName = null;
-          eventTime = 0;
-        }
-        if (eventName != null) {
-          threadLine += String.format(
-              " (running %s[%s])",
-              eventName,
-              formatElapsedTime(currentMillis - eventTime));
-        }
-
-        if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-          if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-            threadLine = ansi.asErrorText(threadLine);
-          } else {
-            threadLine = ansi.asWarningText(threadLine);
-          }
-        }
-      }
-      lines.add(threadLine);
+    for (long threadId : renderer.getSortedThreadIds()) {
+      lines.add(renderer.renderStatusLine(threadId, lineBuilder));
     }
   }
 
