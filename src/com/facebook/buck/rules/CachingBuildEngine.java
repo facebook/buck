@@ -65,6 +65,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -72,6 +73,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -81,7 +84,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,6 +91,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -1240,8 +1244,11 @@ public class CachingBuildEngine implements BuildEngine {
     // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
     // `ArtifactCache` interface uses raw paths.
     try (NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest")) {
-      try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
-        Files.copy(inputStream, tempFile.get(), StandardCopyOption.REPLACE_EXISTING);
+      try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
+           OutputStream outputStream =
+               new GZIPOutputStream(
+                   new BufferedOutputStream(Files.newOutputStream(tempFile.get())))) {
+        ByteStreams.copy(inputStream, outputStream);
       }
       cache.store(
           ImmutableSet.of(manifestKey.getFirst()),
@@ -1276,8 +1283,10 @@ public class CachingBuildEngine implements BuildEngine {
         return CacheResult.miss();
       }
       try (OutputStream outputStream =
-               rule.getProjectFilesystem().newFileOutputStream(manifestPath)) {
-        Files.copy(tempFile.get(), outputStream);
+               rule.getProjectFilesystem().newFileOutputStream(manifestPath);
+           InputStream inputStream =
+               new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempFile.get())))) {
+        ByteStreams.copy(inputStream, outputStream);
       }
     }
 

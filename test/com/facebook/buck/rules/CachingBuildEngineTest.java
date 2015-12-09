@@ -95,6 +95,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -108,6 +109,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Nullable;
 
@@ -1917,7 +1920,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Manifest manifest = Manifest.fromMap(
         ImmutableMap.of(new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    manifest.serialize(byteArrayOutputStream);
+    try (GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+      manifest.serialize(outputStream);
+    }
     cache.store(
         ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
         ImmutableMap.<String, String>of(),
@@ -2042,7 +2047,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Manifest manifest = Manifest.fromMap(
         ImmutableMap.of(new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    manifest.serialize(byteArrayOutputStream);
+    try (GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+      manifest.serialize(outputStream);
+    }
     cache.store(
         ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
         ImmutableMap.<String, String>of(),
@@ -2160,7 +2167,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, input)),
         ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, input)));
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    manifest.serialize(byteArrayOutputStream);
+    try (GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+      manifest.serialize(outputStream);
+    }
     cache.store(
         ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
         ImmutableMap.<String, String>of(),
@@ -2699,7 +2708,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   private Manifest loadManifest(Path path) throws IOException {
-    try (InputStream inputStream = Files.newInputStream(path)) {
+    try (InputStream inputStream =
+             new GZIPInputStream(new BufferedInputStream(Files.newInputStream(path)))) {
       return new Manifest(inputStream);
     }
   }
