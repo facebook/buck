@@ -59,6 +59,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -616,7 +617,7 @@ public class AdbHelper {
             output.matches("\\Adrwx....-x +[0-9]+ +shell +shell.* /data/local/tmp[\\r\\n]*\\z"))) {
           loggingInfo.append(
               String.format(
-                  java.util.Locale.ENGLISH,
+                  Locale.ENGLISH,
                   "Bad ls output for /data/local/tmp: '%s'\n",
                   output));
         }
@@ -626,7 +627,7 @@ public class AdbHelper {
         if (!output.matches("\\Aexo[\\r\\n]*\\z")) {
           loggingInfo.append(
               String.format(
-                  java.util.Locale.ENGLISH,
+                  Locale.ENGLISH,
                   "Bad echo/cat output for /data/local/tmp: '%s'\n",
                   output));
         }
@@ -635,7 +636,7 @@ public class AdbHelper {
       } catch (CommandFailedException e) {
         loggingInfo.append(
             String.format(
-                java.util.Locale.ENGLISH,
+                Locale.ENGLISH,
                 "Failed (%d) '%s':\n%s\n",
                 e.exitCode,
                 e.command,
@@ -900,7 +901,7 @@ public class AdbHelper {
         @Override
         @Nullable
         protected String matchForError(String line) {
-          return line.toLowerCase().contains("failure") ? line : null;
+          return line.toLowerCase(Locale.US).contains("failure") ? line : null;
         }
       };
       device.executeShellCommand(
