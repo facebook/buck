@@ -621,7 +621,7 @@ class DaemonicParserState {
   @Override
   public String toString() {
     return String.format(
-        "memoized=%s known-cells=%s use-watchman-globbing=%s",
+        "memoized=%s known-cells=%s",
         allTargetNodes,
         knownCells);
   }
