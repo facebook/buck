@@ -33,19 +33,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.Locale;
 
 /**
  * Implementation of {@code AbstractConsoleEventBusListener} for terminals that don't support ansi.
  */
 public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListener {
+  private final Locale locale;
   private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
 
   public SimpleConsoleEventBusListener(
       Console console,
       Clock clock,
-      TestResultSummaryVerbosity summaryVerbosity) {
-    super(console, clock);
+      TestResultSummaryVerbosity summaryVerbosity,
+      Locale locale) {
+    super(console, clock, locale);
+    this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.testFormatter = new TestResultFormatter(
         console.getAnsi(),
@@ -145,9 +149,13 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
-      String line = String.format("BUILT %s", finished.getBuildRule().getFullyQualifiedName());
+      String line = String.format(
+          locale,
+          "BUILT %s",
+          finished.getBuildRule().getFullyQualifiedName());
       if (ruleCount.isPresent()) {
         line += String.format(
+            locale,
             " (%d/%d JOBS)",
             numRulesCompleted.get(),
             ruleCount.get());

@@ -89,7 +89,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -98,7 +98,6 @@ public class SuperConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
 
-  private static final DecimalFormat timeFormatter = new DecimalFormat("0.0s");
   private static final TestResultSummaryVerbosity noisySummaryVerbosity =
       TestResultSummaryVerbosity.of(true, true);
 
@@ -114,11 +113,12 @@ public class SuperConsoleEventBusListenerTest {
    * separator, as was the case in https://github.com/facebook/buck/issues/58.
    */
   private static String formatConsoleTimes(String template, Double... time) {
-    return String.format(template, (Object[]) FluentIterable.from(ImmutableList.copyOf(time))
+    return String.format(Locale.US, template, (Object[]) FluentIterable.from(
+                             ImmutableList.copyOf(time))
         .transform(new Function<Double, String>() {
           @Override
           public String apply(Double input) {
-            return timeFormatter.format(input);
+            return String.format(Locale.US, "%01.1fs", input);
           }
         }).toArray(String.class));
   }
@@ -160,7 +160,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -438,7 +439,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
         eventBus);
@@ -581,7 +583,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -857,7 +860,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1132,7 +1136,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1417,7 +1422,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     // Start the build.
@@ -1582,7 +1588,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1606,7 +1613,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1660,7 +1668,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
         eventBus);
@@ -1714,7 +1723,8 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.<WebServer>absent());
+            Optional.<WebServer>absent(),
+            Locale.US);
     eventBus.register(listener);
 
     rawEventBus.post(ConsoleEvent.info("Hello world!"));
@@ -1787,5 +1797,41 @@ public class SuperConsoleEventBusListenerTest {
     }
     assertThat(listener.createRenderLinesAtTime(timeMs), equalTo(lines));
     assertThat(listener.createLogRenderLines(), equalTo(logLines));
+  }
+
+  @Test
+  public void timestampsInLocaleWithDecimalCommaFormatCorrectly() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent(),
+            // Note we use de_DE to ensure we get a decimal comma in the output.
+            Locale.GERMAN);
+    eventBus.register(listener);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 0L, ImmutableList.of(
+                        "[+] GENERATING PROJECT...0,0s"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectGenerationEvent.Finished(),
+            0L, TimeUnit.MILLISECONDS, 0L));
+
+    validateConsole(console, listener, 0L, ImmutableList.of(
+                        "[-] GENERATING PROJECT...FINISHED 0,0s"));
   }
 }

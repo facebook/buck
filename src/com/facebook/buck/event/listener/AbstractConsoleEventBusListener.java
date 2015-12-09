@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
@@ -36,6 +37,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
@@ -43,9 +45,11 @@ import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -54,18 +58,24 @@ import javax.annotation.Nullable;
  * running build to {@code stderr}.
  */
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
-  protected static final DecimalFormat TIME_FORMATTER = new DecimalFormat("0.0s");
-  protected static final long UNFINISHED_EVENT_PAIR = -1;
-  protected static final Function<Long, String> FORMAT_TIME_FUNCTION =
-      new Function<Long, String>() {
+  private static final NumberFormatter TIME_FORMATTER = new NumberFormatter(
+      new Function<Locale, NumberFormat>() {
         @Override
-        public String apply(Long elapsedTimeMs) {
-          return TIME_FORMATTER.format(elapsedTimeMs / 1000.0);
+        public NumberFormat apply(Locale locale) {
+          // Yes, this is the only way to apply and localize a pattern to a NumberFormat.
+          NumberFormat numberFormat = NumberFormat.getIntegerInstance(locale);
+          Preconditions.checkState(numberFormat instanceof DecimalFormat);
+          DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
+          decimalFormat.applyPattern("0.0s");
+          return decimalFormat;
         }
-      };
+      });
+
+  protected static final long UNFINISHED_EVENT_PAIR = -1;
   protected final Console console;
   protected final Clock clock;
   protected final Ansi ansi;
+  private final Locale locale;
 
   @Nullable
   protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
@@ -114,9 +124,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
 
-  public AbstractConsoleEventBusListener(Console console, Clock clock) {
+  public AbstractConsoleEventBusListener(Console console, Clock clock, Locale locale) {
     this.console = console;
     this.clock = clock;
+    this.locale = locale;
     this.ansi = console.getAnsi();
 
     this.projectBuildFileParseStarted = null;
@@ -143,7 +154,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
-    return FORMAT_TIME_FUNCTION.apply(elapsedTimeMs);
+    return TIME_FORMATTER.format(locale, elapsedTimeMs / 1000.0);
   }
 
   protected Optional<Double> getApproximateBuildProgress() {

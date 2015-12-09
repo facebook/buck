@@ -59,6 +59,7 @@ import com.google.common.hash.HashCode;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
+import java.util.Locale;
 
 public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
@@ -86,7 +87,8 @@ public class SimpleConsoleEventBusListenerTest {
     SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
         console,
         fakeClock,
-        TestResultSummaryVerbosity.of(false, false));
+        TestResultSummaryVerbosity.of(false, false),
+        Locale.US);
     eventBus.register(listener);
 
     final long threadId = 0;

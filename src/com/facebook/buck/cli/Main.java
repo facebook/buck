@@ -736,6 +736,10 @@ public final class Main {
         getHttpWriteExecutorService(cacheBuckConfig);
     VersionControlStatsGenerator vcStatsGenerator = null;
 
+    // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
+    // when connecting. For now, we'll use the default from the server environment.
+    Locale locale = Locale.getDefault();
+
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
@@ -752,7 +756,8 @@ public final class Main {
                  console,
                  testConfig.getResultSummaryVerbosity(),
                  executionEnvironment,
-                 webServer);
+                 webServer,
+                 locale);
          TempDirectoryCreator tempDirectoryCreator =
              new TempDirectoryCreator(testTempDirOverride);
          AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
@@ -1220,7 +1225,8 @@ public final class Main {
       Console console,
       TestResultSummaryVerbosity testResultSummaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer) {
+      Optional<WebServer> webServer,
+      Locale locale) {
     Verbosity verbosity = console.getVerbosity();
 
     if (Platform.WINDOWS != Platform.detect() &&
@@ -1232,7 +1238,8 @@ public final class Main {
           clock,
           testResultSummaryVerbosity,
           executionEnvironment,
-          webServer);
+          webServer,
+          locale);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
@@ -1240,7 +1247,8 @@ public final class Main {
     return new SimpleConsoleEventBusListener(
         console,
         clock,
-        testResultSummaryVerbosity);
+        testResultSummaryVerbosity,
+        locale);
   }
 
   @VisibleForTesting

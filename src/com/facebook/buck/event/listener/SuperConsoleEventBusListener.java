@@ -39,6 +39,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -52,6 +53,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -74,6 +76,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
+  private final Locale locale;
+  private final Function<Long, String> formatTimeFunction;
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>>
       threadsToRunningBuildRuleEvent;
@@ -115,8 +119,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer) {
-    super(console, clock);
+      Optional<WebServer> webServer,
+      Locale locale) {
+    super(console, clock, locale);
+    this.locale = locale;
+    this.formatTimeFunction = new Function<Long, String>(){
+        @Override
+        public String apply(Long elapsedTimeMs) {
+          return formatElapsedTime(elapsedTimeMs);
+        }
+    };
     this.webServer = webServer;
     this.threadsToRunningBuildRuleEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
@@ -243,8 +255,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       String jobSummary = null;
       if (ruleCount.isPresent()) {
         List<String> columns = Lists.newArrayList();
-        columns.add(String.format("%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
-        columns.add(String.format("%d UPDATED", updated.get()));
+        columns.add(String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
+        columns.add(String.format(locale, "%d UPDATED", updated.get()));
         if (ruleCount.isPresent() && ruleCount.get() > 0) {
           // Measure CACHE HIT % based on total cache misses and the theoretical total number of
           // build rules.
@@ -256,11 +268,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           // only count as one cache_hit even though it saved us from fetching N nodes.
           columns.add(
               String.format(
+                  locale,
                   "%.1f%% CACHE MISS",
                   100 * (double) cacheMisses.get() / ruleCount.get()));
           if (cacheErrors.get() > 0) {
             columns.add(
                 String.format(
+                    locale,
                     "%.1f%% CACHE ERRORS",
                     100 * (double) cacheErrors.get() / updated.get()));
           }
@@ -274,6 +288,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional<Integer> port = webServer.get().getPort();
         if (port.isPresent()) {
           buildTrace = String.format(
+              locale,
               "Details: http://localhost:%s/trace/%s",
               port.get(),
               buildFinished.getBuildId());
@@ -298,7 +313,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       if (buildTime == UNFINISHED_EVENT_PAIR) {
         ThreadStateRenderer renderer = new BuildThreadStateRenderer(
             ansi,
-            FORMAT_TIME_FUNCTION,
+            formatTimeFunction,
             currentTimeMillis,
             threadsToRunningBuildRuleEvent,
             threadsToRunningStep,
@@ -319,7 +334,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       if (testRunTime == UNFINISHED_EVENT_PAIR) {
         ThreadStateRenderer renderer = new TestThreadStateRenderer(
             ansi,
-            FORMAT_TIME_FUNCTION,
+            formatTimeFunction,
             currentTimeMillis,
             threadsToRunningTestRuleEvent,
             threadsToRunningTestSummaryEvent,
@@ -376,6 +391,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (testSkipsVal > 0) {
       return Optional.of(
           String.format(
+              locale,
               "(%d PASS/%d SKIP/%d FAIL)",
               testPassesVal,
               testSkipsVal,
@@ -383,6 +399,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else if (testPassesVal > 0 || testFailuresVal > 0) {
       return Optional.of(
           String.format(
+              locale,
               "(%d PASS/%d FAIL)",
               testPassesVal,
               testFailuresVal));
@@ -562,7 +579,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         // includes the stack trace and stdout/stderr.
         logEvents.add(
             ConsoleEvent.severe(
-                String.format("%s %s %s: %s",
+                String.format(
+                    locale,
+                    "%s %s %s: %s",
                     testResult.getType().toString(),
                     testResult.getTestCaseName(),
                     testResult.getTestName(),
