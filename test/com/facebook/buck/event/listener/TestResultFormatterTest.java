@@ -42,6 +42,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.util.Locale;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,14 +57,16 @@ public class TestResultFormatterTest {
     return new TestResultFormatter(
         new Ansi(false),
         Verbosity.COMMANDS,
-        TestResultSummaryVerbosity.of(false, false));
+        TestResultSummaryVerbosity.of(false, false),
+        Locale.US);
   }
 
   private TestResultFormatter createNoisyFormatter() {
     return new TestResultFormatter(
         new Ansi(false),
         Verbosity.COMMANDS,
-        TestResultSummaryVerbosity.of(true, true));
+        TestResultSummaryVerbosity.of(true, true),
+        Locale.US);
   }
 
   private TestResultFormatter createFormatterWithMaxLogLines(int logLines) {
@@ -73,7 +77,8 @@ public class TestResultFormatterTest {
             .setIncludeStdOut(false)
             .setIncludeStdErr(false)
             .setMaxDebugLogLines(logLines)
-            .build());
+            .build(),
+        Locale.US);
   }
 
   @Before
@@ -290,6 +295,36 @@ public class TestResultFormatterTest {
     formatter.reportResult(builder, results);
 
     assertEquals("PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
+        toString(builder));
+  }
+
+  @Test
+  public void shouldUseDecimalCommaForGerman() {
+    TestResultFormatter formatter = new TestResultFormatter(
+        new Ansi(false),
+        Verbosity.COMMANDS,
+        TestResultSummaryVerbosity.of(false, false),
+        Locale.GERMAN);
+
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest",
+        ImmutableList.of(
+            new TestResultSummary(
+                "com.example.FooTest",
+                "successTest",
+                ResultType.SUCCESS,
+                12300,
+                /*message*/ null,
+                /*stacktrace*/ null,
+                "good stdout",
+                "good stderr")));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    assertEquals(
+        "PASS     12,3s  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
         toString(builder));
   }
 

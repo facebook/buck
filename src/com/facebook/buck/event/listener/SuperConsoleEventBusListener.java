@@ -146,7 +146,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.testFormatter = new TestResultFormatter(
         console.getAnsi(),
         console.getVerbosity(),
-        summaryVerbosity);
+        summaryVerbosity,
+        locale);
     this.testRunStarted = new AtomicReference<>();
     this.testRunFinished = new AtomicReference<>();
   }

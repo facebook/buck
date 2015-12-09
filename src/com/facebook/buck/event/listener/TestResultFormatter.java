@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 public class TestResultFormatter {
 
@@ -44,7 +45,8 @@ public class TestResultFormatter {
 
   private final Ansi ansi;
   private final Verbosity verbosity;
-  private TestResultSummaryVerbosity summaryVerbosity;
+  private final TestResultSummaryVerbosity summaryVerbosity;
+  private final Locale locale;
 
   public enum FormatMode {
       BEFORE_TEST_RUN,
@@ -54,10 +56,12 @@ public class TestResultFormatter {
   public TestResultFormatter(
       Ansi ansi,
       Verbosity verbosity,
-      TestResultSummaryVerbosity summaryVerbosity) {
+      TestResultSummaryVerbosity summaryVerbosity,
+      Locale locale) {
     this.ansi = ansi;
     this.verbosity = verbosity;
     this.summaryVerbosity = summaryVerbosity;
+    this.locale = locale;
   }
 
   public void runStarted(
@@ -91,14 +95,16 @@ public class TestResultFormatter {
         verbosity.shouldPrintBinaryRunInformation() &&
             results.getTotalNumberOfTests() > 1) {
       addTo.add("");
-      addTo.add(String.format(
+      addTo.add(
+          String.format(
+              locale,
               "Results for %s (%d/%d) %s",
               results.getBuildTarget().getFullyQualifiedName(),
               results.getSequenceNumber(),
               results.getTotalNumberOfTests(), verbosity));
     }
     for (TestCaseSummary testCase : results.getTestCases()) {
-      addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));
+      addTo.add(testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi));
 
       // Don't print the full error if there were no failures (so only successes and assumption
       // violations)
@@ -119,6 +125,7 @@ public class TestResultFormatter {
 
       if (results.getTestLogPath().isPresent()) {
         reportLogSummary(
+            locale,
             addTo,
             results.getTestLogPath().get(),
             summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
@@ -127,6 +134,7 @@ public class TestResultFormatter {
   }
 
   private static void reportLogSummary(
+      Locale locale,
       ImmutableList.Builder<String> addTo,
       Path logPath,
       int maxLogLines) {
@@ -144,10 +152,10 @@ public class TestResultFormatter {
 
       int logLinesStartIndex;
       if (logLines.size() > maxLogLines) {
-        addTo.add(String.format("Last %d test log lines from %s:", maxLogLines, logPath));
+        addTo.add(String.format(locale, "Last %d test log lines from %s:", maxLogLines, logPath));
         logLinesStartIndex = logLines.size() - maxLogLines;
       } else {
-        addTo.add(String.format("Test logs from %s:", logPath));
+        addTo.add(String.format(locale, "Test logs from %s:", logPath));
         logLinesStartIndex = 0;
       }
       addTo.addAll(logLines.subList(logLinesStartIndex, logLines.size()));
@@ -158,11 +166,13 @@ public class TestResultFormatter {
 
   public void reportResultSummary(ImmutableList.Builder<String> addTo,
                                   TestResultSummary testResult) {
-    addTo.add(String.format("%s %s %s: %s",
-        testResult.getType().toString(),
-        testResult.getTestCaseName(),
-        testResult.getTestName(),
-        testResult.getMessage()));
+    addTo.add(
+        String.format(
+            locale, "%s %s %s: %s",
+            testResult.getType().toString(),
+            testResult.getTestCaseName(),
+            testResult.getTestName(),
+            testResult.getMessage()));
 
     if (testResult.getStacktrace() != null) {
       for (String line : Splitter.on("\n").split(testResult.getStacktrace())) {
@@ -214,9 +224,13 @@ public class TestResultFormatter {
         addTo.add(ansi.asHighlightedSuccessText("TESTS PASSED"));
       }
     } else {
-      addTo.add(ansi.asHighlightedFailureText(
-          String.format(
-              "TESTS FAILED: %d %s", numFailures, numFailures == 1 ? "FAILURE" : "FAILURES")));
+      addTo.add(
+          ansi.asHighlightedFailureText(
+              String.format(
+                  locale,
+                  "TESTS FAILED: %d %s",
+                  numFailures,
+                  numFailures == 1 ? "FAILURE" : "FAILURES")));
       for (TestResults results : failingTests.keySet()) {
         addTo.add("Failed target: " + results.getBuildTarget().getFullyQualifiedName());
         for (TestCaseSummary summary : failingTests.get(results)) {

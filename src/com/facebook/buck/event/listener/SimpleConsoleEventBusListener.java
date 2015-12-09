@@ -54,7 +54,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     this.testFormatter = new TestResultFormatter(
         console.getAnsi(),
         console.getVerbosity(),
-        summaryVerbosity);
+        summaryVerbosity,
+        locale);
   }
 
   @Override
