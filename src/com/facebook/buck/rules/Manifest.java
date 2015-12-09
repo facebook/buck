@@ -243,6 +243,10 @@ public class Manifest {
     }
   }
 
+  public int size() {
+    return entries.size();
+  }
+
   @VisibleForTesting
   ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> toMap() {
     ImmutableMap.Builder<RuleKey, ImmutableMap<String, HashCode>> builder = ImmutableMap.builder();

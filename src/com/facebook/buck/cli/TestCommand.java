@@ -466,6 +466,7 @@ public class TestCommand extends BuildCommand {
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
+              params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               actionGraphAndResolver.getSecond());
       try (Build build = createBuild(
           params.getBuckConfig(),

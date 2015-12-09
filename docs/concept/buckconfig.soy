@@ -291,6 +291,12 @@ This section includes settings that control build engine behavior.
   #              to/from the cache.
   depfiles = enabled
 
+  # Sets the maximum size of the depfile cache for each input source file,
+  # used when setting `depfiles` to `cache` above.  An ideal setting for
+  # this should be big enough for the working set of all possible header
+  # states that a given unchanged source file uses.
+  max_depfile_cache_entries = 256
+
   # Configures order in which the build engine executes scheduled jobs.
   # Supported values:
   #   LIFO     : Last in, first out. This mode will prefer building all

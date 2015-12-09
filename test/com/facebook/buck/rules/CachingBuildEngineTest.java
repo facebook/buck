@@ -203,6 +203,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Add a build step so we can verify that the steps are executed.
@@ -315,6 +316,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
@@ -436,6 +438,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(
@@ -522,6 +525,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(
@@ -583,6 +587,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -689,6 +694,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.DEEP,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -833,6 +839,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -983,6 +990,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -1028,6 +1036,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1081,6 +1090,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1173,6 +1183,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1277,6 +1288,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1375,6 +1387,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1476,6 +1489,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1598,6 +1612,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1700,6 +1715,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1776,6 +1792,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.CACHE,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1887,6 +1904,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.CACHE,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -1943,6 +1961,119 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
+  }
+
+  @Test
+  public void manifestIsTruncatedWhenGrowingPastSizeLimit() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            1L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
+    // size.
+    Manifest manifest = Manifest.fromMap(
+        ImmutableMap.of(new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    manifest.serialize(byteArrayOutputStream);
+    cache.store(
+        ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
+        ImmutableMap.<String, String>of(),
+        byteArrayOutputStream.toByteArray());
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+    OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+    RuleKey depFileRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
+
+    // Verify that the manifest is truncated and now only contains the newly written entry.
+    Path fetchedManifest = tmp.newFile("manifest").toPath();
+    CacheResult cacheResult =
+        cache.fetch(
+            cachingBuildEngine.getManifestRuleKey(rule),
+            fetchedManifest);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+    manifest = loadManifest(fetchedManifest);
+    assertThat(
+        manifest.toMap(),
+        equalTo(
+            ImmutableMap.of(
+                depFileRuleKey,
+                ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
   }
 
   @Test
@@ -2010,6 +2141,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.CACHE,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -2093,6 +2225,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -2179,6 +2312,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.DEEP,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -2283,6 +2417,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
@@ -2339,6 +2474,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -2403,6 +2539,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -2459,6 +2596,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             pathResolver,
             Functions.constant(
                 new CachingBuildEngine.RuleKeyFactories(
@@ -2517,6 +2655,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
+            256L,
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     assertThat(

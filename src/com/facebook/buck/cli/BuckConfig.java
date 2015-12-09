@@ -662,6 +662,13 @@ public class BuckConfig {
   }
 
   /**
+   * @return the maximum number of entries to support in the depfile cache.
+   */
+  public long getBuildMaxDepFileCacheEntries() {
+    return getLong("build", "max_depfile_cache_entries").or(256L);
+  }
+
+  /**
    * @return the selected execution order of the build work queue.
    */
   public WorkQueueExecutionOrder getWorkQueueExecutionOrder() {

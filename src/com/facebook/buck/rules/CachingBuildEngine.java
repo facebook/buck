@@ -122,6 +122,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final BuildMode buildMode;
   private final DependencySchedulingOrder dependencySchedulingOrder;
   private final DepFiles depFiles;
+  private final long maxDepFileCacheEntries;
   private final SourcePathResolver pathResolver;
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
@@ -132,11 +133,13 @@ public class CachingBuildEngine implements BuildEngine {
       BuildMode buildMode,
       DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
+      long maxDepFileCacheEntries,
       final BuildRuleResolver resolver) {
     this.service = service;
     this.buildMode = buildMode;
     this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
+    this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.pathResolver = new SourcePathResolver(resolver);
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -159,12 +162,14 @@ public class CachingBuildEngine implements BuildEngine {
       BuildMode buildMode,
       DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
+      long maxDepFileCacheEntries,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
     this.service = service;
     this.buildMode = buildMode;
     this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
+    this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.pathResolver = pathResolver;
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -1209,6 +1214,13 @@ public class CachingBuildEngine implements BuildEngine {
                rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
         manifest = new Manifest(inputStream);
       }
+    }
+
+    // If the manifest is larger than the max size, just truncate it.  It might be nice to support
+    // some sort of LRU management here to avoid evicting everything, but it'll take some care to do
+    // this efficiently and it's not clear how much benefit this will give us.
+    if (manifest.size() >= maxDepFileCacheEntries) {
+      manifest = new Manifest();
     }
 
     // Update the manifest with the new output rule key.
