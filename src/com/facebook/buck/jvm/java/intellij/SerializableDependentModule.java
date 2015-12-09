@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nullable;
@@ -108,10 +109,11 @@ class SerializableDependentModule {
     return new SerializableDependentModule("inheritedJdk", null);
   }
 
-  static SerializableDependentModule newStandardJdk() {
+  static SerializableDependentModule newStandardJdk(Optional<String> jdkName,
+      Optional<String> jdkType) {
     SerializableDependentModule dependentModule = new SerializableDependentModule("jdk", null);
-    dependentModule.jdkName = "1.7";
-    dependentModule.jdkType = "JavaSDK";
+    dependentModule.jdkName = jdkName.or("1.7");
+    dependentModule.jdkType = jdkType.or("JavaSDK");
     return dependentModule;
   }
 
