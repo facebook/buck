@@ -199,7 +199,7 @@ public class AndroidBinaryGraphEnhancer {
       resourceRules = ImmutableSortedSet.<BuildRule>of(resourcesFilter);
     } else {
       filteredResourcesProvider = new IdentityResourcesProvider(
-          pathResolver.deprecatedAllPaths(resourceDetails.getResourceDirectories()));
+          resourceDetails.getResourceDirectories());
     }
 
     // Create the AaptPackageResourcesBuildable.
@@ -275,14 +275,14 @@ public class AndroidBinaryGraphEnhancer {
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.
     ImmutableList<DexProducedFromJavaLibrary> preDexBuildConfigs;
-    ImmutableList<Path> buildConfigJarFiles;
+    ImmutableList<SourcePath> buildConfigJarFiles;
     if (packageType == PackageType.INSTRUMENTED) {
       preDexBuildConfigs = ImmutableList.of();
       buildConfigJarFiles = ImmutableList.of();
     } else {
       ImmutableList.Builder<DexProducedFromJavaLibrary> preDexBuildConfigsBuilder =
           ImmutableList.builder();
-      ImmutableList.Builder<Path> buildConfigJarFilesBuilder = ImmutableList.builder();
+      ImmutableList.Builder<SourcePath> buildConfigJarFilesBuilder = ImmutableList.builder();
       addBuildConfigDeps(
           shouldPreDex,
           packageableCollection,
@@ -347,9 +347,8 @@ public class AndroidBinaryGraphEnhancer {
         .setPreDexMerge(preDexMerge)
         .setComputeExopackageDepsAbi(computeExopackageDepsAbi)
         .setClasspathEntriesToDex(
-            ImmutableSet.<Path>builder()
-                .addAll(pathResolver.deprecatedAllPaths(
-                        packageableCollection.getClasspathEntriesToDex()))
+            ImmutableSet.<SourcePath>builder()
+                .addAll(packageableCollection.getClasspathEntriesToDex())
                 .addAll(buildConfigJarFiles)
                 .build())
         .setFinalDeps(enhancedDeps.build())
@@ -366,7 +365,7 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
       ImmutableList.Builder<DexProducedFromJavaLibrary> preDexRules,
-      ImmutableList.Builder<Path> buildConfigJarFilesBuilder) {
+      ImmutableList.Builder<SourcePath> buildConfigJarFilesBuilder) {
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
         ImmutableList.<BuildConfigFields.Field>of(
             BuildConfigFields.Field.of(
@@ -410,12 +409,12 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 
       enhancedDeps.add(buildConfigJavaLibrary);
-      Path buildConfigJar = buildConfigJavaLibrary.getPathToOutput();
       Preconditions.checkNotNull(
-          buildConfigJar,
+          buildConfigJavaLibrary.getPathToOutput(),
           "%s must have an output file.",
           buildConfigJavaLibrary);
-      buildConfigJarFilesBuilder.add(buildConfigJar);
+      buildConfigJarFilesBuilder.add(
+          new BuildTargetSourcePath(buildConfigJavaLibrary.getBuildTarget()));
 
       if (shouldPreDex) {
         DexProducedFromJavaLibrary buildConfigDex = new DexProducedFromJavaLibrary(

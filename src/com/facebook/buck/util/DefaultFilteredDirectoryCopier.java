@@ -59,8 +59,8 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
 
   @Override
   public void copyDir(final ProjectFilesystem filesystem,
-      final Path srcDir,
-      final Path destDir,
+      Path srcDir,
+      Path destDir,
       final Predicate<Path> pred) throws IOException {
 
     // Remove existing contents if any.
@@ -69,14 +69,16 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
     }
     filesystem.mkdirs(destDir);
 
-    filesystem.walkRelativeFileTree(srcDir, new SimpleFileVisitor<Path>() {
+    final Path absoluteSrcDir = filesystem.resolve(srcDir);
+    final Path absoluteDestDir = filesystem.resolve(destDir);
+    filesystem.walkFileTree(absoluteSrcDir, new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult visitFile(Path srcPath, BasicFileAttributes attributes)
+          public FileVisitResult visitFile(Path absoluteSrcPath, BasicFileAttributes attributes)
               throws IOException {
-            if (pred.apply(srcPath)) {
-              Path destPath = destDir.resolve(srcDir.relativize(srcPath));
+            if (pred.apply(filesystem.getRootPath().relativize(absoluteSrcPath))) {
+              Path destPath = absoluteDestDir.resolve(absoluteSrcDir.relativize(absoluteSrcPath));
               filesystem.createParentDirs(destPath);
-              filesystem.copy(srcPath, destPath, ProjectFilesystem.CopySourceMode.FILE);
+              filesystem.copy(absoluteSrcPath, destPath, ProjectFilesystem.CopySourceMode.FILE);
             }
             return FileVisitResult.CONTINUE;
           }
