@@ -43,7 +43,9 @@ public class AndroidLibraryBuilder extends AbstractNodeBuilder<AndroidLibraryDes
   }
 
   public AndroidLibraryBuilder addProcessorBuildTarget(BuildTarget processorRule) {
-    arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, processorRule);
+    arg.annotationProcessorDeps = amend(
+        arg.annotationProcessorDeps,
+        processorRule);
     return this;
   }
 

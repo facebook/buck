@@ -87,18 +87,14 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    JavacOptions.Builder javacOptionsBuilder =
-        JavaLibraryDescription.getJavacOptions(
+    JavacOptions javacOptions =
+        JavacArgInterpreter.populateJavacOptions(
+            templateOptions,
+            params,
+            resolver,
             pathResolver,
-            args,
-            templateOptions);
-    AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
-            resolver);
-    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
-    JavacOptions javacOptions = javacOptionsBuilder.build();
+            args
+        );
 
     CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
         params,

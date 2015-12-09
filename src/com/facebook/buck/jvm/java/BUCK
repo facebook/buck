@@ -130,6 +130,8 @@ java_library(
     'JarFattener.java',
     'JavaBinary.java',
     'JavaBinaryDescription.java',
+    'JavacArg.java',
+    'JavacArgInterpreter.java',
     'JavaLibraryDescription.java',
     'JavaLibraryClasspathProvider.java',
     'JavaLibraryRules.java',

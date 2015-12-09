@@ -19,10 +19,9 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavacArgInterpreter;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -86,18 +85,14 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableList<String> vmArgs = args.vmArgs.get();
 
-    JavacOptions.Builder javacOptionsBuilder =
-        JavaLibraryDescription.getJavacOptions(
+    JavacOptions javacOptions =
+        JavacArgInterpreter.populateJavacOptions(
+            templateOptions,
+            params,
+            resolver,
             pathResolver,
-            args,
-            templateOptions);
-    AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
-            resolver);
-    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
-    JavacOptions javacOptions = javacOptionsBuilder.build();
+            args
+        );
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
