@@ -103,8 +103,21 @@ public class TestResultFormatter {
               results.getSequenceNumber(),
               results.getTotalNumberOfTests(), verbosity));
     }
+
+    // If there's only one test case and one log, print the log path inline with the test summary.
+    boolean appendLogToSummaryOnSuccess = results.getTestCases().size() == 1 &&
+        results.getTestLogPaths().size() == 1 &&
+        verbosity != Verbosity.SILENT;
+    boolean shouldListLogsAfterTests = !appendLogToSummaryOnSuccess;
+    boolean shouldReportLogSummaryAfterTests = false;
+
     for (TestCaseSummary testCase : results.getTestCases()) {
-      addTo.add(testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi));
+      StringBuilder oneLineSummary = new StringBuilder(
+          testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi));
+      if (appendLogToSummaryOnSuccess && testCase.isSuccess()) {
+        oneLineSummary.append("  Logs: ").append(results.getTestLogPaths().get(0).toString());
+      }
+      addTo.add(oneLineSummary.toString());
 
       // Don't print the full error if there were no failures (so only successes and assumption
       // violations)
@@ -119,16 +132,27 @@ public class TestResultFormatter {
 
         // Report on either explicit failure
         if (!testResult.isSuccess()) {
+          shouldListLogsAfterTests = false;
+          shouldReportLogSummaryAfterTests = true;
           reportResultSummary(addTo, testResult);
         }
       }
+    }
 
-      if (results.getTestLogPath().isPresent()) {
-        reportLogSummary(
-            locale,
-            addTo,
-            results.getTestLogPath().get(),
-            summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
+    if (verbosity != Verbosity.SILENT) {
+      for (Path testLogPath : results.getTestLogPaths()) {
+        if (Files.exists(testLogPath)) {
+          if (shouldReportLogSummaryAfterTests) {
+            reportLogSummary(
+                locale,
+                addTo,
+                testLogPath,
+                summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
+          }
+          if (shouldListLogsAfterTests) {
+            addTo.add("Logs: " + testLogPath.toString());
+          }
+        }
       }
     }
   }
@@ -155,7 +179,7 @@ public class TestResultFormatter {
         addTo.add(String.format(locale, "Last %d test log lines from %s:", maxLogLines, logPath));
         logLinesStartIndex = logLines.size() - maxLogLines;
       } else {
-        addTo.add(String.format(locale, "Test logs from %s:", logPath));
+        addTo.add(String.format(locale, "Logs from %s:", logPath));
         logLinesStartIndex = 0;
       }
       addTo.addAll(logLines.subList(logLinesStartIndex, logLines.size()));

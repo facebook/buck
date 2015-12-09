@@ -33,7 +33,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
@@ -104,6 +103,7 @@ public class AppleTest
   private final boolean runTestSeparately;
 
   private final Path testOutputPath;
+  private final Path testLogsPath;
 
   private final String testBundleExtension;
 
@@ -181,6 +181,7 @@ public class AppleTest
     this.runTestSeparately = runTestSeparately;
     this.testBundleExtension = testBundleExtension;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
+    this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.absent();
     this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
     this.testLogDirectoryEnvironmentVariable = testLogDirectoryEnvironmentVariable;
@@ -228,8 +229,8 @@ public class AppleTest
         getPathToTestOutputDirectory());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
 
-    Path pathToTestLogs = pathToTestOutput.resolve("logs");
-    steps.add(new MkdirStep(getProjectFilesystem(), pathToTestLogs));
+    Path resolvedTestLogsPath = getProjectFilesystem().resolve(testLogsPath);
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resolvedTestLogsPath));
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(
         testOutputPath);
@@ -291,7 +292,7 @@ public class AppleTest
               xcodeDeveloperDirSupplier,
               options.getTestSelectorList(),
               Optional.of(testLogDirectoryEnvironmentVariable),
-              Optional.of(pathToTestLogs),
+              Optional.of(resolvedTestLogsPath),
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel));
       steps.add(xctoolStep);
@@ -363,11 +364,18 @@ public class AppleTest
             }
           }
         }
-        return TestResults.of(
-          getBuildTarget(),
-          testCaseSummaries,
-          contacts,
-          FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        TestResults.Builder testResultsBuilder = TestResults.builder()
+            .setBuildTarget(getBuildTarget())
+            .setTestCases(testCaseSummaries)
+            .setContacts(contacts)
+            .setLabels(FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        if (getProjectFilesystem().isDirectory(testLogsPath)) {
+          for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
+            testResultsBuilder.addTestLogPaths(testLogPath);
+          }
+        }
+
+        return testResultsBuilder.build();
       }
     };
   }

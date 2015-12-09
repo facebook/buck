@@ -368,7 +368,7 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.builder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
         .setTestCases(ImmutableList.of(summary))
-        .setTestLogPath(logPath)
+        .addTestLogPaths(logPath)
         .build();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -402,7 +402,7 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.builder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
         .setTestCases(ImmutableList.of(summary))
-        .setTestLogPath(logPath)
+        .addTestLogPaths(logPath)
         .build();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -414,7 +414,7 @@ public class TestResultFormatterTest {
         "FAILURE %s %s: %s",
         "%s",
         "====TEST LOGS====",
-        "Test logs from log.txt:",
+        "Logs from log.txt:",
         "This is a debug log",
         "Here's another one"),
         failingTest.getTestCaseName(),
@@ -426,7 +426,7 @@ public class TestResultFormatterTest {
   }
 
   @Test
-  public void shouldNotOutputLogLinesOfPassingTest() throws IOException {
+  public void shouldOutputLogPathInlineForPassingTest() throws IOException {
     TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
@@ -440,14 +440,50 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.builder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
         .setTestCases(ImmutableList.of(summary))
-        .setTestLogPath(logPath)
+        .addTestLogPaths(logPath)
         .build();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
 
-    assertEquals("PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
+    assertEquals(
+        "PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest  Logs: log.txt",
+        toString(builder));
+  }
+
+  @Test
+  public void shouldOutputMultipleLogPathsForPassingTest() throws IOException {
+    TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path logPath = vfs.getPath("log.txt");
+    Files.write(
+        logPath,
+        ImmutableList.of("This is a debug log", "Here's another one"),
+        StandardCharsets.UTF_8);
+
+    Path log2Path = vfs.getPath("log2.txt");
+    Files.write(
+        log2Path,
+        ImmutableList.of("This is another debug log"),
+        StandardCharsets.UTF_8);
+
+    TestResults results = TestResults.builder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
+        .setTestCases(ImmutableList.of(summary))
+        .addTestLogPaths(logPath, log2Path)
+        .build();
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    assertEquals(
+        "PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest\n" +
+        "Logs: log.txt\n" +
+        "Logs: log2.txt",
         toString(builder));
   }
 
@@ -467,7 +503,7 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.builder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
         .setTestCases(ImmutableList.of(summary))
-        .setTestLogPath(logPath)
+        .addTestLogPaths(logPath)
         .build();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -506,7 +542,7 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.builder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
         .setTestCases(ImmutableList.of(summary))
-        .setTestLogPath(logPath)
+        .addTestLogPaths(logPath)
         .build();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();

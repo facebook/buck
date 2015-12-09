@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -90,6 +89,8 @@ abstract class AbstractTestResults {
   @Value.Parameter
   public abstract ImmutableSet<String> getLabels();
 
+  public abstract ImmutableList<Path> getTestLogPaths();
+
   @Value.Default
   public boolean getDependenciesPassTheirTests() {
     return true;
@@ -109,6 +110,4 @@ abstract class AbstractTestResults {
   public String toString() {
     return String.format("%s (success=%s) %s", super.toString(), isSuccess(), getTestCases());
   }
-
-  public abstract Optional<Path> getTestLogPath();
 }
