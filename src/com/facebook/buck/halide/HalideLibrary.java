@@ -192,7 +192,7 @@ public class HalideLibrary
       Linker.LinkableDepType type) {
     // Create a new flavored HalideLibrary rule object for the given platform.
     HalideLibrary rule = (HalideLibrary) requireBuildRule(cxxPlatform);
-    Path libPath = getPathToOutput().resolve(rule.getLibraryName());
+    Path libPath = rule.getPathToOutput().resolve(rule.getLibraryName());
     return NativeLinkableInput.of(
             SourcePathArg.from(
                     getResolver(),
