@@ -167,12 +167,6 @@ public class AppleLibraryDescription implements
                 .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                 .build());
       }
-      if (!AppleDescriptions.INCLUDE_RESOURCES.getValue(params.getBuildTarget()).isPresent()) {
-        return resolver.requireRule(
-            BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(AppleDescriptions.TRANSITIVE_RESOURCES_FLAVOR)
-                .build());
-      }
 
       return AppleDescriptions.createAppleBundle(
           cxxPlatformFlavorDomain,

@@ -44,7 +44,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -85,19 +84,6 @@ public class AppleDescriptions {
               INCLUDE_FRAMEWORKS_FLAVOR, Boolean.TRUE,
               NO_INCLUDE_FRAMEWORKS_FLAVOR, Boolean.FALSE));
 
-  public static final Flavor NO_RESOURCES_FLAVOR = ImmutableFlavor.of("no-resources");
-  public static final Flavor FIRST_ORDER_RESOURCES_FLAVOR =
-      ImmutableFlavor.of("first-order-resources");
-  public static final Flavor TRANSITIVE_RESOURCES_FLAVOR =
-      ImmutableFlavor.of("transitive-resources");
-  public static final FlavorDomain<DependencyMode> INCLUDE_RESOURCES =
-      new FlavorDomain<>(
-          "Include resources",
-          ImmutableMap.of(
-              NO_RESOURCES_FLAVOR, DependencyMode.NONE,
-              FIRST_ORDER_RESOURCES_FLAVOR, DependencyMode.FIRST_ORDER,
-              TRANSITIVE_RESOURCES_FLAVOR, DependencyMode.TRANSITIVE));
-
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
   private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
@@ -126,9 +112,9 @@ public class AppleDescriptions {
     // The exported headers in the populated cxx constructor arg will contain exported headers from
     // the apple constructor arg with the public include style.
     return AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-        pathResolver,
-        headerPathPrefix,
-        arg.exportedHeaders.or(EMPTY_HEADERS));
+                pathResolver,
+                headerPathPrefix,
+                arg.exportedHeaders.or(EMPTY_HEADERS));
   }
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
@@ -428,7 +414,6 @@ public class AppleDescriptions {
     AppleResources.collectResourceDirsAndFiles(
         targetGraph,
         Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())),
-        INCLUDE_RESOURCES.getRequiredValue(params.getBuildTarget()),
         bundleDirsBuilder,
         dirsContainingResourceDirsBuilder,
         bundleFilesBuilder,

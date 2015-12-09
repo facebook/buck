@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -67,15 +66,10 @@ public class AppleResources {
   public static <T> void collectResourceDirsAndFiles(
       TargetGraph targetGraph,
       TargetNode<T> targetNode,
-      DependencyMode dependencyMode,
       ImmutableSet.Builder<SourcePath> resourceDirs,
       ImmutableSet.Builder<SourcePath> dirsContainingResourceDirs,
       ImmutableSet.Builder<SourcePath> resourceFiles,
       ImmutableSet.Builder<SourcePath> bundleVariantFiles) {
-    if (dependencyMode.equals(DependencyMode.NONE)) {
-      return;
-    }
-
     ImmutableSet<BuildRuleType> types =
         ReactNativeFlavors.skipBundling(targetNode.getBuildTarget())
             ? ImmutableSet.of(AppleResourceDescription.TYPE)
@@ -84,9 +78,7 @@ public class AppleResources {
     Iterable<TargetNode<?>> resourceNodes =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
-            dependencyMode.equals(DependencyMode.TRANSITIVE) ?
-                AppleBuildRules.RecursiveDependenciesMode.COPYING :
-                AppleBuildRules.RecursiveDependenciesMode.NONE,
+            AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
             Optional.of(types));
 

@@ -163,12 +163,6 @@ public class AppleBinaryDescription
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build());
       }
-      if (!AppleDescriptions.INCLUDE_RESOURCES.getValue(params.getBuildTarget()).isPresent()) {
-        return resolver.requireRule(
-            BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(AppleDescriptions.TRANSITIVE_RESOURCES_FLAVOR)
-                .build());
-      }
       Optional<AppleDebugFormat> flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
           params.getBuildTarget());
       BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();

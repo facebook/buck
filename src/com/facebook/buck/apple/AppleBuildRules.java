@@ -99,10 +99,6 @@ public final class AppleBuildRules {
 
   public enum RecursiveDependenciesMode {
     /**
-     * Will never traverse dependencies.
-     */
-    NONE,
-    /**
      * Will traverse all rules that are built.
      */
     BUILDING,
@@ -183,13 +179,10 @@ public final class AppleBuildRules {
               LOG.verbose("Exported deps for node %s mode %s: %s", node, mode, exportedDeps);
             }
 
-            ImmutableSortedSet<TargetNode<?>> deps;
+            ImmutableSortedSet<TargetNode<?>> deps = ImmutableSortedSet.of();
 
             if (node != targetNode) {
               switch (mode) {
-                case NONE:
-                  deps = ImmutableSortedSet.of();
-                  break;
                 case LINKING:
                   if (node.getType().equals(AppleLibraryDescription.TYPE) ||
                       node.getType().equals(CxxLibraryDescription.TYPE)) {
@@ -214,12 +207,6 @@ public final class AppleBuildRules {
                 case BUILDING:
                   deps = defaultDeps;
                   break;
-                default:
-                  throw new RuntimeException(
-                      String.format(
-                          "Unhandled '%s': '%s'.",
-                          RecursiveDependenciesMode.class.getSimpleName(),
-                          mode));
               }
             } else {
               deps = defaultDeps;

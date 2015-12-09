@@ -50,7 +50,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -276,7 +275,6 @@ public class AppleTestDescription implements
     AppleResources.collectResourceDirsAndFiles(
         targetGraph,
         Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())),
-        DependencyMode.TRANSITIVE,
         resourceDirsBuilder,
         dirsContainingResourceDirsBuilder,
         resourceFilesBuilder,

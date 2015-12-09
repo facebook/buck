@@ -85,9 +85,6 @@ public class AndroidLibraryGraphEnhancer {
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
 
     switch (resourceDependencyMode) {
-      case NONE:
-        androidResourceDeps = ImmutableSet.of();
-        break;
       case FIRST_ORDER:
         androidResourceDeps = FluentIterable.from(originalDeps)
             .filter(HasAndroidResourceDeps.class)

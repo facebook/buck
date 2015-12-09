@@ -80,9 +80,8 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphonesimulator-x86_64," +
-                        "no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/DemoApp")));
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/DemoApp.app/" +
+                        "DemoApp")));
 
     assertFalse(checkCodeSigning("DemoApp#iphonesimulator-x86_64,no-debug/DemoApp.app"));
   }
@@ -107,13 +106,11 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/DemoApp")));
+                    "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app/" +
+                        "DemoApp")));
 
     assertTrue(
-        checkCodeSigning(
-            "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks,transitive-resources/" +
-                "DemoApp.app"));
+        checkCodeSigning("DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app"));
   }
 
   @Test
@@ -137,14 +134,10 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphoneos-arm64" +
-                        ",no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/DemoApp")));
+                    "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app/DemoApp")));
 
     assertTrue(
-        checkCodeSigning(
-            "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks,transitive-resources/" +
-                "DemoApp.app"));
+        checkCodeSigning("DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app"));
   }
 
   @Test
@@ -164,8 +157,7 @@ public class AppleBundleIntegrationTest {
     Path outputFile = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "DemoApp#iphonesimulator-i386,iphonesimulator-x86_64," +
-                "no-debug,no-include-frameworks,transitive-resources/" +
+            "DemoApp#iphonesimulator-i386,iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
                 "DemoApp.app/DemoApp");
 
     assertTrue(Files.exists(outputFile));
@@ -189,9 +181,7 @@ public class AppleBundleIntegrationTest {
         .runBuckCommand("targets", "--show-output", "//:DemoApp#no-debug");
     result.assertSuccess();
     assertEquals(
-        "//:DemoApp#no-debug " +
-            "buck-out/gen/DemoApp#no-debug,no-include-frameworks,transitive-resources/" +
-            "DemoApp.app",
+        "//:DemoApp#no-debug buck-out/gen/DemoApp#no-debug,no-include-frameworks/DemoApp.app",
         result.getStdout().trim());
   }
 
@@ -208,8 +198,7 @@ public class AppleBundleIntegrationTest {
         .runBuckCommand("targets", "--show-output", "//:DemoExtension#no-debug");
     result.assertSuccess();
     assertEquals(
-        "//:DemoExtension#no-debug " +
-            "buck-out/gen/DemoExtension#no-debug,no-include-frameworks,transitive-resources/" +
+        "//:DemoExtension#no-debug buck-out/gen/DemoExtension#no-debug,no-include-frameworks/" +
             "DemoExtension.appex",
         result.getStdout().trim());
 
@@ -218,9 +207,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     Path outputBinary = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve(
-            "DemoExtension#no-debug,no-include-frameworks,transitive-resources/" +
-                "DemoExtension.appex/DemoExtension");
+        .resolve("DemoExtension#no-debug,no-include-frameworks/DemoExtension.appex/DemoExtension");
     assertTrue(
         String.format(
             "Extension binary could not be found inside the appex dir [%s].",
@@ -242,8 +229,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     assertEquals(
         "//:DemoAppWithExtension#no-debug " +
-            "buck-out/gen/" +
-            "DemoAppWithExtension#no-debug,no-include-frameworks,transitive-resources/" +
+            "buck-out/gen/DemoAppWithExtension#no-debug,no-include-frameworks/" +
             "DemoAppWithExtension.app",
         result.getStdout().trim());
 
@@ -252,9 +238,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     Path bundleDir = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve(
-            "DemoAppWithExtension#no-debug,no-include-frameworks,transitive-resources/" +
-                "DemoAppWithExtension.app");
+        .resolve("DemoAppWithExtension#no-debug,no-include-frameworks/DemoAppWithExtension.app");
     assertTrue(Files.exists(bundleDir.resolve("DemoAppWithExtension")));
     assertTrue(Files.exists(bundleDir.resolve("PlugIns/DemoExtension.appex/DemoExtension")));
   }
@@ -277,8 +261,7 @@ public class AppleBundleIntegrationTest {
     Path bundlePath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "DemoApp#dwarf-and-dsym,iphonesimulator-x86_64," +
-                "no-include-frameworks,transitive-resources/DemoApp.app");
+            "DemoApp#dwarf-and-dsym,iphonesimulator-x86_64,no-include-frameworks/DemoApp.app");
     Path dwarfPath = bundlePath
         .getParent()
         .resolve("DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp");
@@ -355,9 +338,7 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve(
-                    "DemoApp#no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/DemoApp")));
+                .resolve("DemoApp#no-debug,no-include-frameworks/DemoApp.app/DemoApp")));
   }
 
   @Test
@@ -377,8 +358,7 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphonesimulator-x86_64," +
-                        "no-debug,no-include-frameworks,transitive-resources/" +
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
                         "DemoApp.app/DemoApp")));
   }
 
@@ -397,9 +377,7 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve(
-                    "DemoApp#no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/Assets.car")));
+                .resolve("DemoApp#no-debug,no-include-frameworks/DemoApp.app/Assets.car")));
 
     workspace.verify();
   }
@@ -422,8 +400,7 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphonesimulator-x86_64," +
-                        "no-debug,no-include-frameworks,transitive-resources/" +
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
                         "DemoApp.app/DemoApp")));
   }
 
@@ -443,9 +420,8 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphonesimulator-x86_64," +
-                        "no-debug,no-include-frameworks,transitive-resources/" +
-                        "BrandNewProduct.app/BrandNewProduct")));
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
+                    "BrandNewProduct.app/BrandNewProduct")));
   }
 
   @Test
@@ -477,9 +453,8 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#iphonesimulator-x86_64," +
-                        "no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/AppViewController.nib")));
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/DemoApp.app/" +
+                        "AppViewController.nib")));
   }
 
   @Test
@@ -502,16 +477,16 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/Watch/DemoWatchApp.app/DemoWatchApp")));
+                    "DemoApp#no-debug,no-include-frameworks/DemoApp.app/Watch/" +
+                        "DemoWatchApp.app/DemoWatchApp")));
 
     assertTrue(
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve(
-                    "DemoApp#no-debug,no-include-frameworks,transitive-resources/" +
-                        "DemoApp.app/Watch/DemoWatchApp.app/PlugIns/DemoWatchAppExtension.appex/" +
+                    "DemoApp#no-debug,no-include-frameworks/DemoApp.app/Watch/" +
+                        "DemoWatchApp.app/PlugIns/DemoWatchAppExtension.appex/" +
                         "DemoWatchAppExtension")));
   }
 }

@@ -77,7 +77,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
     Path appPath =
         getGenDir().resolve(
-            "Apps/TestApp/TestApp#app,no-include-frameworks,transitive-resources/TestApp.app/");
+            "Apps/TestApp/TestApp#app,no-include-frameworks/TestApp.app/");
     assertThat(Files.exists(appPath.resolve("Info.plist")), is(true));
     assertThat(
         workspace.runCommand("file", appPath.resolve("TestApp").toString())
@@ -262,9 +262,8 @@ public class AppleBinaryIntegrationTest {
         "//:DemoApp#dwarf-and-dsym")
         .assertSuccess();
     Path output = getGenDir()
-        .resolve(
-            "DemoApp#dwarf-and-dsym,no-include-frameworks,transitive-resources/" +
-                "DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp");
+        .resolve("DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
+            "Resources/DWARF/DemoApp");
     assertThat(Files.exists(output), Matchers.equalTo(true));
   }
 
@@ -308,8 +307,8 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         Files.exists(
             getGenDir().resolve(
-                "DemoApp#dwarf-and-dsym,no-include-frameworks,transitive-resources/" +
-                    "DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+                "DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
+                    "Resources/DWARF/DemoApp")),
         Matchers.equalTo(true));
   }
 

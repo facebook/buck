@@ -139,12 +139,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
               .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
               .build());
     }
-    if (!AppleDescriptions.INCLUDE_RESOURCES.getValue(params.getBuildTarget()).isPresent()) {
-      return (AppleBundle) resolver.requireRule(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(AppleDescriptions.TRANSITIVE_RESOURCES_FLAVOR)
-              .build());
-    }
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
