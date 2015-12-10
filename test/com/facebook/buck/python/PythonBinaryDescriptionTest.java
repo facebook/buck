@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -299,6 +300,44 @@ public class PythonBinaryDescriptionTest {
         Matchers.contains(
             PythonTestUtils.PYTHON_PLATFORM.getEnvironment().getPythonPath().toString(),
             binary.getBinPath().toAbsolutePath().toString()));
+  }
+
+  @Test
+  public void packagedBinaryAttachedPexToolDeps() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    final Genrule pexTool =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:pex_tool"))
+            .setOut("pex-tool")
+            .build(resolver);
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public PackageStyle getPackageStyle() {
+            return PackageStyle.STANDALONE;
+          }
+          @Override
+          public Tool getPexTool(BuildRuleResolver resolver) {
+            return new CommandTool.Builder()
+                .addArg(new BuildTargetSourcePath(pexTool.getBuildTarget()))
+                .build();
+          }
+        };
+    PythonBinaryBuilder builder =
+        new PythonBinaryBuilder(
+            target,
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    PythonPackagedBinary binary =
+        (PythonPackagedBinary) builder
+            .setMainModule("main")
+            .build(resolver);
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(pexTool));
   }
 
 }

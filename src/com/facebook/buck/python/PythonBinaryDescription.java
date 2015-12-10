@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -217,13 +218,18 @@ public class PythonBinaryDescription implements
       case STANDALONE:
         ImmutableSortedSet<BuildRule> componentDeps =
             PythonUtil.getDepsFromComponents(pathResolver, components);
+        Tool pexTool = pythonBuckConfig.getPexTool(resolver);
         return new PythonPackagedBinary(
             params.copyWithDeps(
-                Suppliers.ofInstance(componentDeps),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(componentDeps)
+                        .addAll(pexTool.getDeps(pathResolver))
+                        .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             pythonPlatform,
-            pythonBuckConfig.getPexTool(resolver),
+            pexTool,
             buildArgs,
             pythonBuckConfig.getPathToPexExecuter(resolver).or(pythonPlatform.getEnvironment()),
             pythonBuckConfig.getPexExtension(),
