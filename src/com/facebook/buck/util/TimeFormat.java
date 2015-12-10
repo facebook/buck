@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import java.util.Locale;
+
 public class TimeFormat {
 
   private TimeFormat() {}
@@ -23,14 +25,14 @@ public class TimeFormat {
   /**
    * @return a six-character string, so it is a fixed width
    */
-  public static String formatForConsole(long durationInMillis, Ansi ansi) {
+  public static String formatForConsole(Locale locale, long durationInMillis, Ansi ansi) {
     if (durationInMillis < 100) {
       return ansi.asSuccessText("<100ms");
     } else if (durationInMillis < 1000) {
-      return ansi.asWarningText(String.format(" %dms", durationInMillis));
+      return ansi.asWarningText(String.format(locale, " %dms", durationInMillis));
     } else {
       double seconds = durationInMillis / 1000.0;
-      return ansi.asErrorText(String.format("%5.1fs", seconds));
+      return ansi.asErrorText(String.format(locale, "%5.1fs", seconds));
     }
   }
 }

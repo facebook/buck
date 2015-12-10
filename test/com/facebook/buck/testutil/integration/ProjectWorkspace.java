@@ -395,6 +395,7 @@ public class ProjectWorkspace {
         "ANDROID_NDK",
         "ANDROID_NDK_REPOSITORY",
         "ANDROID_SDK",
+        "GROOVY_HOME",
         "NDK_HOME",
         "PATH",
         "PATHEXT",

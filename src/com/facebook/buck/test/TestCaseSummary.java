@@ -23,6 +23,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -126,7 +127,7 @@ public class TestCaseSummary {
   }
 
   /** @return a one-line, printable summary */
-  public String getOneLineSummary(boolean hasPassingDependencies, Ansi ansi) {
+  public String getOneLineSummary(Locale locale, boolean hasPassingDependencies, Ansi ansi) {
     String statusText;
     Ansi.SeverityLevel severityLevel;
     if (isDryRun) {
@@ -162,10 +163,12 @@ public class TestCaseSummary {
       padding += ' ';
     }
 
-    return String.format("%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
+    return String.format(
+        locale,
+        "%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
         status,
         padding,
-        !isCached ? TimeFormat.formatForConsole(totalTime, ansi)
+        !isCached ? TimeFormat.formatForConsole(locale, totalTime, ansi)
                   : ansi.asHighlightedStatusText(severityLevel, "CACHED"),
         getPassedCount(),
         skippedCount,
@@ -192,7 +195,9 @@ public class TestCaseSummary {
 
   @Override
   public String toString() {
-    return String.format("%s %s",
+    return String.format(
+        Locale.US,
+        "%s %s",
         getShortStatusSummaryString(),
         testCaseName);
   }

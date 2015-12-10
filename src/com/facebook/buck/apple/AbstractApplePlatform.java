@@ -59,6 +59,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
       ApplePlatform.builder()
           .setName("macosx")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setAppIncludesFrameworks(true)
           .build();
 
   /**
@@ -81,6 +82,11 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   @Value.Default
   public Optional<Path> getStubBinaryPath() {
     return Optional.absent();
+  }
+
+  @Value.Default
+  public boolean getAppIncludesFrameworks() {
+    return false;
   }
 
   public static boolean needsCodeSign(String name) {

@@ -88,9 +88,9 @@ public class SmartDexingStep implements Step {
       175,
       600
   };
-  private static final int TOTAL_MEMORY =
-      (int) (Runtime.getRuntime().totalMemory() / 2 / 1024 / 1024);
-  private static final Semaphore memorySemaphore = new Semaphore(TOTAL_MEMORY);
+  private static final int MAX_MEMORY =
+      (int) (Runtime.getRuntime().maxMemory() / 2 / 1024 / 1024);
+  private static final Semaphore memorySemaphore = new Semaphore(MAX_MEMORY);
 
   public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();

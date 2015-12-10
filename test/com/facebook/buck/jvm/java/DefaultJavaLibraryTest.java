@@ -41,6 +41,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -69,7 +70,6 @@ import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
@@ -1219,7 +1219,7 @@ public class DefaultJavaLibraryTest {
 
     // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
     return ImmutableBuildContext.builder()
-        .setActionGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
+        .setActionGraph(new ActionGraph(ImmutableList.of(javaLibrary)))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())

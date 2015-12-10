@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
@@ -155,7 +157,10 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                             javacOptions.getInputs(pathResolver)))),
                 pathResolver,
                 args.srcs.get(),
-                validateResources(pathResolver, args, params.getProjectFilesystem()),
+                validateResources(
+                    pathResolver,
+                    params.getProjectFilesystem(),
+                    args.resources.get()),
                 javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
@@ -191,24 +196,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           pathResolver,
           args.mavenCoords);
     }
-  }
-
-  // TODO(natthu): Consider adding a validateArg() method on Description which gets called before
-  // createBuildable().
-  public static ImmutableSortedSet<SourcePath> validateResources(
-      SourcePathResolver resolver,
-      Arg arg,
-      ProjectFilesystem filesystem) {
-    for (Path path : resolver.filterInputsToCompareToOutput(arg.resources.get())) {
-      if (!filesystem.exists(path)) {
-        throw new HumanReadableException("Error: `resources` argument '%s' does not exist.", path);
-      } else if (filesystem.isDirectory(path)) {
-        throw new HumanReadableException(
-            "Error: a directory is not a valid input to the `resources` argument: %s",
-            path);
-      }
-    }
-    return arg.resources.get();
   }
 
   public static JavacOptions.Builder getJavacOptions(

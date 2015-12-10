@@ -140,7 +140,7 @@ public class AndroidInstrumentationApkTest {
             Paths.get("buck-out/gen/java/com/example/lib3.jar")),
         FluentIterable
             .from(androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver.getRelativePathFunction())
             .toSet());
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
@@ -150,7 +150,7 @@ public class AndroidInstrumentationApkTest {
                 androidInstrumentationApk
                     .getAndroidPackageableCollection()
                     .getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver.getRelativePathFunction())
             .toSet());
   }
 }

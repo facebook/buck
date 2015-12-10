@@ -331,8 +331,9 @@ public class Project {
             projectRule instanceof JavaLibrary ||
             projectRule instanceof CxxLibrary ||
             projectRule instanceof NdkLibrary,
-        "project_config() does not know how to process a src_target of type %s.",
-        projectRule.getType());
+        "project_config() does not know how to process a src_target of type %s (%s).",
+        projectRule.getType(),
+        projectRule.getBuildTarget());
 
     LinkedHashSet<SerializableDependentModule> dependencies = Sets.newLinkedHashSet();
     final BuildTarget target = projectConfig.getBuildTarget();

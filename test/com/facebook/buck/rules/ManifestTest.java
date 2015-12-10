@@ -278,4 +278,25 @@ public class ManifestTest {
         Matchers.equalTo(Optional.of(key2)));
   }
 
+  @Test
+  public void size() {
+    assertThat(new Manifest().size(), Matchers.equalTo(0));
+    assertThat(
+        Manifest.fromMap(
+            ImmutableMap.of(
+                new RuleKey("aa"),
+                ImmutableMap.of("foo.h", HashCode.fromInt(0))))
+            .size(),
+        Matchers.equalTo(1));
+    assertThat(
+        Manifest.fromMap(
+            ImmutableMap.of(
+                new RuleKey("aa"),
+                ImmutableMap.of("foo.h", HashCode.fromInt(0)),
+                new RuleKey("bb"),
+                ImmutableMap.of("bar.h", HashCode.fromInt(0))))
+            .size(),
+        Matchers.equalTo(2));
+  }
+
 }

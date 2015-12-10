@@ -44,7 +44,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
@@ -71,7 +70,6 @@ public class BuildCommand extends AbstractCommand {
 
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
-  private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
   private static final String POPULATE_CACHE_LONG_ARG = "--populate-cache";
@@ -88,13 +86,6 @@ public class BuildCommand extends AbstractCommand {
       usage = "File where build report will be written.")
   @Nullable
   private Path buildReport = null;
-
-  @Nullable
-  @Option(name = LOAD_LIMIT_LONG_ARG,
-      aliases = "-L",
-      usage = "[Float] Do not start new jobs when system load is above this level." +
-      " See uptime(1).")
-  private Double loadLimit = null;
 
   @Nullable
   @Option(
@@ -193,15 +184,6 @@ public class BuildCommand extends AbstractCommand {
 
   public void setKeepGoing(boolean keepGoing) {
     this.keepGoing = keepGoing;
-  }
-
-  public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
-    Double loadLimit = this.loadLimit;
-    if (loadLimit == null) {
-      loadLimit = (double) buckConfig.getLoadLimit();
-    }
-
-    return new ConcurrencyLimit(buckConfig.getNumThreads(), loadLimit);
   }
 
   /**
@@ -396,6 +378,7 @@ public class BuildCommand extends AbstractCommand {
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
                  params.getBuckConfig().getDependencySchedulingOrder(),
                  params.getBuckConfig().getBuildDepFiles(),
+                 params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
                  actionGraphAndResolver.getSecond()),
              artifactCache,
              params.getConsole(),
@@ -447,10 +430,6 @@ public class BuildCommand extends AbstractCommand {
     if (buildReport != null) {
       builder.add(BUILD_REPORT_LONG_ARG);
       builder.add(buildReport.toString());
-    }
-    if (loadLimit != null) {
-      builder.add(LOAD_LIMIT_LONG_ARG);
-      builder.add(loadLimit.toString());
     }
     if (justBuildTarget != null) {
       builder.add(JUST_BUILD_LONG_ARG);

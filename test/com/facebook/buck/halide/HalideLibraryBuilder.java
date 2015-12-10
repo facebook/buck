@@ -38,9 +38,11 @@ public class HalideLibraryBuilder extends
   public HalideLibraryBuilder(
     BuildTarget target,
     HalideBuckConfig halideBuckConfig,
+    CxxPlatform defaultCxxPlatform,
     FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
       new HalideLibraryDescription(
+        defaultCxxPlatform,
         cxxPlatforms,
         CxxPreprocessMode.SEPARATE,
         halideBuckConfig),
@@ -51,6 +53,7 @@ public class HalideLibraryBuilder extends
     this(
       target,
       createDefaultHalideConfig(new FakeProjectFilesystem()),
+      createDefaultPlatform(),
       createDefaultPlatforms());
   }
 

@@ -53,7 +53,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
-import com.facebook.buck.testutil.RuleMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -742,7 +741,7 @@ public class ProjectTest {
       javaPackageFinder = new FakeJavaPackageFinder();
     }
 
-    ActionGraph actionGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
+    ActionGraph actionGraph = new ActionGraph(ruleResolver.getBuildRules());
 
     // Create the Project.
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);

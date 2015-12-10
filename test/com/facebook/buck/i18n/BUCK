@@ -1,0 +1,10 @@
+java_test(
+  name = 'i18n',
+  srcs = glob(['*Test.java']),
+  deps = [
+    '//src/com/facebook/buck/i18n:i18n',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+  ]
+)

@@ -1,0 +1,33 @@
+java_library(
+  name = 'rules',
+  srcs = [
+    'GroovyBuckConfig.java',
+    'GroovyLibraryDescription.java',
+    'GroovycStepFactory.java',
+    'GroovycStep.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/jvm/groovy:groovy',
+  ],
+  deps = [
+    '//src/com/facebook/buck/android:packageable',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/jvm/common:resources',
+    '//src/com/facebook/buck/jvm/core:classhash',
+    '//src/com/facebook/buck/jvm/core:suggestbuildrules',
+    '//src/com/facebook/buck/jvm/java:rules',
+    '//src/com/facebook/buck/jvm/java:steps',
+    '//src/com/facebook/buck/jvm/java:support',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules/keys:keys',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
+    '//third-party/java/guava:guava',
+    '//third-party/java/infer-annotations:infer-annotations'
+  ],
+  visibility = ['PUBLIC'],
+)

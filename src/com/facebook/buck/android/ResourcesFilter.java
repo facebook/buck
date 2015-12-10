@@ -28,6 +28,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -121,13 +122,17 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<Path> getResDirectories() {
-    return buildOutputInitializer.getBuildOutput().resDirectories;
+  public ImmutableList<SourcePath> getResDirectories() {
+    return FluentIterable.from(buildOutputInitializer.getBuildOutput().resDirectories)
+        .transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()))
+        .toList();
   }
 
   @Override
-  public ImmutableList<Path> getStringFiles() {
-    return buildOutputInitializer.getBuildOutput().stringFiles;
+  public ImmutableList<SourcePath> getStringFiles() {
+    return FluentIterable.from(buildOutputInitializer.getBuildOutput().stringFiles)
+        .transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()))
+        .toList();
   }
 
   @Override
@@ -138,8 +143,8 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths =
-        ImmutableSet.copyOf(getResolver().deprecatedAllPaths(whitelistedStringDirs));
-    ImmutableList<Path> resPaths = getResolver().deprecatedAllPaths(resDirectories);
+        ImmutableSet.copyOf(getResolver().getAllAbsolutePaths(whitelistedStringDirs));
+    ImmutableList<Path> resPaths = getResolver().getAllAbsolutePaths(resDirectories);
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
         resPaths,
         whitelistedStringPaths,
@@ -204,7 +209,9 @@ public class ResourcesFilter extends AbstractBuildRule
     int count = 0;
     for (Path resDir : resourceDirectories) {
       Path filteredResourceDir = Paths.get(resDestinationBasePath, String.valueOf(count++));
-      filteredResourcesDirMapBuilder.put(resDir, filteredResourceDir);
+      filteredResourcesDirMapBuilder.put(
+          resDir,
+          getProjectFilesystem().resolve(filteredResourceDir));
       filteredResDirectories.add(filteredResourceDir);
     }
 

@@ -110,7 +110,7 @@ public class PackageStringAssets extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToStrings));
     steps.add(new CompileStringsStep(
             getProjectFilesystem(),
-            filteredResourcesProvider.getStringFiles(),
+            getResolver().getAllAbsolutePaths(filteredResourcesProvider.getStringFiles()),
             aaptPackageResources.getPathToRDotTxtDir(),
             assetPathBuilder));
     steps.add(new ZipStep(

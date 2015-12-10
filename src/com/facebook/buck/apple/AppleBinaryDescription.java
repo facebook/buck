@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -142,6 +143,25 @@ public class AppleBinaryDescription
             "Cannot create application for apple_binary '%s':\n",
             "No value specified for 'info_plist' attribute.",
             params.getBuildTarget().getUnflavoredBuildTarget());
+      }
+      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
+        CxxPlatform cxxPlatform =
+            cxxPlatformFlavorDomain.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+        ApplePlatform applePlatform =
+            Preconditions
+                .checkNotNull(platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor()))
+                .getAppleSdk()
+                .getApplePlatform();
+        if (applePlatform.getAppIncludesFrameworks()) {
+          return resolver.requireRule(
+              BuildTarget.builder(params.getBuildTarget())
+                  .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                  .build());
+        }
+        return resolver.requireRule(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build());
       }
       Optional<AppleDebugFormat> flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
           params.getBuildTarget());

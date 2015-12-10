@@ -73,7 +73,16 @@ import java.util.Set;
 public class AppleDescriptions {
 
   public static final Flavor FRAMEWORK_FLAVOR = ImmutableFlavor.of("framework");
-  public static final Flavor FRAMEWORK_SHALLOW_FLAVOR = ImmutableFlavor.of("framework-shallow");
+
+  public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = ImmutableFlavor.of("include-frameworks");
+  public static final Flavor NO_INCLUDE_FRAMEWORKS_FLAVOR =
+      ImmutableFlavor.of("no-include-frameworks");
+  public static final FlavorDomain<Boolean> INCLUDE_FRAMEWORKS =
+      new FlavorDomain<>(
+          "Include frameworks",
+          ImmutableMap.of(
+              INCLUDE_FRAMEWORKS_FLAVOR, Boolean.TRUE,
+              NO_INCLUDE_FRAMEWORKS_FLAVOR, Boolean.FALSE));
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
@@ -414,12 +423,13 @@ public class AppleDescriptions {
     ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
     ImmutableSet<SourcePath> bundleVariantFiles = bundleVariantFilesBuilder.build();
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
-    if (!params.getBuildTarget().getFlavors().contains(FRAMEWORK_SHALLOW_FLAVOR)) {
+    if (INCLUDE_FRAMEWORKS.getRequiredValue(params.getBuildTarget())) {
       for (BuildTarget dep : deps) {
         Optional<FrameworkDependencies> frameworkDependencies =
             resolver.requireMetadata(
                 BuildTarget.builder(dep)
-                    .addFlavors(FRAMEWORK_SHALLOW_FLAVOR)
+                    .addFlavors(FRAMEWORK_FLAVOR)
+                    .addFlavors(NO_INCLUDE_FRAMEWORKS_FLAVOR)
                     .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
                     .build(),
                 FrameworkDependencies.class);
@@ -509,8 +519,7 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       BuildTarget binary) throws NoSuchBuildTargetException {
     // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
-    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR) ||
-        flavors.contains(AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR)) {
+    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
       flavors = ImmutableSet.<Flavor>builder()
           .addAll(flavors)
           .add(CxxDescriptionEnhancer.SHARED_FLAVOR)
@@ -523,7 +532,6 @@ public class AppleDescriptions {
                 ImmutableSet.of(
                     ReactNativeFlavors.DO_NOT_BUNDLE,
                     AppleDescriptions.FRAMEWORK_FLAVOR,
-                    AppleDescriptions.FRAMEWORK_SHALLOW_FLAVOR,
                     AppleDebugFormat.DWARF_AND_DSYM_FLAVOR,
                     AppleDebugFormat.NO_DEBUG_FLAVOR,
                     AppleBinaryDescription.APP_FLAVOR)));

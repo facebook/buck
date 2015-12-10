@@ -14,6 +14,7 @@ addons:
       - ia32-libs
       - ia32-libs-multiarch
       - gcc-multilib
+      - groovy
 
 before_install:
   # Set up the Android environment.
@@ -23,6 +24,8 @@ before_install:
   - ./scripts/travisci_install_android_sdk.sh
   # Install go 1.5
   - eval "$(gimme 1.5)"
+  # Set up the Groovy environment
+  - export GROOVY_HOME=/usr/share/groovy/
 
 cache:
   directories:

@@ -1,0 +1,51 @@
+{namespace buck.command.run}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck run' /}
+    {param description}
+      A command that builds and runs an executable.
+    {/param}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+
+<p>
+  This command builds and runs an executable resulting from building a target.
+
+  <pre>buck run {literal}//app:app-dist{/literal}</pre>
+
+  For Android/iOS rules which can't be run directly, <a href="install.html"><code>buck install -r</code></a> should
+  be used to install the result of the build on the appropriate emulator/simulator.
+</p>
+
+<h2>Common Parameters</h2>
+
+<p>
+  All the parameters for <a href="build.html"><code>buck build</code></a> also
+  apply to <code>buck run</code>.
+</p>
+
+<h2>Passing Arguments</h2>
+
+<p>
+  Passing the <code>--</code> flag will cause all following arguments to be
+  piped through to the binary called by <code>buck run</code>. For example,
+  calling
+
+  <pre>buck run {literal}//:bin{/literal} --no-cache -- --foo=bar arg1 arg2</pre>
+
+  Will build <code>{literal}//:bin{/literal}</code> without the cache and call
+  the result with the arguments <code>["--foo=bar", "arg1", "arg2"]</code>
+</p>
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

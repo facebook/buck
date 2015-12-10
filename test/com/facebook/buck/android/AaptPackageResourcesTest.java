@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class AaptPackageResourcesTest {
 
@@ -49,11 +48,11 @@ public class AaptPackageResourcesTest {
     FilteredResourcesProvider resourcesProvider =
         new FilteredResourcesProvider() {
           @Override
-          public ImmutableList<Path> getResDirectories() {
+          public ImmutableList<SourcePath> getResDirectories() {
             throw new AssertionError("unexpected call to getResDirectories");
           }
           @Override
-          public ImmutableList<Path> getStringFiles() {
+          public ImmutableList<SourcePath> getStringFiles() {
             throw new AssertionError("unexpected call to getStringFiles");
           }
         };

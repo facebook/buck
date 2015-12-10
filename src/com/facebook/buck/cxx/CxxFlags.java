@@ -24,11 +24,13 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.SortedMap;
 
 public class CxxFlags {
 
@@ -37,13 +39,14 @@ public class CxxFlags {
   public static RuleKeyAppendableFunction<String, String> getTranslateMacrosFn(
       final CxxPlatform cxxPlatform) {
 
-    final ImmutableMap<String, String> flagMacros = cxxPlatform.getFlagMacros();
+    final ImmutableSortedMap<String, String> flagMacros =
+        ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros());
 
     return new RuleKeyAppendableFunction<String, String>() {
 
       @Override
       public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-        Map<String, String> sanitizedMap = Maps.transformValues(
+        SortedMap<String, String> sanitizedMap = Maps.transformValues(
             flagMacros,
             cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()));
         return builder.setReflectively("flagMacros", sanitizedMap);
