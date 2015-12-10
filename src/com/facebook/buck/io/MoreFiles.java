@@ -40,11 +40,17 @@ import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 public final class MoreFiles {
+
+  public enum DeleteRecursivelyOptions {
+      IGNORE_NO_SUCH_FILE_EXCEPTION,
+      DELETE_CONTENTS_ONLY,
+  }
 
   // Unix has two illegal characters - '/', and '\0'.  Windows has ten, which includes those two.
   // The full list can be found at https://msdn.microsoft.com/en-us/library/aa365247
@@ -83,13 +89,9 @@ public final class MoreFiles {
   private MoreFiles() {}
 
   public static void deleteRecursivelyIfExists(Path path) throws IOException {
-    try {
-      deleteRecursively(path);
-    } catch (NoSuchFileException e) {
-      // Delete anyway even if the directory does not exist
-      // This behavior is the same as rm -rf
-      return;
-    }
+    deleteRecursivelyWithOptions(
+        path,
+        EnumSet.of(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
   }
 
   /**
@@ -151,26 +153,46 @@ public final class MoreFiles {
   }
 
   public static void deleteRecursively(final Path path) throws IOException {
-    // Adapted from http://codingjunkie.net/java-7-copy-move/.
-    SimpleFileVisitor<Path> deleteDirVisitor = new SimpleFileVisitor<Path>() {
+    deleteRecursivelyWithOptions(path, EnumSet.noneOf(DeleteRecursivelyOptions.class));
+  }
 
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        Files.delete(file);
-        return FileVisitResult.CONTINUE;
-      }
+  public static void deleteRecursivelyWithOptions(
+      final Path path,
+      final EnumSet<DeleteRecursivelyOptions> options) throws IOException {
+    try {
+        // Adapted from http://codingjunkie.net/java-7-copy-move/.
+        SimpleFileVisitor<Path> deleteDirVisitor = new SimpleFileVisitor<Path>() {
 
-      @Override
-      public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-        if (e == null) {
-          Files.delete(dir);
-          return FileVisitResult.CONTINUE;
-        } else {
-          throw e;
-        }
+          @Override
+          public FileVisitResult visitFile(
+              Path file,
+              BasicFileAttributes attrs) throws IOException {
+            Files.delete(file);
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+            if (e == null) {
+              // Allow leaving the top-level directory in place (e.g. for deleting the contents of
+              // the trash dir but not the trash dir itself)
+              if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY) &&
+                    dir.equals(path))) {
+                Files.delete(dir);
+              }
+              return FileVisitResult.CONTINUE;
+            } else {
+              throw e;
+            }
+          }
+        };
+        Files.walkFileTree(path, deleteDirVisitor);
+    } catch (NoSuchFileException e) {
+      if (!options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
+        throw e;
       }
-    };
-    Files.walkFileTree(path, deleteDirVisitor);
+    }
+
   }
 
   /**

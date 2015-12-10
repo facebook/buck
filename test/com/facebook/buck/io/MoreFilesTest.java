@@ -17,15 +17,21 @@
 package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+import static org.hamcrest.Matchers.is;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,11 +39,13 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 public class MoreFilesTest {
@@ -56,6 +64,38 @@ public class MoreFilesTest {
     assertEquals("There should be files to delete.", 3, tmp.getRoot().toFile().listFiles().length);
     MoreFiles.deleteRecursively(tmp.getRoot());
     assertNull(tmp.getRoot().toFile().listFiles());
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsShouldNotFailOnNonExistentDir() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    MoreFiles.deleteRecursivelyIfExists(fakeTmpDir.resolve("nonexistent"));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsDeletesDirectory() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    Path dirToDelete = fakeTmpDir.resolve("delete-me");
+    Path childDir = dirToDelete.resolve("child-dir");
+    Files.createDirectories(childDir);
+    MoreFiles.deleteRecursivelyIfExists(dirToDelete);
+    assertThat(Files.exists(dirToDelete), is(false));
+  }
+
+  @Test
+  public void deleteRecursivelyContentsOnlyLeavesParentDirectory() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    Path dirToDelete = fakeTmpDir.resolve("delete-me");
+    Path childDir = dirToDelete.resolve("child-dir");
+    Files.createDirectories(childDir);
+    MoreFiles.deleteRecursivelyWithOptions(
+        dirToDelete,
+        EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+    assertThat(Files.exists(dirToDelete), is(true));
+    assertThat(Files.exists(childDir), is(false));
   }
 
   @Test
