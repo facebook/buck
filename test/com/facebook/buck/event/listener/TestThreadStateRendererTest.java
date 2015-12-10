@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +48,7 @@ public class TestThreadStateRendererTest {
       new Function<Long, String>() {
         @Override
         public String apply(Long timeMs) {
-          return String.format("%.1fs", timeMs / 1000.0);
+          return String.format(Locale.US, "%.1fs", timeMs / 1000.0);
         }
       };
   private static final BuildTarget TARGET1 = BuildTargetFactory.newInstance("//:target1");
