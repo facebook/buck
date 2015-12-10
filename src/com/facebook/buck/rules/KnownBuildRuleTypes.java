@@ -547,7 +547,10 @@ public class KnownBuildRuleTypes {
             goBuckConfig,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
-    builder.register(new GroovyLibraryDescription(new GroovyBuckConfig(config)));
+    builder.register(
+        new GroovyLibraryDescription(
+            new GroovyBuckConfig(config),
+            defaultJavacOptions));
     builder.register(new GwtBinaryDescription());
     builder.register(
       new HalideLibraryDescription(

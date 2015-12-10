@@ -39,7 +39,6 @@ import org.immutables.value.Value;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -122,11 +121,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return new JdkProvidedInMemoryJavac();
   }
 
-  public interface OptionsConsumer {
-    void addOptionValue(final String option, final String value);
-    void addFlag(final String flagName);
-    void addExtras(final Collection<String> extras);
-  }
 
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,

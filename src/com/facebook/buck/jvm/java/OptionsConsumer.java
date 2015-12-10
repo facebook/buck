@@ -13,32 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.jvm.java;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-class OptionAccumulator implements OptionsConsumer {
-  public final Map<String, String> keyVals = new HashMap<String, String>();
-  public final List<String> flags = new ArrayList<String>();
-  public final List<String> extras = new ArrayList<String>();
+public interface OptionsConsumer {
+  void addOptionValue(final String option, final String value);
 
-  @Override
-  public void addOptionValue(String option, String value) {
-    keyVals.put(option, value);
-  }
+  void addFlag(final String flagName);
 
-  @Override
-  public void addFlag(String flagName) {
-    flags.add(flagName);
-  }
-
-  @Override
-  public void addExtras(Collection<String> extraArgs) {
-    extras.addAll(extraArgs);
-  }
+  void addExtras(final Collection<String> extras);
 }
