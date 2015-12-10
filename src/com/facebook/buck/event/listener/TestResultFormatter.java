@@ -107,6 +107,7 @@ public class TestResultFormatter {
     // If there's only one test case and one log, print the log path inline with the test summary.
     boolean appendLogToSummaryOnSuccess = results.getTestCases().size() == 1 &&
         results.getTestLogPaths().size() == 1 &&
+        Files.exists(results.getTestLogPaths().get(0)) &&
         verbosity != Verbosity.SILENT;
     boolean shouldListLogsAfterTests = !appendLogToSummaryOnSuccess;
     boolean shouldReportLogSummaryAfterTests = false;

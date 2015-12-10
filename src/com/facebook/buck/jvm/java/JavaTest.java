@@ -117,6 +117,8 @@ public class JavaTest
 
   private final Optional<Long> testRuleTimeoutMs;
 
+  private final Path pathToTestLogs;
+
   private static final int TEST_CLASSES_SHUFFLE_SEED = 0xFACEB00C;
 
   private static final Logger LOG = Logger.get(JavaTest.class);
@@ -180,6 +182,7 @@ public class JavaTest
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
     this.testTempDirOverride = testTempDirOverride;
+    this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
   }
 
   @Override
@@ -284,7 +287,7 @@ public class JavaTest
             options,
             Optional.of(pathToTestOutput),
             Optional.of(tmpDirectory),
-            Optional.of(pathToTestOutput.resolve("robolectric-log.txt")));
+            Optional.of(pathToTestLogs));
     steps.add(junit);
     return steps.build();
   }
@@ -470,11 +473,13 @@ public class JavaTest
           }
         }
 
-        return TestResults.of(
-            getBuildTarget(),
-            summaries,
-            contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        return TestResults.builder()
+            .setBuildTarget(getBuildTarget())
+            .setTestCases(summaries)
+            .setContacts(contacts)
+            .setLabels(FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet())
+            .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
+            .build();
       }
 
     };
