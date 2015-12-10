@@ -46,6 +46,7 @@ import com.martiansoftware.nailgun.NGContext;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -149,6 +150,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void nativeLibsEnvVarIsPreserved() throws IOException {
     String nativeLibsEnvVarName =
         DefaultCxxPlatforms

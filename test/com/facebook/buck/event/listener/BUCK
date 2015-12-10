@@ -1,6 +1,11 @@
+BROKEN = [
+  'BuildThreadStateRendererTest.java',
+  'TestThreadStateRendererTest.java',
+]
+
 java_test(
   name = 'listener',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = BROKEN),
   deps = [
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
