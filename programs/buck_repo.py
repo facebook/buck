@@ -16,6 +16,7 @@ import buck_version
 JAVA_CLASSPATHS = [
     "build/abi_processor/classes",
     "build/classes",
+    "build/aosp/classes",
     "build/dx_classes",
     "src",
     "third-party/java/android/sdklib.jar",

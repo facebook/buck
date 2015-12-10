@@ -132,12 +132,17 @@
     <include name="slf4j/slf4j-api-1.7.5.jar" />
   </fileset>
 
-  <path id="classpath-no-src">
+  <path id="classpath-no-src-no-aosp">
     <fileset refid="buck.jars" />
     <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
+  </path>
+
+  <path id="classpath-no-src">
+    <path refid="classpath-no-src-no-aosp" />
+    <pathelement location="${aosp.classes.dir}" />
   </path>
 
   <path id="classpath">
@@ -402,29 +407,12 @@
   </target>
 
   <target name="compile"
-          depends="compile-testrunner, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
+          depends="compile-testrunner, compile-aosp, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
     <!-- Copy in scripts we need at run time when using an unpacked buck -->
     <copy file="src/com/facebook/buck/json/buck.py" todir="${classes.dir}/com/facebook/buck/json"/>
-
-    <!--
-      Compile code from AOSP using the default compiler.
-      Using ecj spits out too many warnings that are not our responsibility to fix.
-    -->
-    <javac destdir="${classes.dir}"
-           classpathref="classpath"
-           debug="on"
-           deprecation="on"
-           includeAntRuntime="no"
-           >
-      <src path="${aosp.src.dir}" />
-
-      <compilerarg value="-Xlint:rawtypes" />
-      <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:serial" />
-    </javac>
 
     <ecj>
       <javac-params>
