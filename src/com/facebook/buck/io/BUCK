@@ -51,6 +51,7 @@ java_library(
     # the number of dependencies to an absolute minimum.
     '//src/com/facebook/buck/cli:low-level-config',
     '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util/environment:env-filter',
