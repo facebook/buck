@@ -107,7 +107,7 @@ public class IjProject {
               new Function<SourcePath, Path>() {
                 @Override
                 public Path apply(SourcePath input) {
-                  return getAbsolutePathAndRecordRule(input);
+                  return getRelativePathAndRecordRule(input);
                 }
               };
 
@@ -156,12 +156,12 @@ public class IjProject {
                 .transform(getAbsolutePathAndRecordRuleFunction);
           }
 
-          private Path getAbsolutePathAndRecordRule(SourcePath sourcePath) {
+          private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
             requiredBuildTargets.addAll(
                 sourcePathResolver.getRule(sourcePath)
                     .transform(HasBuildTarget.TO_TARGET)
                     .asSet());
-            return sourcePathResolver.getAbsolutePath(sourcePath);
+            return sourcePathResolver.getRelativePath(sourcePath);
           }
         };
     IjModuleGraph moduleGraph = IjModuleGraph.from(
