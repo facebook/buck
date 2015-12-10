@@ -41,6 +41,8 @@ import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
@@ -125,9 +127,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -181,6 +186,11 @@ public final class Main {
   private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
+
+  // Ensure we only have one instance of this, so multiple trash cleaning
+  // operations are serialized on one queue.
+  private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
+      new AsynchronousDirectoryContentsCleaner(BuckConstant.TRASH_PATH);
 
   private final Platform platform;
 
@@ -528,6 +538,36 @@ public final class Main {
     }
   }
 
+  private static void moveToTrash(
+      ProjectFilesystem filesystem,
+      Console console,
+      BuildId buildId,
+      Path... pathsToMove) throws IOException {
+    Path trashPath = BuckConstant.TRASH_PATH.resolve(buildId.toString());
+    filesystem.mkdirs(trashPath);
+    for (Path pathToMove : pathsToMove) {
+      try {
+        // Technically this might throw AtomicMoveNotSupportedException,
+        // but we're moving a path within buck-out, so we don't expect this
+        // to throw.
+        //
+        // If it does throw, we'll complain loudly and synchronously delete
+        // the file instead.
+        filesystem.move(
+            pathToMove,
+            trashPath.resolve(pathToMove.getFileName()),
+            StandardCopyOption.ATOMIC_MOVE);
+      } catch (NoSuchFileException e) {
+        LOG.verbose(e, "Ignoring missing path %s", pathToMove);
+      } catch (AtomicMoveNotSupportedException e) {
+        console.getStdErr().format(
+            "Atomic moves not supported, falling back to synchronous delete: %s",
+            e);
+        MoreFiles.deleteRecursivelyIfExists(pathToMove);
+      }
+    }
+  }
+
   /**
    *
    * @param buildId an identifier for this command execution.
@@ -597,6 +637,7 @@ public final class Main {
     // become the only executing read/write command.
     // This must happen immediately before the try block to ensure that the semaphore is released.
     boolean commandSemaphoreAcquired = false;
+    boolean shouldCleanUpTrash = false;
     if (!command.isReadOnly()) {
       commandSemaphoreAcquired = commandSemaphore.tryAcquire();
       if (!commandSemaphoreAcquired) {
@@ -605,10 +646,18 @@ public final class Main {
       Optional<String> currentVersion =
           filesystem.readFileIfItExists(BuckConstant.CURRENT_VERSION_FILE);
       if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
-        filesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);
-        filesystem.deleteRecursivelyIfExists(BuckConstant.GEN_PATH);
-        filesystem.deleteRecursivelyIfExists(BuckConstant.SCRATCH_PATH);
-        filesystem.deleteRecursivelyIfExists(BuckConstant.RES_PATH);
+        // Migrate any version-dependent directories (which might be
+        // huge) to a trash directory so we can delete it
+        // asynchronously after the command is done.
+        moveToTrash(
+            filesystem,
+            console,
+            buildId,
+            BuckConstant.ANNOTATION_PATH,
+            BuckConstant.GEN_PATH,
+            BuckConstant.SCRATCH_PATH,
+            BuckConstant.RES_PATH);
+        shouldCleanUpTrash = true;
         filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
         filesystem.writeContentsToPath(BuckVersion.getVersion(), BuckConstant.CURRENT_VERSION_FILE);
       }
@@ -661,6 +710,14 @@ public final class Main {
     }
 
     final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
+
+    if (!isDaemon && shouldCleanUpTrash) {
+      // Clean up the trash on a background thread if this was a
+      // non-buckd read-write command. (We don't bother waiting
+      // for it to complete; the thread is a daemon thread which
+      // will just be terminated at shutdown time.)
+      TRASH_CLEANER.startCleaningDirectory();
+    }
 
     KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
         processExecutor,
@@ -911,6 +968,13 @@ public final class Main {
     } finally {
       if (commandSemaphoreAcquired) {
         commandSemaphore.release(); // Allow another command to execute while outputting traces.
+      }
+      if (isDaemon && shouldCleanUpTrash) {
+        // Clean up the trash in the background if this was a buckd
+        // read-write command. (We don't bother waiting for it to
+        // complete; the cleaner will ensure subsequent cleans are
+        // serialized with this one.)
+        TRASH_CLEANER.startCleaningDirectory();
       }
     }
     if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
