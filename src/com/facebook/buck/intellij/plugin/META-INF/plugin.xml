@@ -105,7 +105,7 @@
           class="com.facebook.buck.intellij.plugin.actions.GoToBuckFile"
           text="Go to Buck file"
           description="Go to Buck file for this source file.">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Z"/>
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
       <add-to-group anchor="first" group-id="BuildMenu"/>
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
@@ -113,7 +113,7 @@
 
     <group id="buck.BuildGroup">
       <action class="com.facebook.buck.intellij.plugin.actions.ChooseTargetAction" id="buck.ChooseTarget">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
       </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallAction" id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
