@@ -28,6 +28,7 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -140,6 +141,7 @@ public class AdbHelper {
    */
   @Nullable
   @VisibleForTesting
+  @SuppressForbidden
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
       console.printBuildFailure("No devices are found.");
@@ -238,6 +240,7 @@ public class AdbHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
+  @SuppressForbidden
   public List<IDevice> getDevices(boolean quiet) throws InterruptedException {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
@@ -287,6 +290,7 @@ public class AdbHelper {
    *  devices will be used to install the apk if needed.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
+  @SuppressForbidden
   public boolean adbCall(
       AdbCallable adbCallable,
       boolean quiet) throws InterruptedException {
@@ -518,6 +522,7 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
+  @SuppressForbidden
   public boolean installApk(
       final InstallableApk installableApk,
       final boolean installViaSd,
@@ -545,6 +550,7 @@ public class AdbHelper {
           }
 
           @Override
+          @SuppressForbidden
           public String toString() {
             return String.format("install apk %s", installableApk.getBuildTarget().toString());
           }
@@ -564,6 +570,7 @@ public class AdbHelper {
    * Installs apk on specific device. Reports success or failure to console.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
+  @SuppressForbidden
   public boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd, boolean quiet) {
     String name;
     if (device.isEmulator()) {
@@ -603,6 +610,7 @@ public class AdbHelper {
   }
 
   @VisibleForTesting
+  @SuppressForbidden
   protected boolean isDeviceTempWritable(IDevice device, String name) {
     StringBuilder loggingInfo = new StringBuilder();
     try {
@@ -682,6 +690,7 @@ public class AdbHelper {
   /**
    * Installs apk on device, copying apk to external storage first.
    */
+  @SuppressForbidden
   private String deviceInstallPackageViaSd(IDevice device, String apk) {
     try {
       // Figure out where the SD card is mounted.
@@ -721,6 +730,7 @@ public class AdbHelper {
     return value;
   }
 
+  @SuppressForbidden
   public int startActivity(
       InstallableApk installableApk,
       @Nullable String activity) throws IOException, InterruptedException {
@@ -787,6 +797,7 @@ public class AdbHelper {
 
   @VisibleForTesting
   @Nullable
+  @SuppressForbidden
   String deviceStartActivity(IDevice device, String activityToRun) {
     try {
       AdbHelper.ErrorParsingReceiver receiver = new AdbHelper.ErrorParsingReceiver() {
@@ -847,6 +858,7 @@ public class AdbHelper {
    * {@link com.facebook.buck.cli.UninstallCommand}.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
+  @SuppressForbidden
   private boolean uninstallApkFromDevice(IDevice device, String packageName, boolean keepData) {
     String name;
     if (device.isEmulator()) {
