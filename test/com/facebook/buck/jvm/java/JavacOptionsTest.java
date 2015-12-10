@@ -17,9 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -29,15 +31,11 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Test;
@@ -55,7 +53,7 @@ public class JavacOptionsTest {
   public void buildsAreDebugByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertOptionsContains(options, "-g");
+    assertOptionFlags(options, hasItem("g"));
   }
 
   @Test
@@ -64,14 +62,14 @@ public class JavacOptionsTest {
         .setProductionBuild(true)
         .build();
 
-    assertOptionsDoesNotContain(options, "-g");
+    assertOptionFlags(options, not(hasItem("g")));
   }
 
   @Test
   public void testDoesNotSetBootclasspathByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertOptionsDoesNotContain(options, "-bootclasspath");
+    assertOptionsHasNoKey(options, "bootclasspath");
   }
 
   @Test
@@ -80,7 +78,7 @@ public class JavacOptionsTest {
         .setBootclasspath("foo:bar")
         .build();
 
-    assertOptionsContains(options, "-bootclasspath foo:bar");
+    assertOptionsHasKeyValue(options, "bootclasspath", "foo:bar");
   }
 
   @Test
@@ -94,7 +92,7 @@ public class JavacOptionsTest {
         .setAnnotationProcessingParams(params)
         .build();
 
-    assertOptionsContains(options, "-proc:only");
+    assertOptionFlags(options, hasItem("proc:only"));
   }
 
   @Test
@@ -108,7 +106,7 @@ public class JavacOptionsTest {
         .setAnnotationProcessingParams(params)
         .build();
 
-    assertOptionsContains(options, "-processor myproc,theirproc");
+    assertOptionsHasKeyValue(options, "processor", "myproc,theirproc");
   }
 
   @Test
@@ -119,9 +117,8 @@ public class JavacOptionsTest {
         .build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
-
-    assertOptionsContains(copy, "-source 7");
-    assertOptionsContains(copy, "-target 5");
+    assertOptionsHasKeyValue(copy, "source", "7");
+    assertOptionsHasKeyValue(copy, "target", "5");
   }
 
   @Test
@@ -131,10 +128,7 @@ public class JavacOptionsTest {
         .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
         .build();
 
-    ImmutableList.Builder<String> allArgs = ImmutableList.builder();
-    options.appendOptionsToList(allArgs, Functions.<Path>identity());
-
-    assertOptionsContains(options, "-bootclasspath some-magic.jar:also.jar");
+    assertOptionsHasKeyValue(options, "bootclasspath", "some-magic.jar:also.jar");
   }
 
   @Test
@@ -146,13 +140,7 @@ public class JavacOptionsTest {
         .putSourceToBootclasspath("5", "not-the-right-path.jar")
         .build();
 
-    ImmutableList.Builder<String> allArgs = ImmutableList.builder();
-    options.appendOptionsToList(allArgs, Functions.<Path>identity());
-
-    ImmutableList<String> args = allArgs.build();
-    int bootclasspathIndex = Iterables.indexOf(args, Predicates.equalTo("-bootclasspath"));
-    assertNotEquals(-1, bootclasspathIndex);
-    assertEquals(expectedBootClasspath, args.get(bootclasspathIndex + 1));
+    assertOptionsHasKeyValue(options, "bootclasspath", expectedBootClasspath);
   }
 
   @Test
@@ -163,13 +151,7 @@ public class JavacOptionsTest {
         .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
         .build();
 
-    ImmutableList.Builder<String> allArgs = ImmutableList.builder();
-    options.appendOptionsToList(allArgs, Functions.<Path>identity());
-
-    ImmutableList<String> args = allArgs.build();
-    int bootclasspathIndex = Iterables.indexOf(args, Predicates.equalTo("-bootclasspath"));
-    assertNotEquals(-1, bootclasspathIndex);
-    assertEquals("cake.jar", args.get(bootclasspathIndex + 1));
+    assertOptionsHasKeyValue(options, "bootclasspath", "cake.jar");
   }
 
   @Test
@@ -180,8 +162,7 @@ public class JavacOptionsTest {
         .build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
-
-    assertOptionsContains(copy, "-bootclasspath some-magic.jar:also.jar");
+    assertOptionsHasKeyValue(copy, "bootclasspath", "some-magic.jar:also.jar");
   }
 
   @Test
@@ -190,7 +171,7 @@ public class JavacOptionsTest {
         .addExtraArguments("-Xfoobar")
         .build();
 
-    assertOptionsContains(options, "-Xfoobar");
+    assertOptionsHasExtra(options, "-Xfoobar");
   }
 
   @Test
@@ -235,34 +216,34 @@ public class JavacOptionsTest {
         Matchers.<SourcePath>containsInAnyOrder(javacJarPath));
   }
 
-  private void assertOptionsContains(JavacOptions options, String param) {
-    String output = optionsAsString(options);
-
-    assertTrue(String.format("Unable to find: %s in %s", param, output),
-        output.contains(" " + param + " "));
-  }
-
-  private void assertOptionsDoesNotContain(JavacOptions options, String param) {
-    String output = optionsAsString(options);
-
-    assertFalse(
-        String.format("Surprisingly and unexpectedly found: %s in %s", param, output),
-        output.contains(" " + param + " "));
-  }
-
-  private String optionsAsString(JavacOptions options) {
-    ImmutableList.Builder<String> paramBuilder = ImmutableList.builder();
-
-    options.appendOptionsToList(
-        paramBuilder, /* pathAbsolutifier */ IdentityPathAbsolutifier.getIdentityAbsolutifier());
-
-    ImmutableList<String> params = paramBuilder.build();
-    return " " + Joiner.on(" ").join(params) + " ";
-  }
-
   private JavacOptions.Builder createStandardBuilder() {
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setSourceLevel("5")
         .setTargetLevel("5");
+  }
+
+  private void assertOptionFlags(JavacOptions options, Matcher<Iterable<? super String>> matcher) {
+    assertThat(visitOptions(options).flags, matcher);
+  }
+
+  private OptionAccumulator visitOptions(JavacOptions options) {
+    OptionAccumulator optionsConsumer = new OptionAccumulator();
+    options.appendOptionsTo(optionsConsumer, Functions.<Path>identity());
+    return optionsConsumer;
+  }
+
+  private void assertOptionsHasNoKey(JavacOptions options, String optionKey) {
+    assertThat(visitOptions(options).keyVals, not(hasKey(optionKey)));
+  }
+
+  private void assertOptionsHasExtra(JavacOptions options, String extra) {
+    assertThat(visitOptions(options).extras, hasItem(extra));
+  }
+
+  private void assertOptionsHasKeyValue(
+      JavacOptions options,
+      String optionName,
+      String optionValue) {
+    assertThat(visitOptions(options).keyVals, hasEntry(optionName, optionValue));
   }
 }

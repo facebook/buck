@@ -32,7 +32,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -40,6 +39,7 @@ import org.immutables.value.Value;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -122,46 +122,52 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return new JdkProvidedInMemoryJavac();
   }
 
-  public void appendOptionsToList(
-      ImmutableList.Builder<String> optionsBuilder,
+  public interface OptionsConsumer {
+    void addOptionValue(final String option, final String value);
+    void addFlag(final String flagName);
+    void addExtras(final Collection<String> extras);
+  }
+
+  public void appendOptionsTo(
+      OptionsConsumer optionsConsumer,
       final Function<Path, Path> pathRelativizer) {
 
     // Add some standard options.
-    optionsBuilder.add("-source", getSourceLevel());
-    optionsBuilder.add("-target", getTargetLevel());
+    optionsConsumer.addOptionValue("source", getSourceLevel());
+    optionsConsumer.addOptionValue("target", getTargetLevel());
 
     // Set the sourcepath to stop us reading source files out of jars by mistake.
-    optionsBuilder.add("-sourcepath", "");
+    optionsConsumer.addOptionValue("sourcepath", "");
 
     if (isDebug()) {
-      optionsBuilder.add("-g");
+      optionsConsumer.addFlag("g");
     }
 
     if (isVerbose()) {
-      optionsBuilder.add("-verbose");
+      optionsConsumer.addFlag("verbose");
     }
 
     // Override the bootclasspath if Buck is building Java code for Android.
     if (getBootclasspath().isPresent()) {
-      optionsBuilder.add("-bootclasspath", getBootclasspath().get());
+      optionsConsumer.addOptionValue("bootclasspath", getBootclasspath().get());
     } else {
       String bcp = getSourceToBootclasspath().get(getSourceLevel());
       if (bcp != null) {
-        optionsBuilder.add("-bootclasspath", bcp);
+        optionsConsumer.addOptionValue("bootclasspath", bcp);
       }
     }
 
     // Add annotation processors.
     if (!getAnnotationProcessingParams().isEmpty()) {
-
       // Specify where to generate sources so IntelliJ can pick them up.
       Path generateTo = getAnnotationProcessingParams().getGeneratedSourceFolderName();
       if (generateTo != null) {
-        optionsBuilder.add("-s").add(pathRelativizer.apply(generateTo).toString());
+        //noinspection ConstantConditions
+        optionsConsumer.addOptionValue("s", pathRelativizer.apply(generateTo).toString());
       }
 
       // Specify processorpath to search for processors.
-      optionsBuilder.add("-processorpath",
+      optionsConsumer.addOptionValue("processorpath",
           Joiner.on(File.pathSeparator).join(
               FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
                   .transform(pathRelativizer)
@@ -169,23 +175,23 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
       // Specify names of processors.
       if (!getAnnotationProcessingParams().getNames().isEmpty()) {
-        optionsBuilder.add(
-            "-processor",
+        optionsConsumer.addOptionValue(
+            "processor",
             Joiner.on(',').join(getAnnotationProcessingParams().getNames()));
       }
 
       // Add processor parameters.
       for (String parameter : getAnnotationProcessingParams().getParameters()) {
-        optionsBuilder.add("-A" + parameter);
+        optionsConsumer.addFlag("A" + parameter);
       }
 
       if (getAnnotationProcessingParams().getProcessOnly()) {
-        optionsBuilder.add("-proc:only");
+        optionsConsumer.addFlag("proc:only");
       }
     }
 
     // Add extra arguments.
-    optionsBuilder.addAll(getExtraArguments());
+    optionsConsumer.addExtras(getExtraArguments());
   }
 
   @Override
