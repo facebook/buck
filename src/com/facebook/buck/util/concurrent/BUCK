@@ -5,6 +5,7 @@ java_library(
     '//test/com/facebook/buck/util/concurrent:concurrent',
   ],
   deps = [
+    '//third-party/java/concurrent-locks:concurrent-locks',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
   ],
