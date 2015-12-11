@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.apple.BuildRuleWithAppleBundle;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.hashing.FileHashLoader;
@@ -652,7 +653,12 @@ public class TargetsCommand extends AbstractCommand {
           builder.add(ruleKeyBuilderFactory.get().build(rule).toString());
         }
         if (isShowOutput()) {
-          Path outputPath = rule.getPathToOutput();
+          Path outputPath;
+          if (rule instanceof BuildRuleWithAppleBundle) {
+            outputPath = ((BuildRuleWithAppleBundle) rule).getAppleBundle().getPathToOutput();
+          } else {
+            outputPath = rule.getPathToOutput();
+          }
           if (outputPath != null) {
             builder.add(outputPath.toString());
           }

@@ -34,6 +34,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -488,5 +489,35 @@ public class AppleBundleIntegrationTest {
                     "DemoApp#no-debug,no-include-frameworks/DemoApp.app/Watch/" +
                         "DemoWatchApp.app/PlugIns/DemoWatchAppExtension.appex/" +
                         "DemoWatchAppExtension")));
+  }
+
+  @Test
+  public void testTargetOutputForAppleBundle() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path genDir = tmp.getRootPath().relativize(tmp.getRootPath().resolve(BuckConstant.GEN_DIR));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result;
+    // test no-debug output
+    result = workspace.runBuckCommand(
+        "targets",
+        "--show-output",
+        "//:DemoApp#no-debug");
+    result.assertSuccess();
+    assertThat(result.getStdout(),
+        Matchers.startsWith("//:DemoApp#no-debug " +
+            genDir.resolve("DemoApp#no-debug,no-include-frameworks/DemoApp.app").toString()));
+
+    // test debug output
+    result = workspace.runBuckCommand(
+        "targets",
+        "--show-output",
+        "//:DemoApp#dwarf-and-dsym");
+    result.assertSuccess();
+    assertThat(result.getStdout(),
+        Matchers.startsWith("//:DemoApp#dwarf-and-dsym " +
+            genDir.resolve("DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app").toString()));
   }
 }

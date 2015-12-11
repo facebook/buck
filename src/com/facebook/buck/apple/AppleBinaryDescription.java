@@ -79,7 +79,6 @@ public class AppleBinaryDescription
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat defaultDebugInfoFormat;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
@@ -87,15 +86,13 @@ public class AppleBinaryDescription
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugInfoFormat) {
+      ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.defaultDebugInfoFormat = defaultDebugInfoFormat;
   }
 
   @Override
@@ -163,8 +160,6 @@ public class AppleBinaryDescription
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build());
       }
-      Optional<AppleDebugFormat> flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN.getValue(
-          params.getBuildTarget());
       BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();
       return AppleDescriptions.createAppleBundle(
           cxxPlatformFlavorDomain,
@@ -181,8 +176,7 @@ public class AppleBinaryDescription
           args.infoPlist.get(),
           args.infoPlistSubstitutions,
           args.deps.get(),
-          args.getTests(),
-          flavoredDebugInfoFormat.or(defaultDebugInfoFormat));
+          args.getTests());
     }
     return createBinary(targetGraph, params, resolver, args);
   }

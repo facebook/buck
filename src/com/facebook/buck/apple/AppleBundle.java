@@ -34,12 +34,9 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.shell.DefaultShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
@@ -47,9 +44,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -63,7 +57,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -73,8 +66,9 @@ import java.util.Set;
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
-public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps, NativeTestable {
-
+public class AppleBundle
+    extends AbstractBuildRule
+    implements NativeTestable, BuildRuleWithAppleBundle {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
@@ -116,15 +110,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final Tool ibtool;
 
   @AddToRuleKey
-  private final Tool dsymutil;
-
-  @AddToRuleKey
-  private final Tool strip;
-
-  @AddToRuleKey
-  private final Tool lldb;
-
-  @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey
@@ -142,9 +127,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   @AddToRuleKey
   private final Optional<Tool> codesignAllocatePath;
 
-  @AddToRuleKey
-  private final AppleDebugFormat debugInfoFormat;
-
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey
   private final ImmutableMap<SourcePath, String> extensionBundlePaths;
@@ -155,7 +137,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final Path bundleRoot;
   private final Path binaryPath;
   private final Path bundleBinaryPath;
-  private final Path dsymPath;
   private final boolean hasBinary;
 
   AppleBundle(
@@ -174,16 +155,12 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Set<SourcePath> frameworks,
       Tool ibtool,
-      Tool dsymutil,
-      Tool strip,
-      Tool lldb,
       Optional<AppleAssetCatalog> assetCatalog,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
       Optional<Tool> codesignAllocatePath,
-      ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat debugInfoFormat) {
+      ProvisioningProfileStore provisioningProfileStore) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -200,9 +177,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.resourceVariantFiles = resourceVariantFiles;
     this.frameworks = frameworks;
     this.ibtool = ibtool;
-    this.dsymutil = dsymutil;
-    this.strip = strip;
-    this.lldb = lldb;
     this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot = getBundleRoot(getBuildTarget(), this.binaryName, this.extension);
@@ -211,11 +185,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.platformName = sdk.getApplePlatform().getName();
     this.sdkName = sdk.getName();
-    this.debugInfoFormat = debugInfoFormat;
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
-    dsymPath = bundleRoot
-        .getParent()
-        .resolve(bundleRoot.getFileName().toString() + ".dSYM");
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
 
     if (needCodeSign()) {
@@ -326,53 +296,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               getProjectFilesystem(),
               binaryOutputPath,
               bundleBinaryPath));
-      if (debugInfoFormat == AppleDebugFormat.DWARF_AND_DSYM) {
-        buildableContext.recordArtifact(dsymPath);
-        stepsBuilder.add(
-            new DsymStep(
-                getProjectFilesystem(),
-                dsymutil.getEnvironment(getResolver()),
-                dsymutil.getCommandPrefix(getResolver()),
-                bundleBinaryPath,
-                dsymPath));
-      }
-
-      stepsBuilder.add(
-          new Step() {
-            @Override
-            public int execute(ExecutionContext context) throws IOException, InterruptedException {
-              // Don't strip binaries which are already code-signed.  Note: we need to use
-              // binaryOutputPath instead of bundleBinaryPath because codesign will evaluate the
-              // entire .app bundle, even if you pass it the direct path to the embedded binary.
-              if (!CodeSigning.hasValidSignature(context.getProcessExecutor(), binaryOutputPath)) {
-                return (new DefaultShellStep(
-                    getProjectFilesystem().getRootPath(),
-                    ImmutableList.<String>builder()
-                        .addAll(strip.getCommandPrefix(getResolver()))
-                        .add("-S")
-                        .add(getProjectFilesystem().resolve(bundleBinaryPath).toString())
-                        .build(),
-                    strip.getEnvironment(getResolver())))
-                    .execute(context);
-              } else {
-                LOG.info("Not stripping code-signed binary.");
-                return 0;
-              }
-            }
-
-            @Override
-            public String getShortName() {
-              return "strip binary";
-            }
-
-            @Override
-            public String getDescription(ExecutionContext context) {
-              return String.format(
-                  "strip debug symbols from binary '%s'",
-                  bundleRoot);
-            }
-          }
-      );
     }
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
@@ -528,46 +451,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     buildableContext.recordArtifact(getPathToOutput());
 
     return stepsBuilder.build();
-  }
-
-  @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    if (!hasBinary || debugInfoFormat == AppleDebugFormat.NONE) {
-      return ImmutableList.of();
-    }
-    return ImmutableList.<Step>of(
-        new Step() {
-          @Override
-          public int execute(ExecutionContext context) throws IOException, InterruptedException {
-            ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(getResolver());
-            ProcessExecutorParams params = ProcessExecutorParams
-                .builder()
-                .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
-                .build();
-            return context.getProcessExecutor().launchAndExecute(
-                params,
-                ImmutableSet.<ProcessExecutor.Option>of(),
-                Optional.of(
-                    String.format("target create %s\ntarget symbols add %s", bundleRoot, dsymPath)),
-                Optional.<Long>absent(),
-                Optional.<Function<Process, Void>>absent()).getExitCode();
-          }
-
-          @Override
-          public String getShortName() {
-            return "register debug symbols";
-          }
-
-          @Override
-          public String getDescription(ExecutionContext context) {
-            return String.format(
-                "register debug symbols for binary '%s': '%s'",
-                bundleRoot,
-                dsymPath);
-          }
-        });
   }
 
   public void addStepsToCopyExtensionBundlesDependencies(
@@ -749,5 +632,18 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
   private boolean needCodeSign() {
     return binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName);
+  }
+
+  @Override
+  public AppleBundle getAppleBundle() {
+    return this;
+  }
+
+  public Path getBundleRoot() {
+    return bundleRoot;
+  }
+
+  public Path getBundleBinaryPath() {
+    return bundleBinaryPath;
   }
 }

@@ -108,7 +108,6 @@ public class AppleLibraryDescription implements
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat debugInfoFormat;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -116,15 +115,13 @@ public class AppleLibraryDescription implements
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat debugInfoFormat) {
+      ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.debugInfoFormat = debugInfoFormat;
   }
 
   @Override
@@ -151,9 +148,6 @@ public class AppleLibraryDescription implements
       A args) throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
-    Optional<AppleDebugFormat> flavoredDebugInfoFormat =
-        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       if (!args.infoPlist.isPresent()) {
         throw new HumanReadableException(
@@ -183,8 +177,7 @@ public class AppleLibraryDescription implements
           args.infoPlist.get(),
           args.infoPlistSubstitutions,
           args.deps.get(),
-          args.getTests(),
-          flavoredDebugInfoFormat.or(debugInfoFormat));
+          args.getTests());
     }
 
     return createBuildRule(

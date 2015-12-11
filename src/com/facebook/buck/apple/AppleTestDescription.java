@@ -218,7 +218,7 @@ public class AppleTestDescription implements
                               resolver,
                               testHostAppNode.getExtraDeps()))),
                   resolver,
-                  testHostAppDescription));
+                  testHostAppDescription).getAppleBundle());
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
           new BuildTargetSourcePath(testHostAppDescription.binary));
 
@@ -331,16 +331,12 @@ public class AppleTestDescription implements
         Optional.of(resourceVariantFiles),
         ImmutableSet.<SourcePath>of(),
         appleCxxPlatform.getIbtool(),
-        appleCxxPlatform.getDsymutil(),
-        appleCxxPlatform.getCxxPlatform().getStrip(),
-        appleCxxPlatform.getLldb(),
         assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
         appleCxxPlatform.getCodesignAllocate(),
-        provisioningProfileStore,
-        AppleDebugFormat.NONE);
+        provisioningProfileStore);
 
 
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which

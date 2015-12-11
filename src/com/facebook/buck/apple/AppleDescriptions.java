@@ -83,6 +83,9 @@ public class AppleDescriptions {
           ImmutableMap.of(
               INCLUDE_FRAMEWORKS_FLAVOR, Boolean.TRUE,
               NO_INCLUDE_FRAMEWORKS_FLAVOR, Boolean.FALSE));
+  public static final Flavor APPLE_DSYM = ImmutableFlavor.of("apple-dsym");
+  public static final Flavor APPLE_BUNDLE_WITH_DSYM = ImmutableFlavor.of("apple-bundle-with-dsym");
+
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
@@ -382,6 +385,45 @@ public class AppleDescriptions {
     return appleCxxPlatform;
   }
 
+  static AppleDsym createAppleDsym(
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      AppleBundle appleBundle) {
+    AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
+        cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
+        params.getBuildTarget());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    return new AppleDsym(
+        params.copyWithChanges(
+            BuildTarget.builder(params.getBuildTarget()).addFlavors(APPLE_DSYM).build(),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(appleBundle)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        sourcePathResolver,
+        appleBundle.getBundleRoot(),
+        appleBundle.getBundleBinaryPath(),
+        appleCxxPlatform.getDsymutil(),
+        appleCxxPlatform.getLldb(),
+        appleCxxPlatform.getCxxPlatform().getStrip());
+  }
+
+  static AppleBundleWithDsym createAppleBundleWithDsym(
+      AppleBundle appleBundle,
+      AppleDsym appleDsym,
+      BuildRuleParams params,
+      BuildRuleResolver resolver) {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    return new AppleBundleWithDsym(
+        params.copyWithChanges(
+            BuildTarget.builder(params.getBuildTarget()).addFlavors(APPLE_BUNDLE_WITH_DSYM).build(),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(appleDsym)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        sourcePathResolver,
+        appleBundle);
+  }
+
   static AppleBundle createAppleBundle(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
@@ -397,8 +439,7 @@ public class AppleDescriptions {
       final SourcePath infoPlist,
       Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
       ImmutableSortedSet<BuildTarget> deps,
-      ImmutableSortedSet<BuildTarget> tests,
-      AppleDebugFormat debugInfoFormat)
+      ImmutableSortedSet<BuildTarget> tests)
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
@@ -499,16 +540,12 @@ public class AppleDescriptions {
         Optional.of(bundleVariantFiles),
         frameworks,
         appleCxxPlatform.getIbtool(),
-        appleCxxPlatform.getDsymutil(),
-        appleCxxPlatform.getCxxPlatform().getStrip(),
-        appleCxxPlatform.getLldb(),
         assetCatalog,
         tests,
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
         appleCxxPlatform.getCodesignAllocate(),
-        provisioningProfileStore,
-        debugInfoFormat);
+        provisioningProfileStore);
   }
 
   private static BuildRule getFlavoredBinaryRule(
@@ -598,8 +635,8 @@ public class AppleDescriptions {
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     for (BuildRule rule : deps) {
-      if (rule instanceof AppleBundle) {
-        AppleBundle appleBundle = (AppleBundle) rule;
+      if (rule instanceof BuildRuleWithAppleBundle) {
+        AppleBundle appleBundle = ((BuildRuleWithAppleBundle) rule).getAppleBundle();
         if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension()) ||
             AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
           Path outputPath = Preconditions.checkNotNull(

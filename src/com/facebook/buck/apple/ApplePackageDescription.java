@@ -50,7 +50,7 @@ public class ApplePackageDescription implements
       A args) {
     BuildRule bundle = resolver.getRule(
         propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
-    if (!(bundle instanceof AppleBundle)) {
+    if (!(bundle instanceof BuildRuleWithAppleBundle)) {
       throw new HumanReadableException(
           "In %s, bundle='%s' must be an apple_bundle() but was %s().",
           params.getBuildTarget(),
@@ -58,7 +58,10 @@ public class ApplePackageDescription implements
           bundle.getType());
     }
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    return new ApplePackage(params, sourcePathResolver, (AppleBundle) bundle);
+    return new ApplePackage(
+        params,
+        sourcePathResolver,
+        ((BuildRuleWithAppleBundle) bundle).getAppleBundle());
   }
 
   @Override

@@ -22,6 +22,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.BuildRuleWithAppleBundle;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
@@ -236,8 +237,8 @@ public class InstallCommand extends BuildCommand {
         if (exitCode != 0) {
           return exitCode;
         }
-      } else if (buildRule instanceof AppleBundle) {
-        AppleBundle appleBundle = (AppleBundle) buildRule;
+      } else if (buildRule instanceof BuildRuleWithAppleBundle) {
+        AppleBundle appleBundle = ((BuildRuleWithAppleBundle) buildRule).getAppleBundle();
         InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
         params.getBuckEventBus().post(started);
         InstallResult installResult = installAppleBundle(
