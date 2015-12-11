@@ -371,7 +371,7 @@ public class Parser {
     return targets.build();
   }
 
-  private SimplePerfEvent.Scope getTargetNodeEventScope(
+  static SimplePerfEvent.Scope getTargetNodeEventScope(
       BuckEventBus eventBus,
       BuildTarget buildTarget) {
     return SimplePerfEvent.scope(

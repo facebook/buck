@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -50,7 +51,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
@@ -81,6 +89,21 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
    * checking for the existence of symlinks in the source tree.
    */
   private final Map<Path, Path> symlinkExistenceCache;
+
+  /**
+   * The count of build targets in {@code pendingBuildTargets}.  Getting the size is an expensive
+   * operation, so we track an upper-bound at all times.
+   */
+  private final AtomicInteger pendingBuildTargetCount;
+  /**
+   * The queue of build targets to parse.
+   */
+  private final LinkedBlockingQueue<BuildTarget> pendingBuildTargets;
+  /**
+   * Used to notify the caller of {@link #startParsing(Set, ParserConfig, Executor)} when all work
+   * on the parsing threads is completed.
+   */
+  private final CountDownLatch completionNotifier;
 
   public ParallelPerBuildState(
       ParallelDaemonicParserState permState,
@@ -116,7 +139,30 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
     this.closer = Closer.create();
 
+    this.pendingBuildTargetCount = new AtomicInteger(0);
+    this.pendingBuildTargets = new LinkedBlockingQueue<>();
+    this.completionNotifier = new CountDownLatch(1);
+
     register(rootCell);
+  }
+
+  /**
+   * Setups up the parallel parsing environment and blocks until parsing has finished (successfully
+   * or with an error).
+   */
+  public void startParsing(
+      Set<BuildTarget> toExplore,
+      ParserConfig parserConfig,
+      Executor executor) throws InterruptedException {
+    addBuildTargetsToProcess(toExplore);
+
+    // Create the worker threads.
+    for (int i = parserConfig.getNumParsingThreads(); i > 0; i--) {
+      executor.execute(new BuildTargetParserWorker());
+    }
+
+    // Now we wait for parsing to complete.
+    completionNotifier.await();
   }
 
   @Override
@@ -298,6 +344,102 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
     if (lastSeen != null) {
       throw lastSeen;
+    }
+  }
+
+  /**
+   * This should be called when a worker wants to parse a {@link BuildTarget}.
+   * @return a processing scope that contains the build target, if available.
+   */
+  private BuildTargetProcessingScope startProcessingBuildTarget()
+      throws InterruptedException, TimeoutException {
+    BuildTarget target = pendingBuildTargets.poll(5, TimeUnit.SECONDS); // Arbitrarily choosen.
+    if (target == null) {
+      throw new TimeoutException();
+    }
+    return this.new BuildTargetProcessingScope(target);
+  }
+
+  private void addBuildTargetsToProcess(Set<BuildTarget> nodes) {
+    Preconditions.checkArgument(nodes.size() > 0);
+    pendingBuildTargetCount.getAndAdd(nodes.size());
+    Preconditions.checkState(pendingBuildTargets.addAll(nodes));
+  }
+
+  @NotThreadSafe
+  private class BuildTargetProcessingScope implements AutoCloseable {
+
+    private final BuildTarget buildTarget;
+
+    public BuildTargetProcessingScope(BuildTarget buildTarget) {
+      this.buildTarget = buildTarget;
+    }
+
+    public BuildTarget getBuildTarget() {
+      return buildTarget;
+    }
+
+    public void addDepsToProcess(Set<BuildTarget> deps) {
+      if (deps.size() == 0) {
+        // Nothing to do here.
+        return;
+      }
+      addBuildTargetsToProcess(deps);
+    }
+
+    @Override
+    public void close() {
+      if (pendingBuildTargetCount.getAndDecrement() == 1) {
+        completionNotifier.countDown();
+      }
+    }
+  }
+
+  private class BuildTargetParserWorker implements Runnable {
+    @Override
+    public void run() {
+      while (shouldWaitForWork()) {
+        try (BuildTargetProcessingScope processingScope = startProcessingBuildTarget()) {
+          TargetNode<?> node;
+          try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(
+              eventBus,
+              processingScope.getBuildTarget())) {
+            try {
+              node = getTargetNode(processingScope.getBuildTarget());
+            } catch (BuildFileParseException | BuildTargetException | IOException e) {
+              // It's okay to not raise this further up because in `Parser` we build the target
+              // graph and while doing so will hit the same error (the parsing will have been
+              // cached).
+              abortDoingMoreWork();
+              return;
+            }
+
+            processingScope.addDepsToProcess(node.getDeps());
+          }
+        } catch (TimeoutException e) {
+          // We timed out waiting to process something on the queue.  This could mean we are done,
+          // so run through the while statement again.
+          continue;
+        } catch (InterruptedException e) {
+          abortDoingMoreWork();
+          return;
+        }
+      }
+    }
+
+    private boolean shouldWaitForWork() {
+      return pendingBuildTargetCount.get() > 0;
+    }
+
+    /**
+     * Called when all work on all threads should be stopped.  This clears all entries in
+     * {@link #pendingBuildTargets} and sets {@link #pendingBuildTargetCount} to {@code 1} so that
+     * when {@link BuildTargetProcessingScope#close()} is called, the waiting thread is properly
+     * signaled.
+     */
+    private void abortDoingMoreWork() {
+      pendingBuildTargets.clear();
+      pendingBuildTargetCount.set(1);
     }
   }
 }

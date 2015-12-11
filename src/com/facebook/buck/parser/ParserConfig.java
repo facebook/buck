@@ -110,4 +110,12 @@ public class ParserConfig {
   public Optional<Long> getWatchmanQueryTimeoutMs() {
     return delegate.getLong("project", "watchman_query_timeout_ms");
   }
+
+  public int getNumParsingThreads() {
+    Optional<Long> value = delegate.getLong("project", "parsing_threads");
+    if (value.isPresent()) {
+      return Math.min(value.get().intValue(), delegate.getNumThreads());
+    }
+    return delegate.getNumThreads();
+  }
 }
