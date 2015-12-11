@@ -32,24 +32,31 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Closer;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.concurrent.ThreadSafe;
+
+@ThreadSafe
 class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   private static final Logger LOG = Logger.get(ParallelPerBuildState.class);
-  private final DaemonicParserState permState;
+  private final ParallelDaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
@@ -60,7 +67,8 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
   private final Map<Path, Cell> cells;
   private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability;
-  private final Map<Cell, ProjectBuildFileParser> parsers;
+  private final ThreadLocal<Map<Cell, ProjectBuildFileParser>> parsers;
+  private final Closer closer;
   /**
    * Build rule input files (e.g., paths in {@code srcs}) whose
    * paths contain an element which exists in {@code symlinkExistenceCache}.
@@ -75,7 +83,7 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   private final Map<Path, Path> symlinkExistenceCache;
 
   public ParallelPerBuildState(
-      DaemonicParserState permState,
+      ParallelDaemonicParserState permState,
       ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       Cell rootCell,
@@ -86,7 +94,12 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     this.enableProfiling = enableProfiling;
     this.cells = new ConcurrentHashMap<>();
     this.cellSymlinkAllowability = new ConcurrentHashMap<>();
-    this.parsers = new ConcurrentHashMap<>();
+    this.parsers = new ThreadLocal<Map<Cell, ProjectBuildFileParser>>() {
+      @Override
+      protected Map<Cell, ProjectBuildFileParser> initialValue() {
+        return new HashMap<>();
+      }
+    };
     this.buildInputPathsUnderSymlink = Sets.newHashSet();
     this.symlinkExistenceCache = new ConcurrentHashMap<>();
 
@@ -100,6 +113,8 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
         registerInputsUnderSymlinks(buildFile, node);
       }
     };
+
+    this.closer = Closer.create();
 
     register(rootCell);
   }
@@ -147,15 +162,24 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   }
 
   private ProjectBuildFileParser getBuildFileParser(Cell cell) {
-    ProjectBuildFileParser parser = parsers.get(cell);
-    if (parser == null) {
-      parser = cell.createBuildFileParser(
-          marshaller,
-          console,
-          eventBus);
-      parser.setEnableProfiling(enableProfiling);
-      parsers.put(cell, parser);
+    Map<Cell, ProjectBuildFileParser> threadLocalParsers = parsers.get();
+    if (threadLocalParsers.containsKey(cell)) {
+      return threadLocalParsers.get(cell);
     }
+
+    final ProjectBuildFileParser parser = cell.createBuildFileParser(marshaller, console, eventBus);
+    parser.setEnableProfiling(enableProfiling);
+    threadLocalParsers.put(cell, parser);
+    closer.register(new Closeable() {
+      @Override
+      public void close() throws IOException {
+        try {
+          parser.close();
+        } catch (BuildFileParseException | InterruptedException e) {
+          new IOException(e);
+        }
+      }
+    });
     return parser;
   }
 
@@ -251,12 +275,16 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     stderr.close();
 
     BuildFileParseException lastSeen = null;
-    for (ProjectBuildFileParser parser : parsers.values()) {
-      try {
-        parser.close();
-      } catch (BuildFileParseException e) {
-        lastSeen = e;
+    try {
+      closer.close();
+    } catch (IOException e) {
+      if (e.getCause() instanceof BuildFileParseException) {
+        lastSeen = (BuildFileParseException) e.getCause();
       }
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
+      Throwables.propagate(e);
     }
 
     LOG.debug(
