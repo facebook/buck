@@ -44,6 +44,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.concurrent.AutoCloseableLock;
+import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -79,12 +81,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
+import javax.annotation.concurrent.GuardedBy;
+import javax.annotation.concurrent.ThreadSafe;
+
 
 /**
  * Persistent parsing data, that can exist between invocations of the {@link Parser}. All public
  * methods that cause build files to be read must be guarded by calls to
  * {@link #invalidateIfProjectBuildFileParserStateChanged(Cell)} in order to ensure that state is maintained correctly.
  */
+@ThreadSafe
 class ParallelDaemonicParserState implements DaemonicParserState {
   private static final Logger LOG = Logger.get(ParallelDaemonicParserState.class);
 
@@ -98,6 +104,7 @@ class ParallelDaemonicParserState implements DaemonicParserState {
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
   private final OptimisticLoadingCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
+  @GuardedBy("this")
   private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
   private final OptimisticLoadingCache<BuildTarget, TargetNode<?>> allTargetNodes;
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
@@ -106,6 +113,7 @@ class ParallelDaemonicParserState implements DaemonicParserState {
    * A map from absolute included files ({@code /foo/BUILD_DEFS}, for example) to the build files
    * that depend on them (typically {@code /foo/BUCK} files).
    */
+  @GuardedBy("this")
   private final SetMultimap<Path, Path> buildFileDependents;
 
   /**
@@ -114,12 +122,14 @@ class ParallelDaemonicParserState implements DaemonicParserState {
    * is stored between requests to parse build files and the cache is invalidated and build files
    * reevaluated if the environment changes.
    */
+  @GuardedBy("cachedStateLock")
   private ImmutableMap<String, String> cachedEnvironment;
 
   /**
    * The default includes used by the previous run of the parser in each cell (the key is the
    * cell's root path). If this value changes, then we need to invalidate all the caches.
    */
+  @GuardedBy("cachedStateLock")
   private Map<Path, Iterable<String>> cachedIncludes;
 
   /**
@@ -127,6 +137,8 @@ class ParallelDaemonicParserState implements DaemonicParserState {
    * for cache invalidation. Please see {@link #invalidateBasedOn(WatchEvent)} for example usage.
    */
   private final Set<Cell> knownCells;
+
+  private final AutoCloseableReadWriteUpdateLock cachedStateLock;
 
   public ParallelDaemonicParserState(
       TypeCoercerFactory typeCoercerFactory,
@@ -147,6 +159,8 @@ class ParallelDaemonicParserState implements DaemonicParserState {
     this.cachedEnvironment = ImmutableMap.of();
     this.cachedIncludes = new ConcurrentHashMap<>();
     this.knownCells = Collections.synchronizedSet(new HashSet<Cell>());
+
+    this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
   }
 
   @Override
@@ -297,27 +311,32 @@ class ParallelDaemonicParserState implements DaemonicParserState {
                 toReturn.add(rawNode);
               }
             }
-            // We now know all the nodes. They all implicitly depend on everything in
-            // the "dependentsOfEveryNode" set.
-            for (Path dependent : dependentsOfEveryNode) {
-              buildFileDependents.put(dependent, buildFile);
+
+            synchronized (this) {
+              // We now know all the nodes. They all implicitly depend on everything in
+              // the "dependentsOfEveryNode" set.
+              for (Path dependent : dependentsOfEveryNode) {
+                buildFileDependents.put(dependent, buildFile);
+              }
             }
 
             // We also know that the rules all depend on the default includes for the
             // cell.
             Iterable<String> defaultIncludes =
                 new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
-            for (String include : defaultIncludes) {
-              // Default includes are given as "//path/to/file". They look like targets
-              // but they are not. However, I bet someone will try and treat it like a
-              // target, so find the owning cell if necessary, and then fully resolve
-              // the path against the owning cell's root.
-              int slashesIndex = include.indexOf("//");
-              Preconditions.checkState(slashesIndex != -1);
+            synchronized (this) {
+              for (String include : defaultIncludes) {
+                // Default includes are given as "//path/to/file". They look like targets
+                // but they are not. However, I bet someone will try and treat it like a
+                // target, so find the owning cell if necessary, and then fully resolve
+                // the path against the owning cell's root.
+                int slashesIndex = include.indexOf("//");
+                Preconditions.checkState(slashesIndex != -1);
 
-              buildFileDependents.put(
-                  cell.getFilesystem().resolve(include.substring(2)),
-                  buildFile);
+                buildFileDependents.put(
+                    cell.getFilesystem().resolve(include.substring(2)),
+                    buildFile);
+              }
             }
 
             return toReturn.build();
@@ -399,7 +418,9 @@ class ParallelDaemonicParserState implements DaemonicParserState {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
+        synchronized (this) {
+          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
+        }
         TargetNode<?> node = new TargetNode(
             hasher.hash(),
             description,
@@ -535,7 +556,7 @@ class ParallelDaemonicParserState implements DaemonicParserState {
    * the targets and rules defined by files that transitively include {@code path} from the cache.
    * @param path The File that has changed.
    */
-  private void invalidatePath(Cell cell, Path path) {
+  private synchronized void invalidatePath(Cell cell, Path path) {
     // Paths from Watchman are not absolute.
     path = cell.getFilesystem().resolve(path);
 
@@ -589,32 +610,37 @@ class ParallelDaemonicParserState implements DaemonicParserState {
   private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
     ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getEnvironment();
     Iterable<String> defaultIncludes = new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
-    Iterable<String> expected = cachedIncludes.get(cell.getRoot());
 
     boolean invalidateCaches = false;
+    try (AutoCloseableLock updateLock = cachedStateLock.updateLock()) {
+      Iterable<String> expected = cachedIncludes.get(cell.getRoot());
 
-    if (!cellEnv.equals(cachedEnvironment)) {
-      // Contents of System.getenv() have changed. Cowardly refuse to accept we'll parse everything
-      // the same way.
-      invalidateCaches = true;
-    } else if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
-      // Someone's changed the default includes. That's almost definitely caused all our lovingly
-      // cached data to be enormously wonky.
-      invalidateCaches = true;
+      if (!cellEnv.equals(cachedEnvironment)) {
+        // Contents of System.getenv() have changed. Cowardly refuse to accept we'll parse
+        // everything the same way.
+        invalidateCaches = true;
+      } else if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
+        // Someone's changed the default includes. That's almost definitely caused all our lovingly
+        // cached data to be enormously wonky.
+        invalidateCaches = true;
+      }
+
+      if (!invalidateCaches) {
+        return;
+      }
+
+      try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
+        cachedEnvironment = cellEnv;
+        cachedIncludes.put(cell.getRoot(), defaultIncludes);
+      }
     }
-
-    if (!invalidateCaches) {
-      return;
+    synchronized (this) {
+      invalidateAllCaches();
+      knownCells.add(cell);
     }
-
-    invalidateAllCaches();
-
-    cachedEnvironment = cellEnv;
-    cachedIncludes.put(cell.getRoot(), defaultIncludes);
-    knownCells.add(cell);
   }
 
-  private void invalidateAllCaches() {
+  private synchronized void invalidateAllCaches() {
     LOG.debug("Invalidating all caches");
     allTargetNodes.invalidateAll();
     targetsCornucopia.clear();
