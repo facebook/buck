@@ -138,7 +138,7 @@ def git_checkout(revision, cwd):
 
 
 BUILD_RESULT_LOG_LINE = re.compile(
-    r'BuildRuleFinished\((?P<rule_name>[\w_\-:#\/]+)\): (?P<result>[A-Z_]+) '
+    r'BuildRuleFinished\((?P<rule_name>[\w_\-:#\/,]+)\): (?P<result>[A-Z_]+) '
     r'(?P<cache_result>[A-Z_]+) (?P<success_type>[A-Z_]+) '
     r'(?P<rule_key>[0-9a-f]*)')
 
@@ -186,7 +186,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     tmpFile = tempfile.TemporaryFile()
     try:
         subprocess.check_call(
-            [args.path_to_buck, 'build', target, '-v', '5'],
+            [args.path_to_buck, 'build', '--deep', target, '-v', '5'],
             stdout=tmpFile,
             stderr=tmpFile,
             cwd=cwd,
