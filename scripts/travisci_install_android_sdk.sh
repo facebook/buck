@@ -14,20 +14,31 @@ if [ ! -x ${ANDROID_TOOL} ]; then
   mv android-sdk-linux ${ANDROID_HOME}
 fi
 
+function android_update_sdk() {
+  (
+    set +x
+    while true
+    do
+      echo y
+      sleep 2
+    done
+  ) | ${ANDROID_TOOL} update sdk \
+    --force \
+    --no-ui \
+    --all \
+    "$@"
+}
+
 # We always update the SDK, even if it is cached, in case we change the
 # versions of things we care about.
 # Values from `android list sdk --extended --all`
-(while :
-do
-    echo y
-    sleep 2
- done) | ${ANDROID_TOOL} update sdk \
-  --force \
-  --no-ui \
-  --all \
-  --filter \
-tools,\
-platform-tools,\
+
+# We install the SDK in multiple invocations because it seems that the list
+# of available packages depends on which other packages are already installed
+# and installing all packages in a single invocation does not work.
+android_update_sdk --filter platform-tools
+android_update_sdk --filter tools
+android_update_sdk --filter \
 build-tools-23.0.2,\
 android-23,\
 addon-google_apis-google-23,\
