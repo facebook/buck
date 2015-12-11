@@ -106,6 +106,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -340,108 +341,119 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    Pair<ImmutableSet<BuildTarget>, TargetGraph> traversalResult = null;
-    try {
-       traversalResult = params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableProfiling(),
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  getArguments()));
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
-    }
-
-    ImmutableSet<BuildTarget> passedInTargetsSet = traversalResult.getFirst();
-    ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
-        params.getParser(),
-        params.getCell(),
-        params.getBuckEventBus(),
-        getEnableProfiling());
-
-    Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();
-    boolean useExperimentalProjectGeneration = isExperimentalIntelliJProjectGenerationEnabled() ||
-        projectIde == Ide.XCODE;
-
-    TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
-        getTargetNodeSpecsForIde(
-            passedInTargetsSet,
-            useExperimentalProjectGeneration));
-
-    projectIde = getIdeBasedOnPassedInTargetsAndProjectGraph(
-        params.getBuckConfig(),
-        passedInTargetsSet,
-        Optional.of(projectGraph));
-    if (projectIde == ProjectCommand.Ide.XCODE) {
-      useExperimentalProjectGeneration = true;  // we want to use this feature for Xcode projects
-      checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
-    }
-
-    ProjectPredicates projectPredicates = ProjectPredicates.forIde(projectIde);
-
-    ImmutableSet<BuildTarget> graphRoots;
-    if (!passedInTargetsSet.isEmpty()) {
-      ImmutableSet<BuildTarget> supplementalGraphRoots = ImmutableSet.of();
-      if (projectIde == Ide.INTELLIJ && !useExperimentalProjectGeneration) {
-        supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
-            projectIde,
-            projectGraph,
-            projectPredicates);
-      }
-      graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
-    } else {
-      graphRoots = getRootsFromPredicate(
-          projectGraph,
-          projectPredicates.getProjectRootsPredicate());
-    }
-
-    TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(
-        projectGraph,
-        graphRoots,
-        projectGraphParser,
-        projectPredicates.getAssociatedProjectPredicate(),
-        isWithTests(),
-        isWithDependenciesTests(),
-        useExperimentalProjectGeneration);
-
-    if (getDryRun()) {
-      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
-        params.getConsole().getStdOut().println(targetNode.toString());
+    ImmutableSet<BuildTarget> passedInTargetsSet;
+    ProjectGraphParser projectGraphParser;
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Project",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      Pair<ImmutableSet<BuildTarget>, TargetGraph> traversalResult = null;
+      try {
+        traversalResult = params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                params.getBuckEventBus(),
+                params.getCell(),
+                getEnableProfiling(),
+                pool.getExecutor(),
+                parseArgumentsAsTargetNodeSpecs(
+                    params.getBuckConfig(),
+                    getArguments()));
+      } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
       }
 
-      return 0;
-    }
+      passedInTargetsSet = traversalResult.getFirst();
+      projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
+          params.getParser(),
+          params.getCell(),
+          params.getBuckEventBus(),
+          getEnableProfiling()
+      );
 
-    params.getBuckEventBus().post(ProjectGenerationEvent.started());
-    int result;
-    try {
-      switch (projectIde) {
-        case INTELLIJ:
-          result = runIntellijProjectGenerator(
-              params,
+      Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();
+      boolean useExperimentalProjectGeneration = isExperimentalIntelliJProjectGenerationEnabled() ||
+          projectIde == Ide.XCODE;
+
+      TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
+          getTargetNodeSpecsForIde(
+              passedInTargetsSet,
+              useExperimentalProjectGeneration),
+          pool.getExecutor());
+
+      projectIde = getIdeBasedOnPassedInTargetsAndProjectGraph(
+          params.getBuckConfig(),
+          passedInTargetsSet,
+          Optional.of(projectGraph));
+      if (projectIde == ProjectCommand.Ide.XCODE) {
+        useExperimentalProjectGeneration = true;  // we want to use this feature for Xcode projects
+        checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
+      }
+
+      ProjectPredicates projectPredicates = ProjectPredicates.forIde(projectIde);
+
+      ImmutableSet<BuildTarget> graphRoots;
+      if (!passedInTargetsSet.isEmpty()) {
+        ImmutableSet<BuildTarget> supplementalGraphRoots = ImmutableSet.of();
+        if (projectIde == Ide.INTELLIJ && !useExperimentalProjectGeneration) {
+          supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
+              projectIde,
               projectGraph,
-              targetGraphAndTargets,
-              passedInTargetsSet);
-          break;
-        case XCODE:
-          result = runXcodeProjectGenerator(
-              params,
-              targetGraphAndTargets,
-              passedInTargetsSet);
-          break;
-        default:
-          // unreachable
-          throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
+              projectPredicates);
+        }
+        graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
+      } else {
+        graphRoots = getRootsFromPredicate(
+            projectGraph,
+            projectPredicates.getProjectRootsPredicate());
       }
-    } finally {
-      params.getBuckEventBus().post(ProjectGenerationEvent.finished());
-    }
 
-    return result;
+      TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(
+          projectGraph,
+          graphRoots,
+          projectGraphParser,
+          projectPredicates.getAssociatedProjectPredicate(),
+          isWithTests(),
+          isWithDependenciesTests(),
+          useExperimentalProjectGeneration,
+          pool.getExecutor());
+
+      if (getDryRun()) {
+        for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+          params.getConsole().getStdOut().println(targetNode.toString());
+        }
+
+        return 0;
+      }
+
+      params.getBuckEventBus().post(ProjectGenerationEvent.started());
+      int result;
+      try {
+        switch (projectIde) {
+          case INTELLIJ:
+            result = runIntellijProjectGenerator(
+                params,
+                projectGraph,
+                targetGraphAndTargets,
+                passedInTargetsSet);
+            break;
+          case XCODE:
+            result = runXcodeProjectGenerator(
+                params,
+                targetGraphAndTargets,
+                passedInTargetsSet);
+            break;
+          default:
+            // unreachable
+            throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
+        }
+      } finally {
+        params.getBuckEventBus().post(ProjectGenerationEvent.finished());
+      }
+
+      return result;
+    }
   }
 
   private Ide getIdeBasedOnPassedInTargetsAndProjectGraph(
@@ -984,7 +996,8 @@ public class ProjectCommand extends BuildCommand {
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      boolean experimentalProjectGenerationEnabled
+      boolean experimentalProjectGenerationEnabled,
+      Executor executor
   )
       throws IOException, InterruptedException {
 
@@ -1002,7 +1015,8 @@ public class ProjectCommand extends BuildCommand {
           projectGraphParser.buildTargetGraphForTargetNodeSpecs(
               getTargetNodeSpecsForIde(
                   Sets.union(graphRoots, explicitTestTargets),
-                  experimentalProjectGenerationEnabled));
+                  experimentalProjectGenerationEnabled),
+              executor);
     } else {
       resultProjectGraph = projectGraph;
       explicitTestTargets = ImmutableSet.of();

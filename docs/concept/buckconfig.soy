@@ -923,6 +923,28 @@ on the generated files.
   post_process = ./scripts/post_process_buck_project.sh
 </pre>{/literal}
 
+<p>
+  Buck can parse your {call buck.build_file /}s in parallel when setting
+  {sp}<code>parallel_parsing</code> to <code>true</code>.  By default, this is set to
+  {sp}<code>false</code>.
+</p>
+
+{literal}<pre class="prettyprint lang-ini">
+[project]
+  parallel_parsing = false
+</pre>{/literal}
+
+<p>
+  When <code>parallel_parsing</code> is enabled, the number of threads Buck uses to parse is
+  controlled by the <code>parsing_threads</code> setting.  By default, this is equal to the number
+  of threads Buck uses to build, and will be the minimum of this setting and
+  {sp}<code>build.threads</code>.
+</p>
+
+{literal}<pre class="prettyprint lang-ini">
+[project]
+  parsing_threads = 2
+</pre>{/literal}
 
 {call .section}{param title: 'python' /}{/call}
 

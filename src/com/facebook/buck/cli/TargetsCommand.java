@@ -91,6 +91,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -258,110 +259,117 @@ public class TargetsCommand extends AbstractCommand {
       throw new HumanReadableException("Cannot show rule key and target hash at the same time.");
     }
 
-    if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
-      try {
-        return doShowRules(params);
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(
-            "Error getting rules: %s",
-            e.getHumanReadableErrorMessage());
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Targets",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
+        try {
+          return doShowRules(params, pool.getExecutor());
+        } catch (NoSuchBuildTargetException e) {
+          throw new HumanReadableException(
+              "Error getting rules: %s",
+              e.getHumanReadableErrorMessage());
+        }
       }
-    }
 
-    // Verify the --type argument.
-    ImmutableSet<String> types = getTypes();
-    ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
-    for (String name : types) {
-      try {
-        buildRuleTypesBuilder.add(params.getCell().getBuildRuleType(name));
-      } catch (IllegalArgumentException e) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            "Invalid build rule type: " + name));
-        return 1;
+      // Verify the --type argument.
+      ImmutableSet<String> types = getTypes();
+      ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
+      for (String name : types) {
+        try {
+          buildRuleTypesBuilder.add(params.getCell().getBuildRuleType(name));
+        } catch (IllegalArgumentException e) {
+          params.getBuckEventBus().post(ConsoleEvent.severe(
+              "Invalid build rule type: " + name));
+          return 1;
+        }
       }
-    }
 
-    // Parse the entire action graph, or (if targets are specified),
-    // only the specified targets and their dependencies..
-    //
-    // TODO(k21):
-    // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
-    // know which targets can refer to the specified targets or their dependencies in their
-    // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
-    // longer be necessary.
-    ImmutableSet<BuildTarget> matchingBuildTargets;
-    TargetGraph graph;
-    try {
-      if (getArguments().isEmpty() || isDetectTestChanges()) {
-        matchingBuildTargets = ImmutableSet.of();
-        graph = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
-                ImmutableList.of(
-                    TargetNodePredicateSpec.of(
-                        Predicates.<TargetNode<?>>alwaysTrue(),
-                        BuildFileSpec.fromRecursivePath(
-                            Paths.get(""))))).getSecond();
-      } else {
-        Pair<ImmutableSet<BuildTarget>, TargetGraph> results = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
-                parseArgumentsAsTargetNodeSpecs(
-                    params.getBuckConfig(),
-                    getArguments()));
-        matchingBuildTargets = results.getFirst();
-        graph = results.getSecond();
-      }
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
-    }
-
-    PathArguments.ReferencedFiles referencedFiles = getReferencedFiles(
-        params.getCell().getFilesystem().getRootPath());
-    SortedMap<String, TargetNode<?>> matchingNodes;
-    // If all of the referenced files are paths outside the project root, then print nothing.
-    if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
-        referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
-      matchingNodes = ImmutableSortedMap.of();
-    } else {
-      ImmutableSet<BuildRuleType> buildRuleTypes = buildRuleTypesBuilder.build();
-      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
-
-      matchingNodes = getMatchingNodes(
-          graph,
-          referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
-              Optional.<ImmutableSet<Path>>absent() :
-              Optional.of(referencedFiles.relativePathsUnderProjectRoot),
-          matchingBuildTargets.isEmpty() ?
-              Optional.<ImmutableSet<BuildTarget>>absent() :
-              Optional.of(matchingBuildTargets),
-          buildRuleTypes.isEmpty() ?
-              Optional.<ImmutableSet<BuildRuleType>>absent() :
-              Optional.of(buildRuleTypes),
-          isDetectTestChanges(),
-          parserConfig.getBuildFileName());
-    }
-
-    // Print out matching targets in alphabetical order.
-    if (getPrintJson()) {
+      // Parse the entire action graph, or (if targets are specified),
+      // only the specified targets and their dependencies..
+      //
+      // TODO(k21):
+      // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
+      // know which targets can refer to the specified targets or their dependencies in their
+      // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
+      // longer be necessary.
+      ImmutableSet<BuildTarget> matchingBuildTargets;
+      TargetGraph graph;
       try {
-        printJsonForTargets(params, matchingNodes);
-      } catch (BuildFileParseException e) {
+        if (getArguments().isEmpty() || isDetectTestChanges()) {
+          matchingBuildTargets = ImmutableSet.of();
+          graph = params.getParser()
+              .buildTargetGraphForTargetNodeSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableProfiling(),
+                  pool.getExecutor(),
+                  ImmutableList.of(
+                      TargetNodePredicateSpec.of(
+                          Predicates.<TargetNode<?>>alwaysTrue(),
+                          BuildFileSpec.fromRecursivePath(
+                              Paths.get(""))))).getSecond();
+        } else {
+          Pair<ImmutableSet<BuildTarget>, TargetGraph> results = params.getParser()
+              .buildTargetGraphForTargetNodeSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableProfiling(),
+                  pool.getExecutor(),
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getBuckConfig(),
+                      getArguments()));
+          matchingBuildTargets = results.getFirst();
+          graph = results.getSecond();
+        }
+      } catch (BuildTargetException | BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
       }
-    } else if (isPrint0()) {
-      printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
-    } else {
-      for (String target : matchingNodes.keySet()) {
-        params.getConsole().getStdOut().println(target);
+
+      PathArguments.ReferencedFiles referencedFiles = getReferencedFiles(
+          params.getCell().getFilesystem().getRootPath());
+      SortedMap<String, TargetNode<?>> matchingNodes;
+      // If all of the referenced files are paths outside the project root, then print nothing.
+      if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
+          referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
+        matchingNodes = ImmutableSortedMap.of();
+      } else {
+        ImmutableSet<BuildRuleType> buildRuleTypes = buildRuleTypesBuilder.build();
+        ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+
+        matchingNodes = getMatchingNodes(
+            graph,
+            referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
+                Optional.<ImmutableSet<Path>>absent() :
+                Optional.of(referencedFiles.relativePathsUnderProjectRoot),
+            matchingBuildTargets.isEmpty() ?
+                Optional.<ImmutableSet<BuildTarget>>absent() :
+                Optional.of(matchingBuildTargets),
+            buildRuleTypes.isEmpty() ?
+                Optional.<ImmutableSet<BuildRuleType>>absent() :
+                Optional.of(buildRuleTypes),
+            isDetectTestChanges(),
+            parserConfig.getBuildFileName());
+      }
+
+      // Print out matching targets in alphabetical order.
+      if (getPrintJson()) {
+        try {
+          printJsonForTargets(params, matchingNodes);
+        } catch (BuildFileParseException e) {
+          params.getBuckEventBus().post(ConsoleEvent.severe(
+              MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+          return 1;
+        }
+      } else if (isPrint0()) {
+        printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
+      } else {
+        for (String target : matchingNodes.keySet()) {
+          params.getConsole().getStdOut().println(target);
+        }
       }
     }
 
@@ -593,7 +601,7 @@ public class TargetsCommand extends AbstractCommand {
    * specified targets, followed by the rule key, output path, and/or
    * target hash, depending on what flags are passed in.
    */
-  private int doShowRules(CommandRunnerParams params)
+  private int doShowRules(CommandRunnerParams params, Executor executor)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
     if (getArguments().isEmpty()) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -609,20 +617,22 @@ public class TargetsCommand extends AbstractCommand {
               params.getBuckEventBus(),
               params.getCell(),
               getEnableProfiling(),
+              executor,
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   getArguments()));
       matchingBuildTargets = result.getFirst();
       targetGraph = result.getSecond();
+
+      if (isShowTargetHash()) {
+        return doShowTargetHash(params, executor, matchingBuildTargets);
+      }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
-    if (isShowTargetHash()) {
-      return doShowTargetHash(params, matchingBuildTargets);
-    }
     // We only need the action graph if we're showing the output or the keys, and the
     // RuleKeyBuilderFactory if we're showing the keys.
     Optional<ActionGraph> actionGraph = Optional.absent();
@@ -672,6 +682,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private int doShowTargetHash(
       CommandRunnerParams params,
+      Executor executor,
       ImmutableSet<BuildTarget> matchingBuildTargets)
       throws IOException, InterruptedException {
     LOG.debug("Getting target hash for %s", matchingBuildTargets);
@@ -680,11 +691,13 @@ public class TargetsCommand extends AbstractCommand {
         params.getParser(),
         params.getCell(),
         params.getBuckEventBus(),
-        getEnableProfiling());
+        getEnableProfiling()
+    );
 
     // Parse the BUCK files for the targets passed in from the command line and their deps.
     TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
-        Iterables.transform(matchingBuildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC));
+        Iterables.transform(matchingBuildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC),
+        executor);
 
     LOG.debug("Built project graph with nodes: %s", projectGraph.getNodes());
 
@@ -704,7 +717,8 @@ public class TargetsCommand extends AbstractCommand {
       projectGraphWithTests = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
           Iterables.transform(
               matchingBuildTargetsWithTests,
-              BuildTargetSpec.TO_BUILD_TARGET_SPEC));
+              BuildTargetSpec.TO_BUILD_TARGET_SPEC),
+          executor);
     } else {
       matchingBuildTargetsWithTests = matchingBuildTargets;
       projectGraphWithTests = projectGraph;

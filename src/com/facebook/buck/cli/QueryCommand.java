@@ -45,6 +45,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 public class QueryCommand extends AbstractCommand {
@@ -106,12 +107,21 @@ public class QueryCommand extends AbstractCommand {
     }
 
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableProfiling());
-    try {
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Query",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
       String queryFormat = arguments.remove(0);
       if (queryFormat.contains("%s")) {
-        return runMultipleQuery(params, env, queryFormat, arguments, shouldGenerateJsonOutput());
+        return runMultipleQuery(
+            params,
+            env,
+            pool.getExecutor(),
+            queryFormat,
+            arguments,
+            shouldGenerateJsonOutput());
       } else {
-        return runSingleQuery(params, env, queryFormat);
+        return runSingleQuery(params, env, pool.getExecutor(), queryFormat);
       }
     } catch (QueryException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -127,6 +137,7 @@ public class QueryCommand extends AbstractCommand {
   static int runMultipleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
+      Executor executor,
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets,
       boolean generateJsonOutput)
@@ -141,7 +152,7 @@ public class QueryCommand extends AbstractCommand {
 
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      Set<QueryTarget> queryResult = env.evaluateQuery(query);
+      Set<QueryTarget> queryResult = env.evaluateQuery(query, executor);
       queryResultMap.putAll(input, queryResult);
     }
 
@@ -154,9 +165,13 @@ public class QueryCommand extends AbstractCommand {
     return 0;
   }
 
-  int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
+  int runSingleQuery(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Executor executor,
+      String query)
       throws IOException, InterruptedException, QueryException {
-    Set<QueryTarget> queryResult = env.evaluateQuery(query);
+    Set<QueryTarget> queryResult = env.evaluateQuery(query, executor);
 
     LOG.debug("Printing out the following targets: " + queryResult);
     if (shouldOutputAttributes()) {

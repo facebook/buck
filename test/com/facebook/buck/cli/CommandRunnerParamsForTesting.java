@@ -27,6 +27,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -72,8 +73,8 @@ public class CommandRunnerParamsForTesting {
         artifactCache,
         eventBus,
         new Parser(
-            typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory)),
+            new ParserConfig(cell.getBuckConfig()),
+            typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory)),
         platform,
         environment,
         javaPackageFinder,

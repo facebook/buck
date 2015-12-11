@@ -241,6 +241,7 @@ public final class Main {
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
       this.parser = new Parser(
+          new ParserConfig(cell.getBuckConfig()),
           typeCoercerFactory,
           new ConstructorArgMarshaller(typeCoercerFactory));
       fileEventBus.register(parser);
@@ -849,6 +850,7 @@ public final class Main {
       if (parser == null) {
         TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
         parser = new Parser(
+            new ParserConfig(rootCell.getBuckConfig()),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory));
       }

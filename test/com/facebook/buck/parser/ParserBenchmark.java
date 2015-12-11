@@ -32,6 +32,7 @@ import com.google.caliper.Param;
 import com.google.caliper.api.Macrobenchmark;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,10 +41,15 @@ import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ParserBenchmark {
   @Param({"10", "100", "500"})
   private int targetCount = 10;
+
+  @Param({"1", "2", "10"})
+  private int threadCount = 1;
 
   public DebuggableTemporaryFolder tempDir = new DebuggableTemporaryFolder();
 
@@ -51,6 +57,7 @@ public class ParserBenchmark {
   private ProjectFilesystem filesystem;
   private Cell cell;
   private BuckEventBus eventBus;
+  private ExecutorService executorService;
 
   @Before
   public void setUpTest() throws Exception {
@@ -84,8 +91,18 @@ public class ParserBenchmark {
           String.format("package com.facebook.target_%d; class A {}", i).getBytes("UTF-8"));
     }
 
+    ImmutableMap.Builder<String, ImmutableMap<String, String>> configSectionsBuilder =
+        ImmutableMap.builder();
+    if (threadCount > 1) {
+      configSectionsBuilder.put(
+          "project",
+          ImmutableMap.of(
+              "parallel_parsing", "true",
+              "parsing_threads", Integer.toString(threadCount)));
+    }
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
+        .setSections(configSectionsBuilder.build())
         .build();
 
     cell = new TestCellBuilder()
@@ -94,16 +111,21 @@ public class ParserBenchmark {
         .build();
 
     eventBus = BuckEventBusFactory.newInstance();
+    executorService = Executors.newFixedThreadPool(threadCount);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
-    parser = new Parser(typeCoercerFactory, marshaller);
+    parser = new Parser(
+        new ParserConfig(config),
+        typeCoercerFactory,
+        marshaller);
   }
 
   @After
   @AfterExperiment
   public void cleanup() {
     tempDir.delete();
+    executorService.shutdown();
   }
 
   @Test
@@ -117,6 +139,7 @@ public class ParserBenchmark {
         eventBus,
         cell,
         /* enableProfiling */ false,
+        executorService,
         ImmutableList.of(
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),

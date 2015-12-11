@@ -34,6 +34,7 @@ import com.google.common.base.Preconditions;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A literal set of targets. (The syntax of the string "pattern" determines which.)
@@ -49,7 +50,8 @@ public final class TargetLiteral extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env) throws QueryException, InterruptedException {
+  public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+      throws QueryException, InterruptedException {
     return env.getTargetsMatchingPattern(pattern);
   }
 

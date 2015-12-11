@@ -105,12 +105,16 @@ public class UninstallCommand extends AbstractCommand {
     // Parse all of the build targets specified by the user.
     BuildRuleResolver resolver;
     ImmutableSet<BuildTarget> buildTargets;
-    try {
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Uninstall",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
               getEnableProfiling(),
+              pool.getExecutor(),
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   getArguments()));

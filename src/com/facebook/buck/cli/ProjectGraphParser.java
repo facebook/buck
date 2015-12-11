@@ -20,6 +20,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.TargetGraph;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 /**
  * Testable wrapper for {@link com.facebook.buck.parser.Parser}
@@ -31,6 +32,7 @@ interface ProjectGraphParser {
    * {@link TargetNodeSpec}s.
    */
   TargetGraph buildTargetGraphForTargetNodeSpecs(
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      Executor executor)
     throws IOException, InterruptedException;
 }

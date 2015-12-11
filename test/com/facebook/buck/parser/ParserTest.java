@@ -69,11 +69,14 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -81,9 +84,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.SortedMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+@RunWith(Parameterized.class)
 public class ParserTest {
 
   @Rule
@@ -91,6 +100,8 @@ public class ParserTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
+  private final int threads;
+  private final boolean parallelParsing;
   private Path defaultIncludeFile;
   private Path includedByIncludeFile;
   private Path includedByBuildFile;
@@ -101,6 +112,21 @@ public class ParserTest {
   private BuckEventBus eventBus;
   private Cell cell;
   private ParseEventStartedCounter counter;
+  private ExecutorService executorService;
+
+  public ParserTest(int threads, boolean parallelParsing) {
+    this.threads = threads;
+    this.parallelParsing = parallelParsing;
+  }
+
+  @Parameterized.Parameters
+  public static Collection<Object[]> generateData() {
+    return Arrays.asList(new Object[][] {
+        { 1, false, },
+        { 1, true, },
+        { 2, true, },
+    });
+  }
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -136,13 +162,22 @@ public class ParserTest {
     cellRoot = filesystem.getRootPath();
     eventBus = BuckEventBusFactory.newInstance();
 
+    ImmutableMap.Builder<String, ImmutableMap<String, String>> configSectionsBuilder =
+        ImmutableMap.builder();
+    configSectionsBuilder
+        .put("buildfile", ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"));
+    if (parallelParsing) {
+      configSectionsBuilder.put(
+          "project",
+          ImmutableMap.of(
+              "temp_files", ".*\\.swp$",
+              "parallel_parsing", "true"));
+    } else {
+      configSectionsBuilder.put("project", ImmutableMap.of("temp_files", ".*\\.swp$"));
+    }
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
-        .setSections(
-            "[buildfile]",
-            "includes = //java/com/facebook/defaultIncludeFile",
-            "[project]",
-            "temp_files = .*\\.swp$")
+        .setSections(configSectionsBuilder.build())
         .build();
 
     cell = new TestCellBuilder()
@@ -151,10 +186,20 @@ public class ParserTest {
         .build();
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = new Parser(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    parser = new Parser(
+        new ParserConfig(cell.getBuckConfig()),
+        typeCoercerFactory,
+        new ConstructorArgMarshaller(typeCoercerFactory));
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
+
+    executorService = Executors.newFixedThreadPool(threads);
+  }
+
+  @After
+  public void tearDown() {
+    executorService.shutdown();
   }
 
   @Test
@@ -174,6 +219,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
     BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
     BuildRule fooRule = resolver.requireRule(fooTarget);
@@ -210,6 +256,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
   }
 
@@ -250,6 +297,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         Collections.singleton(BuildTargetFactory.newInstance(cell.getFilesystem(), "//:cake")));
   }
 
@@ -284,6 +332,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         ImmutableSortedSet.of(flavored));
   }
 
@@ -302,6 +351,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         ImmutableSortedSet.of(flavored));
   }
 
@@ -334,6 +384,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
   }
 
@@ -344,7 +395,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        BuckEventBusFactory.newInstance());
+        BuckEventBusFactory.newInstance(),
+        executorService);
 
     ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.of(
         BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build(),
@@ -360,12 +412,14 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
     filterAllTargetsInProject(
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -378,7 +432,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     // Process event.
     WatchEvent<Object> event = WatchEventsForTests.createOverflowEvent();
@@ -389,7 +444,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -410,7 +466,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     // Call filterAllTargetsInProject to request cached rules.
     config = FakeBuckConfig.builder()
@@ -425,7 +482,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -446,14 +504,16 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
     filterAllTargetsInProject(
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1092,6 +1152,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
     BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
@@ -1110,7 +1171,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
@@ -1128,7 +1190,8 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     assertEquals("Should have invalidated cache.", 2, counter.calls);
   }
@@ -1140,12 +1203,14 @@ public class ParserTest {
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
     BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
     parser.buildTargetGraph(
         eventBus,
         cell,
         false,
+        executorService,
         ImmutableList.of(foo));
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
@@ -1159,12 +1224,14 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         ImmutableList.of(foo));
     filterAllTargetsInProject(
         parser,
         cell,
         Predicates.<TargetNode<?>>alwaysTrue(),
-        eventBus);
+        eventBus,
+        executorService);
 
     assertEquals("Should have replaced build rules", 1, counter.calls);
   }
@@ -1196,6 +1263,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
 
     // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
@@ -1216,6 +1284,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
   }
 
@@ -1232,7 +1301,10 @@ public class ParserTest {
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = new Parser(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    parser = new Parser(
+        new ParserConfig(cell.getBuckConfig()),
+        typeCoercerFactory,
+        new ConstructorArgMarshaller(typeCoercerFactory));
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1347,7 +1419,10 @@ public class ParserTest {
     HashCode lib2Key = hashes.get(fooLib2Target);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = new Parser(typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    parser = new Parser(
+        new ParserConfig(cell.getBuckConfig()),
+        typeCoercerFactory,
+        new ConstructorArgMarshaller(typeCoercerFactory));
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
@@ -1458,6 +1533,7 @@ public class ParserTest {
           eventBus,
           cell,
           false,
+          executorService,
           buildTargets);
       BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
@@ -1476,6 +1552,7 @@ public class ParserTest {
           eventBus,
           cell,
           false,
+          executorService,
           buildTargets);
       BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
@@ -1513,6 +1590,7 @@ public class ParserTest {
           eventBus,
           cell,
           false,
+          executorService,
           buildTargets);
       BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
@@ -1534,6 +1612,7 @@ public class ParserTest {
           eventBus,
           cell,
           false,
+          executorService,
           buildTargets);
       BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
 
@@ -1582,6 +1661,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargets);
   }
 
@@ -1625,7 +1705,8 @@ public class ParserTest {
       Parser parser,
       Cell cell,
       Predicate<TargetNode<?>> filter,
-      BuckEventBus buckEventBus)
+      BuckEventBus buckEventBus,
+      Executor executor)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     return FluentIterable
         .from(
@@ -1633,6 +1714,7 @@ public class ParserTest {
                 buckEventBus,
                 cell,
                 false,
+                executor,
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
                         filter,
@@ -1653,6 +1735,7 @@ public class ParserTest {
         eventBus,
         cell,
         false,
+        executorService,
         buildTargetsList);
 
     ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();

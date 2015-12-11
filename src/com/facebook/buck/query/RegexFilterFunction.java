@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 /**
@@ -41,7 +42,7 @@ abstract class RegexFilterFunction implements QueryFunction {
       throws QueryException, InterruptedException;
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
       throws QueryException, InterruptedException {
     Pattern compiledPattern;
     try {
@@ -51,8 +52,8 @@ abstract class RegexFilterFunction implements QueryFunction {
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<T> targets = getExpressionToEval(args).eval(env);
-    env.buildTransitiveClosure(targets, Integer.MAX_VALUE);
+    Set<T> targets = getExpressionToEval(args).eval(env, executor);
+    env.buildTransitiveClosure(targets, Integer.MAX_VALUE, executor);
     Set<T> result = new LinkedHashSet<>();
     for (T target : targets) {
       String attributeValue = getStringToFilter(env, args, target);

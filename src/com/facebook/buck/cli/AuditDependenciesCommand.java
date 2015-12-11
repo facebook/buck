@@ -93,10 +93,14 @@ public class AuditDependenciesCommand extends AbstractCommand {
     }
 
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableProfiling());
-    try {
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Audit",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
       return QueryCommand.runMultipleQuery(
           params,
           env,
+          pool.getExecutor(),
           QueryCommand.getAuditDependenciesQueryFormat(
               shouldShowTransitiveDependencies(),
               shouldIncludeTests()),

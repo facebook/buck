@@ -26,6 +26,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 /**
  * Utilities for creating {@link ProjectGraphParser} instances.
@@ -48,13 +49,15 @@ public class ProjectGraphParsers {
     return new ProjectGraphParser() {
       @Override
       public TargetGraph buildTargetGraphForTargetNodeSpecs(
-          Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+          Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+          Executor executor)
         throws IOException, InterruptedException {
         try {
           return parser.buildTargetGraphForTargetNodeSpecs(
               buckEventBus,
               rootCell,
               enableProfiling,
+              executor,
               targetNodeSpecs).getSecond();
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);

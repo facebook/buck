@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -171,7 +172,7 @@ public interface QueryEnvironment<T> {
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned
      *     by {@link #getArgumentTypes} and {@link #getMandatoryArguments}*/
-    <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+    <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
         throws QueryException, InterruptedException;
   }
 
@@ -203,7 +204,7 @@ public interface QueryEnvironment<T> {
    * improve incrementality, since all depth-constrained methods filter it
    * after it is built anyway.
    */
-  void buildTransitiveClosure(Set<T> targetNodes, int maxDepth)
+  void buildTransitiveClosure(Set<T> targetNodes, int maxDepth, Executor executor)
       throws InterruptedException, QueryException;
 
   String getTargetKind(T target) throws InterruptedException, QueryException;

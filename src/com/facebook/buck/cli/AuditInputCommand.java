@@ -105,11 +105,15 @@ public class AuditInputCommand extends AbstractCommand {
     LOG.debug("Getting input for targets: %s", targets);
 
     TargetGraph graph;
-    try {
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Audit",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
       graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
           params.getCell(),
           getEnableProfiling(),
+          pool.getExecutor(),
           targets);
     } catch (BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(

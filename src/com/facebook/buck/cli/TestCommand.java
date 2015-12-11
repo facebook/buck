@@ -353,112 +353,114 @@ public class TestCommand extends BuildCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     LOG.debug("Running with arguments %s", getArguments());
 
-    // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    BuildEvent.Started started = BuildEvent.started(getArguments());
-    if (params.getParser().getParseStartTime().isPresent()) {
-      params.getBuckEventBus().post(
-          started,
-          params.getParser().getParseStartTime().get());
-    } else {
-      params.getBuckEventBus().post(started);
-    }
-
-    // The first step is to parse all of the build files. This will populate the parser and find all
-    // of the test rules.
-    TargetGraph targetGraph;
-    ImmutableSet<BuildTarget> explicitBuildTargets;
-
-    try {
-
-      // If the user asked to run all of the tests, parse all of the build files looking for any
-      // test rules.
-      if (isRunAllTests()) {
-        targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
-            params.getBuckEventBus(),
-            params.getCell(),
-            getEnableProfiling(),
-            ImmutableList.of(
-                TargetNodePredicateSpec.of(
-                    new Predicate<TargetNode<?>>() {
-                      @Override
-                      public boolean apply(TargetNode<?> input) {
-                        return input.getType().isTestRule();
-                      }
-                    },
-                    BuildFileSpec.fromRecursivePath(Paths.get(""))))).getSecond();
-        explicitBuildTargets = ImmutableSet.of();
-
-        // Otherwise, the user specified specific test targets to build and run, so build a graph
-        // around these.
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Test",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      // Post the build started event, setting it to the Parser recorded start time if appropriate.
+      BuildEvent.Started started = BuildEvent.started(getArguments());
+      if (params.getParser().getParseStartTime().isPresent()) {
+        params.getBuckEventBus().post(
+            started,
+            params.getParser().getParseStartTime().get());
       } else {
-        LOG.debug("Parsing graph for arguments %s", getArguments());
-        Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
-                parseArgumentsAsTargetNodeSpecs(
-                    params.getBuckConfig(),
-                    getArguments()));
-        targetGraph = result.getSecond();
-        explicitBuildTargets = result.getFirst();
+        params.getBuckEventBus().post(started);
+      }
 
-        LOG.debug("Got explicit build targets %s", explicitBuildTargets);
-        ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
-        for (TargetNode<?> node : targetGraph.getAll(explicitBuildTargets)) {
-          ImmutableSortedSet<BuildTarget> nodeTests = TargetNodes.getTestTargetsForNode(node);
-          if (!nodeTests.isEmpty()) {
-            LOG.debug("Got tests for target %s: %s", node.getBuildTarget(), nodeTests);
-            testTargetsBuilder.addAll(nodeTests);
-          }
-        }
-        ImmutableSet<BuildTarget> testTargets = testTargetsBuilder.build();
-        if (!testTargets.isEmpty()) {
-          LOG.debug("Got related test targets %s, building new target graph...", testTargets);
-          targetGraph = params.getParser().buildTargetGraph(
+      // The first step is to parse all of the build files. This will populate the parser and find
+      // all of the test rules.
+      TargetGraph targetGraph;
+      ImmutableSet<BuildTarget> explicitBuildTargets;
+
+      try {
+
+        // If the user asked to run all of the tests, parse all of the build files looking for any
+        // test rules.
+        if (isRunAllTests()) {
+          targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
               getEnableProfiling(),
-              Iterables.concat(
-                  explicitBuildTargets,
-                  testTargets));
-          LOG.debug("Finished building new target graph with tests.");
+              pool.getExecutor(),
+              ImmutableList.of(
+                  TargetNodePredicateSpec.of(
+                      new Predicate<TargetNode<?>>() {
+                        @Override
+                        public boolean apply(TargetNode<?> input) {
+                          return input.getType().isTestRule();
+                        }
+                      },
+                      BuildFileSpec.fromRecursivePath(Paths.get(""))))).getSecond();
+          explicitBuildTargets = ImmutableSet.of();
+
+          // Otherwise, the user specified specific test targets to build and run, so build a graph
+          // around these.
+        } else {
+          LOG.debug("Parsing graph for arguments %s", getArguments());
+          Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+              .buildTargetGraphForTargetNodeSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableProfiling(),
+                  pool.getExecutor(),
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getBuckConfig(),
+                      getArguments()));
+          targetGraph = result.getSecond();
+          explicitBuildTargets = result.getFirst();
+
+          LOG.debug("Got explicit build targets %s", explicitBuildTargets);
+          ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
+          for (TargetNode<?> node : targetGraph.getAll(explicitBuildTargets)) {
+            ImmutableSortedSet<BuildTarget> nodeTests = TargetNodes.getTestTargetsForNode(node);
+            if (!nodeTests.isEmpty()) {
+              LOG.debug("Got tests for target %s: %s", node.getBuildTarget(), nodeTests);
+              testTargetsBuilder.addAll(nodeTests);
+            }
+          }
+          ImmutableSet<BuildTarget> testTargets = testTargetsBuilder.build();
+          if (!testTargets.isEmpty()) {
+            LOG.debug("Got related test targets %s, building new target graph...", testTargets);
+            targetGraph = params.getParser().buildTargetGraph(
+                params.getBuckEventBus(),
+                params.getCell(),
+                getEnableProfiling(),
+                pool.getExecutor(),
+                Iterables.concat(
+                    explicitBuildTargets,
+                    testTargets));
+            LOG.debug("Finished building new target graph with tests.");
+          }
         }
+
+      } catch (BuildTargetException | BuildFileParseException e) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
       }
 
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
-    }
+      TargetGraphToActionGraph targetGraphToActionGraph =
+          new TargetGraphToActionGraph(
+              params.getBuckEventBus(),
+              new BuildTargetNodeToBuildRuleTransformer());
+      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+          Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph));
 
-    TargetGraphToActionGraph targetGraphToActionGraph =
-        new TargetGraphToActionGraph(
-            params.getBuckEventBus(),
-            new BuildTargetNodeToBuildRuleTransformer());
-    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
-        Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph));
+      // Look up all of the test rules in the action graph.
+      Iterable<TestRule> testRules = Iterables.filter(
+          actionGraphAndResolver.getFirst().getNodes(),
+          TestRule.class);
 
-    // Look up all of the test rules in the action graph.
-    Iterable<TestRule> testRules = Iterables.filter(
-        actionGraphAndResolver.getFirst().getNodes(),
-        TestRule.class);
+      // Unless the user requests that we build filtered tests, filter them out here, before
+      // the build.
+      if (!isBuildFiltered(params.getBuckConfig())) {
+        testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
+      }
 
-    // Unless the user requests that we build filtered tests, filter them out here, before
-    // the build.
-    if (!isBuildFiltered(params.getBuckConfig())) {
-      testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
-    }
+      if (isDryRun()) {
+        printMatchingTestRules(params.getConsole(), testRules);
+      }
 
-    if (isDryRun()) {
-      printMatchingTestRules(params.getConsole(), testRules);
-    }
-
-    try (
-        CommandThreadManager pool = new CommandThreadManager(
-            "Test",
-            params.getBuckConfig().getWorkQueueExecutionOrder(),
-            getConcurrencyLimit(params.getBuckConfig()))) {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),

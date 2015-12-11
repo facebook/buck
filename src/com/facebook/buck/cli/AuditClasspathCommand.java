@@ -120,11 +120,15 @@ public class AuditClasspathCommand extends AbstractCommand {
     }
 
     TargetGraph targetGraph;
-    try {
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Audit",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
       targetGraph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
           params.getCell(),
           getEnableProfiling(),
+          pool.getExecutor(),
           targets);
     } catch (BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(

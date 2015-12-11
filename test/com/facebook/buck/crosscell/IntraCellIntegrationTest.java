@@ -24,6 +24,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -39,6 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 public class IntraCellIntegrationTest {
 
@@ -65,13 +67,17 @@ public class IntraCellIntegrationTest {
     Cell cell = workspace.asCell();
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-    Parser parser = new Parser(coercerFactory, new ConstructorArgMarshaller(coercerFactory));
+    Parser parser = new Parser(
+        new ParserConfig(cell.getBuckConfig()),
+        coercerFactory,
+        new ConstructorArgMarshaller(coercerFactory));
 
     // This parses cleanly
     parser.buildTargetGraph(
         BuckEventBusFactory.newInstance(),
         cell,
         false,
+        Executors.newSingleThreadExecutor(),
         ImmutableSet.of(BuildTargetFactory.newInstance(
             cell.getFilesystem(),
             "//just-a-directory:rule")));
@@ -86,6 +92,7 @@ public class IntraCellIntegrationTest {
           BuckEventBusFactory.newInstance(),
           childCell,
           false,
+          Executors.newSingleThreadExecutor(),
           ImmutableSet.of(BuildTargetFactory.newInstance(
               childCell.getFilesystem(),
               "//:child-target")));

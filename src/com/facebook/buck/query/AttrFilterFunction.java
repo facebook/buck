@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A attrfilter(attribute, value, argument) filter expression, which computes the subset
@@ -57,7 +58,7 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
       throws QueryException, InterruptedException {
     QueryExpression argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
@@ -71,7 +72,7 @@ public class AttrFilterFunction implements QueryFunction {
     };
 
     Set<T> result = new LinkedHashSet<>();
-    for (T target : argument.eval(env)) {
+    for (T target : argument.eval(env, executor)) {
       ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);

@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -65,6 +66,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.Executors;
 
 public class InterCellIntegrationTest {
 
@@ -236,7 +238,10 @@ public class InterCellIntegrationTest {
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-    Parser parser = new Parser(coercerFactory, new ConstructorArgMarshaller(coercerFactory));
+    Parser parser = new Parser(
+        new ParserConfig(cells.getFirst().asCell().getBuckConfig()),
+        coercerFactory,
+        new ConstructorArgMarshaller(coercerFactory));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     Cell primaryCell = primary.asCell();
@@ -249,6 +254,7 @@ public class InterCellIntegrationTest {
         eventBus,
         primaryCell,
         false,
+        Executors.newSingleThreadExecutor(),
         ImmutableSet.of(namedTarget));
   }
 

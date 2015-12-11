@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A "testsof" query expression, which computes the tests of the given targets.
@@ -54,9 +55,9 @@ public class TestsOfFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
       throws QueryException, InterruptedException {
-    Set<T> targets = args.get(0).getExpression().eval(env);
+    Set<T> targets = args.get(0).getExpression().eval(env, executor);
     Set<T> tests = new LinkedHashSet<>();
     for (T target : targets) {
       tests.addAll(env.getTestsForTarget(target));

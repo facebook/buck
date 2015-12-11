@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -69,8 +70,13 @@ public class Parser {
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
 
-  public Parser(TypeCoercerFactory typeCoercerFactory, ConstructorArgMarshaller marshaller) {
-    this.permState = new SerialDaemonicParserState(typeCoercerFactory, marshaller);
+  public Parser(
+      ParserConfig parserConfig,
+      TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller) {
+    this.permState = parserConfig.getEnableParallelParsing() ?
+        new ParallelDaemonicParserState(typeCoercerFactory, marshaller) :
+        new SerialDaemonicParserState(typeCoercerFactory, marshaller);
     this.marshaller = marshaller;
   }
 
@@ -164,8 +170,32 @@ public class Parser {
       final BuckEventBus eventBus,
       final Cell rootCell,
       final boolean enableProfiling,
+      final Executor executor,
       final Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
+    ParserConfig config = new ParserConfig(rootCell.getBuckConfig());
+    // Parse in parallel only if we are building a partial target graph.
+    if (config.getEnableParallelParsing() && FluentIterable.from(toExplore).size() > 0) {
+      return buildTargetGraphInParallel(
+          eventBus,
+          rootCell,
+          enableProfiling,
+          executor,
+          toExplore);
+    }
+    return buildTargetGraphSerially(
+        eventBus,
+        rootCell,
+        enableProfiling,
+        toExplore);
+  }
+
+  private TargetGraph buildTargetGraphSerially(
+    final BuckEventBus eventBus,
+    final Cell rootCell,
+    final boolean enableProfiling,
+    final Iterable<BuildTarget> toExplore)
+    throws IOException, InterruptedException, BuildFileParseException {
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
@@ -263,6 +293,113 @@ public class Parser {
     }
   }
 
+  private TargetGraph buildTargetGraphInParallel(
+      final BuckEventBus eventBus,
+      final Cell rootCell,
+      final boolean enableProfiling,
+      Executor executor,
+      final Iterable<BuildTarget> toExplore)
+      throws IOException, InterruptedException, BuildFileParseException {
+    final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+
+    ParseEvent.Started parseStart = ParseEvent.started(toExplore);
+    eventBus.post(parseStart);
+
+    TargetGraph targetGraph = null;
+    Preconditions.checkState(permState instanceof ParallelDaemonicParserState);
+    try (final ParallelPerBuildState state =
+            new ParallelPerBuildState(
+                (ParallelDaemonicParserState) permState,
+                marshaller,
+                eventBus,
+                rootCell,
+                enableProfiling)) {
+      state.startParsing(
+          ImmutableSet.<BuildTarget>builder().addAll(toExplore).build(),
+          new ParserConfig(rootCell.getBuckConfig()),
+          executor);
+
+      final AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
+          new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
+
+            @Override
+            protected Iterator<BuildTarget> findChildren(BuildTarget target)
+                throws IOException, InterruptedException {
+              TargetNode<?> node;
+              try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, target)) {
+                try {
+                  node = state.getTargetNode(target);
+                } catch (BuildFileParseException | BuildTargetException e) {
+                  throw new RuntimeException(e);
+                }
+              }
+
+              Set<BuildTarget> deps = Sets.newHashSet();
+              for (BuildTarget dep : node.getDeps()) {
+                TargetNode<?> depTargetNode;
+                try (SimplePerfEvent.Scope scope =
+                         getTargetNodeEventScope(eventBus, dep)) {
+                  try {
+                    depTargetNode = state.getTargetNode(dep);
+                  } catch (
+                      BuildFileParseException |
+                          BuildTargetException |
+                          HumanReadableException e) {
+                    throw new HumanReadableException(
+                        e,
+                        "Couldn't get dependency '%s' of target '%s':\n%s",
+                        dep,
+                        target,
+                        e.getMessage());
+                  }
+                }
+                depTargetNode.checkVisibility(target);
+                deps.add(dep);
+              }
+              return deps.iterator();
+            }
+
+            @Override
+            protected void onNodeExplored(BuildTarget target)
+                throws IOException, InterruptedException {
+              try {
+                TargetNode<?> targetNode = state.getTargetNode(target);
+
+                Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
+                graph.addNode(targetNode);
+                MoreMaps.putCheckEquals(index, target, targetNode);
+                if (target.isFlavored()) {
+                  BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+                  MoreMaps.putCheckEquals(
+                      index,
+                      unflavoredTarget,
+                      state.getTargetNode(unflavoredTarget));
+                }
+                for (BuildTarget dep : targetNode.getDeps()) {
+                  graph.addEdge(targetNode, state.getTargetNode(dep));
+                }
+              } catch (BuildFileParseException | BuildTargetException e) {
+                throw new RuntimeException(e);
+              }
+            }
+
+            @Override
+            protected void onTraversalComplete(Iterable<BuildTarget> nodesInExplorationOrder) {
+
+            }
+          };
+
+      traversal.traverse(toExplore);
+      targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
+      return targetGraph;
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new HumanReadableException(e.getMessage());
+    } finally {
+      eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(targetGraph)));
+    }
+  }
+
   /**
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @param eventBus used to log events while parsing.
@@ -273,6 +410,7 @@ public class Parser {
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
+      Executor executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
@@ -295,6 +433,7 @@ public class Parser {
             eventBus,
             rootCell,
             enableProfiling,
+            executor,
             buildTargets);
         return new Pair<>(buildTargets, graph);
       } finally {

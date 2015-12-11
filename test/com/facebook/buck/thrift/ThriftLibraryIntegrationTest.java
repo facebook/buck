@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -63,6 +64,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.Executors;
 
 public class ThriftLibraryIntegrationTest {
 
@@ -73,11 +75,6 @@ public class ThriftLibraryIntegrationTest {
   public void shouldBeAbleToConstructACxxLibraryFromThrift() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cxx", tmp);
     workspace.setUp();
-
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    Parser parser = new Parser(
-        typeCoercerFactory,
-        new ConstructorArgMarshaller(typeCoercerFactory));
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
@@ -95,6 +92,12 @@ public class ThriftLibraryIntegrationTest {
             "cpp_reflection_library = //thrift:fake")
         .build();
 
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    Parser parser = new Parser(
+        new ParserConfig(config),
+        typeCoercerFactory,
+        new ConstructorArgMarshaller(typeCoercerFactory));
+
     Cell cell = Cell.createCell(
         filesystem,
         new TestConsole(),
@@ -111,6 +114,7 @@ public class ThriftLibraryIntegrationTest {
         eventBus,
         cell,
         false,
+        Executors.newSingleThreadExecutor(),
         ImmutableSet.of(target));
 
     TargetNodeToBuildRuleTransformer transformer = new BuildTargetNodeToBuildRuleTransformer();

@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -63,6 +64,7 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -276,21 +278,27 @@ public class BuildCommand extends AbstractCommand {
       params.getBuckEventBus().post(started);
     }
 
-    // Parse the build files to create a ActionGraph.
-    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
-        createActionGraphAndResolver(params);
-    if (actionGraphAndResolver == null) {
-      return 1;
-    }
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Build",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      // Parse the build files to create a ActionGraph.
+      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+          createActionGraphAndResolver(params, pool.getExecutor());
+      if (actionGraphAndResolver == null) {
+        return 1;
+      }
 
-    int exitCode = executeBuild(params, actionGraphAndResolver);
-    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-    return exitCode;
+      int exitCode = executeBuild(params, actionGraphAndResolver, pool.getExecutor());
+      params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
+      return exitCode;
+    }
   }
 
   @Nullable
   public Pair<ActionGraph, BuildRuleResolver> createActionGraphAndResolver(
-      CommandRunnerParams params)
+      CommandRunnerParams params,
+      Executor executor)
       throws IOException, InterruptedException {
     if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
@@ -314,6 +322,7 @@ public class BuildCommand extends AbstractCommand {
               params.getBuckEventBus(),
               params.getCell(),
               getEnableProfiling(),
+              executor,
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   getArguments()));
@@ -354,7 +363,8 @@ public class BuildCommand extends AbstractCommand {
 
   protected int executeBuild(
       CommandRunnerParams params,
-      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver)
+      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver,
+      ListeningExecutorService executor)
       throws IOException, InterruptedException {
 
     ArtifactCache artifactCache = params.getArtifactCache();
@@ -362,34 +372,29 @@ public class BuildCommand extends AbstractCommand {
       artifactCache = new NoopArtifactCache();
     }
 
-    try (
-        CommandThreadManager pool = new CommandThreadManager(
-            "Build",
-            params.getBuckConfig().getWorkQueueExecutionOrder(),
-            getConcurrencyLimit(params.getBuckConfig()));
-         Build build = createBuild(
-             params.getBuckConfig(),
-             actionGraphAndResolver.getFirst(),
-             actionGraphAndResolver.getSecond(),
-             params.getAndroidPlatformTargetSupplier(),
-             new CachingBuildEngine(
-                 pool.getExecutor(),
-                 params.getFileHashCache(),
-                 getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-                 params.getBuckConfig().getDependencySchedulingOrder(),
-                 params.getBuckConfig().getBuildDepFiles(),
-                 params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-                 actionGraphAndResolver.getSecond()),
-             artifactCache,
-             params.getConsole(),
-             params.getBuckEventBus(),
-             Optional.<TargetDevice>absent(),
-             params.getPlatform(),
-             params.getEnvironment(),
-             params.getObjectMapper(),
-             params.getClock(),
-             Optional.<AdbOptions>absent(),
-             Optional.<TargetDeviceOptions>absent())) {
+    try (Build build = createBuild(
+        params.getBuckConfig(),
+        actionGraphAndResolver.getFirst(),
+        actionGraphAndResolver.getSecond(),
+        params.getAndroidPlatformTargetSupplier(),
+        new CachingBuildEngine(
+            executor,
+            params.getFileHashCache(),
+            getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+            params.getBuckConfig().getDependencySchedulingOrder(),
+            params.getBuckConfig().getBuildDepFiles(),
+            params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+            actionGraphAndResolver.getSecond()),
+        artifactCache,
+        params.getConsole(),
+        params.getBuckEventBus(),
+        Optional.<TargetDevice>absent(),
+        params.getPlatform(),
+        params.getEnvironment(),
+        params.getObjectMapper(),
+        params.getClock(),
+        Optional.<AdbOptions>absent(),
+        Optional.<TargetDeviceOptions>absent())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           buildTargets,

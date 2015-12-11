@@ -111,6 +111,10 @@ public class ParserConfig {
     return delegate.getLong("project", "watchman_query_timeout_ms");
   }
 
+  public boolean getEnableParallelParsing() {
+    return delegate.getBooleanValue("project", "parallel_parsing", false);
+  }
+
   public int getNumParsingThreads() {
     Optional<Long> value = delegate.getLong("project", "parsing_threads");
     if (value.isPresent()) {

@@ -46,6 +46,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
@@ -89,7 +90,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public Set<QueryTarget> evaluateQuery(QueryExpression expr)
+  public Set<QueryTarget> evaluateQuery(QueryExpression expr, Executor executor)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
@@ -100,12 +101,12 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new QueryException("Error in preloading targets. %s", e.getMessage());
     }
-    return expr.eval(this);
+    return expr.eval(this, executor);
   }
 
-  public Set<QueryTarget> evaluateQuery(String query)
+  public Set<QueryTarget> evaluateQuery(String query, Executor executor)
       throws QueryException, InterruptedException {
-    return evaluateQuery(QueryExpression.parse(query, this));
+    return evaluateQuery(QueryExpression.parse(query, this), executor);
   }
 
   @Override
@@ -201,13 +202,15 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return getTargetsFromBuildTargetsContainer(graph.getSubgraph(nodes).getNodes());
   }
 
-  private void buildGraphForBuildTargets(Set<BuildTarget> targets)
-      throws QueryException, InterruptedException {
+  private void buildGraphForBuildTargets(
+      Set<BuildTarget> targets,
+      Executor executor) throws QueryException, InterruptedException {
     try {
       graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
           params.getCell(),
           enableProfiling,
+          executor,
           targets);
     } catch (BuildFileParseException | IOException e) {
       throw new QueryException("Error in building depencency graph");
@@ -215,7 +218,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth)
+  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth, Executor executor)
       throws QueryException, InterruptedException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     Set<BuildTarget> graphTargets = getTargetsFromNodes(graph.getNodes());
@@ -229,7 +232,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       }
     }
     if (!newBuildTargets.isEmpty()) {
-      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets));
+      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets), executor);
       for (BuildTarget buildTarget : getTargetsFromNodes(graph.getNodes())) {
         if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
           buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
