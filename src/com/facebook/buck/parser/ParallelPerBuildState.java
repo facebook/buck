@@ -33,7 +33,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -52,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -105,6 +108,11 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
    */
   private final CountDownLatch completionNotifier;
 
+  /**
+   * Used to not try to parse already parsed targets.
+   */
+  private final Set<BuildTarget> parsedBuildTargets;
+
   public ParallelPerBuildState(
       ParallelDaemonicParserState permState,
       ConstructorArgMarshaller marshaller,
@@ -142,6 +150,8 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     this.pendingBuildTargetCount = new AtomicInteger(0);
     this.pendingBuildTargets = new LinkedBlockingQueue<>();
     this.completionNotifier = new CountDownLatch(1);
+
+    this.parsedBuildTargets = new ConcurrentSkipListSet<>();
 
     register(rootCell);
   }
@@ -389,6 +399,7 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
     @Override
     public void close() {
+      parsedBuildTargets.add(buildTarget);
       if (pendingBuildTargetCount.getAndDecrement() == 1) {
         completionNotifier.countDown();
       }
@@ -400,6 +411,10 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     public void run() {
       while (shouldWaitForWork()) {
         try (BuildTargetProcessingScope processingScope = startProcessingBuildTarget()) {
+          // If we've already parsed this in another thread, we can skip doing any work.
+          if (parsedBuildTargets.contains(processingScope.getBuildTarget())) {
+            continue;
+          }
           TargetNode<?> node;
           try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(
               eventBus,
@@ -413,9 +428,17 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
               abortDoingMoreWork();
               return;
             }
-
-            processingScope.addDepsToProcess(node.getDeps());
           }
+
+          processingScope.addDepsToProcess(FluentIterable.from(node.getDeps())
+              .filter(new Predicate<BuildTarget>() {
+                @Override
+                public boolean apply(BuildTarget buildTarget) {
+                  return !parsedBuildTargets.contains(buildTarget) &&
+                      !pendingBuildTargets.contains(buildTarget);
+                }
+              })
+              .toSet());
         } catch (TimeoutException e) {
           // We timed out waiting to process something on the queue.  This could mean we are done,
           // so run through the while statement again.
