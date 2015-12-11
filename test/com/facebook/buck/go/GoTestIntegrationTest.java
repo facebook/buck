@@ -68,7 +68,7 @@ public class GoTestIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
-    assertTrue(stderr, stderr.contains("Timed out running test command"));
+    assertTrue(stderr, stderr.contains("Timed out after 500 ms running test command"));
   }
 
   @Test

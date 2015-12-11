@@ -99,7 +99,10 @@ public class GoTestStep implements Step {
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
 
     if (result.isTimedOut()) {
-      throw new HumanReadableException("Timed out running test command %s", command);
+      throw new HumanReadableException(
+          "Timed out after %d ms running test command %s",
+          testRuleTimeoutMs.or(-1L),
+          command);
     }
 
     // Since test binaries return a non-zero exit code when unittests fail, save the exit code

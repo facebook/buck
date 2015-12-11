@@ -55,7 +55,7 @@ public class CxxTestIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
-    assertThat(stderr, Matchers.containsString("Timed out running test command"));
+    assertThat(stderr, Matchers.containsString("Timed out after 250 ms running test command"));
   }
 
   @Test
@@ -70,6 +70,6 @@ public class CxxTestIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
-    assertThat(stderr, Matchers.containsString("Timed out running test command"));
+    assertThat(stderr, Matchers.containsString("Timed out after 100 ms running test command"));
   }
 }

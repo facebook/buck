@@ -126,7 +126,7 @@ public class CxxTestStepTest {
             exitCode,
             output,
             /* testRuleTimeoutMs */ Optional.of(10L));
-    expectedException.expectMessage("Timed out running test command");
+    expectedException.expectMessage("Timed out after 10 ms running test command");
     step.execute(context);
   }
 }
