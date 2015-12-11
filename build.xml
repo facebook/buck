@@ -84,6 +84,7 @@
     <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
+    <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar"/>
     <include name="eclipse/org.eclipse.core.jobs_3.6.1.v20141014-1248.jar"/>

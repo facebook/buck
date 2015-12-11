@@ -28,6 +28,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "third-party/java/closure-templates/soy-excluding-deps.jar",
     "third-party/java/commons-compress/commons-compress-1.8.1.jar",
+    "third-party/java/concurrent-locks/concurrent-locks-1.0.0.jar",
     "third-party/java/dd-plist/dd-plist.jar",
     "third-party/java/ddmlib/ddmlib-22.5.3.jar",
     "third-party/java/eclipse/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar",

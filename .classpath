@@ -16,6 +16,7 @@
 	<classpathentry kind="lib" path="third-party/java/asm/asm-debug-all-5.0.3.jar" sourcepath="third-party/java/asm/asm-5.0.3-src.zip"/>
 	<classpathentry kind="lib" path="third-party/java/cglib/cglib-nodep-2.2.jar"/>
 	<classpathentry kind="lib" path="third-party/java/closure-templates/soy-excluding-deps.jar"/>
+	<classpathentry kind="lib" path="third-party/java/concurrent-locks/concurrent-locks-1.0.0.jar" sourcepath="third-party/java/concurrent-locks/concurrent-locks-1.0.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/commons-compress/commons-compress-1.8.1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/dd-plist/dd-plist.jar" sourcepath="third-party/java/dd-plist/dd-plist-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/ddmlib/ddmlib-22.5.3.jar"/>
