@@ -84,7 +84,7 @@ public class Parser {
 
     try (
         PerBuildState state =
-            new PerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
+            new SerialPerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
       return state.getAllRawNodes(cell, buildFile);
     }
   }
@@ -106,7 +106,7 @@ public class Parser {
 
     try (
         PerBuildState state =
-            new PerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
+            new SerialPerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -119,7 +119,7 @@ public class Parser {
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     try (
         PerBuildState state =
-            new PerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
+            new SerialPerBuildState(permState, marshaller, eventBus, cell, enableProfiling)) {
       return state.getTargetNode(target);
     } catch (RuntimeException e) {
       throw e;
@@ -175,7 +175,7 @@ public class Parser {
     TargetGraph targetGraph = null;
     try (
         final PerBuildState state =
-            new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
+            new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       final AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
           new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
 
@@ -280,7 +280,7 @@ public class Parser {
 
     try (
         PerBuildState state =
-            new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
+            new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       // Resolve the target node specs to the build targets the represent.
       ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
           state,
@@ -335,7 +335,7 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     try (
         PerBuildState state =
-            new PerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
+            new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       return resolveTargetSpec(state, rootCell, spec);
     }
   }
