@@ -70,7 +70,7 @@ public class Parser {
   private final ConstructorArgMarshaller marshaller;
 
   public Parser(TypeCoercerFactory typeCoercerFactory, ConstructorArgMarshaller marshaller) {
-    this.permState = new DaemonicParserState(typeCoercerFactory, marshaller);
+    this.permState = new SerialDaemonicParserState(typeCoercerFactory, marshaller);
     this.marshaller = marshaller;
   }
 
