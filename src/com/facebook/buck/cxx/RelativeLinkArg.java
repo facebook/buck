@@ -75,8 +75,7 @@ public class RelativeLinkArg extends Arg {
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("link", link);
-    builder.setReflectively("lib", library);
+    builder.setReflectively("relative_link_lib", library);
     return builder;
   }
 
