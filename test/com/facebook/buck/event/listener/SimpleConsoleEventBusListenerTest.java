@@ -118,7 +118,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     rawEventBus.post(
         configureTestEventAtTime(
-            BuildRuleEvent.started(fakeRule, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(fakeRule),
             600L,
             TimeUnit.MILLISECONDS,
             threadId));

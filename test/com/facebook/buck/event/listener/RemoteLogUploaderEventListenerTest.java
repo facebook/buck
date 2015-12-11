@@ -23,7 +23,6 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildEvent;
@@ -31,14 +30,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.TriState;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.network.RemoteLogger;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -266,13 +260,9 @@ public class RemoteLogUploaderEventListenerTest {
             hasJsonField("daemon", true)
         ));
 
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
     SourcePathResolver resolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
     FakeBuildRule buildRule = createFakeBuildRule("//build:rule1", resolver);
     FakeBuildRule buildRule2 = createFakeBuildRule(
         "//build:rule2",
@@ -280,7 +270,7 @@ public class RemoteLogUploaderEventListenerTest {
         ImmutableSortedSet.<BuildRule>of(buildRule));
 
     singleSchemaTest(
-        BuildRuleEvent.started(buildRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(buildRule),
         Matchers.allOf(
             hasJsonField("type", "BuildRuleStarted"),
             eventShapeMatcher,
@@ -292,7 +282,7 @@ public class RemoteLogUploaderEventListenerTest {
                 ))));
 
     singleSchemaTest(
-        BuildRuleEvent.started(buildRule2, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(buildRule2),
         Matchers.allOf(
             hasJsonField("type", "BuildRuleStartedAux"),
             hasJsonField("buildRule", buildRuleShapeMatcher),

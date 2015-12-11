@@ -241,14 +241,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(events, Matchers.hasSize(11));
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(dep, ruleKeyBuilderFactory), buckEventBus),
+        configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(ruleToTest, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(ruleToTest),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -333,7 +333,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(buildRule, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(buildRule),
             buckEventBus)
             .getEventName(),
         eventIter.next().getEventName());
@@ -604,14 +604,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(events, Matchers.hasSize(6));
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(dep, ruleKeyBuilderFactory), buckEventBus),
+        configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(ruleToTest, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(ruleToTest),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -709,14 +709,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(events, Matchers.hasSize(8));
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(dep, ruleKeyBuilderFactory), buckEventBus),
+        configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(ruleToTest, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(ruleToTest),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -855,7 +855,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(transitiveRuntimeDep, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(transitiveRuntimeDep),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -865,7 +865,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         eventIter.next());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(runtimeDep, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(runtimeDep),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -875,7 +875,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         eventIter.next());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.started(ruleToTest, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(ruleToTest),
             buckEventBus),
         eventIter.next());
     assertEquals(

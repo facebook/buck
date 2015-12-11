@@ -930,11 +930,7 @@ public class CachingBuildEngine implements BuildEngine {
           new Function<List<RuleKey>, RuleKey>() {
             @Override
             public RuleKey apply(List<RuleKey> input) {
-              context.getEventBus().logVerboseAndPost(
-                  LOG,
-                  BuildRuleEvent.started(
-                      rule,
-                      keyFactories.defaultRuleKeyBuilderFactory));
+              context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.started(rule));
               try {
                 return keyFactories.defaultRuleKeyBuilderFactory.build(rule);
               } finally {

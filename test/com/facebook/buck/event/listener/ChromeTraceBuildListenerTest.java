@@ -218,7 +218,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(artifactCompressionStartedEvent);
     eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
 
-    eventBus.post(BuildRuleEvent.started(rule, ruleKeyBuilderFactory));
+    eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
 
@@ -366,7 +366,7 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "//fake:rule",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", "abc123"));
+        ImmutableMap.<String, String>of());
 
     assertNextResult(
         resultListCopy,

@@ -194,7 +194,7 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.1s"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(fakeRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(fakeRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 700L, ImmutableList.of(parsingLine,
@@ -273,7 +273,7 @@ public class SuperConsoleEventBusListenerTest {
         " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(cachedRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(cachedRule),
         1010L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
@@ -455,7 +455,7 @@ public class SuperConsoleEventBusListenerTest {
             "0.0% CACHE MISS)"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(fakeRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(fakeRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
@@ -495,7 +495,7 @@ public class SuperConsoleEventBusListenerTest {
         " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(cachedRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(cachedRule),
         1010L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
@@ -608,7 +608,7 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.1s"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(testBuildRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(testBuildRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
 
@@ -885,7 +885,7 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.1s"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(testBuildRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(testBuildRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
 
@@ -1159,7 +1159,7 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.1s"));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildRuleEvent.started(testBuildRule, ruleKeyBuilderFactory),
+        BuildRuleEvent.started(testBuildRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
 
@@ -1428,7 +1428,7 @@ public class SuperConsoleEventBusListenerTest {
     // Start the rule.
     rawEventBus.post(
         configureTestEventAtTime(
-            BuildRuleEvent.started(fakeRule, ruleKeyBuilderFactory),
+            BuildRuleEvent.started(fakeRule),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

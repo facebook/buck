@@ -133,16 +133,13 @@ public class EventSerializationTest {
   @Test
   public void testBuildRuleEventStarted() throws IOException {
     BuildRule rule = generateFakeBuildRule();
-    BuildRuleEvent.Started event = BuildRuleEvent.started(
-        rule,
-        new FakeRuleKeyBuilderFactory(
-            ImmutableMap.of(rule.getBuildTarget(), new RuleKey("aaaa"))));
+    BuildRuleEvent.Started event = BuildRuleEvent.started(rule);
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-        "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"," +
+        "\"type\":\"BuildRuleStarted\"," +
         "\"eventKey\":{\"value\":1024186770}}",
         message);
   }
@@ -167,7 +164,7 @@ public class EventSerializationTest {
             "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
             "\"present\":false},\"cacheError\":{\"present\":false}," +
             "\"metadata\":{\"present\":false}}, \"buildRule\":{\"type\":" +
-            "\"fake_build_rule\",\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\"," +
+            "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
             "\"type\":\"BuildRuleFinished\"," +
             "\"eventKey\":{\"value\":1024186770}}",
         message);

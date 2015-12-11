@@ -29,9 +29,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.StepEvent;
@@ -71,13 +68,6 @@ public class BuildThreadStateRendererTest {
   private static final BuildRule RULE2 = createFakeRule(TARGET2);
   private static final BuildRule RULE3 = createFakeRule(TARGET3);
   private static final BuildRule RULE4 = createFakeRule(TARGET4);
-  private static final RuleKeyBuilderFactory RULE_KEY_BUILDER_FACTORY =
-      new FakeRuleKeyBuilderFactory(
-          ImmutableMap.of(
-              TARGET1, new RuleKey("1234"),
-              TARGET2, new RuleKey("2345"),
-              TARGET3, new RuleKey("3456"),
-              TARGET4, new RuleKey("4567")));
 
   @Test
   public void emptyInput() {
@@ -161,7 +151,7 @@ public class BuildThreadStateRendererTest {
       BuildRule rule) {
     return Optional.of(
         TestEventConfigerator.configureTestEventAtTime(
-            BuildRuleEvent.started(rule, RULE_KEY_BUILDER_FACTORY),
+            BuildRuleEvent.started(rule),
             timeMs,
             TimeUnit.MILLISECONDS,
             threadId));

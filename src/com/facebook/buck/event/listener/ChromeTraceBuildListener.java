@@ -278,7 +278,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", started.getRuleKeySafe()),
+        ImmutableMap.<String, String>of(),
         started);
   }
 
@@ -302,7 +302,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", resumed.getRuleKeySafe()),
+        ImmutableMap.of("rule_key", resumed.getRuleKey()),
         resumed);
   }
 
@@ -312,7 +312,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.of("rule_key", suspended.getRuleKeySafe()),
+        ImmutableMap.of("rule_key", suspended.getRuleKey()),
         suspended);
   }
 
