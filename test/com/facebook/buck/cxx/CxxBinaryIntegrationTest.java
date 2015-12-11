@@ -898,7 +898,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(depHeaderExportedSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(depPreprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
-    buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
+    buildLog.assertTargetHadMatchingInputRuleKey(depArchiveTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
@@ -992,7 +992,7 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetHadMatchingInputRuleKey("//:bin#binary");
     buildLog.assertTargetHadMatchingDepfileRuleKey("//:bin#compile-bin.c.o,default");
-    buildLog.assertTargetBuiltLocally("//:lib1#default,static");
+    buildLog.assertTargetHadMatchingInputRuleKey("//:lib1#default,static");
   }
 
   @Test
