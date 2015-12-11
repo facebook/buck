@@ -219,7 +219,7 @@ public class AaptPackageResources extends AbstractBuildRule
         new AaptStep(
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
-            getResolver().getAllAbsolutePaths(filteredResourcesProvider.getResDirectories()),
+            filteredResourcesProvider.getResDirectories(),
             FluentIterable.from(getResolver().getAllAbsolutePaths(assetsDirectories))
                 .toSortedSet(Ordering.<Path>natural()),
             getResourceApkPath(),
@@ -324,7 +324,7 @@ public class AaptPackageResources extends AbstractBuildRule
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
           getProjectFilesystem(),
           rDotTxtDir,
-          getResolver().getAllAbsolutePaths(filteredResourcesProvider.getResDirectories()),
+          filteredResourcesProvider.getResDirectories(),
           outputDirPath);
       steps.add(genNativeStringInfo);
 

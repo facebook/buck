@@ -113,9 +113,10 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        ImmutableSet.copyOf(packageableCollection.getClasspathEntriesToDex()),
         ImmutableSet.copyOf(
-            pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs())),
+            pathResolver.deprecatedAllPaths(packageableCollection.getClasspathEntriesToDex())),
+        ImmutableSet.copyOf(
+            pathResolver.deprecatedAllPaths(packageableCollection.getProguardConfigs())),
         commands,
         buildableContext);
 
@@ -142,8 +143,7 @@ public class AndroidBinaryTest {
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         Optional.<Integer>absent(),
         ImmutableMap.of(
-            GEN_PATH.resolve("java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar")
-                .toAbsolutePath(),
+            GEN_PATH.resolve("java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
             GEN_PATH.resolve(
                 "java/src/com/facebook/base/__apk#aapt_package__proguard__/.proguard/buck-out/" +
                     "gen/java/src/com/facebook/base/lib__libraryOne__output/" +

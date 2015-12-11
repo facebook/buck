@@ -43,18 +43,16 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
+import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -66,7 +64,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +71,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
@@ -548,7 +544,7 @@ public class AndroidBinary
         nativeLibraryDirectories,
         zipFiles.build(),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(getResolver().getAbsolutePathFunction())
+            .transform(getResolver().deprecatedPathFunction())
             .toSet(),
         getResolver().getAbsolutePath(keystore.getPathToStore()),
         getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
@@ -613,7 +609,7 @@ public class AndroidBinary
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
     // Execute preprocess_java_classes_binary, if appropriate.
-    ImmutableSet<SourcePath> classpathEntriesToDex;
+    ImmutableSet<Path> classpathEntriesToDex;
     if (preprocessJavaClassesBash.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
       // directory. Expect parallel outputs in the output directory and update classpathEntriesToDex
@@ -622,28 +618,19 @@ public class AndroidBinary
       final Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), preprocessJavaClassesInDir));
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), preprocessJavaClassesOutDir));
-      ImmutableBiMap<SourcePath, Path> symlinkMap = SymlinkTree.resolveDuplicateRelativePaths(
-          ImmutableSortedSet.copyOf(enhancementResult.getClasspathEntriesToDex()),
-          getResolver());
       steps.add(
-          new SymlinkTreeStep(
+          new SymlinkFilesIntoDirectoryStep(
               getProjectFilesystem(),
-              preprocessJavaClassesInDir,
-              ImmutableMap.copyOf(
-                  Maps.transformValues(
-                      symlinkMap.inverse(),
-                      getResolver().getAbsolutePathFunction()))
-          ));
-      classpathEntriesToDex =
-          FluentIterable.from(symlinkMap.values())
-          .transform(
-              new Function<Path, Path>() {
-                @Override
-                public Path apply(Path input) {
-                  return preprocessJavaClassesOutDir.resolve(input);
-                }
-              })
-          .transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()))
+              getProjectFilesystem().getRootPath(),
+              enhancementResult.getClasspathEntriesToDex(),
+              preprocessJavaClassesInDir));
+      classpathEntriesToDex = FluentIterable.from(enhancementResult.getClasspathEntriesToDex())
+          .transform(new Function<Path, Path>() {
+            @Override
+            public Path apply(Path classpathEntry) {
+              return preprocessJavaClassesOutDir.resolve(classpathEntry);
+            }
+          })
           .toSet();
 
       AbstractGenruleStep.CommandString commandString = new AbstractGenruleStep.CommandString(
@@ -684,7 +671,7 @@ public class AndroidBinary
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
           ImmutableSet.copyOf(
-              getResolver().getAllAbsolutePaths(packageableCollection.getProguardConfigs())),
+              getResolver().deprecatedAllPaths(packageableCollection.getProguardConfigs())),
           steps,
           buildableContext);
     }
@@ -725,9 +712,7 @@ public class AndroidBinary
       steps.add(new MkdirStep(getProjectFilesystem(), primaryDexPath.getParent()));
 
       addDexingSteps(
-          FluentIterable.from(classpathEntriesToDex)
-              .transform(getResolver().getAbsolutePathFunction())
-              .toSet(),
+          classpathEntriesToDex,
           classNamesToHashesSupplier,
           secondaryDexDirectoriesBuilder,
           steps,
@@ -742,7 +727,7 @@ public class AndroidBinary
   }
 
   public Supplier<Map<String, HashCode>> addAccumulateClassNamesStep(
-      final ImmutableSet<SourcePath> classPathEntriesToDex,
+      final ImmutableSet<Path> classPathEntriesToDex,
       ImmutableList.Builder<Step> steps) {
     final ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
 
@@ -750,12 +735,12 @@ public class AndroidBinary
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
           public int execute(ExecutionContext context) {
-            for (SourcePath path : classPathEntriesToDex) {
+            for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
                   AccumulateClassNamesStep.calculateClassHashes(
                       context,
                       getProjectFilesystem(),
-                      getResolver().getAbsolutePath(path));
+                      path);
               if (!hashes.isPresent()) {
                 return 1;
               }
@@ -825,8 +810,8 @@ public class AndroidBinary
    * @return the resulting set of ProGuarded classpath entries to dex.
    */
   @VisibleForTesting
-  ImmutableSet<SourcePath> addProguardCommands(
-      Set<SourcePath> classpathEntriesToDex,
+  ImmutableSet<Path> addProguardCommands(
+      Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
@@ -848,18 +833,14 @@ public class AndroidBinary
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(jasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
-    ImmutableMap.Builder<Path, Path> inputOutputEntriesBuilder = ImmutableMap.builder();
-    for (Map.Entry<SourcePath, Path> entry :
-        SymlinkTree.resolveDuplicateRelativePaths(
-            ImmutableSortedSet.copyOf(classpathEntriesToDex),
-            getResolver()).entrySet()) {
-      SourcePath sourcePath = entry.getKey();
-      Path relativePath = entry.getValue();
-      inputOutputEntriesBuilder.put(
-          getResolver().getAbsolutePath(sourcePath),
-          getProguardOutputFromInputClasspath(relativePath));
-    }
-    ImmutableMap<Path, Path> inputAndOutputEntries = inputOutputEntriesBuilder.build();
+    final ImmutableMap<Path, Path> inputOutputEntries = FluentIterable
+        .from(classpathEntriesToDex)
+        .toMap(new Function<Path, Path>() {
+          @Override
+          public Path apply(Path classpathEntry) {
+            return getProguardOutputFromInputClasspath(classpathEntry);
+          }
+        });
 
     Path proguardConfigDir = enhancementResult.getAaptPackageResources()
         .getPathToGeneratedProguardConfigDir();
@@ -874,7 +855,7 @@ public class AndroidBinary
         proguardConfigsBuilder.build(),
         sdkProguardConfig,
         optimizationPasses,
-        inputAndOutputEntries,
+        inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
         proguardConfigDir,
         buildableContext,
@@ -882,9 +863,7 @@ public class AndroidBinary
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
     // so that we're now dexing the proguarded artifacts).
-    return FluentIterable.from(inputAndOutputEntries.values())
-        .transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()))
-        .toSet();
+    return ImmutableSet.copyOf(inputOutputEntries.values());
   }
 
   /** Helper method to check whether intra-dex reordering is enabled
@@ -965,13 +944,12 @@ public class AndroidBinary
           proguardMappingFile,
           dexSplitMode,
           dexSplitMode.getPrimaryDexScenarioFile()
-              .transform(getResolver().getAbsolutePathFunction()),
-          dexSplitMode.getPrimaryDexClassesFile()
-              .transform(getResolver().getAbsolutePathFunction()),
+              .transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().deprecatedPathFunction()),
           dexSplitMode.getSecondaryDexHeadClassesFile()
-              .transform(getResolver().getAbsolutePathFunction()),
+              .transform(getResolver().deprecatedPathFunction()),
           dexSplitMode.getSecondaryDexTailClassesFile()
-              .transform(getResolver().getAbsolutePathFunction()),
+              .transform(getResolver().deprecatedPathFunction()),
           zipSplitReportDir);
       steps.add(splitZipCommand);
 
@@ -1060,8 +1038,9 @@ public class AndroidBinary
     if (isReorderingClasses()) {
       IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
           getProjectFilesystem(),
-          dexReorderToolFile.transform(getResolver().getAbsolutePathFunction()).get(),
-          dexReorderDataDumpFile.transform(getResolver().getAbsolutePathFunction()).get(),
+          dexReorderToolFile,
+          dexReorderDataDumpFile,
+          getResolver(),
           getBuildTarget(),
           selectedPrimaryDexPath,
           primaryDexPath,

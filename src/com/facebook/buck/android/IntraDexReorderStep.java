@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -59,8 +61,9 @@ public class IntraDexReorderStep implements Step {
 
   IntraDexReorderStep(
       ProjectFilesystem filesystem,
-      Path reorderTool,
-      Path reorderDataFile,
+      Optional<SourcePath> reorderTool,
+      Optional<SourcePath> reorderDataFile,
+      SourcePathResolver sourcePathResolver,
       BuildTarget buildTarget,
       Path inputPrimaryDexPath,
       Path outputPrimaryDexPath,
@@ -68,8 +71,9 @@ public class IntraDexReorderStep implements Step {
       String inputSubDir,
       String outputSubDir) {
     this.filesystem = filesystem;
-    this.reorderTool = reorderTool;
-    this.reorderDataFile = reorderDataFile;
+    this.reorderTool = reorderTool.transform(sourcePathResolver.deprecatedPathFunction()).get();
+    this.reorderDataFile =
+        reorderDataFile.transform(sourcePathResolver.deprecatedPathFunction()).get();
     this.inputPrimaryDexPath = inputPrimaryDexPath;
     this.outputPrimaryDexPath = outputPrimaryDexPath;
     this.secondaryDexMap = secondaryDexMap;

@@ -36,12 +36,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -88,13 +88,13 @@ public class RobolectricTestRuleTest {
   }
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
         ImmutableList.builder();
@@ -102,7 +102,7 @@ public class RobolectricTestRuleTest {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
       resDepsBuilder.add(
-          new ResourceRule(new FakeSourcePath(filesystem, path)));
+          new ResourceRule(new FakeSourcePath(path)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -127,7 +127,7 @@ public class RobolectricTestRuleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
     filesystem.mkdirs(Paths.get("res1/values"));
     filesystem.mkdirs(Paths.get("res2/values"));
     filesystem.mkdirs(Paths.get("res3/values"));
@@ -142,11 +142,11 @@ public class RobolectricTestRuleTest {
     expectedVmArgBuilder.append("-D")
         .append(RobolectricTest.LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME)
         .append("=")
-        .append(filesystem.resolve(resDep1))
+        .append(resDep1)
         .append(File.pathSeparator)
-        .append(filesystem.resolve(resDep2))
+        .append(resDep2)
         .append(File.pathSeparator)
-        .append(filesystem.resolve(resDep3));
+        .append(resDep3);
 
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
