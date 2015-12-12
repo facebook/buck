@@ -107,8 +107,8 @@
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jimfs/jimfs-1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
-    <include name="okhttp/okhttp-2.2.0.jar" />
-    <include name="okio/okio-1.2.0.jar" />
+    <include name="okhttp/okhttp-2.6.0.jar" />
+    <include name="okio/okio-1.6.0.jar" />
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
     <include name="slf4j/slf4j-api-1.7.2.jar" />
     <include name="stringtemplate/ST-4.0.8.jar" />
