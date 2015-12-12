@@ -21,17 +21,20 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Request;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 /**
  * Creates instances of the {@link ArtifactCache}.
@@ -39,6 +42,15 @@ import java.util.concurrent.TimeUnit;
 public class ArtifactCaches {
 
   private ArtifactCaches() {
+  }
+
+  private static Request.Builder addHeadersToBuilder(
+      Request.Builder builder, ImmutableMap<String, String> headers) {
+    ImmutableSet<Map.Entry<String, String>> entries = headers.entrySet();
+    for (Map.Entry<String, String> header : entries) {
+      builder.addHeader(header.getKey(), header.getValue());
+    }
+    return builder;
   }
 
   /**
@@ -184,7 +196,7 @@ public class ArtifactCaches {
     int timeoutSeconds = cacheDescription.getTimeoutSeconds();
     boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
 
-    // Setup the defaut client to use.
+    // Setup the default client to use.
     OkHttpClient client = new OkHttpClient();
     client.networkInterceptors().add(
         new Interceptor() {
@@ -212,6 +224,35 @@ public class ArtifactCaches {
     // For fetches, use a client with a read timeout.
     OkHttpClient fetchClient = client.clone();
     fetchClient.setReadTimeout(timeoutSeconds, TimeUnit.SECONDS);
+
+    final ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
+    final ImmutableMap<String, String> writeHeaders = cacheDescription.getWriteHeaders();
+
+    // If write headers are specified, add them to every default client request.
+    if (!writeHeaders.isEmpty()) {
+      client.networkInterceptors().add(
+          new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+              return chain.proceed(
+                addHeadersToBuilder(chain.request().newBuilder(), writeHeaders).build()
+              );
+            }
+          });
+    }
+
+    // If read headers are specified, add them to every read client request.
+    if (!readHeaders.isEmpty()) {
+      fetchClient.networkInterceptors().add(
+          new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+              return chain.proceed(
+                addHeadersToBuilder(chain.request().newBuilder(), readHeaders).build()
+              );
+            }
+          });
+    }
 
     return new HttpArtifactCache(
         cacheName,

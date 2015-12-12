@@ -107,18 +107,51 @@ public class ArtifactCacheBuckConfigTest {
         "http_writer_shutdown_timeout_seconds = 6",
         "http_timeout_seconds = 42",
         "http_url = http://test.host:1234",
+        "http_read_headers = Foo: bar; Baz: meh",
+        "http_write_headers = Authorization: none",
         "http_mode = readwrite");
     ImmutableSet<HttpCacheEntry> httpCaches = config.getHttpCaches();
     assertThat(httpCaches, Matchers.hasSize(1));
     HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
 
+    ImmutableMap.Builder<String, String> readBuilder = ImmutableMap.builder();
+    ImmutableMap<String, String> expectedReadHeaders = readBuilder
+        .put("Foo", "bar")
+        .put("Baz", "meh")
+        .build();
+    ImmutableMap.Builder<String, String>  writeBuilder = ImmutableMap.builder();
+    ImmutableMap<String, String> expectedWriteHeaders = writeBuilder
+        .put("Authorization", "none")
+        .build();
+
     assertThat(config.getHttpMaxConcurrentWrites(), Matchers.is(5));
     assertThat(config.getHttpWriterShutdownTimeout(), Matchers.is(6));
     assertThat(cacheEntry.getTimeoutSeconds(), Matchers.is(42));
     assertThat(cacheEntry.getUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
+    assertThat(cacheEntry.getReadHeaders(), Matchers.equalTo(expectedReadHeaders));
+    assertThat(cacheEntry.getWriteHeaders(), Matchers.equalTo(expectedWriteHeaders));
     assertThat(
         cacheEntry.getCacheReadMode(),
         Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+  }
+
+  @Test
+  public void testHttpCacheHeaderDefaultSettings() throws Exception {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "http_timeout_seconds = 42");
+    ImmutableSet<HttpCacheEntry> httpCaches = config.getHttpCaches();
+    assertThat(httpCaches, Matchers.hasSize(1));
+    HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
+
+    // If the headers are not set we shouldn't get any by default.
+    ImmutableMap.Builder<String, String>  readBuilder = ImmutableMap.builder();
+    ImmutableMap<String, String> expectedReadHeaders = readBuilder.build();
+    ImmutableMap.Builder<String, String>  writeBuilder = ImmutableMap.builder();
+    ImmutableMap<String, String> expectedWriteHeaders = writeBuilder.build();
+
+    assertThat(cacheEntry.getReadHeaders(), Matchers.equalTo(expectedReadHeaders));
+    assertThat(cacheEntry.getWriteHeaders(), Matchers.equalTo(expectedWriteHeaders));
   }
 
   @Test
