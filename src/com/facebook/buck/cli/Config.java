@@ -133,6 +133,12 @@ public class Config {
     return getOptionalListWithoutComments(sectionName, propertyName).or(ImmutableList.<String>of());
   }
 
+  public ImmutableList<String> getListWithoutComments(
+      String sectionName, String propertyName, char splitChar) {
+    return getOptionalListWithoutComments(sectionName, propertyName, splitChar)
+        .or(ImmutableList.<String>of());
+  }
+
   /**
    * ini4j leaves things that look like comments in the values of entries in the file. Generally,
    * we don't want to include these in our parameters, so filter them out where necessary. In an INI
@@ -145,12 +151,17 @@ public class Config {
    */
   public Optional<ImmutableList<String>> getOptionalListWithoutComments(
       String sectionName, String propertyName) {
+    // Default split character for lists is comma.
+    return getOptionalListWithoutComments(sectionName, propertyName, ',');
+  }
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String sectionName, String propertyName, char splitChar) {
     Optional<String> value = getValue(sectionName, propertyName);
     if (!value.isPresent()) {
       return Optional.absent();
     }
 
-    Iterable<String> allValues = Splitter.on(',')
+    Iterable<String> allValues = Splitter.on(splitChar)
         .omitEmptyStrings()
         .trimResults()
         .split(value.get());

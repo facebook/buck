@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -93,6 +94,37 @@ public class ConfigTest {
     assertEquals(
         Optional.of(0.333f),
         ConfigBuilder.createFromText("[a]", "  f = 0.333").getFloat("a", "f")
+    );
+  }
+
+  @Test
+  public void testGetList() throws IOException {
+    String[] config = {"[a]", "  b = foo,bar,baz"};
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList<String> expected = builder.add("foo").add("bar").add("baz").build();
+    assertEquals(
+        expected,
+        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b")
+    );
+    assertEquals(
+        Optional.of(expected),
+        ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b")
+    );
+  }
+
+  @Test
+  public void testGetListWithCustomSplitChar() throws IOException {
+    String[] config = {"[a]", "  b = cool;story;bro"};
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList<String> expected = builder.add("cool").add("story").add("bro").build();
+    assertEquals(
+        expected,
+        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b", ';')
+    );
+    assertEquals(
+        Optional.of(expected),
+        ConfigBuilder.createFromText(config[0], config[1])
+            .getOptionalListWithoutComments("a", "b", ';')
     );
   }
 
