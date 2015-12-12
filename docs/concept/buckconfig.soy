@@ -382,6 +382,18 @@ directory-based and http caching.
     # readwrite.
     http_mode = readwrite
 
+    # HTTP headers to use when reading from the cache.
+    # Multiple headers are separated with a semicolon.
+    #
+    # The default set is empty.
+    http_read_headers = User-Agent: buck
+
+    # HTTP headers to use when writing to the cache.
+    # Multiple headers are separated with a semicolon.
+    #
+    # The default set is empty.
+    http_read_headers = Authorization: XXXXXXX; User-Agent: buck
+
     # Timeout for http requests (defaults to 3 seconds).
     http_timeout_seconds = 3
 

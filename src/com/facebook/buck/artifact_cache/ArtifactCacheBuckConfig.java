@@ -27,8 +27,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -39,6 +41,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Represents configuration specific to the {@link ArtifactCache}s.
@@ -53,11 +56,15 @@ public class ArtifactCacheBuckConfig {
   private static final String HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME = "blacklisted_wifi_ssids";
   private static final String HTTP_MODE_FIELD_NAME = "http_mode";
   private static final String HTTP_TIMEOUT_SECONDS_FIELD_NAME = "http_timeout_seconds";
+  private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
+  private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final ImmutableSet<String> HTTP_CACHE_DESCRIPTION_FIELDS = ImmutableSet.of(
       HTTP_URL_FIELD_NAME,
       HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME,
       HTTP_MODE_FIELD_NAME,
-      HTTP_TIMEOUT_SECONDS_FIELD_NAME);
+      HTTP_TIMEOUT_SECONDS_FIELD_NAME,
+      HTTP_READ_HEADERS_FIELD_NAME,
+      HTTP_WRITE_HEADERS_FIELD_NAME);
 
   // List of names of cache-* sections that contain the fields above. This is used to emulate
   // dicts, essentially.
@@ -204,6 +211,22 @@ public class ArtifactCacheBuckConfig {
     return result;
   }
 
+  private ImmutableMap<String, String> getCacheHeaders(String section, String fieldName) {
+    ImmutableMap.Builder<String, String> headerBuilder = ImmutableMap.builder();
+    ImmutableList<String> rawHeaders = buckConfig.getListWithoutComments(
+        section,
+        fieldName,
+        ';');
+    for (String rawHeader : rawHeaders) {
+      List<String> splitHeader = Splitter.on(':')
+          .omitEmptyStrings()
+          .trimResults()
+          .splitToList(rawHeader);
+      headerBuilder.put(splitHeader.get(0), splitHeader.get(1));
+    }
+    return headerBuilder.build();
+  }
+
   private ImmutableSet<String> getHttpCacheNames() {
     ImmutableList<String> httpCacheNames = buckConfig.getListWithoutComments(
         CACHE_SECTION_NAME,
@@ -220,6 +243,8 @@ public class ArtifactCacheBuckConfig {
     builder.setTimeoutSeconds(
         buckConfig.getLong(section, HTTP_TIMEOUT_SECONDS_FIELD_NAME)
             .or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS).intValue());
+    builder.setReadHeaders(getCacheHeaders(section, HTTP_READ_HEADERS_FIELD_NAME));
+    builder.setWriteHeaders(getCacheHeaders(section, HTTP_WRITE_HEADERS_FIELD_NAME));
     builder.setBlacklistedWifiSsids(
         buckConfig.getListWithoutComments(section, HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME));
     builder.setCacheReadMode(
@@ -286,6 +311,8 @@ public class ArtifactCacheBuckConfig {
     public abstract Optional<String> getName();
     public abstract URI getUrl();
     public abstract int getTimeoutSeconds();
+    public abstract ImmutableMap<String, String> getReadHeaders();
+    public abstract ImmutableMap<String, String> getWriteHeaders();
     public abstract CacheReadMode getCacheReadMode();
     protected abstract ImmutableSet<String> getBlacklistedWifiSsids();
 

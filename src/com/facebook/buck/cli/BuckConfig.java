@@ -226,6 +226,11 @@ public class BuckConfig {
     return config.getListWithoutComments(section, field);
   }
 
+  public ImmutableList<String> getListWithoutComments(
+      String section, String field, char splitChar) {
+    return config.getListWithoutComments(section, field, splitChar);
+  }
+
   public Function<Optional<String>, Path> getCellRoots() {
     return cellToPath;
   }
