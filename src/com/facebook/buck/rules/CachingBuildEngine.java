@@ -71,6 +71,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.BufferedInputStream;
@@ -1205,7 +1206,7 @@ public class CachingBuildEngine implements BuildEngine {
     Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
             .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
-    Path manifestPath = getManifestPath(rule);
+    final Path manifestPath = getManifestPath(rule);
     Manifest manifest = new Manifest();
 
     // If we already have a manifest downloaded, use that.
@@ -1237,19 +1238,39 @@ public class CachingBuildEngine implements BuildEngine {
       manifest.serialize(outputStream);
     }
 
-    // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
-    // `ArtifactCache` interface uses raw paths.
-    try (NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest")) {
+    final NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest");
+    try {
+      // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
+      // `ArtifactCache` interface uses raw paths.
       try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
            OutputStream outputStream =
                new GZIPOutputStream(
                    new BufferedOutputStream(Files.newOutputStream(tempFile.get())))) {
         ByteStreams.copy(inputStream, outputStream);
       }
-      cache.store(
-          ImmutableSet.of(manifestKey.getFirst()),
-          ImmutableMap.<String, String>of(),
-          tempFile.get());
+      cache
+          .store(
+              ImmutableSet.of(manifestKey.getFirst()),
+              ImmutableMap.<String, String>of(),
+              tempFile.get())
+          .addListener(
+              new Runnable() {
+                @Override
+                public void run() {
+                  try {
+                    tempFile.close();
+                  } catch (IOException e) {
+                    LOG.warn(
+                        e,
+                        "Error occurred while deleting temporary manifest file for %s",
+                        manifestPath);
+                  }
+                }
+              },
+              MoreExecutors.directExecutor());
+    } catch (InterruptedException e) {
+      tempFile.close();
+      throw e;
     }
   }
 
