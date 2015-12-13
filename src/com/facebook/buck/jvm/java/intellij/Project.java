@@ -374,6 +374,9 @@ public class Project {
         projectConfig.getSourceRoots(),
         false /* isTestSource */);
 
+    // resource folders
+    addResourceFolders(module, projectConfig.getResourceRoots());
+
     addRootExcludes(module, projectConfig.getSrcRule(), projectFilesystem);
 
     // At least one of src or tests should contribute a source folder unless this is an
@@ -663,6 +666,20 @@ public class Project {
       module.excludeFolders.add(excludeFolder);
     }
 
+    return true;
+  }
+
+  private boolean addResourceFolders(
+      SerializableModule module,
+      @Nullable ImmutableList<SourceRoot> resourceRoots) {
+    if (resourceRoots == null || resourceRoots.isEmpty()) {
+      return false;
+    }
+    for (SourceRoot resourceRoot : resourceRoots) {
+      SerializableModule.SourceFolder sourceFolder = new SerializableModule.SourceFolder(
+          String.format("file://$MODULE_DIR$/%s", resourceRoot.getName()), false);
+      module.resourceFolders.add(sourceFolder);
+    }
     return true;
   }
 

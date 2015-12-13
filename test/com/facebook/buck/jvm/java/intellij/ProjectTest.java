@@ -724,6 +724,31 @@ public class ProjectTest {
         moduleHasSrcFolder.sourceFolders);
   }
 
+  @Test
+  public void testResources() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule baseBuildRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .build(ruleResolver);
+    ProjectConfig packageProjectConfig = (ProjectConfig) ProjectConfigBuilder
+        .createBuilder(
+            BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
+        .setSrcRule(baseBuildRule.getBuildTarget())
+        .setSrcRoots(ImmutableList.<String>of())
+        .setResourceRoots(ImmutableList.of("res"))
+        .build(ruleResolver);
+
+    ProjectWithModules projectWithDefaultJdk = getModulesForActionGraph(
+        ruleResolver,
+        ImmutableSortedSet.of(packageProjectConfig),
+        null /* javaPackageFinder */);
+    SerializableModule moduleWithDefaultJdk = projectWithDefaultJdk.modules.get(0);
+    assertListEquals(
+        ImmutableList.of(SourceFolder.RES),
+        moduleWithDefaultJdk.resourceFolders);
+  }
+
   private static class ProjectWithModules {
     private final Project project;
     private final ImmutableList<SerializableModule> modules;

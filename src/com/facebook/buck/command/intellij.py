@@ -285,6 +285,10 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 'is_test_source': str(source_folder['isTestSource']).lower(),
                 'package_prefix': package_prefix
             }
+        for resource_folder in module['resourceFolders']:
+            xml += '\n      <sourceFolder url="%(url)s" type="java-resource" />' % {
+                'url': resource_folder['url']
+            }
         for exclude_folder in module['excludeFolders']:
             xml += '\n      <excludeFolder url="%s" />' % exclude_folder['url']
         for exclude_folder in sorted(additional_excludes[module['pathToImlFile']]):

@@ -50,4 +50,10 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
     arg.testRoots = Optional.fromNullable(testRoots);
     return this;
   }
+
+  public ProjectConfigBuilder setResourceRoots(@Nullable ImmutableList<String> resourceRoots) {
+    arg.resourceRoots = Optional.fromNullable(resourceRoots);
+    return this;
+  }
+
 }

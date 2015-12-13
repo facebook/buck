@@ -46,6 +46,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
         args.srcRoots.orNull(),
         args.testTarget.transform(resolver.getRuleFunction()).orNull(),
         args.testRoots.orNull(),
+        args.resourceRoots.orNull(),
         args.isIntellijPlugin.or(false));
   }
 
@@ -56,6 +57,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
     public Optional<ImmutableList<String>> srcRoots;
     public Optional<BuildTarget> testTarget;
     public Optional<ImmutableList<String>> testRoots;
+    public Optional<ImmutableList<String>> resourceRoots;
     public Optional<Boolean> isIntellijPlugin;
   }
 }

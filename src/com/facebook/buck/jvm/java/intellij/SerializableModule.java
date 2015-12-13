@@ -75,6 +75,8 @@ final class SerializableModule {
   @JsonProperty
   List<SourceFolder> sourceFolders = Lists.newArrayList();
   @JsonProperty
+  List<SourceFolder> resourceFolders = Lists.newArrayList();
+  @JsonProperty
   boolean isRootModule = false;
   /**
    * &lt;excludeFolder> elements must be sorted alphabetically in an .iml file.
@@ -158,6 +160,7 @@ final class SerializableModule {
 
     static final SourceFolder SRC = new SourceFolder("file://$MODULE_DIR$/src", false);
     static final SourceFolder TESTS = new SourceFolder("file://$MODULE_DIR$/tests", true);
+    static final SourceFolder RES = new SourceFolder("file://$MODULE_DIR$/res", false);
     static final SourceFolder GEN = new SourceFolder("file://$MODULE_DIR$/gen", false);
 
     @JsonProperty

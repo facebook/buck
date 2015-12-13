@@ -41,6 +41,9 @@ public class ProjectConfig extends NoopBuildRule {
   @Nullable
   private final ImmutableList<SourceRoot> testsSourceRoots;
 
+  @Nullable
+  private final ImmutableList<SourceRoot> resourceSourceRoots;
+
   private final boolean isIntelliJPlugin;
 
   protected ProjectConfig(
@@ -50,6 +53,7 @@ public class ProjectConfig extends NoopBuildRule {
       @Nullable List<String> srcRoots,
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
+      @Nullable List<String> resourceRoots,
       boolean isIntelliJPlugin) {
     super(params, resolver);
     Preconditions.checkArgument(srcRule != null || testRule != null,
@@ -86,6 +90,18 @@ public class ProjectConfig extends NoopBuildRule {
       this.testsSourceRoots = null;
     }
 
+    if (resourceRoots != null) {
+      this.resourceSourceRoots = ImmutableList.copyOf(Iterables.transform(resourceRoots,
+          new Function<String, SourceRoot>() {
+            @Override
+            public SourceRoot apply(String resourceRoots) {
+              return new SourceRoot(resourceRoots);
+            }
+          }));
+    } else {
+      this.resourceSourceRoots = null;
+    }
+
     this.isIntelliJPlugin = isIntelliJPlugin;
   }
 
@@ -120,6 +136,11 @@ public class ProjectConfig extends NoopBuildRule {
   @Nullable
   public ImmutableList<SourceRoot> getTestsSourceRoots() {
     return testsSourceRoots;
+  }
+
+  @Nullable
+  public ImmutableList<SourceRoot> getResourceRoots() {
+    return resourceSourceRoots;
   }
 
   public boolean getIsIntelliJPlugin() {
