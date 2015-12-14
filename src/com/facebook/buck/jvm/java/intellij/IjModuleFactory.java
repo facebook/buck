@@ -234,7 +234,7 @@ public class IjModuleFactory {
       Map<BuildTarget, IjModuleGraph.DependencyType> result = new HashMap<>(dependencyTypeMap);
       for (Path path : dependencyOriginMap.keySet()) {
         IjModuleGraph.DependencyType dependencyType =
-            Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)).isTest() ?
+            Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder ?
                 IjModuleGraph.DependencyType.TEST :
                 IjModuleGraph.DependencyType.PROD;
         for (BuildTarget buildTarget : dependencyOriginMap.get(path)) {
@@ -361,43 +361,55 @@ public class IjModuleFactory {
    * Add the set of input paths to the {@link IjModule.Builder} as source folders.
    *
    * @param foldersToInputsIndex mapping of source folders to their inputs.
-   * @param type folder type.
    * @param wantsPackagePrefix whether folders should be annotated with a package prefix. This
    *                           only makes sense when the source folder is Java source code.
    * @param context the module to add the folders to.
    */
   private static void addSourceFolders(
+      IjFolder.IJFolderFactory factory,
       ImmutableMultimap<Path, Path> foldersToInputsIndex,
-      IjFolder.Type type,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
     for (Map.Entry<Path, Collection<Path>> entry : foldersToInputsIndex.asMap().entrySet()) {
       context.addSourceFolder(
-          IjFolder.builder()
-              .setPath(entry.getKey())
-              .setInputs(FluentIterable.from(entry.getValue()).toSortedSet(Ordering.natural()))
-              .setType(type)
-              .setWantsPackagePrefix(wantsPackagePrefix)
-              .build());
+          factory.create(
+            entry.getKey(),
+            wantsPackagePrefix,
+            FluentIterable.from(entry.getValue()).toSortedSet(Ordering.natural())
+        )
+      );
     }
   }
 
   private static void addDepsAndSources(
       TargetNode<?> targetNode,
-      boolean isTest,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
     ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(
         targetNode.getInputs());
-    addSourceFolders(
-        foldersToInputsIndex,
-        isTest ? IjFolder.Type.TEST_FOLDER : IjFolder.Type.SOURCE_FOLDER,
-        wantsPackagePrefix,
-        context);
+    addSourceFolders(SourceFolder.FACTORY, foldersToInputsIndex, wantsPackagePrefix, context);
+    addDeps(foldersToInputsIndex, targetNode, IjModuleGraph.DependencyType.PROD, context);
+  }
+
+  private static void addDepsAndTestSources(
+      TargetNode<?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context) {
+    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(
+        targetNode.getInputs());
+    addSourceFolders(TestFolder.FACTORY, foldersToInputsIndex, wantsPackagePrefix, context);
+    addDeps(foldersToInputsIndex, targetNode, IjModuleGraph.DependencyType.TEST, context);
+  }
+
+  private static void addDeps(
+      ImmutableMultimap<Path, Path> foldersToInputsIndex,
+      TargetNode<?> targetNode,
+      IjModuleGraph.DependencyType dependencyType,
+      ModuleBuildContext context) {
     context.addDeps(
         foldersToInputsIndex.keySet(),
         targetNode.getDeps(),
-        isTest ? IjModuleGraph.DependencyType.TEST : IjModuleGraph.DependencyType.PROD);
+        dependencyType);
   }
 
   private static <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
@@ -443,7 +455,6 @@ public class IjModuleFactory {
         ModuleBuildContext context) {
       addDepsAndSources(
           target,
-          false /* isTest */,
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
@@ -491,8 +502,8 @@ public class IjModuleFactory {
     @Override
     public void apply(TargetNode<CxxLibraryDescription.Arg> target, ModuleBuildContext context) {
       addSourceFolders(
+          SourceFolder.FACTORY,
           getSourceFoldersToInputsIndex(target.getInputs()),
-          IjFolder.Type.SOURCE_FOLDER,
           false /* wantsPackagePrefix */,
           context);
     }
@@ -509,7 +520,6 @@ public class IjModuleFactory {
     public void apply(TargetNode<JavaLibraryDescription.Arg> target, ModuleBuildContext context) {
       addDepsAndSources(
           target,
-          false /* isTest */,
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
@@ -525,9 +535,8 @@ public class IjModuleFactory {
 
     @Override
     public void apply(TargetNode<JavaTestDescription.Arg> target, ModuleBuildContext context) {
-      addDepsAndSources(
+      addDepsAndTestSources(
           target,
-          true /* isTest */,
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);

@@ -28,7 +28,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -63,7 +62,7 @@ public class IjSourceRootSimplifier {
     ImmutableSet.Builder<IjFolder> foldersToMergeBuilder = ImmutableSet.builder();
 
     for (IjFolder folder : folders) {
-      if (folder.getType().isCoalescent()) {
+      if (folder.isCoalescent()) {
         foldersToMergeBuilder.add(folder);
       } else {
         mergedFoldersBuilder.add(folder);
@@ -180,9 +179,7 @@ public class IjSourceRootSimplifier {
         myFolder = currentFolder;
       } else {
         IjFolder aChild = presentChildren.iterator().next();
-        myFolder = aChild
-            .withInputs(ImmutableSortedSet.<Path>of())
-            .withPath(currentPath);
+        myFolder = aChild.createCopyWith(currentPath);
       }
       boolean allChildrenCanBeMerged = FluentIterable.from(presentChildren)
           .allMatch(
@@ -213,12 +210,14 @@ public class IjSourceRootSimplifier {
       PackagePathCache packagePathCache) {
     Preconditions.checkArgument(child.getPath().startsWith(parent.getPath()));
 
-    if (parent.getType() != child.getType()) {
-      return false;
+    if (!child.canMergeWith(parent)) {
+        return false;
     }
+
     if (parent.getWantsPackagePrefix() != child.getWantsPackagePrefix()) {
       return false;
     }
+
     if (parent.getWantsPackagePrefix()) {
       Optional<Path> parentPackage = packagePathCache.lookup(parent);
       if (!parentPackage.isPresent()) {

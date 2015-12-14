@@ -296,7 +296,7 @@ public class IjModuleFactoryTest {
 
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("java/com/example/base"), folder.getPath());
-    assertFalse(folder.isTest());
+    assertFalse(folder instanceof TestFolder);
     assertTrue(folder.getWantsPackagePrefix());
   }
 
@@ -491,15 +491,14 @@ public class IjModuleFactoryTest {
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(cxxLibrary));
 
+    IjFolder cxxLibraryModel =
+        new SourceFolder(
+            Paths.get("cpp/lib"),
+            false,
+            ImmutableSortedSet.of(Paths.get("cpp/lib/foo.cpp")));
     assertThat(
         module.getFolders(),
-        Matchers.contains(
-            IjFolder.builder()
-                .setPath(Paths.get("cpp/lib"))
-                .setType(AbstractIjFolder.Type.SOURCE_FOLDER)
-                .setWantsPackagePrefix(false)
-                .setInputs(ImmutableSortedSet.of(Paths.get("cpp/lib/foo.cpp")))
-                .build())
+        Matchers.contains(cxxLibraryModel)
     );
   }
 }

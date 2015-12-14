@@ -221,9 +221,9 @@ public class IjProjectTemplateDataPreparer {
 
   private IjSourceFolder createSourceFolder(IjFolder folder, Path moduleLocationBasePath) {
     return IjSourceFolder.builder()
-        .setType(folder.getType().getIjName())
+        .setType(folder.getIjName())
         .setUrl(toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
-        .setIsTestSource(folder.isTest())
+        .setIsTestSource(folder instanceof TestFolder)
         .setPackagePrefix(getPackagPrefix(folder))
         .build();
   }
@@ -285,13 +285,7 @@ public class IjProjectTemplateDataPreparer {
               return FileVisitResult.SKIP_SUBTREE;
             }
             if (!referencedFolderPaths.contains(dir)) {
-              excludesBuilder.add(
-                  IjFolder.builder()
-                      .setPath(dir)
-                      .setType(AbstractIjFolder.Type.EXCLUDE_FOLDER)
-                      .setWantsPackagePrefix(false)
-                      .setInputs(ImmutableSortedSet.<Path>of())
-                      .build());
+              excludesBuilder.add(new ExcludeFolder(dir));
               return FileVisitResult.SKIP_SUBTREE;
             }
 

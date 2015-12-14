@@ -262,12 +262,10 @@ public class IjProjectDataPreparerTest {
                 .setModuleBasePath(Paths.get("java/com/example/base"))
                 .setTargets(ImmutableSet.<TargetNode<?>>of(baseTargetNode))
                 .addFolders(
-                    IjFolder.builder()
-                        .setType(AbstractIjFolder.Type.SOURCE_FOLDER)
-                        .setPath(Paths.get("java/com/example/base"))
-                        .setInputs(ImmutableSortedSet.<Path>of(baseTargetSrcFilePath))
-                        .setWantsPackagePrefix(true)
-                        .build())
+                    new SourceFolder(
+                        Paths.get("java/com/example/base"),
+                        true,
+                        ImmutableSortedSet.<Path>of(baseTargetSrcFilePath)))
                 .build(),
             IjModule.builder()
                 .setModuleBasePath(Paths.get(""))
@@ -443,7 +441,7 @@ public class IjProjectDataPreparerTest {
                 new Predicate<IjFolder>() {
                   @Override
                   public boolean apply(IjFolder input) {
-                    return !input.getType().equals(IjFolder.Type.EXCLUDE_FOLDER);
+                    return !(input instanceof ExcludeFolder);
                   }
                 }));
     return FluentIterable.from(folders)

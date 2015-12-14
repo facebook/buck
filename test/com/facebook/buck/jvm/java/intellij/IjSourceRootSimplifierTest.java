@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -34,39 +33,20 @@ import java.nio.file.Paths;
 
 public class IjSourceRootSimplifierTest {
 
-  private static IjFolder buildFolder(String path, AbstractIjFolder.Type type) {
-    return IjFolder.builder()
-        .setPath(Paths.get(path))
-        .setType(type)
-        .setWantsPackagePrefix(true)
-        .setInputs(ImmutableSortedSet.<Path>of())
-        .build();
-  }
-
   private static IjFolder buildExcludeFolder(String path) {
-    return IjFolder.builder()
-        .setPath(Paths.get(path))
-        .setType(AbstractIjFolder.Type.EXCLUDE_FOLDER)
-        .setWantsPackagePrefix(false)
-        .setInputs(ImmutableSortedSet.<Path>of())
-        .build();
+    return new ExcludeFolder(Paths.get(path));
   }
 
   private static IjFolder buildSourceFolder(String path) {
-    return buildFolder(path, AbstractIjFolder.Type.SOURCE_FOLDER);
+    return new SourceFolder(Paths.get(path), true);
   }
 
   private static IjFolder buildNoPrefixSourceFolder(String path) {
-    return IjFolder.builder()
-        .setPath(Paths.get(path))
-        .setType(AbstractIjFolder.Type.SOURCE_FOLDER)
-        .setWantsPackagePrefix(false)
-        .setInputs(ImmutableSortedSet.<Path>of())
-        .build();
+    return new SourceFolder(Paths.get(path));
   }
 
   private static IjFolder buildTestFolder(String path) {
-    return buildFolder(path, AbstractIjFolder.Type.TEST_FOLDER);
+    return new TestFolder(Paths.get(path));
   }
 
   private static JavaPackageFinder fakePackageFinder() {
