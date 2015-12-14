@@ -28,10 +28,12 @@ import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
+import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.Filter;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
+import org.junit.runners.Suite;
 import org.junit.runners.model.RunnerBuilder;
 
 import java.io.ByteArrayOutputStream;
@@ -63,6 +65,18 @@ public final class JUnitRunner extends BaseRunner {
   private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
 
   public JUnitRunner() {
+  }
+
+  private List<Class<?>> getTestClasses(Class<?> clazz) {
+    List<Class<?>> testClasses = new ArrayList<>();
+    RunWith runWith = clazz.getAnnotation(RunWith.class);
+    Suite.SuiteClasses suiteClasses = clazz.getAnnotation(Suite.SuiteClasses.class);
+    if (runWith != null && suiteClasses != null) {
+      Collections.addAll(testClasses, suiteClasses.value());
+    } else {
+      testClasses.add(clazz);
+    }
+    return testClasses;
   }
 
   @Override
@@ -112,7 +126,7 @@ public final class JUnitRunner extends BaseRunner {
     };
 
     for (String className : testClassNames) {
-      final Class<?> testClass = Class.forName(className);
+      Class<?> testClass = Class.forName(className);
       Ignore ignore = testClass.getAnnotation(Ignore.class);
       boolean isTestClassIgnored = (ignore != null || !isTestClass(testClass));
 
@@ -122,21 +136,53 @@ public final class JUnitRunner extends BaseRunner {
         results = Collections.emptyList();
       } else {
         results = new ArrayList<>();
-        JUnitCore jUnitCore = new JUnitCore();
+        for (Class<?> suiteClass : getTestClasses(testClass)) {
+          List<TestResult> suiteResults = new ArrayList<>();
 
-        Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[]{testClass});
-        Request request = Request.runner(suite);
-        request = request.filterWith(filter);
+          JUnitCore jUnitCore = new JUnitCore();
 
-        jUnitCore.addListener(new TestListener(results, stdOutLogLevel, stdErrLogLevel));
-        jUnitCore.run(request);
+          Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[]{suiteClass});
+          Request request = Request.runner(suite);
+          request = request.filterWith(filter);
+
+          jUnitCore.addListener(new TestListener(suiteResults, stdOutLogLevel, stdErrLogLevel));
+          jUnitCore.run(request);
+
+          if (isDryRun) {
+            suiteResults = getDryRunResults(className, suiteClass);
+          }
+
+          for (TestResult result : suiteResults) {
+            results.add(result);
+          }
+        }
       }
 
-      results = interpretResults(className, results);
+      results = interpretResults(results);
       if (results != null) {
         writeResult(className, results);
       }
     }
+  }
+
+  // For dry runs, write fake results for every method seen in the given class.
+  private List<TestResult> getDryRunResults(String className, Class<?> testClass) {
+    List<TestResult> fakeResults = new ArrayList<>();
+    for (TestDescription seenDescription : seenDescriptions) {
+      if (seenDescription.getClassName().equals(testClass.getName())) {
+        TestResult fakeResult =
+            new TestResult(
+                className,
+                seenDescription.getMethodName(),
+                0L,
+                ResultType.DRY_RUN,
+                null,
+                "",
+                "");
+        fakeResults.add(fakeResult);
+      }
+    }
+    return fakeResults;
   }
 
   /**
@@ -152,25 +198,7 @@ public final class JUnitRunner extends BaseRunner {
    * NoTestsRemainException to be thrown, which is propagated back as an error.
    */
   /* @Nullable */
-  private List<TestResult> interpretResults(String className, List<TestResult> results) {
-    // For dry runs, write fake results for every method seen in the given class.
-    if (isDryRun) {
-      List<TestResult> fakeResults = new ArrayList<>();
-      for (TestDescription seenDescription : seenDescriptions) {
-        if (seenDescription.getClassName().equals(className)) {
-          TestResult fakeResult = new TestResult(
-            seenDescription.getClassName(),
-              seenDescription.getMethodName(),
-              0L,
-              ResultType.DRY_RUN,
-              null,
-              "",
-              "");
-          fakeResults.add(fakeResult);
-        }
-      }
-      results = fakeResults;
-    }
+  private List<TestResult> interpretResults(List<TestResult> results) {
 
     // When not using any command line filtering options, all results should be recorded.
     if (testSelectorList.isEmpty()) {
