@@ -55,6 +55,7 @@ class GroovycStepFactory implements CompileStepFactory {
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
+      ImmutableList<String> postprocessClassesCommands,
       /* out params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {

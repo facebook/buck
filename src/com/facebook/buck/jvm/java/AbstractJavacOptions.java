@@ -51,8 +51,32 @@ import java.util.Map;
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
+  /**
+   * The method in which the compiler output is spooled.
+   */
+  public enum SpoolMode {
+    /**
+     * Writes the compiler output directly to a .jar file while retaining the intermediate .class
+     * files in memory.
+     * If {@link com.facebook.buck.jvm.java.JavaLibraryDescription.Arg} postprocessClassesCommands
+     * are present, the builder will resort to writing .class files to disk by necessity.
+     */
+    DIRECT_TO_JAR,
+
+    /**
+     * Writes the intermediate .class files from the compiler output to disk which is later packed
+     * up into a .jar file.
+     */
+    INTERMEDIATE_TO_DISK,
+  }
+
   protected abstract Optional<Path> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
+
+  @Value.Default
+  protected SpoolMode getSpoolMode() {
+    return SpoolMode.INTERMEDIATE_TO_DISK;
+  }
 
   @Value.Default
   protected boolean isProductionBuild() {
@@ -222,6 +246,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
     builder.setJavacPath(options.getJavacPath());
     builder.setJavacJarPath(options.getJavacJarPath());
+    builder.setSpoolMode(options.getSpoolMode());
     builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());
     builder.putAllSourceToBootclasspath(options.getSourceToBootclasspath());
     builder.setBootclasspath(options.getBootclasspath());

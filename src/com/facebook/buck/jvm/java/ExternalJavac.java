@@ -174,7 +174,8 @@ public class ExternalJavac implements Javac {
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException {
+      Optional<Path> workingDirectory,
+      Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(pathToJavac.toString());
     command.addAll(options);

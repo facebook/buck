@@ -43,6 +43,7 @@ public interface CompileStepFactory extends RuleKeyAppendable {
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
+      ImmutableList<String> postprocessClassesCommands,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);

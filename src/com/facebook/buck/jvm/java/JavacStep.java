@@ -143,7 +143,8 @@ public class JavacStep implements Step {
           getOptions(context, declaredClasspathEntries),
           javaSourceFilePaths,
           pathToSrcsList,
-          workingDirectory);
+          workingDirectory,
+          Optional.<StandardJavaFileManagerFactory>absent());
 
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);

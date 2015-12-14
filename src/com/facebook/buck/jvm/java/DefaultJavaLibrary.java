@@ -481,6 +481,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           workingDirectory,
           Optional.of(pathToSrcsList),
           Optional.of(suggestBuildRule),
+          postprocessClassesCommands,
           steps,
           buildableContext);
 
