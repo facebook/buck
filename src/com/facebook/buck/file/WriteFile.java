@@ -81,4 +81,6 @@ public class WriteFile extends AbstractBuildRule {
   public Path getPathToOutput() {
     return output;
   }
+
+  public byte[] getFileContents() { return fileContents.clone(); }
 }

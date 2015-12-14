@@ -67,3 +67,9 @@ apple_bundle(
   extension = 'app',
   info_plist = 'Info.plist',
 )
+
+apple_package(
+  name = 'DemoAppPackage',
+  bundle = ':DemoApp',
+)
+
