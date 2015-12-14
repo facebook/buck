@@ -60,6 +60,8 @@ java_immutables_library(
     'Javac.java',
     'JavacErrorParser.java',
     'JdkProvidedInMemoryJavac.java',
+    'JavaInMemoryFileManager.java',
+    'JavaInMemoryFileObject.java',
     'Jsr199Javac.java',
     'MavenPublishable.java',
     'TracingProcessorWrapper.java',
@@ -90,6 +92,7 @@ java_immutables_library(
     '//src/com/facebook/buck/zip:unzip',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/zip:stream'
   ],
   provided_deps = [
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
