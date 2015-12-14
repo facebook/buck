@@ -18,7 +18,6 @@ package com.facebook.buck.go;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -66,9 +65,7 @@ public class GoTestIntegrationTest {
   @Test
   public void testGoTestTimeout() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
-    result.assertSpecialExitCode("test should fail", 42);
-    String stderr = result.getStderr();
-    assertTrue(stderr, stderr.contains("Timed out after 500 ms running test command"));
+    result.assertTestFailure("test timed out after 500ms");
   }
 
   @Test
