@@ -203,7 +203,9 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-isystem"),
-                Iterables.transform(systemIncludeRoots, Functions.toStringFunction())))
+                Iterables.transform(
+                    systemIncludeRoots,
+                    Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
