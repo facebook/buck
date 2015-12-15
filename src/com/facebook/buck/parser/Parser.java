@@ -449,11 +449,21 @@ public class Parser {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
 
     for (TargetNodeSpec spec : specs) {
-      targets.addAll(
-          resolveTargetSpec(
-              state,
-              cell,
-              spec));
+      // Iterate over the build files the given target node spec returns.
+      for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(cell)) {
+
+        // Format a proper error message for non-existent build files.
+        if (!cell.getFilesystem().isFile(buildFile)) {
+          throw new MissingBuildFileException(
+              spec,
+              cell.getFilesystem().getRootPath().relativize(buildFile));
+        }
+
+        // Build up a list of all target nodes from the build file.
+        ImmutableSet<TargetNode<?>> nodes = state.getAllTargetNodes(cell, buildFile);
+        // Call back into the target node spec to filter the relevant build targets.
+        targets.addAll(spec.filter(nodes));
+      }
     }
 
     return targets.build();
@@ -468,39 +478,8 @@ public class Parser {
     try (
         PerBuildState state =
             new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
-      return resolveTargetSpec(state, rootCell, spec);
+      return resolveTargetSpecs(state, rootCell, ImmutableList.of(spec));
     }
-  }
-
-
-  /**
-   * @return a set of {@link BuildTarget} objects that this {@link TargetNodeSpec} refers to.
-   */
-  private ImmutableSet<BuildTarget> resolveTargetSpec(
-      PerBuildState state,
-      Cell cell,
-      TargetNodeSpec spec)
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-
-    // Iterate over the build files the given target node spec returns.
-    for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(cell)) {
-
-      // Format a proper error message for non-existent build files.
-      if (!cell.getFilesystem().isFile(buildFile)) {
-        throw new MissingBuildFileException(
-            spec,
-            cell.getFilesystem().getRootPath().relativize(buildFile));
-      }
-
-      // Build up a list of all target nodes from the build file.
-      ImmutableSet<TargetNode<?>> nodes = state.getAllTargetNodes(cell, buildFile);
-      // Call back into the target node spec to filter the relevant build targets.
-      targets.addAll(spec.filter(nodes));
-    }
-
-    return targets.build();
   }
 
   static SimplePerfEvent.Scope getTargetNodeEventScope(
