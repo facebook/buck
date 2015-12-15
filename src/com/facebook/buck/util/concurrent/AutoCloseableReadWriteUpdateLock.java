@@ -29,22 +29,16 @@ public class AutoCloseableReadWriteUpdateLock implements ReadWriteUpdateLock {
 
   @Override
   public AutoCloseableLock readLock() {
-    AutoCloseableLock lock = new AutoCloseableLock(reentrantReadWriteUpdateLock.readLock());
-    lock.lock();
-    return lock;
+    return AutoCloseableLock.createFor(reentrantReadWriteUpdateLock.readLock());
   }
 
   @Override
   public AutoCloseableLock updateLock() {
-    AutoCloseableLock lock = new AutoCloseableLock(reentrantReadWriteUpdateLock.updateLock());
-    lock.lock();
-    return lock;
+    return AutoCloseableLock.createFor(reentrantReadWriteUpdateLock.updateLock());
   }
 
   @Override
   public AutoCloseableLock writeLock() {
-    AutoCloseableLock lock = new AutoCloseableLock(reentrantReadWriteUpdateLock.writeLock());
-    lock.lock();
-    return lock;
+    return AutoCloseableLock.createFor(reentrantReadWriteUpdateLock.writeLock());
   }
 }

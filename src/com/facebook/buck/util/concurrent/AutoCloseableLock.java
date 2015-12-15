@@ -23,8 +23,14 @@ import java.util.concurrent.locks.Lock;
 public class AutoCloseableLock implements AutoCloseable, Lock {
   private final Lock lock;
 
-  public AutoCloseableLock(Lock lock) {
+  private AutoCloseableLock(Lock lock) {
     this.lock = lock;
+  }
+
+  public static AutoCloseableLock createFor(Lock lock) {
+    AutoCloseableLock l = new AutoCloseableLock(lock);
+    l.lock();
+    return l;
   }
 
   @Override
