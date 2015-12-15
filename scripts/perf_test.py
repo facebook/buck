@@ -286,7 +286,8 @@ def build_all_targets(
         cache_mode,
         dir_cache_only=dir_cache_only)
     result = {}
-    for target in args.targets_to_build:
+    for target_str in args.targets_to_build:
+        target = target_str.split(',')[0]
         if run_clean:
             buck_clean(args, cwd)
         #TODO(rowillia): Do smart things with the results here.
