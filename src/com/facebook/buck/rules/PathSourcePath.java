@@ -22,6 +22,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
 
@@ -44,6 +45,24 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
 
   public PathSourcePath(ProjectFilesystem filesystem, Path relativePath) {
     this(filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(filesystem.getRootPath(), relativePath.get());
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (!(other instanceof PathSourcePath)) {
+      return false;
+    }
+    PathSourcePath that = (PathSourcePath) other;
+    return relativePath.get().equals(that.relativePath.get()) &&
+        filesystem.getRootPath().equals(that.filesystem.getRootPath());
   }
 
   @Override
