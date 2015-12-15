@@ -268,9 +268,41 @@ public class BserDeserializer {
     return map;
   }
 
+  private List<Map<String, Object>> deserializeTemplate(ByteBuffer buffer) throws IOException {
+    byte arrayType = buffer.get();
+    if (arrayType != BSER_ARRAY) {
+      throw new IOException(String.format("Expected ARRAY to follow TEMPLATE, got %d", arrayType));
+    }
+    List<Object> keys = deserializeArray(buffer);
+    byte numItemsType = buffer.get();
+    int numItems = deserializeIntLen(buffer, numItemsType);
+    ArrayList<Map<String, Object>> result = new ArrayList<>();
+    for (int itemIdx = 0; itemIdx < numItems; itemIdx++) {
+      Map<String, Object> obj;
+      if (keyOrdering == KeyOrdering.UNSORTED) {
+        obj = new LinkedHashMap<>();
+      } else {
+        obj = new TreeMap<>();
+      }
+      for (int keyIdx = 0; keyIdx < keys.size(); keyIdx++) {
+        byte keyValueType = buffer.get();
+        if (keyValueType != BSER_SKIP) {
+          String key = (String) keys.get(keyIdx);
+          obj.put(key, deserializeRecursiveWithType(buffer, keyValueType));
+        }
+      }
+      result.add(obj);
+    }
+    return result;
+  }
+
   @Nullable
   private Object deserializeRecursive(ByteBuffer buffer) throws IOException {
     byte type = buffer.get();
+    return deserializeRecursiveWithType(buffer, type);
+  }
+
+  private Object deserializeRecursiveWithType(ByteBuffer buffer, byte type) throws IOException {
     switch (type) {
       case BSER_INT8:
       case BSER_INT16:
@@ -292,7 +324,7 @@ public class BserDeserializer {
       case BSER_OBJECT:
         return deserializeObject(buffer);
       case BSER_TEMPLATE:
-        throw new UnsupportedOperationException("TODO");
+        return deserializeTemplate(buffer);
       default:
         throw new IOException(String.format("Unrecognized BSER value type %d", type));
     }

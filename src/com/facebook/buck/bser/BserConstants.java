@@ -32,4 +32,5 @@ public class BserConstants {
   public static final byte BSER_FALSE = 0x09;
   public static final byte BSER_NULL = 0x0a;
   public static final byte BSER_TEMPLATE = 0x0b;
+  public static final byte BSER_SKIP = 0x0c;
 }

@@ -39,6 +39,8 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.List;
 import java.util.Map;
 
+import org.hamcrest.Matchers;
+
 import org.junit.rules.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -166,6 +168,31 @@ public class BserDeserializerTest {
     assertThat(
         deserialized.entrySet(),
         contains(BAR_MAP_ENTRY, BAZ_MAP_ENTRY, FOO_MAP_ENTRY));
+  }
+
+  @Test
+  public void deserializeTemplate() throws IOException {
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    List<Map<String, Object>> deserialized = (List<Map<String, Object>>)
+        deserializer.deserializeBserValue(
+            getByteStream(
+                "000103280B0003020203046E616D6502030361676503030203046672656403140203" +
+                "0470657465031E0C0319"));
+
+    // We have to cast to byte because otherwise Java coerces the ages to Integer
+    // objects which are sadly not equal to the BSER-deserialized Byte objects with the
+    // same value.
+    assertThat(
+        deserialized,
+        Matchers.<Map<String, Object>>contains(
+            Matchers.<Map<String, Object>>allOf(
+                Matchers.<String, Object>hasEntry("name", "fred"),
+                Matchers.<String, Object>hasEntry("age", (byte) 20)),
+            Matchers.<Map<String, Object>>allOf(
+                Matchers.<String, Object>hasEntry("name", "pete"),
+                Matchers.<String, Object>hasEntry("age", (byte) 30)),
+            Matchers.<Map<String, Object>>allOf(
+                Matchers.<String, Object>hasEntry("age", (byte) 25))));
   }
 
   @Test
