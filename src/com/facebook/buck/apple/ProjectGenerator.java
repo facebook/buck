@@ -40,6 +40,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -142,7 +143,8 @@ public class ProjectGenerator {
   private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
   private static final String CODESIGN_TEMPLATE = "codesign.st";
   private static final String CODESIGN_PY_RESOURCE = "codesign.py";
-
+  private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   public static final String XCODE_BUILD_SCRIPT_FLAVOR_VALUE =
       "#$PLATFORM_NAME-$arch";
@@ -254,6 +256,7 @@ public class ProjectGenerator {
 
   private final Map<String, String> gidsToTargetNames;
   private final HalideBuckConfig halideBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -272,7 +275,8 @@ public class ProjectGenerator {
       Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
       BuckEventBus buckEventBus,
       boolean attemptToDetermineBestCxxPlatform,
-      HalideBuckConfig halideBuckConfig) {
+      HalideBuckConfig halideBuckConfig,
+      CxxBuckConfig cxxBuckConfig) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -323,6 +327,7 @@ public class ProjectGenerator {
     targetConfigNamesBuilder = ImmutableSet.builder();
     gidsToTargetNames = new HashMap<>();
     this.halideBuckConfig = halideBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
   }
 
   /**
@@ -1203,10 +1208,24 @@ public class ProjectGenerator {
                 .join(
                     Iterables.transform(
                         Iterables.concat(
-                            targetNode.getConstructorArg().compilerFlags.get(),
-                            targetNode.getConstructorArg().preprocessorFlags.get(),
+                            cxxBuckConfig.getFlags("cflags").or(DEFAULT_CFLAGS),
                             collectRecursiveExportedPreprocessorFlags(
-                                ImmutableList.of(targetNode))),
+                                ImmutableList.of(targetNode)),
+                            targetNode.getConstructorArg().compilerFlags.get(),
+                            targetNode.getConstructorArg().preprocessorFlags.get()),
+                        Escaper.BASH_ESCAPER)))
+        .put(
+            "OTHER_CPLUSPLUSFLAGS",
+            Joiner
+                .on(' ')
+                .join(
+                    Iterables.transform(
+                        Iterables.concat(
+                            cxxBuckConfig.getFlags("cxxflags").or(DEFAULT_CXXFLAGS),
+                            collectRecursiveExportedPreprocessorFlags(
+                                ImmutableList.of(targetNode)),
+                            targetNode.getConstructorArg().compilerFlags.get(),
+                            targetNode.getConstructorArg().preprocessorFlags.get()),
                         Escaper.BASH_ESCAPER)))
         .put(
             "OTHER_LDFLAGS",

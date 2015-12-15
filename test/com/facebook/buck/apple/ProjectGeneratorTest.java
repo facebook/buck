@@ -58,6 +58,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -149,6 +150,7 @@ public class ProjectGeneratorTest {
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
+  private CxxBuckConfig cxxBuckConfig;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -171,6 +173,12 @@ public class ProjectGeneratorTest {
         Paths.get("bar.png"));
     fakeProjectFilesystem.touch(Paths.get("Base.lproj", "Bar.storyboard"));
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(fakeProjectFilesystem);
+
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of(
+            "cflags", "-Wno-deprecated -Wno-conversion",
+            "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers"));
+    cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
   }
 
   @Test
@@ -1186,6 +1194,35 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleLibraryCxxCFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -Wno-deprecated -Wno-conversion", settings.get("OTHER_CFLAGS"));
+    assertEquals("$(inherited) -Wundeclared-selector -Wno-objc-designated-initializers",
+        settings.get("OTHER_CPLUSPLUSFLAGS"));
+
+  }
+
+  @Test
   public void testAppleLibraryCompilerAndPreprocessorFlags() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
@@ -1210,7 +1247,8 @@ public class ProjectGeneratorTest {
         "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -fhello -fworld", settings.get("OTHER_CFLAGS"));
+    assertEquals("$(inherited) -Wno-deprecated -Wno-conversion -fhello -fworld",
+        settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -1249,7 +1287,7 @@ public class ProjectGeneratorTest {
         "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) ", settings.get("OTHER_CFLAGS"));
+    assertEquals("$(inherited) -Wno-deprecated -Wno-conversion", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -1276,7 +1314,8 @@ public class ProjectGeneratorTest {
         "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -DHELLO", settings.get("OTHER_CFLAGS"));
+    assertEquals("$(inherited) -Wno-deprecated -Wno-conversion -DHELLO",
+        settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -1314,7 +1353,8 @@ public class ProjectGeneratorTest {
         "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -DHELLO", settings.get("OTHER_CFLAGS"));
+    assertEquals("$(inherited) -Wno-deprecated -Wno-conversion -DHELLO",
+        settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -3249,7 +3289,8 @@ public class ProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false,
-        halideBuckConfig)
+        halideBuckConfig,
+        cxxBuckConfig)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -3452,7 +3493,8 @@ public class ProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false,
-        halideBuckConfig);
+        halideBuckConfig,
+        cxxBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3537,7 +3579,8 @@ public class ProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false,
-        halideBuckConfig);
+        halideBuckConfig,
+        cxxBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3604,7 +3647,8 @@ public class ProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false,
-        halideBuckConfig);
+        halideBuckConfig,
+        cxxBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -4052,7 +4096,8 @@ public class ProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         false,
-        halideBuckConfig);
+        halideBuckConfig,
+        cxxBuckConfig);
   }
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
