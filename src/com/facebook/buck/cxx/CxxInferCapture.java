@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 
 /**
  * Generate the CFG for a source file
@@ -127,7 +128,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
 
   private ImmutableList<String> getPreprocessorSuffix() {
     return ImmutableList.<String>builder()
-        .addAll(rulePreprocessorFlags.get())
+        .addAll(new LinkedHashSet<>(rulePreprocessorFlags.get()))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
@@ -149,10 +150,12 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
-                Iterables.transform(frameworkRoots,
-                    Functions.compose(
-                        Functions.toStringFunction(),
-                        frameworkPathSearchPathFunction))))
+                FluentIterable.from(frameworkRoots)
+                    .transform(
+                        Functions.compose(
+                            Functions.toStringFunction(),
+                            frameworkPathSearchPathFunction))
+                    .toSet()))
         .build();
   }
 
