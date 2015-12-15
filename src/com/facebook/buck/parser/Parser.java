@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -80,7 +81,8 @@ public class Parser {
     this.marshaller = marshaller;
   }
 
-  public ImmutableList<Map<String, Object>> getRawTargetNodes(
+  @VisibleForTesting
+  ImmutableList<Map<String, Object>> getRawTargetNodes(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
