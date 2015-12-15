@@ -27,8 +27,8 @@ case "$1" in
   exit 0
   ;;
 'unbundle')
-  ASSET_DIR="$LAST_ARG"
-  APP_ENTRY_FILE="$SECOND_LAST_ARG"
+  ASSET_DIR="$SECOND_LAST_ARG"
+  APP_ENTRY_FILE="$THIRD_LAST_ARG"
   JS_MODULE_DIR=`dirname "$APP_ENTRY_FILE"`/js
 
   mkdir "$JS_MODULE_DIR"
@@ -36,6 +36,9 @@ case "$1" in
   cp $THIS_DIR/app/helpers.js "$JS_MODULE_DIR/helpers.js"
 
   copy_assets "$ASSET_DIR/assets/Apps/DemoApp-Unbundle/"
+
+  # write something as the source map because the rule caches this output.
+  echo "sourcemap" > "$LAST_ARG"
 
   exit 0
   ;;

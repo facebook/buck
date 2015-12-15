@@ -28,15 +28,16 @@ case "$1" in
   exit 0
   ;;
 'unbundle')
-  RESOURCE_DIR="$LAST_ARG"
-  APP_ENTRY_FILE="$SECOND_LAST_ARG"
+  OUTPUT_DIR="$SECOND_LAST_ARG"
+  APP_ENTRY_FILE="$THIRD_LAST_ARG"
   JS_MODULE_DIR=`dirname "$APP_ENTRY_FILE"`/js
 
   mkdir "$JS_MODULE_DIR"
   cp $THIS_DIR/app/sample.android.js > "$APP_ENTRY_FILE"
   cp $THIS_DIR/app/helpers.js "$JS_MODULE_DIR/helpers.js"
 
-  copy_resources $RESOURCE_DIR
+  copy_resources $OUTPUT_DIR
+  echo "source map" > $LAST_ARG
   exit 0
   ;;
 'list-dependencies')

@@ -185,12 +185,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       "--platform", platform.toString(),
       "--dev", isDevMode ? "true" : "false",
       "--bundle-output", absoluteBundleOutputPath,
-      "--assets-dest", absoluteResourceOutputPath
+      "--assets-dest", absoluteResourceOutputPath,
+      "--sourcemap-output", absoluteSourceMapOutputPath
     );
-
-    if (!isUnbundle) {
-      builder.add("--sourcemap-output", absoluteSourceMapOutputPath);
-    }
 
 
     if (packagerFlags.isPresent()) {
