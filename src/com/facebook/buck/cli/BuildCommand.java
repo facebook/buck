@@ -248,8 +248,7 @@ public class BuildCommand extends AbstractCommand {
     return run(params, ImmutableSet.<String>of());
   }
 
-  protected int run(CommandRunnerParams params, ImmutableSet<String> additionalTargets)
-      throws IOException, InterruptedException {
+  protected int checkArguments(CommandRunnerParams params) {
     if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
 
@@ -262,6 +261,15 @@ public class BuildCommand extends AbstractCommand {
             Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
       }
       return 1;
+    }
+    return 0;
+  }
+
+  protected int run(CommandRunnerParams params, ImmutableSet<String> additionalTargets)
+      throws IOException, InterruptedException {
+    int exitCode = checkArguments(params);
+    if (exitCode != 0) {
+      return exitCode;
     }
 
     if (!additionalTargets.isEmpty()){
@@ -289,7 +297,7 @@ public class BuildCommand extends AbstractCommand {
         return 1;
       }
 
-      int exitCode = executeBuild(params, actionGraphAndResolver, pool.getExecutor());
+      exitCode = executeBuild(params, actionGraphAndResolver, pool.getExecutor());
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
       return exitCode;
     }

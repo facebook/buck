@@ -179,11 +179,9 @@ public class InstallCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-
-    // Make sure that at least one build target is specified.
-    if (getArguments().size() < 1) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify at least one rule."));
-      return 1;
+    int exitCode = checkArguments(params);
+    if (exitCode != 0) {
+      return exitCode;
     }
 
     // Get the helper targets if present
@@ -198,7 +196,7 @@ public class InstallCommand extends BuildCommand {
     }
 
     // Build the targets
-    int exitCode = super.run(params, installHelperTargets);
+    exitCode = super.run(params, installHelperTargets);
     if (exitCode != 0) {
       return exitCode;
     }
