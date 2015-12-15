@@ -196,12 +196,17 @@ public class InstallCommand extends BuildCommand {
     }
 
     // Build the targets
-    exitCode = super.run(params, installHelperTargets);
-    if (exitCode != 0) {
-      return exitCode;
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Install",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      exitCode = super.run(params, pool.getExecutor(), installHelperTargets);
+      if (exitCode != 0) {
+        return exitCode;
+      }
     }
 
-    //Install the targets
+    // Install the targets
     try {
       exitCode = install(params);
     } catch (NoSuchBuildTargetException e) {

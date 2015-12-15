@@ -243,9 +243,18 @@ public class BuildCommand extends AbstractCommand {
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
   @Override
-  @SuppressWarnings("PMD.PrematureDeclaration")
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    return run(params, ImmutableSet.<String>of());
+    int exitCode = checkArguments(params);
+    if (exitCode != 0) {
+      return exitCode;
+    }
+
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Build",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      return run(params, pool.getExecutor(), ImmutableSet.<String>of());
+    }
   }
 
   protected int checkArguments(CommandRunnerParams params) {
@@ -265,13 +274,10 @@ public class BuildCommand extends AbstractCommand {
     return 0;
   }
 
-  protected int run(CommandRunnerParams params, ImmutableSet<String> additionalTargets)
-      throws IOException, InterruptedException {
-    int exitCode = checkArguments(params);
-    if (exitCode != 0) {
-      return exitCode;
-    }
-
+  protected int run(
+      CommandRunnerParams params,
+      ListeningExecutorService executorService,
+      ImmutableSet<String> additionalTargets) throws IOException, InterruptedException {
     if (!additionalTargets.isEmpty()){
       this.arguments.addAll(additionalTargets);
     }
@@ -286,21 +292,16 @@ public class BuildCommand extends AbstractCommand {
       params.getBuckEventBus().post(started);
     }
 
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Build",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      // Parse the build files to create a ActionGraph.
-      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
-          createActionGraphAndResolver(params, pool.getExecutor());
-      if (actionGraphAndResolver == null) {
-        return 1;
-      }
-
-      exitCode = executeBuild(params, actionGraphAndResolver, pool.getExecutor());
-      params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-      return exitCode;
+    // Parse the build files to create a ActionGraph.
+    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+        createActionGraphAndResolver(params, executorService);
+    if (actionGraphAndResolver == null) {
+      return 1;
     }
+
+    int exitCode = executeBuild(params, actionGraphAndResolver, executorService);
+    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
+    return exitCode;
   }
 
   @Nullable
