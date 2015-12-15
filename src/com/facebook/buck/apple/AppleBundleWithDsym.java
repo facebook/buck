@@ -15,6 +15,12 @@
  */
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.NativeTestable;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -24,7 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class AppleBundleWithDsym
     extends NoopBuildRule
-    implements BuildRuleWithAppleBundle, HasRuntimeDeps {
+    implements BuildRuleWithAppleBundle, HasRuntimeDeps, NativeTestable {
 
   private final AppleBundle appleBundle;
 
@@ -47,5 +53,17 @@ public class AppleBundleWithDsym
         .add(appleBundle)
         .addAll(getDeclaredDeps())
         .build();
+  }
+
+  @Override
+  public boolean isTestedBy(BuildTarget testRule) {
+    return appleBundle.isTestedBy(testRule);
+  }
+
+  @Override
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    return appleBundle.getCxxPreprocessorInput(cxxPlatform, headerVisibility);
   }
 }
