@@ -357,53 +357,10 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     }
   }
 
-  /**
-   * This should be called when a worker wants to parse a {@link BuildTarget}.
-   * @return a processing scope that contains the build target, if available.
-   */
-  private BuildTargetProcessingScope startProcessingBuildTarget()
-      throws InterruptedException, TimeoutException {
-    BuildTarget target = pendingBuildTargets.poll(5, TimeUnit.SECONDS); // Arbitrarily choosen.
-    if (target == null) {
-      throw new TimeoutException();
-    }
-    return this.new BuildTargetProcessingScope(target);
-  }
-
   private void addBuildTargetsToProcess(Set<BuildTarget> nodes) {
     Preconditions.checkArgument(nodes.size() > 0);
     pendingBuildTargetCount.getAndAdd(nodes.size());
     Preconditions.checkState(pendingBuildTargets.addAll(nodes));
-  }
-
-  @NotThreadSafe
-  private class BuildTargetProcessingScope implements AutoCloseable {
-
-    private final BuildTarget buildTarget;
-
-    public BuildTargetProcessingScope(BuildTarget buildTarget) {
-      this.buildTarget = buildTarget;
-    }
-
-    public BuildTarget getBuildTarget() {
-      return buildTarget;
-    }
-
-    public void addDepsToProcess(Set<BuildTarget> deps) {
-      if (deps.size() == 0) {
-        // Nothing to do here.
-        return;
-      }
-      addBuildTargetsToProcess(deps);
-    }
-
-    @Override
-    public void close() {
-      parsedBuildTargets.add(buildTarget);
-      if (pendingBuildTargetCount.getAndDecrement() == 1) {
-        completionNotifier.countDown();
-      }
-    }
   }
 
   private class BuildTargetParserWorker implements Runnable {
@@ -448,6 +405,45 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
           return;
         }
       }
+    }
+
+    @NotThreadSafe
+    private class BuildTargetProcessingScope implements AutoCloseable {
+
+      private final BuildTarget buildTarget;
+
+      public BuildTargetProcessingScope(BuildTarget buildTarget) {
+        this.buildTarget = buildTarget;
+      }
+
+      public BuildTarget getBuildTarget() {
+        return buildTarget;
+      }
+
+      public void addDepsToProcess(Set<BuildTarget> deps) {
+        if (deps.size() == 0) {
+          // Nothing to do here.
+          return;
+        }
+        addBuildTargetsToProcess(deps);
+      }
+
+      @Override
+      public void close() {
+        parsedBuildTargets.add(buildTarget);
+        if (pendingBuildTargetCount.getAndDecrement() == 1) {
+          completionNotifier.countDown();
+        }
+      }
+    }
+
+    private BuildTargetProcessingScope startProcessingBuildTarget()
+        throws InterruptedException, TimeoutException {
+      BuildTarget target = pendingBuildTargets.poll(5, TimeUnit.SECONDS); // Arbitrarily choosen.
+      if (target == null) {
+        throw new TimeoutException();
+      }
+      return new BuildTargetProcessingScope(target);
     }
 
     private boolean shouldWaitForWork() {
