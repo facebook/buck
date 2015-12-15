@@ -414,8 +414,6 @@ public class Parser {
       Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
-    TargetGraph graph = null;
-
     try (
         PerBuildState state =
             new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
@@ -425,20 +423,13 @@ public class Parser {
           rootCell,
           targetNodeSpecs);
 
-      ParseEvent.Started started = ParseEvent.started(buildTargets);
-      eventBus.post(started);
-
-      try {
-        graph = buildTargetGraph(
-            eventBus,
-            rootCell,
-            enableProfiling,
-            executor,
-            buildTargets);
-        return new Pair<>(buildTargets, graph);
-      } finally {
-        eventBus.post(ParseEvent.finished(started, Optional.fromNullable(graph)));
-      }
+      TargetGraph graph = buildTargetGraph(
+          eventBus,
+          rootCell,
+          enableProfiling,
+          executor,
+          buildTargets);
+      return new Pair<>(buildTargets, graph);
     }
   }
 
