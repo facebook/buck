@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -38,6 +39,14 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
+
+  private final Supplier<String> typeSupplier = Suppliers.memoize(
+      new Supplier<String>() {
+        @Override
+        public String get() {
+          return getTypeForClass();
+        }
+      });
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
@@ -78,7 +87,14 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final String getType() {
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getClass().getSimpleName());
+    return typeSupplier.get();
+  }
+
+  private String getTypeForClass() {
+    return CaseFormat
+        .UPPER_CAMEL
+        .to(CaseFormat.LOWER_UNDERSCORE, getClass().getSimpleName())
+        .intern();
   }
 
   public final SourcePathResolver getResolver() {

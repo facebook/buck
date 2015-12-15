@@ -24,6 +24,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,6 +59,14 @@ public class Config {
   private static final Path GLOBAL_BUCK_CONFIG_DIRECTORY_PATH = Paths.get("/etc/buckconfig.d");
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries;
+
+  private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
+    new Supplier<Integer>() {
+      @Override
+      public Integer get() {
+        return Objects.hashCode(sectionToEntries);
+      }
+    });
 
   @SafeVarargs
   public Config(ImmutableMap<String, ImmutableMap<String, String>>... maps) {
@@ -288,7 +298,7 @@ public class Config {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(sectionToEntries);
+    return hashCodeSupplier.get();
   }
 
   private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {
