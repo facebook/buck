@@ -866,13 +866,13 @@ public class CachingBuildEngine implements BuildEngine {
   @Override
   public int getNumRulesToBuild(Iterable<BuildRule> rules) {
     Set<BuildRule> seen = Sets.newConcurrentHashSet();
-    ListenableFuture<Void> result = Futures.immediateFuture(null);
-    for (BuildRule rule : rules) {
+    ImmutableList.Builder<ListenableFuture<?>> results = ImmutableList.builder();
+    for (final BuildRule rule : rules) {
       if (seen.add(rule)) {
-        result = MoreFutures.chainExceptions(walkRule(rule, seen), result);
+        results.add(walkRule(rule, seen));
       }
     }
-    Futures.getUnchecked(result);
+    Futures.getUnchecked(Futures.allAsList(results.build()));
     return seen.size();
   }
 
