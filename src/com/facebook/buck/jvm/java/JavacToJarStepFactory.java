@@ -31,11 +31,12 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class JavacStepFactory implements CompileStepFactory {
+public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
+
   private final JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
 
-  public JavacStepFactory(JavacOptions javacOptions, JavacOptionsAmender amender) {
+  public JavacToJarStepFactory(JavacOptions javacOptions, JavacOptionsAmender amender) {
     this.javacOptions = javacOptions;
     this.amender = amender;
   }
@@ -52,11 +53,8 @@ public class JavacStepFactory implements CompileStepFactory {
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
-      ImmutableList<String> postprocessClassesCommands,
-      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
-
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
     // Javac requires that the root directory for generated sources already exist.

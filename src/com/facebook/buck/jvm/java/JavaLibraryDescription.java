@@ -169,7 +169,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
+                new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.tests.get()));

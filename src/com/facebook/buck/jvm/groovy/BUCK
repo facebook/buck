@@ -3,7 +3,7 @@ java_library(
   srcs = [
     'GroovyBuckConfig.java',
     'GroovyLibraryDescription.java',
-    'GroovycStepFactory.java',
+    'GroovycToJarStepFactory.java',
     'GroovycStep.java',
   ],
   tests = [

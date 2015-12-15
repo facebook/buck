@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
-import com.facebook.buck.jvm.java.CompileStepFactory;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -32,11 +32,12 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-class GroovycStepFactory implements CompileStepFactory {
+class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
+
   private final Tool groovyc;
   private final Optional<ImmutableList<String>> extraArguments;
 
-  public GroovycStepFactory(
+  public GroovycToJarStepFactory(
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments) {
     this.groovyc = groovyc;
@@ -55,7 +56,6 @@ class GroovycStepFactory implements CompileStepFactory {
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
-      ImmutableList<String> postprocessClassesCommands,
       /* out params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {

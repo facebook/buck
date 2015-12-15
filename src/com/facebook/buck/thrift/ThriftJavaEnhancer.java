@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
-import com.facebook.buck.jvm.java.JavacStepFactory;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -167,7 +167,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 /* abiJar */ new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                new JavacStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
+                new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
                 /* resourcesRoot */ Optional.<Path>absent(),
                 /* mavenCoords */ Optional.<String>absent(),
                 /* tests */ ImmutableSortedSet.<BuildTarget>of()));

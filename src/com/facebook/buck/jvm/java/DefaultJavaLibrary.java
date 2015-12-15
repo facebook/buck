@@ -41,13 +41,11 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -58,7 +56,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.reflect.ClassPath;
@@ -69,7 +66,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -133,7 +129,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Optional<Path> generatedSourceFolder;
 
   @AddToRuleKey
-  private final CompileStepFactory compileStepFactory;
+  private final CompileToJarStepFactory compileStepFactory;
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
@@ -179,7 +175,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
       ImmutableSet<Path> additionalClasspathEntries,
-      CompileStepFactory compileStepFactory,
+      CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -221,7 +217,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePath abiJar,
       final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
-      CompileStepFactory compileStepFactory,
+      CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -470,7 +466,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
-      compileStepFactory.createCompileStep(
+      compileStepFactory.createCompileToJarStep(
           context,
           getJavaSrcs(),
           target,
@@ -482,20 +478,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           Optional.of(pathToSrcsList),
           Optional.of(suggestBuildRule),
           postprocessClassesCommands,
+          ImmutableSortedSet.of(outputDirectory),
+          /* mainClass */ Optional.<String>absent(),
+          /* manifestFile */ Optional.<Path>absent(),
+          output,
+          /* output params */
           steps,
           buildableContext);
-
-      steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
-              getProjectFilesystem().getRootPath(),
-              postprocessClassesCommands,
-              outputDirectory)));
-      steps.add(
-          new JarDirectoryStep(
-              getProjectFilesystem(),
-              output,
-              ImmutableSortedSet.of(outputDirectory),
-              /* mainClass */null,
-              /* manifestFile */null));
     }
 
 
@@ -555,35 +544,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().getClassNamesToHashes();
-  }
-
-  /**
-   * Adds a BashStep for each postprocessClasses command that runs the command followed by the
-   * outputDirectory of javac outputs.
-   *
-   * The expectation is that the command will inspect and update the directory by
-   * modifying, adding, and deleting the .class files in the directory.
-   *
-   * The outputDirectory should be a valid java root.  I.e., if outputDirectory
-   * is buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule
-   * should be at buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
-   *
-   * @param postprocessClassesCommands the list of commands to post-process .class files.
-   * @param outputDirectory the directory that will contain all the javac output.
-   */
-  @VisibleForTesting
-  static ImmutableList<Step> addPostprocessClassesCommands(
-      Path workingDirectory,
-      List<String> postprocessClassesCommands,
-      Path outputDirectory) {
-    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<Step>();
-    for (final String postprocessClassesCommand : postprocessClassesCommands) {
-      BashStep bashStep = new BashStep(
-          workingDirectory,
-          postprocessClassesCommand + " " + outputDirectory);
-      commands.add(bashStep);
-    }
-    return commands.build();
   }
 
   @Override

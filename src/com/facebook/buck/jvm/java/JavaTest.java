@@ -143,7 +143,7 @@ public class JavaTest
       SourcePath abiJar,
       ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
-      CompileStepFactory compileStepFactory,
+      CompileToJarStepFactory compileStepFactory,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       ImmutableSet<BuildRule> sourceUnderTest,

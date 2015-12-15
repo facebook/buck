@@ -30,7 +30,11 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public interface CompileStepFactory extends RuleKeyAppendable {
+/**
+ * Creates the necessary steps to compile the source files, apply post process classes commands,
+ * and pack the output .class files into a Jar.
+ */
+public interface CompileToJarStepFactory extends RuleKeyAppendable {
 
   void createCompileStep(
       BuildContext context,
@@ -43,7 +47,26 @@ public interface CompileStepFactory extends RuleKeyAppendable {
       Optional<Path> workingDirectory,
       Optional<Path> pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
+      /* output params */
+      ImmutableList.Builder<Step> steps,
+      BuildableContext buildableContext);
+
+  void createCompileToJarStep(
+      BuildContext context,
+      ImmutableSortedSet<Path> sourceFilePaths,
+      BuildTarget invokingRule,
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
+      Path outputDirectory,
+      Optional<Path> workingDirectory,
+      Optional<Path> pathToSrcsList,
+      Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList<String> postprocessClassesCommands,
+      ImmutableSortedSet<Path> entriesToJar,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      Path outputJar,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);

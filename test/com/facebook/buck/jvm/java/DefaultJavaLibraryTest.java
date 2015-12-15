@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
-import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -61,7 +60,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -1053,7 +1051,7 @@ public class DefaultJavaLibraryTest {
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* abiJar */ new FakeSourcePath("abi.jar"),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        new JavacStepFactory(DEFAULT_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+        new JavacToJarStepFactory(DEFAULT_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
@@ -1166,34 +1164,6 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         jsrJavac.getCompilerClassPath(),
         ImmutableSet.of(new BuildTargetSourcePath(javac.getBuildTarget())));
-  }
-
-  @Test
-  public void testAddPostprocessClassesCommands() {
-    ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
-    Path outputDirectory = SCRATCH_PATH.resolve("android/java/lib__java__classes");
-    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    commands.addAll(
-        DefaultJavaLibrary.addPostprocessClassesCommands(
-            new FakeProjectFilesystem().getRootPath(),
-            postprocessClassesCommands,
-            outputDirectory));
-
-    ImmutableList<Step> steps = commands.build();
-    assertEquals(2, steps.size());
-
-    assertTrue(steps.get(0) instanceof ShellStep);
-    ShellStep step0 = (ShellStep) steps.get(0);
-    assertEquals(
-        ImmutableList.of("bash", "-c", "tool arg1 " + outputDirectory),
-        step0.getShellCommand(executionContext));
-
-    assertTrue(steps.get(1) instanceof ShellStep);
-    ShellStep step1 = (ShellStep) steps.get(1);
-    assertEquals(
-        ImmutableList.of("bash", "-c", "tool2 " + outputDirectory),
-        step1.getShellCommand(executionContext));
   }
 
   // Utilities

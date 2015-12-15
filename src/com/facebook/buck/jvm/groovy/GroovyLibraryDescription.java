@@ -97,7 +97,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                new GroovycStepFactory(
+                new GroovycToJarStepFactory(
                     groovyBuckConfig.getGroovyCompiler().get(),
                     args.extraArguments),
                 Optional.<Path>absent(),

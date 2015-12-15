@@ -137,7 +137,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                 new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.testType.or(TestType.JUNIT),
-                new JavacStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
+                new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.vmArgs.get(),
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 validateAndGetSourcesUnderTest(
