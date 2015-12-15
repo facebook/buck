@@ -844,6 +844,9 @@ public class ProjectGenerator {
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         targetNode,
         Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES));
+    if (isFrameworkBundle(targetNode.getConstructorArg())) {
+      copiedRules = rulesWithoutFrameworkBundles(copiedRules);
+    }
     ImmutableList<PBXBuildPhase> copyFilesBuildPhases = getCopyFilesBuildPhases(copiedRules);
 
     PBXNativeTarget target = generateBinaryTarget(
@@ -862,6 +865,24 @@ public class ProjectGenerator {
 
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
+  }
+
+  /**
+   * Returns a new list of rules which does not contain framework bundles.
+   */
+  private ImmutableList<TargetNode<?>> rulesWithoutFrameworkBundles(
+      Iterable<TargetNode<?>> copiedRules) {
+    return FluentIterable.from(copiedRules).filter(new Predicate<TargetNode<?>>() {
+      @Override
+      public boolean apply(TargetNode<?> input) {
+        Optional<TargetNode<AppleBundleDescription.Arg>> appleBundleNode =
+            input.castArg(AppleBundleDescription.Arg.class);
+        if (appleBundleNode.isPresent()) {
+          return !isFrameworkBundle(appleBundleNode.get().getConstructorArg());
+        }
+        return true;
+      }
+    }).toList();
   }
 
   private PBXNativeTarget generateAppleBinaryTarget(

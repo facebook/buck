@@ -3941,6 +3941,84 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
   }
 
+  @Test
+  public void testFrameworkBundleDepIsNotCopiedToFrameworkBundle() throws IOException {
+    BuildTarget framework2Target = BuildTarget.builder(rootPath, "//foo", "framework_2")
+        .addFlavors(DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    BuildTarget framework2BinaryTarget = BuildTarget.builder(rootPath, "//foo", "framework_2_bin")
+        .addFlavors(DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> framework2BinaryNode = AppleLibraryBuilder
+        .createBuilder(framework2BinaryTarget)
+        .build();
+    TargetNode<?> framework2Node = AppleBundleBuilder
+        .createBuilder(framework2Target)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(framework2BinaryTarget)
+        .build();
+
+    BuildTarget framework1Target = BuildTarget.builder(rootPath, "//foo", "framework_1")
+        .addFlavors(DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    BuildTarget framework1BinaryTarget = BuildTarget.builder(rootPath, "//foo", "framework_1_bin")
+        .addFlavors(DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> framework1BinaryNode = AppleLibraryBuilder
+        .createBuilder(framework1BinaryTarget)
+        .build();
+    TargetNode<?> framework1Node = AppleBundleBuilder
+        .createBuilder(framework1Target)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(framework1BinaryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(framework2Target)))
+        .build();
+
+    BuildTarget sharedLibraryTarget = BuildTarget
+        .builder(rootPath, "//dep", "shared")
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
+        .build();
+
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle")
+        .build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(sharedLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(framework1Target)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(
+            framework1Node,
+            framework2Node,
+            framework1BinaryNode,
+            framework2BinaryNode,
+            sharedLibraryNode,
+            bundleNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:framework_1#default,shared");
+    assertEquals(target.getProductType(), ProductType.FRAMEWORK);
+    for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
+      if (buildPhase instanceof PBXCopyFilesBuildPhase) {
+        PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
+        assertThat(copyFilesBuildPhase.getDstSubfolderSpec().getDestination(),
+            Matchers.not(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
+      }
+    }
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(
