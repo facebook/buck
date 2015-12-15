@@ -45,7 +45,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Ignore("Disabled due to CI flakiness t8307334")
 public class AppleTestIntegrationTest {
 
   @Rule
@@ -55,6 +54,7 @@ public class AppleTestIntegrationTest {
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Ignore("Disabled due to test failing with default platform check")
   public void testAppleTestHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
@@ -412,7 +412,7 @@ public class AppleTestIntegrationTest {
   public void successForAppTestWithXib() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "app_bundle_with_xib", tmp);
+        this, "app_bundle_with_xib_and_storyboard", tmp);
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
