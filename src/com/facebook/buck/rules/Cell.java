@@ -151,7 +151,7 @@ public class Cell {
             parentConfig.getPlatform(),
             parentConfig.getEnvironment());
 
-        Watchman.build(cellPath, parentConfig.getEnvironment(), console, clock);
+        Watchman.build(cellPath, parentConfig.getEnvironment(), console, clock).close();
 
         return new Cell(
             cellFilesystem,

@@ -18,19 +18,28 @@ package com.facebook.buck.io;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.Map;
 
 public class WatchmanTest {
 
@@ -38,43 +47,94 @@ public class WatchmanTest {
   private String exe = "/opt/bin/watchman";
   private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
   private ImmutableMap<String, String> env = ImmutableMap.of();
+  private static final Function<Path, Optional<WatchmanClient>> NULL_WATCHMAN_CONNECTOR =
+      new Function<Path, Optional<WatchmanClient>>() {
+        @Override
+        public Optional<WatchmanClient> apply(Path path) {
+          return Optional.absent();
+        }
+      };
+
+  private static Function<Path, Optional<WatchmanClient>> fakeWatchmanConnector(
+      final Path socketName,
+      final long queryElapsedTimeNanos,
+      final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>
+        queryResults) {
+    return new Function<Path, Optional<WatchmanClient>>() {
+      @Override
+      public Optional<WatchmanClient> apply(Path path) {
+        if (!path.equals(socketName)) {
+          System.err.format("bad path (%s != %s", path, socketName);
+          return Optional.absent();
+        }
+        return Optional.<WatchmanClient>of(
+            new FakeWatchmanClient(queryElapsedTimeNanos, queryResults));
+      }
+    };
+  }
+
+  private static ByteBuffer bserSerialized(Object obj) throws IOException {
+    ByteBuffer buf = ByteBuffer.allocate(256).order(ByteOrder.nativeOrder());
+    ByteBuffer result = new BserSerializer().serializeToBuffer(obj, buf);
+    // Prepare the buffer for reading.
+    result.flip();
+    return result;
+  }
 
   @Test
-  public void shouldReturnEmptyWatchmanIfVersionCheckFails() throws InterruptedException {
+  public void shouldReturnEmptyWatchmanIfVersionCheckFails() throws
+      InterruptedException, IOException {
     SettableFakeClock clock = new SettableFakeClock(0, 0);
     FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
         ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
             .putAll(
-                ProcessExecutorParams.ofCommand(exe, "version"),
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
                 FakeListeningProcessState.ofExit(1))
             .build(),
         clock);
 
     Watchman watchman = Watchman.build(
-        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+        executor,
+        NULL_WATCHMAN_CONNECTOR,
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock);
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
 
   @Test
-  public void shouldNotUseWatchProjectIfNotAvailable() throws InterruptedException {
+  public void shouldNotUseWatchProjectIfNotAvailable()
+      throws InterruptedException, IOException {
     SettableFakeClock clock = new SettableFakeClock(0, 0);
     FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
         ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
             .putAll(
-                ProcessExecutorParams.ofCommand(exe, "version"),
-                FakeListeningProcessState.ofStdout("{\"version\":\"3.0.0\"}"),
-                FakeListeningProcessState.ofExit(0))
-            .putAll(
-                ProcessExecutorParams.ofCommand(exe, "watch", root),
-                FakeListeningProcessState.ofStdout(
-                    "{\"version\":\"3.0.0\",\"watch\":\"" + root + "\"}"),
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
+                FakeListeningProcessState.ofStdoutBytes(
+                    bserSerialized(
+                        ImmutableMap.of(
+                            "version", "3.0.0",
+                            "sockname", "/path/to/sock"))),
                 FakeListeningProcessState.ofExit(0))
             .build(),
         clock);
 
     Watchman watchman = Watchman.build(
-        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+        executor,
+        fakeWatchmanConnector(
+            Paths.get("/path/to/sock"),
+            0,
+            ImmutableMap.of(
+                ImmutableList.of("watch", root),
+                ImmutableMap.of("version", "3.0.0", "watch", root))),
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock);
 
     assertEquals("3.0.0", watchman.getVersion().get());
     assertEquals(root, watchman.getWatchRoot().get());
@@ -82,23 +142,34 @@ public class WatchmanTest {
   }
 
   @Test
-  public void successfulExecutionPopulatesAWatchmanInstance() throws InterruptedException {
+  public void successfulExecutionPopulatesAWatchmanInstance()
+      throws InterruptedException, IOException {
     SettableFakeClock clock = new SettableFakeClock(0, 0);
     FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
         ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
             .putAll(
-                ProcessExecutorParams.ofCommand(exe, "version"),
-                FakeListeningProcessState.ofStdout("{\"version\":\"3.4.0\"}"),
-                FakeListeningProcessState.ofExit(0))
-            .putAll(
-                ProcessExecutorParams.ofCommand(exe, "watch-project", root),
-                FakeListeningProcessState.ofStdout(
-                    "{\"version\":\"3.4.0\",\"watch\":\"" + root + "\"}"),
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
+                FakeListeningProcessState.ofStdoutBytes(
+                    bserSerialized(
+                        ImmutableMap.of(
+                            "version", "3.4.0",
+                            "sockname", "/path/to/sock"))),
                 FakeListeningProcessState.ofExit(0))
             .build(),
         clock);
     Watchman watchman = Watchman.build(
-        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+        executor,
+        fakeWatchmanConnector(
+            Paths.get("/path/to/sock"),
+            0,
+            ImmutableMap.of(
+                ImmutableList.of("watch-project", root),
+                ImmutableMap.of("version", "3.4.0", "watch", root))),
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock);
 
     assertEquals("3.4.0", watchman.getVersion().get());
     assertEquals(root, watchman.getWatchRoot().get());
@@ -106,42 +177,67 @@ public class WatchmanTest {
   }
 
   @Test
-  public void watchmanVersionTakingThirtySecondsReturnsEmpty() throws InterruptedException {
+  public void watchmanVersionTakingThirtySecondsReturnsEmpty()
+      throws InterruptedException, IOException {
     SettableFakeClock clock = new SettableFakeClock(0, 0);
     FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
         ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
             .putAll(
-                ProcessExecutorParams.ofCommand(exe, "version"),
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
                 FakeListeningProcessState.ofWaitNanos(TimeUnit.SECONDS.toNanos(30)),
-                FakeListeningProcessState.ofStdout("{\"version\":\"3.4.0\"}"),
+                FakeListeningProcessState.ofStdoutBytes(
+                    bserSerialized(
+                        ImmutableMap.of(
+                            "version", "3.4.0",
+                            "sockname", "/path/to/sock"))),
                 FakeListeningProcessState.ofExit(0))
             .build(),
         clock);
     Watchman watchman = Watchman.build(
-        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+        executor,
+        fakeWatchmanConnector(
+            Paths.get("/path/to/sock"),
+            0,
+            ImmutableMap.of(
+                ImmutableList.of("watch-project", root),
+                ImmutableMap.of("version", "3.4.0", "watch", root))),
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock);
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
 
   @Test
-  public void watchmanWatchProjectTakingThirtySecondsReturnsEmpty() throws InterruptedException {
+  public void watchmanWatchProjectTakingThirtySecondsReturnsEmpty()
+      throws InterruptedException, IOException {
     SettableFakeClock clock = new SettableFakeClock(0, 0);
     FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
         ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
             .putAll(
-                ProcessExecutorParams.ofCommand(exe, "version"),
-                FakeListeningProcessState.ofStdout("{\"version\":\"3.4.0\"}"),
-                FakeListeningProcessState.ofExit(0))
-            .putAll(
-                ProcessExecutorParams.ofCommand(exe, "watch-project", root),
-                FakeListeningProcessState.ofWaitNanos(TimeUnit.SECONDS.toNanos(30)),
-                FakeListeningProcessState.ofStdout(
-                    "{\"version\":\"3.4.0\",\"watch\":\"" + root + "\"}"),
-                FakeListeningProcessState.ofExit(0))
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
+                FakeListeningProcessState.ofStdoutBytes(
+                    bserSerialized(
+                        ImmutableMap.of(
+                            "version", "3.4.0",
+                            "sockname", "/path/to/sock"))))
             .build(),
         clock);
     Watchman watchman = Watchman.build(
-        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+        executor,
+        fakeWatchmanConnector(
+            Paths.get("/path/to/sock"),
+            TimeUnit.SECONDS.toNanos(30),
+            ImmutableMap.of(
+                ImmutableList.of("watch-project", root),
+                ImmutableMap.of("version", "3.4.0", "watch", root))),
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock);
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
