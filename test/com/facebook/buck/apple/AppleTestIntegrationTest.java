@@ -35,7 +35,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -54,7 +53,6 @@ public class AppleTestIntegrationTest {
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Ignore("Disabled due to test failing with default platform check")
   public void testAppleTestHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
@@ -62,8 +60,8 @@ public class AppleTestIntegrationTest {
         this, "apple_test_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance("//Libraries/TestLibrary:Test#default,header-symlink-tree");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:Test#iphonesimulator-x86_64,private-headers");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
