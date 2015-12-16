@@ -49,7 +49,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
 
   public static Finished finished(
       BuildRule rule,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      BuildRuleKeys ruleKeys,
       BuildRuleStatus status,
       CacheResult cacheResult,
       Optional<BuildRuleSuccessType> successType,
@@ -57,7 +57,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
       Optional<Long> outputSize) {
     return new Finished(
         rule,
-        ruleKeyBuilderFactory,
+        ruleKeys,
         status,
         cacheResult,
         successType,
@@ -89,13 +89,13 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     private final BuildRuleStatus status;
     private final CacheResult cacheResult;
     private final Optional<BuildRuleSuccessType> successType;
-    private final String ruleKey;
+    private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
 
     protected Finished(
         BuildRule rule,
-        RuleKeyBuilderFactory ruleKeyBuilderFactory,
+        BuildRuleKeys ruleKeys,
         BuildRuleStatus status,
         CacheResult cacheResult,
         Optional<BuildRuleSuccessType> successType,
@@ -105,7 +105,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
       this.status = status;
       this.cacheResult = cacheResult;
       this.successType = successType;
-      this.ruleKey = ruleKeyBuilderFactory.newInstance(rule).build().toString();
+      this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
       this.outputSize = outputSize;
     }
@@ -124,8 +124,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     }
 
     @JsonIgnore
-    public String getRuleKey() {
-      return ruleKey;
+    public BuildRuleKeys getRuleKeys() {
+      return ruleKeys;
     }
 
     @JsonIgnore
@@ -141,12 +141,15 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     @Override
     public String toString() {
       String success = successType.isPresent() ? successType.get().toString() : "MISSING";
-      return String.format("BuildRuleFinished(%s): %s %s %s %s",
+      return String.format("BuildRuleFinished(%s): %s %s %s %s%s",
           getBuildRule(),
           getStatus(),
           getCacheResult(),
           success,
-          getRuleKey());
+          getRuleKeys().getRuleKey().toString(),
+          getRuleKeys().getInputRuleKey().isPresent() ?
+              " I" + getRuleKeys().getInputRuleKey().get().toString() :
+              "");
     }
 
     @Override

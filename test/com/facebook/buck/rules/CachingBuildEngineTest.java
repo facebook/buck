@@ -255,7 +255,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -365,7 +365,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 buildRule,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(ruleKeyBuilderFactory.build(buildRule)),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -628,7 +628,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -738,7 +738,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 dep,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(depKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -750,7 +750,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -892,7 +892,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -909,7 +909,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 runtimeDep,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(runtimeDepKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -926,7 +926,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 transitiveRuntimeDep,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(transitiveRuntimeDepKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),

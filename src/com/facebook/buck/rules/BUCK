@@ -200,6 +200,7 @@ java_library(
 java_immutables_library(
   name = 'rules',
   srcs = [
+    'AbstractBuildRuleKeys.java',
     'AssociatedTargetNodePredicate.java',
     'BuildOutputInitializer.java',
     'BuildRuleEvent.java',

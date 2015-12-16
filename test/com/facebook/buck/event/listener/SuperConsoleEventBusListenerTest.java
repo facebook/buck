@@ -44,6 +44,7 @@ import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
@@ -127,10 +128,6 @@ public class SuperConsoleEventBusListenerTest {
         pathResolver,
         ImmutableSortedSet.<BuildRule>of());
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
-        ImmutableMap.of(
-            fakeTarget, new RuleKey("aaaa"),
-            cachedTarget, new RuleKey("aaaa")));
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             console,
@@ -260,7 +257,7 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
             fakeRule,
-            ruleKeyBuilderFactory,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -284,7 +281,7 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
             cachedRule,
-            ruleKeyBuilderFactory,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -400,10 +397,6 @@ public class SuperConsoleEventBusListenerTest {
         pathResolver,
         ImmutableSortedSet.<BuildRule>of());
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
-        ImmutableMap.of(
-            fakeTarget, new RuleKey("aaaa"),
-            cachedTarget, new RuleKey("aaaa")));
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             console,
@@ -482,7 +475,7 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
             fakeRule,
-            ruleKeyBuilderFactory,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -506,7 +499,7 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
             cachedRule,
-            ruleKeyBuilderFactory,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -542,9 +535,6 @@ public class SuperConsoleEventBusListenerTest {
         pathResolver,
         ImmutableSortedSet.<BuildRule>of());
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
-        ImmutableMap.of(
-            testTarget, new RuleKey("aaaa")));
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             console,
@@ -620,7 +610,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildRuleEvent.finished(
                 testBuildRule,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -819,9 +809,6 @@ public class SuperConsoleEventBusListenerTest {
         pathResolver,
         ImmutableSortedSet.<BuildRule>of());
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
-        ImmutableMap.of(
-            testTarget, new RuleKey("aaaa")));
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             console,
@@ -896,7 +883,7 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
             testBuildRule,
-            ruleKeyBuilderFactory,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -1093,9 +1080,6 @@ public class SuperConsoleEventBusListenerTest {
         pathResolver,
         ImmutableSortedSet.<BuildRule>of());
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
-        ImmutableMap.of(
-            testTarget, new RuleKey("aaaa")));
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             console,
@@ -1170,7 +1154,7 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
             testBuildRule,
-            ruleKeyBuilderFactory,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -1517,7 +1501,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildRuleEvent.finished(
                 fakeRule,
-                ruleKeyBuilderFactory,
+                BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -1642,7 +1626,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.register(listener);
 
     rawEventBus.post(CommandEvent.started("project",
-        ImmutableList.<String>of("arg1", "arg2"),
+        ImmutableList.of("arg1", "arg2"),
         false));
 
     rawEventBus.post(

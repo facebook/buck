@@ -747,7 +747,12 @@ public class CachingBuildEngine implements BuildEngine {
                     LOG,
                     BuildRuleEvent.finished(
                         rule,
-                        keyFactories.defaultRuleKeyBuilderFactory,
+                        BuildRuleKeys.builder()
+                            .setRuleKey(keyFactories.defaultRuleKeyBuilderFactory.build(rule))
+                            .setInputRuleKey(
+                                onDiskBuildInfo.getRuleKey(
+                                    BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY))
+                            .build(),
                         input.getStatus(),
                         input.getCacheResult(),
                         successType,
