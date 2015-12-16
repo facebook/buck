@@ -574,12 +574,10 @@ public class ProjectWorkspace {
     /**
      * Returns the exit code from the process.
      * <p>
-     * Currently, this method is private because, in practice, any time a client might want to use
-     * it, it is more appropriate to use {@link #assertSuccess()} or
-     * {@link #assertFailure()} instead. If a valid use case arises, then we should make this
-     * getter public.
+     * Currently, in practice, any time a client might want to use it, it is more appropriate to
+     * use {@link #assertSuccess()} or {@link #assertFailure()} instead.
      */
-    private int getExitCode() {
+    public int getExitCode() {
       return exitCode;
     }
 

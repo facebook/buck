@@ -23,6 +23,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableBiMap;
@@ -83,6 +84,19 @@ public class SymlinkTree
     }
     this.fullLinks = fullLinks.build();
     this.linksForRuleKey = getLinksForRuleKey(links);
+  }
+
+  public static SymlinkTree from(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      Path root,
+      ImmutableMap<String, SourcePath> links)
+      throws InvalidSymlinkTreeException {
+    return new SymlinkTree(
+        params,
+        resolver,
+        root,
+        MoreMaps.transformKeys(links, MorePaths.toPathFn(root.getFileSystem())));
   }
 
   /**

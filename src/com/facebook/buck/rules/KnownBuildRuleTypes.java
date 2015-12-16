@@ -103,6 +103,9 @@ import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.lua.LuaBinaryDescription;
+import com.facebook.buck.lua.LuaBuckConfig;
+import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.ocaml.OCamlBinaryDescription;
@@ -562,6 +565,8 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             testTempDirOverride));
     builder.register(new KeystoreDescription());
+    builder.register(new LuaBinaryDescription(new LuaBuckConfig(config, new ExecutableFinder())));
+    builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));

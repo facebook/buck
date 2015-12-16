@@ -76,6 +76,7 @@ java_library(
     '//src/com/facebook/buck/d:d',
     '//src/com/facebook/buck/go:go',
     '//src/com/facebook/buck/halide:rules',
+    '//src/com/facebook/buck/lua:lua',
     '//src/com/facebook/buck/file:downloader',
     '//src/com/facebook/buck/jvm/java:autodeps',
     '//src/com/facebook/buck/jvm/java:config',

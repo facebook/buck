@@ -36,6 +36,7 @@ java_library(
     '//src/com/facebook/buck/jvm/java:support',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/lua:lua',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/ocaml:rules',
     '//src/com/facebook/buck/parser:config',

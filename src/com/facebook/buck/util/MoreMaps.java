@@ -16,7 +16,9 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
@@ -33,4 +35,17 @@ public class MoreMaps {
     }
     return map;
   }
+
+  public static <K1, K2, V> ImmutableMap<K2, V> transformKeys(
+      Map<K1, V> map,
+      Function<K1, K2> transformer) {
+    ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builder();
+    for (Map.Entry<K1, V> ent : map.entrySet()) {
+      transformedMap.put(
+          Preconditions.checkNotNull(transformer.apply(ent.getKey())),
+          ent.getValue());
+    }
+    return transformedMap.build();
+  }
+
 }
