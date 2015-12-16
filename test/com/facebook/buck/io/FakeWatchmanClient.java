@@ -31,7 +31,7 @@ public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
   private final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>
     queryResults;
-  private final IOException exceptionToThrow;
+  private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
       long queryElapsedTimeNanos,
@@ -42,7 +42,7 @@ public class FakeWatchmanClient implements WatchmanClient {
   public FakeWatchmanClient(
       long queryElapsedTimeNanos,
       Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>> queryResults,
-      IOException exceptionToThrow) {
+      Exception exceptionToThrow) {
     this.queryElapsedTimeNanos = queryElapsedTimeNanos;
     this.queryResults = queryResults;
     this.exceptionToThrow = exceptionToThrow;
@@ -51,12 +51,18 @@ public class FakeWatchmanClient implements WatchmanClient {
   @Override
   public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
       long timeoutNanos,
-      Object... query) throws IOException {
+      Object... query) throws InterruptedException, IOException {
     if (queryElapsedTimeNanos > timeoutNanos) {
       return Optional.absent();
     }
     if (exceptionToThrow != null) {
-      throw exceptionToThrow;
+      if (exceptionToThrow instanceof IOException) {
+        throw (IOException) exceptionToThrow;
+      } else if (exceptionToThrow instanceof InterruptedException) {
+        throw (InterruptedException) exceptionToThrow;
+      } else {
+        throw new RuntimeException("Invalid exception");
+      }
     }
     return Optional.fromNullable(queryResults.get(ImmutableList.copyOf(query)));
   }

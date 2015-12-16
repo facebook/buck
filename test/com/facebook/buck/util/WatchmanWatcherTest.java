@@ -23,6 +23,8 @@ import static org.easymock.EasyMock.newCapture;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -30,15 +32,13 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.timing.IncrementingFakeClock;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -55,9 +55,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.List;
 import java.util.Set;
 
+@SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
 public class WatchmanWatcherTest {
+
+  private static final List<Object> FAKE_QUERY = ImmutableList.<Object>of("fake-query");
 
   @After
   public void cleanUp() {
@@ -67,21 +71,17 @@ public class WatchmanWatcherTest {
 
   @Test
   public void whenFilesListIsEmptyThenNoEventsAreGenerated()
-      throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{",
-        "\"version\": \"2.9.2\",",
-        "\"clock\": \"c:1386170113:26390:5:50273\",",
-        "\"is_fresh_instance\": false,",
-        "\"files\": []",
-        "}");
+    throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "version", "2.9.2",
+        "clock", "c:1386170113:26390:5:50273",
+        "is_fresh_instance", false,
+        "files", ImmutableList.of());
     EventBus eventBus = createStrictMock(EventBus.class);
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -90,21 +90,16 @@ public class WatchmanWatcherTest {
 
   @Test
   public void whenNameThenModifyEventIsGenerated() throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\"",
-            "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(
+            ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
     Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -119,22 +114,18 @@ public class WatchmanWatcherTest {
 
   @Test
   public void whenNewIsTrueThenCreateEventIsGenerated() throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\",",
-                "\"new\": true",
-            "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(
+            ImmutableMap.<String, Object>of(
+                "name", "foo/bar/baz",
+                "new", true)));
     Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -146,23 +137,19 @@ public class WatchmanWatcherTest {
 
   @Test
   public void whenExistsIsFalseThenDeleteEventIsGenerated()
-      throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\",",
-                "\"exists\": false",
-            "}",
-        "]}");
+    throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(
+            ImmutableMap.<String, Object>of(
+                "name", "foo/bar/baz",
+                "exists", false)));
     Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -175,23 +162,19 @@ public class WatchmanWatcherTest {
   @Test
   public void whenNewAndNotExistsThenDeleteEventIsGenerated()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\",",
-                "\"new\": true,",
-                "\"exists\": false",
-             "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(
+            ImmutableMap.<String, Object>of(
+                "name", "foo/bar/baz",
+                "new", true,
+                "exists", false)));
     Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -204,15 +187,10 @@ public class WatchmanWatcherTest {
   @Test
   public void whenMultipleFilesThenMultipleEventsGenerated()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\"",
-            "},",
-            "{",
-                "\"name\": \"foo/bar/boz\"",
-            "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(
+            ImmutableMap.<String, Object>of("name", "foo/bar/baz"),
+            ImmutableMap.<String, Object>of("name", "foo/bar/boz")));
     EventBus eventBus = createStrictMock(EventBus.class);
     Capture<WatchEvent<Path>> firstEvent = newCapture();
     Capture<WatchEvent<Path>> secondEvent = newCapture();
@@ -221,9 +199,7 @@ public class WatchmanWatcherTest {
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -239,30 +215,25 @@ public class WatchmanWatcherTest {
   @Test
   public void whenTooManyChangesThenOverflowEventGenerated()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\"",
-            "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(
+            ImmutableMap.<String, Object>of(
+                "name", "foo/bar/baz")));
     Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
-    FakeProcess fakeProcess = new FakeProcess(0, watchmanOutput, "");
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        fakeProcess,
-        new IncrementingFakeClock(),
-        new ObjectMapper(),
+        new FakeWatchmanClient(
+            0 /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_QUERY, watchmanOutput)),
         -1 /* overflow */,
         10000 /* timeout */);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
     verify(eventBus);
-    assertTrue("Watchman query process should be destroyed.", fakeProcess.isDestroyed());
-    assertTrue("Watchman query process should be waited for.", fakeProcess.isWaitedFor());
     assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
         eventCapture.getValue().kind());
@@ -277,16 +248,19 @@ public class WatchmanWatcherTest {
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(1, "", ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        new FakeWatchmanClient(
+            0 /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_QUERY, ImmutableMap.<String, Object>of()),
+            new IOException("oops")),
+        200 /* overflow */,
+        10000 /* timeout */);
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
           ImmutableSet.<String>builder());
       fail("Should have thrown IOException.");
-    } catch (WatchmanWatcherException e) {
-      assertTrue("Should be watchman error", e.getMessage().startsWith("Watchman failed"));
+    } catch (IOException e) {
+      assertTrue("Should be expected error", e.getMessage().startsWith("oops"));
     }
     verify(eventBus);
     assertEquals("Should be overflow event.",
@@ -302,13 +276,14 @@ public class WatchmanWatcherTest {
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
-    FakeProcess fakeProcess = new FakeProcess(
-        0, "", "", Optional.of(new InterruptedException(message)));
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        fakeProcess,
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        new FakeWatchmanClient(
+            0 /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_QUERY, ImmutableMap.<String, Object>of()),
+            new InterruptedException(message)),
+        200 /* overflow */,
+        10000 /* timeout */);
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
@@ -317,8 +292,6 @@ public class WatchmanWatcherTest {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
     verify(eventBus);
-    assertTrue("Watchman query process should be destroyed.", fakeProcess.isDestroyed());
-    assertTrue("Watchman query process should be waited for.", fakeProcess.isWaitedFor());
     assertTrue(Thread.currentThread().isInterrupted());
     assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
@@ -329,19 +302,15 @@ public class WatchmanWatcherTest {
   public void whenQueryResultContainsErrorThenHumanReadableExceptionThrown()
       throws IOException, InterruptedException {
     String watchmanError = "Watch does not exist.";
-    String watchmanOutput = Joiner.on('\n').join(
-        "{",
-        "\"version\": \"2.9.2\",",
-        "\"error\": \"" + watchmanError + "\"",
-        "}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "version", "2.9.2",
+        "error", watchmanError);
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(anyObject());
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
@@ -357,20 +326,16 @@ public class WatchmanWatcherTest {
   @Test(expected = WatchmanWatcherException.class)
   public void whenQueryResultContainsErrorThenOverflowEventGenerated()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{",
-        "\"version\": \"2.9.2\",",
-        "\"error\": \"Watch does not exist.\"",
-        "}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "version", "2.9.2",
+        "error", "Watch does not exist.");
     Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
@@ -385,13 +350,11 @@ public class WatchmanWatcherTest {
   @Test
   public void whenWatchmanInstanceIsFreshAllCachesAreCleared()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{",
-        "\"version\": \"2.9.2\",",
-        "\"clock\": \"c:1386170113:26390:5:50273\",",
-        "\"is_fresh_instance\": true,",
-        "\"files\": []",
-        "}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "version", "2.9.2",
+        "clock", "c:1386170113:26390:5:50273",
+        "is_fresh_instance", true,
+        "files", ImmutableList.of());
 
     final Set<WatchEvent<?>> events = Sets.newHashSet();
     EventBus bus = new EventBus("watchman test");
@@ -404,9 +367,7 @@ public class WatchmanWatcherTest {
         });
     WatchmanWatcher watcher = createWatcher(
         bus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper());
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -421,13 +382,11 @@ public class WatchmanWatcherTest {
   @Test
   public void whenParseTimesOutThenOverflowGenerated()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{",
-        "\"version\": \"2.9.2\",",
-        "\"clock\": \"c:1386170113:26390:5:50273\",",
-        "\"is_fresh_instance\": true,",
-        "\"files\": []",
-        "}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "version", "2.9.2",
+        "clock", "c:1386170113:26390:5:50273",
+        "is_fresh_instance", true,
+        "files", ImmutableList.of());
 
     final Set<WatchEvent<?>> events = Sets.newHashSet();
     EventBus bus = new EventBus("watchman test");
@@ -438,12 +397,11 @@ public class WatchmanWatcherTest {
             events.add(event);
           }
         });
-    FakeProcess fakeProcess = new FakeProcess(0, watchmanOutput, "");
     WatchmanWatcher watcher = createWatcher(
         bus,
-        fakeProcess,
-        new IncrementingFakeClock(),
-        new ObjectMapper(),
+        new FakeWatchmanClient(
+            10000000000L /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_QUERY, watchmanOutput)),
         200 /* overflow */,
         -1 /* timeout */);
     watcher.postEvents(
@@ -454,15 +412,12 @@ public class WatchmanWatcherTest {
     for (WatchEvent<?> event : events) {
       overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
     }
-    assertTrue("Watchman query process should be destroyed.", fakeProcess.isDestroyed());
-    assertTrue("Watchman query process should be waited for.", fakeProcess.isWaitedFor());
     assertTrue(overflowSeen);
   }
 
   @Test
   public void watchmanQueryWithRepoRelativePrefix() {
-    String query = WatchmanWatcher.createQuery(
-        new ObjectMapper(),
+    List<Object> query = WatchmanWatcher.createQuery(
         "path/to/repo",
         Optional.of("project"),
         "uuid",
@@ -472,31 +427,12 @@ public class WatchmanWatcherTest {
 
     assertThat(
         query,
-        Matchers.containsString("\"relative_root\":\"project\""));
-  }
-
-  @Test
-  public void watchmanQueryWithRepoPathNeedingEscapingFormatsToCorrectJson() {
-    String query = WatchmanWatcher.createQuery(
-        new ObjectMapper(),
-        "/path/to/\"repo\"",
-        Optional.<String>absent(),
-        "uuid",
-        Lists.<Path>newArrayList(),
-        Lists.<String>newArrayList(),
-        ImmutableSet.of(Watchman.Capability.DIRNAME));
-    assertEquals(
-        "[\"query\",\"/path/to/\\\"repo\\\"\",{\"since\":\"n:buckduuid\"," +
-        "\"expression\":[\"not\",[\"anyof\"," +
-        "[\"type\",\"d\"]]]," +
-        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
-        query);
+        hasItem(hasEntry("relative_root", "project")));
   }
 
   @Test
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
-    String query = WatchmanWatcher.createQuery(
-        new ObjectMapper(),
+    List<Object> query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
         "uuid",
@@ -504,19 +440,26 @@ public class WatchmanWatcherTest {
         Lists.<String>newArrayList(),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
-        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
-        "\"expression\":[\"not\",[\"anyof\"," +
-        "[\"type\",\"d\"]," +
-        "[\"dirname\",\"foo\"]," +
-        "[\"dirname\",\"bar/baz\"]]]," +
-        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        ImmutableList.of(
+            "query",
+            "/path/to/repo",
+            ImmutableMap.of(
+                "since", "n:buckduuid",
+                "expression", ImmutableList.of(
+                    "not",
+                    ImmutableList.of(
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("dirname", "foo"),
+                        ImmutableList.of("dirname", "bar/baz"))),
+                "empty_on_fresh_instance", true,
+                "fields", ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
   @Test
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
-    String query = WatchmanWatcher.createQuery(
-        new ObjectMapper(),
+    List<Object> query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
         "uuid",
@@ -524,19 +467,26 @@ public class WatchmanWatcherTest {
         Lists.<String>newArrayList(),
         ImmutableSet.<Watchman.Capability>of());
     assertEquals(
-        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
-        "\"expression\":[\"not\",[\"anyof\"," +
-        "[\"type\",\"d\"]," +
-        "[\"match\",\"foo/*\",\"wholename\"]," +
-        "[\"match\",\"bar/baz/*\",\"wholename\"]]]," +
-        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        ImmutableList.of(
+            "query",
+            "/path/to/repo",
+            ImmutableMap.of(
+                "since", "n:buckduuid",
+                "expression", ImmutableList.of(
+                    "not",
+                    ImmutableList.of(
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("match", "foo/*", "wholename"),
+                        ImmutableList.of("match", "bar/baz/*", "wholename"))),
+                "empty_on_fresh_instance", true,
+                "fields", ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
   @Test
   public void watchmanQueryRelativizesExcludePaths() {
-    String query = WatchmanWatcher.createQuery(
-        new ObjectMapper(),
+    List<Object> query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
         "uuid",
@@ -544,19 +494,26 @@ public class WatchmanWatcherTest {
         Lists.<String>newArrayList(),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
-        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
-        "\"expression\":[\"not\",[\"anyof\"," +
-        "[\"type\",\"d\"]," +
-        "[\"dirname\",\"foo\"]," +
-        "[\"dirname\",\"bar/baz\"]]]," +
-        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        ImmutableList.of(
+            "query",
+            "/path/to/repo",
+            ImmutableMap.of(
+                "since", "n:buckduuid",
+                "expression", ImmutableList.of(
+                    "not",
+                    ImmutableList.of(
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("dirname", "foo"),
+                        ImmutableList.of("dirname", "bar/baz"))),
+                "empty_on_fresh_instance", true,
+                "fields", ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
   @Test
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
-    String query = WatchmanWatcher.createQuery(
-        new ObjectMapper(),
+    List<Object> query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
         "uuid",
@@ -564,32 +521,33 @@ public class WatchmanWatcherTest {
         Lists.newArrayList("*.pbxproj"),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
-        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
-        "\"expression\":[\"not\",[\"anyof\"," +
-        "[\"type\",\"d\"]," +
-        "[\"match\",\"*.pbxproj\"]]]," +
-        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        ImmutableList.of(
+            "query",
+            "/path/to/repo",
+            ImmutableMap.of(
+                "since", "n:buckduuid",
+                "expression", ImmutableList.of(
+                    "not",
+                    ImmutableList.of(
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("match", "*.pbxproj"))),
+                "empty_on_fresh_instance", true,
+                "fields", ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
   @Test
   public void whenWatchmanProducesAWarningThenOverflowEventNotGenerated()
       throws IOException, InterruptedException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-        "{",
-        "\"warning\": \"message\"",
-        "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(),
+        "warning", "message");
     EventBus eventBus = createStrictMock(EventBus.class);
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper(),
-        10000 /* overflow */,
-        10000 /* timeout */);
+        watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
         ImmutableSet.<String>builder());
@@ -599,12 +557,9 @@ public class WatchmanWatcherTest {
   public void whenWatchmanProducesAWarningThenConsoleEventGenerated()
       throws IOException, InterruptedException {
     String message = "Find me!";
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-        "{",
-        "\"warning\": \"" + message + "\"",
-        "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(),
+        "warning", message);
     Capture<ConsoleEvent> eventCapture = newCapture();
     EventBus eventBus = new EventBus("watchman test");
     BuckEventBus buckEventBus = createStrictMock(BuckEventBus.class);
@@ -612,11 +567,7 @@ public class WatchmanWatcherTest {
     replay(buckEventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper(),
-        10000 /* overflow */,
-        10000 /* timeout */);
+        watchmanOutput);
     watcher.postEvents(buckEventBus, ImmutableSet.<String>builder());
     verify(buckEventBus);
     assertThat(eventCapture.getValue().getMessage(), Matchers.containsString(message));
@@ -626,20 +577,13 @@ public class WatchmanWatcherTest {
   public void whenWatchmanProducesAWarningThenWarningReturned()
       throws IOException, InterruptedException {
     String message = "I'm a warning!";
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-        "{",
-        "\"warning\": \"" + message + "\"",
-        "}",
-        "]}");
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "files", ImmutableList.of(),
+        "warning", message);
     EventBus eventBus = new EventBus("watchman test");
     WatchmanWatcher watcher = createWatcher(
         eventBus,
-        new FakeProcess(0, watchmanOutput, ""),
-        new IncrementingFakeClock(),
-        new ObjectMapper(),
-        10000 /* overflow */,
-        10000 /* timeout */);
+        watchmanOutput);
     ImmutableSet.Builder<String> warningsBuilder = ImmutableSet.builder();
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
@@ -649,40 +593,25 @@ public class WatchmanWatcherTest {
 
   private WatchmanWatcher createWatcher(
       EventBus eventBus,
-      FakeProcess fakeProcess,
-      Clock clock,
-      ObjectMapper objectMapper) {
+      ImmutableMap<String, ? extends Object> response) {
     return createWatcher(
         eventBus,
-        fakeProcess,
-        clock,
-        objectMapper,
+        new FakeWatchmanClient(
+            0 /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_QUERY, response)),
         200 /* overflow */,
         10000 /* timeout */);
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus,
-                                        FakeProcess queryProcess,
-                                        Clock clock,
-                                        ObjectMapper objectMapper,
+                                        FakeWatchmanClient watchmanClient,
                                         int overflow,
                                         long timeoutMillis) {
     return new WatchmanWatcher(
         eventBus,
-        clock,
-        objectMapper,
-        new FakeProcessExecutor(
-            ImmutableMap.of(
-                ProcessExecutorParams.builder()
-                    .addCommand("watchman", "--server-encoding=json", "--no-pretty", "-j")
-                    .build(),
-                queryProcess,
-                ProcessExecutorParams.builder()
-                    .addCommand("watchman", "version")
-                    .build(),
-                new FakeProcess(0, "{\"version\":\"3.5.0\"}\n", ""))),
+        watchmanClient,
         overflow,
         timeoutMillis,
-        "" /* query */);
+        FAKE_QUERY);
   }
 }

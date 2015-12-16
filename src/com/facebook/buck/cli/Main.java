@@ -896,9 +896,6 @@ public final class Main {
             WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
                watchman.getWatchRoot().or(canonicalRootPath.toString()),
                daemon.getFileEventBus(),
-               clock,
-               objectMapper,
-               processExecutor,
                filesystem.getIgnorePaths(),
                DEFAULT_IGNORE_GLOBS,
                watchman,
