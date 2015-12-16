@@ -155,10 +155,10 @@ BUCK_LOG_RULEKEY_LINE = re.compile(
     r'(?P<rule_key_debug>.*)$')
 
 
-def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
+def buck_build_target(args, cwd, targets, perftest_side, log_as_perftest=True):
     """Builds a target with buck and returns performance information.
     """
-    log('Running buck build %s.' % target)
+    log('Running buck build %s.' % ' '.join(targets))
     bucklogging_properties_path = os.path.join(
         cwd, '.bucklogging.local.properties')
     with open(bucklogging_properties_path, 'w') as bucklogging_properties:
@@ -186,7 +186,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     tmpFile = tempfile.TemporaryFile()
     try:
         subprocess.check_call(
-            [args.path_to_buck, 'build', '--deep', target, '-v', '5'],
+            [args.path_to_buck, 'build', '--deep'] + targets + ['-v', '5'],
             stdout=tmpFile,
             stderr=tmpFile,
             cwd=cwd,
@@ -271,6 +271,7 @@ def set_perftest_side(
             buckversion.write(args.new_buck_revision + os.linesep)
         buckversion.truncate()
 
+
 def build_all_targets(
         args,
         cwd,
@@ -285,22 +286,21 @@ def build_all_targets(
         perftest_side,
         cache_mode,
         dir_cache_only=dir_cache_only)
-    result = {}
+    targets = []
     for target_str in args.targets_to_build:
-        target = target_str.split(',')[0]
-        if run_clean:
-            buck_clean(args, cwd)
-        #TODO(rowillia): Do smart things with the results here.
-        result[target] = buck_build_target(
-            args,
-            cwd,
-            target,
-            perftest_side,
-            log_as_perftest=log_as_perftest)
-    return result
+        targets.extend(target_str.split(','))
+    if run_clean:
+        buck_clean(args, cwd)
+    #TODO(rowillia): Do smart things with the results here.
+    return buck_build_target(
+        args,
+        cwd,
+        targets,
+        perftest_side,
+        log_as_perftest=log_as_perftest)
 
 
-def run_tests_for_diff(args, revisions_to_test, test_index, last_results):
+def run_tests_for_diff(args, revisions_to_test, test_index, last_result):
     log('=== Running tests at revision %s ===' % revisions_to_test[test_index])
     new_directory_name = (os.path.basename(args.repo_under_test) +
                           '_test_iteration_%d' % test_index)
@@ -313,25 +313,23 @@ def run_tests_for_diff(args, revisions_to_test, test_index, last_results):
 
     try:
         log('== Checking new revision for problems with absolute paths ==')
-        results = build_all_targets(args, cwd, 'new', 'readonly')
-        for target, result in results.iteritems():
-            if (len(result.cache_results.keys()) != 1 or
-                    'DIR_HIT' not in result.cache_results):
-                # Remove DIR_HITs to make error message cleaner
-                result.cache_results.pop('DIR_HIT', None)
-                log('Building %s at revision %s with the new buck version '
-                    'was unable to reuse the cache from a previous run.  '
-                    'This suggests one of the rule keys contains an '
-                    'abosolute path.' % (
-                        target,
-                        revisions_to_test[test_index - 1]))
-                for rule in result.cache_results['MISS']:
-                    rule_name = rule['rule_name']
-                    old_key = last_results[target].rule_key_map[rule_name]
-                    log('Rule %s missed.' % rule_name)
-                    log('\tOld Rule Key: %s.' % old_key)
-                    log('\tNew Rule Key: %s.' % result.rule_key_map[rule_name])
-                raise Exception('Failed to reuse cache across directories!!!')
+        result = build_all_targets(args, cwd, 'new', 'readonly')
+        if (len(result.cache_results.keys()) != 1 or
+                'DIR_HIT' not in result.cache_results):
+            # Remove DIR_HITs to make error message cleaner
+            result.cache_results.pop('DIR_HIT', None)
+            log('Building at revision %s with the new buck version '
+                'was unable to reuse the cache from a previous run.  '
+                'This suggests one of the rule keys contains an '
+                'abosolute path.' % (
+                    revisions_to_test[test_index - 1]))
+            for rule in result.cache_results['MISS']:
+                rule_name = rule['rule_name']
+                old_key = last_result.rule_key_map[rule_name]
+                log('Rule %s missed.' % rule_name)
+                log('\tOld Rule Key: %s.' % old_key)
+                log('\tNew Rule Key: %s.' % result.rule_key_map[rule_name])
+            raise Exception('Failed to reuse cache across directories!!!')
 
         git_checkout(revisions_to_test[test_index], cwd)
 
@@ -344,29 +342,27 @@ def run_tests_for_diff(args, revisions_to_test, test_index, last_results):
             build_all_targets(args, cwd, 'new', cache_mode)
 
         log('== Checking new revision to ensure noop build does nothing. ==')
-        results = build_all_targets(
+        result = build_all_targets(
             args,
             cwd,
             'new',
             cache_mode,
             run_clean=False)
-        for target, result in results.iteritems():
-            if (len(result.cache_results.keys()) != 1 or
-                    'LOCAL_KEY_UNCHANGED_HIT' not in result.cache_results):
-                result.cache_results.pop('DIR_HIT', None)
-                raise Exception(
-                    'Doing a noop build for %s at revision %s with the new '
-                    'buck version did not hit all of it\'s keys.\nMissed '
-                    'Rules: %s' % (
-                        target,
-                        revisions_to_test[test_index - 1],
-                        repr(result.cache_results)))
+        if (len(result.cache_results.keys()) != 1 or
+                'LOCAL_KEY_UNCHANGED_HIT' not in result.cache_results):
+            result.cache_results.pop('DIR_HIT', None)
+            raise Exception(
+                'Doing a noop build at revision %s with the new '
+                'buck version did not hit all of it\'s keys.\nMissed '
+                'Rules: %s' % (
+                    revisions_to_test[test_index - 1],
+                    repr(result.cache_results)))
 
     finally:
         log('Renaming %s to %s' % (cwd, args.repo_under_test))
         os.rename(cwd, args.repo_under_test)
 
-    return results
+    return result
 
 
 def main():
