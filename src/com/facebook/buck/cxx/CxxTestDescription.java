@@ -180,6 +180,7 @@ public class CxxTestDescription implements
         test = new CxxGtestTest(
             testParams,
             pathResolver,
+            cxxLinkAndCompileRules.cxxLink,
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
@@ -196,6 +197,7 @@ public class CxxTestDescription implements
         test = new CxxBoostTest(
             testParams,
             pathResolver,
+            cxxLinkAndCompileRules.cxxLink,
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,

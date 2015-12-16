@@ -108,6 +108,11 @@ public class CxxTestTest {
         new FakeCxxTest() {
 
           @Override
+          public Path getPathToOutput() {
+            return Paths.get("output");
+          }
+
+          @Override
           protected ImmutableList<String> getShellCommand(
               ExecutionContext context, Path output) {
             return command;
@@ -148,6 +153,11 @@ public class CxxTestTest {
 
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
+
+          @Override
+          public Path getPathToOutput() {
+            return Paths.get("output");
+          }
 
           @Override
           protected Path getPathToTestExitCode() {

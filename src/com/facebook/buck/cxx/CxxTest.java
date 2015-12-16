@@ -17,13 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -51,7 +52,7 @@ import java.util.concurrent.Callable;
 /**
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
-public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
+public abstract class CxxTest extends AbstractBuildRule implements TestRule, HasRuntimeDeps {
 
   @AddToRuleKey
   private final Supplier<ImmutableMap<String, String>> env;
@@ -94,6 +95,13 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
     this.sourceUnderTest = sourceUnderTest;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+  }
+
+  @Override
+  public final ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
   }
 
   /**

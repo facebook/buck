@@ -30,6 +30,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -81,10 +82,18 @@ public class CxxGtestTestTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     CxxGtestTest test = new CxxGtestTest(
         new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+        pathResolver,
+        new CxxLink(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
+            pathResolver,
+            CxxPlatformUtils.DEFAULT_PLATFORM.getLd(),
+            Paths.get("output"),
+            ImmutableList.<Arg>of()),
         new CommandTool.Builder()
             .addArg(new FakeSourcePath(""))
             .build(),

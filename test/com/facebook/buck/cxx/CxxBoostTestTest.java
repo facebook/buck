@@ -30,6 +30,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -74,23 +75,32 @@ public class CxxBoostTestTest {
             "simple_failure_with_output");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    CxxBoostTest test = new CxxBoostTest(
-        new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-            .build(),
+    SourcePathResolver pathResolver =
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
-        new CommandTool.Builder()
-            .addArg(new FakeSourcePath(""))
-            .build(),
-        Suppliers.ofInstance(ImmutableMap.<String, String>of()),
-        Suppliers.ofInstance(ImmutableList.<String>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        ImmutableSet.<Label>of(),
-        ImmutableSet.<String>of(),
-        ImmutableSet.<BuildRule>of(),
-        /* runTestSeparately */ false,
-        /* testRuleTimeoutMs */ Optional.<Long>absent());
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    CxxBoostTest test =
+        new CxxBoostTest(
+            new FakeBuildRuleParamsBuilder(target)
+                .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
+                .build(),
+            pathResolver,
+            new CxxLink(
+                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
+                pathResolver,
+                CxxPlatformUtils.DEFAULT_PLATFORM.getLd(),
+                Paths.get("output"),
+                ImmutableList.<Arg>of()),
+            new CommandTool.Builder()
+                .addArg(new FakeSourcePath(""))
+                .build(),
+            Suppliers.ofInstance(ImmutableMap.<String, String>of()),
+            Suppliers.ofInstance(ImmutableList.<String>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            ImmutableSet.<Label>of(),
+            ImmutableSet.<String>of(),
+            ImmutableSet.<BuildRule>of(),
+            /* runTestSeparately */ false,
+            /* testRuleTimeoutMs */ Optional.<Long>absent());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 

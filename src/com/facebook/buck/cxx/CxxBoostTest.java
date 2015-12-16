@@ -67,11 +67,13 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
+  private final CxxLink binary;
   private final Tool executable;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      CxxLink binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
@@ -93,7 +95,13 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         sourceUnderTest,
         runTestSeparately,
         testRuleTimeoutMs);
+    this.binary = binary;
     this.executable = executable;
+  }
+
+  @Override
+  public Path getPathToOutput() {
+    return binary.getPathToOutput();
   }
 
   @Override
