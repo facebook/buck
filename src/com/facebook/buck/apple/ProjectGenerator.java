@@ -849,8 +849,13 @@ public class ProjectGenerator {
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         targetNode,
         Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES));
-    if (isFrameworkBundle(targetNode.getConstructorArg())) {
+    if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
       copiedRules = rulesWithoutFrameworkBundles(copiedRules);
+    } else if (bundleRequiresAllTransitiveFrameworks(binaryNode)) {
+      copiedRules = ImmutableSet.<TargetNode<?>>builder()
+          .addAll(copiedRules)
+          .addAll(getTransitiveFrameworkNodes(targetNode))
+          .build();
     }
     ImmutableList<PBXBuildPhase> copyFilesBuildPhases = getCopyFilesBuildPhases(copiedRules);
 
@@ -870,6 +875,24 @@ public class ProjectGenerator {
 
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
+  }
+
+  private ImmutableSet<TargetNode<?>> getTransitiveFrameworkNodes(
+      TargetNode<? extends HasAppleBundleFields> targetNode) {
+    return FluentIterable
+        .from(targetGraph.getSubgraph(ImmutableSet.of(targetNode)).getNodes())
+        .filter(new Predicate<TargetNode<?>>() {
+          @Override
+          public boolean apply(TargetNode<?> input) {
+            Optional<TargetNode<AppleBundleDescription.Arg>> appleBundleNode =
+                input.castArg(AppleBundleDescription.Arg.class);
+            if (!appleBundleNode.isPresent()) {
+              return false;
+            }
+            return isFrameworkBundle(appleBundleNode.get().getConstructorArg());
+          }
+        })
+        .toSet();
   }
 
   /**
@@ -2431,6 +2454,16 @@ public class ProjectGenerator {
   private static boolean isFrameworkBundle(HasAppleBundleFields arg) {
     return arg.getExtension().isLeft() &&
         arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
+  }
+
+  private static boolean bundleRequiresRemovalOfAllTransitiveFrameworks(
+      TargetNode<? extends HasAppleBundleFields> targetNode) {
+    return isFrameworkBundle(targetNode.getConstructorArg());
+  }
+
+  private static boolean bundleRequiresAllTransitiveFrameworks(
+      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
+    return binaryNode.castArg(AppleBinaryDescription.Arg.class).isPresent();
   }
 
   private Path emptyFileWithExtension(String extension) {
