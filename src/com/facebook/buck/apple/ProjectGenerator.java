@@ -1803,6 +1803,10 @@ public class ProjectGenerator {
                 CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES)
             );
           }
+        case BUNDLE:
+          return Optional.of(
+              CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PLUGINS)
+          );
           //$CASES-OMITTED$
         default:
           return Optional.of(
