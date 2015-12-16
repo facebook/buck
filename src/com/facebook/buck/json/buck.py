@@ -742,6 +742,12 @@ def main():
         dest='watchman_watch_root',
         help='Path to root of watchman watch as returned by `watchman watch-project`.')
     parser.add_option(
+        '--watchman_socket_path',
+        action='store',
+        type='string',
+        dest='watchman_socket_path',
+        help='Path to Unix domain socket/named pipe as returned by `watchman get-sockname`.')
+    parser.add_option(
         '--watchman_project_prefix',
         action='store',
         type='string',
@@ -783,6 +789,9 @@ def main():
             # pywatchman expects a timeout as a nonnegative floating-point
             # value in seconds.
             client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
+        if options.watchman_socket_path is not None:
+            client_args['sockpath'] = options.watchman_socket_path
+            client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
         watchman_error = pywatchman.WatchmanError
 

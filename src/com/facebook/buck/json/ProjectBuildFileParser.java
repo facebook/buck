@@ -226,6 +226,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--watchman_watch_root", options.getWatchman().getWatchRoot().get());
     }
 
+    if (options.getWatchman().getSocketPath().isPresent()) {
+      argBuilder.add(
+          "--watchman_socket_path",
+          options.getWatchman().getSocketPath().get().toAbsolutePath().toString());
+    }
+
     if (options.getWatchmanQueryTimeoutMs().isPresent()) {
       argBuilder.add(
           "--watchman_query_timeout_ms",
