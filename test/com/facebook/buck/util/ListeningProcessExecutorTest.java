@@ -33,6 +33,7 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -194,4 +195,24 @@ public class ListeningProcessExecutorTest {
     executor.destroyProcess(process, /* force */ true);
     executor.waitForProcess(process, 0, TimeUnit.MILLISECONDS);
   }
+
+  @Test
+  public void clearsEnvWhenExplicitlySet() throws Exception {
+    ListeningProcessExecutor executor = new ListeningProcessExecutor();
+    CapturingListener listener = new CapturingListener();
+    ProcessExecutorParams params;
+    if (Platform.detect() == Platform.WINDOWS) {
+      params = ProcessExecutorParams.ofCommand("cmd.exe", "/c", "set");
+    } else {
+      params = ProcessExecutorParams.ofCommand("env");
+    }
+    params = params.withEnvironment(new HashMap<String, String>());
+    ListeningProcessExecutor.LaunchedProcess process =
+        executor.launchProcess(params, listener);
+    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    assertThat(returnCode, equalTo(0));
+    assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
+    assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
+  }
+
 }
