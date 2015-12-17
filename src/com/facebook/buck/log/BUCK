@@ -1,21 +1,34 @@
+LOGGER_FILES = ['Logger.java']
+APPENDABLE_LOG_RECORD_FILES = ['AppendableLogRecord.java']
+
+java_library(
+  name = 'appendablelogrecord',
+  srcs = APPENDABLE_LOG_RECORD_FILES,
+  deps = [],
+  visibility = [],
+)
+
 java_library(
   name = 'api',
-  srcs = [ 'Logger.java' ],
+  srcs = LOGGER_FILES,
   deps = [
-    # This class is used everywhere. Only depend on third-party, and then only if strictly
+    # This class is used everywhere. Only depend on
+    # appendablelogrecord and third-party, and then only if strictly
     # necessary.
     '//third-party/java/jsr:jsr305',
+    ':appendablelogrecord',
   ],
   visibility = [ 'PUBLIC' ],
 )
 
 java_library(
   name = 'log',
-  srcs = glob(['*.java'], excludes = [ 'Logger.java' ]),
+  srcs = glob(['*.java'], excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES),
   tests = [
     '//test/com/facebook/buck/log:log',
   ],
   deps = [
+    ':appendablelogrecord',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:constants',

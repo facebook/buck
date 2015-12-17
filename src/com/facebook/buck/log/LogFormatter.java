@@ -86,9 +86,15 @@ public class LogFormatter extends java.util.logging.Formatter {
     }
     sb.append("][")
       .append(record.getLoggerName())
-      .append("] ")
-      .append(formatMessage(record))
-      .append("\n");
+      .append("] ");
+    if (record instanceof AppendableLogRecord) {
+      // Avoid allocating then throwing away the formatted message and
+      // params; just format directly to the StringBuilder.
+      ((AppendableLogRecord) record).appendFormattedMessage(sb);
+    } else {
+      sb.append(formatMessage(record));
+    }
+    sb.append("\n");
     Throwable t = record.getThrown();
     if (t != null) {
       StringWriter sw = new StringWriter();
