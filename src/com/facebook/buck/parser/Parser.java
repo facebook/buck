@@ -478,10 +478,19 @@ public class Parser {
       boolean enableProfiling,
       TargetNodeSpec spec)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    return resolveTargetSpecs(eventBus, rootCell, enableProfiling, ImmutableList.of(spec));
+  }
+
+  public ImmutableSet<BuildTarget> resolveTargetSpecs(
+      BuckEventBus eventBus,
+      Cell rootCell,
+      boolean enableProfiling,
+      Iterable<? extends TargetNodeSpec> specs)
+      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     try (
         PerBuildState state =
             new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
-      return resolveTargetSpecs(state, rootCell, ImmutableList.of(spec));
+      return resolveTargetSpecs(state, rootCell, specs);
     }
   }
 

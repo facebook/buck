@@ -48,10 +48,8 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
@@ -88,7 +86,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
@@ -102,7 +99,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -342,46 +338,35 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    ProjectGraphParser projectGraphParser;
+    Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();
+    boolean useExperimentalProjectGeneration = isExperimentalIntelliJProjectGenerationEnabled() ||
+        projectIde == Ide.XCODE;
+
     try (CommandThreadManager pool = new CommandThreadManager(
         "Project",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
-      Pair<ImmutableSet<BuildTarget>, TargetGraph> traversalResult = null;
+      ImmutableSet<BuildTarget> passedInTargetsSet;
+      TargetGraph projectGraph;
       try {
-        traversalResult = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
+        passedInTargetsSet = params.getParser()
+            .resolveTargetSpecs(
                 params.getBuckEventBus(),
                 params.getCell(),
                 getEnableProfiling(),
-                pool.getExecutor(),
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     getArguments()));
+        projectGraph = getProjectGraphForIde(
+            params,
+            pool.getExecutor(),
+            passedInTargetsSet,
+            useExperimentalProjectGeneration);
       } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
       }
-
-      passedInTargetsSet = traversalResult.getFirst();
-      projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
-          params.getParser(),
-          params.getCell(),
-          params.getBuckEventBus(),
-          getEnableProfiling()
-      );
-
-      Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();
-      boolean useExperimentalProjectGeneration = isExperimentalIntelliJProjectGenerationEnabled() ||
-          projectIde == Ide.XCODE;
-
-      TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
-          getTargetNodeSpecsForIde(
-              passedInTargetsSet,
-              useExperimentalProjectGeneration),
-          pool.getExecutor());
 
       projectIde = getIdeBasedOnPassedInTargetsAndProjectGraph(
           params.getBuckConfig(),
@@ -410,15 +395,22 @@ public class ProjectCommand extends BuildCommand {
             projectPredicates.getProjectRootsPredicate());
       }
 
-      TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(
-          projectGraph,
-          graphRoots,
-          projectGraphParser,
-          projectPredicates.getAssociatedProjectPredicate(),
-          isWithTests(),
-          isWithDependenciesTests(),
-          useExperimentalProjectGeneration,
-          pool.getExecutor());
+      TargetGraphAndTargets targetGraphAndTargets;
+      try {
+        targetGraphAndTargets = createTargetGraph(
+            params,
+            projectGraph,
+            graphRoots,
+            projectPredicates.getAssociatedProjectPredicate(),
+            isWithTests(),
+            isWithDependenciesTests(),
+            useExperimentalProjectGeneration,
+            pool.getExecutor());
+      } catch (BuildFileParseException | HumanReadableException e) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
+      }
 
       if (getDryRun()) {
         for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
@@ -976,36 +968,48 @@ public class ProjectCommand extends BuildCommand {
         .toSet();
   }
 
-  private static Iterable<? extends TargetNodeSpec> getTargetNodeSpecsForIde(
-      Collection<BuildTarget> passedInBuildTargets,
+  private TargetGraph getProjectGraphForIde(
+      CommandRunnerParams params,
+      Executor executor,
+      ImmutableSet<BuildTarget> passedInTargets,
       boolean experimentalProjectGenerationEnabled
-  ) {
-    if (experimentalProjectGenerationEnabled && !passedInBuildTargets.isEmpty()) {
-      return Iterables.transform(
-          passedInBuildTargets,
-          BuildTargetSpec.TO_BUILD_TARGET_SPEC);
+  ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    if (experimentalProjectGenerationEnabled && !passedInTargets.isEmpty()) {
+      return params.getParser()
+          .buildTargetGraph(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
+              executor,
+              passedInTargets);
     } else {
-      return ImmutableList.of(
-          TargetNodePredicateSpec.of(
-              Predicates.<TargetNode<?>>alwaysTrue(),
-              BuildFileSpec.fromRecursivePath(Paths.get(""))));
+      return params.getParser()
+          .buildTargetGraphForTargetNodeSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
+              executor,
+              ImmutableList.of(
+                  TargetNodePredicateSpec.of(
+                      Predicates.<TargetNode<?>>alwaysTrue(),
+                      BuildFileSpec.fromRecursivePath(Paths.get("")))))
+          .getSecond();
     }
   }
 
-  private static TargetGraphAndTargets createTargetGraph(
+  private TargetGraphAndTargets createTargetGraph(
+      CommandRunnerParams params,
       TargetGraph projectGraph,
       ImmutableSet<BuildTarget> graphRoots,
-      ProjectGraphParser projectGraphParser,
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       boolean isWithDependenciesTests,
       boolean experimentalProjectGenerationEnabled,
       Executor executor
   )
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, BuildFileParseException {
 
-    TargetGraph resultProjectGraph;
-    ImmutableSet<BuildTarget> explicitTestTargets;
+    ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
         replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
 
@@ -1014,21 +1018,21 @@ public class ProjectCommand extends BuildCommand {
           graphRootsOrSourceTargets,
           projectGraph,
           isWithDependenciesTests);
-      resultProjectGraph =
-          projectGraphParser.buildTargetGraphForTargetNodeSpecs(
-              getTargetNodeSpecsForIde(
-                  Sets.union(graphRoots, explicitTestTargets),
-                  experimentalProjectGenerationEnabled),
-              executor);
-    } else {
-      resultProjectGraph = projectGraph;
-      explicitTestTargets = ImmutableSet.of();
+      // The test of nodes for non-experimental project generation is the same regardless.
+      if (experimentalProjectGenerationEnabled) {
+        projectGraph = params.getParser().buildTargetGraph(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableProfiling(),
+            executor,
+            Sets.union(graphRoots, explicitTestTargets));
+      }
     }
 
     return TargetGraphAndTargets.create(
         graphRoots,
         graphRootsOrSourceTargets,
-        resultProjectGraph,
+        projectGraph,
         associatedProjectPredicate,
         isWithTests,
         isWithDependenciesTests,
