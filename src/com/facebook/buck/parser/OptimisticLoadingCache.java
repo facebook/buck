@@ -71,6 +71,10 @@ class OptimisticLoadingCache<K, V> {
     return values.get(key);
   }
 
+  public boolean containsKey(K key) {
+    return values.containsKey(key);
+  }
+
   public void invalidateAll(Set<K> keys) {
     for (K key : keys) {
       invalidate(key);
