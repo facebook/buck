@@ -18,7 +18,10 @@ package com.facebook.buck.test;
 
 import com.facebook.buck.model.BuildTarget;
 
+import com.google.common.collect.ImmutableList;
+
 import java.nio.file.Paths;
+import java.nio.file.Path;
 
 /**
  * Test utility to build TestResults objects for use in test cases.
@@ -31,9 +34,16 @@ public class FakeTestResults {
         BuildTarget.builder(Paths.get("/does/not/exist"), "//foo/bar", "baz").build();
 
   public static TestResults of(Iterable<? extends TestCaseSummary> testCases) {
+    return withTestLogs(testCases, ImmutableList.<Path>of());
+  }
+
+  public static TestResults withTestLogs(
+      Iterable<? extends TestCaseSummary> testCases,
+      Iterable<Path> testLogs) {
     return TestResults.builder()
         .setBuildTarget(DUMMY_TARGET_FOR_TESTING)
         .setTestCases(testCases)
+        .setTestLogPaths(testLogs)
         .build();
   }
 }

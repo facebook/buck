@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Locale;
 
@@ -47,7 +48,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       Console console,
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
-      Locale locale) {
+      Locale locale,
+      Path testLogPath) {
     super(console, clock, locale);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
@@ -55,7 +57,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         console.getAnsi(),
         console.getVerbosity(),
         summaryVerbosity,
-        locale);
+        locale,
+        Optional.of(testLogPath));
   }
 
   @Override

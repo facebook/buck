@@ -20,6 +20,7 @@ java_library(
   deps = [
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/test:test',
+    '//third-party/java/guava:guava',
   ],
   visibility = [
     '//test/...',

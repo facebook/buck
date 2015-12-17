@@ -29,6 +29,7 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -52,13 +53,16 @@ public class TestResultFormatterTest {
   private TestResultSummary successTest;
   private TestResultSummary failingTest;
   private String stackTrace;
+  private FileSystem vfs;
+  private Path logPath;
 
   private TestResultFormatter createSilentFormatter() {
     return new TestResultFormatter(
         new Ansi(false),
         Verbosity.COMMANDS,
         TestResultSummaryVerbosity.of(false, false),
-        Locale.US);
+        Locale.US,
+        Optional.of(logPath));
   }
 
   private TestResultFormatter createNoisyFormatter() {
@@ -66,7 +70,8 @@ public class TestResultFormatterTest {
         new Ansi(false),
         Verbosity.COMMANDS,
         TestResultSummaryVerbosity.of(true, true),
-        Locale.US);
+        Locale.US,
+        Optional.of(logPath));
   }
 
   private TestResultFormatter createFormatterWithMaxLogLines(int logLines) {
@@ -78,7 +83,14 @@ public class TestResultFormatterTest {
             .setIncludeStdErr(false)
             .setMaxDebugLogLines(logLines)
             .build(),
-        Locale.US);
+        Locale.US,
+        Optional.of(logPath));
+  }
+
+  @Before
+  public void createTestLogFile() {
+    vfs = Jimfs.newFileSystem(Configuration.unix());
+    logPath = vfs.getPath("log.txt");
   }
 
   @Before
@@ -231,6 +243,40 @@ public class TestResultFormatterTest {
   }
 
   @Test
+  public void allTestsPassingShouldIncludeNonEmptyTestLogs() throws IOException {
+    Path testLogPath = vfs.getPath("test-log.txt");
+    Files.write(testLogPath, ImmutableList.of("Hello world"), StandardCharsets.UTF_8);
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    TestResults results = FakeTestResults.withTestLogs(
+        ImmutableList.of(summary),
+        ImmutableList.of(testLogPath));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(builder, ImmutableList.of(results));
+
+    assertEquals("Updated test logs: log.txt\nTESTS PASSED", toString(builder));
+  }
+
+  @Test
+  public void allTestsPassingShouldNotEmptyTestLogs() throws IOException {
+    Path testLogPath = vfs.getPath("test-log.txt");
+    Files.write(testLogPath, new byte[0]);
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    TestResults results = FakeTestResults.withTestLogs(
+        ImmutableList.of(summary),
+        ImmutableList.of(testLogPath));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(builder, ImmutableList.of(results));
+
+    assertEquals("TESTS PASSED", toString(builder));
+  }
+
+  @Test
   public void shouldReportTheNumberOfFailingTests() {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
@@ -304,7 +350,8 @@ public class TestResultFormatterTest {
         new Ansi(false),
         Verbosity.COMMANDS,
         TestResultSummaryVerbosity.of(false, false),
-        Locale.GERMAN);
+        Locale.GERMAN,
+        Optional.of(logPath));
 
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest",
@@ -361,8 +408,6 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
     Files.write(logPath, new byte[0]);
 
     TestResults results = TestResults.builder()
@@ -392,8 +437,6 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
     Files.write(
         logPath,
         ImmutableList.of("This is a debug log", "Here's another one"),
@@ -426,12 +469,10 @@ public class TestResultFormatterTest {
   }
 
   @Test
-  public void shouldOutputLogPathInlineForPassingTest() throws IOException {
+  public void shouldNotOutputLogPathInlineForPassingTest() throws IOException {
     TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
     Files.write(
         logPath,
         ImmutableList.of("This is a debug log", "Here's another one"),
@@ -448,42 +489,7 @@ public class TestResultFormatterTest {
     formatter.reportResult(builder, results);
 
     assertEquals(
-        "PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest  Logs: log.txt",
-        toString(builder));
-  }
-
-  @Test
-  public void shouldOutputMultipleLogPathsForPassingTest() throws IOException {
-    TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
-    TestCaseSummary summary = new TestCaseSummary(
-        "com.example.FooTest", ImmutableList.of(successTest));
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
-    Files.write(
-        logPath,
-        ImmutableList.of("This is a debug log", "Here's another one"),
-        StandardCharsets.UTF_8);
-
-    Path log2Path = vfs.getPath("log2.txt");
-    Files.write(
-        log2Path,
-        ImmutableList.of("This is another debug log"),
-        StandardCharsets.UTF_8);
-
-    TestResults results = TestResults.builder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
-        .setTestCases(ImmutableList.of(summary))
-        .addTestLogPaths(logPath, log2Path)
-        .build();
-
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    formatter.reportResult(builder, results);
-
-    assertEquals(
-        "PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest\n" +
-        "Logs: log.txt\n" +
-        "Logs: log2.txt",
+        "PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
         toString(builder));
   }
 
@@ -492,8 +498,6 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createFormatterWithMaxLogLines(3);
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
     Files.write(
         logPath,
         ImmutableList.of(
@@ -532,8 +536,6 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createFormatterWithMaxLogLines(0);
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
     Files.write(
         logPath,
         ImmutableList.of("None", "of", "these", "will", "appear"),

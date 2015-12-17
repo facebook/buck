@@ -828,7 +828,8 @@ public final class Main {
                    testConfig.getResultSummaryVerbosity(),
                    executionEnvironment,
                    webServer,
-                   locale);
+                   locale,
+                   BuckConstant.LOG_PATH.resolve("test.log"));
            TempDirectoryCreator tempDirectoryCreator =
                new TempDirectoryCreator(testTempDirOverride);
            AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
@@ -1305,7 +1306,8 @@ public final class Main {
       TestResultSummaryVerbosity testResultSummaryVerbosity,
       ExecutionEnvironment executionEnvironment,
       Optional<WebServer> webServer,
-      Locale locale) {
+      Locale locale,
+      Path testLogPath) {
     Verbosity verbosity = console.getVerbosity();
 
     if (Platform.WINDOWS != Platform.detect() &&
@@ -1318,7 +1320,8 @@ public final class Main {
           testResultSummaryVerbosity,
           executionEnvironment,
           webServer,
-          locale);
+          locale,
+          testLogPath);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
@@ -1327,7 +1330,8 @@ public final class Main {
         console,
         clock,
         testResultSummaryVerbosity,
-        locale);
+        locale,
+        testLogPath);
   }
 
   @VisibleForTesting

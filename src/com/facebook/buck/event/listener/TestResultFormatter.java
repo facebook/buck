@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
@@ -25,6 +26,7 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -47,6 +49,7 @@ public class TestResultFormatter {
   private final Verbosity verbosity;
   private final TestResultSummaryVerbosity summaryVerbosity;
   private final Locale locale;
+  private final Optional<Path> testLogsPath;
 
   public enum FormatMode {
       BEFORE_TEST_RUN,
@@ -57,11 +60,13 @@ public class TestResultFormatter {
       Ansi ansi,
       Verbosity verbosity,
       TestResultSummaryVerbosity summaryVerbosity,
-      Locale locale) {
+      Locale locale,
+      Optional<Path> testLogsPath) {
     this.ansi = ansi;
     this.verbosity = verbosity;
     this.summaryVerbosity = summaryVerbosity;
     this.locale = locale;
+    this.testLogsPath = testLogsPath;
   }
 
   public void runStarted(
@@ -104,20 +109,11 @@ public class TestResultFormatter {
               results.getTotalNumberOfTests(), verbosity));
     }
 
-    // If there's only one test case and one log, print the log path inline with the test summary.
-    boolean appendLogToSummaryOnSuccess = results.getTestCases().size() == 1 &&
-        results.getTestLogPaths().size() == 1 &&
-        Files.exists(results.getTestLogPaths().get(0)) &&
-        verbosity != Verbosity.SILENT;
-    boolean shouldListLogsAfterTests = !appendLogToSummaryOnSuccess;
     boolean shouldReportLogSummaryAfterTests = false;
 
     for (TestCaseSummary testCase : results.getTestCases()) {
       StringBuilder oneLineSummary = new StringBuilder(
           testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi));
-      if (appendLogToSummaryOnSuccess && testCase.isSuccess()) {
-        oneLineSummary.append("  Logs: ").append(results.getTestLogPaths().get(0).toString());
-      }
       addTo.add(oneLineSummary.toString());
 
       // Don't print the full error if there were no failures (so only successes and assumption
@@ -133,26 +129,20 @@ public class TestResultFormatter {
 
         // Report on either explicit failure
         if (!testResult.isSuccess()) {
-          shouldListLogsAfterTests = false;
           shouldReportLogSummaryAfterTests = true;
           reportResultSummary(addTo, testResult);
         }
       }
     }
 
-    if (verbosity != Verbosity.SILENT) {
+    if (shouldReportLogSummaryAfterTests && verbosity != Verbosity.SILENT) {
       for (Path testLogPath : results.getTestLogPaths()) {
         if (Files.exists(testLogPath)) {
-          if (shouldReportLogSummaryAfterTests) {
-            reportLogSummary(
-                locale,
-                addTo,
-                testLogPath,
-                summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
-          }
-          if (shouldListLogsAfterTests) {
-            addTo.add("Logs: " + testLogPath.toString());
-          }
+          reportLogSummary(
+              locale,
+              addTo,
+              testLogPath,
+              summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
         }
       }
     }
@@ -225,7 +215,10 @@ public class TestResultFormatter {
     ListMultimap<TestResults, TestCaseSummary> failingTests = ArrayListMultimap.create();
 
     int numFailures = 0;
+    ImmutableList.Builder<Path> testLogPathsBuilder = ImmutableList.builder();
+
     for (TestResults summary : completedResults) {
+      testLogPathsBuilder.addAll(summary.getTestLogPaths());
       if (!summary.isSuccess()) {
         isAllTestsPassed = false;
         numFailures += summary.getFailureCount();
@@ -239,10 +232,21 @@ public class TestResultFormatter {
       }
     }
 
+    ImmutableList<Path> testLogPaths = testLogPathsBuilder.build();
+
     // Print the summary of the test results.
     if (completedResults.isEmpty()) {
       addTo.add(ansi.asHighlightedFailureText("NO TESTS RAN"));
     } else if (isAllTestsPassed) {
+      if (testLogsPath.isPresent() && verbosity != Verbosity.SILENT) {
+        try {
+          if (MoreFiles.concatenateFiles(testLogsPath.get(), testLogPaths)) {
+            addTo.add("Updated test logs: " + testLogsPath.get().toString());
+          }
+        } catch (IOException e) {
+          LOG.warn(e, "Could not concatenate test logs %s to %s", testLogPaths, testLogsPath.get());
+        }
+      }
       if (isAnyAssumptionViolated) {
         addTo.add(ansi.asHighlightedWarningText("TESTS PASSED (with some assumption violations)"));
       } else {

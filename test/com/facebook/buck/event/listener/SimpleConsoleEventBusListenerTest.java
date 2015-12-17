@@ -53,8 +53,14 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.hash.HashCode;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 
 import java.util.concurrent.TimeUnit;
 import java.util.Locale;
@@ -62,6 +68,15 @@ import java.util.Locale;
 public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
+
+  private FileSystem vfs;
+  private Path logPath;
+
+    @Before
+    public void createTestLogFile() {
+    vfs = Jimfs.newFileSystem(Configuration.unix());
+    logPath = vfs.getPath("log.txt");
+  }
 
   @Test
   public void testSimpleBuild() {
@@ -84,7 +99,8 @@ public class SimpleConsoleEventBusListenerTest {
         console,
         fakeClock,
         TestResultSummaryVerbosity.of(false, false),
-        Locale.US);
+        Locale.US,
+        logPath);
     eventBus.register(listener);
 
     final long threadId = 0;

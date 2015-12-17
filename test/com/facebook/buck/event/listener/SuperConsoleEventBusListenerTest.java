@@ -81,12 +81,16 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.hash.HashCode;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import com.google.gson.Gson;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
@@ -104,6 +108,15 @@ public class SuperConsoleEventBusListenerTest {
       TestResultSummaryVerbosity.of(false, false);
 
   private static final DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  private FileSystem vfs;
+  private Path logPath;
+
+  @Before
+  public void createTestLogFile() {
+    vfs = Jimfs.newFileSystem(Configuration.unix());
+    logPath = vfs.getPath("log.txt");
+  }
 
   @Test
   public void testSimpleBuild() {
@@ -137,7 +150,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -406,7 +420,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
         eventBus);
@@ -544,7 +559,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -818,7 +834,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1089,7 +1106,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1375,7 +1393,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     // Start the build.
@@ -1538,7 +1557,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1563,7 +1583,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1618,7 +1639,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
         eventBus);
@@ -1673,7 +1695,8 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent(),
-            Locale.US);
+            Locale.US,
+            logPath);
     eventBus.register(listener);
 
     rawEventBus.post(ConsoleEvent.info("Hello world!"));
@@ -1764,7 +1787,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             // Note we use de_DE to ensure we get a decimal comma in the output.
-            Locale.GERMAN);
+            Locale.GERMAN,
+            logPath);
     eventBus.register(listener);
 
     rawEventBus.post(
