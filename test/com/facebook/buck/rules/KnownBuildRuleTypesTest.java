@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JvmLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -137,8 +138,8 @@ public class KnownBuildRuleTypesTest {
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes) {
-    JavaLibraryDescription description =
-        (JavaLibraryDescription) buildRuleTypes.getDescription(JavaLibraryDescription.TYPE);
+    JvmLibraryDescription description =
+        (JvmLibraryDescription) buildRuleTypes.getDescription(JavaLibraryDescription.TYPE);
 
     JavaLibraryDescription.Arg arg = new JavaLibraryDescription.Arg();
     populateJavaArg(arg);
