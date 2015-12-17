@@ -34,9 +34,15 @@ java_library(
   ],
 )
 
+FLAKY = [
+  'PythonBinaryIntegrationTest.java',
+  'PythonSrcZipIntegrationTest.java',
+  'PythonTestIntegrationTest.java',
+]
+
 java_test(
   name = 'python',
-  srcs = glob(['*Test.java']),
+  srcs = glob(['*Test.java'], excludes = FLAKY),
   deps = [
     ':builders',
     ':testutil',
