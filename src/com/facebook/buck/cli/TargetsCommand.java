@@ -33,7 +33,6 @@ import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -73,7 +72,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
@@ -625,7 +623,7 @@ public class TargetsCommand extends AbstractCommand {
       targetGraph = result.getSecond();
 
       if (isShowTargetHash()) {
-        return doShowTargetHash(params, executor, matchingBuildTargets);
+        return doShowTargetHash(params, executor, matchingBuildTargets, targetGraph);
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -683,45 +681,33 @@ public class TargetsCommand extends AbstractCommand {
   private int doShowTargetHash(
       CommandRunnerParams params,
       Executor executor,
-      ImmutableSet<BuildTarget> matchingBuildTargets)
-      throws IOException, InterruptedException {
+      ImmutableSet<BuildTarget> matchingBuildTargets,
+      TargetGraph targetGraph)
+      throws IOException, InterruptedException, BuildFileParseException {
     LOG.debug("Getting target hash for %s", matchingBuildTargets);
 
-    ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
-        params.getParser(),
-        params.getCell(),
-        params.getBuckEventBus(),
-        getEnableProfiling()
-    );
-
-    // Parse the BUCK files for the targets passed in from the command line and their deps.
-    TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
-        Iterables.transform(matchingBuildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC),
-        executor);
-
-    LOG.debug("Built project graph with nodes: %s", projectGraph.getNodes());
-
     Iterable<BuildTarget> matchingBuildTargetsWithTests;
-    final TargetGraph projectGraphWithTests;
+    final TargetGraph targetGraphWithTests;
     if (isDetectTestChanges()) {
       ImmutableSet<BuildTarget> explicitTestTargets;
       explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
           matchingBuildTargets,
-          projectGraph,
+          targetGraph,
           true);
       LOG.debug("Got explicit test targets: %s", explicitTestTargets);
       matchingBuildTargetsWithTests =
           Sets.union(matchingBuildTargets, explicitTestTargets);
 
       // Parse the BUCK files for the tests of the targets passed in from the command line.
-      projectGraphWithTests = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
-          Iterables.transform(
-              matchingBuildTargetsWithTests,
-              BuildTargetSpec.TO_BUILD_TARGET_SPEC),
-          executor);
+      targetGraphWithTests = params.getParser().buildTargetGraph(
+          params.getBuckEventBus(),
+          params.getCell(),
+          getEnableProfiling(),
+          executor,
+          matchingBuildTargetsWithTests);
     } else {
       matchingBuildTargetsWithTests = matchingBuildTargets;
-      projectGraphWithTests = projectGraph;
+      targetGraphWithTests = targetGraph;
     }
 
     TargetHashFileMode targetHashFileMode = getTargetHashFileMode();
@@ -745,7 +731,7 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
         TargetGraphHashing.hashTargetGraph(
             params.getCell().getFilesystem(),
-            projectGraphWithTests,
+            targetGraphWithTests,
             fileHashLoader,
             matchingBuildTargetsWithTests);
 
@@ -754,11 +740,11 @@ public class TargetsCommand extends AbstractCommand {
     // hashing the target, its deps, the tests, and their deps.
     for (BuildTarget target : matchingBuildTargets) {
       TargetNode<?> targetNode = Preconditions.checkNotNull(
-          projectGraphWithTests.get(target),
+          targetGraphWithTests.get(target),
           "Could not find target %s in project graph",
           target);
       ImmutableSet<TargetNode<?>> dependencyClosure =
-          getDependencyClosure(projectGraphWithTests, targetNode);
+          getDependencyClosure(targetGraphWithTests, targetNode);
 
       Hasher hasher = Hashing.sha1().newHasher();
       ImmutableSortedSet.Builder<TargetNode<?>> nodesWithDepsAndTests =
@@ -774,7 +760,7 @@ public class TargetsCommand extends AbstractCommand {
                     new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
                       @Override
                       public Iterable<TargetNode<?>> apply(TargetNode<?> node) {
-                        return projectGraphWithTests.getAll(
+                        return targetGraphWithTests.getAll(
                             TargetNodes.getTestTargetsForNode(node));
                       }
                     }));
