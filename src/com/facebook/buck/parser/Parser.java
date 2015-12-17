@@ -76,7 +76,10 @@ public class Parser {
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller) {
     this.permState = parserConfig.getEnableParallelParsing() ?
-        new ParallelDaemonicParserState(typeCoercerFactory, marshaller) :
+        new ParallelDaemonicParserState(
+            typeCoercerFactory,
+            marshaller,
+            parserConfig.getNumParsingThreads()) :
         new SerialDaemonicParserState(typeCoercerFactory, marshaller);
     this.marshaller = marshaller;
   }

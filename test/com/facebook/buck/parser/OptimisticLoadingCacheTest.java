@@ -29,7 +29,7 @@ public class OptimisticLoadingCacheTest {
 
   @Test
   public void shouldAllowAnEntryToBeAdded() throws ExecutionException {
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>();
+    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
     cache.get("cake", new Callable<Integer>() {
       @Override
       public Integer call() throws Exception {
@@ -44,7 +44,7 @@ public class OptimisticLoadingCacheTest {
 
   @Test
   public void shouldRemoveValues() throws ExecutionException {
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>();
+    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
     cache.get("cake", new Callable<Integer>() {
       @Override
       public Integer call() throws Exception {
@@ -60,7 +60,7 @@ public class OptimisticLoadingCacheTest {
   @Test
   public void shouldOnlyAddAnItemOnceToTheCache() throws ExecutionException {
     final AtomicInteger value = new AtomicInteger(1);
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>();
+    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
     Callable<Integer> loader = new Callable<Integer>() {
       @Override
       public Integer call() throws Exception {
@@ -76,7 +76,7 @@ public class OptimisticLoadingCacheTest {
 
   @Test(expected = ExecutionException.class)
   public void disallowsNullValuesInTheCache() throws ExecutionException {
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>();
+    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
     cache.get("cake", new Callable<Integer>() {
       @Override
       public Integer call() throws Exception {

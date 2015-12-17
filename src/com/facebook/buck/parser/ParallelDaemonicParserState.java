@@ -142,12 +142,13 @@ class ParallelDaemonicParserState implements DaemonicParserState {
 
   public ParallelDaemonicParserState(
       TypeCoercerFactory typeCoercerFactory,
-      ConstructorArgMarshaller marshaller) {
+      ConstructorArgMarshaller marshaller,
+      int parsingThreads) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
-    this.allRawNodes = new OptimisticLoadingCache<>();
+    this.allRawNodes = new OptimisticLoadingCache<>(parsingThreads);
     this.targetsCornucopia = HashMultimap.create();
-    this.allTargetNodes = new OptimisticLoadingCache<>();
+    this.allTargetNodes = new OptimisticLoadingCache<>(parsingThreads);
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override

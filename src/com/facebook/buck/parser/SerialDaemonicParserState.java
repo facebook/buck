@@ -133,9 +133,9 @@ class SerialDaemonicParserState implements DaemonicParserState {
       ConstructorArgMarshaller marshaller) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
-    this.allRawNodes = new OptimisticLoadingCache<>();
+    this.allRawNodes = new OptimisticLoadingCache<>(1);
     this.targetsCornucopia = HashMultimap.create();
-    this.allTargetNodes = new OptimisticLoadingCache<>();
+    this.allTargetNodes = new OptimisticLoadingCache<>(1);
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override
