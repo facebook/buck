@@ -57,6 +57,8 @@ import javax.annotation.Nullable;
 public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
+  private static final String VERBOSITY_LEVEL_DISABLES_COMMAND_OUTPUT =
+      "(verbosity level disables command output)";
 
   private final ProjectFilesystem filesystem;
   private final Operation operation;
@@ -324,10 +326,12 @@ public class CxxPreprocessAndCompileStep implements Step {
               inputType.isPreprocessable()));
     }
 
-    LOG.debug(
-        "Running command (pwd=%s): %s",
-        builder.directory(),
-        getDescription(context));
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          "Running command (pwd=%s): %s",
+          builder.directory(),
+          getDescription(context));
+    }
 
     // Start the process.
     Process process = builder.start();
@@ -496,7 +500,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
-  public String getDescriptionNoContext() {
+  private String getDescriptionNoContext() {
     switch (operation) {
       case PIPED_PREPROCESS_AND_COMPILE: {
         return Joiner.on(' ').join(
@@ -523,7 +527,10 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getDescriptionNoContext();
+    if (context.getVerbosity().shouldPrintCommand()) {
+      return getDescriptionNoContext();
+    }
+    return VERBOSITY_LEVEL_DISABLES_COMMAND_OUTPUT;
   }
 
   // We need to do binary rewriting if doing combined preprocessing and compiling or if we're

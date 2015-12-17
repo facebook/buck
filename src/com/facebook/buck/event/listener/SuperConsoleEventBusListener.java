@@ -201,7 +201,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
                   MoreIterables.zipAndConcat(
                       lines,
                       Iterables.cycle("\n"))));
-          StringBuilder fullFrame = new StringBuilder(lastRenderClear);
+          int bufferSize = lastRenderClear.length();
+          for (String part : renderedLines) {
+            bufferSize += part.length();
+          }
+          StringBuilder fullFrame = new StringBuilder(bufferSize);
+          fullFrame.append(lastRenderClear);
           for (String part : renderedLines) {
             fullFrame.append(part);
           }
