@@ -630,7 +630,9 @@ public class DefaultJavaLibraryTest {
           // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
           /* deps */ ImmutableSortedSet.<BuildRule>of(),
-          /* exportedDeps */ ImmutableSortedSet.of(genrule));
+          /* exportedDeps */ ImmutableSortedSet.of(genrule),
+          /* spoolMode */ Optional.<AbstractJavacOptions.SpoolMode>absent(),
+          /* postprocessClassesCommands */ ImmutableList.<String>of());
       fail("A non-java library listed as exported dep should have thrown.");
     } catch (HumanReadableException e) {
       String expected =
@@ -640,6 +642,90 @@ public class DefaultJavaLibraryTest {
       assertEquals(expected, e.getMessage());
     }
 
+  }
+
+  @Test
+  public void testStepsPresenceForForDirectJarSpooling() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
+
+    BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
+        buildTarget,
+        /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+        /* postprocessClassesCommands */ ImmutableList.<String>of());
+
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    BuildContext buildContext = createBuildContext(
+        javaLibraryBuildRule,
+        /* bootclasspath */ null,
+        projectFilesystem);
+
+    ImmutableList<Step> steps =
+        javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+
+    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JavacDirectToJarStep.class)));
+    assertThat(steps, Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JavacStep.class))));
+    assertThat(
+        steps,
+        Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JarDirectoryStep.class))));
+  }
+
+  @Test
+  public void testJavacDirectToJarStepIsNotPresentWhenPostprocessClassesCommandsPresent() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
+
+    BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
+        buildTarget,
+        /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+        /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
+
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    BuildContext buildContext = createBuildContext(
+        javaLibraryBuildRule,
+        /* bootclasspath */ null,
+        projectFilesystem);
+
+    ImmutableList<Step> steps =
+        javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+
+    assertThat(
+        steps,
+        Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
+    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JavacStep.class)));
+    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
+  }
+
+  @Test
+  public void testStepsPresenceForIntermediateOutputToDiskSpooling() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
+
+    BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
+        buildTarget,
+        /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
+        /* postprocessClassesCommands */ ImmutableList.<String>of());
+
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    BuildContext buildContext = createBuildContext(
+        javaLibraryBuildRule,
+        /* bootclasspath */ null,
+        projectFilesystem);
+
+    ImmutableList<Step> steps =
+        javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+
+    assertThat(
+        steps,
+        Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
+    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JavacStep.class)));
+    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
   }
 
   /**
@@ -1027,7 +1113,9 @@ public class DefaultJavaLibraryTest {
       BuildTarget buildTarget,
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
-      ImmutableSortedSet<BuildRule> exportedDeps) {
+      ImmutableSortedSet<BuildRule> exportedDeps,
+      Optional<AbstractJavacOptions.SpoolMode> spoolMode,
+      ImmutableList<String> postprocessClassesCommands) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(MorePaths.TO_PATH)
@@ -1038,20 +1126,24 @@ public class DefaultJavaLibraryTest {
         .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
         .build();
 
+    JavacOptions javacOptions = spoolMode.isPresent()
+        ? JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spoolMode.get()).build()
+        : DEFAULT_JAVAC_OPTIONS;
+
     return new DefaultJavaLibrary(
         buildRuleParams,
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
-        DEFAULT_JAVAC_OPTIONS.getGeneratedSourceFolderName(),
+        javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.<SourcePath>absent(),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
+        postprocessClassesCommands,
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* abiJar */ new FakeSourcePath("abi.jar"),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        new JavacToJarStepFactory(DEFAULT_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+        new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
@@ -1288,7 +1380,8 @@ public class DefaultJavaLibraryTest {
           .setDebugEnabled(true)
           .build();
 
-      ImmutableList<String> options = javacCommand.getOptions(executionContext,
+      ImmutableList<String> options = javacCommand.getOptions(
+          executionContext,
           /* buildClasspathEntries */ ImmutableSortedSet.<Path>of());
 
       return options;

@@ -45,7 +45,7 @@ public class JavaInMemoryFileObjectTest {
   @Test
   public void testJavaFileName() throws Exception {
     JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        "com.facebook.buck.java.JavaInMemoryFileObjectTest",
+        "com/facebook/buck/java/JavaInMemoryFileObjectTest.class",
         JavaFileObject.Kind.CLASS,
         outputStream,
         semaphore);
@@ -57,7 +57,7 @@ public class JavaInMemoryFileObjectTest {
   @Test
   public void testJavaFileContent() throws Exception {
     JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        "com.facebook.buck.java.JavaInMemoryFileObjectTest",
+        "com/facebook/buck/java/JavaInMemoryFileObjectTest.class",
         JavaFileObject.Kind.CLASS,
         outputStream,
         semaphore);
@@ -74,13 +74,13 @@ public class JavaInMemoryFileObjectTest {
   @Test
   public void testMultipleJavaFiles() throws Exception {
     JavaInMemoryFileObject file1 = new JavaInMemoryFileObject(
-        "com.facebook.buck.java.JavaFileParser",
+        "com/facebook/buck/java/JavaFileParser.class",
         JavaFileObject.Kind.CLASS,
         outputStream,
         semaphore);
 
     JavaInMemoryFileObject file2 = new JavaInMemoryFileObject(
-        "com.facebook.buck.java.JavaLibrary",
+        "com/facebook/buck/java/JavaLibrary.class",
         JavaFileObject.Kind.CLASS,
         outputStream,
         semaphore);

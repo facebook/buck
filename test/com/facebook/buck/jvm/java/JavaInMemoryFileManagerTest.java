@@ -57,12 +57,12 @@ public class JavaInMemoryFileManagerTest {
   public void testJavaFileName() throws Exception {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
-        "JavaFileParser",
+        "com.facebook.buck.jvm.java.JavaFileParser",
         JavaFileObject.Kind.SOURCE,
         null);
 
     assertEquals(JavaFileObject.Kind.SOURCE, fileObject.getKind());
-    assertEquals("JavaFileParser.java", fileObject.getName());
+    assertEquals("com/facebook/buck/jvm/java/JavaFileParser.java", fileObject.getName());
   }
 
   @Test

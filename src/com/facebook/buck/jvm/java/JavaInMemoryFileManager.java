@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +42,8 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private CustomZipOutputStream jarOutputStream;
   private StandardJavaFileManager delegate;
   private Semaphore jarFileSemaphore = new Semaphore(1);
-  private Set<String> existingDirectoryNames;
+  private Set<String> directoryPaths;
+  private Set<String> javaFileForOutputPaths;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
@@ -48,7 +51,8 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     super(standardManager);
     this.delegate = standardManager;
     this.jarOutputStream = jarOutputStream;
-    this.existingDirectoryNames = new HashSet<>();
+    this.directoryPaths = new HashSet<>();
+    this.javaFileForOutputPaths = new HashSet<>();
   }
 
   /**
@@ -63,6 +67,14 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return entry;
   }
 
+  private static String getPath(String className) {
+    return className.replace('.', '/');
+  }
+
+  private static String getPath(String className, JavaFileObject.Kind kind) {
+    return className.replace('.', '/') + kind.extension;
+  }
+
   @Override
   public JavaFileObject getJavaFileForOutput(
       Location location,
@@ -72,15 +84,17 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     // Create the directories that are part of the class name path.
     for (int i = 0; i < className.length(); ++i) {
       if (className.charAt(i) == '.') {
-        String directoryName = className.substring(0, i + 1);
-        if (existingDirectoryNames.contains(directoryName)) {
+        String directoryPath = getPath(className.substring(0, i + 1));
+        if (directoryPaths.contains(directoryPath)) {
           continue;
         }
-        createDirectory(directoryName);
-        existingDirectoryNames.add(directoryName);
+        createDirectory(directoryPath);
+        directoryPaths.add(directoryPath);
       }
     }
-    return createJavaMemoryFileObject(className, kind);
+    JavaFileObject fileObject = createJavaMemoryFileObject(getPath(className, kind), kind);
+    javaFileForOutputPaths.add(fileObject.getName());
+    return fileObject;
   }
 
   @Override
@@ -126,6 +140,10 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return delegate.getLocation(location);
   }
 
+  public ImmutableSet<String> getEntries() {
+    return ImmutableSet.copyOf(Sets.union(directoryPaths, javaFileForOutputPaths));
+  }
+
   private void createDirectory(String name) throws IOException {
     JavaFileObject fileObject = createJavaMemoryFileObject(name, JavaFileObject.Kind.OTHER);
     jarFileSemaphore.acquireUninterruptibly();
@@ -134,7 +152,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     jarFileSemaphore.release();
   }
 
-  private JavaFileObject createJavaMemoryFileObject(String className, JavaFileObject.Kind kind) {
-    return new JavaInMemoryFileObject(className, kind, jarOutputStream, jarFileSemaphore);
+  private JavaFileObject createJavaMemoryFileObject(String path, JavaFileObject.Kind kind) {
+    return new JavaInMemoryFileObject(path, kind, jarOutputStream, jarFileSemaphore);
   }
 }

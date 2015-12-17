@@ -47,6 +47,10 @@ public class JavaBuckConfig {
         "java",
         "extra_arguments");
 
+    AbstractJavacOptions.SpoolMode spoolMode = delegate
+        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class)
+        .or(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
+
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
@@ -60,6 +64,7 @@ public class JavaBuckConfig {
         .setJavacJarPath(getJavacJarPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
+        .setSpoolMode(spoolMode)
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .build();

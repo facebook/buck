@@ -50,6 +50,8 @@ public class JavacStep implements Step {
 
   private final Path outputDirectory;
 
+  private final Optional<StandardJavaFileManagerFactory> fileManagerFactory;
+
   private final Optional<Path> workingDirectory;
 
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -98,6 +100,7 @@ public class JavacStep implements Step {
 
   public JavacStep(
       Path outputDirectory,
+      Optional<StandardJavaFileManagerFactory> fileManagerFactory,
       Optional<Path> workingDirectory,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
@@ -109,6 +112,7 @@ public class JavacStep implements Step {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem) {
     this.outputDirectory = outputDirectory;
+    this.fileManagerFactory = fileManagerFactory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
@@ -144,7 +148,7 @@ public class JavacStep implements Step {
           javaSourceFilePaths,
           pathToSrcsList,
           workingDirectory,
-          Optional.<StandardJavaFileManagerFactory>absent());
+          fileManagerFactory);
 
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
@@ -237,6 +241,20 @@ public class JavacStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
+      ExecutionContext context,
+      ImmutableSortedSet<Path> buildClasspathEntries) {
+    return getOptions(
+        javacOptions,
+        filesystem,
+        outputDirectory,
+        context,
+        buildClasspathEntries);
+  }
+
+  public static ImmutableList<String> getOptions(
+      JavacOptions javacOptions,
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();

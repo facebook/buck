@@ -209,6 +209,7 @@ java_immutables_library(
     'JacocoConstants.java',
     'JarDirectoryStep.java',
     'JarDirectoryStepHelper.java',
+    'JavacDirectToJarStep.java',
     'JavacStep.java',
     'JUnitStep.java',
     'TestType.java',

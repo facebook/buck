@@ -457,7 +457,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      Path output = outputJar.get();
       // This adds the javac command, along with any supporting commands.
       Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
@@ -481,7 +480,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.<String>absent(),
           /* manifestFile */ Optional.<Path>absent(),
-          output,
+          outputJar.get(),
           /* output params */
           steps,
           buildableContext);

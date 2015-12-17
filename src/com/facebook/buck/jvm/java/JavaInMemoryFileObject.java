@@ -34,33 +34,20 @@ import javax.tools.SimpleJavaFileObject;
  */
 public class JavaInMemoryFileObject extends SimpleJavaFileObject {
 
-  private final String name;
   private final CustomZipOutputStream jarOutputStream;
   private final Semaphore jarFileSemaphore;
   private final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-  private static String getJarPath(String name, Kind kind) {
-    return name.replace('.', '/') + kind.extension;
-  }
-
-  public JavaInMemoryFileObject(String name, Kind kind,
+  public JavaInMemoryFileObject(String path, Kind kind,
       CustomZipOutputStream jarOutputStream, Semaphore jarFileSemaphore) {
-    super(
-        URI.create(
-            "string:///" + getJarPath(name, kind)), kind);
-    this.name = getJarPath(name, kind);
+    super(URI.create(path), kind);
     this.jarOutputStream = jarOutputStream;
     this.jarFileSemaphore = jarFileSemaphore;
   }
 
   @Override
-  public String getName() {
-    return super.getName().substring(1);
-  }
-
-  @Override
   public OutputStream openOutputStream() throws IOException {
-    final ZipEntry entry = JavaInMemoryFileManager.createEntry(name);
+    final ZipEntry entry = JavaInMemoryFileManager.createEntry(getName());
 
     return new OutputStream() {
       @Override

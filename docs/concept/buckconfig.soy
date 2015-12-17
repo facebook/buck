@@ -668,6 +668,21 @@ and generated code, respectively.  Both default to "7".
 <p>
 Use "skip_checking_missing_deps" to skip analyzing build failure to find missing
 dependencies.
+<p>
+You can also specify how the compiler output to the .jar file should be spooled by setting
+"jar_spool_mode":
+
+{literal}<pre class="prettyprint lang-ini">
+[java]
+  jar_spool_mode = direct_to_jar
+</pre>{/literal}
+
+By default, it is <code>intermediate_to_disk</code> which writes the intermediate
+.class files from the compiler output to disk. The .class files are then packed into a .jar file.
+If you change it to <code>direct_to_jar</code>, the compiler output will be directly written
+to a .jar file retaining the intermediate .class files in memory. When <code>jar_spool_mode</code>
+is set to <code>direct_to_jar</code>, the compiler output will still be written to disk if there
+are postprocessing commands specified during the build.
 
 {call .section}{param title: 'httpserver' /}{/call}
 

@@ -20,7 +20,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -43,16 +46,19 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 /**
  * Integration test that verifies that a {@link DefaultJavaLibrary} writes its ABI key as part
@@ -372,6 +378,59 @@ public class DefaultJavaLibraryIntegrationTest {
     String stderr = result.getStderr();
 
     assertTrue(stderr, stderr.contains("cannot find symbol"));
+  }
+
+  @Test
+  public void testSaveClassFilesToDisk() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spool_class_files_to_disk",
+        tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("//:a");
+
+    result.assertSuccess();
+
+    Path classesDir = workspace.getPath("buck-out/bin/lib__a__classes");
+    assertTrue(Files.exists(classesDir));
+    assertTrue(Files.isDirectory(classesDir));
+    ArrayList<String> classFiles = new ArrayList<>();
+    for (File file : classesDir.toFile().listFiles()) {
+      classFiles.add(file.getName());
+    }
+    assertThat(
+        "There should be 2 class files saved to disk from the compiler",
+        classFiles, hasSize(2));
+    assertThat(classFiles, hasItem("A.class"));
+    assertThat(classFiles, hasItem("B.class"));
+  }
+
+  @Test
+  public void testSpoolClassFilesDirectlyToJar() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spool_class_files_directly_to_jar",
+        tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("//:a");
+
+    result.assertSuccess();
+
+    Path classesDir = workspace.getPath("buck-out/bin/lib__a__classes");
+
+    assertThat(Files.exists(classesDir), is(Boolean.TRUE));
+    assertThat(
+        "There should be no class files in disk",
+        ImmutableList.copyOf(classesDir.toFile().listFiles()), hasSize(0));
+
+    Path jarPath = workspace.getPath("buck-out/gen/lib__a__output/a.jar");
+    assertTrue(Files.exists(jarPath));
+    ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
+    assertThat(zip.getNextEntry().getName(), is("A.class"));
+    assertThat(zip.getNextEntry().getName(), is("B.class"));
+    zip.close();
   }
 
   /**

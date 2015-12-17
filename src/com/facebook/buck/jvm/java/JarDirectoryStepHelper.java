@@ -28,6 +28,7 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -61,6 +62,7 @@ public class JarDirectoryStepHelper {
       Path pathToOutputFile,
       CustomZipOutputStream outputFile,
       ImmutableSortedSet<Path> entriesToJar,
+      ImmutableSet<String> alreadyAddedEntriesToOutputFile,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       boolean mergeManifests,
@@ -73,7 +75,7 @@ public class JarDirectoryStepHelper {
 
     Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
 
-    Set<String> alreadyAddedEntries = Sets.newHashSet();
+    Set<String> alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntriesToOutputFile);
     for (Path entry : entriesToJar) {
       Path file = filesystem.getPathForRelativePath(entry);
       if (Files.isRegularFile(file)) {
@@ -158,6 +160,7 @@ public class JarDirectoryStepHelper {
           pathToOutputFile,
           outputFile,
           entriesToJar,
+          /* alreadyAddedEntriesToOutputFile */ ImmutableSet.<String>of(),
           mainClass,
           manifestFile,
           mergeManifests,
