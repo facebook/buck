@@ -89,6 +89,7 @@ abstract class AbstractTestResults {
   @Value.Parameter
   public abstract ImmutableSet<String> getLabels();
 
+  @JsonIgnore
   public abstract ImmutableList<Path> getTestLogPaths();
 
   @Value.Default

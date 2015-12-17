@@ -195,7 +195,6 @@ public class EventSerializationTest {
         "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
-        "\"testLogPaths\":[]," +
         "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
         "\"cell\":{\"present\":false},\"flavor\":\"\"}," +
         "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":" +
@@ -228,7 +227,6 @@ public class EventSerializationTest {
         "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
-        "\"testLogPaths\":[]," +
         "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
         "\"cell\":{\"present\":false},\"flavor\":\"\"}," +
         "\"success\":false},\"type\":\"ResultsAvailable\"}", message);
