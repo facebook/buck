@@ -19,11 +19,6 @@ local lua = <LUA>
 local main_module = <MAIN_MODULE>
 local modules_dir = <MODULES_DIR>
 
--- Get the platform name.
-local function uname ()
-  return io.popen('uname -s'):read("*l")
-end
-
 -- Escape the given string as an argument for the system shell.
 local function escape (str)
   return '\'' .. string.gsub(str, "\'", "'\\''") .. '\''
@@ -39,23 +34,16 @@ local function exec (command)
   end
   local shell_cmd = table.concat(escaped, ' ')
 
-  -- Begin gross decoding of platform-specific return code.
   -- TODO: handle signal exit codes.
-  local platform = uname()
-
   local exit_code
 
-  -- For linux, right shift 8 bits to get the real return code.
-  if (platform == 'Linux') then
-    exit_code = os.execute(shell_cmd) / 256
-
-  -- For mac, unpack the tuple to grab the exit code
-  elseif (platform == 'Darwin') then
+  -- For Lua 5.2, unpack the tuple to grab the exit code
+  if _ENV then
     _, _, exit_code = os.execute(shell_cmd)
 
-  -- For everything else, just return what we have.
+  -- Otherwise, right shift 8 bits to get the real return code.
   else
-    exit_code = os.execute(shell_cmd)
+    exit_code = os.execute(shell_cmd) / 256
   end
 
   return exit_code
