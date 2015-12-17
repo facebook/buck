@@ -1130,10 +1130,12 @@ public class DefaultJavaLibraryTest {
         ? JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spoolMode.get()).build()
         : DEFAULT_JAVAC_OPTIONS;
 
-    return new DefaultJavaLibrary(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new BuildTargetNodeToBuildRuleTransformer());
+    DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
         buildRuleParams,
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+        new SourcePathResolver(ruleResolver),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
         javacOptions.getGeneratedSourceFolderName(),
@@ -1147,7 +1149,10 @@ public class DefaultJavaLibraryTest {
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
-        };
+    };
+
+    ruleResolver.addToIndex(defaultJavaLibrary);
+    return defaultJavaLibrary;
   }
 
   @Test
@@ -1406,12 +1411,13 @@ public class DefaultJavaLibraryTest {
           .setProjectFilesystem(projectFilesystem)
           .build();
 
-      return new AndroidLibrary(
+      BuildRuleResolver ruleResolver = new BuildRuleResolver(
+          TargetGraph.EMPTY,
+          new BuildTargetNodeToBuildRuleTransformer());
+      AndroidLibrary androidLibrary = new AndroidLibrary(
           buildRuleParams,
           new SourcePathResolver(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer())),
+              ruleResolver),
           ImmutableSet.of(new FakeSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<SourcePath>absent(),
@@ -1425,6 +1431,9 @@ public class DefaultJavaLibraryTest {
           /* mavenCoords */ Optional.<String>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),
           /* tests */ ImmutableSortedSet.<BuildTarget>of());
+
+      ruleResolver.addToIndex(androidLibrary);
+      return androidLibrary;
     }
 
     private JavacStep lastJavacCommand(Iterable<Step> commands) {
