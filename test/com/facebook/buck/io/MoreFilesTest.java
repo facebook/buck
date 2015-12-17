@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
+import org.hamcrest.Matchers;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -215,5 +217,56 @@ public class MoreFilesTest {
         "No permissions should have been changed",
         "rwxrwxrwx",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+  }
+
+  @Test
+  public void concatenatingNoFilesReturnsFalse() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path outputPath = vfs.getPath("logs.txt");
+    boolean collected = MoreFiles.concatenateFiles(outputPath, ImmutableList.<Path>of());
+    assertThat(collected, is(false));
+    assertThat(Files.exists(outputPath), is(false));
+  }
+
+  @Test
+  public void concatenatingTwoEmptyFilesReturnsFalse() throws Exception {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path fooPath = vfs.getPath("foo.txt");
+    Files.write(fooPath, new byte[0]);
+
+    Path barPath = vfs.getPath("bar.txt");
+    Files.write(barPath, new byte[0]);
+
+    Path outputPath = vfs.getPath("logs.txt");
+
+    boolean concatenated = MoreFiles.concatenateFiles(
+        outputPath,
+        ImmutableList.of(fooPath, barPath));
+    assertThat(concatenated, is(false));
+
+    assertThat(Files.exists(outputPath), is(false));
+  }
+
+  @Test
+  public void concatenatingTwoNonEmptyFilesReturnsTrueAndWritesConcatenatedFile() throws Exception {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path fooPath = vfs.getPath("foo.txt");
+    Files.write(fooPath, "hello world\n".getBytes(UTF_8));
+
+    Path barPath = vfs.getPath("bar.txt");
+    Files.write(barPath, "goodbye world\n".getBytes(UTF_8));
+
+    Path outputPath = vfs.getPath("logs.txt");
+
+    boolean concatenated = MoreFiles.concatenateFiles(
+        outputPath,
+        ImmutableList.of(fooPath, barPath));
+    assertThat(concatenated, is(true));
+
+    assertThat(
+        Files.readAllLines(outputPath, UTF_8),
+        Matchers.<List<String>>equalTo(ImmutableList.of("hello world", "goodbye world")));
   }
 }

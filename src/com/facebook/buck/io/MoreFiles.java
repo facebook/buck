@@ -23,11 +23,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -35,6 +38,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
@@ -44,6 +48,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public final class MoreFiles {
 
@@ -295,4 +300,49 @@ public final class MoreFiles {
     return CharMatcher.anyOf(ILLEGAL_FILE_NAME_CHARACTERS).replaceFrom(name, "_");
   }
 
+  /**
+   * Concatenates the contents of one or more files.
+   *
+   * @param dest The path to which the concatenated files' contents are written.
+   * @param pathsToConcatenate The paths whose contents are concatenated to {@code dest}.
+   *
+   * @return {@code true} if any data was concatenated to {@code dest}, {@code false} otherwise.
+   */
+  public static boolean concatenateFiles(Path dest, Iterable<Path> pathsToConcatenate)
+      throws IOException {
+    // Concatenate all the logs to a temp file, then atomically rename it to the
+    // passed-in concatenatedPath if any log data was collected.
+    String tempFilename = "." + dest.getFileName() + ".tmp." + UUID.randomUUID().toString();
+    Path tempPath = dest.resolveSibling(tempFilename);
+
+    try {
+      long bytesCollected = 0;
+      try (OutputStream os =
+           Files.newOutputStream(
+               tempPath,
+               StandardOpenOption.CREATE,
+               StandardOpenOption.TRUNCATE_EXISTING,
+               StandardOpenOption.WRITE)) {
+        for (Path path : pathsToConcatenate) {
+          try (InputStream is = Files.newInputStream(path)) {
+            bytesCollected += ByteStreams.copy(is, os);
+          } catch (NoSuchFileException e) {
+            continue;
+          }
+        }
+      }
+      if (bytesCollected > 0) {
+        Files.move(
+            tempPath,
+            dest,
+            StandardCopyOption.REPLACE_EXISTING,
+            StandardCopyOption.ATOMIC_MOVE);
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      Files.deleteIfExists(tempPath);
+    }
+  }
 }
