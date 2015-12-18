@@ -18,7 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.util.ClosureException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -112,37 +111,30 @@ public class PythonUtil {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    try {
-      new AbstractBreadthFirstTraversal<BuildRule>(params.getDeps()) {
-        @Override
-        public ImmutableSortedSet<BuildRule> visit(BuildRule rule) {
-          // We only process and recurse on instances of PythonPackagable.
-          if (rule instanceof PythonPackagable) {
-            PythonPackagable lib = (PythonPackagable) rule;
+    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
+        params.getDeps()) {
+      @Override
+      public ImmutableSortedSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+        // We only process and recurse on instances of PythonPackagable.
+        if (rule instanceof PythonPackagable) {
+          PythonPackagable lib = (PythonPackagable) rule;
 
-            // Add all components from the python packable into our top-level
-            // package.
-            try {
-              components.addComponent(
-                  lib.getPythonPackageComponents(pythonPlatform, cxxPlatform),
-                  rule.getBuildTarget());
-            } catch (NoSuchBuildTargetException e) {
-              throw new ClosureException(e);
-            }
+          // Add all components from the python packable into our top-level
+          // package.
+          components.addComponent(
+              lib.getPythonPackageComponents(pythonPlatform, cxxPlatform),
+              rule.getBuildTarget());
 
-            // Return all our deps to recurse on them.
-            return FluentIterable.from(rule.getDeps())
-                .filter(Predicates.instanceOf(PythonPackagable.class))
-                .toSortedSet(Ordering.natural());
-          }
-
-          // Don't recurse on anything from other rules.
-          return ImmutableSortedSet.of();
+          // Return all our deps to recurse on them.
+          return FluentIterable.from(rule.getDeps())
+              .filter(Predicates.instanceOf(PythonPackagable.class))
+              .toSortedSet(Ordering.natural());
         }
-      }.start();
-    } catch (ClosureException e) {
-      throw (NoSuchBuildTargetException) e.getException();
-    }
+
+        // Don't recurse on anything from other rules.
+        return ImmutableSortedSet.of();
+      }
+    }.start();
 
     ImmutableMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.ClosureException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -199,31 +198,20 @@ public final class CxxInferEnhancer {
       final CxxPlatform cxxPlatform,
       final Iterable<? extends BuildRule> deps) throws NoSuchBuildTargetException {
     final ImmutableSet.Builder<CxxInferAnalyze> depsBuilder = ImmutableSet.builder();
-
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(deps) {
-          @Override
-          public ImmutableSet<BuildRule> visit(BuildRule buildRule) {
-            if (buildRule instanceof CxxLibrary) {
-              CxxLibrary library = (CxxLibrary) buildRule;
-              try {
-                depsBuilder.add(
-                    (CxxInferAnalyze) library.requireBuildRule(
-                        INFER_ANALYZE,
-                        cxxPlatform.getFlavor()));
-              } catch (NoSuchBuildTargetException e) {
-                throw new ClosureException(e);
-              }
-              return buildRule.getDeps();
-            }
-            return ImmutableSet.of();
-          }
-        };
-    try {
-      visitor.start();
-    } catch (ClosureException e) {
-      throw (NoSuchBuildTargetException) e.getException();
-    }
+    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule buildRule) throws NoSuchBuildTargetException {
+        if (buildRule instanceof CxxLibrary) {
+          CxxLibrary library = (CxxLibrary) buildRule;
+          depsBuilder.add(
+              (CxxInferAnalyze) library.requireBuildRule(
+                  INFER_ANALYZE,
+                  cxxPlatform.getFlavor()));
+          return buildRule.getDeps();
+        }
+        return ImmutableSet.of();
+      }
+    }.start();
     return depsBuilder.build();
   }
 

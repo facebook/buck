@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.ClosureException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -94,31 +93,20 @@ public class CxxPreprocessables {
     final Map<BuildTarget, CxxPreprocessorInput> deps = Maps.newLinkedHashMap();
 
     // Build up the map of all C/C++ preprocessable dependencies.
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
-          @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
-            if (rule instanceof CxxPreprocessorDep) {
-              CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-              try {
-                deps.putAll(
-                    dep.getTransitiveCxxPreprocessorInput(
-                        cxxPlatform,
-                        HeaderVisibility.PUBLIC));
-              } catch (NoSuchBuildTargetException e) {
-                throw new ClosureException(e);
-              }
-              return ImmutableSet.of();
-            }
-            return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
-          }
-        };
-    try {
-      visitor.start();
-    } catch (ClosureException e) {
-      throw (NoSuchBuildTargetException) e.getException();
-    }
-
+    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(inputs) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+        if (rule instanceof CxxPreprocessorDep) {
+          CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
+          deps.putAll(
+              dep.getTransitiveCxxPreprocessorInput(
+                  cxxPlatform,
+                  HeaderVisibility.PUBLIC));
+          return ImmutableSet.of();
+        }
+        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
+      }
+    }.start();
 
     // Grab the cxx preprocessor inputs and return them.
     return deps.values();

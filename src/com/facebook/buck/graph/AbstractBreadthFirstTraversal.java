@@ -16,63 +16,18 @@
 
 package com.facebook.buck.graph;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import java.util.Queue;
-import java.util.Set;
-
 /**
  * Performs a breadth-first traversal of dependencies of a graph node.
  */
-public abstract class AbstractBreadthFirstTraversal<Node> {
-
-  private final Queue<Node> toExplore;
-  private final Set<Node> explored;
+public abstract class AbstractBreadthFirstTraversal<Node>
+    extends AbstractBreadthFirstThrowingTraversal<Node, RuntimeException> {
 
   public AbstractBreadthFirstTraversal(Node initialNode) {
-    this(ImmutableSet.of(initialNode));
+    super(initialNode);
   }
 
   public AbstractBreadthFirstTraversal(Iterable<? extends Node> initialNodes) {
-    toExplore = Lists.newLinkedList();
-    Iterables.addAll(toExplore, initialNodes);
-    explored = Sets.newHashSet();
+    super(initialNodes);
   }
 
-  public final void start() {
-    while (!toExplore.isEmpty()) {
-      Node currentNode = toExplore.remove();
-      if (explored.contains(currentNode)) {
-        continue;
-      }
-
-      Iterable<Node> depsToVisit = visit(currentNode);
-      explored.add(currentNode);
-
-      for (Node dep : depsToVisit) {
-        if (!explored.contains(dep)) {
-          toExplore.add(dep);
-        }
-      }
-    }
-
-    onComplete();
-  }
-
-  /** Override this method with any logic that should be run when {@link #start()} completes. */
-  protected void onComplete() {
-
-  }
-
-  /**
-   * To perform a full traversal of the the {@code initialNode}'s transitive dependencies, this
-   * function should return all of {@code node}'s direct dependencies.
-   *
-   * @param node Visited graph node
-   * @return The set of direct dependencies to visit after visiting this node.
-   */
-  public abstract Iterable<Node> visit(Node node);
 }
