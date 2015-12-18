@@ -49,7 +49,9 @@ import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibrary {
+public class PrebuiltCxxLibrary
+    extends NoopBuildRule
+    implements AbstractCxxLibrary, CanProvideSharedNativeLinkTarget {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -63,11 +65,10 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<String> soname;
   private final boolean linkWithoutSoname;
-  private final Linkage linkage;
+  private final boolean forceStatic;
   private final boolean headerOnly;
   private final boolean linkWhole;
   private final boolean provided;
-
 
   private final Map<Pair<Flavor, HeaderVisibility>, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       cxxPreprocessorInputCache = Maps.newHashMap();
@@ -85,12 +86,13 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<String> soname,
       boolean linkWithoutSoname,
-      Linkage linkage,
+      boolean forceStatic,
       boolean headerOnly,
       boolean linkWhole,
       boolean provided,
       Function<CxxPlatform, Boolean> hasHeaders) {
     super(params, pathResolver);
+    Preconditions.checkArgument(!forceStatic || !provided);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
@@ -102,10 +104,14 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.soname = soname;
     this.linkWithoutSoname = linkWithoutSoname;
-    this.linkage = linkage;
+    this.forceStatic = forceStatic;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
     this.provided = provided;
+  }
+
+  protected String getSoname(CxxPlatform cxxPlatform) {
+    return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
   }
 
   /**
@@ -141,25 +147,29 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   /**
    * @return the {@link Path} representing the actual static PIC library.
    */
-  private Path getStaticPicLibrary(CxxPlatform cxxPlatform) {
+  private Optional<Path> getStaticPicLibrary(CxxPlatform cxxPlatform) {
     Path staticPicLibraryPath =
         PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
             getBuildTarget(),
             cxxPlatform,
             libDir,
             libName);
-
-    // If a specific static-pic variant isn't available, then just use the static variant.
-    if (!params.getProjectFilesystem().exists(staticPicLibraryPath)) {
-      staticPicLibraryPath =
-          PrebuiltCxxLibraryDescription.getStaticLibraryPath(
-              getBuildTarget(),
-              cxxPlatform,
-              libDir,
-              libName);
+    if (params.getProjectFilesystem().exists(staticPicLibraryPath)) {
+      return Optional.of(staticPicLibraryPath);
     }
 
-    return staticPicLibraryPath;
+    // If a specific static-pic variant isn't available, then just use the static variant.
+    Path staticLibraryPath =
+        PrebuiltCxxLibraryDescription.getStaticLibraryPath(
+            getBuildTarget(),
+            cxxPlatform,
+            libDir,
+            libName);
+    if (params.getProjectFilesystem().exists(staticLibraryPath)) {
+      return Optional.of(staticLibraryPath);
+    }
+
+    return Optional.absent();
   }
 
   @Override
@@ -241,7 +251,8 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
     linkerArgsBuilder.addAll(
         StringArg.from(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform))));
     if (!headerOnly) {
-      if (provided || (type == Linker.LinkableDepType.SHARED && linkage != Linkage.STATIC)) {
+      if (type == Linker.LinkableDepType.SHARED) {
+        Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
         final SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
         if (linkWithoutSoname) {
           if (!(sharedLibrary instanceof PathSourcePath)) {
@@ -255,9 +266,10 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
               new SourcePathArg(getResolver(), requireSharedLibrary(cxxPlatform)));
         }
       } else {
+        Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
         Path staticLibraryPath =
             type == Linker.LinkableDepType.STATIC_PIC ?
-                getStaticPicLibrary(cxxPlatform) :
+                getStaticPicLibrary(cxxPlatform).get() :
                 PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                     getBuildTarget(),
                     cxxPlatform,
@@ -285,7 +297,13 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return linkage;
+    if (forceStatic) {
+      return Linkage.STATIC;
+    }
+    if (provided || !getStaticPicLibrary(cxxPlatform).isPresent()) {
+      return Linkage.SHARED;
+    }
+    return Linkage.ANY;
   }
 
   @Override
@@ -301,14 +319,52 @@ public class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibr
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    String resolvedSoname =
-        PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
+    String resolvedSoname = getSoname(cxxPlatform);
     ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
-    if (!headerOnly && !provided && linkage != Linkage.STATIC) {
+    if (!headerOnly && !provided && getPreferredLinkage(cxxPlatform) != Linkage.STATIC) {
       SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
       solibs.put(resolvedSoname, sharedLibrary);
     }
     return solibs.build();
+  }
+
+  @Override
+  public Optional<SharedNativeLinkTarget> getSharedNativeLinkTarget(CxxPlatform cxxPlatform) {
+    if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
+      return Optional.absent();
+    }
+    return Optional.<SharedNativeLinkTarget>of(
+        new SharedNativeLinkTarget() {
+          @Override
+          public BuildTarget getBuildTarget() {
+            return PrebuiltCxxLibrary.this.getBuildTarget();
+          }
+          @Override
+          public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
+              CxxPlatform cxxPlatform) {
+            return Iterables.concat(
+                getNativeLinkableDeps(cxxPlatform),
+                getNativeLinkableExportedDeps(cxxPlatform));
+          }
+          @Override
+          public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+            return getSoname(cxxPlatform);
+          }
+          @Override
+          public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)
+              throws NoSuchBuildTargetException {
+            return NativeLinkableInput.builder()
+                .addAllArgs(StringArg.from(exportedLinkerFlags.apply(cxxPlatform)))
+                .addAllArgs(
+                    cxxPlatform.getLd().linkWhole(
+                        new SourcePathArg(
+                            getResolver(),
+                            new PathSourcePath(
+                                params.getProjectFilesystem(),
+                                getStaticPicLibrary(cxxPlatform).get()))))
+                .build();
+          }
+        });
   }
 
 }

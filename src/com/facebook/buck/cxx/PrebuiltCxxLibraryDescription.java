@@ -384,7 +384,7 @@ public class PrebuiltCxxLibraryDescription
         },
         args.soname,
         args.linkWithoutSoname.or(false),
-        args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
+        args.forceStatic.or(false),
         args.headerOnly.or(false),
         args.linkWhole.or(false),
         args.provided.or(false),
