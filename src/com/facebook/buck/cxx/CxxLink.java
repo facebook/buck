@@ -107,7 +107,7 @@ public class CxxLink
   }
 
   @VisibleForTesting
-  protected ImmutableList<String> getArgs() {
+  public ImmutableList<String> getArgs() {
     return Arg.stringify(args);
   }
 }

@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonPackagable;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;

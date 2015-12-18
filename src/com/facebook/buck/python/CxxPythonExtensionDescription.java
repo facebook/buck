@@ -14,16 +14,31 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxConstructorArg;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxFlags;
+import com.facebook.buck.cxx.CxxLinkableEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessAndCompile;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.Linkers;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
-import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;

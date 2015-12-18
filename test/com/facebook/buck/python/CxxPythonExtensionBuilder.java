@@ -14,11 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.python.PythonPlatform;
 import com.google.common.base.Optional;
 
 public class CxxPythonExtensionBuilder extends
