@@ -47,6 +47,8 @@ abstract class AbstractAppleCxxPlatform {
 
   public abstract AppleSdkPaths getAppleSdkPaths();
 
+  public abstract Optional<String> getBuildVersion();
+  public abstract String getMinVersion();
   public abstract Tool getActool();
   public abstract Tool getIbtool();
   public abstract Tool getXctest();

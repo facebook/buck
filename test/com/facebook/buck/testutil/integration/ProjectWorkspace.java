@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.BinaryPropertyListParser;
+import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
@@ -720,6 +721,24 @@ public class ProjectWorkspace {
                   !((expectedObject != null) ^ (observedObject != null)));
 
               if (expectedObject != null && observedObject != null) {
+                // These keys depend on the locally installed version of Xcode, so ignore them
+                // in comparisons.
+                String[] ignoredKeys = {
+                    "DTSDKName",
+                    "DTPlatformName",
+                    "DTPlatformVersion",
+                    "MinimumOSVersion",
+                    "DTSDKBuild",
+                    "DTPlatformBuild"
+                };
+                if (observedObject instanceof NSDictionary &&
+                    expectedObject instanceof NSDictionary) {
+                  for (String key : ignoredKeys) {
+                    ((NSDictionary) observedObject).remove(key);
+                    ((NSDictionary) expectedObject).remove(key);
+                  }
+                }
+
                 assertEquals(
                     String.format(
                         "In %s, expected binary plist contents to match.",

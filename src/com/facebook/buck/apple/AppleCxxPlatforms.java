@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.BsdArchiver;
 import com.facebook.buck.cxx.ClangCompiler;
@@ -42,6 +44,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -223,36 +227,47 @@ public class AppleCxxPlatforms {
     }
     ImmutableMap<String, String> macros = macrosBuilder.build();
 
+    Optional<String> buildVersion;
+    try (InputStream versionPlist =
+             Files.newInputStream(sdkPaths.getPlatformPath().resolve("version.plist"))) {
+      NSDictionary versionInfo = (NSDictionary) PropertyListParser.parse(versionPlist);
+      buildVersion = Optional.of(versionInfo.objectForKey("ProductBuildVersion").toString());
+    } catch (Exception e) {
+      buildVersion = Optional.absent();
+    }
+
     CxxPlatform cxxPlatform = CxxPlatforms.build(
-        targetFlavor,
-        config,
-        clangPath,
-        new ClangPreprocessor(clangPath),
-        new ClangCompiler(clangPath),
-        new ClangCompiler(clangXxPath),
-        new ClangPreprocessor(clangPath),
-        new ClangPreprocessor(clangXxPath),
-        new DarwinLinker(clangXxPath),
+      targetFlavor,
+      config,
+      clangPath,
+      new ClangPreprocessor(clangPath),
+      new ClangCompiler(clangPath),
+      new ClangCompiler(clangXxPath),
+      new ClangPreprocessor(clangPath),
+      new ClangPreprocessor(clangXxPath),
+      new DarwinLinker(clangXxPath),
         ImmutableList.<String>builder()
-            .addAll(cflags)
-            .addAll(ldflags)
-            .build(),
-        strip,
-        new BsdArchiver(ar),
-        ranlib,
-        asflags,
-        ImmutableList.<String>of(),
-        cflags,
-        ImmutableList.<String>of(),
-        "dylib",
-        "%s.dylib",
-        Optional.of(debugPathSanitizer),
-        macros);
+          .addAll(cflags)
+          .addAll(ldflags)
+          .build(),
+      strip,
+      new BsdArchiver(ar),
+      ranlib,
+      asflags,
+      ImmutableList.<String>of(),
+      cflags,
+      ImmutableList.<String>of(),
+      "dylib",
+      "%s.dylib",
+      Optional.of(debugPathSanitizer),
+      macros);
 
     return AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
         .setAppleSdk(targetSdk)
         .setAppleSdkPaths(sdkPaths)
+        .setMinVersion(minVersion)
+        .setBuildVersion(buildVersion)
         .setActool(actool)
         .setIbtool(ibtool)
         .setXctest(xctest)

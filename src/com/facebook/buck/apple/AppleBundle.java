@@ -119,6 +119,9 @@ public class AppleBundle
   private final String sdkName;
 
   @AddToRuleKey
+  private final String sdkVersion;
+
+  @AddToRuleKey
   private final ProvisioningProfileStore provisioningProfileStore;
 
   @AddToRuleKey
@@ -133,6 +136,8 @@ public class AppleBundle
 
   private final Optional<AppleAssetCatalog> assetCatalog;
 
+  private final Optional<String> platformBuildVersion;
+  private final String minOSVersion;
   private final String binaryName;
   private final Path bundleRoot;
   private final Path binaryPath;
@@ -154,12 +159,10 @@ public class AppleBundle
       ImmutableMap<SourcePath, String> extensionBundlePaths,
       Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Set<SourcePath> frameworks,
-      Tool ibtool,
+      AppleCxxPlatform appleCxxPlatform,
       Optional<AppleAssetCatalog> assetCatalog,
       Set<BuildTarget> tests,
-      AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
-      Optional<Tool> codesignAllocatePath,
       ProvisioningProfileStore provisioningProfileStore) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
@@ -176,15 +179,20 @@ public class AppleBundle
     this.extensionBundlePaths = extensionBundlePaths;
     this.resourceVariantFiles = resourceVariantFiles;
     this.frameworks = frameworks;
-    this.ibtool = ibtool;
+    this.ibtool = appleCxxPlatform.getIbtool();
     this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot = getBundleRoot(getBuildTarget(), this.binaryName, this.extension);
     this.binaryPath = this.destinations.getExecutablesPath()
         .resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
+    AppleSdk sdk = appleCxxPlatform.getAppleSdk();
     this.platformName = sdk.getApplePlatform().getName();
     this.sdkName = sdk.getName();
+    this.sdkVersion = sdk.getVersion();
+    this.minOSVersion = appleCxxPlatform.getMinVersion();
+    this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
+
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
 
@@ -197,7 +205,7 @@ public class AppleBundle
       this.codeSignIdentityStore =
           CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
     }
-    this.codesignAllocatePath = codesignAllocatePath;
+    this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -278,8 +286,8 @@ public class AppleBundle
             getProjectFilesystem(),
             infoPlistSubstitutionTempPath,
             infoPlistOutputPath,
-            getInfoPlistAdditionalKeys(platformName, sdkName),
-            getInfoPlistOverrideKeys(platformName),
+            getInfoPlistAdditionalKeys(),
+            getInfoPlistOverrideKeys(),
             PlistProcessStep.OutputFormat.BINARY));
 
     if (hasBinary) {
@@ -480,8 +488,7 @@ public class AppleBundle
     return builder.build();
   }
 
-  static ImmutableMap<String, NSObject> getInfoPlistOverrideKeys(
-      String platformName) {
+  private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
 
     if (platformName.contains("osx")) {
@@ -493,9 +500,7 @@ public class AppleBundle
     return keys.build();
   }
 
-  static ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys(
-      String platformName,
-      String sdkName) {
+  private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
 
     if (platformName.contains("osx")) {
@@ -504,7 +509,13 @@ public class AppleBundle
     }
 
     keys.put("DTPlatformName", new NSString(platformName));
-    keys.put("DTSDKName", new NSString(sdkName));
+    keys.put("DTPlatformVersion", new NSString(sdkVersion));
+    keys.put("DTSDKName", new NSString(sdkName + sdkVersion));
+    keys.put("MinimumOSVersion", new NSString(minOSVersion));
+    if (platformBuildVersion.isPresent()) {
+      keys.put("DTPlatformBuild", new NSString(platformBuildVersion.get()));
+      keys.put("DTSDKBuild", new NSString(platformBuildVersion.get()));
+    }
 
     return keys.build();
   }

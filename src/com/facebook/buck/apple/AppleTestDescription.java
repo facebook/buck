@@ -330,12 +330,10 @@ public class AppleTestDescription implements
         ImmutableMap.<SourcePath, String>of(),
         Optional.of(resourceVariantFiles),
         ImmutableSet.<SourcePath>of(),
-        appleCxxPlatform.getIbtool(),
+        appleCxxPlatform,
         assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
-        appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
-        appleCxxPlatform.getCodesignAllocate(),
         provisioningProfileStore);
 
 

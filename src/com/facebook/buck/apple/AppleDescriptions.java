@@ -539,12 +539,10 @@ public class AppleDescriptions {
         extensionBundlePaths,
         Optional.of(bundleVariantFiles),
         frameworks,
-        appleCxxPlatform.getIbtool(),
+        appleCxxPlatform,
         assetCatalog,
         tests,
-        appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
-        appleCxxPlatform.getCodesignAllocate(),
         provisioningProfileStore);
   }
 
