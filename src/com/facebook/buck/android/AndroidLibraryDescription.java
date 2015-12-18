@@ -17,11 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.common.ResourceValidator;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.JavacArgInterpreter;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -82,19 +82,13 @@ public class AndroidLibraryDescription
       return new JavaSourceJar(params, pathResolver, args.srcs.get(), args.mavenCoords);
     }
 
-    JavacOptions.Builder javacOptionsBuilder =
-        JavaLibraryDescription.getJavacOptions(
-            pathResolver,
-            args,
-            defaultOptions);
-
-    AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
-        params.getBuildTarget(),
-        params.getProjectFilesystem(),
-        resolver);
-    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
-
-    JavacOptions javacOptions = javacOptionsBuilder.build();
+    JavacOptions javacOptions = JavacArgInterpreter.populateJavacOptions(
+        defaultOptions,
+        params,
+        resolver,
+        pathResolver,
+        args
+    );
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),

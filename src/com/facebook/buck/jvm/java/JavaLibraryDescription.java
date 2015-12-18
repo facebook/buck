@@ -18,10 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
@@ -37,7 +35,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -127,15 +124,13 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       }
     }
 
-    JavacOptions.Builder javacOptionsBuilder =
-        JavaLibraryDescription.getJavacOptions(
-            pathResolver,
-            args,
-            defaultOptions);
-    AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(target, params.getProjectFilesystem(), resolver);
-    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
-    JavacOptions javacOptions = javacOptionsBuilder.build();
+    JavacOptions javacOptions = JavacArgInterpreter.populateJavacOptions(
+        defaultOptions,
+        params,
+        resolver,
+        pathResolver,
+        args
+    );
 
     BuildTarget abiJarTarget =
         BuildTarget.builder(params.getBuildTarget())
@@ -198,65 +193,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
   }
 
-  public static JavacOptions.Builder getJavacOptions(
-      SourcePathResolver resolver,
-      Arg args,
-      JavacOptions defaultOptions) {
-    if ((args.source.isPresent() || args.target.isPresent()) && args.javaVersion.isPresent()) {
-      throw new HumanReadableException("Please set either source and target or java_version.");
-    }
-
-    JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
-
-    if (args.javaVersion.isPresent()) {
-      builder.setSourceLevel(args.javaVersion.get());
-      builder.setTargetLevel(args.javaVersion.get());
-    }
-
-    if (args.source.isPresent()) {
-      builder.setSourceLevel(args.source.get());
-    }
-
-    if (args.target.isPresent()) {
-      builder.setTargetLevel(args.target.get());
-    }
-
-    if (args.extraArguments.isPresent()) {
-      builder.addAllExtraArguments(args.extraArguments.get());
-    }
-
-    if (args.compiler.isPresent()) {
-      Either<BuiltInJavac, SourcePath> either = args.compiler.get();
-
-      if (either.isRight()) {
-        SourcePath sourcePath = either.getRight();
-
-        Optional<BuildRule> possibleRule = resolver.getRule(sourcePath);
-        if (possibleRule.isPresent()) {
-          BuildRule rule = possibleRule.get();
-          if (rule instanceof PrebuiltJar) {
-            builder.setJavacJarPath(
-                new BuildTargetSourcePath(rule.getBuildTarget()));
-          } else {
-            throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
-          }
-        } else {
-          builder.setJavacPath(resolver.getAbsolutePath(sourcePath));
-        }
-      }
-    } else {
-      if (args.javac.isPresent() || args.javacJar.isPresent()) {
-        if (args.javac.isPresent() && args.javacJar.isPresent()) {
-          throw new HumanReadableException("Cannot set both javac and javacjar");
-        }
-        builder.setJavacPath(args.javac);
-        builder.setJavacJarPath(args.javacJar);
-      }
-    }
-
-    return builder;
-  }
-
   /**
    * Creates a {@link BuildRule} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
    * <p>
@@ -302,23 +238,13 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements HasTests {
+  public static class Arg extends JavacArg implements HasTests {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
-    public Optional<String> source;
-    public Optional<String> target;
-    public Optional<String> javaVersion;
-    public Optional<Path> javac;
-    public Optional<SourcePath> javacJar;
-    // I am not proud of this.
-    public Optional<Either<BuiltInJavac, SourcePath>> compiler;
-    public Optional<ImmutableList<String>> extraArguments;
+
     public Optional<Path> proguardConfig;
-    public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
-    public Optional<ImmutableList<String>> annotationProcessorParams;
-    public Optional<ImmutableSet<String>> annotationProcessors;
-    public Optional<Boolean> annotationProcessorOnly;
     public Optional<ImmutableList<String>> postprocessClassesCommands;
+
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
     public Optional<String> mavenCoords;
@@ -328,34 +254,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
 
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
-
-    public AnnotationProcessingParams buildAnnotationProcessingParams(
-        BuildTarget owner,
-        ProjectFilesystem filesystem,
-        BuildRuleResolver resolver) {
-      ImmutableSet<String> annotationProcessors =
-          this.annotationProcessors.or(ImmutableSet.<String>of());
-
-      if (annotationProcessors.isEmpty()) {
-        return AnnotationProcessingParams.EMPTY;
-      }
-
-      AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
-      builder.setOwnerTarget(owner);
-      builder.addAllProcessors(annotationProcessors);
-      builder.setProjectFilesystem(filesystem);
-      ImmutableSortedSet<BuildRule> processorDeps =
-          resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.<BuildTarget>of()));
-      for (BuildRule processorDep : processorDeps) {
-        builder.addProcessorBuildTarget(processorDep);
-      }
-      for (String processorParam : annotationProcessorParams.or(ImmutableList.<String>of())) {
-        builder.addParameter(processorParam);
-      }
-      builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));
-
-      return builder.build();
-    }
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
