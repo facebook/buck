@@ -36,7 +36,7 @@ public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public Set<QueryTarget> getTargetsMatchingPattern(String pattern)
+  public Set<QueryTarget> getTargetsMatchingPattern(String pattern, Executor executor)
       throws QueryException, InterruptedException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }

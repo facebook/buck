@@ -418,21 +418,48 @@ public class Parser {
       Executor executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
+
+    if (parserConfig.getEnableParallelParsing()) {
+      Preconditions.checkState(permState instanceof ParallelDaemonicParserState);
+      try (
+          ParallelPerBuildState state =
+              new ParallelPerBuildState(
+                  (ParallelDaemonicParserState) permState,
+                  marshaller,
+                  eventBus,
+                  rootCell,
+                  enableProfiling)) {
+        ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecsInParallel(
+            state,
+            rootCell,
+            executor,
+            parserConfig,
+            targetNodeSpecs);
+
+        TargetGraph graph = buildTargetGraphInParallel(
+            eventBus,
+            rootCell,
+            enableProfiling,
+            executor,
+            buildTargets);
+        return new Pair<>(buildTargets, graph);
+      }
+    }
 
     try (
-        PerBuildState state =
+        SerialPerBuildState state =
             new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
       // Resolve the target node specs to the build targets the represent.
-      ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
+      ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecsSerially(
           state,
           rootCell,
           targetNodeSpecs);
 
-      TargetGraph graph = buildTargetGraph(
+      TargetGraph graph = buildTargetGraphSerially(
           eventBus,
           rootCell,
           enableProfiling,
-          executor,
           buildTargets);
       return new Pair<>(buildTargets, graph);
     }
@@ -443,8 +470,8 @@ public class Parser {
     return permState.toString();
   }
 
-  private ImmutableSet<BuildTarget> resolveTargetSpecs(
-      PerBuildState state,
+  private ImmutableSet<BuildTarget> resolveTargetSpecsSerially(
+      SerialPerBuildState state,
       Cell cell,
       Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
@@ -472,25 +499,92 @@ public class Parser {
     return targets.build();
   }
 
+  private ImmutableSet<BuildTarget> resolveTargetSpecsInParallel(
+      ParallelPerBuildState state,
+      Cell cell,
+      Executor executor,
+      ParserConfig parserConfig,
+      Iterable<? extends TargetNodeSpec> specs)
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+
+    ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
+
+    for (TargetNodeSpec spec : specs) {
+      // Iterate over the build files the given target node spec returns.
+      for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(cell)) {
+
+        // Format a proper error message for non-existent build files.
+        if (!cell.getFilesystem().isFile(buildFile)) {
+          throw new MissingBuildFileException(
+              spec,
+              cell.getFilesystem().getRootPath().relativize(buildFile));
+        }
+
+        buildFiles.add(buildFile);
+      }
+    }
+    state.startParsing(cell, buildFiles.build(), parserConfig, executor);
+
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+    for (TargetNodeSpec spec : specs) {
+      // Iterate over the build files the given target node spec returns.
+      for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(cell)) {
+        // Build up a list of all target nodes from the build file.
+        ImmutableSet<TargetNode<?>> nodes = state.getAllTargetNodes(cell, buildFile);
+        // Call back into the target node spec to filter the relevant build targets.
+        targets.addAll(spec.filter(nodes));
+      }
+    }
+
+    return targets.build();
+  }
+
   public ImmutableSet<BuildTarget> resolveTargetSpec(
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
+      Executor executor,
       TargetNodeSpec spec)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
-    return resolveTargetSpecs(eventBus, rootCell, enableProfiling, ImmutableList.of(spec));
+    return resolveTargetSpecs(
+        eventBus,
+        rootCell,
+        enableProfiling,
+        executor,
+        ImmutableList.of(spec));
   }
 
   public ImmutableSet<BuildTarget> resolveTargetSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
+      Executor executor,
       Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
+    if (parserConfig.getEnableParallelParsing()) {
+      Preconditions.checkState(permState instanceof ParallelDaemonicParserState);
+      try (
+          ParallelPerBuildState state =
+              new ParallelPerBuildState(
+                  (ParallelDaemonicParserState) permState,
+                  marshaller,
+                  eventBus,
+                  rootCell,
+                  enableProfiling)) {
+        return resolveTargetSpecsInParallel(
+            state,
+            rootCell,
+            executor,
+            parserConfig,
+            specs);
+      }
+    }
+
     try (
-        PerBuildState state =
+        SerialPerBuildState state =
             new SerialPerBuildState(permState, marshaller, eventBus, rootCell, enableProfiling)) {
-      return resolveTargetSpecs(state, rootCell, specs);
+      return resolveTargetSpecsSerially(state, rootCell, specs);
     }
   }
 

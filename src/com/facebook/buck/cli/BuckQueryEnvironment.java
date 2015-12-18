@@ -95,7 +95,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     try {
-      targetPatternEvaluator.preloadTargetPatterns(targetLiterals);
+      targetPatternEvaluator.preloadTargetPatterns(targetLiterals, executor);
     } catch (IOException e) {
       throw new QueryException("Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -110,10 +110,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
+  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern, Executor executor)
       throws QueryException, InterruptedException {
     try {
-      return targetPatternEvaluator.resolveTargetPattern(pattern);
+      return targetPatternEvaluator.resolveTargetPattern(pattern, executor);
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error in resolving targets matching %s", pattern);
     }

@@ -52,7 +52,7 @@ public final class TargetLiteral extends QueryExpression {
   @Override
   public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
       throws QueryException, InterruptedException {
-    return env.getTargetsMatchingPattern(pattern);
+    return env.getTargetsMatchingPattern(pattern, executor);
   }
 
   @Override

@@ -180,7 +180,8 @@ public interface QueryEnvironment<T> {
    * Returns the set of target nodes in the graph for the specified target
    * pattern, in 'buck build' syntax.
    */
-  Set<T> getTargetsMatchingPattern(String pattern) throws QueryException, InterruptedException;
+  Set<T> getTargetsMatchingPattern(String pattern, Executor executor)
+      throws QueryException, InterruptedException;
 
   /** Returns the direct forward dependencies of the specified targets. */
   Collection<T> getFwdDeps(Iterable<T> targets) throws QueryException, InterruptedException;

@@ -354,6 +354,7 @@ public class ProjectCommand extends BuildCommand {
                 params.getBuckEventBus(),
                 params.getCell(),
                 getEnableProfiling(),
+                pool.getExecutor(),
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     getArguments()));

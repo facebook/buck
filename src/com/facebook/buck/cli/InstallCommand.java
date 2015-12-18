@@ -70,6 +70,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -184,22 +185,22 @@ public class InstallCommand extends BuildCommand {
       return exitCode;
     }
 
-    // Get the helper targets if present
-    ImmutableSet<String> installHelperTargets;
-    try {
-      installHelperTargets = getInstallHelperTargets(params);
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getBuckEventBus().post(
-          ConsoleEvent.severe(
-              MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
-    }
-
-    // Build the targets
     try (CommandThreadManager pool = new CommandThreadManager(
         "Install",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
+      // Get the helper targets if present
+      ImmutableSet<String> installHelperTargets;
+      try {
+        installHelperTargets = getInstallHelperTargets(params, pool.getExecutor());
+      } catch (BuildTargetException | BuildFileParseException e) {
+        params.getBuckEventBus().post(
+            ConsoleEvent.severe(
+                MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
+      }
+
+      // Build the targets
       exitCode = super.run(params, pool.getExecutor(), installHelperTargets);
       if (exitCode != 0) {
         return exitCode;
@@ -274,7 +275,9 @@ public class InstallCommand extends BuildCommand {
     return exitCode;
   }
 
-  private ImmutableSet<String> getInstallHelperTargets(CommandRunnerParams params)
+  private ImmutableSet<String> getInstallHelperTargets(
+      CommandRunnerParams params,
+      Executor executor)
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException{
 
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
@@ -289,6 +292,7 @@ public class InstallCommand extends BuildCommand {
             params.getBuckEventBus(),
             params.getCell(),
             getEnableProfiling(),
+            executor,
             spec).iterator().next();
 
         TargetNode<?> node = params.getParser().getTargetNode(

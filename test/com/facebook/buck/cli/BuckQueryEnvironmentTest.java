@@ -43,12 +43,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BuckQueryEnvironmentTest {
 
@@ -57,6 +60,7 @@ public class BuckQueryEnvironmentTest {
 
   private BuckQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
+  private ExecutorService executor;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
     return QueryBuildTarget.of(BuildTarget.builder(cellRoot, baseName, shortName).build());
@@ -89,6 +93,12 @@ public class BuckQueryEnvironmentTest {
 
     buckQueryEnvironment = new BuckQueryEnvironment(params, /* enableProfiling */ false);
     cellRoot = workspace.getDestPath();
+    executor = Executors.newSingleThreadExecutor();
+  }
+
+  @After
+  public void cleanUp() {
+    executor.shutdown();
   }
 
   @Test
@@ -96,11 +106,11 @@ public class BuckQueryEnvironmentTest {
     ImmutableSet<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six", executor);
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example", "six"));
     assertThat(targets, is(equalTo(expectedTargets)));
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven");
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven", executor);
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example/app", "seven"));
     assertThat(targets, is(equalTo(expectedTargets)));
   }
@@ -120,7 +130,7 @@ public class BuckQueryEnvironmentTest {
         createQueryBuildTarget("//example", "four-application-tests"),
         createQueryBuildTarget("//example", "six-tests"));
     assertThat(
-        buckQueryEnvironment.getTargetsMatchingPattern("//example:"),
+        buckQueryEnvironment.getTargetsMatchingPattern("//example:", executor),
         is(equalTo(expectedTargets)));
   }
 }
