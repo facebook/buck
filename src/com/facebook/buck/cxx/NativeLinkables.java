@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -228,6 +229,21 @@ public class NativeLinkables {
       }
     }
     return libraries.build();
+  }
+
+  /**
+   * @return the {@link SharedNativeLinkTarget} that can be extracted from {@code object}, if any.
+   */
+  public static Optional<SharedNativeLinkTarget> getSharedNativeLinkTarget(
+      Object object,
+      CxxPlatform cxxPlatform) {
+    if (object instanceof SharedNativeLinkTarget) {
+      return Optional.of((SharedNativeLinkTarget) object);
+    }
+    if (object instanceof CanProvideSharedNativeLinkTarget) {
+      return ((CanProvideSharedNativeLinkTarget) object).getSharedNativeLinkTarget(cxxPlatform);
+    }
+    return Optional.absent();
   }
 
 }

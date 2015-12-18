@@ -4,6 +4,7 @@ PLATFORM_SRCS = [
   'AbstractCxxPlatform.java',
   'BsdArchiver.java',
   'ByteBufferReplacer.java',
+  'CanProvideSharedNativeLinkTarget.java',
   'ClangCompiler.java',
   'ClangPreprocessor.java',
   'Compiler.java',
@@ -21,6 +22,7 @@ PLATFORM_SRCS = [
   'NativeLinkables.java',
   'ObjectFileScrubbers.java',
   'Preprocessor.java',
+  'SharedNativeLinkTarget.java',
   'VersionedTool.java',
   'WindowsLinker.java',
 ]
