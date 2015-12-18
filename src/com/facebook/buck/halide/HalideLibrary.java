@@ -45,6 +45,8 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
@@ -99,7 +101,8 @@ public class HalideLibrary
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path outputDir = getPathToOutput();
+    final Path outputDir = getPathToOutput();
+    final Path output = outputDir.resolve(getLibraryName());
     String shortName = getBuildTarget().getShortName();
     buildableContext.recordArtifact(outputDir.resolve(getLibraryName()));
     buildableContext.recordArtifact(outputDir.resolve(shortName + ".h"));
@@ -120,8 +123,23 @@ public class HalideLibrary
         getProjectFilesystem().getRootPath(),
         archiver.getEnvironment(getResolver()),
         archiver.getCommandPrefix(getResolver()),
-        outputDir.resolve(getLibraryName()),
+        output,
         ImmutableList.of(outputDir.resolve(shortName + ".o"))));
+    commands.add(
+      new ShellStep(getProjectFilesystem().getRootPath()) {
+        @Override
+        protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+          return ImmutableList.<String>builder()
+              .addAll(cxxPlatform.getRanlib().getCommandPrefix(getResolver()))
+              .add(output.toString())
+              .build();
+        }
+
+        @Override
+        public String getShortName() {
+          return "ranlib";
+        }
+      });
     return commands.build();
   }
 
