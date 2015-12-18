@@ -24,6 +24,7 @@ import java.util.Formatter;
 import java.util.IllegalFormatException;
 import java.util.Locale;
 
+@SuppressWarnings("serial")
 public class AppendableLogRecord extends LogRecord {
   private final String displayLevel;
 

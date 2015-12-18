@@ -31,6 +31,7 @@ java_library(
     # Java API. The objective is to limit the set of files added to the ClassLoader that runs the
     # test, as not to interfere with the results of the test.
     '//third-party/java/junit:junit',
+    '//src/com/facebook/buck/log:appendablelogrecord',
     '//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner',
     '//src/com/facebook/buck/jvm/java/runner:runner',
   ],

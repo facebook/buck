@@ -5,7 +5,11 @@ java_library(
   name = 'appendablelogrecord',
   srcs = APPENDABLE_LOG_RECORD_FILES,
   deps = [],
-  visibility = [],
+  visibility = [
+    # The test runner needs access to this so it can format Buck's special
+    # AppendableLogRecords in its JulLogFormatter.
+    '//src/com/facebook/buck/testrunner:junit',
+  ],
 )
 
 java_library(

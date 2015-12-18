@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testrunner;
 
+import com.facebook.buck.log.AppendableLogRecord;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -62,9 +64,13 @@ public class JulLogFormatter extends Formatter {
     }
     sb.append("][")
       .append(record.getLoggerName())
-      .append("] ")
-      .append(formatMessage(record))
-      .append("\n");
+      .append("] ");
+    if (record instanceof AppendableLogRecord) {
+      ((AppendableLogRecord) record).appendFormattedMessage(sb);
+    } else {
+      sb.append(formatMessage(record));
+    }
+    sb.append("\n");
     Throwable t = record.getThrown();
     if (t != null) {
       // Closing a StringWriter has no effect, so we don't need to do it in a
