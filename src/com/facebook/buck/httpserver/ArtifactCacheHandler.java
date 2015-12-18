@@ -102,11 +102,11 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
     Path temp = null;
     try {
+      projectFilesystem.mkdirs(BuckConstant.SCRATCH_PATH);
       temp = projectFilesystem.createTempFile(
           BuckConstant.SCRATCH_PATH,
           "outgoing_rulekey",
           ".tmp");
-      projectFilesystem.createParentDirs(temp);
       CacheResult fetchResult;
       try {
         fetchResult = artifactCache.get().fetch(ruleKey, temp);
@@ -148,11 +148,11 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
     Path temp = null;
     try {
+      projectFilesystem.mkdirs(BuckConstant.SCRATCH_PATH);
       temp = projectFilesystem.createTempFile(
           BuckConstant.SCRATCH_PATH,
           "incoming_upload",
           ".tmp");
-      projectFilesystem.createParentDirs(temp);
 
       StoreResponseReadResult storeRequest;
       try (DataInputStream requestInputData = new DataInputStream(baseRequest.getInputStream());

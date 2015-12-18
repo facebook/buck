@@ -139,7 +139,7 @@ public class IjProjectWriter {
 
     boolean danglingTempFile = false;
     Path tempFile = projectFilesystem.createTempFile(
-        projectFilesystem.getPathForRelativePath(IDEA_CONFIG_DIR_PREFIX),
+        IDEA_CONFIG_DIR_PREFIX,
         path.getFileName().toString(),
         ".tmp");
     try {

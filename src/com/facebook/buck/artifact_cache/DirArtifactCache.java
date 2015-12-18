@@ -134,7 +134,7 @@ public class DirArtifactCache implements ArtifactCache {
         // Write to a temporary file and move the file to its final location atomically to protect
         // against partial artifacts (whether due to buck interruption or filesystem failure) posing
         // as valid artifacts during subsequent buck runs.
-        Path tmp = filesystem.createTempFile(filesystem.resolve(cacheDir), "artifact", ".tmp");
+        Path tmp = filesystem.createTempFile(cacheDir, "artifact", ".tmp");
         try {
           filesystem.copyFile(output, tmp);
           Path artifactPath = cacheDir.resolve(ruleKey.toString());
@@ -145,7 +145,7 @@ public class DirArtifactCache implements ArtifactCache {
         }
 
         // Now, write the meta data artifact.
-        tmp = filesystem.createTempFile(filesystem.resolve(cacheDir), "metadata", ".tmp");
+        tmp = filesystem.createTempFile(cacheDir, "metadata", ".tmp");
         try {
           try (DataOutputStream out = new DataOutputStream(filesystem.newFileOutputStream(tmp))) {
             out.writeInt(metadata.size());

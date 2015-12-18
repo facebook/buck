@@ -1100,7 +1100,8 @@ public class ProjectFilesystem {
       String suffix,
       FileAttribute<?>... attrs)
       throws IOException {
-    return Files.createTempFile(directory, prefix, suffix, attrs);
+    Path tmp = Files.createTempFile(resolve(directory), prefix, suffix, attrs);
+    return getPathRelativeToProjectRoot(tmp).or(tmp);
   }
 
   public void touch(Path fileToTouch) throws IOException {

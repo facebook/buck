@@ -117,11 +117,6 @@ public class OutputToFileExpander implements MacroExpander {
         .hash()
         .toString();
 
-    // ProjectFilesystem.createTempFile expects an absolute path, so make sure we're using one
-    Path absolute = filesystem.resolve(directory);
-    Path temp = filesystem.createTempFile(absolute, prefix, ".macro");
-
-    // And now return the actual path to the file in a form relative to the file system root.
-    return directory.resolve(temp.getFileName());
+    return filesystem.createTempFile(directory, prefix, ".macro");
   }
 }
