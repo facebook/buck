@@ -3525,10 +3525,12 @@ public class ProjectGeneratorTest {
             "buck build --report-absolute-paths --flag 'value with spaces' " +
                 bundleTarget.getFullyQualifiedName()));
 
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     PBXBuildPhase fixUUIDPhase = buildWithBuckTarget.getBuildPhases().get(1);
     assertThat(fixUUIDPhase, instanceOf(PBXShellScriptBuildPhase.class));
     PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = (PBXShellScriptBuildPhase) fixUUIDPhase;
-    String fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath();
+    Path fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath(filesystem);
     assertThat(
         fixUUIDShellScriptBuildPhase.getShellScript(),
         containsString(
@@ -3537,7 +3539,7 @@ public class ProjectGeneratorTest {
     PBXBuildPhase codesignPhase = buildWithBuckTarget.getBuildPhases().get(2);
     assertThat(codesignPhase, instanceOf(PBXShellScriptBuildPhase.class));
     PBXShellScriptBuildPhase codesignShellScriptPhase = (PBXShellScriptBuildPhase) codesignPhase;
-    String codesignScriptPath = ProjectGenerator.getCodesignScriptPath();
+    Path codesignScriptPath = ProjectGenerator.getCodesignScriptPath(filesystem);
     assertThat(
         codesignShellScriptPhase.getShellScript(),
         containsString(

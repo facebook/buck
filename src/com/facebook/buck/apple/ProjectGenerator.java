@@ -79,6 +79,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -146,8 +147,7 @@ public class ProjectGenerator {
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
-  public static final String XCODE_BUILD_SCRIPT_FLAVOR_VALUE =
-      "#$PLATFORM_NAME-$arch";
+  public static final String XCODE_BUILD_SCRIPT_FLAVOR_VALUE = "#$PLATFORM_NAME-$arch";
   public static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   public enum Option {
@@ -360,16 +360,24 @@ public class ProjectGenerator {
     return headerSymlinkTrees;
   }
 
-  @VisibleForTesting
-  static String getFixUUIDScriptPath() {
-    return Resources.getResource(
-        ProjectGenerator.class,
-        FIX_UUID_PY_RESOURCE).getPath();
+  static PackagedResource getPackagedResourceNamed(ProjectFilesystem filesystem, String name) {
+    return new PackagedResource(filesystem, ProjectGenerator.class, name);
+  }
+
+  static Path getPathToBuck(
+      ExecutableFinder executableFinder,
+      ImmutableMap<String, String> environment) {
+    return executableFinder.getExecutable(Paths.get("buck"), environment);
   }
 
   @VisibleForTesting
-  static String getCodesignScriptPath() {
-    return Resources.getResource(ProjectGenerator.class, CODESIGN_PY_RESOURCE).getPath();
+  static Path getFixUUIDScriptPath(ProjectFilesystem filesystem) {
+    return getPackagedResourceNamed(filesystem, FIX_UUID_PY_RESOURCE).get();
+  }
+
+  @VisibleForTesting
+  static Path getCodesignScriptPath(ProjectFilesystem filesystem) {
+    return getPackagedResourceNamed(filesystem, CODESIGN_PY_RESOURCE).get();
   }
 
   public Path getProjectPath() {
@@ -542,8 +550,6 @@ public class ProjectGenerator {
           "There was an error loading '" + BUILD_WITH_BUCK_TEMPLATE + "' template", e);
     }
 
-    Path pathToBuck = executableFinder.getExecutable(Paths.get("buck"), environment);
-
     String buildFlags = getBuildFlags();
     String escapedBuildTarget = Escaper.escapeAsBashString(
         targetNode.getBuildTarget().getFullyQualifiedName());
@@ -552,7 +558,7 @@ public class ProjectGenerator {
     }
 
     template.add("repo_root", projectFilesystem.getRootPath());
-    template.add("path_to_buck", pathToBuck);
+    template.add("path_to_buck", getPathToBuck(executableFinder, environment));
     template.add("build_flags", buildFlags);
     template.add("escaped_build_target", escapedBuildTarget);
 
@@ -579,21 +585,20 @@ public class ProjectGenerator {
         compDir.length(),
         'f');
 
-    Path pathToBuck = executableFinder.getExecutable(Paths.get("buck"), environment);
     Optional<String> productName = getProductNameForTargetNode(targetNode);
     String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
     Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
     Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get(), binaryName);
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
-    String fixUUIDScriptPath = getFixUUIDScriptPath();
+    Path fixUUIDScriptPath = getFixUUIDScriptPath(projectFilesystem);
 
     if (attemptToDetermineBestCxxPlatform) {
       template.add("buck_flavor", XCODE_BUILD_SCRIPT_FLAVOR_VALUE);
     } else {
       template.add("buck_flavor", "");
     }
-    template.add("path_to_buck", pathToBuck);
+    template.add("path_to_buck", getPathToBuck(executableFinder, environment));
     template.add("buck_target", targetToBuildWithBuck.get().getFullyQualifiedName());
     template.add("root_path", projectFilesystem.getRootPath());
 
@@ -625,7 +630,7 @@ public class ProjectGenerator {
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
 
     template.add("root_path", projectFilesystem.getRootPath());
-    template.add("path_to_codesign_script", getCodesignScriptPath());
+    template.add("path_to_codesign_script", getCodesignScriptPath(projectFilesystem));
     template.add("app_bundle_path", resolvedBundleDestination);
 
     return template.render();
