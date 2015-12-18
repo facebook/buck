@@ -186,6 +186,27 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testCxxLibraryDepClang() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "-c", "ndk.compiler=clang",
+            "-c", "ndk.cxx_runtime=libcxx",
+            "//apps/sample:app_cxx_lib_dep");
+    result.assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            "buck-out/gen/apps/sample/app_cxx_lib_dep.apk"));
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi/libc++_shared.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/x86/libc++_shared.so");
+  }
+
+  @Test
   public void testCxxLibraryDepWithNoFilters() throws IOException {
     workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_dep_no_filters").assertSuccess();
 

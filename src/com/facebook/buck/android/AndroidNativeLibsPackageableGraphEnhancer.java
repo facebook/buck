@@ -199,8 +199,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       String sharedLibrarySoName = entry.getKey().getSecond();
       BuildTarget targetForStripRule = BuildTarget.builder(originalBuildTarget)
           .addFlavors(ImmutableFlavor.of("strip"))
-          .addFlavors(ImmutableFlavor.of(sharedLibrarySoName))
-          .addFlavors(ImmutableFlavor.of(targetCpuType.name()))
+          .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)))
+          .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())))
           .build();
 
       Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(targetForStripRule);
