@@ -339,8 +339,8 @@ public class ProjectCommand extends BuildCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();
-    boolean useExperimentalProjectGeneration = isExperimentalIntelliJProjectGenerationEnabled() ||
-        projectIde == Ide.XCODE;
+    boolean needsFullRecursiveParse = !isExperimentalIntelliJProjectGenerationEnabled() &&
+        projectIde != Ide.XCODE;
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Project",
@@ -357,11 +357,12 @@ public class ProjectCommand extends BuildCommand {
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     getArguments()));
+        needsFullRecursiveParse = needsFullRecursiveParse || passedInTargetsSet.isEmpty();
         projectGraph = getProjectGraphForIde(
             params,
             pool.getExecutor(),
             passedInTargetsSet,
-            useExperimentalProjectGeneration);
+            needsFullRecursiveParse);
       } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -373,7 +374,6 @@ public class ProjectCommand extends BuildCommand {
           passedInTargetsSet,
           Optional.of(projectGraph));
       if (projectIde == ProjectCommand.Ide.XCODE) {
-        useExperimentalProjectGeneration = true;  // we want to use this feature for Xcode projects
         checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
       }
 
@@ -382,7 +382,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> graphRoots;
       if (!passedInTargetsSet.isEmpty()) {
         ImmutableSet<BuildTarget> supplementalGraphRoots = ImmutableSet.of();
-        if (projectIde == Ide.INTELLIJ && !useExperimentalProjectGeneration) {
+        if (projectIde == Ide.INTELLIJ && needsFullRecursiveParse) {
           supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
               projectIde,
               projectGraph,
@@ -404,7 +404,7 @@ public class ProjectCommand extends BuildCommand {
             projectPredicates.getAssociatedProjectPredicate(),
             isWithTests(),
             isWithDependenciesTests(),
-            useExperimentalProjectGeneration,
+            needsFullRecursiveParse,
             pool.getExecutor());
       } catch (BuildFileParseException | HumanReadableException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -972,17 +972,9 @@ public class ProjectCommand extends BuildCommand {
       CommandRunnerParams params,
       Executor executor,
       ImmutableSet<BuildTarget> passedInTargets,
-      boolean experimentalProjectGenerationEnabled
+      boolean needsFullRecursiveParse
   ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
-    if (experimentalProjectGenerationEnabled && !passedInTargets.isEmpty()) {
-      return params.getParser()
-          .buildTargetGraph(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableProfiling(),
-              executor,
-              passedInTargets);
-    } else {
+    if (needsFullRecursiveParse) {
       return params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
@@ -995,6 +987,15 @@ public class ProjectCommand extends BuildCommand {
                       BuildFileSpec.fromRecursivePath(Paths.get("")))))
           .getSecond();
     }
+    Preconditions.checkState(!passedInTargets.isEmpty());
+    return params.getParser()
+        .buildTargetGraph(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableProfiling(),
+            executor,
+            passedInTargets);
+
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -1004,7 +1005,7 @@ public class ProjectCommand extends BuildCommand {
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      boolean experimentalProjectGenerationEnabled,
+      boolean needsFullRecursiveParse,
       Executor executor
   )
       throws IOException, InterruptedException, BuildFileParseException {
@@ -1018,8 +1019,8 @@ public class ProjectCommand extends BuildCommand {
           graphRootsOrSourceTargets,
           projectGraph,
           isWithDependenciesTests);
-      // The test of nodes for non-experimental project generation is the same regardless.
-      if (experimentalProjectGenerationEnabled) {
+      // The test nodes for a recursively parsed project is the same regardless.
+      if (!needsFullRecursiveParse) {
         projectGraph = params.getParser().buildTargetGraph(
             params.getBuckEventBus(),
             params.getCell(),
