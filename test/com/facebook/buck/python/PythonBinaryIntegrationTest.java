@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -54,21 +55,25 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
 @RunWith(Parameterized.class)
 public class PythonBinaryIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0}")
+  @Parameterized.Parameters(name = "{0},{1}")
   public static Collection<Object[]> data() {
-    return ImmutableList.of(
-        new Object[]{PythonBuckConfig.PackageStyle.INPLACE},
-        new Object[]{PythonBuckConfig.PackageStyle.STANDALONE});
+    return ParameterizedTests.getPermutations(
+        Arrays.asList(PythonBuckConfig.PackageStyle.values()),
+        Arrays.asList(NativeLinkStrategy.values()));
   }
 
   @Parameterized.Parameter
   public PythonBuckConfig.PackageStyle packageStyle;
+
+  @Parameterized.Parameter(value = 1)
+  public NativeLinkStrategy nativeLinkStrategy;
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -81,9 +86,12 @@ public class PythonBinaryIntegrationTest {
     workspace.setUp();
     workspace.writeContentsToPath(
         "[python]\n" +
-            "  package_style = " + packageStyle.toString().toLowerCase() + "\n",
+            "  package_style = " + packageStyle.toString().toLowerCase() + "\n" +
+            "  native_link_strategy = " + nativeLinkStrategy.toString().toLowerCase() + "\n",
         ".buckconfig");
-    assertPackageStyle(packageStyle);
+    PythonBuckConfig config = getPythonBuckConfig();
+    assertThat(config.getPackageStyle(), equalTo(packageStyle));
+    assertThat(config.getNativeLinkStrategy(), equalTo(nativeLinkStrategy));
   }
 
   @Test
@@ -123,6 +131,10 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void nativeLibraries() throws IOException {
     assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.INPLACE));
+    assumeThat(
+        "TODO(8667197): Native libs currently don't work on El Capitan",
+        Platform.detect(),
+        not(equalTo(Platform.MACOS)));
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
     assertThat(
@@ -150,6 +162,11 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void nativeLibsEnvVarIsPreserved() throws IOException {
+    assumeThat(
+        "TODO(8667197): Native libs currently don't work on El Capitan",
+        Platform.detect(),
+        not(equalTo(Platform.MACOS)));
+
     String nativeLibsEnvVarName =
         DefaultCxxPlatforms
             .build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
@@ -247,25 +264,21 @@ public class PythonBinaryIntegrationTest {
     assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
   }
 
-  private void assertPackageStyle(PythonBuckConfig.PackageStyle style) throws IOException {
-    Config rawConfig = Config.createDefaultConfig(
-        tmp.getRootPath(),
-        ImmutableMap.<String, ImmutableMap<String, String>>of());
-
-    BuckConfig buckConfig = new BuckConfig(
-        rawConfig,
-        new ProjectFilesystem(tmp.getRootPath()),
-        Architecture.detect(),
-        Platform.detect(),
-        ImmutableMap.<String, String>of());
-
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(
-            buckConfig,
-            new FakeExecutableFinder(ImmutableList.<Path>of()));
-    assertThat(
-        pythonBuckConfig.getPackageStyle(),
-        equalTo(style));
+  private PythonBuckConfig getPythonBuckConfig() throws IOException {
+    Config rawConfig =
+        Config.createDefaultConfig(
+            tmp.getRootPath(),
+            ImmutableMap.<String, ImmutableMap<String, String>>of());
+    BuckConfig buckConfig =
+        new BuckConfig(
+            rawConfig,
+            new ProjectFilesystem(tmp.getRootPath()),
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.<String, String>of());
+    return new PythonBuckConfig(
+        buckConfig,
+        new FakeExecutableFinder(ImmutableList.<Path>of()));
   }
 
 }

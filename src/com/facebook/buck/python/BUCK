@@ -1,4 +1,5 @@
 CONFIG_SRCS = [
+  'NativeLinkStrategy.java',
   'PythonBuckConfig.java',
 ]
 java_library(

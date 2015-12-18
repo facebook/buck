@@ -233,6 +233,11 @@ public class PythonBuckConfig {
     return delegate.getTool(SECTION, "path_to_pex_executer", resolver);
   }
 
+  public NativeLinkStrategy getNativeLinkStrategy() {
+    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
+        .or(NativeLinkStrategy.SPEARATE);
+  }
+
   public String getPexExtension() {
     return delegate.getValue(SECTION, "pex_extension").or(".pex");
   }

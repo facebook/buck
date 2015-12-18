@@ -200,4 +200,8 @@ public abstract class AbstractNodeBuilder<A> {
     return desc.findDepsForTargetFromConstructorArgs(target, cellRoots, arg);
   }
 
+  public BuildTarget getTarget() {
+    return target;
+  }
+
 }

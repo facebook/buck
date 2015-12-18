@@ -1003,6 +1003,18 @@ This section may define a settings relevant to <code>python_*</code> rules.
   #     faster than the "standalone" variant.
   #
   package_style = standalone
+
+  # The strategy used for pulling in native dependencies.
+  #
+  #   separate - Transitive native deps are linked as full, separate shared libraries.
+  #     Preferred for build-time speed.
+  #
+  #   merged - Native deps which have explicit deps from python rules are linked as
+  #     full, separate shared libraries.  Transitive native deps which do *not* have
+  #     explicit deps from python rules are statically linked into a single monolithic
+  #     shared library.  Preferred to reduce native code size and shared library count.
+  #
+  native_link_strategy = separate
 </pre>{/literal}
 
 Adding a section with header [python#<i>flavor</i>] to the .buckconfig will define

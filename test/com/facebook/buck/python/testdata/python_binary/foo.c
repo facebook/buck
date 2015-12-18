@@ -1,5 +1,5 @@
-#include <stdio.h>
+#include "bar.h"
 
 void foo() {
-  printf("HELLO WORLD\n");
+  bar();
 }

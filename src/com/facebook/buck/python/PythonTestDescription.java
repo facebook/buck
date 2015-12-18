@@ -254,9 +254,12 @@ public class PythonTestDescription implements
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             params,
+            resolver,
+            pathResolver,
             testComponents,
             pythonPlatform,
-            cxxPlatform);
+            cxxPlatform,
+            pythonBuckConfig.getNativeLinkStrategy());
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(

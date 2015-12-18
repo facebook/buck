@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 
 public abstract class CxxPythonExtension extends NoopBuildRule implements PythonPackagable {
 
@@ -46,5 +47,15 @@ public abstract class CxxPythonExtension extends NoopBuildRule implements Python
       throws NoSuchBuildTargetException;
 
   public abstract SharedNativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
+
+  public static Function<CxxPythonExtension, SharedNativeLinkTarget> getNativeLinkTargetFn(
+      final PythonPlatform pythonPlatform) {
+    return new Function<CxxPythonExtension, SharedNativeLinkTarget>() {
+      @Override
+      public SharedNativeLinkTarget apply(CxxPythonExtension cxxPythonExtension) {
+        return cxxPythonExtension.getNativeLinkTarget(pythonPlatform);
+      }
+    };
+  }
 
 }

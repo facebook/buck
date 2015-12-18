@@ -295,11 +295,15 @@ public class PythonBinaryDescription implements
                 .transform(Flavor.TO_FLAVOR)
                 .or(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
-    PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
-        params,
-        binaryPackageComponents,
-        pythonPlatform,
-        cxxPlatform);
+    PythonPackageComponents allPackageComponents =
+        PythonUtil.getAllComponents(
+            params,
+            resolver,
+            pathResolver,
+            binaryPackageComponents,
+            pythonPlatform,
+            cxxPlatform,
+            pythonBuckConfig.getNativeLinkStrategy());
     return createPackageRule(
         params,
         resolver,

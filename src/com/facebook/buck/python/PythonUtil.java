@@ -18,26 +18,34 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.SharedNativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PythonUtil {
 
@@ -97,58 +105,126 @@ public class PythonUtil {
         .build();
   }
 
+  private static boolean hasNativeCode(
+      CxxPlatform cxxPlatform,
+      PythonPackageComponents components) {
+    for (Path module : components.getModules().keySet()) {
+      if (module.toString().endsWith(cxxPlatform.getSharedLibraryExtension())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static PythonPackageComponents getAllComponents(
       BuildRuleParams params,
-      PythonPackageComponents packageComponents,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      final PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
-      final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      final CxxPlatform cxxPlatform,
+      final NativeLinkStrategy nativeLinkStrategy)
+      throws NoSuchBuildTargetException {
 
-    final PythonPackageComponents.Builder components =
+    final PythonPackageComponents.Builder allComponents =
         new PythonPackageComponents.Builder(params.getBuildTarget());
 
-    // Add components from our self.
-    components.addComponent(packageComponents, params.getBuildTarget());
+    final Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
+    final Map<BuildTarget, SharedNativeLinkTarget> nativeLinkTargetRoots = new LinkedHashMap<>();
+    final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    final Set<BuildTarget> excludedNativeLinkableRoots = new LinkedHashSet<>();
+
+    // Add the top-level components.
+    allComponents.addComponent(packageComponents, params.getBuildTarget());
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
         params.getDeps()) {
+      private final ImmutableList<BuildRule> empty = ImmutableList.of();
       @Override
-      public ImmutableSortedSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        // We only process and recurse on instances of PythonPackagable.
-        if (rule instanceof PythonPackagable) {
-          PythonPackagable lib = (PythonPackagable) rule;
-
-          // Add all components from the python packable into our top-level
-          // package.
-          components.addComponent(
-              lib.getPythonPackageComponents(pythonPlatform, cxxPlatform),
-              rule.getBuildTarget());
-
-          // Return all our deps to recurse on them.
-          return FluentIterable.from(rule.getDeps())
-              .filter(Predicates.instanceOf(PythonPackagable.class))
-              .toSortedSet(Ordering.natural());
+      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+        Iterable<BuildRule> deps = empty;
+        Optional<SharedNativeLinkTarget> linkTarget =
+            NativeLinkables.getSharedNativeLinkTarget(rule, cxxPlatform);
+        if (rule instanceof CxxPythonExtension) {
+          extensions.put(rule.getBuildTarget(), (CxxPythonExtension) rule);
+        } else if (rule instanceof PythonPackagable) {
+          PythonPackagable packagable = (PythonPackagable) rule;
+          PythonPackageComponents comps =
+              packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
+          allComponents.addComponent(comps, rule.getBuildTarget());
+          if (hasNativeCode(cxxPlatform, comps)) {
+            for (BuildRule dep : rule.getDeps()) {
+              if (dep instanceof NativeLinkable) {
+                NativeLinkable linkable = (NativeLinkable) dep;
+                excludedNativeLinkableRoots.add(linkable.getBuildTarget());
+              }
+            }
+          }
+          deps = rule.getDeps();
+        } else if (linkTarget.isPresent()) {
+          nativeLinkTargetRoots.put(linkTarget.get().getBuildTarget(), linkTarget.get());
+        } else if (rule instanceof NativeLinkable) {
+          nativeLinkableRoots.put(rule.getBuildTarget(), (NativeLinkable) rule);
         }
-
-        // Don't recurse on anything from other rules.
-        return ImmutableSortedSet.of();
+        return deps;
       }
     }.start();
 
-    ImmutableMap<String, SourcePath> sharedLibs =
-        NativeLinkables.getTransitiveSharedLibraries(
-            cxxPlatform,
-            params.getDeps(),
-            Predicates.instanceOf(PythonPackagable.class));
+    // Collect up native libraries.
+    ImmutableMap<String, SourcePath> sharedLibs;
+
+    // For the merged strategy, build up the lists of included native linkable roots, and the
+    // excluded native linkable roots.
+    if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
+
+      // Include all native link targets we found which aren't excluded.
+      List<SharedNativeLinkTarget> includedNativeLinkTargetRoots = new ArrayList<>();
+      for (Map.Entry<BuildTarget, SharedNativeLinkTarget> ent : nativeLinkTargetRoots.entrySet()) {
+        if (!excludedNativeLinkableRoots.contains(ent.getKey())) {
+          includedNativeLinkTargetRoots.add(ent.getValue());
+        }
+      }
+
+      // All C/C++ python extensions are included native link targets.
+      for (CxxPythonExtension extension : extensions.values()) {
+        includedNativeLinkTargetRoots.add(extension.getNativeLinkTarget(pythonPlatform));
+      }
+
+      sharedLibs =
+          Omnibus.getSharedLibraries(
+              params,
+              ruleResolver,
+              pathResolver,
+              cxxPlatform,
+              includedNativeLinkTargetRoots,
+              nativeLinkableRoots.values());
+    } else {
+
+      // For regular linking, add all extensions via the package components interface.
+      for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
+        allComponents.addComponent(
+            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform),
+            entry.getKey());
+      }
+
+      sharedLibs =
+          NativeLinkables.getTransitiveSharedLibraries(
+              cxxPlatform,
+              params.getDeps(),
+              Predicates.instanceOf(PythonPackagable.class));
+    }
+
+    // Add all the native libraries.
     for (Map.Entry<String, SourcePath> ent : sharedLibs.entrySet()) {
-      components.addNativeLibraries(
+      allComponents.addNativeLibraries(
           Paths.get(ent.getKey()),
           ent.getValue(),
           params.getBuildTarget());
     }
 
-    return components.build();
+    return allComponents.build();
   }
 
   public static Path getBasePath(BuildTarget target, Optional<String> override) {
