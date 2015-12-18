@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -55,10 +55,7 @@ import java.util.regex.Pattern;
  */
 public class CxxLibrary
     extends NoopBuildRule
-    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable {
-
-  @AddToRuleKey
-  private final boolean canBeAsset;
+    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, SharedNativeLinkTarget {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -67,6 +64,7 @@ public class CxxLibrary
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<Arg>> exportedLinkerFlags;
+  private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
@@ -74,6 +72,7 @@ public class CxxLibrary
   private final boolean linkWhole;
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
+  private final boolean canBeAsset;
 
   private final Map<Pair<Flavor, HeaderVisibility>, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       cxxPreprocessorInputCache = Maps.newHashMap();
@@ -87,6 +86,7 @@ public class CxxLibrary
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<Arg>> exportedLinkerFlags,
+      Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -102,6 +102,7 @@ public class CxxLibrary
     this.headerOnly = headerOnly;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
+    this.linkTargetInput = linkTargetInput;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.frameworks = frameworks;
     this.libraries = libraries;
@@ -277,6 +278,26 @@ public class CxxLibrary
   @Override
   public boolean isTestedBy(BuildTarget testTarget) {
     return tests.contains(testTarget);
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+    return Iterables.concat(
+        getNativeLinkableDeps(cxxPlatform),
+        getNativeLinkableExportedDeps(cxxPlatform));
+  }
+
+  @Override
+  public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+    return CxxDescriptionEnhancer.getSharedLibrarySoname(
+        soname,
+        getBuildTarget(),
+        cxxPlatform);
+  }
+
+  @Override
+  public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+    return linkTargetInput.apply(cxxPlatform);
   }
 
   @Override

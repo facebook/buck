@@ -189,6 +189,7 @@ public class CxxLibraryTest {
         /* headerOnly */ Predicates.<CxxPlatform>alwaysFalse(),
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         /* exportedLinkerFlags */ Functions.constant(ImmutableList.<Arg>of()),
+        /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of(),

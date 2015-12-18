@@ -1182,4 +1182,56 @@ public class CxxLibraryDescriptionTest {
         Matchers.<NativeLinkable>contains(dep));
   }
 
+  @Test
+  public void sharedNativeLinkTargetLibraryName() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    CxxLibrary rule =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSoname("libsoname.so")
+            .build(resolver);
+    assertThat(
+        rule.getSharedNativeLinkTargetLibraryName(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo("libsoname.so"));
+  }
+
+  @Test
+  public void sharedNativeLinkTargetDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    CxxLibrary exportedDep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:exported_dep"))
+            .build(resolver);
+    CxxLibrary rule =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setExportedDeps(
+                ImmutableSortedSet.of(dep.getBuildTarget(), exportedDep.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        ImmutableList.copyOf(
+            rule.getSharedNativeLinkTargetDeps(CxxLibraryBuilder.createDefaultPlatform())),
+        Matchers.<NativeLinkable>hasItems(dep, exportedDep));
+  }
+
+  @Test
+  public void sharedNativeLinkTargetInput() throws Exception {
+    CxxLibraryBuilder ruleBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setLinkerFlags(ImmutableList.of("--flag"))
+            .setExportedLinkerFlags(ImmutableList.of("--exported-flag"));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(ruleBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    CxxLibrary rule = (CxxLibrary) ruleBuilder.build(resolver);
+    NativeLinkableInput input =
+        rule.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+    assertThat(
+        Arg.stringify(input.getArgs()),
+        Matchers.hasItems("--flag", "--exported-flag"));
+  }
+
 }

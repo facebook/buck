@@ -49,6 +49,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -309,6 +310,58 @@ public class CxxLibraryDescription implements
         cxxPlatform.getRanlib(),
         staticLibraryPath,
         ImmutableList.copyOf(objects.values()));
+  }
+
+  private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
+      Optional<SourcePath> prefixHeader,
+      ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
+      ImmutableList<String> compilerFlags,
+      ImmutableMap<String, CxxSource> sources,
+      ImmutableList<String> linkerFlags,
+      ImmutableList<String> exportedLinkerFlags,
+      ImmutableSet<FrameworkPath> frameworks,
+      CxxPreprocessMode preprocessMode)
+      throws NoSuchBuildTargetException {
+
+    // Create rules for compiling the PIC object files.
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
+        requireObjects(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            preprocessorFlags,
+            exportedPreprocessorFlags,
+            prefixHeader,
+            headers,
+            exportedHeaders,
+            compilerFlags,
+            sources,
+            frameworks,
+            preprocessMode,
+            CxxSourceRuleFactory.PicType.PIC);
+
+    return NativeLinkableInput.builder()
+        .addAllArgs(
+            FluentIterable
+                .from(linkerFlags)
+                .append(exportedLinkerFlags)
+                .transform(
+                    MacroArg.toMacroArgFunction(
+                        MACRO_HANDLER,
+                        params.getBuildTarget(),
+                        params.getCellRoots(),
+                        ruleResolver)))
+        .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
+        .addAllFrameworks(frameworks)
+        .build();
   }
 
   /**
@@ -753,7 +806,7 @@ public class CxxLibraryDescription implements
       final A args,
       TypeAndPlatform typeAndPlatform,
       Optional<Linker.LinkableDepType> linkableDepType,
-      Optional<SourcePath> bundleLoader,
+      final Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
@@ -915,6 +968,60 @@ public class CxxLibraryDescription implements
                         params.getCellRoots(),
                         resolver))
                 .toList();
+          }
+        },
+        new Function<CxxPlatform, NativeLinkableInput>() {
+          @Override
+          public NativeLinkableInput apply(CxxPlatform cxxPlatform) {
+            try {
+              return getSharedLibraryNativeLinkTargetInput(
+                  params,
+                  resolver,
+                  pathResolver,
+                  cxxPlatform,
+                  CxxFlags.getLanguageFlags(
+                      args.preprocessorFlags,
+                      args.platformPreprocessorFlags,
+                      args.langPreprocessorFlags,
+                      cxxPlatform),
+                  CxxFlags.getLanguageFlags(
+                      args.exportedPreprocessorFlags,
+                      args.exportedPlatformPreprocessorFlags,
+                      args.exportedLangPreprocessorFlags,
+                      cxxPlatform),
+                  args.prefixHeader,
+                  CxxDescriptionEnhancer.parseHeaders(
+                      params.getBuildTarget(),
+                      pathResolver,
+                      Optional.of(cxxPlatform),
+                      args),
+                  CxxDescriptionEnhancer.parseExportedHeaders(
+                      params.getBuildTarget(),
+                      pathResolver,
+                      Optional.of(cxxPlatform),
+                      args),
+                  CxxFlags.getFlags(
+                      args.compilerFlags,
+                      args.platformCompilerFlags,
+                      cxxPlatform),
+                  CxxDescriptionEnhancer.parseCxxSources(
+                      params.getBuildTarget(),
+                      pathResolver,
+                      cxxPlatform,
+                      args),
+                  CxxFlags.getFlags(
+                      args.linkerFlags,
+                      args.platformLinkerFlags,
+                      cxxPlatform),
+                  CxxFlags.getFlags(
+                      args.exportedLinkerFlags,
+                      args.exportedPlatformLinkerFlags,
+                      cxxPlatform),
+                  args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+                  preprocessMode);
+            } catch (NoSuchBuildTargetException e) {
+              throw Throwables.propagate(e);
+            }
           }
         },
         args.supportedPlatformsRegex,
