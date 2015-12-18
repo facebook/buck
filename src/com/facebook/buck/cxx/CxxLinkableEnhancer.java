@@ -57,6 +57,56 @@ public class CxxLinkableEnhancer {
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
 
+  public static CxxLink createCxxLinkableBuildRule(
+      CxxPlatform cxxPlatform,
+      BuildRuleParams params,
+      final SourcePathResolver resolver,
+      BuildTarget target,
+      Path output,
+      ImmutableList<Arg> args,
+      Linker.LinkableDepType depType) {
+
+    final Linker linker = cxxPlatform.getLd();
+
+    // Build up the arguments to pass to the linker.
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // Pass any platform specific or extra linker flags.
+    argsBuilder.addAll(
+        SanitizedArg.from(
+            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
+            cxxPlatform.getLdflags()));
+
+    argsBuilder.addAll(args);
+
+    // Add all arguments needed to link in the C/C++ platform runtime.
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(depType)));
+
+    final ImmutableList<Arg> allArgs = argsBuilder.build();
+
+    // Build the C/C++ link step.
+    return new CxxLink(
+        // Construct our link build rule params.  The important part here is combining the build
+        // rules that construct our object file inputs and also the deps that build our
+        // dependencies.
+        params.copyWithChanges(
+            target,
+            new Supplier<ImmutableSortedSet<BuildRule>>() {
+              @Override
+              public ImmutableSortedSet<BuildRule> get() {
+                return FluentIterable.from(allArgs)
+                    .transformAndConcat(Arg.getDepsFunction(resolver))
+                    .append(linker.getDeps(resolver))
+                    .toSortedSet(Ordering.natural());
+              }
+            },
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        resolver,
+        linker,
+        output,
+        allArgs);
+  }
+
   /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects
    * and a dependency tree of {@link NativeLinkable} dependencies.
@@ -83,8 +133,6 @@ public class CxxLinkableEnhancer {
     Preconditions.checkState(
         !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
 
-    Linker linker = cxxPlatform.getLd();
-
     // Collect and topologically sort our deps that contribute to the link.
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
     for (NativeLinkable nativeLinkable : Maps.filterKeys(
@@ -102,12 +150,6 @@ public class CxxLinkableEnhancer {
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
-    // Pass any platform specific or extra linker flags.
-    argsBuilder.addAll(
-        SanitizedArg.from(
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
-            cxxPlatform.getLdflags()));
-
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
     if (linkType == Linker.LinkType.SHARED) {
@@ -122,7 +164,7 @@ public class CxxLinkableEnhancer {
       }
     }
     if (soname.isPresent()) {
-      argsBuilder.addAll(StringArg.from(linker.soname(soname.get())));
+      argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().soname(soname.get())));
     }
 
     // Add all the top-level arguments.
@@ -145,31 +187,16 @@ public class CxxLinkableEnhancer {
         mergeFrameworks(linkableInput, frameworks),
         argsBuilder);
 
-    // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(depType)));
-
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
-    // Build the C/C++ link step.
-    return new CxxLink(
-        // Construct our link build rule params.  The important part here is combining the build
-        // rules that construct our object file inputs and also the deps that build our
-        // dependencies.
-        params.copyWithChanges(
-            target,
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return FluentIterable.from(allArgs)
-                    .transformAndConcat(Arg.getDepsFunction(resolver))
-                    .toSortedSet(Ordering.natural());
-              }
-            },
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+    return createCxxLinkableBuildRule(
+        cxxPlatform,
+        params,
         resolver,
-        cxxPlatform.getLd(),
+        target,
         output,
-        allArgs);
+        allArgs,
+        depType);
   }
 
   private static ImmutableSortedSet<FrameworkPath> mergeFrameworks(
@@ -286,4 +313,27 @@ public class CxxLinkableEnhancer {
       }
     };
   }
+
+  public static CxxLink createCxxLinkableSharedBuildRule(
+      CxxPlatform cxxPlatform,
+      BuildRuleParams params,
+      final SourcePathResolver resolver,
+      BuildTarget target,
+      Path output,
+      String soname,
+      ImmutableList<Arg> args) {
+    return createCxxLinkableBuildRule(
+        cxxPlatform,
+        params,
+        resolver,
+        target,
+        output,
+        ImmutableList.<Arg>builder()
+            .add(new StringArg("-shared"))
+            .addAll(StringArg.from(cxxPlatform.getLd().soname(soname)))
+            .addAll(args)
+            .build(),
+        Linker.LinkableDepType.SHARED);
+  }
+
 }

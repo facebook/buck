@@ -46,6 +46,7 @@ public interface NativeLinkable extends HasBuildTarget {
   enum Linkage {
     ANY,
     STATIC,
+    SHARED,
   }
 
 }

@@ -49,7 +49,7 @@ public abstract class AbstractBreadthFirstTraversal<Node> {
         continue;
       }
 
-      ImmutableSet<Node> depsToVisit = visit(currentNode);
+      Iterable<Node> depsToVisit = visit(currentNode);
       explored.add(currentNode);
 
       for (Node dep : depsToVisit) {
@@ -74,5 +74,5 @@ public abstract class AbstractBreadthFirstTraversal<Node> {
    * @param node Visited graph node
    * @return The set of direct dependencies to visit after visiting this node.
    */
-  public abstract ImmutableSet<Node> visit(Node node);
+  public abstract Iterable<Node> visit(Node node);
 }
