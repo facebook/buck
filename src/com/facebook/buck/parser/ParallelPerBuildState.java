@@ -92,14 +92,21 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   private final Map<Path, Path> symlinkExistenceCache;
 
   /**
-   * The count of build targets in {@code pendingBuildTargets}.  Getting the size is an expensive
-   * operation, so we track an upper-bound at all times.
+   * The count of build targets in {@link #pendingBuildTargets} if
+   * {@link #startParsing(Set, ParserConfig, Executor)} was called, or the count of builds files in
+   * {@link #pendingBuildFiles} if {@link #startParsing(Set, ParserConfig, Executor)} was called.
+   * Getting the size of a {@link LinkedBlockingQueue} is an expensive operation, so we track an
+   * upper-bound at all times.
    */
-  private final AtomicInteger pendingBuildTargetCount;
+  private final AtomicInteger pendingWorkQueueCount;
   /**
    * The queue of build targets to parse.
    */
   private final LinkedBlockingQueue<BuildTarget> pendingBuildTargets;
+  /**
+   * The queue of build files to parse.
+   */
+  private final LinkedBlockingQueue<Path> pendingBuildFiles;
   /**
    * Used to notify the caller of {@link #startParsing(Set, ParserConfig, Executor)} when all work
    * on the parsing threads is completed.
@@ -140,8 +147,9 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
     this.closer = Closer.create();
 
-    this.pendingBuildTargetCount = new AtomicInteger(0);
+    this.pendingWorkQueueCount = new AtomicInteger(0);
     this.pendingBuildTargets = new LinkedBlockingQueue<>();
+    this.pendingBuildFiles = new LinkedBlockingQueue<>();
     this.completionNotifier = new CountDownLatch(1);
 
     register(rootCell);
@@ -155,11 +163,33 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
       Set<BuildTarget> toExplore,
       ParserConfig parserConfig,
       Executor executor) throws InterruptedException {
+    Preconditions.checkArgument(
+        completionNotifier.getCount() == 1,
+        "Only one invocation of `startParsing` allowed until completion");
     addBuildTargetsToProcess(toExplore);
 
     // Create the worker threads.
     for (int i = parserConfig.getNumParsingThreads(); i > 0; i--) {
       executor.execute(new BuildTargetParserWorker());
+    }
+
+    // Now we wait for parsing to complete.
+    completionNotifier.await();
+  }
+
+  public void startParsing(
+      Cell cell,
+      Set<Path> buildFiles,
+      ParserConfig parserConfig,
+      Executor executor) throws InterruptedException {
+    Preconditions.checkArgument(
+        completionNotifier.getCount() == 1,
+        "Only one invocation of `startParsing` allowed until completion");
+    addBuildFilesToProcess(buildFiles);
+
+    // Create the worker threads.
+    for (int i = parserConfig.getNumParsingThreads(); i > 0; i--) {
+      executor.execute(new BuildFileParserWorker(cell));
     }
 
     // Now we wait for parsing to complete.
@@ -292,7 +322,7 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
       Collection<Path> inputs,
       ProjectFilesystem projectFilesystem,
       Map<Path, Path> symlinkExistenceCache,
-      Map<Path, Path> newSymlinksEncountered) throws IOException{
+      Map<Path, Path> newSymlinksEncountered) throws IOException {
     boolean result = false;
     for (Path input : inputs) {
       for (int i = 1; i < input.getNameCount(); i++) {
@@ -350,11 +380,46 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
   private void addBuildTargetsToProcess(Set<BuildTarget> nodes) {
     Preconditions.checkArgument(nodes.size() > 0);
-    pendingBuildTargetCount.getAndAdd(nodes.size());
+    Preconditions.checkState(pendingBuildFiles.size() == 0);
+    pendingWorkQueueCount.getAndAdd(nodes.size());
     Preconditions.checkState(pendingBuildTargets.addAll(nodes));
   }
 
-  private class BuildTargetParserWorker implements Runnable {
+  private void addBuildFilesToProcess(Set<Path> buildFiles) {
+    Preconditions.checkArgument(buildFiles.size() > 0);
+    Preconditions.checkState(pendingBuildTargets.size() == 0);
+    pendingWorkQueueCount.getAndAdd(buildFiles.size());
+    Preconditions.checkState(pendingBuildFiles.addAll(buildFiles));
+  }
+
+  private abstract class Worker implements Runnable {
+    static final int WAIT_FOR_WORK_TIMEOUT_SECONDS = 5;
+
+    protected boolean shouldWaitForWork() {
+      return pendingWorkQueueCount.get() > 0;
+    }
+
+    /**
+     * Called when all work on all threads should be stopped.  This clears all entries in
+     * {@link #pendingBuildTargets} and {@link #pendingBuildFiles}, and sets
+     * {@link #pendingWorkQueueCount} to {@code 1} so that {@link #completionNotifier} is properly
+     * signaled.
+     */
+    protected void abortDoingMoreWork() {
+      pendingBuildTargets.clear();
+      pendingBuildFiles.clear();
+      pendingWorkQueueCount.set(1);
+    }
+
+    protected void notifyIfWorkCompleted() {
+      if (pendingWorkQueueCount.getAndDecrement() == 1) {
+        completionNotifier.countDown();
+      }
+    }
+  }
+
+  @NotThreadSafe
+  private class BuildTargetParserWorker extends Worker {
     @Override
     public void run() {
       while (shouldWaitForWork()) {
@@ -415,34 +480,76 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
 
       @Override
       public void close() {
-        if (pendingBuildTargetCount.getAndDecrement() == 1) {
-          completionNotifier.countDown();
-        }
+        notifyIfWorkCompleted();
       }
     }
 
     private BuildTargetProcessingScope startProcessingBuildTarget()
         throws InterruptedException, TimeoutException {
-      BuildTarget target = pendingBuildTargets.poll(5, TimeUnit.SECONDS); // Arbitrarily choosen.
+      BuildTarget target = pendingBuildTargets.poll(
+          WAIT_FOR_WORK_TIMEOUT_SECONDS,
+          TimeUnit.SECONDS);
       if (target == null) {
         throw new TimeoutException();
       }
       return new BuildTargetProcessingScope(target);
     }
+  }
 
-    private boolean shouldWaitForWork() {
-      return pendingBuildTargetCount.get() > 0;
+  @NotThreadSafe
+  private class BuildFileParserWorker extends Worker {
+    private final Cell cell;
+
+    public BuildFileParserWorker(Cell cell) {
+      this.cell = cell;
     }
 
-    /**
-     * Called when all work on all threads should be stopped.  This clears all entries in
-     * {@link #pendingBuildTargets} and sets {@link #pendingBuildTargetCount} to {@code 1} so that
-     * when {@link BuildTargetProcessingScope#close()} is called, the waiting thread is properly
-     * signaled.
-     */
-    private void abortDoingMoreWork() {
-      pendingBuildTargets.clear();
-      pendingBuildTargetCount.set(1);
+    @Override
+    public void run() {
+      while (shouldWaitForWork()) {
+        try (BuildFileProcessingScope processingScope = startProcessingBuildFile()) {
+          getAllTargetNodes(cell, processingScope.getBuildFile());
+        } catch (BuildFileParseException | InterruptedException | IOException e) {
+          // It's okay to not raise this further up because in `Parser` we build the target
+          // graph and while doing so will hit the same error (the parsing will have been
+          // cached).
+          abortDoingMoreWork();
+          return;
+        } catch (TimeoutException e) {
+          // We timed out waiting to process something on the queue.  This could mean we are done,
+          // so run through the while statement again.
+          continue;
+        }
+      }
+    }
+
+    @NotThreadSafe
+    class BuildFileProcessingScope implements AutoCloseable {
+      private final Path buildFile;
+
+      public BuildFileProcessingScope(Path buildFile) {
+        this.buildFile = buildFile;
+      }
+
+      public Path getBuildFile() {
+        return buildFile;
+      }
+
+      @Override
+      public void close() {
+        notifyIfWorkCompleted();
+      }
+    }
+
+    private BuildFileProcessingScope startProcessingBuildFile()
+        throws InterruptedException, TimeoutException {
+      Path buildFile = pendingBuildFiles.poll(
+          WAIT_FOR_WORK_TIMEOUT_SECONDS,
+          TimeUnit.SECONDS);
+      if (buildFile == null) {
+        throw new TimeoutException();
+      }
+      return new BuildFileProcessingScope(buildFile);
     }
   }
 }
