@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+import contextlib
 import os
 import sys
 import json
@@ -27,20 +28,8 @@ if not zipfile.is_zipfile(sys.argv[0]):
         'third-party/py/twitter-commons/src/python'))
     sys.path.insert(0, os.path.join(
         buck_root, 'third-party/py/setuptools'))
-    pkg_resources_py = os.path.join(
-        buck_root,
-        'third-party/py/setuptools/pkg_resources.py')
 
-# Otherwise, we're running from a PEX, so import the `pkg_resources`
-# module via a resource.
-else:
-    import pkg_resources
-    pkg_resources_py_tmp = tempfile.NamedTemporaryFile(
-        prefix='pkg_resources.py')
-    pkg_resources_py_tmp.write(
-        pkg_resources.resource_string(__name__, 'pkg_resources.py'))
-    pkg_resources_py_tmp.flush()
-    pkg_resources_py = pkg_resources_py_tmp.name
+import pkg_resources
 
 from twitter.common.python.pex_builder import PEXBuilder
 from twitter.common.python.interpreter import PythonInterpreter
@@ -57,6 +46,45 @@ def dereference_symlinks(src):
         src = os.path.join(os.path.dirname(src), os.readlink(src))
 
     return src
+
+
+@contextlib.contextmanager
+def closable_named_temporary_file():
+    """
+    Due to a bug in python (https://bugs.python.org/issue14243), we need to be able to close() the
+    temporary file without deleting it.
+    """
+    fp = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        with fp:
+            yield fp
+    finally:
+        os.remove(fp.name)
+
+
+
+def copy_package(pex_builder, package, resource='', prefix=''):
+    """
+    Copies the code of a package to the pex using the pkg_resources API.
+    """
+    if pkg_resources.resource_isdir(package, resource):
+        for entry in pkg_resources.resource_listdir(package, resource):
+            copy_package(pex_builder, package,
+                         os.path.join(resource, entry), prefix)
+    else:
+        if not resource.endswith('.py') or 'tests' in resource:
+            return
+
+        target_path = os.path.join(package, resource)
+
+        with closable_named_temporary_file() as fp:
+            with pkg_resources.resource_stream(package, resource) as r:
+                shutil.copyfileobj(r, fp)
+                fp.close()
+
+                pex_builder.add_source(
+                    fp.name,
+                    os.path.join(prefix, target_path))
 
 
 def main():
@@ -103,9 +131,7 @@ def main():
         pex_builder.info.entry_point = options.entry_point
 
         # Copy in our version of `pkg_resources`.
-        pex_builder.add_source(
-            dereference_symlinks(pkg_resources_py),
-            os.path.join(pex_builder.BOOTSTRAP_DIR, 'pkg_resources.py'))
+        copy_package(pex_builder, 'pkg_resources', prefix=pex_builder.BOOTSTRAP_DIR)
 
         # Add the sources listed in the manifest.
         for dst, src in manifest['modules'].iteritems():
