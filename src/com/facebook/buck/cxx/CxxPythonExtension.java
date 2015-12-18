@@ -22,56 +22,30 @@ import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-
-public class CxxPythonExtension extends NoopBuildRule implements PythonPackagable {
-
-  private final BuildRuleResolver ruleResolver;
-  private final Path module;
+public abstract class CxxPythonExtension extends NoopBuildRule implements PythonPackagable {
 
   public CxxPythonExtension(
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      Path module) {
-    super(params, pathResolver);
-    this.ruleResolver = ruleResolver;
-    this.module = module;
+      SourcePathResolver resolver) {
+    super(params, resolver);
   }
 
   @VisibleForTesting
-  protected BuildRule getExtension(
+  protected abstract BuildRule getExtension(
       PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    return ruleResolver.requireRule(
-        getBuildTarget().withFlavors(
-            pythonPlatform.getFlavor(),
-            cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR));
-  }
+      CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(
+  public abstract PythonPackageComponents getPythonPackageComponents(
       PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    BuildRule extension = getExtension(pythonPlatform, cxxPlatform);
-    SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
-    return PythonPackageComponents.of(
-        ImmutableMap.of(module, output),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
-        Optional.of(false));
-  }
+      CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
+
+  public abstract SharedNativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
 
 }

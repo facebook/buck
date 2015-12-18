@@ -21,12 +21,14 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -41,6 +43,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -109,13 +112,12 @@ public class CxxPythonExtensionDescription implements
         .resolve(getExtensionName(target));
   }
 
-  private <A extends Arg> BuildRule createExtensionBuildRule(
+  private ImmutableList<com.facebook.buck.rules.args.Arg> getExtensionArgs(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      PythonPlatform pythonPlatform,
+      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+      Arg args) throws NoSuchBuildTargetException {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -133,13 +135,14 @@ public class CxxPythonExtensionDescription implements
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
-    HeaderSymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-        params,
-        ruleResolver,
-        new SourcePathResolver(ruleResolver),
-        cxxPlatform,
-        headers,
-        HeaderVisibility.PRIVATE);
+    HeaderSymlinkTree headerSymlinkTree =
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            params,
+            ruleResolver,
+            new SourcePathResolver(ruleResolver),
+            cxxPlatform,
+            headers,
+            HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
@@ -188,7 +191,16 @@ public class CxxPythonExtensionDescription implements
     // Add object files into the args.
     argsBuilder.addAll(SourcePathArg.from(pathResolver, picObjects.values()));
 
-    // Setup the rules to link the shared library.
+    return argsBuilder.build();
+  }
+
+  private <A extends Arg> BuildRule createExtensionBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      A args) throws NoSuchBuildTargetException {
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     String extensionName = getExtensionName(params.getBuildTarget());
     Path extensionPath =
         getExtensionPath(
@@ -206,7 +218,7 @@ public class CxxPythonExtensionDescription implements
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
-        argsBuilder.build(),
+        getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         Optional.<SourcePath>absent(),
@@ -219,7 +231,7 @@ public class CxxPythonExtensionDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
-      A args) throws NoSuchBuildTargetException {
+      final A args) throws NoSuchBuildTargetException {
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -265,13 +277,78 @@ public class CxxPythonExtensionDescription implements
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    return new CxxPythonExtension(
-        params,
-        ruleResolver,
-        pathResolver,
-        baseModule.resolve(getExtensionName(params.getBuildTarget())));
+    final Path module = baseModule.resolve(getExtensionName(params.getBuildTarget()));
+    return new CxxPythonExtension(params, pathResolver) {
+
+      @Override
+      protected BuildRule getExtension(
+          PythonPlatform pythonPlatform,
+          CxxPlatform cxxPlatform)
+          throws NoSuchBuildTargetException {
+        return ruleResolver.requireRule(
+            getBuildTarget().withFlavors(
+                pythonPlatform.getFlavor(),
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.SHARED_FLAVOR));
+      }
+
+      @Override
+      public PythonPackageComponents getPythonPackageComponents(
+          PythonPlatform pythonPlatform,
+          CxxPlatform cxxPlatform)
+          throws NoSuchBuildTargetException {
+        BuildRule extension = getExtension(pythonPlatform, cxxPlatform);
+        SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
+        return PythonPackageComponents.of(
+            ImmutableMap.of(module, output),
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableSet.<SourcePath>of(),
+            Optional.of(false));
+      }
+
+      @Override
+      public SharedNativeLinkTarget getNativeLinkTarget(final PythonPlatform pythonPlatform) {
+        return new SharedNativeLinkTarget() {
+
+          @Override
+          public BuildTarget getBuildTarget() {
+            return BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(pythonPlatform.getFlavor())
+                .build();
+          }
+
+          @Override
+          public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
+              CxxPlatform cxxPlatform) {
+            return FluentIterable.from(params.getDeclaredDeps().get())
+                .filter(NativeLinkable.class)
+                .append(
+                    ruleResolver.getRuleOptionalWithType(
+                        pythonPlatform.getCxxLibrary().get().getBuildTarget(),
+                        NativeLinkable.class).get());
+          }
+
+          @Override
+          public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+            return getExtensionName(params.getBuildTarget());
+          }
+
+          @Override
+          public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)
+              throws NoSuchBuildTargetException {
+            return NativeLinkableInput.builder()
+                .addAllArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
+                .addAllFrameworks(args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
+                .build();
+          }
+
+        };
+      }
+
+    };
   }
 
   @Override

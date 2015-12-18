@@ -376,4 +376,98 @@ public class CxxPythonExtensionDescriptionTest {
         Matchers.allOf(Matchers.hasItem("-lpython3"), Matchers.not(Matchers.hasItem("-lpython2"))));
   }
 
+  @Test
+  public void sharedNativeLinkTargetLibraryName() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
+    new CxxLibraryBuilder(PYTHON3_DEP_TARGET).build(resolver);
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            new FlavorDomain<>(
+                "Python Platform",
+                ImmutableMap.of(
+                    PY2.getFlavor(), PY2,
+                    PY3.getFlavor(), PY3)),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms());
+    CxxPythonExtension rule =
+        (CxxPythonExtension) builder.build(resolver);
+    SharedNativeLinkTarget sharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    assertThat(
+        sharedNativeLinkTarget.getSharedNativeLinkTargetLibraryName(
+            CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo("rule.so"));
+  }
+
+  @Test
+  public void sharedNativeLinkTargetDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
+    new CxxLibraryBuilder(PYTHON3_DEP_TARGET).build(resolver);
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            new FlavorDomain<>(
+                "Python Platform",
+                ImmutableMap.of(
+                    PY2.getFlavor(), PY2,
+                    PY3.getFlavor(), PY3)),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms());
+    CxxPythonExtension rule =
+        (CxxPythonExtension) builder
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver);
+    SharedNativeLinkTarget sharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    assertThat(
+        ImmutableList.copyOf(
+            sharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+                CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.<NativeLinkable>hasItem(dep));
+    assertThat(
+        ImmutableList.copyOf(
+            sharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+                CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.hasItem((NativeLinkable) resolver.getRule(PY2.getCxxLibrary().get())));
+  }
+
+  @Test
+  public void sharedNativeLinkTargetInput() throws Exception {
+    CxxLibraryBuilder python2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
+    CxxLibraryBuilder python3Builder = new CxxLibraryBuilder(PYTHON3_DEP_TARGET);
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            new FlavorDomain<>(
+                "Python Platform",
+                ImmutableMap.of(
+                    PY2.getFlavor(), PY2,
+                    PY3.getFlavor(), PY3)),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms());
+    builder.setLinkerFlags(ImmutableList.of("--flag"));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                builder.build(),
+                python2Builder.build(),
+                python3Builder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    python2Builder.build(resolver);
+    python3Builder.build(resolver);
+    CxxPythonExtension rule = (CxxPythonExtension) builder.build(resolver);
+    SharedNativeLinkTarget sharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    NativeLinkableInput input =
+        sharedNativeLinkTarget.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+    assertThat(
+        Arg.stringify(input.getArgs()),
+        Matchers.hasItems("--flag"));
+  }
+
 }
