@@ -85,6 +85,14 @@ public class TestCaseSummariesBuildingXctoolEventHandler
   }
 
   @Override
+  public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
+  }
+
+  @Override
+  public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
+  }
+
+  @Override
   public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
     testReportingCallback.testDidBegin(
         Preconditions.checkNotNull(event.className),

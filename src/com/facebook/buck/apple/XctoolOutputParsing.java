@@ -68,6 +68,14 @@ public class XctoolOutputParsing {
     public String targetName = null;
   }
 
+  public static class StatusEvent {
+    public double timestamp = -1;
+    @Nullable
+    public String message = null;
+    @Nullable
+    public String level = null;
+  }
+
   public static class BeginTestSuiteEvent {
     public double timestamp = -1;
     @Nullable
@@ -117,6 +125,8 @@ public class XctoolOutputParsing {
   public interface XctoolEventCallback {
     void handleBeginOcunitEvent(BeginOcunitEvent event);
     void handleEndOcunitEvent(EndOcunitEvent event);
+    void handleBeginStatusEvent(StatusEvent event);
+    void handleEndStatusEvent(StatusEvent event);
     void handleBeginTestSuiteEvent(BeginTestSuiteEvent event);
     void handleEndTestSuiteEvent(EndTestSuiteEvent event);
     void handleBeginTestEvent(BeginTestEvent event);
@@ -167,6 +177,12 @@ public class XctoolOutputParsing {
         break;
       case "end-ocunit":
         eventCallback.handleEndOcunitEvent(gson.fromJson(element, EndOcunitEvent.class));
+        break;
+      case "begin-status":
+        eventCallback.handleBeginStatusEvent(gson.fromJson(element, StatusEvent.class));
+        break;
+      case "end-status":
+        eventCallback.handleEndStatusEvent(gson.fromJson(element, StatusEvent.class));
         break;
       case "begin-test-suite":
         eventCallback.handleBeginTestSuiteEvent(gson.fromJson(element, BeginTestSuiteEvent.class));

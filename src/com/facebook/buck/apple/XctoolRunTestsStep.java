@@ -126,6 +126,14 @@ public class XctoolRunTestsStep implements Step {
     }
 
     @Override
+    public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
+    }
+
+    @Override
+    public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
+    }
+
+    @Override
     public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
       Preconditions.checkNotNull(this.currentTestTarget);
       testTargetsToDescriptions.put(
