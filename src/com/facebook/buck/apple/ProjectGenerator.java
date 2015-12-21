@@ -1372,16 +1372,19 @@ public class ProjectGenerator {
   getXcodeBuildConfigurationsForTargetNode(
       TargetNode<?> targetNode,
       ImmutableMap<String, String> appendedConfig) {
-    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
-        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.absent();
+    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
+      targetNode.castArg(AppleNativeTargetDescriptionArg.class);
+    Optional<TargetNode<HalideLibraryDescription.Arg>> halideTargetNode =
+      targetNode.castArg(HalideLibraryDescription.Arg.class);
     if (appleTargetNode.isPresent()) {
       configs = appleTargetNode.get().getConstructorArg().configs;
+    } else if (halideTargetNode.isPresent()) {
+      configs = halideTargetNode.get().getConstructorArg().configs;
     }
     if (!configs.isPresent() ||
         (configs.isPresent() && configs.get().isEmpty()) ||
-        targetNode.getType().equals(CxxLibraryDescription.TYPE) ||
-        targetNode.getType().equals(HalideLibraryDescription.TYPE)) {
+        targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
       ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
           CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
               defaultCxxPlatform,
