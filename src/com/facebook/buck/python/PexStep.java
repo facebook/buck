@@ -42,7 +42,7 @@ public class PexStep extends ShellStep {
   // The PEX builder command prefix.
   private final ImmutableList<String> commandPrefix;
 
-  // The path to the executable to create.
+  // The path to the executable/directory to create.
   private final Path destination;
 
   // The main module that begins execution in the PEX.
@@ -53,6 +53,7 @@ public class PexStep extends ShellStep {
 
   // The map of resources to include in the PEX.
   private final ImmutableMap<Path, Path> resources;
+  private final PythonVersion pythonVersion;
   private final Path pythonPath;
   private final Path tempDir;
 
@@ -72,6 +73,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
       Path pythonPath,
+      PythonVersion pythonVersion,
       Path tempDir,
       Path destination,
       String entry,
@@ -87,6 +89,7 @@ public class PexStep extends ShellStep {
     this.environment = environment;
     this.commandPrefix = commandPrefix;
     this.pythonPath = pythonPath;
+    this.pythonVersion = pythonVersion;
     this.tempDir = tempDir;
     this.destination = destination;
     this.entry = entry;
@@ -153,6 +156,8 @@ public class PexStep extends ShellStep {
     builder.addAll(commandPrefix);
     builder.add("--python");
     builder.add(pythonPath.toString());
+    builder.add("--python-version");
+    builder.add(pythonVersion.toString());
     builder.add("--entry-point");
     builder.add(entry);
 
