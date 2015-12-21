@@ -22,10 +22,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -253,18 +254,13 @@ public class ThriftLibraryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     BuildTarget target = params.getBuildTarget();
 
     // Extract the thrift language we're using from our build target.
-    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
-    try {
-      enhancerFlavor = enhancers.getFlavorAndValue(ImmutableSet.copyOf(target.getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", target, e.getMessage());
-    }
-
+    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor =
+        enhancers.getFlavorAndValue(target);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, SourcePath> namedSources =
         pathResolver.getSourcePathNames(target, "srcs", args.srcs.keySet());
@@ -289,7 +285,7 @@ public class ThriftLibraryDescription
       ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
 
       // Create the symlink tree build rule and add it to the resolver.
-      Path includeRoot = getIncludeRoot(target);
+      Path includeRoot = params.getProjectFilesystem().resolve(getIncludeRoot(target));
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       HeaderSymlinkTree symlinkTree;
       try {
@@ -302,7 +298,7 @@ public class ThriftLibraryDescription
             includeRoot,
             includes);
       } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(target);
+        throw e.getHumanReadableExceptionForBuildTarget(target.getUnflavoredBuildTarget());
       }
       resolver.addToIndex(symlinkTree);
 
@@ -422,14 +418,10 @@ public class ThriftLibraryDescription
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       ThriftConstructorArg arg) {
-    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
-    try {
-      enhancerFlavor = enhancers.getFlavorAndValue(ImmutableSet.copyOf(buildTarget.getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
-    }
-
+    Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor =
+        enhancers.getFlavorAndValue(buildTarget);
     // The unflavored target represents the actual thrift library, which doesn't need
     // any implicit deps.
     if (!enhancerFlavor.isPresent()) {

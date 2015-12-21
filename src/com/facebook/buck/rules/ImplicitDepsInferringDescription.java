@@ -17,6 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+
+import java.nio.file.Path;
 
 /**
  * While building up the target graph, we infer the implicit dependencies of a rule by parsing
@@ -31,5 +35,6 @@ public interface ImplicitDepsInferringDescription<T> {
 
   Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       T constructorArg);
 }

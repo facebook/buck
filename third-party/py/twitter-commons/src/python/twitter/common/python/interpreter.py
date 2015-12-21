@@ -74,7 +74,7 @@ class PythonIdentity(object):
   class InvalidError(Error): pass
   class UnknownRequirement(Error): pass
 
-  # TODO(user)  Support interpreter-specific versions, e.g. PyPy-2.2.1
+  # TODO(wickman)  Support interpreter-specific versions, e.g. PyPy-2.2.1
   HASHBANGS = {
     'CPython': 'python%(major)d.%(minor)d',
     'Jython': 'jython',

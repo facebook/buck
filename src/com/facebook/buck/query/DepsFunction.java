@@ -40,6 +40,7 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A 'deps(x [, depth])' expression, which finds the dependencies of the given argument set 'x'.
@@ -78,11 +79,11 @@ public class DepsFunction implements QueryFunction {
    * transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
       throws QueryException, InterruptedException {
-    Set<T> argumentSet = args.get(0).getExpression().eval(env);
+    Set<T> argumentSet = args.get(0).getExpression().eval(env, executor);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
-    env.buildTransitiveClosure(argumentSet, depthBound);
+    env.buildTransitiveClosure(argumentSet, depthBound, executor);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are

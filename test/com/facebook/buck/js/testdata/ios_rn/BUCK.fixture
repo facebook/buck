@@ -32,3 +32,32 @@ apple_binary(
     '$SDKROOT/usr/lib/libobjc.dylib',
   ],
 )
+
+apple_bundle(
+  name = 'DemoApp-Unbundle',
+  binary = ':DemoAppBinary-Unbundle',
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+
+apple_binary(
+  name = 'DemoAppBinary-Unbundle',
+  deps = [
+    ':DemoAppResources',
+    '//js:DemoAppJS#unbundle',
+  ],
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    '*.h',
+  ]),
+  srcs = glob([
+    '*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+  libraries = [
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+)

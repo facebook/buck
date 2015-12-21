@@ -1,5 +1,5 @@
 # This is a quick hack to make it so that all Java rules build using Java 7.
-# TODO(mbolin): Find a less hacky way to do this, likely something in .buckconfig.
+# TODO(bolinfest): Find a less hacky way to do this, likely something in .buckconfig.
 
 original_java_library = java_library
 def java_library(

@@ -71,7 +71,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   // List buck.css second to override prettify.
   <link type="text/css" rel="stylesheet" href="{ROOT}static/buck.css">
 
-  // TODO(mbolin): Pass $og_type in as a parameter.
+  // TODO(bolinfest): Pass $og_type in as a parameter.
   {let $og_type}
     {if $ishome}
       website
@@ -198,6 +198,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'go': [
             'go_binary',
             'go_library',
+            'go_test',
+        ],
+        'halide': [
+            'halide_library',
         ],
         'ios': [
             'apple_asset_catalog',
@@ -282,6 +286,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         {param rules: $platformRulesMap['go'] /}
     {/call}
     {call .platformBuildRuleLink}
+        {param platform: 'Halide' /}
+        {param rules: $platformRulesMap['halide'] /}
+    {/call}
+    {call .platformBuildRuleLink}
         {param platform: 'iOS' /}
         {param rules: $platformRulesMap['ios'] /}
     {/call}
@@ -325,7 +333,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'project',
         'query',
         'quickstart',
+        'run',
         'server',
+        'simulate',
         'targets',
         'test',
         'uninstall',
@@ -342,6 +352,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   <h3>Contributing to Buck</h3>
   <ul>
     <li><a href="https://groups.google.com/group/buck-build">Discussion Group</a>
+    <li><a href="http://stackoverflow.com/questions/ask?tags=buck">Get Support</a>
     <li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a>
     <li><a href="{ROOT}contributing/tour.html">Tour of the Codebase</a>
     <li><a href="{ROOT}contributing/development.html">Development Workflow</a>
@@ -729,8 +740,25 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .cmd_run}
+{call .cmd_link}{param name : 'run' /}{/call}
+{/template}
+
+/***/
+{template .cmd_simulate}
+{call .cmd_link}{param name : 'simulate' /}{/call}
+{/template}
+
+/***/
 {template .cmd_uninstall}
 {call .cmd_link}{param name : 'uninstall' /}{/call}
+{/template}
+
+/**
+ * @param section
+ */
+{template .concept_buckconfig_section}
+<a href="{ROOT}concept/buckconfig.html#{$section}"><code>.buckconfig</code></a>
 {/template}
 
 /***/
@@ -784,13 +812,26 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {template .run_test_separately_arg}
 {call buck.arg}
   {param name: 'run_test_separately' /}
-  {param default : 'false' /}
+  {param default : 'False' /}
   {param desc}
   If set to <code>true</code>, the test(s) in this rule are run separately
   from all other tests. (This is useful
   for integration tests which access a physical device or other limited
   resource.)
   <p>If unset, the test(s) in this rule in parallel with all other tests.</p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .test_rule_timeout_ms}
+{call buck.arg}
+  {param name: 'test_rule_timeout_ms' /}
+  {param default: '[]' /}
+  {param desc}
+  If set specifies the maximum amount of time (in milliseconds) in which all of the tests in this
+  rule should complete. This overrides the default <code>rule_timeout</code> if any has been
+  specified in {call buck.concept_buckconfig_section}{param section : 'test' /}{/call}.
   {/param}
 {/call}
 {/template}

@@ -34,7 +34,7 @@ import java.util.List;
 @BuckStyleImmutable
 abstract class AbstractCxxSource {
 
-  public static enum Type {
+  public enum Type {
 
     C("c", "cpp-output", "c"),
     CXX("c++", "c++-cpp-output", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
@@ -81,6 +81,10 @@ abstract class AbstractCxxSource {
 
     public ImmutableSet<String> getExtensions() {
       return extensions;
+    }
+
+    public boolean isAssembly() {
+      return this == ASSEMBLER || this == ASSEMBLER_WITH_CPP;
     }
 
   }

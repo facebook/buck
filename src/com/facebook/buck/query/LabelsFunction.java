@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A labels(label, argument) expression, which returns the targets in the
@@ -70,10 +71,10 @@ public class LabelsFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
       throws QueryException, InterruptedException {
     String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-    Set<T> inputs = args.get(1).getExpression().eval(env);
+    Set<T> inputs = args.get(1).getExpression().eval(env, executor);
     Set<T> result = new LinkedHashSet<>();
     for (T input : inputs) {
       result.addAll(env.getTargetsInAttribute(input, label));

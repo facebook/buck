@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -61,6 +60,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
@@ -158,7 +158,9 @@ public class ExopackageInstaller {
           @Override
           public boolean call(IDevice device) throws Exception {
             try {
-              return new SingleDeviceInstaller(device, nextAgentPort.getAndIncrement()).doInstall();
+              return new SingleDeviceInstaller(
+                  device,
+                  nextAgentPort.getAndIncrement()).doInstall();
             } catch (Exception e) {
               throw new RuntimeException("Failed to install exopackage on " + device, e);
             }
@@ -204,7 +206,9 @@ public class ExopackageInstaller {
     @Nullable
     private String nativeAgentPath;
 
-    private SingleDeviceInstaller(IDevice device, int agentPort) {
+    private SingleDeviceInstaller(
+        IDevice device,
+        int agentPort) {
       this.device = device;
       this.agentPort = agentPort;
     }
@@ -218,8 +222,9 @@ public class ExopackageInstaller {
       nativeAgentPath = agentInfo.get().nativeLibPath;
       determineBestAgent();
 
-      final File apk = apkRule.getApkPath().toFile();
-      // TODO(user): Support SD installation.
+      final File apk = apkRule.getProjectFilesystem().resolve(
+          apkRule.getApkPath()).toFile();
+      // TODO(dreiss): Support SD installation.
       final boolean installViaSd = false;
 
       if (shouldAppBeInstalled()) {
@@ -239,7 +244,7 @@ public class ExopackageInstaller {
         installNativeLibraryFiles();
       }
 
-      // TODO(user): Make this work on Gingerbread.
+      // TODO(dreiss): Make this work on Gingerbread.
       try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
         AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
       }
@@ -265,7 +270,7 @@ public class ExopackageInstaller {
       // hashes in the file names (because we use that to skip re-uploads), so just hack
       // the metadata file to have hash-like names.
       String metadataContents = com.google.common.io.Files.toString(
-          exopackageInfo.getDexInfo().get().getMetadata().toFile(),
+          projectFilesystem.resolve(exopackageInfo.getDexInfo().get().getMetadata()).toFile(),
           Charsets.UTF_8)
           .replaceAll(
               "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
@@ -453,7 +458,8 @@ public class ExopackageInstaller {
 
       LOG.debug("App path: %s", appPackageInfo.get().apkPath);
       String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
-      String localAppSignature = AgentUtil.getJarSignature(apkRule.getApkPath().toString());
+      String localAppSignature = AgentUtil.getJarSignature(apkRule.getProjectFilesystem().resolve(
+              apkRule.getApkPath()).toString());
       LOG.debug("Local app signature: %s", localAppSignature);
       LOG.debug("Remote app signature: %s", installedAppSignature);
 
@@ -588,7 +594,8 @@ public class ExopackageInstaller {
         IDevice device,
         final int port,
         Path pathRelativeToDataRoot,
-        final Path source) throws Exception {
+        final Path relativeSource) throws Exception {
+      final Path source = projectFilesystem.resolve(relativeSource);
       CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
 
         private boolean sentPayload = false;
@@ -617,7 +624,8 @@ public class ExopackageInstaller {
         }
       };
 
-      String targetFileName = dataRoot.resolve(pathRelativeToDataRoot).toString();
+      String targetFileName = projectFilesystem.resolve(
+          dataRoot.resolve(pathRelativeToDataRoot)).toString();
       String command =
           "umask 022 && " +
               getAgentCommand() +
@@ -739,9 +747,20 @@ public class ExopackageInstaller {
   @VisibleForTesting
   static Optional<PackageInfo> parsePathAndPackageInfo(String packageName, String rawOutput) {
     Iterable<String> lines = Splitter.on("\r\n").omitEmptyStrings().split(rawOutput);
+    Iterator<String> lineIter = lines.iterator();
     String pmPathPrefix = "package:";
-    String pmPath = Iterables.getFirst(lines, null);
+
+    String pmPath = null;
+    if (lineIter.hasNext()) {
+      pmPath = lineIter.next();
+      if (pmPath.startsWith("WARNING: linker: ")) {
+        // Ignore silly linker warnings about non-PIC code on emulators
+        pmPath = lineIter.hasNext() ? lineIter.next() : null;
+      }
+    }
+
     if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
+      LOG.warn("unable to locate package path for [" + packageName + "]");
       return Optional.absent();
     }
 

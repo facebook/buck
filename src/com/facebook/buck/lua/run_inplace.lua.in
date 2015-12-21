@@ -1,0 +1,119 @@
+#!<SHEBANG>
+-- Copyright 2015-present Facebook, Inc.
+--
+-- Licensed under the Apache License, Version 2.0 (the "License"); you may
+-- not use this file except in compliance with the License. You may obtain
+-- a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+-- WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+-- License for the specific language governing permissions and limitations
+-- under the License.
+
+require "os"
+
+local lua = <LUA>
+local main_module = <MAIN_MODULE>
+local modules_dir = <MODULES_DIR>
+
+-- Escape the given string as an argument for the system shell.
+local function escape (str)
+  return '\'' .. string.gsub(str, "\'", "'\\''") .. '\''
+end
+
+-- Execute the command and return the error code.
+local function exec (command)
+
+  -- Escape all arguments and format a shell string to pass to `os.execute`.
+  local escaped = {}
+  for idx, val in ipairs(command) do
+    table.insert(escaped, escape(val))
+  end
+  local shell_cmd = table.concat(escaped, ' ')
+
+  -- TODO: handle signal exit codes.
+  local exit_code
+
+  -- For Lua 5.2, unpack the tuple to grab the exit code
+  if _ENV then
+    _, _, exit_code = os.execute(shell_cmd)
+
+  -- Otherwise, right shift 8 bits to get the real return code.
+  else
+    exit_code = os.execute(shell_cmd) / 256
+  end
+
+  return exit_code
+end
+
+-- Return a string representation of the given string used for embedding
+-- in code blocks.
+local function repr (val)
+  if (val == nil) then
+    return 'nil'
+  elseif type(val) == 'string' then
+    return string.format('%q', val)
+  else
+    return val
+  end
+end
+
+local function table_repr(arr)
+  local reprd = {}
+  for k, v in pairs(arr) do
+    table.insert(reprd, string.format('[%s] = %s', repr(k), repr(v)))
+  end
+  return '{' .. table.concat(reprd, ', ') .. '}'
+end
+
+-- Join two path components.
+local function join (a, b)
+  if a == '' then
+    return b
+  elseif b == '' then
+    return a
+  else
+    return a..'/'..b
+  end
+end
+
+-- Return the directory component of the given path.
+local function dirname (path)
+  if path:match(".-/.-") then
+    return string.gsub(path, "(.*/)(.*)", "%1")
+  else
+    return ''
+  end
+end
+
+-- TODO(): Return a path with all symlinks resolved.
+local function realpath (path)
+  return path
+end
+
+-- Use the realpath of the script, to support running behind symlinks.
+local dirpath = dirname(realpath(arg[0]))
+
+-- Create a script to finish up bootstrapping on the other side of the
+-- fork/exec.
+local script = string.format(
+    [[
+arg = %s
+package.path = %s;
+require %s
+]],
+    table_repr(arg),
+    repr(join(join(dirpath, modules_dir),"?.lua")),
+    repr(main_module))
+
+-- Execute the script and exit with its exit code.  We use a separate process
+-- so that we can manipulate environment variables which only get read at
+-- process startup (e.g. `LD_LIBRARY_PATH`).
+local cmd = {}
+for idx, val in ipairs({lua, '-e', script}) do
+  table.insert(cmd, val)
+end
+os.exit(exec(cmd))

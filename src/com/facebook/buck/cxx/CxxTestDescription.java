@@ -19,9 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,12 +31,10 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -49,6 +47,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
+
 public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
     Flavored,
@@ -57,22 +57,20 @@ public class CxxTestDescription implements
   private static final BuildRuleType TYPE = BuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
-              "location", new LocationMacroExpander()));
-
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public CxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      Optional<Long> defaultTestRuleTimeoutMs) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -90,25 +88,13 @@ public class CxxTestDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      final A args) {
-
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+      final A args) throws NoSuchBuildTargetException {
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Generate the link rule that builds the test binary.
-    final CxxDescriptionEnhancer.CxxLinkAndCompileRules cxxLinkAndCompileRules =
+    final CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            targetGraph,
             params,
             resolver,
             cxxPlatform,
@@ -128,10 +114,10 @@ public class CxxTestDescription implements
             return ImmutableMap.copyOf(
                 Maps.transformValues(
                     args.env.or(ImmutableMap.<String, String>of()),
-                    MACRO_HANDLER.getExpander(
+                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
-                        resolver,
-                        params.getProjectFilesystem())));
+                        params.getCellRoots(),
+                        resolver)));
           }
         };
 
@@ -142,10 +128,10 @@ public class CxxTestDescription implements
           public ImmutableList<String> get() {
             return FluentIterable.from(args.args.or(ImmutableList.<String>of()))
                 .transform(
-                    MACRO_HANDLER.getExpander(
+                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
-                        resolver,
-                        params.getProjectFilesystem()))
+                        params.getCellRoots(),
+                        resolver))
                 .toList();
           }
         };
@@ -168,8 +154,9 @@ public class CxxTestDescription implements
                     args.env.or(ImmutableMap.<String, String>of()).values())) {
               try {
                 deps.addAll(
-                    MACRO_HANDLER.extractAdditionalBuildTimeDeps(
+                    CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
                         params.getBuildTarget(),
+                        params.getCellRoots(),
                         resolver,
                         part));
               } catch (MacroException e) {
@@ -193,6 +180,7 @@ public class CxxTestDescription implements
         test = new CxxGtestTest(
             testParams,
             pathResolver,
+            cxxLinkAndCompileRules.cxxLink,
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
@@ -201,6 +189,7 @@ public class CxxTestDescription implements
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
             args.runTestSeparately.or(false),
+            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
             cxxBuckConfig.getMaximumTestOutputSize());
         break;
       }
@@ -208,6 +197,7 @@ public class CxxTestDescription implements
         test = new CxxBoostTest(
             testParams,
             pathResolver,
+            cxxLinkAndCompileRules.cxxLink,
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
@@ -215,7 +205,8 @@ public class CxxTestDescription implements
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
-            args.runTestSeparately.or(false));
+            args.runTestSeparately.or(false),
+            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
         break;
       }
       default: {
@@ -230,21 +221,26 @@ public class CxxTestDescription implements
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
 
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
-    if (!constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep());
-    }
-
-    // Extract parse time deps from args and environment parameters.
-    for (String part :
-          Iterables.concat(
-              constructorArg.args.or(ImmutableList.<String>of()),
-              constructorArg.env.or(ImmutableMap.<String, String>of()).values())) {
+    // Extract parse time deps from flags, args, and environment parameters.
+    Iterable<Iterable<String>> macroStrings =
+        ImmutableList.<Iterable<String>>builder()
+            .add(constructorArg.linkerFlags.get())
+            .addAll(constructorArg.platformLinkerFlags.get().getValues())
+            .add(constructorArg.args.get())
+            .add(constructorArg.env.get().values())
+            .build();
+    for (String macroString : Iterables.concat(macroStrings)) {
       try {
-        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, part));
+        deps.addAll(
+            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
+                buildTarget,
+                cellRoots,
+                macroString));
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }
@@ -302,6 +298,7 @@ public class CxxTestDescription implements
     public Optional<ImmutableList<String>> args;
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> useDefaultTestMain;
+    public Optional<Long> testRuleTimeoutMs;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

@@ -16,21 +16,22 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
-import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -106,41 +107,49 @@ public class AuditClasspathCommand extends AbstractCommand {
                      public BuildTarget apply(String input) {
                        return BuildTargetParser.INSTANCE.parse(
                            input,
-                           BuildTargetPatternParser.fullyQualified());
+                           BuildTargetPatternParser.fullyQualified(),
+                           params.getCell().getCellRoots());
                      }
                    })
         .toSet();
 
     if (targets.isEmpty()) {
-      params.getConsole().printBuildFailure("Please specify at least one build target.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Please specify at least one build target."));
       return 1;
     }
 
     TargetGraph targetGraph;
-    try {
-      targetGraph = params.getParser().buildTargetGraphForBuildTargets(
-          targets,
-          new ParserConfig(params.getBuckConfig()),
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Audit",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      targetGraph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          getEnableProfiling());
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+          params.getCell(),
+          getEnableProfiling(),
+          pool.getExecutor(),
+          targets);
+    } catch (BuildFileParseException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
     TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer(),
-        params.getFileHashCache());
+        new BuildTargetNodeToBuildRuleTransformer());
 
-    if (shouldGenerateDotOutput()) {
-      return printDotOutput(params, targetGraph);
-    } else if (shouldGenerateJsonOutput()) {
-      return printJsonClasspath(params, targetGraph, targetGraphTransformer, targets);
-    } else {
-      return printClasspath(params, targetGraph, targetGraphTransformer, targets);
+    try {
+      if (shouldGenerateDotOutput()) {
+        return printDotOutput(params, targetGraph);
+      } else if (shouldGenerateJsonOutput()) {
+        return printJsonClasspath(params, targetGraph, targetGraphTransformer, targets);
+      } else {
+        return printClasspath(params, targetGraph, targetGraphTransformer, targets);
+      }
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
   }
 
@@ -174,12 +183,13 @@ public class AuditClasspathCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraph targetGraph,
       TargetGraphTransformer targetGraphTransformer,
-      ImmutableSet<BuildTarget> targets) {
-    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
+      ImmutableSet<BuildTarget> targets) throws NoSuchBuildTargetException {
+    BuildRuleResolver resolver =
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getSecond();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
+      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
         classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
@@ -202,12 +212,13 @@ public class AuditClasspathCommand extends AbstractCommand {
       TargetGraph targetGraph,
       TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets)
-      throws IOException {
-    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
+      throws IOException, NoSuchBuildTargetException {
+    BuildRuleResolver resolver =
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getSecond();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
+      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
         continue;

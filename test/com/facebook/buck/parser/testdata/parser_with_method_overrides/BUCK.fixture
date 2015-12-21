@@ -2,7 +2,7 @@ STRING_VALUE = 'No one overwrote me'
 
 echo_genrule(
   name='base_genrule',
-  deps=['//fakeModule:fake_genrule'],
+  srcs=['//fakeModule:fake_genrule'],
   echo_str=STRING_VALUE,
   out='rootOut',
 )

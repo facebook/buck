@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,6 +46,7 @@ public class Archives {
       BuildTarget target,
       BuildRuleParams originalParams,
       Archiver archiver,
+      Tool ranlib,
       Path output,
       ImmutableList<SourcePath> inputs) {
 
@@ -63,6 +65,7 @@ public class Archives {
         archiveParams,
         resolver,
         archiver,
+        ranlib,
         output,
         inputs);
   }

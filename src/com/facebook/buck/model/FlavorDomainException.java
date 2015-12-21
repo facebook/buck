@@ -16,8 +16,10 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.util.HumanReadableException;
+
 @SuppressWarnings("serial")
-public class FlavorDomainException extends Exception {
+public class FlavorDomainException extends HumanReadableException {
 
   public FlavorDomainException(String msg) {
     super(msg);

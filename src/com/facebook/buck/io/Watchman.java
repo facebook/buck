@@ -16,29 +16,34 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.bser.BserDeserializer;
+import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.SimpleProcessListener;
+import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.VersionStringComparator;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class Watchman {
+public class Watchman implements AutoCloseable {
 
   private static final String WATCHMAN_PROJECT_WATCH_VERSION = "3.4";
 
@@ -57,18 +62,21 @@ public class Watchman {
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
 
   private static final VersionStringComparator VERSION_COMPARATOR = new VersionStringComparator();
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
       Optional.<String>absent(),
       Optional.<String>absent(),
       Optional.<String>absent(),
-      ImmutableSet.<Capability>of());
+      ImmutableSet.<Capability>of(),
+      Optional.<Path>absent(),
+      Optional.<WatchmanClient>absent());
 
   private final Optional<String> version;
   private final Optional<String> projectName;
   private final Optional<String> watchRoot;
   private final ImmutableSet<Capability> capabilities;
+  private final Optional<Path> socketPath;
+  private final Optional<WatchmanClient> watchmanClient;
 
   public static Watchman build(
       Path rootPath,
@@ -78,6 +86,9 @@ public class Watchman {
       throws InterruptedException {
     return build(
         new ListeningProcessExecutor(),
+        localSocketWatchmanConnector(
+            console,
+            clock),
         rootPath,
         env,
         new ExecutableFinder(),
@@ -89,28 +100,44 @@ public class Watchman {
   @SuppressWarnings("PMD.PrematureDeclaration")
   static Watchman build(
       ListeningProcessExecutor executor,
+      Function<Path, Optional<WatchmanClient>> watchmanConnector,
       Path rootPath,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
       Console console,
       Clock clock) throws InterruptedException {
+    LOG.info("Creating for: " + rootPath);
+    Optional<WatchmanClient> watchmanClient = Optional.absent();
     try {
-      String watchman = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath().toString();
-      Optional<Map<String, String>> result;
+      Path watchmanPath = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath();
+      Optional<? extends Map<String, ? extends Object>> result;
 
       long remainingTimeNanos = TIMEOUT_NANOS;
       long startTimeNanos = clock.nanoTime();
-      result = execute(executor, console, clock, remainingTimeNanos, watchman, "version");
+      result = execute(executor, console, clock, remainingTimeNanos, watchmanPath, "get-sockname");
 
       if (!result.isPresent()) {
         return NULL_WATCHMAN;
       }
 
-      Optional<String> rawVersion = Optional.fromNullable(result.get().get("version"));
+      Optional<String> rawVersion = Optional.fromNullable((String) result.get().get("version"));
       if (!rawVersion.isPresent()) {
         return NULL_WATCHMAN;
       }
-      LOG.debug("Discovered watchman version: %s", rawVersion.get());
+
+      String rawSockname = (String) result.get().get("sockname");
+      if (rawSockname == null) {
+        return NULL_WATCHMAN;
+      }
+      Path socketPath = Paths.get(rawSockname);
+
+      LOG.info("Connecting to Watchman version %s at %s", rawVersion.get(), socketPath);
+      watchmanClient = watchmanConnector.apply(socketPath);
+      if (!watchmanClient.isPresent()) {
+        LOG.warn("Could not connect to Watchman, disabling.");
+        return NULL_WATCHMAN;
+      }
+      LOG.debug("Connected to Watchman");
 
       ImmutableSet<Capability> capabilities = deriveCapabilities(rawVersion.get());
 
@@ -120,21 +147,13 @@ public class Watchman {
       long watchStartTimeNanos = clock.nanoTime();
       remainingTimeNanos -= (watchStartTimeNanos - startTimeNanos);
       if (capabilities.contains(Capability.SUPPORTS_PROJECT_WATCH)) {
-        result = execute(
-            executor,
-            console,
-            clock,
+        result = watchmanClient.get().queryWithTimeout(
             remainingTimeNanos,
-            watchman,
             "watch-project",
             absoluteRootPath.toString());
       } else {
-        result = execute(
-            executor,
-            console,
-            clock,
+        result = watchmanClient.get().queryWithTimeout(
             remainingTimeNanos,
-            watchman,
             "watch",
             absoluteRootPath.toString());
       }
@@ -144,32 +163,44 @@ public class Watchman {
           absoluteRootPath);
 
       if (!result.isPresent()) {
+        watchmanClient.get().close();
         return NULL_WATCHMAN;
       }
 
-      Map<String, String> map = result.get();
+      Map<String, ? extends Object> map = result.get();
 
       if (map.containsKey("error")) {
         LOG.warn("Error in watchman output: %s", map.get("error"));
+        watchmanClient.get().close();
         return NULL_WATCHMAN;
       }
 
       if (map.containsKey("warning")) {
         LOG.warn("Warning in watchman output: %s", map.get("warning"));
-        return NULL_WATCHMAN;
+        // Warnings are not fatal. Don't panic.
       }
 
       if (!map.containsKey("watch")) {
+        watchmanClient.get().close();
         return NULL_WATCHMAN;
       }
 
       return new Watchman(
           rawVersion,
-          Optional.fromNullable(map.get("relative_path")),
-          Optional.fromNullable(map.get("watch")),
-          capabilities);
+          Optional.fromNullable((String) map.get("relative_path")),
+          Optional.fromNullable((String) map.get("watch")),
+          capabilities,
+          Optional.of(socketPath),
+          watchmanClient);
     } catch (ClassCastException | HumanReadableException | IOException e) {
       LOG.warn(e, "Unable to determine the version of watchman. Going without.");
+      if (watchmanClient.isPresent()) {
+        try {
+          watchmanClient.get().close();
+        } catch (IOException ioe) {
+          LOG.warn(ioe, "Could not close watchman query client");
+        }
+      }
       return NULL_WATCHMAN;
     }
   }
@@ -193,16 +224,24 @@ public class Watchman {
     return capabilities.build();
   }
 
-  private static Optional<Map<String, String>> execute(
+  @SuppressWarnings("unchecked")
+  private static Optional<Map<String, Object>> execute(
       ListeningProcessExecutor executor,
       Console console,
       Clock clock,
       long timeoutNanos,
+      Path watchmanPath,
       String... args)
-      throws InterruptedException, IOException {
-    SimpleProcessListener listener = new SimpleProcessListener();
+    throws InterruptedException, IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    ForwardingProcessListener listener = new ForwardingProcessListener(
+        Channels.newChannel(stdout), Channels.newChannel(stderr));
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        ProcessExecutorParams.ofCommand(args),
+        ProcessExecutorParams.builder()
+            .addCommand(watchmanPath.toString(), "--output-encoding=bser")
+            .addCommand(args)
+            .build(),
         listener);
 
     long startTimeNanos = clock.nanoTime();
@@ -244,27 +283,54 @@ public class Watchman {
       return Optional.absent();
     }
 
-    String stdout = listener.getStdout();
-    LOG.debug("stdout of command: " + stdout);
+    Object response = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED)
+        .deserializeBserValue(new ByteArrayInputStream(stdout.toByteArray()));
+    LOG.debug("stdout of command: " + response);
+    if (!(response instanceof Map<?, ?>)) {
+      LOG.error("Unexpected response from Watchman: %s", response);
+      return Optional.absent();
+    }
+    return Optional.of((Map<String, Object>) response);
+  }
 
-    Map<String, String> output = OBJECT_MAPPER.readValue(
-        stdout,
-        new TypeReference<Map<String, String>>() {
-        });
-    return Optional.fromNullable(output);
+  private static Function<Path, Optional<WatchmanClient>> localSocketWatchmanConnector(
+      final Console console,
+      final Clock clock) {
+    return new Function<Path, Optional<WatchmanClient>>() {
+      @Override
+      public Optional<WatchmanClient> apply(Path socketPath) {
+        try {
+          return Optional.<WatchmanClient>of(
+              new WatchmanSocketClient(
+                  console,
+                  clock,
+                  createLocalWatchmanSocket(socketPath)));
+        } catch (IOException e) {
+          LOG.warn(e, "Could not connect to Watchman at path %s", socketPath);
+          return Optional.absent();
+        }
+      }
+
+      private Socket createLocalWatchmanSocket(Path socketPath) throws IOException {
+        // TODO(bhamiltoncx): Support Windows named pipes here.
+        return UnixDomainSocket.createSocketWithPath(socketPath);
+      }
+    };
   }
 
   private Watchman(
       Optional<String> version,
       Optional<String> projectName,
       Optional<String> watchRoot,
-      ImmutableSet<Capability> capabilities) {
+      ImmutableSet<Capability> capabilities,
+      Optional<Path> socketPath,
+      Optional<WatchmanClient> watchmanClient) {
     this.version = version;
     this.projectName = projectName;
     this.watchRoot = watchRoot;
-
-
     this.capabilities = capabilities;
+    this.socketPath = socketPath;
+    this.watchmanClient = watchmanClient;
   }
 
   public Optional<String> getVersion() {
@@ -285,5 +351,20 @@ public class Watchman {
 
   public boolean hasWildmatchGlob() {
     return capabilities.contains(Capability.WILDMATCH_GLOB);
+  }
+
+  public Optional<Path> getSocketPath() {
+    return socketPath;
+  }
+
+  public Optional<WatchmanClient> getWatchmanClient() {
+    return watchmanClient;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (watchmanClient.isPresent()) {
+      watchmanClient.get().close();
+    }
   }
 }

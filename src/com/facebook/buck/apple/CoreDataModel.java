@@ -69,7 +69,7 @@ public class CoreDataModel extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    // TODO(user): add build steps to fix T4146823
+    // TODO(Coneko): add build steps to fix T4146823
     return ImmutableList.of();
   }
 

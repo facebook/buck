@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -31,21 +32,26 @@ import java.util.List;
 public class IbtoolStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> ibtoolCommand;
   private final Path input;
   private final Path output;
+  private final ImmutableList<String> additionalParams;
 
   public IbtoolStep(
       ProjectFilesystem filesystem,
+      ImmutableMap<String, String> environment,
       List<String> ibtoolCommand,
+      List<String> additionalParams,
       Path input,
       Path output) {
     super(filesystem.getRootPath());
-
     this.filesystem = filesystem;
+    this.environment = environment;
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);
     this.input = input;
     this.output = output;
+    this.additionalParams = ImmutableList.copyOf(additionalParams);
   }
 
   @Override
@@ -57,12 +63,18 @@ public class IbtoolStep extends ShellStep {
         "--output-format", "human-readable-text",
         "--notices",
         "--warnings",
-        "--errors",
-        "--compile",
+        "--errors");
+    commandBuilder.addAll(additionalParams);
+    commandBuilder.add(
         filesystem.resolve(output).toString(),
         filesystem.resolve(input).toString());
 
     return commandBuilder.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

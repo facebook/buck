@@ -16,36 +16,39 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
@@ -55,6 +58,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -108,12 +112,14 @@ public class AuditOwnerCommandTest {
             buildTarget);
     try {
       return new TargetNode<>(
+          Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
           description,
           arg,
+          new DefaultTypeCoercerFactory(),
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of(),
-          UNALIASED);
+          createCellRoots(params.getProjectFilesystem()));
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw new RuntimeException(e);
     }
@@ -190,7 +196,7 @@ public class AuditOwnerCommandTest {
   @Before
   public void setUp() {
     console = new TestConsole();
-    buckConfig = new FakeBuckConfig();
+    buckConfig = FakeBuckConfig.builder().build();
   }
 
   private CommandRunnerParams createAuditOwnerCommandRunnerParams(ProjectFilesystem filesystem)
@@ -229,7 +235,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder",
         "com/test/subtest");
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -261,7 +267,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -293,7 +299,7 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -324,7 +330,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java");
     ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(
         target,
         ImmutableSet.of(Paths.get("java/somefolder")));
@@ -362,7 +368,7 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -400,7 +406,7 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base/name", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base/name:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
     AuditOwnerCommand command = new AuditOwnerCommand();
@@ -444,8 +450,8 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target1 = BuildTarget.builder("//base/name1", "name").build();
-    BuildTarget target2 = BuildTarget.builder("//base/name2", "name").build();
+    BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2:name");
     TargetNode<?> targetNode1 = createTargetNode(target1, inputPaths);
     TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 

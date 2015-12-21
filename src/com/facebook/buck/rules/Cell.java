@@ -36,11 +36,15 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -48,6 +52,8 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 /**
@@ -56,7 +62,8 @@ import java.util.regex.Pattern;
  */
 public class Cell {
 
-  private final LoadingCache<String, Cell> cells;
+  private final Cache<Path, Cell> cells;
+  private final ImmutableSet<Path> knownRoots;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -66,94 +73,129 @@ public class Cell {
   private final String buildFileName;
   private final boolean enforceBuckPackageBoundaries;
   private final ImmutableSet<Pattern> tempFilePatterns;
-  private CellFilesystemResolver cellFilesystemResolver;
+  private final CacheLoader<Path, Cell> cellLoader;
 
-  public Cell(
+  private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
+      new Supplier<Integer>() {
+        @Override
+        public Integer get() {
+          return Objects.hash(filesystem, config, directoryResolver);
+        }
+      });
+
+  private Cell(
       final ProjectFilesystem filesystem,
       final Console console,
       final Watchman watchman,
       BuckConfig config,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
       final AndroidDirectoryResolver directoryResolver,
-      final Clock clock) throws IOException, InterruptedException {
+      final Clock clock,
+      final Cache<Path, Cell> cells) throws IOException, InterruptedException {
 
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
     this.directoryResolver = directoryResolver;
+    this.cells = cells;
 
     ParserConfig parserConfig = new ParserConfig(config);
     this.buildFileName = parserConfig.getBuildFileName();
     this.enforceBuckPackageBoundaries = parserConfig.getEnforceBuckPackageBoundary();
     this.tempFilePatterns = parserConfig.getTempFilePatterns();
 
+    ImmutableMap<String, String> allCells = getBuckConfig().getEntriesForSection("repositories");
+    ImmutableSet.Builder<Path> roots = ImmutableSet.builder();
+    roots.add(filesystem.getRootPath());
+    for (String cellName : allCells.keySet()) {
+      // Added the precondition check, though the resolve call can never return null.
+      Path cellRoot = Preconditions.checkNotNull(getCellRoots().apply(Optional.of(cellName)));
+      roots.add(cellRoot);
+    }
+    this.knownRoots = roots.build();
+
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
 
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config);
 
-    this.cells = CacheBuilder.newBuilder().build(
-        new CacheLoader<String, Cell>() {
-          @Override
-          public Cell load(String cellName) throws Exception {
-            Optional<Path> maybeRoot = getBuckConfig().getPath("repositories", cellName, false);
-            if (!maybeRoot.isPresent()) {
-              throw new HumanReadableException(
-                  "Unable to find repository named '%s' in repo rooted at %s",
-                  cellName,
-                  getFilesystem().getRootPath());
-            }
+    // The cache loader here uses a chunk of state from the to-be-minted cell. Creating this here
+    // saves having to leak more of that state than needed.
+    cellLoader = new CacheLoader<Path, Cell>() {
+      @Override
+      public Cell load(Path cellPath) throws Exception {
+        cellPath = cellPath.toRealPath().normalize();
 
-            // Added the precondition check, though the resolve call can never return null.
-            // TODO(user): Remove precondition check when possible.
-            Path root = Preconditions.checkNotNull(
-                getBuckConfig()
-                    .resolvePathThatMayBeOutsideTheProjectFilesystem(maybeRoot.get()));
-
-            // TODO(simons): Get the overrides from the parent config
-            ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
-            Config config = Config.createDefaultConfig(
-                root,
-                sections);
-
-            ProjectFilesystem cellFilesystem = new ProjectFilesystem(root, config);
-
-            Cell parent = Cell.this;
-            BuckConfig parentConfig = parent.getBuckConfig();
-
-            BuckConfig buckConfig = new BuckConfig(
-                config,
-                cellFilesystem,
-                parentConfig.getPlatform(),
-                parentConfig.getEnvironment());
-
-            Watchman.build(root, parentConfig.getEnvironment(), console, clock);
-
-            return new Cell(
-                cellFilesystem,
-                console,
-                watchman,
-                buckConfig,
-                knownBuildRuleTypesFactory,
-                directoryResolver,
-                clock);
-          }
+        if (!knownRoots.contains(cellPath)) {
+          throw new HumanReadableException(
+              "Unable to find repository rooted at %s. Known roots are:\n  %s",
+              getFilesystem().getRootPath(),
+              Joiner.on(",\n  ").join(knownRoots));
         }
-    );
 
-    Function<Optional<String>, ProjectFilesystem> cellFilesystemAliases =
-        new Function<Optional<String>, ProjectFilesystem>() {
-          @Override
-          public ProjectFilesystem apply(Optional<String> cellName) {
-            return getCell(cellName).getFilesystem();
-          }
-        };
-    this.cellFilesystemResolver =
-        new CellFilesystemResolver(getFilesystem(), cellFilesystemAliases);
+        // TODO(shs96c): Get the overrides from the parent config
+        ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
+        Config config = Config.createDefaultConfig(
+            cellPath,
+            sections);
+
+        ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
+
+        Cell parent = Cell.this;
+        BuckConfig parentConfig = parent.getBuckConfig();
+
+        BuckConfig buckConfig = new BuckConfig(
+            config,
+            cellFilesystem,
+            parentConfig.getArchitecture(),
+            parentConfig.getPlatform(),
+            parentConfig.getEnvironment());
+
+        Watchman.build(cellPath, parentConfig.getEnvironment(), console, clock).close();
+
+        return new Cell(
+            cellFilesystem,
+            console,
+            watchman,
+            buckConfig,
+            knownBuildRuleTypesFactory,
+            directoryResolver,
+            clock,
+            cells);
+      }
+    };
+
+    // Ensure that the cell can find itself.
+    cells.put(getFilesystem().getRootPath(), this);
+  }
+
+  public static Cell createCell(
+      ProjectFilesystem filesystem,
+      Console console,
+      Watchman watchman,
+      BuckConfig config,
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      AndroidDirectoryResolver directoryResolver,
+      Clock clock) throws IOException, InterruptedException {
+    Cache<Path, Cell> cells = CacheBuilder.newBuilder().build();
+
+    return new Cell(
+        filesystem,
+        console,
+        watchman,
+        config,
+        knownBuildRuleTypesFactory,
+        directoryResolver,
+        clock,
+        cells);
   }
 
   public ProjectFilesystem getFilesystem() {
     return filesystem;
+  }
+
+  public Path getRoot() {
+    return getFilesystem().getRootPath();
   }
 
   public KnownBuildRuleTypes getKnownBuildRuleTypes() {
@@ -172,20 +214,30 @@ public class Cell {
     return enforceBuckPackageBoundaries;
   }
 
-  public Cell getCell(Optional<String> cellName) {
-    if (!cellName.isPresent()) {
-      return this;
-    }
+  public Cell getCell(BuildTarget target) {
+    final Path cellPath = target.getCellPath();
 
     try {
-      return cells.getUnchecked(cellName.get());
-    } catch (UncheckedExecutionException e) {
+      return cells.get(cellPath, new Callable<Cell>() {
+        @Override
+        public Cell call() throws Exception {
+          return cellLoader.load(cellPath);
+        }
+      });
+    } catch (ExecutionException | UncheckedExecutionException e) {
       Throwable cause = e.getCause();
       if (cause instanceof HumanReadableException) {
         throw (HumanReadableException) cause;
       }
-      throw e;
+      throw Throwables.propagate(e);
     }
+  }
+
+  public Optional<Cell> getCellIfKnown(BuildTarget target) {
+    if (knownRoots.contains(target.getCellPath())) {
+      return Optional.of(getCell(target));
+    }
+    return Optional.absent();
   }
 
   public Description<?> getDescription(BuildRuleType type) {
@@ -202,12 +254,13 @@ public class Cell {
 
   public Path getAbsolutePathToBuildFile(BuildTarget target)
       throws MissingBuildFileException {
-    Cell targetCell = getCell(target.getCell());
+    Cell targetCell = getCell(target);
 
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
 
-    Path buildFile = targetFilesystem.resolve(target.getBasePath()).resolve(
-        new ParserConfig(targetCell.getBuckConfig()).getBuildFileName());
+    Path buildFile = targetFilesystem
+        .resolve(target.getBasePath())
+        .resolve(targetCell.getBuildFileName());
 
     if (!targetFilesystem.isFile(buildFile)) {
       throw new MissingBuildFileException(target, targetCell.getBuckConfig());
@@ -220,11 +273,15 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
+      ConstructorArgMarshaller marshaller,
       Console console,
-      BuckEventBus eventBus,
-      boolean useWatchmanGlob) {
+      BuckEventBus eventBus) {
+    ParserConfig parserConfig = new ParserConfig(getBuckConfig());
+    boolean useWatchmanGlob =
+        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
+        watchman.hasWildmatchGlob();
     ProjectBuildFileParserFactory factory = createBuildFileParserFactory(useWatchmanGlob);
-    return factory.createParser(console, config.getEnvironment(), eventBus);
+    return factory.createParser(marshaller, console, config.getEnvironment(), eventBus);
   }
 
   @VisibleForTesting
@@ -257,16 +314,26 @@ public class Cell {
   }
 
   @Override
+  public String toString() {
+    return String.format(
+        "%s filesystem=%s config=%s directoryResolver=%s",
+        super.toString(),
+        filesystem,
+        config,
+        directoryResolver);
+  }
+
+  @Override
   public int hashCode() {
-    return Objects.hash(filesystem, config, directoryResolver);
+    return hashCodeSupplier.get();
   }
 
   public Iterable<Pattern> getTempFilePatterns() {
     return tempFilePatterns;
   }
 
-  public CellFilesystemResolver getCellAliases() {
-    return cellFilesystemResolver;
+  public Function<Optional<String>, Path> getCellRoots() {
+    return config.getCellRoots();
   }
 
   @SuppressWarnings("serial")

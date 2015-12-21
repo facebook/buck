@@ -43,6 +43,7 @@ import java.util.Map;
 public class PexStepTest {
 
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
+  private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
   private static final Path TEMP_PATH = Paths.get("/tmp/");
   private static final Path DEST_PATH = Paths.get("/dest");
@@ -63,6 +64,7 @@ public class PexStepTest {
     PexStep step =
         new PexStep(
             new FakeProjectFilesystem(),
+            PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -87,6 +89,7 @@ public class PexStepTest {
     PexStep step =
         new PexStep(
             new FakeProjectFilesystem(),
+            PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -109,6 +112,7 @@ public class PexStepTest {
     PexStep step =
         new PexStep(
             new FakeProjectFilesystem(),
+            PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -142,6 +146,7 @@ public class PexStepTest {
     PexStep step =
         new PexStep(
             new FakeProjectFilesystem(),
+            PEX_ENVIRONMENT,
             ImmutableList.<String>builder()
                 .add("build")
                 .add("--some", "--args")

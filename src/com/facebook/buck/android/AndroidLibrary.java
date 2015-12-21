@@ -19,8 +19,9 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -48,8 +49,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @AddToRuleKey
   private final Optional<SourcePath> manifestFile;
 
-  private final boolean isPrebuiltAar;
-
   @VisibleForTesting
   public AndroidLibrary(
       BuildRuleParams params,
@@ -66,25 +65,24 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      boolean isPrebuiltAar,
       ImmutableSortedSet<BuildTarget> tests) {
     super(
         params,
         resolver,
         srcs,
         resources,
+        javacOptions.getGeneratedSourceFolderName(),
         proguardConfig,
         postprocessClassesCommands,
         exportedDeps,
         providedDeps,
         abiJar,
         additionalClasspathEntries,
-        javacOptions,
+        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         resourcesRoot,
         mavenCoords,
         tests);
     this.manifestFile = manifestFile;
-    this.isPrebuiltAar = isPrebuiltAar;
   }
 
   @Override
@@ -96,8 +94,4 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     return manifestFile;
   }
 
-  /** @return whether this library was generated from an {@link AndroidPrebuiltAarDescription}. */
-  public boolean isPrebuiltAar() {
-    return isPrebuiltAar;
-  }
 }

@@ -40,6 +40,7 @@ import com.google.common.collect.Iterables;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A query expression for user-defined query functions.
@@ -54,8 +55,9 @@ public class FunctionExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env) throws QueryException, InterruptedException {
-    return function.<T>eval(env, args);
+  public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+      throws QueryException, InterruptedException {
+    return function.<T>eval(env, args, executor);
   }
 
   @Override

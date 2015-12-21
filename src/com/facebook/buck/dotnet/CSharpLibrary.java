@@ -82,12 +82,12 @@ public class CSharpLibrary extends AbstractBuildRule {
     ProjectFilesystem filesystem = getProjectFilesystem();
 
     ImmutableSortedSet<Path> sourceFiles = FluentIterable.from(srcs)
-        .transform(getResolver().getResolvedPathFunction())
+        .transform(getResolver().getAbsolutePathFunction())
         .toSortedSet(Ordering.natural());
 
     ImmutableListMultimap.Builder<Path, String> resolvedResources = ImmutableListMultimap.builder();
     for (Map.Entry<String, SourcePath> resource : resources.entrySet()) {
-      resolvedResources.put(getResolver().getResolvedPath(resource.getValue()), resource.getKey());
+      resolvedResources.put(getResolver().getAbsolutePath(resource.getValue()), resource.getKey());
     }
 
     ImmutableList<Either<Path, String>> references = resolveReferences(refs);
@@ -112,7 +112,7 @@ public class CSharpLibrary extends AbstractBuildRule {
 
     for (Either<BuildRule, String> ref : refs) {
       if (ref.isLeft()) {
-        // TODO(simons): Do this in the constructor? Or the Description?
+        // TODO(shs96c): Do this in the constructor? Or the Description?
         BuildRule rule = ref.getLeft();
         Preconditions.checkArgument(
             rule instanceof CSharpLibrary ||

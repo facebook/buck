@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A set(word, ..., word) expression, which computes the union of zero or more
@@ -65,10 +66,11 @@ class SetExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env) throws QueryException, InterruptedException {
+  public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+      throws QueryException, InterruptedException {
     Set<T> result = new LinkedHashSet<>();
     for (TargetLiteral expr : words) {
-      result.addAll(expr.eval(env));
+      result.addAll(expr.eval(env, executor));
     }
     return result;
   }

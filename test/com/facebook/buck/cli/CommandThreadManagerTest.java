@@ -40,7 +40,12 @@ public class CommandThreadManagerTest {
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(1, Double.POSITIVE_INFINITY);
 
     try (CommandThreadManager pool =
-             new CommandThreadManager("Test", concurrencyLimit, 250, TimeUnit.MILLISECONDS)) {
+             new CommandThreadManager(
+                 "Test",
+                 WorkQueueExecutionOrder.LIFO,
+                 concurrencyLimit,
+                 250,
+                 TimeUnit.MILLISECONDS)) {
       pool.getExecutor().submit(
           new Runnable() {
             @Override

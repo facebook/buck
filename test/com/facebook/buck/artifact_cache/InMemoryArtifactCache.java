@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +70,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(
+  public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       Path output) {
@@ -77,6 +79,8 @@ public class InMemoryArtifactCache implements ArtifactCache {
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
+
+    return Futures.immediateFuture(null);
   }
 
   @Override

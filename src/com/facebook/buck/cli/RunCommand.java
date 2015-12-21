@@ -17,18 +17,22 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.shell.DefaultShellStep;
-import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.ForwardingProcessListener;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -37,7 +41,9 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.nio.channels.Channels;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RunCommand extends AbstractCommand {
 
@@ -93,31 +99,41 @@ public class RunCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (!hasTargetSpecified()) {
-      params.getConsole().printBuildFailure("No target given to run");
-      params.getConsole().getStdOut().println("buck run <target> <arg1> <arg2>...");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "No target given to run"));
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "buck run <target> <arg1> <arg2>..."));
       return 1;
     }
 
     // Make sure the target is built.
-    BuildCommand buildCommand = new BuildCommand();
-    buildCommand.setArguments(ImmutableList.of(getTarget(params.getBuckConfig())));
+    BuildCommand buildCommand = new BuildCommand(
+        ImmutableList.of(getTarget(params.getBuckConfig())));
     int exitCode = buildCommand.runWithoutHelp(params);
     if (exitCode != 0) {
       return exitCode;
     }
 
     String targetName = getTarget(params.getBuckConfig());
-    BuildTarget target = Iterables.getOnlyElement(getBuildTargets(ImmutableSet.of(targetName)));
+    BuildTarget target = Iterables.getOnlyElement(
+        getBuildTargets(
+            params.getCell().getCellRoots(),
+            ImmutableSet.of(targetName)));
 
     Build build = buildCommand.getBuild();
-    BuildRule targetRule = build.getActionGraph().findBuildRuleByTarget(target);
+    BuildRule targetRule;
+    try {
+      targetRule = build.getRuleResolver().requireRule(target);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    }
     BinaryBuildRule binaryBuildRule = null;
     if (targetRule instanceof BinaryBuildRule) {
       binaryBuildRule = (BinaryBuildRule) targetRule;
     }
     if (binaryBuildRule == null) {
-      params.getConsole().printBuildFailure(
-          "target " + targetName + " is not a binary rule (only binary rules can be `run`)");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "target " + targetName + " is not a binary rule (only binary rules can be `run`)"));
       return 1;
     }
 
@@ -130,26 +146,32 @@ public class RunCommand extends AbstractCommand {
     // Clearly something bad has happened here. If you are using `buck run` to start up a server
     // or some other process that is meant to "run forever," then it's pretty common to do:
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(ImmutableSet.copyOf(build.getActionGraph().getNodes())));
-    ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
-        .addAll(binaryBuildRule.getExecutableCommand().getCommandPrefix(resolver))
-        .addAll(getTargetArguments())
-        .build();
-
-    ShellStep step = new DefaultShellStep(
-        params.getCell().getFilesystem().getRootPath(),
-        fullCommand) {
-      // Print the output from the step directly to stdout and stderr rather than buffering it and
-      // printing it as two individual strings. This preserves the expected behavior where output
-      // written to stdout and stderr may be interleaved when displayed in a terminal.
-      @Override
-      protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
-        return true;
-      }
-    };
-    return step.execute(build.getExecutionContext());
+    SourcePathResolver resolver = new SourcePathResolver(build.getRuleResolver());
+    Tool executable = binaryBuildRule.getExecutableCommand();
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .addAllCommand(executable.getCommandPrefix(resolver))
+            .addAllCommand(getTargetArguments())
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(params.getEnvironment())
+                    .putAll(executable.getEnvironment(resolver))
+                    .build())
+            .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
+            .build();
+    ForwardingProcessListener processListener =
+        new ForwardingProcessListener(
+            Channels.newChannel(params.getConsole().getStdOut()),
+            Channels.newChannel(params.getConsole().getStdErr()));
+    ListeningProcessExecutor.LaunchedProcess process =
+        processExecutor.launchProcess(processExecutorParams, processListener);
+    try {
+      return processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+    } finally {
+      processExecutor.destroyProcess(process, /* force */ false);
+      processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+    }
   }
 
   @Override

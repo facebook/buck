@@ -16,16 +16,17 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -43,13 +44,13 @@ public class MacroHandler {
 
   public Function<String, String> getExpander(
       final BuildTarget target,
-      final BuildRuleResolver resolver,
-      final ProjectFilesystem filesystem) {
+      final Function<Optional<String>, Path> cellNames,
+      final BuildRuleResolver resolver) {
     return new Function<String, String>() {
       @Override
       public String apply(String blob) {
         try {
-          return expand(target, resolver, filesystem, blob);
+          return expand(target, cellNames, resolver, blob);
         } catch (MacroException e) {
           throw new HumanReadableException("%s: %s", target, e.getMessage());
         }
@@ -85,8 +86,8 @@ public class MacroHandler {
 
   public String expand(
       final BuildTarget target,
+      final Function<Optional<String>, Path> cellNames,
       final BuildRuleResolver resolver,
-      final ProjectFilesystem filesystem,
       String blob)
       throws MacroException {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
@@ -96,15 +97,20 @@ public class MacroHandler {
           new MacroReplacer() {
             @Override
             public String replace(String input) throws MacroException {
-              return getExpander(entry.getKey()).expand(target, resolver, filesystem, input);
+              return getExpander(entry.getKey()).expand(
+                  target,
+                  cellNames,
+                  resolver,
+                  input);
             }
           });
     }
     return MACRO_FINDER.replace(replacers.build(), blob);
   }
 
-  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String blob)
       throws MacroException {
@@ -114,8 +120,9 @@ public class MacroHandler {
     // extract for their respective macros.
     for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
       deps.addAll(
-          getExpander(match.getFirst()).extractAdditionalBuildTimeDeps(
+          getExpander(match.getFirst()).extractBuildTimeDeps(
               target,
+              cellNames,
               resolver,
               match.getSecond()));
     }
@@ -125,6 +132,7 @@ public class MacroHandler {
 
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       String blob)
       throws MacroException {
 
@@ -133,7 +141,11 @@ public class MacroHandler {
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
-      targets.addAll(getExpander(match.getFirst()).extractParseTimeDeps(target, match.getSecond()));
+      targets.addAll(
+          getExpander(match.getFirst()).extractParseTimeDeps(
+              target,
+              cellNames,
+              match.getSecond()));
     }
 
     return targets.build();
@@ -141,6 +153,7 @@ public class MacroHandler {
 
   public ImmutableList<Object> extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String blob)
       throws MacroException {
@@ -153,6 +166,7 @@ public class MacroHandler {
       targets.add(
           getExpander(match.getFirst()).extractRuleKeyAppendables(
               target,
+              cellNames,
               resolver,
               match.getSecond()));
     }

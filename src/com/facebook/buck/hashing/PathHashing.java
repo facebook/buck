@@ -20,13 +20,9 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.Funnels;
 import com.google.common.hash.Hasher;
-import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -44,6 +40,7 @@ public class PathHashing {
    */
   public static void hashPaths(
       Hasher hasher,
+      FileHashLoader fileHashLoader,
       ProjectFilesystem projectFilesystem,
       Set<Path> paths) throws IOException {
     Preconditions.checkArgument(
@@ -51,14 +48,9 @@ public class PathHashing {
         "Paths to hash (%s) must not contain empty path",
         paths
     );
-    try (final OutputStream hasherOutputStream = Funnels.asOutputStream(hasher)) {
-      for (Path path : walkedPathsInSortedOrder(projectFilesystem, paths)) {
-        StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
-        hasher.putLong(projectFilesystem.getFileSize(path));
-        try (InputStream inputStream = projectFilesystem.newFileInputStream(path)) {
-          ByteStreams.copy(inputStream, hasherOutputStream);
-        }
-      }
+    for (Path path : walkedPathsInSortedOrder(projectFilesystem, paths)) {
+      StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
+      hasher.putBytes(fileHashLoader.get(projectFilesystem.resolve(path)).asBytes());
     }
   }
 

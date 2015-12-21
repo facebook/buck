@@ -39,6 +39,7 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
 
   @Override
   public BuildConfigFields coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

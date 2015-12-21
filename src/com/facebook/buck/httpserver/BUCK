@@ -1,11 +1,42 @@
+CACHE_HANDLER_SRCS = [
+  'ArtifactCacheHandler.java',
+]
+UTIL_SRCS = [
+  'Responses.java',
+]
+
 java_library(
-  name = 'httpserver',
-  srcs = glob(['*.java']),
+  name = 'cache_handler',
+  srcs = CACHE_HANDLER_SRCS,
   tests = [
-    '//test/com/facebook/buck/httpserver:httpserver',
+    '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ],
   deps = [
+    ':util',
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
+    '//src/com/facebook/buck/artifact_cache:binary_protocol',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/rules:rule_key',
+    '//src/com/facebook/buck/util:constants',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jetty:jetty',
+    '//third-party/java/jsr:jsr305',
+  ]
+)
+
+java_library(
+  name = 'httpserver',
+  srcs = glob(['*.java'], excludes=CACHE_HANDLER_SRCS + UTIL_SRCS),
+  tests = [
+    '//test/com/facebook/buck/httpserver:httpserver',
+    '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
+  ],
+  deps = [
+    ':cache_handler',
+    ':util',
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
+    '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
@@ -33,5 +64,20 @@ java_library(
     '//test/com/facebook/buck/cli:',
     '//test/com/facebook/buck/httpserver:',
     '//test/com/facebook/buck/event/listener:',
+  ],
+)
+
+java_library(
+  name = 'util',
+  srcs = UTIL_SRCS,
+  tests = [
+    '//test/com/facebook/buck/httpserver:httpserver',
+  ],
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/jetty:jetty',
+  ],
+  visibility = [
+    '//test/...',
   ],
 )

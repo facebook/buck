@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class TestSelectorList {
 
-  private static final TestSelectorList EMPTY = TestSelectorList.builder().build();
+  public static final TestSelectorList EMPTY = TestSelectorList.builder().build();
 
   /**
    * Test selector strings are parsed in two places: (i) by "buck test" when it is first run, to

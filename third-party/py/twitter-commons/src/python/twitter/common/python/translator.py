@@ -165,7 +165,7 @@ class Translator(object):
               interpreter=None,
               conn_timeout=None):
 
-    # TODO(user) Consider interpreter=None to indicate "universal" packages
+    # TODO(wickman) Consider interpreter=None to indicate "universal" packages
     # since the .whl format can support this.
     # Also consider platform=None to require platform-inspecific packages.
     interpreter = interpreter or PythonInterpreter.get()

@@ -23,19 +23,33 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.BinaryPropertyListParser;
+import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
+import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -43,21 +57,29 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.rules.TemporaryFolder;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
@@ -135,9 +157,25 @@ public class ProjectWorkspace {
    * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
    * in the process. Files whose names end in {@code .expected} will not be copied.
    */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public ProjectWorkspace setUp() throws IOException {
 
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
+
+    // Stamp the buck-out directory if it exists and isn't stamped already
+    try (OutputStream outputStream =
+             new BufferedOutputStream(
+                 Channels.newOutputStream(
+                     Files.newByteChannel(
+                         destPath.resolve(BuckConstant.CURRENT_VERSION_FILE),
+                         ImmutableSet.<OpenOption>of(
+                             StandardOpenOption.CREATE_NEW,
+                             StandardOpenOption.WRITE))))) {
+      outputStream.write(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
+    } catch (FileAlreadyExistsException | NoSuchFileException e) {
+      // If the current version file already exists we don't need to create it
+      // If buck-out doesn't exist we don't need to stamp it
+    }
 
     // If there's a local.properties in the host project but not in the destination, make a copy.
     Path localProperties = FileSystems.getDefault().getPath("local.properties");
@@ -195,7 +233,7 @@ public class ProjectWorkspace {
     buildResult.assertSuccess();
 
     // Use `buck targets` to find the output JAR file.
-    // TODO(jacko): This is going to overwrite the build.log. Maybe stash that and return it?
+    // TODO(oconnor663): This is going to overwrite the build.log. Maybe stash that and return it?
     ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
         "targets",
         "--show-output",
@@ -205,15 +243,22 @@ public class ProjectWorkspace {
     return getPath(pathToGeneratedJarFile);
   }
 
-  public ProcessExecutor.Result runJar(Path jar, String... args)
-      throws IOException, InterruptedException {
+  public ProcessExecutor.Result runJar(Path jar,
+      ImmutableList<String> vmArgs,
+      String... args)  throws IOException, InterruptedException {
     List<String> command = ImmutableList.<String>builder()
         .add("java")
+        .addAll(vmArgs)
         .add("-jar")
         .add(jar.toString())
         .addAll(ImmutableList.copyOf(args))
         .build();
     return doRunCommand(command);
+  }
+
+  public ProcessExecutor.Result runJar(Path jar, String... args)
+      throws IOException, InterruptedException {
+    return runJar(jar, ImmutableList.<String>of(), args);
   }
 
   public ProcessExecutor.Result runCommand(String exe, String... args)
@@ -315,13 +360,20 @@ public class ProjectWorkspace {
     throws IOException {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
+    final CapturingPrintStream stderr = new CapturingPrintStream();
 
     final ImmutableList.Builder<BuckEvent> capturedEventsListBuilder =
         new ImmutableList.Builder<>();
     BuckEventListener capturingEventListener = new BuckEventListener() {
       @Subscribe
       public void captureEvent(BuckEvent event) {
+        if (event instanceof ConsoleEvent) {
+          try {
+            stderr.write(((ConsoleEvent) event).getMessage().getBytes(Charsets.UTF_8));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
         capturedEventsListBuilder.add(event);
       }
 
@@ -344,6 +396,8 @@ public class ProjectWorkspace {
         "ANDROID_NDK",
         "ANDROID_NDK_REPOSITORY",
         "ANDROID_SDK",
+        "GROOVY_HOME",
+        "NDK_HOME",
         "PATH",
         "PATHEXT",
 
@@ -378,7 +432,8 @@ public class ProjectWorkspace {
       Thread.currentThread().interrupt();
     }
 
-    return new ProcessResult(exitCode,
+    return new ProcessResult(
+        exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),
         stderr.getContentsAsString(Charsets.UTF_8),
         capturedEventsListBuilder.build());
@@ -470,7 +525,33 @@ public class ProjectWorkspace {
 
   public BuckBuildLog getBuildLog() throws IOException {
     return BuckBuildLog.fromLogContents(
+        getDestPath(),
         Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
+  }
+
+  public Cell asCell() throws IOException, InterruptedException {
+    Config config = Config.createDefaultConfig(
+        getDestPath(),
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(getDestPath(), config);
+    TestConsole console = new TestConsole();
+    ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
+    DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
+        filesystem,
+        Optional.<String>absent(),
+        new DefaultPropertyFinder(filesystem, env));
+    return Cell.createCell(
+        filesystem,
+        console,
+        Watchman.NULL_WATCHMAN,
+        new BuckConfig(config, filesystem, Architecture.detect(), Platform.detect(), env),
+        new KnownBuildRuleTypesFactory(
+            new ProcessExecutor(console),
+            directoryResolver,
+            Optional.<Path>absent()),
+        directoryResolver,
+        new DefaultClock());
   }
 
   /** The result of running {@code buck} from the command line. */
@@ -494,12 +575,10 @@ public class ProjectWorkspace {
     /**
      * Returns the exit code from the process.
      * <p>
-     * Currently, this method is private because, in practice, any time a client might want to use
-     * it, it is more appropriate to use {@link #assertSuccess()} or
-     * {@link #assertFailure()} instead. If a valid use case arises, then we should make this
-     * getter public.
+     * Currently, in practice, any time a client might want to use it, it is more appropriate to
+     * use {@link #assertSuccess()} or {@link #assertFailure()} instead.
      */
-    private int getExitCode() {
+    public int getExitCode() {
       return exitCode;
     }
 
@@ -588,8 +667,11 @@ public class ProjectWorkspace {
   /**
    * For every file in the template directory whose name ends in {@code .expected}, checks that an
    * equivalent file has been written in the same place under the destination directory.
+   *
+   * @param subDirectory An optional subdirectory to check. Only files in this directory will be
+   *                     compared.
    */
-  public void verify() throws IOException {
+  public void verify(final Optional<Path> subDirectory) throws IOException {
     SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -639,6 +721,24 @@ public class ProjectWorkspace {
                   !((expectedObject != null) ^ (observedObject != null)));
 
               if (expectedObject != null && observedObject != null) {
+                // These keys depend on the locally installed version of Xcode, so ignore them
+                // in comparisons.
+                String[] ignoredKeys = {
+                    "DTSDKName",
+                    "DTPlatformName",
+                    "DTPlatformVersion",
+                    "MinimumOSVersion",
+                    "DTSDKBuild",
+                    "DTPlatformBuild"
+                };
+                if (observedObject instanceof NSDictionary &&
+                    expectedObject instanceof NSDictionary) {
+                  for (String key : ignoredKeys) {
+                    ((NSDictionary) observedObject).remove(key);
+                    ((NSDictionary) expectedObject).remove(key);
+                  }
+                }
+
                 assertEquals(
                     String.format(
                         "In %s, expected binary plist contents to match.",
@@ -658,6 +758,16 @@ public class ProjectWorkspace {
         return FileVisitResult.CONTINUE;
       }
     };
-    Files.walkFileTree(templatePath, copyDirVisitor);
+
+    Path root = subDirectory.isPresent() ? templatePath.resolve(subDirectory.get()) : templatePath;
+    Files.walkFileTree(root, copyDirVisitor);
+  }
+
+  public void verify() throws IOException {
+    verify(Optional.<Path>absent());
+  }
+
+  public void verify(Path subDirectory) throws IOException {
+    verify(Optional.of(subDirectory));
   }
 }

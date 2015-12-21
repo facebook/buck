@@ -17,31 +17,37 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidResource.BuildOutput;
-import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import org.easymock.EasyMock;
@@ -51,7 +57,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
 
 public class DummyRDotJavaTest {
 
@@ -60,14 +65,19 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testBuildSteps() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res1"))
+            .setRes(new FakeSourcePath("android_res/com/example/res1"))
             .build());
     setAndroidResourceBuildOutput(resourceRule1, RESOURCE_RULE1_KEY);
     BuildRule resourceRule2 = ruleResolver.addToIndex(
@@ -75,25 +85,27 @@ public class DummyRDotJavaTest {
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res2"))
+            .setRes(new FakeSourcePath("android_res/com/example/res2"))
             .build());
     setAndroidResourceBuildOutput(resourceRule2, RESOURCE_RULE2_KEY);
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
+            .setProjectFilesystem(filesystem)
+            .build(),
         pathResolver,
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
-        new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS);
+        new FakeSourcePath("abi.jar"),
+        ANDROID_JAVAC_OPTIONS,
+        Optional.<String>absent());
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
         buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 6, steps.size());
 
-    ProjectFilesystem filesystem = dummyRDotJava.getProjectFilesystem();
     String rDotJavaSrcFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__").toString();
     String rDotJavaBinFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_bin__").toString();
     String rDotJavaAbiFolder = Paths.get(
@@ -123,7 +135,7 @@ public class DummyRDotJavaTest {
         ImmutableList.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2));
-    assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps());
+    assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps(ruleKeyBuilderFactory));
   }
 
   @Test
@@ -131,30 +143,14 @@ public class DummyRDotJavaTest {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/com/example:library"))
             .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<HasAndroidResourceDeps>of(),
-        new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS);
+        new FakeSourcePath("abi.jar"),
+        ANDROID_JAVAC_OPTIONS,
+        Optional.<String>absent());
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
-  }
-
-  @Test
-  public void testInitializeFromDisk() {
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSet.<HasAndroidResourceDeps>of(),
-        new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS);
-
-    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
-    String keyHash = Strings.repeat("a", 40);
-    onDiskBuildInfo.putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, keyHash);
-
-    assertEquals(
-        keyHash,
-        dummyRDotJava.initializeFromDisk(onDiskBuildInfo).rDotTxtSha1.getHash());
   }
 
   private static String makeCleanDirDescription(Path dirname) {
@@ -164,7 +160,7 @@ public class DummyRDotJavaTest {
   private static String javacInMemoryDescription(
       String rDotJavaClassesFolder,
       SourcePathResolver resolver) {
-    Set<Path> javaSourceFiles = ImmutableSet.of(
+    ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
         Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
     return RDotJava.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,

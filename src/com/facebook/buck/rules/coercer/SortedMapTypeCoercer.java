@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedMap;
 
@@ -60,6 +61,7 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
 
   @Override
   public ImmutableSortedMap<K, V> coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
@@ -69,10 +71,12 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
         K key = keyTypeCoercer.coerce(
+            cellRoots,
             filesystem,
             pathRelativeToProjectRoot,
             entry.getKey());
         V value = valueTypeCoercer.coerce(
+            cellRoots,
             filesystem,
             pathRelativeToProjectRoot,
             entry.getValue());

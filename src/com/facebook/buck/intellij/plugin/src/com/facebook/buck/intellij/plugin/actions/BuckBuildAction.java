@@ -19,15 +19,16 @@ package com.facebook.buck.intellij.plugin.actions;
 import com.facebook.buck.intellij.plugin.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
+import com.facebook.buck.intellij.plugin.config.BuckModule;
+import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 
 /**
  * Run buck build command.
  */
-public class BuckBuildAction extends DumbAwareAction {
+public class BuckBuildAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck build";
   public static final String ACTION_DESCRIPTION = "Run buck build command";
@@ -38,8 +39,8 @@ public class BuckBuildAction extends DumbAwareAction {
 
   @Override
   public void update(AnActionEvent e) {
-    Project project = e.getProject();
-    if (project != null) {
+    if (preUpdateCheck(e)) {
+      Project project = e.getProject();
       e.getPresentation().setEnabled(!BuckBuildManager.getInstance(project).isBuilding());
     }
   }
@@ -54,11 +55,18 @@ public class BuckBuildAction extends DumbAwareAction {
       return;
     }
 
+    // Initiate a buck build
+    BuckEventsConsumer bu = new BuckEventsConsumer(e.getProject());
+    BuckModule mod = e.getProject().getComponent(BuckModule.class);
+    mod.attach(bu, target);
+
+    // this needs to change
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
         BuckCommand.BUILD);
     handler.command().addParameter(target);
     buildManager.runBuckCommand(handler, ACTION_TITLE);
+    // until here
   }
 }

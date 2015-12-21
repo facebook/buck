@@ -24,16 +24,18 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -59,16 +61,14 @@ public class FatBinaryTest {
 
   @SuppressWarnings({"unchecked"})
   @Test
-  public void appleBinaryDescriptionWithMultiplePlatformArgsShouldGenerateFatBinary() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void appleBinaryDescriptionWithMultiplePlatformArgsShouldGenerateFatBinary()
+      throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule fatBinaryRule = AppleBinaryBuilder
         .createBuilder(
-            BuildTarget.builder("//foo", "xctest")
-                .addFlavors(
-                    ImmutableFlavor.of("iphoneos-i386"),
-                    ImmutableFlavor.of("iphoneos-x86_64"))
-                .build())
+            BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,iphoneos-x86_64"))
         .build(resolver, filesystem);
 
     assertThat(fatBinaryRule, instanceOf(FatBinary.class));
@@ -77,7 +77,7 @@ public class FatBinaryTest {
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
 
-    assertThat(steps, hasSize(1));
+    assertThat(steps, hasSize(2));
     Step step = Iterables.getLast(steps);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -96,17 +96,14 @@ public class FatBinaryTest {
   }
 
   @Test
-  public void appleBinaryDescriptionWithMultipleDifferentSdksShouldFail() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void appleBinaryDescriptionWithMultipleDifferentSdksShouldFail() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     try {
       AppleBinaryBuilder
           .createBuilder(
-              BuildTarget.builder("//foo", "xctest")
-                  .addFlavors(
-                      ImmutableFlavor.of("iphoneos-i386"),
-                      ImmutableFlavor.of("macosx-x86_64"))
-                  .build())
+              BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,macosx-x86_64"))
           .build(resolver);
     } catch (HumanReadableException e) {
       exception = e;
@@ -119,8 +116,9 @@ public class FatBinaryTest {
   }
 
   @Test
-  public void fatBinaryWithSpecialBuildActionShouldFail() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void fatBinaryWithSpecialBuildActionShouldFail() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors = ImmutableList.of(
         CxxInferEnhancer.INFER,
@@ -130,12 +128,8 @@ public class FatBinaryTest {
       try {
         AppleBinaryBuilder
             .createBuilder(
-                BuildTarget.builder("//foo", "xctest")
-                    .addFlavors(
-                        ImmutableFlavor.of("iphoneos-i386"),
-                        ImmutableFlavor.of("iphoneos-x86_64"),
-                        ImmutableFlavor.of(flavor.toString()))
-                    .build())
+                BuildTargetFactory.newInstance("//foo:xctest#" +
+                        "iphoneos-i386,iphoneos-x86_64," + flavor.toString()))
             .build(resolver);
       } catch (HumanReadableException e) {
         exception = e;

@@ -26,6 +26,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -42,6 +43,7 @@ public class ThriftCompilerStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     // Setup some dummy values for inputs to the ThriftCompilerStep
+    ImmutableMap<String, String> compilerEnvironment = ImmutableMap.<String, String>of();
     ImmutableList<String> compilerPrefix = ImmutableList.of("compiler", "--allow-64-bit");
     Path outputDir = Paths.get("output-dir");
     Path input = Paths.get("test.thrift");
@@ -52,6 +54,7 @@ public class ThriftCompilerStepTest {
     // Create our ThriftCompilerStep to test.
     ThriftCompilerStep thriftCompilerStep = new ThriftCompilerStep(
         projectFilesystem.getRootPath(),
+        compilerEnvironment,
         compilerPrefix,
         outputDir,
         input,

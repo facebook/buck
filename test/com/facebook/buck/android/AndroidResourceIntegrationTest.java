@@ -68,7 +68,7 @@ public class AndroidResourceIntegrationTest {
                 .assertSuccess()
                 .getStdout()).get(1);
     assertThat(
-        Files.readAllLines(workspace.getPath(output), Charsets.UTF_8),
+        Files.readAllLines(workspace.getPath(output).resolve("R.txt"), Charsets.UTF_8),
         Matchers.contains(
             "int string another_name 0x7f010002",
             "int string some_name 0x7f010001"));

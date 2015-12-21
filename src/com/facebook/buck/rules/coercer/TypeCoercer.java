@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -31,13 +32,13 @@ import java.nio.file.Path;
  */
 public interface TypeCoercer<T> {
 
-  public Class<T> getOutputClass();
+  Class<T> getOutputClass();
 
   /**
    * Returns whether the leaf nodes of this type coercer outputs value that is an instance of the
    * given class or its subclasses. Does not match non-leaf nodes like Map or List.
    */
-  public boolean hasElementClass(Class<?>... types);
+  boolean hasElementClass(Class<?>... types);
 
   /**
    * Traverse an object guided by this TypeCoercer.
@@ -46,12 +47,13 @@ public interface TypeCoercer<T> {
    * If the object is a collection or map, it will also recursively traverse all elements of the
    * map.
    */
-  public void traverse(T object, Traversal traversal);
+  void traverse(T object, Traversal traversal);
 
   /**
    * @throws CoerceFailedException Input object cannot be coerced into the given type.
    */
-  public T coerce(
+  T coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;
@@ -62,9 +64,9 @@ public interface TypeCoercer<T> {
    *
    * @return A value suitable for fields of type Optional when no value has been set.
    */
-  public Optional<T> getOptionalValue();
+  Optional<T> getOptionalValue();
 
-  public static interface Traversal {
-    public void traverse(Object object);
+  interface Traversal {
+    void traverse(Object object);
   }
 }

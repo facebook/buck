@@ -19,11 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,10 +27,9 @@ import com.google.common.collect.ImmutableSortedSet;
 public class FakeBuildRuleParamsBuilder {
 
   private final BuildTarget buildTarget;
-  private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
+  private ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of();
   private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private Optional<FileHashCache> fileHashCache = Optional.absent();
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
@@ -44,8 +39,8 @@ public class FakeBuildRuleParamsBuilder {
     this(BuildTargetFactory.newInstance(Preconditions.checkNotNull(buildTarget)));
   }
 
-  public FakeBuildRuleParamsBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {
-    this.deps = deps;
+  public FakeBuildRuleParamsBuilder setDeclaredDeps(ImmutableSortedSet<BuildRule> declaredDeps) {
+    this.declaredDeps = declaredDeps;
     return this;
   }
 
@@ -59,25 +54,12 @@ public class FakeBuildRuleParamsBuilder {
     return this;
   }
 
-  public FakeBuildRuleParamsBuilder setFileHashCache(FileHashCache hashCache) {
-    this.fileHashCache = Optional.of(hashCache);
-    return this;
-  }
-
   public BuildRuleParams build() {
-    FileHashCache hashCache;
-    if (fileHashCache.isPresent()) {
-      hashCache = fileHashCache.get();
-    } else {
-      hashCache = new DefaultFileHashCache(filesystem);
-    }
     return new BuildRuleParams(
         buildTarget,
-        Suppliers.ofInstance(deps),
+        Suppliers.ofInstance(declaredDeps),
         Suppliers.ofInstance(extraDeps),
         filesystem,
-        new DefaultRuleKeyBuilderFactory(
-            hashCache,
-            new SourcePathResolver(new BuildRuleResolver())));
+        TestCellBuilder.createCellRoots(filesystem));
   }
 }

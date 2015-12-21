@@ -22,26 +22,26 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -55,7 +55,9 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class PythonTestDescription implements Description<PythonTestDescription.Arg> {
+public class PythonTestDescription implements
+    Description<PythonTestDescription.Arg>,
+    ImplicitDepsInferringDescription<PythonTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("python_test");
 
@@ -68,17 +70,23 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
+  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxPlatform defaultCxxPlatform;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
+      Optional<Long> defaultTestRuleTimeoutMs,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
+    this.pythonPlatforms = pythonPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatforms = cxxPlatforms;
   }
 
@@ -93,22 +101,22 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   }
 
   @VisibleForTesting
-  protected Path getTestMainName() {
+  protected static Path getTestMainName() {
     return Paths.get("__test_main__.py");
   }
 
   @VisibleForTesting
-  protected Path getTestModulesListName() {
+  protected static Path getTestModulesListName() {
     return Paths.get("__test_modules__.py");
   }
 
   @VisibleForTesting
-  protected Path getTestModulesListPath(BuildTarget buildTarget) {
+  protected static Path getTestModulesListPath(BuildTarget buildTarget) {
     return BuildTargets.getGenPath(buildTarget, "%s").resolve(getTestModulesListName());
   }
 
   @VisibleForTesting
-  protected BuildTarget getBinaryBuildTarget(BuildTarget target) {
+  protected static BuildTarget getBinaryBuildTarget(BuildTarget target) {
     return BuildTargets.createFlavoredBuildTarget(target.checkUnflavored(), BINARY_FLAVOR);
   }
 
@@ -160,35 +168,55 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      final A args) {
+      final A args) throws NoSuchBuildTargetException {
 
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-
+    PythonPlatform pythonPlatform = pythonPlatforms
+        .getValue(params.getBuildTarget())
+        .or(pythonPlatforms.getValue(
+            args.platform
+                .transform(Flavor.TO_FLAVOR)
+                .or(pythonPlatforms.getFlavors().iterator().next())));
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
-    ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
-        params.getBuildTarget(),
-        pathResolver,
-        "srcs",
-        baseModule,
-        args.srcs);
+    ImmutableMap<Path, SourcePath> srcs =
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "srcs",
+                    baseModule,
+                    args.srcs.asSet()))
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "platformSrcs",
+                    baseModule,
+                    args.platformSrcs.get()
+                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
+            .build();
 
-    ImmutableMap<Path, SourcePath> resources = PythonUtil.toModuleMap(
-        params.getBuildTarget(),
-        pathResolver,
-        "resources",
-        baseModule,
-        args.resources);
+    ImmutableMap<Path, SourcePath> resources =
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "resources",
+                    baseModule,
+                    args.resources.asSet()))
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "platformResources",
+                    baseModule,
+                    args.platformResources.get()
+                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
+            .build();
 
     // Convert the passed in module paths into test module names.
     ImmutableSet.Builder<String> testModulesBuilder = ImmutableSet.builder();
@@ -216,9 +244,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
             .put(
                 getTestMainName(),
-                new PathSourcePath(
-                    params.getProjectFilesystem(),
-                    pythonBuckConfig.getPathToTestMain()))
+                pythonBuckConfig.getPathToTestMain(params.getProjectFilesystem()))
             .putAll(srcs)
             .build(),
         resources,
@@ -226,7 +252,14 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableSet.<SourcePath>of(),
         args.zipSafe);
     PythonPackageComponents allComponents =
-        PythonUtil.getAllComponents(targetGraph, params, testComponents, cxxPlatform);
+        PythonUtil.getAllComponents(
+            params,
+            resolver,
+            pathResolver,
+            testComponents,
+            pythonPlatform,
+            cxxPlatform,
+            pythonBuckConfig.getNativeLinkStrategy());
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(
@@ -238,6 +271,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             binaryParams,
             resolver,
             pathResolver,
+            pythonPlatform,
             cxxPlatform,
             PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
             allComponents,
@@ -254,8 +288,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                     args.env.or(ImmutableMap.<String, String>of()),
                     MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
-                        resolver,
-                        params.getProjectFilesystem())));
+                        params.getCellRoots(),
+                        resolver)));
           }
         };
 
@@ -274,7 +308,22 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), binaryParams.getDeps())),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.contacts.or(ImmutableSet.<String>of()));
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
+
+    if (pythonBuckConfig.getPackageStyle() == PythonBuckConfig.PackageStyle.STANDALONE) {
+      targets.addAll(pythonBuckConfig.getPexTarget().asSet());
+    }
+
+    return targets.build();
   }
 
   @SuppressFieldNotInitialized
@@ -282,10 +331,12 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public Optional<String> platform;
 
     public Optional<ImmutableList<String>> buildArgs;
 
     public Optional<ImmutableMap<String, String>> env;
+    public Optional<Long> testRuleTimeoutMs;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

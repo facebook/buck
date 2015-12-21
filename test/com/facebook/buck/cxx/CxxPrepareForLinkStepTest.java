@@ -23,7 +23,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -32,7 +31,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class CxxPrepareForLinkStepTest {
@@ -75,20 +73,16 @@ public class CxxPrepareForLinkStepTest {
         "a.o",
         "libb.a",
         "-lsysroot",
-        "/Library/Application Support/blabla");
-    Path frameworkRoot = Paths.get("/System/Frameworks");
-    final Path librarySearchPath = Paths.get("/System/libraries");
-    final String library = "z";
-
+        "/Library/Application Support/blabla",
+        "-F/System/Frameworks",
+        "-L/System/libraries",
+        "-lz");
 
     // Create our CxxLinkStep to test.
     CxxPrepareForLinkStep step = new CxxPrepareForLinkStep(
         argFilePath,
         output,
-        args,
-        ImmutableSet.of(frameworkRoot),
-        ImmutableSet.of(librarySearchPath),
-        ImmutableSet.of(library));
+        args);
 
     step.execute(context);
 
@@ -96,15 +90,15 @@ public class CxxPrepareForLinkStepTest {
 
     ImmutableList<String> expectedFileContents = ImmutableList.<String>builder()
         .add("-o", output.toString())
-        .add("-F", frameworkRoot.toString())
-        .add("-L", librarySearchPath.toString())
-        .add("-l" + library)
         .add("-rpath")
         .add("hello")
         .add("a.o")
         .add("libb.a")
         .add("-lsysroot")
         .add("\"/Library/Application Support/blabla\"")
+        .add("-F/System/Frameworks")
+        .add("-L/System/libraries")
+        .add("-lz")
         .build();
     List<String> fileContents = Files.readAllLines(argFilePath, StandardCharsets.UTF_8);
     assertThat(fileContents, Matchers.<List<String>>equalTo(expectedFileContents));

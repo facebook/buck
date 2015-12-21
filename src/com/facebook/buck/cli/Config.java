@@ -24,6 +24,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,6 +59,14 @@ public class Config {
   private static final Path GLOBAL_BUCK_CONFIG_DIRECTORY_PATH = Paths.get("/etc/buckconfig.d");
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries;
+
+  private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
+    new Supplier<Integer>() {
+      @Override
+      public Integer get() {
+        return Objects.hashCode(sectionToEntries);
+      }
+    });
 
   @SafeVarargs
   public Config(ImmutableMap<String, ImmutableMap<String, String>>... maps) {
@@ -126,39 +136,65 @@ public class Config {
   }
 
   /**
+   * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
+   *     empty list if the property is not defined or there are no values.
+   */
+  public ImmutableList<String> getListWithoutComments(String sectionName, String propertyName) {
+    return getOptionalListWithoutComments(sectionName, propertyName).or(ImmutableList.<String>of());
+  }
+
+  public ImmutableList<String> getListWithoutComments(
+      String sectionName, String propertyName, char splitChar) {
+    return getOptionalListWithoutComments(sectionName, propertyName, splitChar)
+        .or(ImmutableList.<String>of());
+  }
+
+  /**
    * ini4j leaves things that look like comments in the values of entries in the file. Generally,
    * we don't want to include these in our parameters, so filter them out where necessary. In an INI
    * file, the comment separator is ";", but some parsers (ini4j included) use "#" too. This method
    * handles both cases.
    *
-   * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
-   *     empty list if there are no values.
+   * @return an {@link ImmutableList} containing all entries that don't look like comments, the
+   *     empty list if the property is defined but there are no values, or Optional.absent() if
+   *     the property is not defined.
    */
-  public ImmutableList<String> getListWithoutComments(String sectionName, String propertyName) {
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String sectionName, String propertyName) {
+    // Default split character for lists is comma.
+    return getOptionalListWithoutComments(sectionName, propertyName, ',');
+  }
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String sectionName, String propertyName, char splitChar) {
     Optional<String> value = getValue(sectionName, propertyName);
     if (!value.isPresent()) {
-      return ImmutableList.of();
+      return Optional.absent();
     }
 
-    Iterable<String> allValues = Splitter.on(',')
+    Iterable<String> allValues = Splitter.on(splitChar)
         .omitEmptyStrings()
         .trimResults()
         .split(value.get());
-    return FluentIterable.from(allValues)
-        .filter(
-            new Predicate<String>() {
-              @Override
-              public boolean apply(String input) {
-                // Reject if the first printable character is an ini comment char (';' or '#')
-                return !Pattern.compile("^\\s*[#;]").matcher(input).find();
-              }
-            })
-        .toList();
+    return Optional.of(
+        FluentIterable.from(allValues)
+            .filter(
+                new Predicate<String>() {
+                  @Override
+                  public boolean apply(String input) {
+                    // Reject if the first printable character is an ini comment char (';' or '#')
+                    return !Pattern.compile("^\\s*[#;]").matcher(input).find();
+                  }
+                })
+            .toList());
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = get(sectionName);
-    return Optional.fromNullable(properties.get(propertyName));
+    String value = properties.get(propertyName);
+    if (value != null && value.length() == 0) {
+      value = null;
+    }
+    return Optional.fromNullable(value);
   }
 
   public Optional<Long> getLong(String sectionName, String propertyName) {
@@ -262,7 +298,7 @@ public class Config {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(sectionToEntries);
+    return hashCodeSupplier.get();
   }
 
   private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {

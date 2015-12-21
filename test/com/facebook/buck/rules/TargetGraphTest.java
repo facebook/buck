@@ -18,8 +18,9 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 
@@ -133,7 +134,7 @@ public class TargetGraphTest {
   }
 
   private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
-    BuildTarget buildTarget = BuildTarget.builder("//foo", name).build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo: " + name);
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
     for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());

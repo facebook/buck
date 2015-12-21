@@ -19,10 +19,13 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
@@ -36,44 +39,53 @@ import java.nio.file.Path;
 public class CellTest {
 
   @Test
-  public void shouldReturnItselfIfRequestedToGetARepoWithAnAbsentOptionalName()
+  public void shouldReturnItselfIfRequestedToGetACellWithAnAbsentOptionalName()
       throws IOException, InterruptedException {
-    Cell repo = new TestCellBuilder().build();
+    Cell cell = new TestCellBuilder().build();
 
-    Cell target = repo.getCell(Optional.<String>absent());
+    BuildTarget target = BuildTargetFactory.newInstance(cell.getFilesystem(), "//does/not:matter");
+    Cell owner = cell.getCell(target);
 
-    assertSame(repo, target);
+    assertSame(cell, owner);
   }
 
   @Test(expected = HumanReadableException.class)
-  public void shouldThrowAnExceptionIfTheNamedRepoIsNotPresent()
+  public void shouldThrowAnExceptionIfTheNamedCellIsNotPresent()
       throws IOException, InterruptedException {
-    Cell repo = new TestCellBuilder().build();
+    Cell cell = new TestCellBuilder().build();
 
-    repo.getCell(Optional.of("not-there"));
+    BuildTarget target = BuildTargetFactory.newInstance(
+        FakeProjectFilesystem.createJavaOnlyFilesystem(),
+        "//does/not:matter");
+
+    // Target's filesystem root is unknown to cell.
+    cell.getCell(target);
   }
 
   @Test
-  public void shouldResolveNamesOfReposAgainstThoseGivenInTheBuckConfig()
+  public void shouldResolveNamesOfCellsAgainstThoseGivenInTheBuckConfig()
       throws IOException, InterruptedException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
     Path root = vfs.getPath("/opt/local/");
-    Path repo1 = root.resolve("repo1");
-    Files.createDirectories(repo1);
-    Path repo2 = root.resolve("repo2");
-    Files.createDirectories(repo2);
+    Path cell1Root = root.resolve("repo1");
+    Files.createDirectories(cell1Root);
+    Path cell2Root = root.resolve("repo2");
+    Files.createDirectories(cell2Root);
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(repo1.toAbsolutePath());
-    FakeBuckConfig config = new FakeBuckConfig(
-        filesystem,
-        "[repositories]",
-        "example = " + repo2.toAbsolutePath().toString());
+    ProjectFilesystem filesystem1 = new ProjectFilesystem(cell1Root.toAbsolutePath());
+    ProjectFilesystem filesystem2 = new ProjectFilesystem(cell2Root.toAbsolutePath());
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem1)
+        .setSections(
+            "[repositories]",
+            "example = " + filesystem2.getRootPath().toString())
+        .build();
 
-    Cell repo = new TestCellBuilder().setBuckConfig(config).setFilesystem(
-        filesystem).build();
-    Cell other = repo.getCell(Optional.of("example"));
+    Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");
+    Cell other = cell1.getCell(target);
 
-    assertEquals(repo2, other.getFilesystem().getRootPath());
+    assertEquals(cell2Root, other.getFilesystem().getRootPath());
   }
 }

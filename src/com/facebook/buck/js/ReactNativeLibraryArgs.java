@@ -27,6 +27,7 @@ public class ReactNativeLibraryArgs {
   public Optional<ImmutableSortedSet<SourcePath>> srcs;
   public SourcePath entryPath;
   public String bundleName;
+  public Optional<String> packagerFlags;
 
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
 }

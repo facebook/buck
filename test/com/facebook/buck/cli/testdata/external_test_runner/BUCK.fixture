@@ -12,6 +12,7 @@ java_test(
   name = 'simple',
   srcs = [
     'SimpleTest.java',
+    'SimpleTest2.java',
   ],
   deps = [
     ':junit',

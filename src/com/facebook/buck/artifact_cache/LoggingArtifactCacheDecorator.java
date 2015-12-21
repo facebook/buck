@@ -20,48 +20,53 @@ import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.file.Path;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
  * and finish of each event.
+ * The underlying cache must only provide synchronous operations.
  */
 public class LoggingArtifactCacheDecorator implements ArtifactCache {
   private final BuckEventBus eventBus;
   private final ArtifactCache delegate;
+  private final ArtifactCacheEventFactory eventFactory;
 
-  public LoggingArtifactCacheDecorator(BuckEventBus eventBus, ArtifactCache delegate) {
+  public LoggingArtifactCacheDecorator(
+      BuckEventBus eventBus,
+      ArtifactCache delegate,
+      ArtifactCacheEventFactory eventFactory) {
     this.eventBus = eventBus;
     this.delegate = delegate;
+    this.eventFactory = eventFactory;
   }
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, Path output)
       throws InterruptedException {
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.FETCH,
-        ImmutableSet.of(ruleKey));
+    ArtifactCacheEvent.Started started =
+        eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
     CacheResult fetchResult = delegate.fetch(ruleKey, output);
-    eventBus.post(ArtifactCacheEvent.finished(
+    eventBus.post(eventFactory.newFetchFinishedEvent(
             started,
             fetchResult));
     return fetchResult;
   }
 
   @Override
-  public void store(
+  public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       Path output)
       throws InterruptedException {
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.STORE,
-        ruleKeys);
+    ArtifactCacheEvent.Started started = eventFactory.newStoreStartedEvent(ruleKeys, metadata);
     eventBus.post(started);
-    delegate.store(ruleKeys, metadata, output);
-    eventBus.post(ArtifactCacheEvent.finished(started));
+    ListenableFuture<Void> storeFuture = delegate.store(ruleKeys, metadata, output);
+    eventBus.post(eventFactory.newStoreFinishedEvent(started));
+    return storeFuture;
   }
 
   @Override

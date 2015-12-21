@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /** Utility class used to test the QueryParser */
 public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
@@ -35,7 +36,7 @@ public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public Set<QueryTarget> getTargetsMatchingPattern(String pattern)
+  public Set<QueryTarget> getTargetsMatchingPattern(String pattern, Executor executor)
       throws QueryException, InterruptedException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }
@@ -59,7 +60,7 @@ public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth)
+  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth, Executor executor)
       throws InterruptedException, QueryException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }

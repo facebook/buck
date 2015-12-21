@@ -27,9 +27,6 @@ public enum CacheResultType {
     /** An error occurred when fetching artifact from cache*/
     ERROR(/* success */ false),
 
-    /** Artifact cache not queried because some of the dependencies were re-built. */
-    SKIP(/* success */ false),
-
     /** Artifact cache not queried because the local cache key was unchanged. */
     LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
 

@@ -21,11 +21,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
-import java.nio.file.Path;
 import java.util.SortedSet;
 
 /**
@@ -56,6 +56,6 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public SortedSet<Path> dirs;
+    public SortedSet<SourcePath> dirs;
   }
 }

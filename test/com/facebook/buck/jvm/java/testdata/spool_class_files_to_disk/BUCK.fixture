@@ -1,0 +1,10 @@
+java_library(
+  name = 'a',
+  srcs = ['A.java', 'B.java'],
+)
+
+java_binary(
+  name = 'binary',
+  deps = [':a'],
+  main_class = 'A',
+)

@@ -47,7 +47,7 @@ public class AuditTestsCommandIntegrationTest {
     result.assertFailure();
     assertThat(
         result.getStderr(),
-        containsString("BUILD FAILED: Must specify at least one build target.\n"));
+        containsString("Must specify at least one build target.\n"));
   }
 
   @Test

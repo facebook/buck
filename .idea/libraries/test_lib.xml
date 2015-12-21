@@ -11,6 +11,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/objenesis/objenesis-1.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/caliper/caliper-1.0-all.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

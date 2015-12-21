@@ -29,7 +29,7 @@ public class FakeAppleConfig extends AppleConfig {
   private ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = null;
 
   public FakeAppleConfig() {
-    super(new FakeBuckConfig());
+    super(FakeBuckConfig.builder().build());
   }
 
   public FakeAppleConfig setAppleSdkPaths(ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths) {

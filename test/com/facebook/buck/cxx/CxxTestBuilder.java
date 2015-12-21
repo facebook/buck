@@ -22,14 +22,21 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.Arg> {
+public class CxxTestBuilder extends
+    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestBuilder> {
 
   public CxxTestBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
+    super(
+        new CxxTestDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            /* testRuleTimeoutMs */ Optional.<Long>absent()),
+        target);
   }
 
   public CxxTestBuilder(BuildTarget target) {
@@ -58,6 +65,11 @@ public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.
 
   public CxxTestBuilder setFramework(CxxTestType framework) {
     arg.framework = Optional.of(framework);
+    return this;
+  }
+
+  @Override
+  protected CxxTestBuilder getThis() {
     return this;
   }
 

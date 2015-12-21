@@ -16,6 +16,9 @@
 
 package com.facebook.buck.bser;
 
+// CHECKSTYLE.OFF: AvoidStarImport
+import static com.facebook.buck.bser.BserConstants.*;
+
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 
@@ -30,6 +33,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,19 +88,6 @@ public class BserDeserializer {
 
   // 2 bytes marker, 1 byte int size, up to 8 bytes int64 value
   private static final int SNIFF_BUFFER_SIZE = 13;
-
-  private static final byte BSER_ARRAY = 0x00;
-  private static final byte BSER_OBJECT = 0x01;
-  private static final byte BSER_STRING = 0x02;
-  private static final byte BSER_INT8 = 0x03;
-  private static final byte BSER_INT16 = 0x04;
-  private static final byte BSER_INT32 = 0x05;
-  private static final byte BSER_INT64 = 0x06;
-  private static final byte BSER_REAL = 0x07;
-  private static final byte BSER_TRUE = 0x08;
-  private static final byte BSER_FALSE = 0x09;
-  private static final byte BSER_NULL = 0x0a;
-  private static final byte BSER_TEMPLATE = 0x0b;
 
   /**
    * Deserializes the next BSER-encoded value from the stream.
@@ -226,7 +217,12 @@ public class BserDeserializer {
     buffer.limit(buffer.position() + len);
 
     try {
-      return utf8Decoder.decode(buffer).toString();
+      // We'll likely have many duplicates of this string. Java 7 and
+      // up have not-insane behavior of String.intern(), so we'll use
+      // it to deduplicate the String instances.
+      //
+      // See: http://java-performance.info/string-intern-in-java-6-7-8/
+      return utf8Decoder.decode(buffer).toString().intern();
     } finally {
       buffer.limit(buffer.capacity());
     }
@@ -235,6 +231,9 @@ public class BserDeserializer {
   private List<Object> deserializeArray(ByteBuffer buffer) throws IOException {
     byte intType = buffer.get();
     int numItems = deserializeIntLen(buffer, intType);
+    if (numItems == 0) {
+      return Collections.emptyList();
+    }
     ArrayList<Object> list = new ArrayList<>(numItems);
     for (int i = 0; i < numItems; i++) {
       list.add(deserializeRecursive(buffer));
@@ -245,6 +244,9 @@ public class BserDeserializer {
   private Map<String, Object> deserializeObject(ByteBuffer buffer) throws IOException {
     byte intType = buffer.get();
     int numItems = deserializeIntLen(buffer, intType);
+    if (numItems == 0) {
+      return Collections.emptyMap();
+    }
     Map<String, Object> map;
     if (keyOrdering == KeyOrdering.UNSORTED) {
       map = new LinkedHashMap<>(numItems);
@@ -266,9 +268,41 @@ public class BserDeserializer {
     return map;
   }
 
+  private List<Map<String, Object>> deserializeTemplate(ByteBuffer buffer) throws IOException {
+    byte arrayType = buffer.get();
+    if (arrayType != BSER_ARRAY) {
+      throw new IOException(String.format("Expected ARRAY to follow TEMPLATE, got %d", arrayType));
+    }
+    List<Object> keys = deserializeArray(buffer);
+    byte numItemsType = buffer.get();
+    int numItems = deserializeIntLen(buffer, numItemsType);
+    ArrayList<Map<String, Object>> result = new ArrayList<>();
+    for (int itemIdx = 0; itemIdx < numItems; itemIdx++) {
+      Map<String, Object> obj;
+      if (keyOrdering == KeyOrdering.UNSORTED) {
+        obj = new LinkedHashMap<>();
+      } else {
+        obj = new TreeMap<>();
+      }
+      for (int keyIdx = 0; keyIdx < keys.size(); keyIdx++) {
+        byte keyValueType = buffer.get();
+        if (keyValueType != BSER_SKIP) {
+          String key = (String) keys.get(keyIdx);
+          obj.put(key, deserializeRecursiveWithType(buffer, keyValueType));
+        }
+      }
+      result.add(obj);
+    }
+    return result;
+  }
+
   @Nullable
   private Object deserializeRecursive(ByteBuffer buffer) throws IOException {
     byte type = buffer.get();
+    return deserializeRecursiveWithType(buffer, type);
+  }
+
+  private Object deserializeRecursiveWithType(ByteBuffer buffer, byte type) throws IOException {
     switch (type) {
       case BSER_INT8:
       case BSER_INT16:
@@ -290,7 +324,7 @@ public class BserDeserializer {
       case BSER_OBJECT:
         return deserializeObject(buffer);
       case BSER_TEMPLATE:
-        throw new UnsupportedOperationException("TODO");
+        return deserializeTemplate(buffer);
       default:
         throw new IOException(String.format("Unrecognized BSER value type %d", type));
     }

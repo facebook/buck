@@ -19,7 +19,9 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
+import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
@@ -33,7 +35,7 @@ import java.util.regex.Pattern;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
-  private static final Pattern STRICT_HASH_PATTERN = Pattern.compile("(^[A-F0-9]{40}$)");
+  private static final Pattern STRICT_HASH_PATTERN = Pattern.compile("(^[A-Fa-f0-9]{40}$)");
 
   /** A pseudo-identity for ad hoc code signing.
    *
@@ -43,33 +45,38 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
    * intended for Buck unit tests.
    */
   public static final CodeSignIdentity AD_HOC = CodeSignIdentity.builder()
-      .setHash("-").setFullName("Ad Hoc").build();
+      .setFingerprint(Optional.<HashCode>absent()).setSubjectCommonName("Ad Hoc").build();
 
-  /** Returns the identity's certificate hash, defined to be unique for each identity.
+  /**
+   * Returns the identity's certificate hash, defined to be unique for each identity.
+   *
+   * If absent, this identity represents an ad-hoc signing identity.
    */
-  public abstract String getHash();
+  public abstract Optional<HashCode> getFingerprint();
 
   /** Returns the full name of the identity.
    * e.g. "iPhone Developer: John Doe (ABCDE12345)"
    *
    * Not guaranteed to be unique.
    */
-  public abstract String getFullName();
+  public abstract String getSubjectCommonName();
 
-  /** Whether this is a hash identifier (or the special ad-hoc '-') or not.
+  /**
+   * Convert a {@code String} into a fingerprint {@code HashCode} if it's in the correct format.
    */
-  public static boolean isHash(String identifier) {
+  public static Optional<HashCode> toFingerprint(String identifier) {
     Matcher matcher = STRICT_HASH_PATTERN.matcher(identifier);
-    return matcher.find() || identifier.equals("-");
-  }
-
-  @Value.Check
-  protected void check() {
-    Preconditions.checkArgument(isHash(getHash()));
+    if (matcher.matches()) {
+      return Optional.of(HashCode.fromString(identifier.toLowerCase()));
+    } else {
+      return Optional.absent();
+    }
   }
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("code-sign-identity", getHash());
+    return builder.setReflectively(
+        "code-sign-identity",
+        getFingerprint().transform(Functions.toStringFunction()));
   }
 }

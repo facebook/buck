@@ -40,6 +40,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Utility class to discover the location of SDKs contained inside an Xcode
@@ -119,9 +121,13 @@ public class AppleSdkDiscovery {
           try (DirectoryStream<Path> sdkStream = Files.newDirectoryStream(
                    developerSdksPath,
                    "*.sdk")) {
+            Set<Path> scannedSdkDirs = new HashSet<>();
             for (Path sdkDir : sdkStream) {
               LOG.debug("Fetching SDK name for %s", sdkDir);
-              if (Files.isSymbolicLink(sdkDir)) {
+
+              sdkDir = sdkDir.toRealPath();
+              if (scannedSdkDirs.contains(sdkDir)) {
+                LOG.debug("Skipping already scanned SDK directory %s", sdkDir);
                 continue;
               }
 
@@ -142,6 +148,7 @@ public class AppleSdkDiscovery {
                 appleSdkPathsBuilder.put(sdk, xcodePaths);
                 orderedSdksForPlatform.put(sdk.getApplePlatform(), sdk);
               }
+              scannedSdkDirs.add(sdkDir);
             }
           } catch (NoSuchFileException e) {
             LOG.warn(
@@ -171,31 +178,6 @@ public class AppleSdkDiscovery {
     // This includes both the discovered SDKs with versions in their names, as well as
     // the unversioned aliases added just above.
     return appleSdkPathsBuilder.build();
-  }
-
-  private static void addArchitecturesForPlatform(
-      AppleSdk.Builder sdkBuilder,
-      ApplePlatform applePlatform) {
-    // TODO(user): These need to be read from the SDK, not hard-coded.
-    switch (applePlatform.getName()) {
-      case ApplePlatform.Name.MACOSX:
-        // Fall through.
-      case ApplePlatform.Name.IPHONESIMULATOR:
-        sdkBuilder.addArchitectures("i386", "x86_64");
-        break;
-      case ApplePlatform.Name.IPHONEOS:
-        sdkBuilder.addArchitectures("armv7", "arm64");
-        break;
-      case ApplePlatform.Name.WATCHSIMULATOR:
-        sdkBuilder.addArchitectures("i386");
-        break;
-      case ApplePlatform.Name.WATCHOS:
-        sdkBuilder.addArchitectures("armv7k");
-        break;
-      default:
-        sdkBuilder.addArchitectures("armv7", "arm64", "i386", "x86_64");
-        break;
-    }
   }
 
   private static boolean buildSdkFromPath(
@@ -238,10 +220,9 @@ public class AppleSdkDiscovery {
         return false;
       } else {
         NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
-        ApplePlatform applePlatform =
-            ApplePlatform.builder().setName(platformName.toString()).build();
+        ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
         sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
-        addArchitecturesForPlatform(sdkBuilder, applePlatform);
+        sdkBuilder.addAllArchitectures(applePlatform.getArchitectures());
         return true;
       }
     } catch (FileNotFoundException e) {

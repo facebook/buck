@@ -16,22 +16,26 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,10 +46,10 @@ import java.nio.file.Path;
 public class AppleBinaryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testAppleBinaryBuildsSomething() throws IOException {
+  public void testAppleBinaryBuildsBinary() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_builds_something", tmp);
@@ -53,50 +57,73 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
+    assertThat(
+        workspace.runCommand("file", getGenDir().resolve("Apps/TestApp/TestApp").toString())
+            .getStdout()
+            .get(),
+        containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryAppBuildsApp() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_builds_something", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#app").assertSuccess();
+
+    assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
+    Path appPath =
+        getGenDir().resolve(
+            "Apps/TestApp/TestApp#app,no-include-frameworks/TestApp.app/");
+    assertThat(Files.exists(appPath.resolve("Info.plist")), is(true));
+    assertThat(
+        workspace.runCommand("file", appPath.resolve("TestApp").toString())
+            .getStdout()
+            .get(),
+        containsString("executable"));
   }
 
   @Test
   public void testAppleBinaryWithSystemFrameworksBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_with_system_frameworks_builds_something", tmp);
     workspace.setUp();
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
   public void testAppleBinaryWithLibraryDependencyBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_with_library_dependency_builds_something", tmp);
     workspace.setUp();
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
   public void testAppleBinaryWithLibraryDependencyWithSystemFrameworksBuildsSomething()
       throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_with_library_dependency_with_system_frameworks_builds_something", tmp);
     workspace.setUp();
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -107,16 +134,14 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Apps/TestApp", "TestApp")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#default," +
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRootPath().toRealPath();
+    Path projectRoot = tmp.getRoot().toRealPath();
 
     Path inputPath = projectRoot.resolve(
         buildTarget.getBasePath());
@@ -139,7 +164,7 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -209,14 +234,13 @@ public class AppleBinaryIntegrationTest {
   public void testAppleBinaryBuildsFatBinaries() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle", tmp);
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
     workspace.setUp();
     workspace.runBuckCommand(
         "build",
         "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64")
         .assertSuccess();
-    Path output = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
+    Path output = getGenDir()
         .resolve("DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
@@ -224,6 +248,90 @@ public class AppleBinaryIntegrationTest {
         lipoVerifyResult.getStderr().or(""),
         0,
         lipoVerifyResult.getExitCode());
+  }
+
+  @Test
+  public void testFlavoredAppleBundleBuildsAndDsymFileCreated() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=none",
+        "//:DemoApp#dwarf-and-dsym")
+        .assertSuccess();
+    Path output = getGenDir()
+        .resolve("DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
+            "Resources/DWARF/DemoApp");
+    assertThat(Files.exists(output), Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testFlavoredAppleBundleBuildsAndDsymFileIsNotCreated() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=dwarf_and_dsym",
+        "//:DemoApp#no-debug")
+        .assertSuccess();
+    assertThat(
+        Files.exists(
+            getGenDir().resolve(
+                "DemoApp#no-debug/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+    assertThat(Files.exists(
+            getGenDir()
+                .resolve(
+                    "DemoApp#dwarf-and-dsym/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+    assertThat(Files.exists(
+            getGenDir().resolve("DemoApp/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+  }
+
+  @Test
+  public void testAppleBundleDebugFormatRespectsDefaultConfigSettingDSYM() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=dwarf_and_dsym",
+        "//:DemoApp")
+        .assertSuccess();
+    assertThat(
+        Files.exists(
+            getGenDir().resolve(
+                "DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
+                    "Resources/DWARF/DemoApp")),
+        Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testAppleBundleDebugFormatRespectsDefaultConfigSettingNoDebug() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.default_debug_info_format=none",
+        "//:DemoApp")
+        .assertSuccess();
+    assertThat(Files.exists(
+            getGenDir().resolve(
+                "DemoApp#no-debug/DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp")),
+        Matchers.equalTo(false));
+  }
+
+  private Path getGenDir() {
+    return tmp.getRoot()
+        .resolve(BuckConstant.GEN_DIR);
   }
 
   private static void assertIsSymbolicLink(

@@ -74,6 +74,21 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
+  public void extraArgs() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c", "test.external_runner=" + workspace.getPath("test_runner_echo.py"),
+            "//:pass",
+            "--",
+            "bobloblawlobslawbomb");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout().trim(),
+        Matchers.equalTo("bobloblawlobslawbomb"));
+  }
+
+  @Test
   public void runJavaTest() throws IOException {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
@@ -87,6 +102,13 @@ public class ExternalTestRunnerIntegrationTest {
             Joiner.on(System.lineSeparator()).join(
                 "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
                 "<testcase name=\"SimpleTest\">",
+                "  <test name=\"passingTest\" success=\"true\" time=\"\\d*\" type=\"SUCCESS\">",
+                "    <stdout>passed!",
+                "</stdout>",
+                "  </test>",
+                "</testcase>",
+                "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                "<testcase name=\"SimpleTest2\">",
                 "  <test name=\"passingTest\" success=\"true\" time=\"\\d*\" type=\"SUCCESS\">",
                 "    <stdout>passed!",
                 "</stdout>",

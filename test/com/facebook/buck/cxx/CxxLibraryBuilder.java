@@ -29,7 +29,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.regex.Pattern;
 
-public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> {
+public class CxxLibraryBuilder extends
+    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg, CxxLibraryBuilder> {
 
   public CxxLibraryBuilder(
       BuildTarget target,
@@ -38,7 +39,7 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     super(
         new CxxLibraryDescription(
             cxxBuckConfig,
-            new InferBuckConfig(new FakeBuckConfig()),
+            new InferBuckConfig(FakeBuckConfig.builder().build()),
             cxxPlatforms,
             CxxPreprocessMode.SEPARATE),
         target);
@@ -91,6 +92,16 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
 
   public CxxLibraryBuilder setSupportedPlatformsRegex(Pattern regex) {
     arg.supportedPlatformsRegex = Optional.of(regex);
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
+    arg.exportedDeps = Optional.of(exportedDeps);
+    return this;
+  }
+
+  @Override
+  protected CxxLibraryBuilder getThis() {
     return this;
   }
 

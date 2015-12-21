@@ -18,9 +18,8 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.HttpArtifactCacheEvent;
-import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
-import com.facebook.buck.event.HttpArtifactCacheEvent.Started;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Started;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -29,6 +28,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -41,6 +43,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
@@ -64,6 +67,7 @@ public class HttpArtifactCache implements ArtifactCache {
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
+  private final ListeningExecutorService httpWriteExecutorService;
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
@@ -74,7 +78,8 @@ public class HttpArtifactCache implements ArtifactCache {
       URI uri,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      ListeningExecutorService httpWriteExecutorService) {
     this.name = name;
     this.fetchClient = fetchClient;
     this.storeClient = storeClient;
@@ -82,6 +87,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
+    this.httpWriteExecutorService = httpWriteExecutorService;
   }
 
   protected Response fetchCall(Request request) throws IOException {
@@ -95,7 +101,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
     Request request =
         new Request.Builder()
-            .url(uri.resolve("/artifacts/key/" + ruleKey.toString()).toURL())
+            .url(new URL(uri.toURL(), "artifacts/key/" + ruleKey.toString()))
             .get()
             .build();
     Response response = fetchCall(request);
@@ -164,7 +170,7 @@ public class HttpArtifactCache implements ArtifactCache {
   public CacheResult fetch(
       RuleKey ruleKey,
       Path output) throws InterruptedException {
-    Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent();
+    Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(ImmutableSet.<RuleKey>of());
     buckEventBus.post(startedEvent);
     Finished.Builder eventBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
         .setRuleKeys(Lists.newArrayList(ruleKey));
@@ -173,7 +179,7 @@ public class HttpArtifactCache implements ArtifactCache {
       CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
       buckEventBus.post(
           eventBuilder
-              .setFetchResult(result.toString())
+              .setFetchResult(result)
               .build());
       return result;
     } catch (IOException e) {
@@ -181,7 +187,7 @@ public class HttpArtifactCache implements ArtifactCache {
       reportFailure(e, "fetch(%s, %s): %s", uri, ruleKey, msg);
       CacheResult cacheResult = CacheResult.error(name, msg);
       buckEventBus.post(eventBuilder
-          .setFetchResult(cacheResult.toString())
+          .setFetchResult(cacheResult)
           .setErrorMessage(msg)
           .build());
       return cacheResult;
@@ -249,38 +255,54 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
-      Path output)
+  public ListenableFuture<Void> store(
+      final ImmutableSet<RuleKey> ruleKeys,
+      final ImmutableMap<String, String> metadata,
+      final Path output)
       throws InterruptedException {
     if (!isStoreSupported()) {
-      return;
+      return Futures.immediateFuture(null);
     }
 
-    Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent();
-    buckEventBus.post(startedEvent);
-    Finished.Builder finishedEventBuilder =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-            .setRuleKeys(ruleKeys);
+    final HttpArtifactCacheEvent.Scheduled scheduled =
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            ArtifactCacheEvent.getTarget(metadata), ruleKeys);
+    buckEventBus.post(scheduled);
 
-    try {
-      storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
-      buckEventBus.post(finishedEventBuilder.build());
-    } catch (IOException e) {
-      reportFailure(
-          e,
-          "store(%s, %s): %s: %s",
-          uri,
-          ruleKeys,
-          e.getClass().getName(),
-          e.getMessage());
+    // HTTP Store operations are asynchronous.
+    return httpWriteExecutorService.submit(
+        new Runnable() {
+          @Override
+          public void run() {
+            Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
+            buckEventBus.post(startedEvent);
+            Finished.Builder finishedEventBuilder =
+                HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
+                    .setRuleKeys(ruleKeys);
 
-      buckEventBus.post(finishedEventBuilder
-          .setWasUploadSuccessful(false)
-          .setErrorMessage(e.toString())
-          .build());
-    }
+            try {
+              storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
+              buckEventBus.post(finishedEventBuilder.build());
+
+            } catch (IOException e) {
+              reportFailure(
+                  e,
+                  "store(%s, %s): %s: %s",
+                  uri,
+                  ruleKeys,
+                  e.getClass().getName(),
+                  e.getMessage());
+
+              buckEventBus.post(
+                  finishedEventBuilder
+                      .setWasUploadSuccessful(false)
+                      .setErrorMessage(e.toString())
+                      .build());
+            }
+          }
+        },
+        /* result */ null
+    );
   }
 
   private void reportFailure(Exception exception, String format, Object... args) {
@@ -306,5 +328,4 @@ public class HttpArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {}
-
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -44,6 +45,7 @@ public class PathTypeCoercerTest {
     String invalidPath = "";
     try {
       pathTypeCoercer.coerce(
+          createCellRoots(filesystem),
           filesystem,
           pathRelativeToProjectRoot,
           invalidPath);
@@ -58,6 +60,7 @@ public class PathTypeCoercerTest {
     String missingPath = "hello";
     try {
       pathTypeCoercer.coerce(
+          createCellRoots(filesystem),
           filesystem,
           pathRelativeToProjectRoot,
           missingPath);

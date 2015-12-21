@@ -48,8 +48,6 @@ produce APKs, so commands like <code>buck install</code> or
 
 {call genrule_common.out_arg /}
 
-{call genrule_common.deps_arg /}
-
 {call buck.visibility_arg /}
 
 {/param} // close args
@@ -77,9 +75,6 @@ android_binary(
 apk_genrule(
   name = 'messenger_super_sign_unalign',
   apk = ':messenger',
-  deps = [
-    '//java/com/facebook/sign:super_sign',
-  ],
   bash = '$(exe //java/com/facebook/sign:super_sign) --input $APK --output $OUT',
   cmd_exe = '$(exe //java/com/facebook/sign:super_sign) --input %APK% --output %OUT%',
   out = 'messenger_super_sign_unalign.apk',
@@ -88,7 +83,6 @@ apk_genrule(
 apk_genrule(
   name = 'messenger_super_sign',
   apk = ':messenger_super_sign_unalign',
-  deps = [],
   bash = '$ANDROID_HOME/tools/zipalign -f 4 $APK $OUT',
   cmd_exe = '%ANDROID_HOME%\\tools\\zipalign -f 4 %APK% %OUT%',
   out = 'messenger_super_sign.apk',

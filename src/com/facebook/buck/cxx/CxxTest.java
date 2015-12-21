@@ -17,13 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -36,6 +37,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -50,7 +52,7 @@ import java.util.concurrent.Callable;
 /**
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
-public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
+public abstract class CxxTest extends AbstractBuildRule implements TestRule, HasRuntimeDeps {
 
   @AddToRuleKey
   private final Supplier<ImmutableMap<String, String>> env;
@@ -61,25 +63,45 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
   private final boolean runTestSeparately;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public CxxTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Supplier<ImmutableMap<String, String>> env,
+      final ImmutableMap<String, String> toolEnv,
+      final Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
-    this.env = Suppliers.memoize(env);
+    this.env = Suppliers.memoize(
+        new Supplier<ImmutableMap<String, String>>() {
+          @Override
+          public ImmutableMap<String, String> get() {
+            ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+            builder.putAll(toolEnv);
+            builder.putAll(env.get());
+            return builder.build();
+          }
+        });
     this.args = Suppliers.memoize(args);
     this.additionalDeps = Suppliers.memoize(additionalDeps);
     this.labels = labels;
     this.contacts = contacts;
     this.sourceUnderTest = sourceUnderTest;
     this.runTestSeparately = runTestSeparately;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
+  }
+
+  @Override
+  public final ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
   }
 
   /**
@@ -133,7 +155,8 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
                 .build(),
             env.get(),
             getPathToTestExitCode(),
-            getPathToTestOutput()));
+            getPathToTestOutput(),
+            testRuleTimeoutMs));
   }
 
   protected abstract ImmutableList<TestResultSummary> parseResults(
@@ -164,7 +187,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
               resultSummaries);
           summaries.add(summary);
         }
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries.build(),
             contacts,

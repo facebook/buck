@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -37,6 +39,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +55,8 @@ import java.util.concurrent.Callable;
 
 public class CxxTestTest {
 
+  private static final Optional<Long> TEST_TIMEOUT_MS = Optional.of(24L);
+
   private abstract static class FakeCxxTest extends CxxTest {
 
     private static BuildRuleParams createBuildParams() {
@@ -62,14 +67,19 @@ public class CxxTestTest {
     public FakeCxxTest() {
       super(
           createBuildParams(),
-          new SourcePathResolver(new BuildRuleResolver()),
+          new SourcePathResolver(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new BuildTargetNodeToBuildRuleTransformer())),
+          ImmutableMap.<String, String>of(),
           Suppliers.ofInstance(ImmutableMap.<String, String>of()),
           Suppliers.ofInstance(ImmutableList.<String>of()),
           Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
           ImmutableSet.<BuildRule>of(),
-          /* runTestSeparately */ false);
+          /* runTestSeparately */ false,
+          TEST_TIMEOUT_MS);
     }
 
     @Override
@@ -98,6 +108,11 @@ public class CxxTestTest {
         new FakeCxxTest() {
 
           @Override
+          public Path getPathToOutput() {
+            return Paths.get("output");
+          }
+
+          @Override
           protected ImmutableList<String> getShellCommand(
               ExecutionContext context, Path output) {
             return command;
@@ -124,7 +139,8 @@ public class CxxTestTest {
             command,
             ImmutableMap.<String, String>of(),
             cxxTest.getPathToTestExitCode(),
-            cxxTest.getPathToTestOutput());
+            cxxTest.getPathToTestOutput(),
+            TEST_TIMEOUT_MS);
 
     assertEquals(cxxTestStep, Iterables.getLast(actualSteps));
   }
@@ -137,6 +153,11 @@ public class CxxTestTest {
 
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
+
+          @Override
+          public Path getPathToOutput() {
+            return Paths.get("output");
+          }
 
           @Override
           protected Path getPathToTestExitCode() {

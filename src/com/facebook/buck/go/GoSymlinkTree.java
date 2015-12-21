@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -39,10 +40,9 @@ public class GoSymlinkTree extends AbstractBuildRule implements HasPostBuildStep
 
   protected GoSymlinkTree(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      Path root) {
+      SourcePathResolver resolver) {
     super(buildRuleParams, resolver);
-    this.root = root;
+    this.root = BuildTargets.getScratchPath(getBuildTarget(), "__%s__tree");
 
     ImmutableMap.Builder<Path, Path> mapBuilder = ImmutableMap.builder();
     for (BuildRule rule : getDeclaredDeps()) {
@@ -59,7 +59,12 @@ public class GoSymlinkTree extends AbstractBuildRule implements HasPostBuildStep
           goRule.getPathInSymlinkTree(),
           getProjectFilesystem().resolve(goRule.getPathToOutput()));
     }
-    this.symlinkMap = mapBuilder.build();
+    try {
+      this.symlinkMap = mapBuilder.build();
+    } catch (IllegalArgumentException ex) {
+      throw new HumanReadableException(
+          "Multiple go targets have the same package name: " + ex.getMessage());
+    }
   }
 
   @Override

@@ -19,16 +19,20 @@ package com.facebook.buck.d;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.util.HumanReadableException;
 
 import java.io.IOException;
 
 abstract class Assumptions {
-  public static void assumeDCompilerAvailable() throws InterruptedException, IOException {
+  public static void assumeDCompilerUsable() throws InterruptedException, IOException {
+    // The methods that we use to figure out how to invoke the D compiler throw when
+    // they cannot determine how to invoke the compiler. Conversely, if they don't throw,
+    // the compiler should be usable. So we check that none of them throw.
     Throwable exception = null;
     try {
-      new DBuckConfig(new FakeBuckConfig()).getDCompiler();
-    } catch (HumanReadableException e) {
+      DBuckConfig dBuckConfig = new DBuckConfig(FakeBuckConfig.builder().build());
+      dBuckConfig.getDCompiler();
+      dBuckConfig.getLinkerFlagsForBinary();
+    } catch (Exception e) {
       exception = e;
     }
     assumeNoException(exception);

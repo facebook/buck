@@ -18,7 +18,7 @@ genrule(
   name = 'B',
   cmd = '$(classpath :test-library)',
   out = 'B.txt',
-  deps = [
+  srcs = [
     ':A'
   ],
 )

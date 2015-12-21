@@ -6,7 +6,7 @@ android_react_native_library(
   package = 'com.sample',
   deps = [],
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
   ],
 )
 
@@ -17,6 +17,14 @@ android_react_native_library(
   bundle_name = 'SampleBundle.js',
   deps = [],
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
+  ],
+)
+
+sh_binary(
+  name = 'packager',
+  main = 'packager.sh',
+  visibility = [
+    'PUBLIC',
   ],
 )

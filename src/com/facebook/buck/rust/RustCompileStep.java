@@ -26,6 +26,7 @@ import java.nio.file.Path;
 
 public class RustCompileStep extends ShellStep {
 
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compilerCommandPrefix;
   private final ImmutableList<String> flags;
   private final ImmutableSet<String> features;
@@ -35,6 +36,7 @@ public class RustCompileStep extends ShellStep {
 
   public RustCompileStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> compilerCommandPrefix,
       ImmutableList<String> flags,
       ImmutableSet<String> features,
@@ -42,6 +44,7 @@ public class RustCompileStep extends ShellStep {
       ImmutableMap<String, Path> crates,
       Path crateRoot) {
     super(workingDirectory);
+    this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;
     this.features = features;
@@ -70,6 +73,11 @@ public class RustCompileStep extends ShellStep {
     return commandBuilder
         .add(crateRoot.toString())
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

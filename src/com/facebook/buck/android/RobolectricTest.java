@@ -20,9 +20,10 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
-import com.facebook.buck.java.JavaTest;
-import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.TestType;
+import com.facebook.buck.jvm.java.JavaTest;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -73,10 +75,26 @@ public class RobolectricTest extends JavaTest {
     @Override
     public Path apply(HasAndroidResourceDeps input) {
       return Optional.fromNullable(input.getRes())
-          .transform(getResolver().getPathFunction())
+          .transform(getResolver().deprecatedPathFunction())
           .get();
     }
   };
+  private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
+      new Function<DummyRDotJava, ImmutableSet<BuildRule>>() {
+        @Override
+        public ImmutableSet<BuildRule> apply(DummyRDotJava input) {
+          ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();
+          for (HasAndroidResourceDeps hasAndroidResourceDeps :
+              input.getAndroidResourceDeps()) {
+            SourcePath resSourcePath = hasAndroidResourceDeps.getRes();
+            if (resSourcePath == null) {
+              continue;
+            }
+            Optionals.addIfPresent(getResolver().getRule(resSourcePath), resourceDeps);
+          }
+          return resourceDeps.build();
+        }
+      };
 
   protected RobolectricTest(
       BuildRuleParams buildRuleParams,
@@ -105,13 +123,14 @@ public class RobolectricTest extends JavaTest {
         resolver,
         srcs,
         resources,
+        javacOptions.getGeneratedSourceFolderName(),
         labels,
         contacts,
         proguardConfig,
         abiJar,
         additionalClasspathEntries,
         TestType.JUNIT,
-        javacOptions,
+        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         vmArgs,
         nativeLibsEnvironment,
         sourceTargetsUnderTest,
@@ -188,8 +207,12 @@ public class RobolectricTest extends JavaTest {
         // Inherit any runtime deps from `JavaTest`.
         .addAll(super.getRuntimeDeps())
         // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
-        // {@link DummyRDotJava} is available locally, if it exists, to run this test.
-        .addAll(Optional.presentInstances(ImmutableList.of(optionalDummyRDotJava)))
+        // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
+        // to run this test.
+        .addAll(optionalDummyRDotJava.asSet())
+        .addAll(optionalDummyRDotJava
+                .transform(resourceRulesFunction)
+                .or(ImmutableSet.<BuildRule>of()))
         // It's possible that the user added some tool as a dependency, so make sure we promote
         // this rules first-order deps to runtime deps, so that these potential tools are available
         // when this test runs.

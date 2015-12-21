@@ -18,9 +18,9 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -35,8 +35,13 @@ public class OnDiskMavenDownloader implements Downloader {
   private static final Optional<String> SPOOF_MAVEN_REPO = Optional.of("http://example.com");
   private final Path root;
 
-  public OnDiskMavenDownloader(Path root) {
-    Preconditions.checkArgument(Files.exists(root), "Root does not exist");
+  public OnDiskMavenDownloader(Path root) throws FileNotFoundException{
+
+    if (!Files.exists(root)) {
+      throw new FileNotFoundException(String.format("Maven root %s doesn't exist",
+          root.toString()));
+    }
+
     this.root = root;
   }
 

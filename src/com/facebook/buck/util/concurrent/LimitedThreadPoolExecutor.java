@@ -18,7 +18,7 @@ package com.facebook.buck.util.concurrent;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -48,12 +48,13 @@ public class LimitedThreadPoolExecutor extends ThreadPoolExecutor {
 
   public LimitedThreadPoolExecutor(
       ThreadFactory threadFactory,
+      BlockingQueue<Runnable> workQueue,
       ConcurrencyLimit concurrencyLimit) {
     super(
         /* corePoolSize */ concurrencyLimit.threadLimit,
         /* maximumPoolSize */ concurrencyLimit.threadLimit,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
+        /* workQueue */ workQueue,
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
     loadLimit = concurrencyLimit.loadLimit;

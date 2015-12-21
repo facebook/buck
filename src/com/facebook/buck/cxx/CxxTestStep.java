@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
@@ -44,18 +45,21 @@ public class CxxTestStep implements Step {
   private final ImmutableMap<String, String> env;
   private final Path exitCode;
   private final Path output;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public CxxTestStep(
       ProjectFilesystem filesystem,
       ImmutableList<String> command,
       ImmutableMap<String, String> env,
       Path exitCode,
-      Path output) {
+      Path output,
+      Optional<Long> testRuleTimeoutMs) {
     this.filesystem = filesystem;
     this.command = command;
     this.env = env;
     this.exitCode = exitCode;
     this.output = output;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
@@ -90,8 +94,15 @@ public class CxxTestStep implements Step {
         process,
         options,
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
+        testRuleTimeoutMs,
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+
+    if (result.isTimedOut()) {
+      throw new HumanReadableException(
+          "Timed out after %d ms running test command %s",
+          testRuleTimeoutMs.or(-1L),
+          command);
+    }
 
     // Since test binaries return a non-zero exit code when unittests fail, save the exit code
     // to a file rather than signalling a step failure.

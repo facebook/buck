@@ -22,8 +22,6 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FlavorableDescription;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -39,8 +37,7 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
   public <T> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      TargetNode<T> targetNode,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      TargetNode<T> targetNode)
       throws NoSuchBuildTargetException {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
@@ -52,24 +49,10 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
     // via a SourcePath.
     BuildRuleParams params = new BuildRuleParams(
         targetNode.getBuildTarget(),
-        Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getDeclaredDeps())),
-        Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
+        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
+        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
-        ruleKeyBuilderFactory);
-    BuildRule buildRule =
-        description.createBuildRule(targetGraph, params, ruleResolver, arg);
-
-    // Note that describedRule has not been added to the BuildRuleResolver yet.
-    if (description instanceof FlavorableDescription && !targetNode.getBuildTarget().isFlavored()) {
-      FlavorableDescription<T> flavorable = (FlavorableDescription<T>) description;
-      flavorable.registerFlavors(
-          arg,
-          buildRule,
-          ruleFactoryParams.getProjectFilesystem(),
-          ruleKeyBuilderFactory,
-          ruleResolver);
-    }
-
-    return buildRule;
+        targetNode.getCellNames());
+    return description.createBuildRule(targetGraph, params, ruleResolver, arg);
   }
 }

@@ -37,7 +37,7 @@ public class AndroidInstrumentationApkIntegrationTest {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        new AndroidBinaryIntegrationTest(),
+        this,
         "android_instrumentation_apk_integration_test",
         tmpFolder);
     workspace.setUp();

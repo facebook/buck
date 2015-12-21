@@ -18,12 +18,13 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +37,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,7 +45,7 @@ import java.nio.file.Paths;
 public class AppleSdkDiscoveryTest {
 
   @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -101,7 +103,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addAllToolchains(toolchains.values())
             .build();
@@ -146,7 +148,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addAllToolchains(toolchains.values())
             .build();
@@ -195,7 +197,7 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldIgnoreSdkWithBadSymlink() throws Exception {
-    Path root = temp.newFolder().toPath();
+    Path root = temp.newFolder();
 
     // Create a dangling symlink
     File toDelete = File.createTempFile("foo", "bar");
@@ -231,7 +233,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -247,7 +249,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.0")
             .setVersion("8.0")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+            .setApplePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -263,8 +265,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -282,7 +283,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("watchos2.0")
             .setVersion("2.0")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build())
+            .setApplePlatform(ApplePlatform.WATCHOS)
             .addArchitectures("armv7k")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -298,8 +299,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("watchsimulator2.0")
             .setVersion("2.0")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build())
+            .setApplePlatform(ApplePlatform.WATCHSIMULATOR)
             .addArchitectures("i386")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -373,7 +373,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+            .setApplePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -389,7 +389,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.0")
             .setVersion("8.0")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+            .setApplePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -405,8 +405,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -424,7 +423,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.1")
             .setVersion("8.1")
-            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+            .setApplePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -440,8 +439,7 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.1")
             .setVersion("8.1")
-            .setApplePlatform(
-                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
@@ -477,6 +475,113 @@ public class AppleSdkDiscoveryTest {
             ImmutableList.<Path>of(),
             toolchains),
         equalTo(expected));
+  }
+
+  @Test
+  public void shouldDiscoverRealSdkThroughAbsoluteSymlink() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-symlink",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    Path actualSdkPath = root.resolve("MacOSX10.9.sdk");
+    Path sdksDir = root.resolve("Platforms/MacOSX.platform/Developer/SDKs");
+
+    Files.createDirectories(sdksDir);
+    Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
+
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        getDefaultToolchain(root));
+
+    AppleSdk macosx109Sdk =
+        AppleSdk.builder()
+            .setName("macosx10.9")
+            .setVersion("10.9")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .addAllToolchains(toolchains.values())
+            .build();
+    AppleSdkPaths macosx109Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(actualSdkPath)
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .build();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(root),
+            ImmutableList.of(root),
+            toolchains),
+        equalTo(expected));
+  }
+
+  @Test
+  public void shouldScanRealDirectoryOnlyOnce() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-symlink",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+    FileSystem fileSystem = root.getFileSystem();
+
+    Path actualSdkPath = root.resolve("MacOSX10.9.sdk");
+    Path sdksDir = root.resolve("Platforms/MacOSX.platform/Developer/SDKs");
+    Files.createDirectories(sdksDir);
+
+    // create relative symlink
+    Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), fileSystem.getPath("MacOSX.sdk"));
+    // create absolute symlink
+    Files.createSymbolicLink(sdksDir.resolve("MacOSX.sdk"), actualSdkPath);
+
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        getDefaultToolchain(root));
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> actual = AppleSdkDiscovery.discoverAppleSdkPaths(
+        Optional.of(root),
+        ImmutableList.of(root),
+        toolchains);
+
+    // if both symlinks were to be visited, exception would have been thrown during discovery
+    assertThat(actual.size(), is(2));
+  }
+
+  @Test
+  public void shouldNotCrashOnBrokenSymlink() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-symlink",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+    FileSystem fileSystem = root.getFileSystem();
+
+    Path sdksDir = root.resolve("Platforms/MacOSX.platform/Developer/SDKs");
+    Files.createDirectories(sdksDir);
+    Files.createSymbolicLink(sdksDir.resolve("MacOSX.sdk"), fileSystem.getPath("does_not_exist"));
+
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        getDefaultToolchain(root));
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> actual = AppleSdkDiscovery.discoverAppleSdkPaths(
+        Optional.of(root),
+        ImmutableList.of(root),
+        toolchains);
+
+    assertThat(actual.size(), is(0));
   }
 
   private void createSymLinkIosSdks(Path root, String version) throws IOException {

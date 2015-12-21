@@ -21,17 +21,18 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -41,11 +42,14 @@ public class BuckBuildLog {
 
   private static final Pattern BUILD_LOG_FINISHED_RULE_REGEX =
       Pattern.compile(".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) " +
-              "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)");
+              "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)" +
+              "(?: I(?<InputRuleKey>\\S+))?");
 
+  private final Path root;
   private final Map<BuildTarget, BuildLogEntry> buildLogEntries;
 
-  private BuckBuildLog(Map<BuildTarget, BuildLogEntry> buildLogEntries) {
+  private BuckBuildLog(Path root, Map<BuildTarget, BuildLogEntry> buildLogEntries) {
+    this.root = root;
     this.buildLogEntries = Preconditions.checkNotNull(buildLogEntries);
   }
 
@@ -99,7 +103,7 @@ public class BuckBuildLog {
     return ImmutableSet.copyOf(buildLogEntries.keySet());
   }
 
-  public static BuckBuildLog fromLogContents(List<String> logContents) {
+  public static BuckBuildLog fromLogContents(Path root, List<String> logContents) {
     ImmutableMap.Builder<BuildTarget, BuildLogEntry> builder = ImmutableMap.builder();
 
     for (String line : logContents) {
@@ -109,7 +113,7 @@ public class BuckBuildLog {
       }
 
       String buildTargetRaw = matcher.group("BuildTarget");
-      BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
+      BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
 
       String statusRaw = matcher.group("Status");
       BuildRuleStatus status = BuildRuleStatus.valueOf(statusRaw);
@@ -135,11 +139,11 @@ public class BuckBuildLog {
               ruleKey));
     }
 
-    return new BuckBuildLog(builder.build());
+    return new BuckBuildLog(root, builder.build());
   }
 
   private BuildLogEntry getLogEntryOrFail(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
     if (!buildLogEntries.containsKey(buildTarget)) {
       fail(String.format("There was no build log entry for target %s", buildTargetRaw));
     }

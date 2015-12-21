@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkPaths;
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -66,13 +66,12 @@ public class QuickstartCommand extends AbstractCommand {
     IOS,
   }
 
-  private static final ImmutableMap<Type, PackagedResource> PATHS_TO_QUICKSTART_DIR =
+  private static final ImmutableMap<Type, String> PATHS_TO_QUICKSTART_DIR =
       ImmutableMap.of(
           Type.ANDROID,
-          new PackagedResource(QuickstartCommand.class, "quickstart/android/android-template.zip"),
-
+          "quickstart/android/android-template.zip",
           Type.IOS,
-          new PackagedResource(QuickstartCommand.class, "quickstart/ios/ios-template.zip"));
+          "quickstart/ios/ios-template.zip");
 
   @Option(name = "--dest-dir", usage = "Destination project directory")
   private String destDir = "";
@@ -145,14 +144,16 @@ public class QuickstartCommand extends AbstractCommand {
       dir = new File(projectDir);
     }
     if (projectDir.isEmpty()) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("No project directory specified. Aborting quickstart.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "No project directory specified. Aborting quickstart."));
       return 1;
     }
 
-    PackagedResource resource = Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type));
+    PackagedResource resource =
+        new PackagedResource(
+            params.getCell().getFilesystem(),
+            QuickstartCommand.class,
+            Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type)));
     Path origin = resource.get();
 
     final Path destination = Paths.get(projectDir);
@@ -166,15 +167,13 @@ public class QuickstartCommand extends AbstractCommand {
 
         File sdkLocationFile = new File(sdkLocation);
         if (!sdkLocationFile.isDirectory()) {
-          params
-              .getConsole()
-              .getStdErr()
-              .println("WARNING: That Android SDK directory does not exist.");
+          params.getBuckEventBus().post(ConsoleEvent.severe(
+              "WARNING: That Android SDK directory does not exist."));
         }
 
         sdkLocation = sdkLocationFile.getAbsoluteFile().toString();
 
-        MoreFiles.copyRecursively(origin, destination);
+        params.getCell().getFilesystem().copyFolder(origin, destination);
 
         // Specify the default Android target so everyone on the project builds against the same
         // SDK.
@@ -205,7 +204,7 @@ public class QuickstartCommand extends AbstractCommand {
               "Could not find any Apple SDK, check your Xcode installation.");
         }
 
-        MoreFiles.copyRecursively(origin, destination);
+        params.getCell().getFilesystem().copyFolder(origin, destination);
 
         File buckConfig = new File(projectDir + "/.buckconfig");
         Files.append("\n", buckConfig, StandardCharsets.UTF_8);
@@ -228,7 +227,7 @@ public class QuickstartCommand extends AbstractCommand {
         });
 
     params.getConsole().getStdOut().print(
-        Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8));
+        params.getCell().getFilesystem().readFileIfItExists(origin.resolve("README.md")).get());
     params.getConsole().getStdOut().flush();
 
     return 0;

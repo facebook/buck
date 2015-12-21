@@ -16,13 +16,14 @@
 
 package com.facebook.buck.cxx;
 
-import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -61,11 +62,13 @@ public class CxxPlatformsTest {
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
           .setStrip(new HashedFileTool(Paths.get("borland")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
+          .setRanlib(new HashedFileTool(Paths.get("borland")))
           .setSharedLibraryExtension(".so")
+          .setSharedLibraryVersionedExtensionFormat(".so.%s")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.getConfigDefaultCxxPlatform(
             new CxxBuckConfig(buckConfig),
@@ -79,7 +82,7 @@ public class CxxPlatformsTest {
   public void unknownDefaultPlatformSetInConfigFallsBackToSystemDefault() {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of("default_platform", "borland_cxx_452"));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.getConfigDefaultCxxPlatform(
             new CxxBuckConfig(buckConfig),
@@ -99,7 +102,7 @@ public class CxxPlatformsTest {
             "cxxppflags", "-Wxp"));
 
     CxxBuckConfig buckConfig =
-        new CxxBuckConfig(new FakeBuckConfig(sections));
+        new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
 
     CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
 
@@ -126,7 +129,7 @@ public class CxxPlatformsTest {
             "cxxppflags", "-Wxp"));
 
     CxxBuckConfig buckConfig =
-        new CxxBuckConfig(new FakeBuckConfig(sections));
+        new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
 
     CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
 
@@ -156,8 +159,12 @@ public class CxxPlatformsTest {
             "ld", Paths.get("fake_path").toString(),
             "linker_platform", linkerPlatform.name()));
 
-    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
-        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+    CxxBuckConfig buckConfig = new CxxBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(
+                new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build());
 
     return DefaultCxxPlatforms.build(buckConfig).getLd();
   }
@@ -177,12 +184,15 @@ public class CxxPlatformsTest {
   @Test
   public void invalidLinkerOverrideFails() {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-      "cxx", ImmutableMap.of(
+        "cxx", ImmutableMap.of(
             "ld", Paths.get("fake_path").toString(),
             "linker_platform", "WRONG_PLATFORM"));
 
-    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
-        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+    CxxBuckConfig buckConfig = new CxxBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build());
 
     expectedException.expect(RuntimeException.class);
     DefaultCxxPlatforms.build(buckConfig);
@@ -194,8 +204,11 @@ public class CxxPlatformsTest {
             "ar", Paths.get("fake_path").toString(),
             "archiver_platform", archiverPlatform.name()));
 
-    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
-        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+    CxxBuckConfig buckConfig = new CxxBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build());
 
     return DefaultCxxPlatforms.build(buckConfig).getAr();
   }
@@ -219,8 +232,11 @@ public class CxxPlatformsTest {
             "ar", Paths.get("fake_path").toString(),
             "archiver_platform", "WRONG_PLATFORM"));
 
-    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
-        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+    CxxBuckConfig buckConfig = new CxxBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build());
 
     expectedException.expect(RuntimeException.class);
     DefaultCxxPlatforms.build(buckConfig);

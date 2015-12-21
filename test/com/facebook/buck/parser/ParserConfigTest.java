@@ -40,7 +40,7 @@ public class ParserConfigTest {
 
   @Test
   public void testGetAllowEmptyGlobs() throws IOException {
-    assertTrue(new ParserConfig(new FakeBuckConfig()).getAllowEmptyGlobs());
+    assertTrue(new ParserConfig(FakeBuckConfig.builder().build()).getAllowEmptyGlobs());
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[build]",
@@ -55,7 +55,7 @@ public class ParserConfigTest {
   @Test
   public void testGetGlobHandler() throws IOException {
     assertThat(
-        new ParserConfig(new FakeBuckConfig()).getGlobHandler(),
+        new ParserConfig(FakeBuckConfig.builder().build()).getGlobHandler(),
         Matchers.equalTo(ParserConfig.GlobHandler.PYTHON));
 
     for (ParserConfig.GlobHandler handler : ParserConfig.GlobHandler.values()) {

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 
@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,11 +40,23 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   public static FakeFileHashCache createFromStrings(Map<String, String> pathsToHashes) {
-    ImmutableMap.Builder<Path, HashCode> builder = ImmutableMap.builder();
+    return createFromStrings(new FakeProjectFilesystem(), pathsToHashes);
+  }
+
+  public static FakeFileHashCache createFromStrings(
+      ProjectFilesystem filesystem,
+      Map<String, String> pathsToHashes) {
+    Map<Path, HashCode> cachedValues = new HashMap<>();
     for (Map.Entry<String, String> entry : pathsToHashes.entrySet()) {
-      builder.put(Paths.get(entry.getKey()), HashCode.fromString(entry.getValue()));
+      // Retain the original behaviour
+      cachedValues.put(Paths.get(entry.getKey()), HashCode.fromString(entry.getValue()));
+
+      // And ensure that the absolute path is also present.
+      if (!entry.getKey().startsWith("/")) {
+        cachedValues.put(filesystem.resolve(entry.getKey()), HashCode.fromString(entry.getValue()));
+      }
     }
-    return new FakeFileHashCache(builder.build());
+    return new FakeFileHashCache(cachedValues);
   }
 
   @Override

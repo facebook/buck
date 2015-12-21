@@ -90,7 +90,7 @@ def resolve(requirements, obtainer=None, interpreter=None, platform=None):
     while requirements:
       requirement = requirements.pop(0)
       requirement_set[requirement.key].append(requirement)
-      # TODO(user) This is trivially parallelizable
+      # TODO(wickman) This is trivially parallelizable
       distribution_list = distribution_set[requirement.key] = packages(
           requirement,
           existing=distribution_set.get(requirement.key))

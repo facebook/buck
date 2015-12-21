@@ -38,7 +38,7 @@ public class LicenseCheckTest {
   // exclude all files under "test/**/testdata/"
   private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
       // Because it's not originally our code.
-      "com/facebook/buck/java/coverage/ReportGenerator.java",
+      "com/facebook/buck/jvm/java/coverage/ReportGenerator.java",
       "com/facebook/buck/util/WindowsCreateProcessEscape.java",
       "com/facebook/buck/util/WindowsCreateProcessEscapeTest.java");
 
@@ -50,7 +50,7 @@ public class LicenseCheckTest {
 
   private static class JavaCopyrightTraversal extends DirectoryTraversal {
     private static final Pattern LICENSE_FRAGMENT = Pattern.compile(
-        // TODO(simons): This is very lame.
+        // TODO(shs96c): This is very lame.
         // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the next
         // part of the copyright.
         "^/\\\\*.*?" +

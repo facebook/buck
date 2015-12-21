@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
@@ -41,10 +42,9 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +54,6 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -112,15 +111,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   @AddToRuleKey
   protected final ImmutableList<SourcePath> srcs;
 
-  protected final Function<String, String> macroExpander;
   @AddToRuleKey
-  protected final Optional<String> cmd;
+  protected final Optional<Arg> cmd;
   @AddToRuleKey
-  protected final Optional<String> bash;
+  protected final Optional<Arg> bash;
   @AddToRuleKey
-  protected final Optional<String> cmdExe;
-
-  protected final Map<Path, Path> srcsToAbsolutePaths;
+  protected final Optional<Arg> cmdExe;
 
   @AddToRuleKey
   private final String out;
@@ -130,38 +126,20 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   private final Path absolutePathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final Path absolutePathToSrcDirectory;
-  protected final Function<Path, Path> relativeToAbsolutePathFunction;
-
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  @AddToRuleKey
-  private final Supplier<ImmutableList<Object>> macroRuleKeyAppendables;
 
   protected Genrule(
       BuildRuleParams params,
       SourcePathResolver resolver,
       List<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
-      String out,
-      final Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe,
+      String out) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
-    this.macroExpander = macroExpander;
     this.cmd = cmd;
     this.bash = bash;
     this.cmdExe = cmdExe;
-    this.srcsToAbsolutePaths = FluentIterable
-        .from(srcs)
-        .transform(resolver.getPathFunction())
-        .toMap(new Function<Path, Path>() {
-          @Override
-          public Path apply(Path src) {
-            return relativeToAbsolutePathFunction.apply(src);
-          }
-        });
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
@@ -180,23 +158,18 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         String.format("%s__tmp", target.getShortNameAndFlavorPostfix()));
-    // TODO(simons): pathToTmpDirectory.toAbsolutePath() should be enough
-    this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(pathToTmpDirectory);
+    this.absolutePathToTmpDirectory = getProjectFilesystem().resolve(pathToTmpDirectory);
 
     this.pathToSrcDirectory = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         String.format("%s__srcs", target.getShortNameAndFlavorPostfix()));
-    // TODO(simons): And here.
-    this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
-
-    this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
-    this.macroRuleKeyAppendables = Suppliers.memoize(macroRuleKeyAppendables);
+    this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
   }
 
   /** @return the absolute path to the output file */
   public String getAbsoluteOutputFilePath() {
-    return relativeToAbsolutePathFunction.apply(getPathToOutput()).toString();
+    return getProjectFilesystem().resolve(getPathToOutput()).toString();
   }
 
   @VisibleForTesting
@@ -211,7 +184,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
   protected void addEnvironmentVariables(ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    environmentVariablesBuilder.put("SRCS", Joiner.on(' ').join(srcsToAbsolutePaths.values()));
+    environmentVariablesBuilder.put(
+        "SRCS",
+        Joiner.on(' ').join(
+            FluentIterable.from(srcs)
+                .transform(getResolver().getAbsolutePathFunction())
+                .transform(Functions.toStringFunction())));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
 
     final Set<String> depFiles = Sets.newHashSet();
@@ -221,12 +199,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     }
 
     environmentVariablesBuilder.put(
-        "GEN_DIR", relativeToAbsolutePathFunction.apply(BuckConstant.GEN_PATH).toString());
+        "GEN_DIR", getProjectFilesystem().resolve(BuckConstant.GEN_PATH).toString());
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
 
-    // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
+    // TODO(bolinfest): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
     AndroidPlatformTarget android;
     try {
@@ -249,7 +227,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
     }
 
-    // TODO(user): This shouldn't be necessary. Speculatively disabling.
+    // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
@@ -263,7 +241,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
     Path output = rule.getPathToOutput();
     if (output != null) {
-      // TODO(user): This is a giant hack and we should do away with $DEPS altogether.
+      // TODO(t6405518): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
       // We can easily hit the shell command character limit. What this does is find
       // BuckConstant.GEN_DIR (which should be the same for every path) and replaces
@@ -275,13 +253,25 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
             output.subpath(BuckConstant.GEN_PATH.getNameCount(), output.getNameCount());
         appendTo.add("$GEN_DIR/" + relativePath);
       } else {
-        appendTo.add(relativeToAbsolutePathFunction.apply(output).toString());
+        appendTo.add(getProjectFilesystem().resolve(output).toString());
       }
     }
 
     for (BuildRule dep : rule.getDeps()) {
       transformNames(processedBuildRules, appendTo, dep);
     }
+  }
+
+  private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {
+    return arg
+        .transform(Arg.stringListFunction())
+        .transform(
+            new Function<ImmutableList<String>, String>() {
+              @Override
+              public String apply(ImmutableList<String> input) {
+                return Joiner.on(' ').join(input);
+              }
+            });
   }
 
   public AbstractGenruleStep createGenruleStep() {
@@ -292,9 +282,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     return new AbstractGenruleStep(
         getBuildTarget(),
         new CommandString(
-            cmd.transform(macroExpander),
-            bash.transform(macroExpander),
-            cmdExe.transform(macroExpander)),
+            flattenToSpaceSeparatedString(cmd),
+            flattenToSpaceSeparatedString(bash),
+            flattenToSpaceSeparatedString(cmdExe)),
         absolutePathToSrcDirectory) {
       @Override
       protected void addEnvironmentVariables(
@@ -345,16 +335,18 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     int basePathLength = basePath.length();
 
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    for (Map.Entry<Path, Path> entry : srcsToAbsolutePaths.entrySet()) {
-      String localPath = MorePaths.pathWithUnixSeparators(entry.getKey());
+    for (SourcePath src : srcs) {
+      Path relativePath = getResolver().getRelativePath(src);
+      Path absolutePath = getResolver().getAbsolutePath(src);
+      String localPath = MorePaths.pathWithUnixSeparators(relativePath);
 
       Path canonicalPath;
-      canonicalPath = MorePaths.absolutify(entry.getValue());
+      canonicalPath = absolutePath.normalize();
 
       // By the time we get this far, all source paths (the keys in the map) have been converted
       // to paths relative to the project root. We want the path relative to the build target, so
       // strip the base path.
-      if (entry.getValue().equals(canonicalPath)) {
+      if (absolutePath.equals(canonicalPath)) {
         if (localPath.startsWith(basePath)) {
           localPath = localPath.substring(basePathLength);
         } else {
@@ -364,7 +356,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
       Path destination = pathToSrcDirectory.resolve(localPath);
       commands.add(
-          new MkdirAndSymlinkFileStep(getProjectFilesystem(), entry.getKey(), destination));
+          new MkdirAndSymlinkFileStep(getProjectFilesystem(), relativePath, destination));
     }
   }
 

@@ -164,8 +164,9 @@ public class AndroidBuildConfig extends AbstractBuildRule {
 
     Supplier<BuildConfigFields> totalFields;
     if (valuesFile.isPresent()) {
-      final ReadValuesStep readValuesStep =
-          new ReadValuesStep(getProjectFilesystem(), getResolver().getPath(valuesFile.get()));
+      final ReadValuesStep readValuesStep = new ReadValuesStep(
+          getProjectFilesystem(),
+          getResolver().getAbsolutePath(valuesFile.get()));
       steps.add(readValuesStep);
       totalFields = Suppliers.memoize(new Supplier<BuildConfigFields>() {
         @Override
@@ -181,7 +182,7 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     steps.add(
         new GenerateBuildConfigStep(
             getProjectFilesystem(),
-            getBuildTarget(),
+            getBuildTarget().getUnflavoredBuildTarget(),
             javaPackage,
             useConstantExpressions,
             totalFields,

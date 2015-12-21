@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.cache;
 
-import static com.facebook.buck.testutil.WatchEvents.createOverflowEvent;
-import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
+import static com.facebook.buck.testutil.WatchEventsForTests.createOverflowEvent;
+import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 

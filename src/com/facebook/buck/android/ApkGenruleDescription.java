@@ -21,20 +21,18 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
 
@@ -56,13 +54,10 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       BuildRuleResolver resolver,
       A args,
       ImmutableList<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
-      String out,
-      Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
+      Optional<com.facebook.buck.rules.args.Arg> cmd,
+      Optional<com.facebook.buck.rules.args.Arg> bash,
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
+      String out) {
 
     final BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
@@ -88,17 +83,15 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                 })),
         new SourcePathResolver(resolver),
         srcs,
-        macroExpander,
         cmd,
         bash,
         cmdExe,
-        relativeToAbsolutePathFunction,
-        macroRuleKeyAppendables,
-        (InstallableApk) installableApk);
+        new BuildTargetSourcePath(args.apk));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractGenruleDescription.Arg {
     public BuildTarget apk;
   }
+
 }

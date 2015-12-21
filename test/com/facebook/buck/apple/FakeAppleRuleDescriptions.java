@@ -30,10 +30,13 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -61,8 +64,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final AppleSdk DEFAULT_MACOSX_SDK =
       AppleSdk.builder()
-          .setApplePlatform(
-              ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
+          .setApplePlatform(ApplePlatform.MACOSX)
           .setName("macosx")
           .setArchitectures(ImmutableList.of("x86_64"))
           .setVersion("10.10")
@@ -71,8 +73,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final AppleSdk DEFAULT_IPHONEOS_SDK =
       AppleSdk.builder()
-          .setApplePlatform(
-              ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+          .setApplePlatform(ApplePlatform.IPHONEOS)
           .setName("iphoneos")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setVersion("8.0")
@@ -85,11 +86,13 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
+          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
           Paths.get("usr/bin/actool"),
           Paths.get("usr/bin/ibtool"),
+          Paths.get("usr/bin/lldb"),
           Paths.get("Tools/otest"),
           Paths.get("usr/bin/xctest")));
 
@@ -99,7 +102,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           EXECUTABLE_FINDER);
 
   private static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
@@ -108,7 +111,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           EXECUTABLE_FINDER);
 
 
@@ -118,10 +121,10 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "x86_64",
           DEFAULT_MACOSX_SDK_PATHS,
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           EXECUTABLE_FINDER);
 
-  private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
+  private static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 
   private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
       Platform.MACOS,
@@ -160,7 +163,12 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_APPLE_FLAVOR_DOMAIN);
+        DEFAULT_APPLE_FLAVOR_DOMAIN,
+        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+        DEFAULT_PLATFORM,
+        CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+        ProvisioningProfileStore.fromProvisioningProfiles(
+            ImmutableList.<ProvisioningProfileMetadata>of()));
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -168,12 +176,16 @@ public class FakeAppleRuleDescriptions {
   public static final AppleBinaryDescription BINARY_DESCRIPTION =
     new AppleBinaryDescription(
         new CxxBinaryDescription(
-            new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
+        DEFAULT_APPLE_FLAVOR_DOMAIN,
+        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+        DEFAULT_PLATFORM,
+        CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+        ProvisioningProfileStore.fromProvisioningProfiles(
+            ImmutableList.<ProvisioningProfileMetadata>of()));
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.
@@ -185,7 +197,10 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
-          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC));
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+          ProvisioningProfileStore.fromProvisioningProfiles(
+              ImmutableList.<ProvisioningProfileMetadata>of()),
+          AppleDebugFormat.DWARF_AND_DSYM);
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
@@ -198,5 +213,8 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
-          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC));
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+          ProvisioningProfileStore.fromProvisioningProfiles(
+              ImmutableList.<ProvisioningProfileMetadata>of()),
+          Suppliers.ofInstance(Optional.<Path>absent()));
 }

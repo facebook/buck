@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 /**
  * Interface marking a rule as having tests.
@@ -42,7 +42,6 @@ public interface NativeTestable {
    * to get preprocessor information, which is not what we want.
    */
   CxxPreprocessorInput getCxxPreprocessorInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility);
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
 }

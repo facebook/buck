@@ -39,7 +39,7 @@ public class FakeAbiRuleBuildRule extends FakeBuildRule implements AbiRule {
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() {
+  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     if (abiKey == null) {
       String hashCode = String.valueOf(Math.abs(this.hashCode()));
       abiKey = Sha1HashCode.of(

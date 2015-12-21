@@ -27,25 +27,21 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+
 public class TestCellBuilder {
-  public static final CellFilesystemResolver UNALIASED = new CellFilesystemResolver(
-      null,
-      new Function<Optional<String>, ProjectFilesystem>() {
-        @Override
-        public ProjectFilesystem apply(Optional<String> input) {
-          throw new HumanReadableException("Cannot load cell: " + input);
-        }
-      });
 
   private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
@@ -55,7 +51,6 @@ public class TestCellBuilder {
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
-    buckConfig = new FakeBuckConfig();
     androidDirectoryResolver = new FakeAndroidDirectoryResolver();
   }
 
@@ -82,35 +77,58 @@ public class TestCellBuilder {
   public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
 
+    BuckConfig config = buckConfig == null ?
+        FakeBuckConfig.builder().setFilesystem(filesystem).build() :
+        buckConfig;
+
     KnownBuildRuleTypesFactory typesFactory = new KnownBuildRuleTypesFactory(
         executor,
         androidDirectoryResolver,
         Optional.<Path>absent());
 
     if (parserFactory == null) {
-      return new Cell(
+      return Cell.createCell(
           filesystem,
           new TestConsole(),
           NULL_WATCHMAN,
-          buckConfig,
+          config,
           typesFactory,
           androidDirectoryResolver,
           new FakeClock(0));
     }
 
-    return new Cell(
-        filesystem,
-        new TestConsole(),
-        NULL_WATCHMAN,
-        buckConfig,
-        typesFactory,
-        androidDirectoryResolver,
-        new FakeClock(0)) {
+    // The constructor for `Cell` is private, and it's in such a central location I don't really
+    // want to make it public. Brace yourselves.
+
+    Enhancer enhancer = new Enhancer();
+    enhancer.setSuperclass(Cell.class);
+    enhancer.setCallback(new MethodInterceptor() {
       @Override
-      protected ProjectBuildFileParserFactory createBuildFileParserFactory(boolean watchmanGlob) {
-        return parserFactory;
+      public Object intercept(
+          Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        if ("createBuildFileParserFactory".equals(method.getName())) {
+          return parserFactory;
+        }
+
+        return proxy.invokeSuper(obj, args);
+      }
+    });
+
+    return (Cell) enhancer.create();
+  }
+
+  public static Function<Optional<String>, Path> createCellRoots(
+      @Nullable ProjectFilesystem filesystem) {
+    final ProjectFilesystem toUse = filesystem == null ? new FakeProjectFilesystem() : filesystem;
+
+    return new Function<Optional<String>, Path>() {
+      @Override
+      public Path apply(Optional<String> cellName) {
+        if (cellName.isPresent()) {
+          throw new RuntimeException("No known cell with the name: " + cellName);
+        }
+        return toUse.getRootPath();
       }
     };
-
   }
 }

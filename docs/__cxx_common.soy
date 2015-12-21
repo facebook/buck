@@ -90,9 +90,9 @@
 {/template}
 
 /***/
-{template .platform_exported_headers_arg}
+{template .exported_platform_headers_arg}
 {call buck.arg}
-  {param name : 'platform_exported_headers' /}
+  {param name : 'exported_platform_headers' /}
   {param default : '[]' /}
   {param desc}
   Platform specific header files. These should be specified as a list of pairs where the first
@@ -243,6 +243,33 @@
   {param desc}
   Determines whether to build and link this rule's dependencies statically or dynamically. Can be
   either <code>static</code> or <code>dynamic</code>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .force_static}
+{call buck.arg}
+  {param name : 'force_static' /}
+  {param default: 'False' /}
+  {param desc}
+  If <code>true</code>, the library will always be linked statically, even if the target that
+  depends on it specifies <code>link_style</code> to be something other than <code>static</code>.
+  Note this will cause duplicate symbols if multiple targets that depend on the library are linked
+  together.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_deps_arg}
+{call buck.arg}
+  {param name : 'exported_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  Dependencies that will also appear to belong to any rules that depend on this one.  Currently, this
+  only affects linking: exported dependencies will also be included in the link line of dependents of
+  this rules, but normal dependencies will not.
   {/param}
 {/call}
 {/template}

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function get_infer_argument {
     # retrieves the value of an argument passed to infer
@@ -29,7 +29,7 @@ case $LAST_ARG in
         # analyze case: create a specs file and a fake json report
         mkdir -p $OUT/specs
         touch $OUT/specs/mockedSpec.specs
-        echo '[{"file":"aFile.c", "type":"NULL_DEREFERENCE"}]' > "$OUT/report.json"
+        echo '[{"file":"aFile.c", "type":"NULL_DEREFERENCE", "line":123}]' > "$OUT/report.json"
         ;;
     *)
         # capture case: check that the source file is passed at the end

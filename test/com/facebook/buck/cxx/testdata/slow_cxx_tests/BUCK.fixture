@@ -1,0 +1,10 @@
+cxx_test(
+  name = 'spinning',
+  srcs = [
+    'spinning.cpp',
+  ],
+)
+
+cxx_library(
+  name = 'fake-gtest',
+)

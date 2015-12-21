@@ -22,14 +22,13 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.AccumulateClassNamesStep;
-import com.facebook.buck.java.Classpaths;
-import com.facebook.buck.java.HasClasspathEntries;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
+import com.facebook.buck.jvm.java.Classpaths;
+import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -40,9 +39,11 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
@@ -183,7 +184,7 @@ public class AndroidBinary
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
-  private final Optional<Path> proguardJarOverride;
+  private final Optional<SourcePath> proguardJarOverride;
   private final String proguardMaxHeapSize;
   @AddToRuleKey
   private final ResourceCompressionMode resourceCompressionMode;
@@ -213,7 +214,7 @@ public class AndroidBinary
   AndroidBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Optional<Path> proguardJarOverride,
+      Optional<SourcePath> proguardJarOverride,
       String proguardMaxHeapSize,
       Keystore keystore,
       PackageType packageType,
@@ -400,7 +401,7 @@ public class AndroidBinary
       for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
         CopyNativeLibraries.copyNativeLibrary(
             getProjectFilesystem(),
-            getResolver().getPath(nativeLibDir),
+            getResolver().getAbsolutePath(nativeLibDir),
             libSubdirectory,
             cpuFilters,
             steps);
@@ -543,10 +544,10 @@ public class AndroidBinary
         nativeLibraryDirectories,
         zipFiles.build(),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(getResolver().getPathFunction())
+            .transform(getResolver().deprecatedPathFunction())
             .toSet(),
-        keystore.getPathToStore(),
-        keystore.getPathToPropertiesFile(),
+        getResolver().getAbsolutePath(keystore.getPathToStore()),
+        getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
         /* debugMode */ false);
     steps.add(apkBuilderCommand);
 
@@ -588,12 +589,12 @@ public class AndroidBinary
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() {
+  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     // For non-exopackages, there is no benefit to the ABI optimization, so we want to disable it.
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
     if (exopackageModes.isEmpty()) {
-      return Sha1HashCode.of(getRuleKey().toString());
+      return Sha1HashCode.of(defaultRuleKeyBuilderFactory.build(this).toString());
     }
     return enhancementResult.getComputeExopackageDepsAbi().get().getAndroidBinaryAbiHash();
   }
@@ -670,7 +671,7 @@ public class AndroidBinary
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
           ImmutableSet.copyOf(
-              getResolver().getAllPaths(packageableCollection.getProguardConfigs())),
+              getResolver().deprecatedAllPaths(packageableCollection.getProguardConfigs())),
           steps,
           buildableContext);
     }
@@ -826,11 +827,11 @@ public class AndroidBinary
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(getResolver().getPath(proguardConfig.get()));
+      proguardConfigsBuilder.add(getResolver().getAbsolutePath(proguardConfig.get()));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
-    // TODO(devjasta): the output path we choose is the result of a slicing function against
+    // TODO(jasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
     final ImmutableMap<Path, Path> inputOutputEntries = FluentIterable
         .from(classpathEntriesToDex)
@@ -846,7 +847,9 @@ public class AndroidBinary
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
         getProjectFilesystem(),
-        proguardJarOverride,
+        proguardJarOverride.isPresent() ?
+            Optional.of(getResolver().getAbsolutePath(proguardJarOverride.get())) :
+            Optional.<Path>absent(),
         proguardMaxHeapSize,
         proguardConfigDir.resolve("proguard.txt"),
         proguardConfigsBuilder.build(),
@@ -940,10 +943,13 @@ public class AndroidBinary
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
-          dexSplitMode.getPrimaryDexScenarioFile().transform(getResolver().getPathFunction()),
-          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().getPathFunction()),
-          dexSplitMode.getSecondaryDexHeadClassesFile().transform(getResolver().getPathFunction()),
-          dexSplitMode.getSecondaryDexTailClassesFile().transform(getResolver().getPathFunction()),
+          dexSplitMode.getPrimaryDexScenarioFile()
+              .transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getSecondaryDexHeadClassesFile()
+              .transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getSecondaryDexTailClassesFile()
+              .transform(getResolver().deprecatedPathFunction()),
           zipSplitReportDir);
       steps.add(splitZipCommand);
 

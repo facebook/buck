@@ -52,11 +52,6 @@ abstract class AbstractTestRunningOptions {
   }
 
   @Value.Default
-  public boolean isIgnoreFailingDependencies() {
-    return false;
-  }
-
-  @Value.Default
   public boolean isResultsCacheEnabled() {
     return true;
   }

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -52,14 +53,14 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   private final Path libraryPath;
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableSortedSet<Path> librarySources;
+  private final ImmutableSortedSet<SourcePath> librarySources;
 
   protected PrebuiltNativeLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path nativeLibsDirectory,
       boolean isAsset,
-      ImmutableSortedSet<Path> librarySources) {
+      ImmutableSortedSet<SourcePath> librarySources) {
     super(params, resolver);
     this.isAsset = isAsset;
     this.libraryPath = nativeLibsDirectory;

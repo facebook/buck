@@ -23,47 +23,52 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Paths;
 
 public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescription.Arg> {
 
-  private PythonBinaryBuilder(
+  public PythonBinaryBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
-      PythonEnvironment pythonEnvironment,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonBinaryDescription(
             pythonBuckConfig,
-            pythonEnvironment,
+            pythonPlatforms,
             defaultCxxPlatform,
             cxxPlatforms),
         target);
   }
 
-  public static PythonBinaryBuilder create(BuildTarget target) {
+  public static PythonBinaryBuilder create(
+      BuildTarget target,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.7")),
+        pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
-                CxxPlatformUtils.DEFAULT_PLATFORM)));
+        CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonBinaryBuilder create(BuildTarget target) {
+    return create(target, PythonTestUtils.PYTHON_PLATFORMS);
   }
 
   public PythonBinaryBuilder setMainModule(String mainModule) {
     arg.mainModule = Optional.of(mainModule);
+    return this;
+  }
+
+  public PythonBinaryBuilder setMain(SourcePath main) {
+    arg.main = Optional.of(main);
     return this;
   }
 
@@ -84,6 +89,11 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
 
   public PythonBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.fromNullable(deps);
+    return this;
+  }
+
+  public PythonBinaryBuilder setPlatform(String platform) {
+    arg.platform = Optional.of(platform);
     return this;
   }
 

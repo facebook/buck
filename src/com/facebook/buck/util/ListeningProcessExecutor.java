@@ -247,6 +247,7 @@ public class ListeningProcessExecutor {
     // Unlike with Java's ProcessBuilder, we don't need special param escaping for Win32 platforms.
     NuProcessBuilder processBuilder = new NuProcessBuilder(processHandler, params.getCommand());
     if (params.getEnvironment().isPresent()) {
+      processBuilder.environment().clear();
       processBuilder.environment().putAll(params.getEnvironment().get());
     }
     if (params.getDirectory().isPresent()) {

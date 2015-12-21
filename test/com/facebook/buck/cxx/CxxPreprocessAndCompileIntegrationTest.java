@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -24,7 +23,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleSuccessType;
@@ -32,12 +30,10 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
@@ -81,22 +77,18 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.writeContentsToPath(
         "[cxx]\n" +
         "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+        "  asflags = -g\n" +
         "  cppflags = -g\n" +
         "  cflags = -g\n" +
         "  cxxppflags = -g\n" +
         "  cxxflags = -g\n" +
         "[build]\n" +
-        "  depfiles = false\n",
+        "  depfiles = disabled\n",
         ".buckconfig");
   }
 
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
-
-    // TODO(user): Currently, we don't properly sanitize the working directory for the default
-    // platform when using the clang compiler.
-    assumeNotUsingSeparateOrPipedModesWithClang();
-
     workspace.runBuckBuild("//:simple#default,static").assertSuccess();
     Path lib = workspace.getPath("buck-out/gen/simple#default,static/libsimple.a");
     String contents =
@@ -107,12 +99,19 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
+  public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
+    workspace.runBuckBuild("//:simple_assembly#default,static").assertSuccess();
+    Path lib =
+        workspace.getPath("buck-out/gen/simple_assembly#default,static/libsimple_assembly.a");
+    String contents =
+        Files.asByteSource(lib.toFile())
+            .asCharSource(Charsets.ISO_8859_1)
+            .read();
+    assertFalse(lib.toString(), contents.contains(tmp.getRootPath().toString()));
+  }
+
+  @Test
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
-
-    // TODO(user): Currently, we don't properly sanitize the working directory for the default
-    // platform when using the clang compiler.
-    assumeNotUsingSeparateOrPipedModesWithClang();
-
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
 
@@ -147,12 +146,18 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
     String sourceName = "bar.cpp";
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget preprocessTarget =
         cxxSourceRuleFactory.createPreprocessBuildTarget(
             sourceName,
@@ -201,12 +206,16 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedHeaderDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_header");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:genheader");
     String sourceName = "foo.cpp";
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget preprocessTarget =
         cxxSourceRuleFactory.createPreprocessBuildTarget(
             sourceName,
@@ -262,9 +271,13 @@ public class CxxPreprocessAndCompileIntegrationTest {
         "only tests \"separate\" preprocess mode",
         mode == CxxPreprocessMode.SEPARATE);
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";
     BuildTarget compileTarget =
@@ -300,27 +313,106 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:source_relative_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
-    String usedHeaderName = "source_relative_header.h";
-    String unusedHeaderName = "unused_header.h";
-    String sourceName = "source_relative_header.cpp";
-    BuildTarget preprocessTarget;
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      preprocessTarget = cxxSourceRuleFactory.createPreprocessBuildTarget(
-          sourceName,
-          AbstractCxxSource.Type.CXX,
-          CxxSourceRuleFactory.PicType.PDC);
-    } else {
-      preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(
-          sourceName,
-          CxxSourceRuleFactory.PicType.PDC);
-    }
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
+    String usedHeaderName = "source_full_header.h";
+    String sourceName = "source_full_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
 
     // Run the build and verify that the C++ source was preprocessed.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
+      throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
+    String usedHeaderName = "source_relative_header.h";
+    String sourceName = "source_relative_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
+    String unusedHeaderName = "unused_header.h";
+    String sourceName = "source.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry firstRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -334,7 +426,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Run the build again and verify that got a matching depfile rule key, and therefore
     // didn't recompile.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
     BuckBuildLog.BuildLogEntry secondRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
@@ -346,43 +438,181 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assertThat(
         secondRunEntry.getRuleKey(),
         Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
 
+  @Test
+  public void manifestCachingRebuildsAfterChangeToUsedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
+    String usedHeaderName = "source_full_header.h";
+    String sourceName = "source_full_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Enable caching for manifest-based caching.
+    workspace.enableDirCache();
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
     workspace.writeContentsToPath(
         "static inline int newFunction() { return 20; }",
         usedHeaderName);
 
+    // Clean the build directory, so that we need to go to cache.
+    workspace.runBuckCommand("clean");
+
     // Run the build again and verify that we recompiled as the header caused the depfile rule key
     // to change.
-    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
-    BuckBuildLog.BuildLogEntry thirdRunEntry =
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
         workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
-        thirdRunEntry.getSuccessType(),
+        secondRunEntry.getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
-
 
     // Also, make sure all three rule keys are actually different.
     assertThat(
-        thirdRunEntry.getRuleKey(),
+        secondRunEntry.getRuleKey(),
         Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void manifestCachingRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
+      throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
+    String usedHeaderName = "source_relative_header.h";
+    String sourceName = "source_relative_header.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Enable caching for manifest-based caching.
+    workspace.enableDirCache();
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
     assertThat(
-        thirdRunEntry.getRuleKey(),
-        Matchers.not(equalTo(secondRunEntry.getRuleKey())));
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Clean the build directory, so that we need to go to cache.
+    workspace.runBuckCommand("clean");
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void manifestCachingGetsHitAfterChangeToUnusedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
+    String unusedHeaderName = "unused_header.h";
+    String sourceName = "source.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Enable caching for manifest-based caching.
+    workspace.enableDirCache();
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Clean the build directory, so that we need to go to cache.
+    workspace.runBuckCommand("clean");
+
+    // Now modify the unused header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        unusedHeaderName);
+
+    // Run the build again and verify that got a matching depfile rule key, and therefore
+    // didn't recompile.
+    workspace.runBuckBuild("--config", "build.depfiles=cache", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
+
+    // Also, make sure the original rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
   }
 
   @Test
   public void parentDirectoryReferenceInSource() throws IOException {
-    MorePaths.append(
-        workspace.getPath(".buckconfig"),
+    workspace.writeContentsToPath(
         "\n[project]\n  check_package_boundary = false\n",
-        UTF_8);
+        ".buckconfig");
     workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
   }
 
-  public void assumeNotUsingSeparateOrPipedModesWithClang() {
-    assumeTrue(
-        Platform.detect() != Platform.MACOS ||
-            !ImmutableSet.of(CxxPreprocessMode.SEPARATE, CxxPreprocessMode.PIPED).contains(mode));
+  private BuildTarget getPreprocessTarget(
+      CxxPlatform cxxPlatform,
+      BuildTarget target,
+      String source,
+      CxxSource.Type type) {
+    CxxSourceRuleFactory cxxSourceRuleFactory =
+        CxxSourceRuleFactoryHelper.of(
+            workspace.getDestPath(),
+            target,
+            cxxPlatform);
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      return cxxSourceRuleFactory.createPreprocessBuildTarget(
+          source,
+          type,
+          CxxSourceRuleFactory.PicType.PDC);
+    } else {
+      return cxxSourceRuleFactory.createCompileBuildTarget(
+          source,
+          CxxSourceRuleFactory.PicType.PDC);
+    }
   }
 
 }

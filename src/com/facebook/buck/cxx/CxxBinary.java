@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -26,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
@@ -94,18 +94,15 @@ public class CxxBinary
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
-        targetGraph,
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.<CxxSource.Type, String>of(),
-        cxxPlatform,
         frameworks);
   }
 
@@ -113,7 +110,10 @@ public class CxxBinary
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.copyOf(executable.getDeps(getResolver()));
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(getDeclaredDeps())
+        .addAll(executable.getDeps(getResolver()))
+        .build();
   }
 
 }

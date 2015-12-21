@@ -16,13 +16,16 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.MavenPublishable;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetSpec;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -30,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployResult;
@@ -39,7 +41,6 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -79,8 +80,9 @@ public class PublishCommand extends BuildCommand {
 
     // Input validation
     if (remoteRepo == null && !toMavenCentral) {
-      printError(params, "Please specify a remote repository to publish to.\n" +
-              "Use " + REMOTE_REPO_LONG_ARG + " <URL> or " + TO_MAVEN_CENTRAL_LONG_ARG);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Please specify a remote repository to publish to.\n" +
+              "Use " + REMOTE_REPO_LONG_ARG + " <URL> or " + TO_MAVEN_CENTRAL_LONG_ARG));
       return 1;
     }
 
@@ -103,13 +105,16 @@ public class PublishCommand extends BuildCommand {
    * @return whether successful
    */
   private boolean publishTarget(BuildTarget buildTarget, CommandRunnerParams params) {
-    BuildRule buildRule = Preconditions.checkNotNull(
-        getBuild().getActionGraph().findBuildRuleByTarget(buildTarget));
+    BuildRule buildRule;
+    try {
+      buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    }
 
     if (!(buildRule instanceof MavenPublishable)) {
-      printError(
-          params,
-          "Cannot publish rule of type " + buildRule.getClass().getName());
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Cannot publish rule of type " + buildRule.getClass().getName()));
       return false;
     }
 
@@ -140,26 +145,21 @@ public class PublishCommand extends BuildCommand {
                         new Function<Artifact, String>() {
                           @Override
                           public String apply(Artifact input) {
-                            return atrifactToString(input);
+                            return artifactToString(input);
                           }
                         })));
     params.getConsole().getStdOut().println("\nDeployRequest:\n" + deployResult.getRequest());
   }
 
-  private static void printError(CommandRunnerParams params, String errorMessage) {
-    params.getConsole().printErrorText(errorMessage);
-  }
-
-  private static String atrifactToString(Artifact artifact) {
+  private static String artifactToString(Artifact artifact) {
     return artifact.toString() + " < " + artifact.getFile();
   }
 
   @Override
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      BuckConfig config, ImmutableSet<Path> ignorePaths, Iterable<String> targetsAsArgs) {
+      BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
         config,
-        ignorePaths,
         targetsAsArgs);
 
     if (includeSource) {

@@ -16,7 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -26,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
@@ -35,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
@@ -50,6 +53,7 @@ public class TargetNodeTest {
     Description<Arg> description = new TestDescription();
     BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
     TargetNode<Arg> targetNode = new TargetNode<>(
+        Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
         description,
         createPopulatedConstructorArg(
             description,
@@ -59,10 +63,11 @@ public class TargetNodeTest {
                 "string", "//example/path:one",
                 "target", "//example/path:two",
                 "sourcePaths", ImmutableSortedSet.of())),
+        new DefaultTypeCoercerFactory(),
         buildRuleFactoryParams,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTargetPattern>of(),
-        UNALIASED);
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -87,6 +92,7 @@ public class TargetNodeTest {
             })
         .toSet();
     TargetNode<Arg> targetNode = new TargetNode<>(
+        Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
         description,
         createPopulatedConstructorArg(
             description,
@@ -96,10 +102,11 @@ public class TargetNodeTest {
                 "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
                 "appleSource", "//example/path:five",
                 "source", "AnotherClass.java")),
+        new DefaultTypeCoercerFactory(),
         buildRuleFactoryParams,
         depsTargets,
         ImmutableSet.<BuildTargetPattern>of(),
-        UNALIASED);
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
 
     assertThat(
         targetNode.getInputs(),
@@ -161,11 +168,13 @@ public class TargetNodeTest {
       Description<Arg> description,
       BuildRuleFactoryParams buildRuleFactoryParams,
       Map<String, Object> instance) throws NoSuchBuildTargetException {
-    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
+    ConstructorArgMarshaller marshaller =
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Arg constructorArg = description.createUnpopulatedConstructorArg();
     try {
       marshaller.populate(
+          createCellRoots(projectFilesystem),
           projectFilesystem,
           buildRuleFactoryParams,
           constructorArg,

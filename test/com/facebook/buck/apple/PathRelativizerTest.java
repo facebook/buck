@@ -18,27 +18,30 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PathRelativizerTest {
-  private Path outputPath;
   private PathRelativizer pathRelativizer;
 
   @Before
   public void setUp() {
-    outputPath = Paths.get("output0/output1");
     pathRelativizer = new PathRelativizer(
-        outputPath,
-        new SourcePathResolver(new BuildRuleResolver()).getPathFunction());
+        Paths.get("output0/output1"),
+        new SourcePathResolver(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new BuildTargetNodeToBuildRuleTransformer()))
+            .deprecatedPathFunction());
   }
 
   @Test
@@ -52,7 +55,7 @@ public class PathRelativizerTest {
   public void testOutputPathToSourcePath() {
     assertEquals(
         Paths.get("../../source/path/foo.h"),
-        pathRelativizer.outputPathToSourcePath(new TestSourcePath("source/path/foo.h")));
+        pathRelativizer.outputPathToSourcePath(new FakeSourcePath("source/path/foo.h")));
   }
 
   @Test
@@ -60,7 +63,7 @@ public class PathRelativizerTest {
     assertEquals(
         Paths.get("../../foo/bar"),
         pathRelativizer.outputPathToBuildTargetPath(
-            BuildTarget.builder("//foo/bar", "baz").build()));
+            BuildTargetFactory.newInstance("//foo/bar:baz")));
   }
 
   @Test

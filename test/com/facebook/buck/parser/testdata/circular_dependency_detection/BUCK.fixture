@@ -1,55 +1,43 @@
-genrule(
+java_library(
   name = 'A',
   deps = [
     ':B',
     ':C',
   ],
-  srcs = [],
-  out = '',
 )
 
-genrule(
+java_library(
   name = 'B',
   deps = [
     ':D',
     ':E',
   ],
-  srcs = [],
-  out = '',
 )
 
-genrule(
+java_library(
   name = 'C',
   deps = [
     ':E',
   ],
-  srcs = [],
-  out = '',
 )
 
-genrule(
+java_library(
   name = 'D',
   deps = [
     ':F',
   ],
-  srcs = [],
-  out = '',
 )
 
-genrule(
+java_library(
   name = 'E',
   deps = [
     ':F',
   ],
-  srcs = [],
-  out = '',
 )
 
-genrule(
+java_library(
   name = 'F',
   deps = [
     ':C',
   ],
-  srcs = [],
-  out = '',
 )

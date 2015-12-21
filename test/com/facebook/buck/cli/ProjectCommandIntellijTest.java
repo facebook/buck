@@ -18,10 +18,11 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.JavaBinaryRuleBuilder;
-import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.java.JavaTestBuilder;
+import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
@@ -65,68 +66,68 @@ public class ProjectCommandIntellijTest {
     // |
     // QuxBin
 
-    BuildTarget dummyRootBinTarget = BuildTarget.builder("//", "bindummy").build();
+    BuildTarget dummyRootBinTarget = BuildTargetFactory.newInstance("//:bindummy");
     dummyRootBinNode = new JavaBinaryRuleBuilder(dummyRootBinTarget)
         .build();
 
-    BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
+    BuildTarget barLibTarget = BuildTargetFactory.newInstance("//bar:lib");
     barLibNode = JavaLibraryBuilder
         .createBuilder(barLibTarget)
         .build();
 
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
     fooLibNode = JavaLibraryBuilder
         .createBuilder(fooLibTarget)
         .addDep(barLibTarget)
         .build();
 
-    BuildTarget fooBinTarget = BuildTarget.builder("//foo", "binbinary").build();
+    BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo:binbinary");
     fooBinNode = new JavaBinaryRuleBuilder(fooBinTarget)
         .setDeps(ImmutableSortedSet.of(fooLibTarget))
         .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();
+    BuildTarget bazLibTarget = BuildTargetFactory.newInstance("//baz:lib");
     bazLibNode = JavaLibraryBuilder
         .createBuilder(bazLibTarget)
         .build();
 
-    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
+    BuildTarget bazTestTarget = BuildTargetFactory.newInstance("//baz:xctest");
     bazTestNode = JavaTestBuilder
         .createBuilder(bazTestTarget)
         .setSourceUnderTest(ImmutableSortedSet.of(bazLibTarget))
         .build();
 
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
+    BuildTarget fooTestTarget = BuildTargetFactory.newInstance("//foo:lib-xctest");
     fooTestNode = JavaTestBuilder
         .createBuilder(fooTestTarget)
         .setSourceUnderTest(ImmutableSortedSet.of(fooLibTarget))
         .addDep(bazLibTarget)
         .build();
 
-    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
+    BuildTarget fooBinTestTarget = BuildTargetFactory.newInstance("//foo:bin-xctest");
     fooBinTestNode = JavaTestBuilder
         .createBuilder(fooBinTestTarget)
         .setSourceUnderTest(ImmutableSortedSet.of(fooBinTarget))
         .build();
 
-    BuildTarget quxBinTarget = BuildTarget.builder("//qux", "bin").build();
+    BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux:bin");
     quxBinNode = new JavaBinaryRuleBuilder(quxBinTarget)
         .setDeps(ImmutableSortedSet.of(barLibTarget))
         .build();
 
-    BuildTarget fooProjectTarget = BuildTarget.builder("//foo", "foo").build();
+    BuildTarget fooProjectTarget = BuildTargetFactory.newInstance("//foo:foo");
     fooProjectNode = ProjectConfigBuilder
         .createBuilder(fooProjectTarget)
         .setSrcRule(fooBinTarget)
         .build();
 
-    BuildTarget bazProjectTarget = BuildTarget.builder("//baz", "baz").build();
+    BuildTarget bazProjectTarget = BuildTargetFactory.newInstance("//baz:baz");
     bazProjectNode = ProjectConfigBuilder
         .createBuilder(bazProjectTarget)
         .setSrcRule(bazLibTarget)
         .build();
 
-    BuildTarget dummyProjectTarget = BuildTarget.builder("//", "dummy").build();
+    BuildTarget dummyProjectTarget = BuildTargetFactory.newInstance("//:dummy");
     dummyProjectNode = ProjectConfigBuilder
         .createBuilder(dummyProjectTarget)
         .setSrcRule(dummyRootBinTarget)
@@ -252,7 +253,7 @@ public class ProjectCommandIntellijTest {
         /* withDependenciesTests = */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.of(
             dummyRootBinNode,
             dummyProjectNode,
             bazProjectNode,
@@ -271,7 +272,7 @@ public class ProjectCommandIntellijTest {
         /* withDependenciesTests = */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.of(
             dummyRootBinNode,
             dummyProjectNode,
             bazProjectNode,

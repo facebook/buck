@@ -16,6 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -24,19 +26,30 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 public class TestResultFormatter {
 
+  private static final int DEFAULT_MAX_LOG_LINES = 50;
+  private static final Logger LOG = Logger.get(TestResultFormatter.class);
+
   private final Ansi ansi;
   private final Verbosity verbosity;
-  private TestResultSummaryVerbosity summaryVerbosity;
+  private final TestResultSummaryVerbosity summaryVerbosity;
+  private final Locale locale;
+  private final Optional<Path> testLogsPath;
 
   public enum FormatMode {
       BEFORE_TEST_RUN,
@@ -46,10 +59,14 @@ public class TestResultFormatter {
   public TestResultFormatter(
       Ansi ansi,
       Verbosity verbosity,
-      TestResultSummaryVerbosity summaryVerbosity) {
+      TestResultSummaryVerbosity summaryVerbosity,
+      Locale locale,
+      Optional<Path> testLogsPath) {
     this.ansi = ansi;
     this.verbosity = verbosity;
     this.summaryVerbosity = summaryVerbosity;
+    this.locale = locale;
+    this.testLogsPath = testLogsPath;
   }
 
   public void runStarted(
@@ -83,14 +100,21 @@ public class TestResultFormatter {
         verbosity.shouldPrintBinaryRunInformation() &&
             results.getTotalNumberOfTests() > 1) {
       addTo.add("");
-      addTo.add(String.format(
+      addTo.add(
+          String.format(
+              locale,
               "Results for %s (%d/%d) %s",
               results.getBuildTarget().getFullyQualifiedName(),
               results.getSequenceNumber(),
               results.getTotalNumberOfTests(), verbosity));
     }
+
+    boolean shouldReportLogSummaryAfterTests = false;
+
     for (TestCaseSummary testCase : results.getTestCases()) {
-      addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));
+      StringBuilder oneLineSummary = new StringBuilder(
+          testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi));
+      addTo.add(oneLineSummary.toString());
 
       // Don't print the full error if there were no failures (so only successes and assumption
       // violations)
@@ -105,19 +129,65 @@ public class TestResultFormatter {
 
         // Report on either explicit failure
         if (!testResult.isSuccess()) {
+          shouldReportLogSummaryAfterTests = true;
           reportResultSummary(addTo, testResult);
+        }
+      }
+    }
+
+    if (shouldReportLogSummaryAfterTests && verbosity != Verbosity.SILENT) {
+      for (Path testLogPath : results.getTestLogPaths()) {
+        if (Files.exists(testLogPath)) {
+          reportLogSummary(
+              locale,
+              addTo,
+              testLogPath,
+              summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
         }
       }
     }
   }
 
+  private static void reportLogSummary(
+      Locale locale,
+      ImmutableList.Builder<String> addTo,
+      Path logPath,
+      int maxLogLines) {
+    if (maxLogLines <= 0) {
+      return;
+    }
+    try {
+      List<String> logLines = Files.readAllLines(
+          logPath,
+          StandardCharsets.UTF_8);
+      if (logLines.isEmpty()) {
+        return;
+      }
+      addTo.add("====TEST LOGS====");
+
+      int logLinesStartIndex;
+      if (logLines.size() > maxLogLines) {
+        addTo.add(String.format(locale, "Last %d test log lines from %s:", maxLogLines, logPath));
+        logLinesStartIndex = logLines.size() - maxLogLines;
+      } else {
+        addTo.add(String.format(locale, "Logs from %s:", logPath));
+        logLinesStartIndex = 0;
+      }
+      addTo.addAll(logLines.subList(logLinesStartIndex, logLines.size()));
+    } catch (IOException e) {
+      LOG.error(e, "Could not read test logs from %s", logPath);
+    }
+  }
+
   public void reportResultSummary(ImmutableList.Builder<String> addTo,
                                   TestResultSummary testResult) {
-    addTo.add(String.format("%s %s %s: %s",
-        testResult.getType().toString(),
-        testResult.getTestCaseName(),
-        testResult.getTestName(),
-        testResult.getMessage()));
+    addTo.add(
+        String.format(
+            locale, "%s %s %s: %s",
+            testResult.getType().toString(),
+            testResult.getTestCaseName(),
+            testResult.getTestName(),
+            testResult.getMessage()));
 
     if (testResult.getStacktrace() != null) {
       for (String line : Splitter.on("\n").split(testResult.getStacktrace())) {
@@ -145,7 +215,10 @@ public class TestResultFormatter {
     ListMultimap<TestResults, TestCaseSummary> failingTests = ArrayListMultimap.create();
 
     int numFailures = 0;
+    ImmutableList.Builder<Path> testLogPathsBuilder = ImmutableList.builder();
+
     for (TestResults summary : completedResults) {
+      testLogPathsBuilder.addAll(summary.getTestLogPaths());
       if (!summary.isSuccess()) {
         isAllTestsPassed = false;
         numFailures += summary.getFailureCount();
@@ -159,19 +232,34 @@ public class TestResultFormatter {
       }
     }
 
+    ImmutableList<Path> testLogPaths = testLogPathsBuilder.build();
+
     // Print the summary of the test results.
     if (completedResults.isEmpty()) {
       addTo.add(ansi.asHighlightedFailureText("NO TESTS RAN"));
     } else if (isAllTestsPassed) {
+      if (testLogsPath.isPresent() && verbosity != Verbosity.SILENT) {
+        try {
+          if (MoreFiles.concatenateFiles(testLogsPath.get(), testLogPaths)) {
+            addTo.add("Updated test logs: " + testLogsPath.get().toString());
+          }
+        } catch (IOException e) {
+          LOG.warn(e, "Could not concatenate test logs %s to %s", testLogPaths, testLogsPath.get());
+        }
+      }
       if (isAnyAssumptionViolated) {
         addTo.add(ansi.asHighlightedWarningText("TESTS PASSED (with some assumption violations)"));
       } else {
         addTo.add(ansi.asHighlightedSuccessText("TESTS PASSED"));
       }
     } else {
-      addTo.add(ansi.asHighlightedFailureText(
-          String.format(
-              "TESTS FAILED: %d %s", numFailures, numFailures == 1 ? "FAILURE" : "FAILURES")));
+      addTo.add(
+          ansi.asHighlightedFailureText(
+              String.format(
+                  locale,
+                  "TESTS FAILED: %d %s",
+                  numFailures,
+                  numFailures == 1 ? "FAILURE" : "FAILURES")));
       for (TestResults results : failingTests.keySet()) {
         addTo.add("Failed target: " + results.getBuildTarget().getFullyQualifiedName());
         for (TestCaseSummary summary : failingTests.get(results)) {

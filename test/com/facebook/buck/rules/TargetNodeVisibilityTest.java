@@ -16,31 +16,44 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
 public class TargetNodeVisibilityTest {
 
+  private static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
   private static final BuildTarget orcaTarget =
-      BuildTarget.builder("//src/com/facebook/orca", "orca").build();
+      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/orca", "orca").build();
   private static final BuildTarget publicTarget =
-      BuildTarget.builder("//src/com/facebook/for", "everyone").build();
+      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/for", "everyone").build();
   private static final BuildTarget nonPublicTarget1 =
-      BuildTarget.builder("//src/com/facebook/something1", "nonPublic").build();
+      BuildTarget.builder(
+          filesystem.getRootPath(),
+          "//src/com/facebook/something1",
+          "nonPublic").build();
   private static final BuildTarget nonPublicTarget2 =
-      BuildTarget.builder("//src/com/facebook/something2", "nonPublic").build();
+      BuildTarget.builder(
+          filesystem.getRootPath(),
+          "//src/com/facebook/something2",
+          "nonPublic").build();
 
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
 
@@ -63,11 +76,15 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+            new SingletonBuildTargetPattern(
+                filesystem.getRootPath(),
+                orcaTarget.getFullyQualifiedName())));
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(
         nonPublicTarget2,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+            new SingletonBuildTargetPattern(
+                filesystem.getRootPath(),
+                orcaTarget.getFullyQualifiedName())));
     TargetNode<?> orcaRule = createTargetNode(
         orcaTarget,        noVisibilityPatterns);
 
@@ -91,7 +108,9 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+            new SingletonBuildTargetPattern(
+                filesystem.getRootPath(),
+                orcaTarget.getFullyQualifiedName())));
     try {
       nonPublicTargetNode1.checkVisibility(publicTarget);
       fail("checkVisibility() should throw an exception");
@@ -110,11 +129,15 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+            new SingletonBuildTargetPattern(
+                filesystem.getRootPath(),
+                orcaTarget.getFullyQualifiedName())));
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(
         nonPublicTarget2,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+            new SingletonBuildTargetPattern(
+                filesystem.getRootPath(),
+                orcaTarget.getFullyQualifiedName())));
     TargetNode<?> publicTargetNode = createTargetNode(
         publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
@@ -138,11 +161,13 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+            new SingletonBuildTargetPattern(
+                filesystem.getRootPath(),
+                orcaTarget.getFullyQualifiedName())));
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(
         nonPublicTarget2,
         ImmutableSet.<BuildTargetPattern>of(
-            new SingletonBuildTargetPattern("//some/other:target")));
+            new SingletonBuildTargetPattern(filesystem.getRootPath(), "//some/other:target")));
     TargetNode<?> publicTargetNode = createTargetNode(
         publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
@@ -166,28 +191,34 @@ public class TargetNodeVisibilityTest {
   @Test
   public void testVisibilityForDirectory()
       throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
-    BuildTarget libTarget = BuildTarget.builder("//lib", "lib").build();
+    BuildTarget libTarget = BuildTarget.builder(filesystem.getRootPath(), "//lib", "lib").build();
     BuildTarget targetInSpecifiedDirectory =
-        BuildTarget.builder("//src/com/facebook", "test").build();
+        BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build();
     BuildTarget targetUnderSpecifiedDirectory =
-        BuildTarget.builder("//src/com/facebook/buck", "test").build();
-    BuildTarget targetInOtherDirectory = BuildTarget.builder("//src/com/instagram", "test").build();
-    BuildTarget targetInParentDirectory = BuildTarget.builder("//", "test").build();
+        BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/buck", "test").build();
+    BuildTarget targetInOtherDirectory =
+        BuildTarget.builder(filesystem.getRootPath(), "//src/com/instagram", "test").build();
+    BuildTarget targetInParentDirectory =
+        BuildTarget.builder(filesystem.getRootPath(), "//", "test").build();
 
     // Build rule that visible to targets in or under directory src/come/facebook
     TargetNode<?> directoryTargetNode = createTargetNode(
         libTarget,
         ImmutableSet.<BuildTargetPattern>of(
-            new SubdirectoryBuildTargetPattern("src/com/facebook/")));
+            new SubdirectoryBuildTargetPattern(
+                filesystem.getRootPath(),
+                filesystem.getRootPath().getFileSystem().getPath("src/com/facebook/"))));
     assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
     assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
     assertFalse(directoryTargetNode.isVisibleTo(targetInOtherDirectory));
     assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
 
-    // Build rule that visible to all targets, equals to PUBLIC.
+    // Build rule that's visible to all targets, equals to PUBLIC.
     TargetNode<?> pubicTargetNode = createTargetNode(
         libTarget,
-        ImmutableSet.<BuildTargetPattern>of(new SubdirectoryBuildTargetPattern("")));
+        ImmutableSet.<BuildTargetPattern>of(new SubdirectoryBuildTargetPattern(
+            filesystem.getRootPath(),
+            filesystem.getRootPath().getFileSystem().getPath(""))));
     assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));
@@ -236,11 +267,13 @@ public class TargetNodeVisibilityTest {
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(buildTarget);
     return new TargetNode<>(
+        Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
         description,
         arg,
+        new DefaultTypeCoercerFactory(),
         params,
         ImmutableSet.<BuildTarget>of(),
         visibilityPatterns,
-        UNALIASED);
+        createCellRoots(filesystem));
   }
 }

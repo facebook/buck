@@ -1,0 +1,35 @@
+java_library(
+  name = 'classhash',
+  srcs = [
+    'HasJavaClassHashes.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'packagefinder',
+  srcs = [
+    'JavaPackageFinder.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'suggestbuildrules',
+  srcs = [
+    'SuggestBuildRules.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)

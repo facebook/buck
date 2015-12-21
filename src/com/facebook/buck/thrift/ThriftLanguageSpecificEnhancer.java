@@ -18,6 +18,7 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -64,7 +65,7 @@ public interface ThriftLanguageSpecificEnhancer {
       BuildRuleResolver resolver,
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
-      ImmutableSortedSet<BuildRule> deps);
+      ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException;
 
   /**
    * @return the names of extra dependencies implicitly required for this language.

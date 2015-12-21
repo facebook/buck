@@ -22,11 +22,13 @@ import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
 public class DCompileStep extends ShellStep {
 
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compiler;
   private final ImmutableList<String> flags;
   private final Path output;
@@ -34,11 +36,13 @@ public class DCompileStep extends ShellStep {
 
   public DCompileStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> compiler,
       ImmutableList<String> flags,
       Path output,
       ImmutableCollection<Path> inputs) {
     super(workingDirectory);
+    this.environment = environment;
     this.compiler = compiler;
     this.flags = flags;
     this.output = output;
@@ -56,7 +60,20 @@ public class DCompileStep extends ShellStep {
   }
 
   @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
+  }
+
+  @Override
   public String getShortName() {
     return "d compile";
+  }
+
+  /**
+   * @param sourceName name of the source file
+   * @return the object file name for the given source file name.
+   */
+  public static String getObjectNameForSourceName(String sourceName) {
+    return sourceName.replaceFirst("(?:\\.[^.]+)$", ".o");
   }
 }

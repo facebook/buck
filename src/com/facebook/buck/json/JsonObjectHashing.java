@@ -27,7 +27,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Hashes parsed JSON objects as returned by {@link RawParser}.
+ * Hashes parsed BUCK file objects.
  */
 public class JsonObjectHashing {
   private static enum HashedObjectType {
@@ -47,8 +47,7 @@ public class JsonObjectHashing {
   private JsonObjectHashing() { }
 
   /**
-   * Given a {@link Hasher} and a parsed JSON object returned by
-   * {@link RawParser#parseFromReader(java.io.Reader)}, updates the Hasher
+   * Given a {@link Hasher} and a parsed BUCK file object, updates the Hasher
    * with the contents of the JSON object.
    */
   public static void hashJsonObject(Hasher hasher, @Nullable Object obj) {
@@ -97,7 +96,7 @@ public class JsonObjectHashing {
       hasher.putInt(HashedObjectType.BOOLEAN.ordinal());
       hasher.putBoolean((boolean) obj);
     } else if (obj instanceof Number) {
-      // This is gross, but it mimics the logic in RawParser.
+      // This is gross, but it mimics the logic originally in RawParser.
       Number number = (Number) obj;
       if (number.longValue() == number.doubleValue()) {
         hasher.putInt(HashedObjectType.LONG.ordinal());

@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.httpserver.WebServer;
@@ -38,6 +39,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -50,9 +52,9 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
-import java.util.Comparator;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -68,16 +70,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListener {
   /**
-   * Amount of time a rule can run before we render it with as a warning.
-   */
-  private static final long WARNING_THRESHOLD_MS = 15000;
-
-  /**
-   * Amount of time a rule can run before we render it with as an error.
-   */
-  private static final long ERROR_THRESHOLD_MS = 30000;
-
-  /**
    * Maximum expected rendered line length so we can start with a decent
    * size of line rendering buffer.
    */
@@ -85,6 +77,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
+  private final Locale locale;
+  private final Function<Long, String> formatTimeFunction;
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>>
       threadsToRunningBuildRuleEvent;
@@ -126,8 +120,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer) {
-    super(console, clock);
+      Optional<WebServer> webServer,
+      Locale locale,
+      Path testLogPath) {
+    super(console, clock, locale);
+    this.locale = locale;
+    this.formatTimeFunction = new Function<Long, String>(){
+        @Override
+        public String apply(Long elapsedTimeMs) {
+          return formatElapsedTime(elapsedTimeMs);
+        }
+    };
     this.webServer = webServer;
     this.threadsToRunningBuildRuleEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
@@ -145,7 +148,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.testFormatter = new TestResultFormatter(
         console.getAnsi(),
         console.getVerbosity(),
-        summaryVerbosity);
+        summaryVerbosity,
+        locale,
+        Optional.of(testLogPath));
     this.testRunStarted = new AtomicReference<>();
     this.testRunFinished = new AtomicReference<>();
   }
@@ -199,7 +204,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
                   MoreIterables.zipAndConcat(
                       lines,
                       Iterables.cycle("\n"))));
-          StringBuilder fullFrame = new StringBuilder(lastRenderClear);
+          int bufferSize = lastRenderClear.length();
+          for (String part : renderedLines) {
+            bufferSize += part.length();
+          }
+          StringBuilder fullFrame = new StringBuilder(bufferSize);
+          fullFrame.append(lastRenderClear);
           for (String part : renderedLines) {
             fullFrame.append(part);
           }
@@ -254,8 +264,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       String jobSummary = null;
       if (ruleCount.isPresent()) {
         List<String> columns = Lists.newArrayList();
-        columns.add(String.format("%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
-        columns.add(String.format("%d UPDATED", updated.get()));
+        columns.add(String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
+        columns.add(String.format(locale, "%d UPDATED", updated.get()));
         if (ruleCount.isPresent() && ruleCount.get() > 0) {
           // Measure CACHE HIT % based on total cache misses and the theoretical total number of
           // build rules.
@@ -267,11 +277,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           // only count as one cache_hit even though it saved us from fetching N nodes.
           columns.add(
               String.format(
+                  locale,
                   "%.1f%% CACHE MISS",
                   100 * (double) cacheMisses.get() / ruleCount.get()));
           if (cacheErrors.get() > 0) {
             columns.add(
                 String.format(
+                    locale,
                     "%.1f%% CACHE ERRORS",
                     100 * (double) cacheErrors.get() / updated.get()));
           }
@@ -285,6 +297,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional<Integer> port = webServer.get().getPort();
         if (port.isPresent()) {
           buildTrace = String.format(
+              locale,
               "Details: http://localhost:%s/trace/%s",
               port.get(),
               buildFinished.getBuildId());
@@ -307,7 +320,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           lines);
 
       if (buildTime == UNFINISHED_EVENT_PAIR) {
-        renderRules(currentTimeMillis, lines);
+        ThreadStateRenderer renderer = new BuildThreadStateRenderer(
+            ansi,
+            formatTimeFunction,
+            currentTimeMillis,
+            threadsToRunningBuildRuleEvent,
+            threadsToRunningStep,
+            accumulatedRuleTime);
+        renderLines(renderer, lines);
       }
 
       long testRunTime = logEventPair(
@@ -321,7 +341,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           lines);
 
       if (testRunTime == UNFINISHED_EVENT_PAIR) {
-        renderTestRun(currentTimeMillis, lines);
+        ThreadStateRenderer renderer = new TestThreadStateRenderer(
+            ansi,
+            formatTimeFunction,
+            currentTimeMillis,
+            threadsToRunningTestRuleEvent,
+            threadsToRunningTestSummaryEvent,
+            threadsToRunningStep,
+            accumulatedRuleTime);
+        renderLines(renderer, lines);
       }
 
       logEventPair("INSTALLING",
@@ -330,6 +358,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0L,
           installStarted,
           installFinished,
+          Optional.<Double>absent(),
+          lines);
+
+      logEventPair("HTTP CACHE UPLOAD",
+          renderHttpUploads(),
+          currentTimeMillis,
+          0,
+          firstHttpCacheUploadScheduled.get(),
+          httpShutdownEvent,
           Optional.<Double>absent(),
           lines);
     }
@@ -349,140 +386,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return logEventLinesBuilder.build();
   }
 
-  /**
-   * Adds lines for rendering the rules that are currently running.
-   * @param currentMillis The time in ms to use when computing elapsed times.
-   * @param lines Builder of lines to render this frame.
-   */
-  private void renderRules(long currentMillis, ImmutableList.Builder<String> lines) {
-    // Sort events by thread id.
-    ImmutableList<Map.Entry<Long, Optional<? extends BuildRuleEvent>>> eventsByThread =
-        FluentIterable.from(threadsToRunningBuildRuleEvent.entrySet())
-            .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends BuildRuleEvent>>>() {
-              @Override
-              public int compare(Map.Entry<Long, Optional<? extends BuildRuleEvent>> a,
-                  Map.Entry<Long, Optional<? extends BuildRuleEvent>> b) {
-                return Long.signum(a.getKey() - b.getKey());
-              }
-            });
-
-    // For each thread that has ever run a rule, render information about that thread.
+  public void renderLines(ThreadStateRenderer renderer, ImmutableList.Builder<String> lines) {
     StringBuilder lineBuilder = new StringBuilder(EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH);
-    lineBuilder.append(" |=> ");
-    for (Map.Entry<Long, Optional<? extends BuildRuleEvent>> entry : eventsByThread) {
-      Optional<? extends BuildRuleEvent> startedEvent = entry.getValue();
-
-      if (!startedEvent.isPresent()) {
-        lineBuilder.append("IDLE");
-        lines.add(ansi.asSubtleText(lineBuilder.toString()));
-      } else {
-        AtomicLong accumulatedTime = accumulatedRuleTime.get(
-            startedEvent.get().getBuildRule().getBuildTarget());
-        long elapsedTimeMs =
-            (currentMillis - startedEvent.get().getTimestamp()) +
-                (accumulatedTime != null ? accumulatedTime.get() : 0);
-        Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
-
-        lineBuilder.append(startedEvent.get().getBuildRule().getFullyQualifiedName());
-        lineBuilder.append("...  ");
-        lineBuilder.append(formatElapsedTime(elapsedTimeMs));
-
-        if (leafEvent != null && leafEvent.isPresent()) {
-          lineBuilder.append(" (running ");
-          lineBuilder.append(leafEvent.get().getCategory());
-          lineBuilder.append('[');
-          lineBuilder.append(formatElapsedTime(currentMillis - leafEvent.get().getTimestamp()));
-          lineBuilder.append("])");
-
-          if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-            if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-              lines.add(ansi.asErrorText(lineBuilder.toString()));
-            } else {
-              lines.add(ansi.asWarningText(lineBuilder.toString()));
-            }
-          } else {
-            lines.add(lineBuilder.toString());
-          }
-        } else {
-          // If a rule is scheduled on a thread but no steps have been scheduled yet, we are still
-          // in the code checking to see if the rule has been cached locally.
-          // Show "CHECKING LOCAL CACHE" to prevent thrashing the UI with super fast rules.
-          lineBuilder.append(" (checking local cache)");
-          lines.add(ansi.asSubtleText(lineBuilder.toString()));
-        }
-      }
-
-      lineBuilder.delete(5, lineBuilder.length());
-    }
-  }
-
-  /**
-   * Adds lines for rendering the rules that are currently running.
-   * @param currentMillis The time in ms to use when computing elapsed times.
-   * @param lines Builder of lines to render this frame.
-   */
-  private void renderTestRun(long currentMillis, ImmutableList.Builder<String> lines) {
-    // Sort events by thread id.
-    ImmutableList<Map.Entry<Long, Optional<? extends TestRuleEvent>>> eventsByThread =
-        FluentIterable.from(threadsToRunningTestRuleEvent.entrySet())
-            .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends TestRuleEvent>>>() {
-              @Override
-              public int compare(Map.Entry<Long, Optional<? extends TestRuleEvent>> a,
-                  Map.Entry<Long, Optional<? extends TestRuleEvent>> b) {
-                return Long.signum(a.getKey() - b.getKey());
-              }
-            });
-
-    // For each thread that has ever run a rule, render information about that thread.
-    for (Map.Entry<Long, Optional<? extends TestRuleEvent>> entry : eventsByThread) {
-      String threadLine = " |=> ";
-      Optional<? extends TestRuleEvent> startedEvent = entry.getValue();
-
-      if (!startedEvent.isPresent()) {
-        threadLine += "IDLE";
-        threadLine = ansi.asSubtleText(threadLine);
-      } else {
-        AtomicLong accumulatedTime = accumulatedRuleTime.get(
-            startedEvent.get().getBuildTarget());
-        long elapsedTimeMs =
-            (currentMillis - startedEvent.get().getTimestamp()) +
-                (accumulatedTime != null ? accumulatedTime.get() : 0);
-
-        threadLine += String.format("%s...  %s",
-            startedEvent.get().getBuildTarget(),
-            formatElapsedTime(elapsedTimeMs));
-
-        Optional<? extends TestSummaryEvent> summaryEvent = threadsToRunningTestSummaryEvent.get(
-            entry.getKey());
-        Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
-        String eventName;
-        long eventTime;
-        if (summaryEvent != null && summaryEvent.isPresent()) {
-          eventName = summaryEvent.get().getTestName();
-          eventTime = summaryEvent.get().getTimestamp();
-        } else if (leafEvent != null && leafEvent.isPresent()) {
-          eventName = leafEvent.get().getCategory();
-          eventTime = leafEvent.get().getTimestamp();
-        } else {
-          eventName = null;
-          eventTime = 0;
-        }
-        if (eventName != null) {
-          threadLine += String.format(
-              " (running %s[%s])",
-              eventName,
-              formatElapsedTime(currentMillis - eventTime));
-        }
-
-        if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-          if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-            threadLine = ansi.asErrorText(threadLine);
-          } else {
-            threadLine = ansi.asWarningText(threadLine);
-          }
-        }
-      }
-      lines.add(threadLine);
+    for (long threadId : renderer.getSortedThreadIds()) {
+      lines.add(renderer.renderStatusLine(threadId, lineBuilder));
     }
   }
 
@@ -493,6 +400,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (testSkipsVal > 0) {
       return Optional.of(
           String.format(
+              locale,
               "(%d PASS/%d SKIP/%d FAIL)",
               testPassesVal,
               testSkipsVal,
@@ -500,6 +408,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else if (testPassesVal > 0 || testFailuresVal > 0) {
       return Optional.of(
           String.format(
+              locale,
               "(%d PASS/%d FAIL)",
               testPassesVal,
               testFailuresVal));
@@ -585,12 +494,26 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void artifactStarted(ArtifactCacheEvent.Started started) {
+  public void artifactCacheStarted(ArtifactCacheEvent.Started started) {
+    if (started.getInvocationType() == ArtifactCacheEvent.InvocationType.SYNCHRONOUS) {
+      threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
+    }
+  }
+
+  @Subscribe
+  public void artifactCacheFinished(ArtifactCacheEvent.Finished finished) {
+    if (finished.getInvocationType() == ArtifactCacheEvent.InvocationType.SYNCHRONOUS) {
+      threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
+    }
+  }
+
+  @Subscribe
+  public void artifactCompressionStarted(ArtifactCompressionEvent.Started started) {
     threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
   }
 
   @Subscribe
-  public void artifactFinished(ArtifactCacheEvent.Finished finished) {
+  public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
   }
 
@@ -665,7 +588,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         // includes the stack trace and stdout/stderr.
         logEvents.add(
             ConsoleEvent.severe(
-                String.format("%s %s %s: %s",
+                String.format(
+                    locale,
+                    "%s %s %s: %s",
                     testResult.getType().toString(),
                     testResult.getTestCaseName(),
                     testResult.getTestName(),

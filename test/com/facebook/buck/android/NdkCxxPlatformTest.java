@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessMode;
@@ -29,16 +30,18 @@ import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -56,7 +59,6 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -77,7 +79,8 @@ public class NdkCxxPlatformTest {
   private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructCompileRuleKeys(
       Operation operation,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     String source = "source.cpp";
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
@@ -109,7 +112,7 @@ public class NdkCxxPlatformTest {
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
-                      new TestSourcePath(source),
+                      new FakeSourcePath(source),
                       ImmutableList.<String>of()),
                   CxxSourceRuleFactory.PicType.PIC,
                   CxxPreprocessMode.COMBINED);
@@ -121,7 +124,7 @@ public class NdkCxxPlatformTest {
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
-                      new TestSourcePath(source),
+                      new FakeSourcePath(source),
                       ImmutableList.<String>of()),
                   CxxSourceRuleFactory.PicType.PIC);
           break;
@@ -132,23 +135,24 @@ public class NdkCxxPlatformTest {
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
-                      new TestSourcePath(source),
+                      new FakeSourcePath(source),
                       ImmutableList.<String>of()),
                   CxxSourceRuleFactory.PicType.PIC);
           break;
         default:
           throw new IllegalStateException();
       }
-      RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
-      ruleKeys.put(entry.getKey(), builder.build());
+      ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
     }
     return ruleKeys.build();
   }
 
   // Create and return some rule keys from a dummy source for the given platforms.
   private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructLinkRuleKeys(
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms)
+      throws NoSuchBuildTargetException {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
@@ -162,24 +166,22 @@ public class NdkCxxPlatformTest {
         ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       BuildRule rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-          TargetGraph.EMPTY,
           entry.getValue().getCxxPlatform(),
           new FakeBuildRuleParamsBuilder(target).build(),
           pathResolver,
-          ImmutableList.<String>of(),
           target,
           Linker.LinkType.EXECUTABLE,
           Optional.<String>absent(),
           Paths.get("output"),
-          ImmutableList.<SourcePath>of(new TestSourcePath("input.o")),
-          /* extraInputs */ ImmutableList.<SourcePath>of(),
+          SourcePathArg.from(
+              pathResolver,
+              new FakeSourcePath("input.o")),
           Linker.LinkableDepType.SHARED,
           ImmutableList.<BuildRule>of(),
-          Optional.<Linker.CxxRuntimeType>absent(),
           Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildRule>of());
-      RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
-      ruleKeys.put(entry.getKey(), builder.build());
+          ImmutableSet.<BuildTarget>of(),
+          ImmutableSet.<FrameworkPath>of());
+      ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
     }
     return ruleKeys.build();
   }
@@ -187,7 +189,7 @@ public class NdkCxxPlatformTest {
   // The important aspects we check for in rule keys is that the host platform and the path
   // to the NDK don't cause changes.
   @Test
-  public void checkRootAndPlatformDoNotAffectRuleKeys() throws IOException {
+  public void checkRootAndPlatformDoNotAffectRuleKeys() throws Exception {
 
     // Test all major compiler and runtime combinations.
     ImmutableList<Pair<NdkCxxPlatforms.Compiler.Type, NdkCxxPlatforms.CxxRuntime>> configs =
@@ -224,6 +226,7 @@ public class NdkCxxPlatformTest {
                       .build(),
                   NdkCxxPlatforms.CxxRuntime.GNUSTL,
                   "target-app-platform",
+                  ImmutableSet.of("x86"),
                   platform,
                   new AlwaysFoundExecutableFinder());
           preprocessAndCompileRukeKeys.put(

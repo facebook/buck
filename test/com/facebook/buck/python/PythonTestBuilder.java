@@ -23,47 +23,71 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Paths;
 
 public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
 
   private PythonTestBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
-      PythonEnvironment pythonEnvironment,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonTestDescription(
             new PythonBinaryDescription(
                 pythonBuckConfig,
-                pythonEnvironment,
+                pythonPlatforms,
                 defaultCxxPlatform,
                 cxxPlatforms),
             pythonBuckConfig,
+            pythonPlatforms,
             defaultCxxPlatform,
+            Optional.<Long>absent(),
             cxxPlatforms),
         target);
   }
 
-  public static PythonTestBuilder create(BuildTarget target) {
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonTestBuilder(
         target,
         pythonBuckConfig,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.7")),
+        pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
-                CxxPlatformUtils.DEFAULT_PLATFORM)));
+        CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonTestBuilder create(BuildTarget target) {
+    return create(target, PythonTestUtils.PYTHON_PLATFORMS);
+  }
+
+  public PythonTestBuilder setSrcs(SourceList srcs) {
+    arg.srcs = Optional.of(srcs);
+    return this;
+  }
+
+  public PythonTestBuilder setPlatformSrcs(PatternMatchedCollection<SourceList> platformSrcs) {
+    arg.platformSrcs = Optional.of(platformSrcs);
+    return this;
+  }
+
+  public PythonTestBuilder setResources(SourceList resources) {
+    arg.resources = Optional.of(resources);
+    return this;
+  }
+
+  public PythonTestBuilder setPlatformResources(
+      PatternMatchedCollection<SourceList> platformResources) {
+    arg.platformResources = Optional.of(platformResources);
+    return this;
   }
 
   public PythonTestBuilder setBaseModule(String baseModule) {
@@ -83,6 +107,11 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
 
   public PythonTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.fromNullable(deps);
+    return this;
+  }
+
+  public PythonTestBuilder setPlatform(String platform) {
+    arg.platform = Optional.of(platform);
     return this;
   }
 

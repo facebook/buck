@@ -4,7 +4,7 @@ import os
 import sys
 import zipfile
 
-from buck_tool import BuckToolException, RestartBuck
+from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from subprocutils import propagate_failure
 
@@ -12,6 +12,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def main(argv):
+    install_signal_handlers()
     with BuckProject.from_current_dir() as project:
         # Try to detect if we're running a PEX by checking if we were invoked
         # via a zip file.

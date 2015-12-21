@@ -21,8 +21,12 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
+import java.nio.file.Path;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -34,6 +38,7 @@ import javax.annotation.concurrent.Immutable;
 public abstract class BuildTargetPatternParser<T> {
 
   private static final String VISIBILITY_PUBLIC = "PUBLIC";
+  private static final String CELL_NAME_PREFIX = "@";
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
@@ -63,7 +68,7 @@ public abstract class BuildTargetPatternParser<T> {
    * For case 2 and 3, parseContext is expected to be
    * {@link BuildTargetPatternParser#forVisibilityArgument()}.
    */
-  public final T parse(String buildTargetPattern) {
+  public final T parse(Function<Optional<String>, Path> cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       if (isPublicVisibilityAllowed()) {
         return createForAll();
@@ -74,32 +79,54 @@ public abstract class BuildTargetPatternParser<T> {
     }
 
     Preconditions.checkArgument(
-        buildTargetPattern.startsWith(BUILD_RULE_PREFIX),
-        String.format("'%s' must start with '//'", buildTargetPattern));
+        buildTargetPattern.startsWith(BUILD_RULE_PREFIX) ||
+            buildTargetPattern.startsWith(CELL_NAME_PREFIX),
+        String.format(
+            "'%s' must start with '//' or a '@' followed by a cell name",
+            buildTargetPattern));
 
     if (buildTargetPattern.equals(WILDCARD_BUILD_RULE_SUFFIX) ||
         buildTargetPattern.endsWith("/" + WILDCARD_BUILD_RULE_SUFFIX)) {
-      if (isWildCardAllowed()) {
-        if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {
-          throw new BuildTargetParseException(
-              String.format(
-                  "'%s' cannot contain colon", buildTargetPattern));
-        }
-        String basePathWithSlash = buildTargetPattern.substring(
-            BUILD_RULE_PREFIX.length(),
-            buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
-        return createForDescendants(basePathWithSlash);
-      } else {
-        throw new BuildTargetParseException(
-            String.format("'%s' cannot end with '...'", buildTargetPattern));
-      }
+      return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
-    BuildTarget target = BuildTargetParser.INSTANCE.parse(buildTargetPattern, this);
+    BuildTarget target = BuildTargetParser.INSTANCE.parse(buildTargetPattern, this, cellNames);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
-      return createForChildren(target.getBasePathWithSlash());
+      return createForChildren(target.getCellPath(), target.getBasePath());
     } else {
       return createForSingleton(target);
+    }
+  }
+
+  private T createWildCardPattern(
+      Function<Optional<String>, Path> cellNames,
+      String buildTargetPattern) {
+    Path cellPath;
+    if (buildTargetPattern.startsWith(CELL_NAME_PREFIX)) {
+      int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
+      Preconditions.checkState(index != -1);
+      cellPath = cellNames.apply(
+          Optional.of(buildTargetPattern.substring(CELL_NAME_PREFIX.length(), index)));
+      buildTargetPattern = buildTargetPattern.substring(index);
+    } else {
+      cellPath = cellNames.apply(Optional.<String>absent());
+    }
+
+    if (isWildCardAllowed()) {
+      if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {
+        throw new BuildTargetParseException(
+            String.format(
+                "'%s' cannot contain colon", buildTargetPattern));
+      }
+      String basePathWithSlash = buildTargetPattern.substring(
+          BUILD_RULE_PREFIX.length(),
+          buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
+      // Make sure the basePath comes from the same underlying filesystem.
+      Path basePath = cellPath.getFileSystem().getPath(basePathWithSlash);
+      return createForDescendants(cellPath, basePath);
+    } else {
+      throw new BuildTargetParseException(
+          String.format("'%s' cannot end with '...'", buildTargetPattern));
     }
   }
 
@@ -134,8 +161,8 @@ public abstract class BuildTargetPatternParser<T> {
   public abstract String makeTargetDescription(String buildTargetName, String buildFileName);
 
   protected abstract T createForAll();
-  protected abstract T createForDescendants(String basePathWithSlash);
-  protected abstract T createForChildren(String basePathWithSlash);
+  protected abstract T createForDescendants(Path cellPath, Path basePath);
+  protected abstract T createForChildren(Path cellPath, Path basePath);
   protected abstract T createForSingleton(BuildTarget target);
 
   private abstract static class BuildTargetPatternBaseParser
@@ -148,16 +175,18 @@ public abstract class BuildTargetPatternParser<T> {
       return BuildTargetPattern.MATCH_ALL;
     }
     @Override
-    public BuildTargetPattern createForDescendants(String basePathWithSlash) {
-      return new SubdirectoryBuildTargetPattern(basePathWithSlash);
+    public BuildTargetPattern createForDescendants(Path cellPath, Path basePath) {
+      return new SubdirectoryBuildTargetPattern(cellPath, basePath);
     }
     @Override
-    public BuildTargetPattern createForChildren(String basePathWithSlash) {
-      return new ImmediateDirectoryBuildTargetPattern(basePathWithSlash);
+    public BuildTargetPattern createForChildren(Path cellPath, Path basePath) {
+      return new ImmediateDirectoryBuildTargetPattern(cellPath, basePath);
     }
     @Override
     public BuildTargetPattern createForSingleton(BuildTarget target) {
-      return new SingletonBuildTargetPattern(target.getFullyQualifiedName());
+      return new SingletonBuildTargetPattern(
+          target.getUnflavoredBuildTarget().getCellPath(),
+          target.getFullyQualifiedName());
     }
   }
 

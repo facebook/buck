@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
@@ -37,7 +38,7 @@ import java.nio.file.Path;
 
 public class QueryTargetAccessor {
 
-  private static final TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+  private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
   private QueryTargetAccessor() { }
 

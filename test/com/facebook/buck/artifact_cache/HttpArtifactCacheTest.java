@@ -22,8 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.HttpArtifactCacheEvent;
-import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -35,6 +33,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
@@ -64,6 +64,8 @@ public class HttpArtifactCacheTest {
   private static final BuckEventBus BUCK_EVENT_BUS =
       new BuckEventBus(new IncrementingFakeClock(), new BuildId());
   private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
+  private static final ListeningExecutorService DIRECT_EXECUTOR_SERVICE =
+      MoreExecutors.newDirectExecutorService();
 
   private ResponseBody createResponseBody(
       ImmutableSet<RuleKey> ruleKeys,
@@ -86,8 +88,10 @@ public class HttpArtifactCacheTest {
     }
   }
 
-  private static Finished.Builder createFinishedEventBuilder() {
-    HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent();
+  private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
+    HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent(
+        ImmutableSet.<RuleKey>of()
+    );
     started.configure(-1, -1, -1, new BuildId());
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }
@@ -103,7 +107,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             Response response =
@@ -145,7 +150,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             Response response =
@@ -177,17 +183,18 @@ public class HttpArtifactCacheTest {
   public void testFetchUrl() throws Exception {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final String expectedUri =
-        "http://localhost:8080/artifacts/key/00000000000000000000000000000000";
+        "http://localhost:8080/path/artifacts/key/00000000000000000000000000000000";
 
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
             null,
             null,
-            new URI("http://localhost:8080"),
+            new URI("http://localhost:8080/path/"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             assertEquals(expectedUri, request.uri().toString());
@@ -221,7 +228,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             Response response =
@@ -263,7 +271,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             Response response =
@@ -303,7 +312,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             throw new IOException();
@@ -332,7 +342,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response storeCall(Request request) throws IOException {
             hasCalled.set(true);
@@ -388,7 +399,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response storeCall(Request request) throws IOException {
             throw new IOException();
@@ -419,7 +431,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response storeCall(Request request) throws IOException {
             Buffer buf = new Buffer();
@@ -463,7 +476,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
@@ -501,7 +515,8 @@ public class HttpArtifactCacheTest {
             new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS) {
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()

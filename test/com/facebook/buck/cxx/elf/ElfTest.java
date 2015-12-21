@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.elf;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -24,6 +25,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -119,6 +121,21 @@ public class ElfTest {
       section = elf.getSectionByName(".symtab");
       assertTrue(section.isPresent());
       assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
+    }
+
+  }
+
+  @Test
+  public void lotsOfSectionHeaders() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "samples", tmp);
+    workspace.setUp();
+
+    Path elfPath = workspace.resolve(Paths.get("has43664sections.o"));
+    try (FileChannel channel = FileChannel.open(elfPath)) {
+      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+      Elf elf = new Elf(buffer);
+      assertThat(elf.getNumberOfSections(), Matchers.equalTo(43664));
     }
 
   }

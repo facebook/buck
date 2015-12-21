@@ -93,7 +93,7 @@ def get_dirty_buck_version(dirpath):
             env=new_environ)
 
         subprocess.check_call(
-            ['git', 'add', '-u'],
+            ['git', 'add', '-A'],
             cwd=dirpath,
             env=new_environ)
 

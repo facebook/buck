@@ -51,6 +51,7 @@ import java.util.zip.ZipEntry;
 /**
  * A {@link com.facebook.buck.step.Step} that creates a ZIP archive..
  */
+@SuppressWarnings("PMD.AvoidUsingOctalValues")
 public class ZipStep implements Step {
 
   private static final Logger LOG = Logger.get(ZipStep.class);
@@ -58,6 +59,11 @@ public class ZipStep implements Step {
   public static final int MIN_COMPRESSION_LEVEL = 0;
   public static final int DEFAULT_COMPRESSION_LEVEL = 6;
   public static final int MAX_COMPRESSION_LEVEL = 9;
+
+  // Extended attribute bits for directories and symlinks; see:
+  // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
+  public static final long S_IFDIR = 0040000;
+  public static final long S_IFLNK = 0120000;
 
   private final ProjectFilesystem filesystem;
   private final Path pathToZipFile;
@@ -133,7 +139,7 @@ public class ZipStep implements Step {
 
         CustomZipEntry entry = new CustomZipEntry(entryName);
         entry.setTime(0);  // We want deterministic ZIP files, so avoid mtimes.
-        entry.setCompressionLevel(compressionLevel);
+        entry.setCompressionLevel(isDirectory ? MIN_COMPRESSION_LEVEL : compressionLevel);
         // If we're using STORED files, we must manually set the CRC, size, and compressed size.
         if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
           entry.setSize(attr.size());
@@ -146,19 +152,33 @@ public class ZipStep implements Step {
                 }
               }.hash(Hashing.crc32()).padToLong());
         }
+
+        long mode = 0;
         // Support executable files.  If we detect this file is executable, store this
         // information as 0100 in the field typically used in zip implementations for
         // POSIX file permissions.  We'll use this information when unzipping.
         if (filesystem.isExecutable(path)) {
-          long mode =
+          mode |=
               MorePosixFilePermissions.toMode(
                   EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
-          long externalAttributes = mode << 16;
-          LOG.verbose(
-              "Setting mode for entry %s path %s to 0x%08X (0x%08X)",
-              entryName, path, mode, externalAttributes);
-          entry.setExternalAttributes(externalAttributes);
         }
+
+        if (isDirectory) {
+          mode |= S_IFDIR;
+        }
+
+        if (filesystem.isSymLink(path)) {
+          mode |= S_IFLNK;
+        }
+
+        // Propagate any additional permissions
+        mode |= MorePosixFilePermissions.toMode(filesystem.getPosixFilePermissions(path));
+
+        long externalAttributes = mode << 16;
+        LOG.verbose(
+            "Setting mode for entry %s path %s to 0x%08X (0x%08X)",
+            entryName, path, mode, externalAttributes);
+        entry.setExternalAttributes(externalAttributes);
         return entry;
       }
 

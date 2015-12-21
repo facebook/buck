@@ -2,9 +2,12 @@ java_test(
   name = 'io',
   srcs = glob(['*Test.java']),
   deps = [
+    ':testutil',
+    '//src/com/facebook/buck/bser:bser',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/io:watchman',
+    '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util/environment:platform',
@@ -27,6 +30,7 @@ java_library(
   srcs = glob(['*.java'], excludes = ['*Test.java']),
   deps = [
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/io:watchman',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
   ],

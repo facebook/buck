@@ -107,7 +107,6 @@ java_library(
 )
 
 WATCHMAN_WATCHER_SRCS = [
-  'ProjectFilesystemWatcher.java',
   'WatchmanWatcher.java',
 ]
 java_library(
@@ -123,8 +122,6 @@ java_library(
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/timing:timing',
     '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson-core',
-    '//third-party/java/jackson:jackson-databind',
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [
@@ -152,6 +149,7 @@ java_immutables_library(
     '//src/com/facebook/buck/zip:stream',
     '//src/com/facebook/buck/zip:unzip',
     '//third-party/java/aosp:aosp',
+    '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [

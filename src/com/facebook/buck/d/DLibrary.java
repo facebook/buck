@@ -16,32 +16,87 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
-public class DLibrary extends DLinkable {
+public class DLibrary extends DCompileBuildRule implements NativeLinkable {
+  BuildRuleParams params;
+  BuildRuleResolver buildRuleResolver;
+
   public DLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      ImmutableList<SourcePath> inputs,
+      SourcePathResolver sourcePathResolver,
+      BuildRuleResolver buildRuleResolver,
+      ImmutableSortedSet<SourcePath> srcs,
       Tool compiler) {
     super(
         params,
-        resolver,
-        inputs,
+        sourcePathResolver,
+        srcs,
         ImmutableList.of("-lib"),
+        compiler,
         BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/lib" + params.getBuildTarget().getShortName() + ".a"),
-        compiler);
+            params.getBuildTarget(), "%s/lib" + params.getBuildTarget().getShortName() + ".a"));
+
+    this.params = params;
+    this.buildRuleResolver = buildRuleResolver;
   }
 
   @Override
-  public BuildableProperties getProperties() {
-    return new BuildableProperties(BuildableProperties.Kind.LIBRARY);
+  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeclaredDeps())
+        .filter(NativeLinkable.class);
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    BuildRule buildRule =
+        buildRuleResolver.requireRule(
+            getBuildTarget().withFlavors(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.STATIC_FLAVOR));
+    return NativeLinkableInput.of(
+        ImmutableList.of(
+            new SourcePathArg(
+                getResolver(),
+                new BuildTargetSourcePath(buildRule.getBuildTarget()))),
+        ImmutableSet.<FrameworkPath>of(),
+        ImmutableSet.<FrameworkPath>of());
+  }
+
+  @Override
+  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return Linkage.ANY;
+  }
+
+  @Override
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    return ImmutableMap.of();
   }
 }

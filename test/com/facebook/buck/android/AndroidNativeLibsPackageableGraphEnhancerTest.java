@@ -18,27 +18,29 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,8 +53,9 @@ import java.nio.file.Paths;
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
   @Test
-  public void testNdkLibrary() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  public void testNdkLibrary() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
     NdkLibrary ndkLibrary = (NdkLibrary) new NdkLibraryBuilder(
@@ -62,7 +65,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(ndkLibrary))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(ndkLibrary))
             .build();
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -82,13 +85,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableSet.<BuildRule>of(ndkLibrary)));
 
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
-        enhancer.getCopyNativeLibraries(TargetGraph.EMPTY, collector.build());
+        enhancer.getCopyNativeLibraries(collector.build());
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
-    assertThat(copyNativeLibraries.getFilteredNativeLibraries(), Matchers.anEmptyMap());
+    assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
         FluentIterable.from(copyNativeLibraries.getNativeLibDirectories())
-            .transform(sourcePathResolver.getPathFunction())
+            .transform(sourcePathResolver.deprecatedPathFunction())
             .toList(),
         Matchers.contains(
             ndkLibrary.getLibraryPath()
@@ -98,8 +101,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testCxxLibrary() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  public void testCxxLibrary() throws Exception {
 
     NdkCxxPlatform ndkCxxPlatform =
         NdkCxxPlatform.builder()
@@ -114,13 +116,15 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
         .build();
 
-
-    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> cxxLibraryBuilder = new CxxLibraryBuilder(
+    CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(
         BuildTargetFactory.newInstance("//:cxxlib"))
         .setSoname("somelib.so")
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("test/bar.cpp"))));
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
     TargetNode<CxxLibraryDescription.Arg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(
         ruleResolver,
         new FakeProjectFilesystem(),
@@ -130,7 +134,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
             .build();
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -151,16 +155,45 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
-        enhancer.getCopyNativeLibraries(targetGraph, packageableCollection);
+        enhancer.getCopyNativeLibraries(packageableCollection);
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
     assertThat(
-        copyNativeLibraries.getFilteredNativeLibraries().keySet(),
+        copyNativeLibraries.getStrippedObjectDescriptions(),
         Matchers.containsInAnyOrder(
-            new Pair<>(NdkCxxPlatforms.TargetCpuType.ARMV7, "somelib.so"),
-            new Pair<>(NdkCxxPlatforms.TargetCpuType.ARMV7, "libgnustl_shared.so")
+            Matchers.allOf(
+                Matchers.hasProperty(
+                    "targetCpuType",
+                    Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty(
+                    "strippedObjectName",
+                    Matchers.equalTo("somelib.so"))
+            ),
+            Matchers.allOf(
+                Matchers.hasProperty(
+                    "targetCpuType",
+                    Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty(
+                    "strippedObjectName",
+                    Matchers.equalTo("libgnustl_shared.so"))
+            )
         )
     );
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
+    ImmutableCollection<BuildRule> stripRules = sourcePathResolver.filterBuildRuleInputs(
+        FluentIterable.from(copyNativeLibraries.getStrippedObjectDescriptions())
+            .transform(
+                new Function<StrippedObjectDescription, SourcePath>() {
+                  @Override
+                  public SourcePath apply(StrippedObjectDescription input) {
+                    return input.getSourcePath();
+                  }
+                })
+            .toSet());
+    assertThat(
+        stripRules,
+        Matchers.contains(
+            Matchers.instanceOf(StripLinkable.class),
+            Matchers.instanceOf(StripLinkable.class)));
   }
 }

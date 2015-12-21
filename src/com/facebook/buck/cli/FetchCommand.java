@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.StackedDownloader;
@@ -25,9 +26,9 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
@@ -36,7 +37,9 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -48,7 +51,8 @@ public class FetchCommand extends BuildCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target to fetch.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Must specify at least one build target to fetch."));
       return 1;
     }
 
@@ -65,59 +69,63 @@ public class FetchCommand extends BuildCommand {
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
     TargetGraphToActionGraph transformer = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        ruleGenerator,
-        params.getFileHashCache());
-
-    ActionGraph actionGraph;
-    ImmutableSet<BuildTarget> buildTargets;
-    try {
-      Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  params.getCell().getFilesystem().getIgnorePaths(),
-                  getArguments()),
-              new ParserConfig(params.getBuckConfig()),
-              params.getBuckEventBus(),
-              params.getConsole(),
-              params.getEnvironment(),
-              getEnableProfiling());
-      actionGraph = transformer.apply(result.getSecond());
-      buildTargets = ruleGenerator.getDownloadableTargets();
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
+        ruleGenerator);
 
     int exitCode;
-    try (CommandThreadManager pool =
-             new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
-         Build build = createBuild(
-             params.getBuckConfig(),
-             actionGraph,
-             params.getAndroidPlatformTargetSupplier(),
-             new CachingBuildEngine(
-                 pool.getExecutor(),
-                 params.getFileHashCache(),
-                 getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-                 params.getBuckConfig().getBuildDepFiles(),
-                 transformer.getRuleResolvers()),
-             params.getArtifactCache(),
-             params.getConsole(),
-             params.getBuckEventBus(),
-             Optional.<TargetDevice>absent(),
-             params.getPlatform(),
-             params.getEnvironment(),
-             params.getObjectMapper(),
-             params.getClock(),
-             Optional.<AdbOptions>absent(),
-             Optional.<TargetDeviceOptions>absent())) {
-      exitCode = build.executeAndPrintFailuresToEventBus(
-          buildTargets,
-          isKeepGoing(),
-          params.getBuckEventBus(),
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Fetch",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver;
+      ImmutableSet<BuildTarget> buildTargets;
+      try {
+        Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                params.getBuckEventBus(),
+                params.getCell(),
+                getEnableProfiling(),
+                pool.getExecutor(),
+                parseArgumentsAsTargetNodeSpecs(
+                    params.getBuckConfig(),
+                    getArguments()));
+        actionGraphAndResolver = Preconditions.checkNotNull(transformer.apply(result.getSecond()));
+        buildTargets = ruleGenerator.getDownloadableTargets();
+      } catch (BuildTargetException | BuildFileParseException e) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
+      }
+
+      try (Build build = createBuild(
+          params.getBuckConfig(),
+          actionGraphAndResolver.getFirst(),
+          actionGraphAndResolver.getSecond(),
+          params.getAndroidPlatformTargetSupplier(),
+          new CachingBuildEngine(
+              pool.getExecutor(),
+              params.getFileHashCache(),
+              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+              params.getBuckConfig().getDependencySchedulingOrder(),
+              params.getBuckConfig().getBuildDepFiles(),
+              params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+              actionGraphAndResolver.getSecond()),
+          params.getArtifactCache(),
           params.getConsole(),
-          getPathToBuildReport(params.getBuckConfig()));
+          params.getBuckEventBus(),
+          Optional.<TargetDevice>absent(),
+          params.getPlatform(),
+          params.getEnvironment(),
+          params.getObjectMapper(),
+          params.getClock(),
+          Optional.<AdbOptions>absent(),
+          Optional.<TargetDeviceOptions>absent())) {
+        exitCode = build.executeAndPrintFailuresToEventBus(
+            buildTargets,
+            isKeepGoing(),
+            params.getBuckEventBus(),
+            params.getConsole(),
+            getPathToBuildReport(params.getBuckConfig()));
+      }
     }
 
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));

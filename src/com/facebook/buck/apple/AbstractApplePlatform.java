@@ -17,37 +17,106 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform> {
-  public class Name {
-    public static final String IPHONEOS = "iphoneos";
-    public static final String IPHONESIMULATOR = "iphonesimulator";
-    public static final String WATCHOS = "watchos";
-    public static final String WATCHSIMULATOR = "watchsimulator";
-    public static final String MACOSX = "macosx";
 
-    private Name() { }
-  }
+  public static final ApplePlatform IPHONEOS =
+      ApplePlatform.builder()
+          .setName("iphoneos")
+          .setArchitectures(ImmutableList.of("armv7", "arm64"))
+          .setMinVersionFlagPrefix("-mios-version-min=")
+          .build();
+  public static final ApplePlatform IPHONESIMULATOR =
+      ApplePlatform.builder()
+          .setName("iphonesimulator")
+          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setMinVersionFlagPrefix("-mios-simulator-version-min=")
+          .build();
+  public static final ApplePlatform WATCHOS =
+      ApplePlatform.builder()
+          .setName("watchos")
+          .setArchitectures(ImmutableList.of("armv7k"))
+          .setMinVersionFlagPrefix("-mwatchos-version-min=")
+          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .build();
+  public static final ApplePlatform WATCHSIMULATOR =
+      ApplePlatform.builder()
+          .setName("watchsimulator")
+          .setArchitectures(ImmutableList.of("i386"))
+          .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
+          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .build();
+  public static final ApplePlatform MACOSX =
+      ApplePlatform.builder()
+          .setName("macosx")
+          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setAppIncludesFrameworks(true)
+          .build();
 
   /**
    * The full name of the platform. For example: {@code macosx}.
    */
   public abstract String getName();
 
+  @SuppressWarnings("immutables")
+  @Value.Default
+  public ImmutableList<String> getArchitectures() {
+    return ImmutableList.of("armv7", "arm64", "i386", "x86_64");
+  }
+
+  @Value.Default
+  public String getMinVersionFlagPrefix() {
+    return "-m" + getName() + "-version-min=";
+  }
+
+  @SuppressWarnings("immutables")
+  @Value.Default
+  public Optional<Path> getStubBinaryPath() {
+    return Optional.absent();
+  }
+
+  @Value.Default
+  public boolean getAppIncludesFrameworks() {
+    return false;
+  }
+
   public static boolean needsCodeSign(String name) {
-    return name.startsWith(Name.IPHONEOS) || name.startsWith(Name.WATCHOS);
+    return name.startsWith(IPHONEOS.getName()) || name.startsWith(WATCHOS.getName());
   }
 
   public static boolean needsInstallHelper(String name) {
-    return name.startsWith(Name.IPHONEOS);
+    return name.startsWith(IPHONEOS.getName());
+  }
+
+  public static boolean isSimulator(String name) {
+    return name.startsWith(IPHONESIMULATOR.getName()) || name.startsWith(WATCHSIMULATOR.getName());
+  }
+
+  public static ApplePlatform of(String name) {
+    for (ApplePlatform platform :
+        ImmutableList.of(IPHONEOS, IPHONESIMULATOR, WATCHOS, WATCHSIMULATOR, MACOSX)) {
+      if (name.equals(platform.getName())) {
+        return platform;
+      }
+    }
+    return ApplePlatform.builder().setName(name).build();
   }
 
   @Override
   public int compareTo(AbstractApplePlatform other) {
+    if (this == other) {
+      return 0;
+    }
+
     return getName().compareTo(other.getName());
   }
 }

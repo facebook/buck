@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'concurrent-locks',
+  binary_jar = 'concurrent-locks-1.0.0.jar',
+  source_jar = 'concurrent-locks-1.0.0-sources.jar',
+  visibility = [
+    '//src/com/facebook/buck/util/concurrent:concurrent',
+  ],
+)

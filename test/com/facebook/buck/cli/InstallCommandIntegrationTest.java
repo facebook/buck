@@ -55,7 +55,7 @@ public class InstallCommandIntegrationTest {
     assumeFalse(result.getStderr().contains("no appropriate simulator found"));
     result.assertSuccess();
 
-    // TODO(user): If we make the install command output the UDID of the
+    // TODO(bhamiltoncx): If we make the install command output the UDID of the
     // simulator, we could poke around in
     // ~/Library/Developer/CoreSimulator/[UDID] to see if the bits were installed.
   }

@@ -15,12 +15,15 @@
  */
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
@@ -32,7 +35,9 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
@@ -40,8 +45,11 @@ import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -50,11 +58,24 @@ import javax.annotation.Nullable;
  * running build to {@code stderr}.
  */
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
-  protected static final DecimalFormat TIME_FORMATTER = new DecimalFormat("0.0s");
+  private static final NumberFormatter TIME_FORMATTER = new NumberFormatter(
+      new Function<Locale, NumberFormat>() {
+        @Override
+        public NumberFormat apply(Locale locale) {
+          // Yes, this is the only way to apply and localize a pattern to a NumberFormat.
+          NumberFormat numberFormat = NumberFormat.getIntegerInstance(locale);
+          Preconditions.checkState(numberFormat instanceof DecimalFormat);
+          DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
+          decimalFormat.applyPattern("0.0s");
+          return decimalFormat;
+        }
+      });
+
   protected static final long UNFINISHED_EVENT_PAIR = -1;
   protected final Console console;
   protected final Clock clock;
   protected final Ansi ansi;
+  private final Locale locale;
 
   @Nullable
   protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
@@ -86,15 +107,27 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable
   protected volatile InstallEvent.Finished installFinished;
 
+  protected AtomicReference<HttpArtifactCacheEvent.Scheduled> firstHttpCacheUploadScheduled =
+      new AtomicReference<>();
+
+  protected final AtomicInteger httpArtifactUploadsScheduledCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadsStartedCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadedCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadFailedCount = new AtomicInteger(0);
+
+  @Nullable
+  protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
+
   protected volatile Optional<Integer> ruleCount = Optional.absent();
 
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
   protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
 
-  public AbstractConsoleEventBusListener(Console console, Clock clock) {
+  public AbstractConsoleEventBusListener(Console console, Clock clock, Locale locale) {
     this.console = console;
     this.clock = clock;
+    this.locale = locale;
     this.ansi = console.getAnsi();
 
     this.projectBuildFileParseStarted = null;
@@ -121,7 +154,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
-    return TIME_FORMATTER.format(elapsedTimeMs / 1000.0);
+    return TIME_FORMATTER.format(locale, elapsedTimeMs / 1000.0);
   }
 
   protected Optional<Double> getApproximateBuildProgress() {
@@ -355,6 +388,65 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void installFinished(InstallEvent.Finished finished) {
     installFinished = finished;
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      firstHttpCacheUploadScheduled.compareAndSet(null, event);
+      httpArtifactUploadsScheduledCount.incrementAndGet();
+    }
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      httpArtifactUploadsStartedCount.incrementAndGet();
+    }
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      if (event.wasUploadSuccessful()) {
+        httpArtifactUploadedCount.incrementAndGet();
+      } else {
+        httpArtifactUploadFailedCount.incrementAndGet();
+      }
+    }
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
+    httpShutdownEvent = event;
+  }
+
+  protected int getHttpUploadFinishedCount() {
+    return httpArtifactUploadedCount.get() + httpArtifactUploadFailedCount.get();
+  }
+
+  protected int getHttpUploadScheduledCount() {
+    return httpArtifactUploadsScheduledCount.get();
+  }
+
+  protected Optional<String> renderHttpUploads() {
+    int scheduled = httpArtifactUploadsScheduledCount.get();
+    int complete = httpArtifactUploadedCount.get();
+    int failed = httpArtifactUploadFailedCount.get();
+    int uploading = httpArtifactUploadsStartedCount.get() - (complete + failed);
+    int pending = scheduled - (uploading + complete + failed);
+    if (scheduled > 0) {
+      return Optional.of(
+          String.format(
+              "(%d COMPLETE/%d FAILED/%d UPLOADING/%d PENDING)",
+              complete,
+              failed,
+              uploading,
+              pending
+          ));
+    } else {
+      return Optional.absent();
+    }
   }
 
   @Override

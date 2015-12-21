@@ -4,13 +4,17 @@ import json
 import os
 import platform
 import re
+import shlex
+import signal
 import signal
 import subprocess
 import sys
 import tempfile
 import textwrap
 import time
+import traceback
 
+from pynailgun import NailgunConnection, NailgunException
 from timing import monotonic_time_nanos
 from tracing import Tracing
 from subprocutils import check_output, CalledProcessError
@@ -18,12 +22,6 @@ from subprocutils import check_output, CalledProcessError
 MAX_BUCKD_RUN_COUNT = 64
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
-
-NAILGUN_CONNECTION_REFUSED_CODE = 230
-# TODO(natthu): CI servers, for some reason, encounter this error.
-# For now, simply skip this error. Need to figure out why this happens.
-NAILGUN_UNEXPECTED_CHUNK_TYPE = 229
-NAILGUN_CONNECTION_BROKEN_CODE = 227
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
@@ -38,8 +36,6 @@ class Resource(object):
         self.basename = name if basename is None else basename
 
 
-CLIENT = Resource("buck_client", executable=True, basename='ng')
-
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
     Resource("testrunner_classes"),
@@ -49,7 +45,6 @@ EXPORTED_RESOURCES = [
     Resource("path_to_pathlib_py", basename='pathlib.py'),
     Resource("path_to_intellij_py"),
     Resource("path_to_pex"),
-    Resource("path_to_python_test_main"),
     Resource("path_to_pywatchman"),
     Resource("path_to_sh_binary_template"),
     Resource("jacoco_agent_jar"),
@@ -132,35 +127,35 @@ class BuckTool(object):
             elif use_buckd and not has_watchman:
                 print("Not using buckd because watchman isn't installed.",
                       file=sys.stderr)
+            elif not use_buckd:
+                print("Not using buckd because NO_BUCKD is set.",
+                      file=sys.stderr)
 
             env = self._environ_for_buck()
             env['BUCK_BUILD_ID'] = build_id
 
-            buck_client_file = self._get_resource(CLIENT)
             buck_socket_path = self._buck_project.get_buckd_socket_path()
 
-            if use_buckd and self._is_buckd_running() and os.path.exists(buck_client_file) and \
+            if use_buckd and self._is_buckd_running() and \
                     os.path.exists(buck_socket_path):
-                print("Using buckd.", file=sys.stderr)
-                command = [buck_client_file]
-                command.append("--nailgun-server")
-                # We don't use buck_socket_path because it's absolute,
-                # and we want a relative path to avoid hitting the
-                # (very small) limit on unix domain socket length.
-                command.append("local:.buckd/sock")
-                command.append("com.facebook.buck.cli.Main")
-                command.extend(sys.argv[1:])
-                with Tracing('buck', args={'command': command}):
-                    exit_code = subprocess.call(command, cwd=self._buck_project.root, env=env)
-                    if exit_code == 2:
-                        print('Daemon is busy, please wait',
-                              'or run "buck kill" to terminate it.',
-                              file=sys.stderr)
-                    return exit_code
+                with Tracing('buck', args={'command': sys.argv[1:]}):
+                    with NailgunConnection('local:.buckd/sock', cwd=self._buck_project.root) as c:
+                        exit_code = c.send_command(
+                            'com.facebook.buck.cli.Main',
+                            sys.argv[1:],
+                            env=env,
+                            cwd=self._buck_project.root)
+                        if exit_code == 2:
+                            print('Daemon is busy, please wait',
+                                  'or run "buck kill" to terminate it.',
+                                  file=sys.stderr)
+                        return exit_code
 
             command = ["buck"]
-            command.extend(self._get_java_args(buck_version_uid))
-            command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
+            extra_default_options = [
+                "-Djava.io.tmpdir={0}".format(self._tmp_dir)
+            ]
+            command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
@@ -188,13 +183,30 @@ class BuckTool(object):
             available port, then parse the port number out of the first log entry.
             '''
             command = ["buckd"]
-            command.extend(self._get_java_args(buck_version_uid))
-            command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
-            command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
-            command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
-            command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
-            command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
-                ngserver_output_path))
+            extra_default_options = [
+                "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
+                "-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET),
+                "-XX:SoftRefLRUPolicyMSPerMB=0",
+                # Stop Java waking up every 50ms to collect thread
+                # statistics; doing it once every five seconds is much
+                # saner for a long-lived daemon.
+                "-XX:PerfDataSamplingInterval=5000",
+                # Likewise, waking up once per second just in case
+                # there's some rebalancing to be done is silly.
+                "-XX:+UnlockDiagnosticVMOptions",
+                "-XX:GuaranteedSafepointInterval=5000",
+                "-Djava.io.tmpdir={0}".format(buckd_tmp_dir),
+                "-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
+                    ngserver_output_path),
+            ]
+
+            if is_java8():
+                extra_default_options.extend([
+                    "-XX:+UseG1GC",
+                    "-XX:MaxHeapFreeRatio=40",
+                ])
+
+            command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.martiansoftware.nailgun.NGServer")
             command.append("local:.buckd/sock")
@@ -268,23 +280,16 @@ class BuckTool(object):
             buckd_socket_path = self._buck_project.get_buckd_socket_path()
             if os.path.exists(buckd_socket_path):
                 print("Shutting down nailgun server...", file=sys.stderr)
-                buck_client_file = self._get_resource(CLIENT)
-                command = [buck_client_file]
-                command.append('ng-stop')
-                command.append('--nailgun-server')
-                command.append("local:.buckd/sock")
                 try:
-                    check_output(
-                        command,
-                        cwd=self._buck_project.root,
-                        stderr=subprocess.STDOUT)
-                except CalledProcessError as e:
-                    if (e.returncode not in
-                        [NAILGUN_CONNECTION_REFUSED_CODE,
-                         NAILGUN_CONNECTION_BROKEN_CODE,
-                         NAILGUN_UNEXPECTED_CHUNK_TYPE]):
-                        print(e.output, end='', file=sys.stderr)
-                        raise
+                    with NailgunConnection('local:.buckd/sock', cwd=self._buck_project.root) as c:
+                        c.send_command('ng-stop')
+                except NailgunException as e:
+                    if e.code not in (NailgunException.CONNECT_FAILED,
+                                      NailgunException.CONNECTION_BROKEN,
+                                      NailgunException.UNEXPECTED_CHUNKTYPE):
+                        raise BuckToolException(
+                            'Unexpected error shutting down nailgun server: ' +
+                            str(e))
 
             self._buck_project.clean_up_buckd()
 
@@ -309,23 +314,19 @@ class BuckTool(object):
             if not os.path.exists(buckd_socket_path):
                 return False
 
-            buck_client_file = self._get_resource(CLIENT)
-            command = [buck_client_file]
-            command.append('ng-stats')
-            command.append('--nailgun-server')
-            command.append('local:.buckd/sock')
             try:
-                check_output(
-                    command,
-                    cwd=self._buck_project.root,
-                    stderr=subprocess.STDOUT)
-            except CalledProcessError as e:
-                if e.returncode == NAILGUN_CONNECTION_REFUSED_CODE:
+                with NailgunConnection(
+                        'local:.buckd/sock',
+                        stdin=None,
+                        stdout=None,
+                        stderr=None,
+                        cwd=self._buck_project.root) as c:
+                    c.send_command('ng-stats')
+            except NailgunException as e:
+                if e.code == NailgunException.CONNECT_FAILED:
                     return False
                 else:
-                    print(e.output, end='', file=sys.stderr)
                     raise
-
             return True
 
     def _get_buck_version_uid(self):
@@ -340,7 +341,7 @@ class BuckTool(object):
     def _get_extra_java_args(self):
         return []
 
-    def _get_java_args(self, version_uid):
+    def _get_java_args(self, version_uid, extra_default_options=[]):
         java_args = [] if is_java8() else ["-XX:MaxPermSize=256m"]
         java_args.extend([
             "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
@@ -357,6 +358,12 @@ class BuckTool(object):
                     "-Dbuck.{0}={1}".format(
                     resource.name, self._get_resource(resource)))
 
+        if sys.platform == "darwin":
+            java_args.append("-Dbuck.enable_objc=true")
+            java_args.append("-Djava.library.path=" + os.path.dirname(
+                self._get_resource(
+                    Resource("libjcocoa.dylib"))))
+
         if os.environ.get("BUCK_DEBUG_MODE"):
             java_args.append("-agentlib:jdwp=transport=dt_socket,"
                              "server=y,suspend=y,address=8888")
@@ -364,14 +371,19 @@ class BuckTool(object):
         if os.environ.get("BUCK_DEBUG_SOY"):
             java_args.append("-Dbuck.soy.debug=true")
 
+        java_args.extend(extra_default_options)
+
         if self._buck_project.buck_javaargs:
-            java_args.extend(self._buck_project.buck_javaargs.split(' '))
+            java_args.extend(shlex.split(self._buck_project.buck_javaargs))
+
+        if self._buck_project.buck_javaargs_local:
+            java_args.extend(shlex.split(self._buck_project.buck_javaargs_local))
 
         java_args.extend(self._get_extra_java_args())
 
         extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")
         if extra_java_args:
-            java_args.extend(extra_java_args.split(' '))
+            java_args.extend(shlex.split(extra_java_args))
         return java_args
 
     def _platform_path(self, path):
@@ -445,12 +457,26 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
                     return name
     return None
 
+_java8 = None
 
 def is_java8():
+    global _java8
+    if _java8 is not None:
+        return _java8
     try:
-        output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
+        cmd = ['java', '-Xms64m', '-version']
+        output = check_output(cmd, stderr=subprocess.STDOUT)
         version_line = output.strip().splitlines()[0]
-        return re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
+        m = re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
+        _java8 = bool(m)
+        return _java8
     except CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
+
+
+def install_signal_handlers():
+    if os.name == 'posix':
+        signal.signal(
+            signal.SIGUSR1,
+            lambda sig, frame: traceback.print_stack(frame))

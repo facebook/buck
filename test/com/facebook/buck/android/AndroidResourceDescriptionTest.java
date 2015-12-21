@@ -20,6 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 import org.junit.Rule;
@@ -27,7 +29,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
@@ -80,16 +81,18 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
     AndroidResourceDescription description = new AndroidResourceDescription();
-    Set<Path> inputs = description.collectInputFiles(
-            new ProjectFilesystem(tmpFolder.getRoot().toPath()),
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot().toPath());
+    Set<SourcePath> inputs = description.collectInputFiles(
+        filesystem,
             Optional.of(Paths.get("res")));
 
     assertThat(
         inputs,
         containsInAnyOrder(
-            Paths.get("res/image.png"),
-            Paths.get("res/layout.xml"),
-            Paths.get("res/_file"),
-            Paths.get("res/dirs/values/strings.xml")));
+            // This clever cast saves us mucking around with generics.
+            (SourcePath) new FakeSourcePath(filesystem, "res/image.png"),
+            new FakeSourcePath(filesystem, "res/layout.xml"),
+            new FakeSourcePath(filesystem, "res/_file"),
+            new FakeSourcePath(filesystem, "res/dirs/values/strings.xml")));
   }
 }

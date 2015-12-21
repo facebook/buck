@@ -18,14 +18,19 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -35,18 +40,24 @@ public class OCamlMLCompileStep extends ShellStep {
 
   public static class Args implements RuleKeyAppendable {
 
-    public final Path ocamlCompiler;
+    private final Function<Path, Path> absolutifier;
+    public final ImmutableMap<String, String> environment;
+    public final Tool ocamlCompiler;
     public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
     public final Path input;
 
     public Args(
+        Function<Path, Path> absolutifier,
+        ImmutableMap<String, String> environment,
         ImmutableList<String> cCompiler,
-        Path ocamlCompiler,
+        Tool ocamlCompiler,
         Path output,
         Path input,
         ImmutableList<String> flags) {
+      this.absolutifier = absolutifier;
+      this.environment = environment;
       this.ocamlCompiler = ocamlCompiler;
       this.cCompiler = cCompiler;
       this.flags = flags;
@@ -56,12 +67,15 @@ public class OCamlMLCompileStep extends ShellStep {
 
     @Override
     public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder.setReflectively("cCompiler", cCompiler)
-          .setReflectively("ocamlCompiler", ocamlCompiler)
-          .setReflectively("output", output.toString())
-          // TODO(user): I suspect this is going to mean absolute paths in rule keys
-          .setReflectively("input", input)
-          .setReflectively("flags", flags);
+      try {
+        return builder.setReflectively("cCompiler", cCompiler)
+            .setReflectively("ocamlCompiler", ocamlCompiler)
+            .setReflectively("output", output.toString())
+            .setPath(absolutifier.apply(input), input)
+            .setReflectively("flags", flags);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     public ImmutableSet<Path> getAllOutputs() {
@@ -92,9 +106,11 @@ public class OCamlMLCompileStep extends ShellStep {
   }
 
   private final Args args;
+  private final SourcePathResolver resolver;
 
-  public OCamlMLCompileStep(Path workingDirectory, Args args) {
+  public OCamlMLCompileStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
     super(workingDirectory);
+    this.resolver = resolver;
     this.args = args;
   }
 
@@ -106,7 +122,7 @@ public class OCamlMLCompileStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(args.ocamlCompiler.toString())
+        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
         .add("-cc", args.cCompiler.get(0))
         .addAll(
@@ -122,4 +138,8 @@ public class OCamlMLCompileStep extends ShellStep {
         .build();
   }
 
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return args.environment;
+  }
 }

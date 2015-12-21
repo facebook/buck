@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -26,10 +27,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -56,9 +60,11 @@ public class ShTestTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
             .setProjectFilesystem(filesystem)
             .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        new TestSourcePath("run_test.sh"),
-        /* args */ ImmutableList.<String>of(),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+        new FakeSourcePath("run_test.sh"),
+        /* args */ ImmutableList.<Arg>of(),
+        Optional.<Long>absent(),
         /* labels */ ImmutableSet.<Label>of());
 
     EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);
@@ -73,7 +79,8 @@ public class ShTestTest extends EasyMockSupport {
 
   @Test
   public void depsAreRuntimeDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
@@ -82,12 +89,14 @@ public class ShTestTest extends EasyMockSupport {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ShTest shTest = new ShTest(
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.of(dep))
+            .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .setExtraDeps(ImmutableSortedSet.of(extraDep))
             .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        new TestSourcePath("run_test.sh"),
-        /* args */ ImmutableList.<String>of(),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+        new FakeSourcePath("run_test.sh"),
+        /* args */ ImmutableList.<Arg>of(),
+        Optional.<Long>absent(),
         /* labels */ ImmutableSet.<Label>of());
 
     assertThat(

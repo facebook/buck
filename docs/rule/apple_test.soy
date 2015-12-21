@@ -59,6 +59,8 @@ code contained in other rules. The tests can be executed by running <code>buck t
   {param sample_file_name : 'foo/bar.m' /}
 {/call}
 
+{call cxx_common.platform_srcs_arg /}
+
 {call apple_common.headers_arg /}
 
 {call apple_common.header_path_prefix_arg /}
@@ -69,6 +71,8 @@ code contained in other rules. The tests can be executed by running <code>buck t
 
 {call cxx_common.compiler_flags_arg /}
 
+{call cxx_common.platform_compiler_flags_arg /}
+
 {call cxx_common.linker_flags_arg /}
 
 {call cxx_common.link_style /}
@@ -76,8 +80,6 @@ code contained in other rules. The tests can be executed by running <code>buck t
 {call buck.run_test_separately_arg /}
 
 {call buck.test_label_arg /}
-
-{call apple_common.provisioning_profile_search_path_arg /}
 
 {call buck.visibility_arg /}
 

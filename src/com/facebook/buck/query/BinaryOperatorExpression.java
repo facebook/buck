@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A binary algebraic set operation.
@@ -63,11 +64,12 @@ class BinaryOperatorExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env) throws QueryException, InterruptedException {
-    Set<T> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env));
+  public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+      throws QueryException, InterruptedException {
+    Set<T> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env, executor));
 
     for (int i = 1; i < operands.size(); i++) {
-      Set<T> rhsValue = operands.get(i).eval(env);
+      Set<T> rhsValue = operands.get(i).eval(env, executor);
       switch (operator) {
         case INTERSECT:
         case CARET:

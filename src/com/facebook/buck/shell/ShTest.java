@@ -29,6 +29,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -61,18 +62,21 @@ public class ShTest
   @AddToRuleKey
   private final SourcePath test;
   @AddToRuleKey
-  private final ImmutableList<String> args;
+  private final ImmutableList<Arg> args;
+  private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<Label> labels;
 
   protected ShTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath test,
-      ImmutableList<String> args,
+      ImmutableList<Arg> args,
+      Optional<Long> testRuleTimeoutMs,
       Set<Label> labels) {
     super(params, resolver);
     this.test = test;
     this.args = args;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.labels = ImmutableSet.copyOf(labels);
   }
 
@@ -113,11 +117,14 @@ public class ShTest
         getPathToTestOutputDirectory());
 
     // Return a single command that runs an .sh file with no arguments.
-    Step runTest = new RunShTestAndRecordResultStep(
-        getProjectFilesystem(),
-        getResolver().getPath(test),
-        args,
-        getPathToTestOutputResult());
+    Step runTest =
+        new RunShTestAndRecordResultStep(
+            getProjectFilesystem(),
+            getResolver().getAbsolutePath(test),
+            Arg.stringify(args),
+            testRuleTimeoutMs,
+            getBuildTarget().getFullyQualifiedName(),
+            getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);
   }
@@ -146,7 +153,7 @@ public class ShTest
       return new Callable<TestResults>() {
         @Override
         public TestResults call() throws Exception {
-          return new TestResults(
+          return TestResults.of(
               getBuildTarget(),
               ImmutableList.<TestCaseSummary>of(),
               contacts,
@@ -166,7 +173,7 @@ public class ShTest
           TestCaseSummary testCaseSummary = new TestCaseSummary(
               getBuildTarget().getFullyQualifiedName(),
               ImmutableList.of(testResultSummary));
-          return new TestResults(
+          return TestResults.of(
               getBuildTarget(),
               ImmutableList.of(testCaseSummary),
               contacts,
@@ -199,13 +206,18 @@ public class ShTest
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("custom")
-        .addCommand(getResolver().getResolvedPath(test).toString())
-        .addAllCommand(args)
+        .addCommand(getResolver().getAbsolutePath(test).toString())
+        .addAllCommand(Arg.stringify(args))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
+  }
+
+  @VisibleForTesting
+  protected ImmutableList<Arg> getArgs() {
+    return args;
   }
 
 }

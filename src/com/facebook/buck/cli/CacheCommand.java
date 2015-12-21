@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -50,13 +51,13 @@ public class CacheCommand extends AbstractCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     if (isNoCache()) {
-      params.getConsole().printErrorText("Caching is disabled.");
+      params.getBuckEventBus().post(ConsoleEvent.severe("Caching is disabled."));
       return 1;
     }
 
     List<String> arguments = getArguments();
     if (arguments.isEmpty()) {
-      params.getConsole().printErrorText("No cache keys specified.");
+      params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
       return 1;
     }
 

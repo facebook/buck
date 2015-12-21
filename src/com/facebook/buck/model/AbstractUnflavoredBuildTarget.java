@@ -20,18 +20,15 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import javax.annotation.Nullable;
 
 @BuckStyleImmutable
 @Value.Immutable
-abstract class AbstractUnflavoredBuildTarget
-    implements Comparable<AbstractUnflavoredBuildTarget>, HasUnflavoredBuildTarget {
+abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnflavoredBuildTarget> {
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
@@ -60,6 +57,9 @@ abstract class AbstractUnflavoredBuildTarget
   }
 
   @Value.Parameter
+  public abstract Path getCellPath();
+
+  @Value.Parameter
   public abstract Optional<String> getCell();
 
   /**
@@ -73,6 +73,7 @@ abstract class AbstractUnflavoredBuildTarget
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava/".
    */
+  @Value.Derived
   public String getBaseNameWithSlash() {
     return getBaseNameWithSlash(getBaseName());
   }
@@ -88,12 +89,14 @@ abstract class AbstractUnflavoredBuildTarget
   }
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "third_party/java/guava". This does not contain the "//" prefix so that it can be appended to
-   * a file path.
+   * If this build target were //third_party/java/guava:guava-latest, then this would return the
+   * {@link Path} "third_party/java/guava". This does not contain the "//" prefix so that it can be
+   * appended to a file path.
    */
+  @Value.Derived
   public Path getBasePath() {
-    return Paths.get(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
+    return getCellPath().getFileSystem().getPath(
+        getBaseName().substring(BUILD_TARGET_PREFIX.length()));
   }
 
   /**
@@ -101,6 +104,7 @@ abstract class AbstractUnflavoredBuildTarget
    *     {@link #getBasePath()} returns the empty string, in which case this also returns the empty
    *     string
    */
+  @Value.Derived
   public String getBasePathWithSlash() {
     String basePath = MorePaths.pathWithUnixSeparators(getBasePath());
     return basePath.isEmpty() ? "" : basePath + "/";
@@ -113,6 +117,7 @@ abstract class AbstractUnflavoredBuildTarget
    * If this build target is //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
+  @Value.Derived
   public String getFullyQualifiedName() {
     return (getCell().isPresent() ? "@" + getCell().get() : "") +
         getBaseName() + ":" + getShortName();
@@ -141,14 +146,20 @@ abstract class AbstractUnflavoredBuildTarget
   }
 
   @Override
-  public int compareTo(@Nullable AbstractUnflavoredBuildTarget target) {
-    Preconditions.checkNotNull(target);
-    return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
-  }
+  public int compareTo(AbstractUnflavoredBuildTarget o) {
+    if (this == o) {
+      return 0;
+    }
 
-  @Override
-  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
-    return UnflavoredBuildTarget.copyOf(this);
+    ComparisonChain comparison = ComparisonChain.start()
+        .compareTrueFirst(getCell().isPresent(), o.getCell().isPresent());
+    if (getCell().isPresent() && o.getCell().isPresent()) {
+      comparison = comparison.compare(getCell().get(), o.getCell().get());
+    }
+    return comparison
+        .compare(getBaseName(), o.getBaseName())
+        .compare(getShortName(), o.getShortName())
+        .result();
   }
 
 }

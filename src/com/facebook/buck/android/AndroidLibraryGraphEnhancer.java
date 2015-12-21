@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.CalculateAbi;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -37,23 +38,20 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidLibraryGraphEnhancer {
 
-  public enum ResourceDependencyMode {
-    FIRST_ORDER,
-    TRANSITIVE,
-  }
-
   public static final Flavor DUMMY_R_DOT_JAVA_FLAVOR = ImmutableFlavor.of("dummy_r_dot_java");
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
   private final JavacOptions javacOptions;
-  private final ResourceDependencyMode resourceDependencyMode;
+  private final DependencyMode resourceDependencyMode;
+  private final Optional<String> resourceUnionPackage;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
       JavacOptions javacOptions,
-      ResourceDependencyMode resourceDependencyMode) {
+      DependencyMode resourceDependencyMode,
+      Optional<String> resourceUnionPackage) {
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
@@ -61,6 +59,7 @@ public class AndroidLibraryGraphEnhancer {
         .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
         .build();
     this.resourceDependencyMode = resourceDependencyMode;
+    this.resourceUnionPackage = resourceUnionPackage;
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
@@ -133,7 +132,8 @@ public class AndroidLibraryGraphEnhancer {
         pathResolver,
         androidResourceDeps,
         new BuildTargetSourcePath(abiJarTarget),
-        javacOptions);
+        javacOptions,
+        resourceUnionPackage);
     ruleResolver.addToIndex(dummyRDotJava);
 
     ruleResolver.addToIndex(

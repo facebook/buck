@@ -3,6 +3,7 @@ java_test(
   srcs = glob(['*Test.java']),
   deps = [
     '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
     '//src/com/facebook/buck/util/concurrent:concurrent',
   ],

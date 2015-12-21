@@ -16,21 +16,23 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
@@ -38,9 +40,13 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
   private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
 
   private final DBuckConfig dBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public DBinaryDescription(DBuckConfig dBuckConfig) {
+  public DBinaryDescription(
+      DBuckConfig dBuckConfig,
+      CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -57,25 +63,37 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      BuildRuleResolver buildRuleResolver,
+      A args) throws NoSuchBuildTargetException {
+
+    // Create a rule that actually builds the binary, and add that
+    // rule to the index.
+    CxxLink nativeLinkable = DDescriptionUtils.createNativeLinkable(
+        params,
+        args.srcs,
+        /* compilerFlags */ ImmutableList.<String>of(),
+        buildRuleResolver,
+        cxxPlatform,
+        dBuckConfig);
+    buildRuleResolver.addToIndex(nativeLinkable);
+
+    // Create a Tool for the executable.
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
+    executableBuilder.addArg(
+        new BuildTargetSourcePath(
+            nativeLinkable.getBuildTarget()));
+
+    // Return a BinaryBuildRule implementation, so that this works
+    // with buck run etc.
     return new DBinary(
         params,
-        new SourcePathResolver(resolver),
-        ImmutableList.<SourcePath>builder()
-            .addAll(args.srcs)
-            .addAll(
-                FluentIterable.from(params.getDeps())
-                    .filter(DLibrary.class)
-                    .transform(
-                        SourcePaths.getToBuildTargetSourcePath()))
-            .build(),
-        dBuckConfig.getDCompiler());
+        new SourcePathResolver(buildRuleResolver),
+        executableBuilder.build());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public ImmutableSet<SourcePath> srcs;
+    public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

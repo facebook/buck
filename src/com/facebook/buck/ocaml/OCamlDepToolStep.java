@@ -16,13 +16,16 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Functions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -34,16 +37,19 @@ import javax.annotation.Nullable;
  */
 public class OCamlDepToolStep extends ShellStep {
 
-  private final ImmutableList<Path> input;
+  private final ImmutableList<SourcePath> input;
   private final ImmutableList<String> flags;
-  private Path ocamlDepTool;
+  private final SourcePathResolver resolver;
+  private Tool ocamlDepTool;
 
   public OCamlDepToolStep(
       Path workingDirectory,
-      Path ocamlDepTool,
-      List<Path> input,
+      SourcePathResolver resolver,
+      Tool ocamlDepTool,
+      List<SourcePath> input,
       List<String> flags) {
     super(workingDirectory);
+    this.resolver = resolver;
     this.ocamlDepTool = ocamlDepTool;
     this.flags = ImmutableList.copyOf(flags);
     this.input = ImmutableList.copyOf(input);
@@ -66,11 +72,13 @@ public class OCamlDepToolStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(@Nullable ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(ocamlDepTool.toString())
+        .addAll(ocamlDepTool.getCommandPrefix(resolver))
         .add("-one-line")
         .add("-native")
         .addAll(flags)
-        .addAll(Iterables.transform(input, Functions.toStringFunction()))
+        .addAll(FluentIterable.from(input)
+            .transform(resolver.getAbsolutePathFunction())
+            .transform(Functions.toStringFunction()))
         .build();
   }
 }

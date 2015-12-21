@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,11 +25,8 @@ import java.nio.file.Paths;
 public class BuildTargetPatternTargetNodeParser
     extends BuildTargetPatternParser<TargetNodeSpec> {
 
-  private final ImmutableSet<Path> ignorePaths;
-
-  public BuildTargetPatternTargetNodeParser(ImmutableSet<Path> ignorePaths) {
+  public BuildTargetPatternTargetNodeParser() {
     super(/* baseName */ "");
-    this.ignorePaths = ignorePaths;
   }
 
   @Override
@@ -42,21 +38,21 @@ public class BuildTargetPatternTargetNodeParser
   public TargetNodeSpec createForAll() {
     return TargetNodePredicateSpec.of(
         Predicates.alwaysTrue(),
-        BuildFileSpec.fromRecursivePath(Paths.get(""), ignorePaths));
+        BuildFileSpec.fromRecursivePath(Paths.get("")));
   }
 
   @Override
-  public TargetNodeSpec createForDescendants(String basePathWithSlash) {
+  public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
         Predicates.alwaysTrue(),
-        BuildFileSpec.fromRecursivePath(Paths.get(basePathWithSlash), ignorePaths));
+        BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath)));
   }
 
   @Override
-  public TargetNodeSpec createForChildren(String basePathWithSlash) {
+  public TargetNodeSpec createForChildren(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
         Predicates.alwaysTrue(),
-        BuildFileSpec.fromPath(Paths.get(basePathWithSlash)));
+        BuildFileSpec.fromPath(cellPath.resolve(basePath)));
   }
 
   @Override

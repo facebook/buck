@@ -30,14 +30,21 @@ public class BuckConstant {
    */
   public static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
   public static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
+  /**
+   * The version the buck output directory was created for
+   */
+  public static final Path CURRENT_VERSION_FILE =
+      BUCK_OUTPUT_PATH.resolve(".currentversion");
 
-  // TODO(mbolin): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
+  // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
 
   public static final String GEN_DIR = BUCK_OUTPUT_DIRECTORY + "/gen";
   public static final Path GEN_PATH = BUCK_OUTPUT_PATH.resolve("gen");
+
+  public static final Path RES_PATH = BUCK_OUTPUT_PATH.resolve("res");
 
   public static final String SCRATCH_DIR = BUCK_OUTPUT_DIRECTORY + "/bin";
   public static final Path SCRATCH_PATH = BUCK_OUTPUT_PATH.resolve("bin");
@@ -48,6 +55,10 @@ public class BuckConstant {
   public static final Path LOG_PATH = BUCK_OUTPUT_PATH.resolve("log");
 
   public static final Path BUCK_TRACE_DIR = BUCK_OUTPUT_PATH.resolve("log/traces");
+  public static final String DEFAULT_CACHE_DIR = "buck-cache";
+
+  // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
+  public static final Path TRASH_PATH = BUCK_OUTPUT_PATH.resolve(".trash");
 
   private BuckConstant() {}
 

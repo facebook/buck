@@ -23,9 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
 
 import org.junit.Assume;
@@ -57,6 +56,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   private static final String REPOS_DIR = "repos";
   private static final String REPO_TWO_DIR = "hg_repo_two";
   private static final String REPO_THREE_DIR = "hg_repo_three";
+  private static final String REPO_WITH_SUB_DIR = "hg_repo_with_subdir";
 
   /***
    *
@@ -87,6 +87,8 @@ public class HgCmdLineInterfaceIntegrationTest {
    * hg_repo_two: above, current tip @branch_from_master2, and no local changes.
    * hg_repo_three: above, current tip @branch_from_master3, and with local changes.
    *
+   * Additionally hg_repo_with_subdir is a new hg_repo with a directory called subdir
+   *
    */
 
   @ClassRule
@@ -94,11 +96,11 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   private static VersionControlCmdLineInterface repoTwoCmdLine;
   private static VersionControlCmdLineInterface repoThreeCmdLine;
-
+  private static Path reposPath;
 
   @BeforeClass
   public static void setUpClass() throws IOException, InterruptedException {
-    Path reposPath = explodeReposZip();
+    reposPath = explodeReposZip();
 
     repoTwoCmdLine = makeCmdLine(reposPath.resolve(REPO_TWO_DIR));
     repoThreeCmdLine = makeCmdLine(reposPath.resolve(REPO_THREE_DIR));
@@ -165,6 +167,15 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
+  public void testCreateCmdLineInterfaceUsingHgSubDir()
+      throws VersionControlCommandFailedException, InterruptedException {
+    VersionControlCmdLineInterface subDirCmdLineInterface =
+        makeCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR));
+
+    assertThat(subDirCmdLineInterface instanceof HgCmdLineInterface, is(true));
+  }
+
+  @Test
   public void testTimestamp() throws VersionControlCommandFailedException, InterruptedException {
     assertThat(
         MASTER_THREE_TS,
@@ -176,8 +187,8 @@ public class HgCmdLineInterfaceIntegrationTest {
     DefaultVersionControlCmdLineInterfaceFactory vcFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(
             tempFolder.getRoot().toPath(),
-            new ProcessExecutor(new TestConsole()),
-            new VersionControlBuckConfig(new FakeBuckConfig()));
+            new TestProcessExecutorFactory(),
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()));
     VersionControlCmdLineInterface cmdLineInterface = vcFactory.createCmdLineInterface();
     assertEquals(NoOpCmdLineInterface.class, cmdLineInterface.getClass());
   }
@@ -209,9 +220,9 @@ public class HgCmdLineInterfaceIntegrationTest {
       throws InterruptedException {
     DefaultVersionControlCmdLineInterfaceFactory vcFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(
-          repoRootDir,
-          new ProcessExecutor(new TestConsole()),
-          new VersionControlBuckConfig(new FakeBuckConfig()));
+            repoRootDir,
+            new TestProcessExecutorFactory(),
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()));
     return vcFactory.createCmdLineInterface();
   }
 }

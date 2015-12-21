@@ -1,0 +1,29 @@
+TYPES_SRCS = [
+  'CoerceFailedException.java',
+  'TypeCoercer.java',
+  'TypeCoercerFactory.java',
+]
+
+java_immutables_library(
+  name = 'types',
+  srcs = TYPES_SRCS,
+  deps = [
+    '//src/com/facebook/buck/io:io',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_immutables_library(
+  name = 'coercer',
+  srcs = glob(['*.java'], excludes=TYPES_SRCS),
+  deps = [
+    ':types',
+    '//src/com/facebook/buck/apple/xcode:xcode',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+  ],
+  visibility = ['PUBLIC'],
+)

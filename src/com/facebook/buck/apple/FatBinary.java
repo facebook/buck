@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -60,15 +61,22 @@ public class FatBinary extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext context,
+      BuildableContext buildableContext) {
+    buildableContext.recordArtifact(output);
+
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
     commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
     for (SourcePath thinBinary : thinBinaries) {
-      commandBuilder.add(getResolver().getResolvedPath(thinBinary).toString());
+      commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
     }
     return ImmutableList.<Step>of(
-        new DefaultShellStep(getProjectFilesystem().getRootPath(), commandBuilder.build()));
+        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        new DefaultShellStep(
+            getProjectFilesystem().getRootPath(),
+            commandBuilder.build(),
+            lipo.getEnvironment(getResolver())));
   }
 
   @Override

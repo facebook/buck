@@ -17,18 +17,17 @@
 package com.facebook.buck.cli;
 
 
-import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryEnvironment;
-import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryExpression;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryEnvironment;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
@@ -47,6 +46,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
@@ -55,7 +55,6 @@ import java.util.Set;
  */
 public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   private final CommandRunnerParams params;
-  private final ParserConfig parserConfig;
   private final BuildFileTree buildFileTree;
   private TargetGraph graph = TargetGraph.EMPTY;
 
@@ -71,19 +70,14 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       boolean enableProfiling) {
     this.params = params;
     this.enableProfiling = enableProfiling;
-    this.parserConfig = new ParserConfig(params.getBuckConfig());
     this.buildFileTree = new FilesystemBackedBuildFileTree(
         params.getCell().getFilesystem(),
-        parserConfig.getBuildFileName());
+        params.getCell().getBuildFileName());
     this.targetPatternEvaluator = new TargetPatternEvaluator(params, enableProfiling);
   }
 
   public CommandRunnerParams getParams() {
     return params;
-  }
-
-  public ParserConfig getParserConfig() {
-    return parserConfig;
   }
 
   public TargetGraph getTargetGraph() {
@@ -96,28 +90,30 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public Set<QueryTarget> evaluateQuery(QueryExpression expr)
+  public Set<QueryTarget> evaluateQuery(QueryExpression expr, Executor executor)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     try {
-      targetPatternEvaluator.preloadTargetPatterns(targetLiterals);
-    } catch (BuildTargetException | BuildFileParseException | IOException e) {
+      targetPatternEvaluator.preloadTargetPatterns(targetLiterals, executor);
+    } catch (IOException e) {
+      throw new QueryException("Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
+    } catch (BuildTargetException | BuildFileParseException e) {
       throw new QueryException("Error in preloading targets. %s", e.getMessage());
     }
-    return expr.eval(this);
+    return expr.eval(this, executor);
   }
 
-  public Set<QueryTarget> evaluateQuery(String query)
+  public Set<QueryTarget> evaluateQuery(String query, Executor executor)
       throws QueryException, InterruptedException {
-    return evaluateQuery(QueryExpression.parse(query, this));
+    return evaluateQuery(QueryExpression.parse(query, this), executor);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
+  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern, Executor executor)
       throws QueryException, InterruptedException {
     try {
-      return targetPatternEvaluator.resolveTargetPattern(pattern);
+      return targetPatternEvaluator.resolveTargetPattern(pattern, executor);
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error in resolving targets matching %s", pattern);
     }
@@ -126,11 +122,11 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   TargetNode<?> getNode(QueryTarget target) throws QueryException, InterruptedException {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     try {
-      return params.getParser().getOrLoadTargetNode(
-          ((QueryBuildTarget) target).getBuildTarget(),
+      return params.getParser().getTargetNode(
           params.getBuckEventBus(),
-          params.getConsole(),
-          enableProfiling);
+          params.getCell(),
+          enableProfiling,
+          ((QueryBuildTarget) target).getBuildTarget());
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error getting target node for %s\n%s", target, e.getMessage());
     }
@@ -206,23 +202,23 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return getTargetsFromBuildTargetsContainer(graph.getSubgraph(nodes).getNodes());
   }
 
-  private void buildGraphForBuildTargets(Set<BuildTarget> targets)
-      throws QueryException, InterruptedException {
+  private void buildGraphForBuildTargets(
+      Set<BuildTarget> targets,
+      Executor executor) throws QueryException, InterruptedException {
     try {
-      graph = params.getParser().buildTargetGraphForBuildTargets(
-          targets,
-          parserConfig,
+      graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          enableProfiling);
-    } catch (BuildTargetException | BuildFileParseException | IOException e) {
+          params.getCell(),
+          enableProfiling,
+          executor,
+          targets);
+    } catch (BuildFileParseException | IOException e) {
       throw new QueryException("Error in building depencency graph");
     }
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth)
+  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth, Executor executor)
       throws QueryException, InterruptedException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     Set<BuildTarget> graphTargets = getTargetsFromNodes(graph.getNodes());
@@ -236,7 +232,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       }
     }
     if (!newBuildTargets.isEmpty()) {
-      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets));
+      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets), executor);
       for (BuildTarget buildTarget : getTargetsFromNodes(graph.getNodes())) {
         if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
           buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
@@ -257,7 +253,6 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     try {
       AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.buildOwnersReport(
           params,
-          parserConfig,
           buildFileTree,
           files,
           /* guessForDeletedEnabled */ false);

@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
+import com.google.common.collect.ComparisonChain;
 
 import java.nio.file.Path;
 
@@ -26,7 +27,7 @@ import java.nio.file.Path;
  * A {@link SourcePath} that utilizes the output from the {@link BuildRule} referenced by a
  * {@link com.facebook.buck.model.BuildTarget} as the file it represents.
  */
-public class BuildTargetSourcePath extends AbstractSourcePath {
+public class BuildTargetSourcePath extends AbstractSourcePath<BuildTargetSourcePath> {
 
   private final BuildTarget target;
   private final Optional<Path> resolvedPath;
@@ -53,6 +54,21 @@ public class BuildTargetSourcePath extends AbstractSourcePath {
   @Override
   protected Object asReference() {
     return new Pair<>(target, resolvedPath);
+  }
+
+  @Override
+  protected int compareReferences(BuildTargetSourcePath o) {
+    if (o == this) {
+      return 0;
+    }
+
+    ComparisonChain comparison = ComparisonChain.start()
+        .compare(target, o.target)
+        .compareTrueFirst(resolvedPath.isPresent(), o.resolvedPath.isPresent());
+    if (resolvedPath.isPresent() && o.resolvedPath.isPresent()) {
+      comparison = comparison.compare(resolvedPath.get(), o.resolvedPath.get());
+    }
+    return comparison.result();
   }
 
   public BuildTarget getTarget() {

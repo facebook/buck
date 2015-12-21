@@ -26,6 +26,8 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -40,6 +42,7 @@ import java.nio.file.Paths;
 
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
+  private Function<Optional<String>, Path> cellRoots;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(new BuildTargetTypeCoercer(), new PathTypeCoercer());
@@ -47,7 +50,24 @@ public class SourcePathTypeCoercerTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
+
+    cellRoots = new Function<Optional<String>, Path>() {
+      @Override
+      public Path apply(Optional<String> cellName) {
+        if (cellName.isPresent()) {
+          throw new HumanReadableException("Boom");
+        }
+        return projectFilesystem.getRootPath();
+      }
+    };
+
   }
+
+  @Before
+  public void setUpCellRoots() {
+  }
+
+
 
   @Rule
   public ExpectedException exception = ExpectedException.none();
@@ -58,6 +78,7 @@ public class SourcePathTypeCoercerTest {
     projectFilesystem.touch(Paths.get(path));
 
     SourcePath sourcePath = sourcePathTypeCoercer.coerce(
+        cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
         path);
@@ -68,6 +89,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceAbsoluteBuildTarget() throws CoerceFailedException, IOException {
     SourcePath sourcePath = sourcePathTypeCoercer.coerce(
+        cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
         "//:hello");
@@ -76,6 +98,7 @@ public class SourcePathTypeCoercerTest {
         new BuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
+                    projectFilesystem.getRootPath(),
                     Optional.<String>absent(),
                     "//",
                     "hello"),
@@ -86,6 +109,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceRelativeBuildTarget() throws CoerceFailedException, IOException {
     SourcePath sourcePath = sourcePathTypeCoercer.coerce(
+        cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
         ":hello");
@@ -94,6 +118,7 @@ public class SourcePathTypeCoercerTest {
         new BuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
+                    projectFilesystem.getRootPath(),
                       Optional.<String>absent(),
                       "//",
                       "hello"),
@@ -103,16 +128,38 @@ public class SourcePathTypeCoercerTest {
 
   @Test
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException, IOException {
+    final Path helloRoot = Paths.get("/opt/src/hello");
+
+    cellRoots = new Function<Optional<String>, Path>() {
+      @Override
+      public Path apply(Optional<String> input) {
+        if (!input.isPresent()) {
+          return projectFilesystem.getRootPath();
+        }
+
+        if ("hello".equals(input.get())) {
+          return helloRoot;
+        }
+
+        throw new RuntimeException("Boom!");
+      }
+    };
+
     SourcePath sourcePath = sourcePathTypeCoercer.coerce(
+        cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
         "@hello//:hello");
 
+    // Note that the important thing is that the root of the target has been set to `helloRoot` so
+    // the cell name should be absent (otherwise, we'd look for a cell named `@hello` from the
+    // `@hello` cell. Yeah. My head hurts a little too.
     assertEquals(
         new BuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
-                    Optional.of("hello"),
+                    helloRoot,
+                    Optional.<String>absent(),
                     "//",
                     "hello"),
                 ImmutableSortedSet.<Flavor>of())),
@@ -129,6 +176,7 @@ public class SourcePathTypeCoercerTest {
         "SourcePath cannot contain an absolute path");
 
     sourcePathTypeCoercer.coerce(
+        cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
         path.toString());

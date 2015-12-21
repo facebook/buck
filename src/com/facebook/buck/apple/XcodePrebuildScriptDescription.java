@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -23,6 +25,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Description for an xcode_prebuild_script rule which runs a shell script
@@ -40,7 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
  * Buck and Xcode build. Those rules do nothing when building with Buck.
  */
 public class XcodePrebuildScriptDescription
-  implements Description<XcodeScriptDescriptionArg> {
+  implements Description<XcodeScriptDescriptionArg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("xcode_prebuild_script");
 
@@ -63,4 +66,8 @@ public class XcodePrebuildScriptDescription
     return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return true;
+  }
 }

@@ -56,6 +56,13 @@ abstract class AbstractFakeListeningProcessState {
         .build();
   }
 
+  public static FakeListeningProcessState ofStdoutBytes(ByteBuffer stdout) {
+    return FakeListeningProcessState.builder()
+        .setType(Type.STDOUT)
+        .setStdout(stdout)
+        .build();
+  }
+
   public static FakeListeningProcessState ofStderr(String stderr) {
     return FakeListeningProcessState.builder()
         .setType(Type.STDERR)

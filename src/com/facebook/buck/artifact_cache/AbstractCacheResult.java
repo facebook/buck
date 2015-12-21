@@ -28,12 +28,6 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractCacheResult {
 
-  private static final CacheResult SKIP_RESULT =
-      CacheResult.of(
-          CacheResultType.SKIP,
-          Optional.<String>absent(),
-          Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent());
   private static final CacheResult MISS_RESULT =
       CacheResult.of(
           CacheResultType.MISS,
@@ -105,10 +99,6 @@ abstract class AbstractCacheResult {
 
   public static CacheResult miss() {
     return MISS_RESULT;
-  }
-
-  public static CacheResult skip() {
-    return SKIP_RESULT;
   }
 
   public static CacheResult localKeyUnchangedHit() {

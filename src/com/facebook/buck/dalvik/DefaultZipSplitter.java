@@ -17,10 +17,10 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.classes.ClasspathTraversal;
-import com.facebook.buck.java.classes.ClasspathTraverser;
-import com.facebook.buck.java.classes.DefaultClasspathTraverser;
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
+import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -113,7 +113,7 @@ public class DefaultZipSplitter implements ZipSplitter {
 
     // Compute the total size of the inputs so that we can figure out whether its safe
     // to begin putting non-essential entries into the primary zip.
-    // TODO(devjasta): There's a more compact way of doing this by writing the primary zip during
+    // TODO(jasta): There's a more compact way of doing this by writing the primary zip during
     // this first-pass step then assigning it as the "currentSecondaryOut" to complete the second
     // pass.  We're already tracking unique entries so we would not end up adding those primary
     // entries twice.

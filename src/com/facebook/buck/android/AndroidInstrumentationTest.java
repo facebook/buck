@@ -117,7 +117,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     }
     steps.add(new InstrumentationStep(
             apk,
-            pathToTestOutput,
+            getProjectFilesystem().resolve(pathToTestOutput),
             testRuleTimeoutMs));
 
     return steps.build();
@@ -135,7 +135,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     // It might happen that a new device is attached when re-running the tests,
     // in which case we want to re-run the tests with the new device included.
     for (IDevice device : devices) {
-      Path testResultPath = getProjectFilesystem().getPathForRelativePath(
+      Path testResultPath = getProjectFilesystem().resolve(
           getPathToTestOutputDirectory().resolve(
               BuckXmlTestRunListener.TEST_RESULT_FILE_PREFIX +
                   device.getSerialNumber() +
@@ -190,7 +190,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         }
 
         for (IDevice device : devices) {
-          Path testResultPath = getProjectFilesystem().getPathForRelativePath(
+          Path testResultPath = getProjectFilesystem().resolve(
               getPathToTestOutputDirectory().resolve(
                   BuckXmlTestRunListener.TEST_RESULT_FILE_PREFIX +
                       device.getSerialNumber() +
@@ -198,7 +198,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
           summaries.add(
               XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
         }
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             summaries.build(),
             contacts,

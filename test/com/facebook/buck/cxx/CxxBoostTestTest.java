@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -25,9 +26,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -36,6 +39,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,21 +75,32 @@ public class CxxBoostTestTest {
             "simple_failure_with_output");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    CxxBoostTest test = new CxxBoostTest(
-        new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-            .build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        new CommandTool.Builder()
-            .addArg(new TestSourcePath(""))
-            .build(),
-        Suppliers.ofInstance(ImmutableMap.<String, String>of()),
-        Suppliers.ofInstance(ImmutableList.<String>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        ImmutableSet.<Label>of(),
-        ImmutableSet.<String>of(),
-        ImmutableSet.<BuildRule>of(),
-        /* runTestSeparately */ false);
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    CxxBoostTest test =
+        new CxxBoostTest(
+            new FakeBuildRuleParamsBuilder(target)
+                .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
+                .build(),
+            pathResolver,
+            new CxxLink(
+                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
+                pathResolver,
+                CxxPlatformUtils.DEFAULT_PLATFORM.getLd(),
+                Paths.get("output"),
+                ImmutableList.<Arg>of()),
+            new CommandTool.Builder()
+                .addArg(new FakeSourcePath(""))
+                .build(),
+            Suppliers.ofInstance(ImmutableMap.<String, String>of()),
+            Suppliers.ofInstance(ImmutableList.<String>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            ImmutableSet.<Label>of(),
+            ImmutableSet.<String>of(),
+            ImmutableSet.<BuildRule>of(),
+            /* runTestSeparately */ false,
+            /* testRuleTimeoutMs */ Optional.<Long>absent());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 

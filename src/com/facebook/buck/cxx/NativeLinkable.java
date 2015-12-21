@@ -16,20 +16,23 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableMap;
 
 /**
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
  * contribute to the top-level link of a native binary (e.g. C++ binary).
  */
-public interface NativeLinkable {
+public interface NativeLinkable extends HasBuildTarget {
 
-  NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type);
+  Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform);
+
+  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform);
+
+  NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
+      throws NoSuchBuildTargetException;
 
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 
@@ -37,13 +40,13 @@ public interface NativeLinkable {
    * @return a map of shared library SONAME to shared library path for the given
    *     {@link CxxPlatform}.
    */
-  ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform);
+  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
 
   enum Linkage {
     ANY,
     STATIC,
+    SHARED,
   }
 
 }

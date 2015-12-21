@@ -16,14 +16,17 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.java.CalculateAbi;
-import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.Javac;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsAmender;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -79,16 +82,16 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   }
 
   @VisibleForTesting
-  protected BuildTarget getSourceZipBuildTarget(BuildTarget target, String name) {
+  protected BuildTarget getSourceZipBuildTarget(UnflavoredBuildTarget target, String name) {
     return BuildTargets.createFlavoredBuildTarget(
-        target.getUnflavoredBuildTarget(),
+        target,
         ImmutableFlavor.of(
             String.format(
                 "thrift-java-source-zip-%s",
                 name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
   }
 
-  private Path getSourceZipOutputPath(BuildTarget target, String name) {
+  private Path getSourceZipOutputPath(UnflavoredBuildTarget target, String name) {
     BuildTarget flavoredTarget = getSourceZipBuildTarget(target, name);
     return BuildTargets.getScratchPath(flavoredTarget, "%s" + Javac.SRC_ZIP);
   }
@@ -106,13 +109,15 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     // Pack all the generated sources into a single source zip that we'll pass to the
     // java rule below.
     ImmutableSortedSet.Builder<BuildRule> sourceZipsBuilder = ImmutableSortedSet.naturalOrder();
+    UnflavoredBuildTarget unflavoredBuildTarget =
+        params.getBuildTarget().getUnflavoredBuildTarget();
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
       String name = ent.getKey();
       BuildRule compilerRule = ent.getValue().getCompileRule();
       Path sourceDirectory = ent.getValue().getOutputDir().resolve("gen-java");
 
-      BuildTarget sourceZipTarget = getSourceZipBuildTarget(params.getBuildTarget(), name);
-      Path sourceZip = getSourceZipOutputPath(params.getBuildTarget(), name);
+      BuildTarget sourceZipTarget = getSourceZipBuildTarget(unflavoredBuildTarget, name);
+      Path sourceZip = getSourceZipOutputPath(unflavoredBuildTarget, name);
 
       sourceZipsBuilder.add(
           new SrcZip(
@@ -130,7 +135,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     // Create to main compile rule.
     BuildRuleParams javaParams = params.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(
-            params.getBuildTarget().getUnflavoredBuildTarget(),
+            unflavoredBuildTarget,
             getFlavor()),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -155,13 +160,14 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                     .transform(SourcePaths.getToBuildTargetSourcePath())
                     .toSortedSet(Ordering.natural()),
                 /* resources */ ImmutableSet.<SourcePath>of(),
+                templateOptions.getGeneratedSourceFolderName(),
                 /* proguardConfig */ Optional.<SourcePath>absent(),
                 /* postprocessClassesCommands */ ImmutableList.<String>of(),
                 /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 /* abiJar */ new BuildTargetSourcePath(abiJarTarget),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                templateOptions,
+                new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
                 /* resourcesRoot */ Optional.<Path>absent(),
                 /* mavenCoords */ Optional.<String>absent(),
                 /* tests */ ImmutableSortedSet.<BuildTarget>of()));

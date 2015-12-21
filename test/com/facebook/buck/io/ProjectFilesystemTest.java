@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -26,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
-import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
@@ -57,8 +57,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributes;
@@ -71,7 +69,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/** Unit test for {@link com.facebook.buck.io.ProjectFilesystem}. */
 public class ProjectFilesystemTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -308,43 +305,6 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testCreateContextStringForModifyEvent() throws IOException {
-    Path file = tmp.newFile("foo.txt");
-    WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(
-        file,
-        StandardWatchEventKinds.ENTRY_MODIFY);
-    assertEquals(
-        file.toAbsolutePath().toString(),
-        filesystem.createContextString(modifyEvent));
-  }
-
-  @Test
-  public void testCreateContextStringForOverflowEvent() {
-    WatchEvent<Object> overflowEvent = new WatchEvent<Object>() {
-      @Override
-      public Kind<Object> kind() {
-        return StandardWatchEventKinds.OVERFLOW;
-      }
-
-      @Override
-      public int count() {
-        return 0;
-      }
-
-      @Override
-      public Object context() {
-        return new Object() {
-          @Override
-          public String toString() {
-            return "I am the context string.";
-          }
-        };
-      }
-    };
-    assertEquals("I am the context string.", filesystem.createContextString(overflowEvent));
-  }
-
-  @Test
   public void testWalkFileTreeWhenProjectRootIsNotWorkingDir() throws IOException {
     tmp.newFolder("dir");
     tmp.newFile("dir/file.txt");
@@ -367,7 +327,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testWalkFileTreeWhenProjectRootIsWorkingDir() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     Path pathRelativeToProjectRoot = Paths.get(
@@ -413,15 +373,6 @@ public class ProjectFilesystemTest {
     assertThat(
         filePaths.build(),
         containsInAnyOrder(Paths.get("dir/file.txt"), Paths.get("linkdir/file.txt")));
-  }
-
-  @Test
-  public void whenContextNullThenCreateContextStringReturnsValidString() {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
-    assertThat(
-        "Context string should contain null.",
-        projectFilesystem.createContextString(WatchEvents.createOverflowEvent()),
-        Matchers.containsString("null"));
   }
 
   @Test
@@ -625,20 +576,20 @@ public class ProjectFilesystemTest {
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
-    ImmutableSet<Path> ignorePaths = ProjectFilesystem.extractIgnorePaths(rootPath, config);
+    ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
     assertEquals(
         "Should ignore paths, sans trailing slashes",
-        ignorePaths,
         ImmutableSet.of(
             BuckConstant.BUCK_OUTPUT_PATH,
             Paths.get(".idea"),
             Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
-            rootPath.resolve(ProjectFilesystem.DEFAULT_CACHE_DIR),
+            Paths.get(BuckConstant.DEFAULT_CACHE_DIR),
             Paths.get(".git"),
             Paths.get("foo"),
             Paths.get("bar"),
             Paths.get("baz"),
-            Paths.get("a/b/c")));
+            Paths.get("a/b/c")),
+        ignorePaths);
   }
 
   @Test
@@ -647,10 +598,48 @@ public class ProjectFilesystemTest {
         "[cache]",
         "dir = cache_dir");
     Path rootPath = tmp.getRoot();
-    ImmutableSet<Path> ignorePaths = ProjectFilesystem.extractIgnorePaths(rootPath, config);
+    ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
     assertThat(
         "Cache directory should be in set of ignored paths",
         ignorePaths,
-        Matchers.hasItem(Paths.get("cache_dir").normalize().toAbsolutePath()));
+        Matchers.hasItem(Paths.get("cache_dir")));
+  }
+
+  @Test
+  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = **/*.orig");
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    Files.createDirectories(tmp.getRoot().resolve("foo/bar"));
+    filesystem.touch(Paths.get("foo/bar/cake.txt"));
+    filesystem.touch(Paths.get("foo/bar/cake.txt.orig"));
+
+    final ImmutableSet.Builder<String> allPaths = ImmutableSet.builder();
+
+    filesystem.walkRelativeFileTree(tmp.getRoot(), new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        allPaths.add(file.toString());
+        return FileVisitResult.CONTINUE;
+      }
+    });
+
+    ImmutableSet<String> found = allPaths.build();
+    assertTrue(found.contains("foo/bar/cake.txt"));
+    assertFalse(found.contains("foo/bar/cake.txt.orig"));
+  }
+
+  @Test
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = **/*.orig");
+    Path rootPath = tmp.getRoot();
+    assertThat(
+        "Two ProjectFilesystems with same glob in ignore should be equal",
+        new ProjectFilesystem(rootPath, config),
+        equalTo(new ProjectFilesystem(rootPath, config)));
   }
 }

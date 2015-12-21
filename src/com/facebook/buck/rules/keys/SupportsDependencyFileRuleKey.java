@@ -16,12 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * Used to tag a rule that supports dependency-file input-based rule keys.
@@ -30,8 +28,6 @@ public interface SupportsDependencyFileRuleKey {
 
   boolean useDependencyFileRuleKeys();
 
-  ImmutableList<Path> getInputsAfterBuildingLocally() throws IOException;
-
-  Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() throws IOException;
+  ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException;
 
 }

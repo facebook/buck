@@ -18,19 +18,19 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
@@ -44,93 +44,88 @@ import java.nio.file.Paths;
 
 public class ArchiveTest {
 
-  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(
-      new HashedFileTool(Paths.get("ar")));
+  private static final Path AR = Paths.get("ar");
+  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(new HashedFileTool(AR));
+  private static final Path RANLIB = Paths.get("ranlib");
+  private static final Tool DEFAULT_RANLIB = new HashedFileTool(RANLIB);
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
-          new TestSourcePath("a.o"),
-          new TestSourcePath("b.o"),
-          new TestSourcePath("c.o"));
-
-  private RuleKey generateRuleKey(
-      RuleKeyBuilderFactory factory,
-      AbstractBuildRule rule) {
-
-    RuleKeyBuilder builder = factory.newInstance(rule);
-    return builder.build();
-  }
+          new FakeSourcePath("a.o"),
+          new FakeSourcePath("b.o"),
+          new FakeSourcePath("c.o"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-              ImmutableMap.of(
-                  "ar", Strings.repeat("0", 40),
-                  "a.o", Strings.repeat("a", 40),
-                  "b.o", Strings.repeat("b", 40),
-                  "c.o", Strings.repeat("c", 40),
-                  "different", Strings.repeat("d", 40))),
-            pathResolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.<String, String>builder()
+            .put(AR.toString(), Strings.repeat("0", 40))
+            .put(RANLIB.toString(), Strings.repeat("1", 40))
+            .put("a.o", Strings.repeat("a", 40))
+            .put("b.o", Strings.repeat("b", 40))
+            .put("c.o", Strings.repeat("c", 40))
+            .put(Paths.get("different").toString(), Strings.repeat("d", 40))
+            .build()
+    );
 
     // Generate a rule key for the defaults.
-    RuleKey defaultRuleKey = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKey archiverChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey archiverChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
             new GnuArchiver(new HashedFileTool(Paths.get("different"))),
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKey outputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
             Paths.get("different"),
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKey inputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
-            ImmutableList.<SourcePath>of(new TestSourcePath("different"))));
+            ImmutableList.<SourcePath>of(new FakeSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
-    RuleKey archiverTypeChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey archiverTypeChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
         new Archive(
             params,
             pathResolver,
-            new BsdArchiver(new HashedFileTool(Paths.get("ar"))),
+            new BsdArchiver(new HashedFileTool(AR)),
+            DEFAULT_RANLIB,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
-
   }
 
 }

@@ -30,17 +30,20 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
   private final ProjectFilesystem filesystem;
   private final BuildableContext buildableContext;
   private final String metadataKey;
+  private final Path pathToRDotJavaPackageFile;
 
   public ExtractFromAndroidManifestStep(
       Path manifest,
       ProjectFilesystem filesystem,
       BuildableContext buildableContext,
-      String metadataKey) {
+      String metadataKey,
+      Path pathToRDotJavaPackageFile) {
     super("extract_from_android_manifest");
     this.manifest = manifest;
     this.filesystem = filesystem;
     this.buildableContext = buildableContext;
     this.metadataKey = metadataKey;
+    this.pathToRDotJavaPackageFile = pathToRDotJavaPackageFile;
   }
 
   @Override
@@ -55,6 +58,7 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
 
     String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
     buildableContext.addMetadata(metadataKey, rDotJavaPackageFromAndroidManifest);
+    filesystem.writeContentsToPath(rDotJavaPackageFromAndroidManifest, pathToRDotJavaPackageFile);
     return 0;
   }
 }

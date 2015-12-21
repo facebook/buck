@@ -16,9 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.HasClasspathEntries;
-import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -27,6 +26,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -58,31 +58,37 @@ public class ClasspathMacroExpander
   }
 
   @Override
-  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
     return ImmutableList.<BuildRule>copyOf(
-        getHasClasspathEntries(resolve(target, resolver, input)).getTransitiveClasspathDeps());
+        getHasClasspathEntries(
+            resolve(
+                target,
+                cellNames,
+                resolver,
+                input)).getTransitiveClasspathDeps());
   }
 
   @Override
   public String expandForFile(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String input) throws MacroException {
     // javac is the canonical reader of classpaths, and its code for reading classpaths from
     // files is a little weird:
     // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
     // The # characters that might be present in classpaths due to flavoring would be read as
     // comments. As a simple workaround, we quote the entire classpath.
-    return String.format("'%s'", expand(target, resolver, filesystem, input));
+    return String.format("'%s'", expand(target, cellNames, resolver, input));
   }
 
   @Override
-  protected String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
+  protected String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException {
     return Joiner.on(File.pathSeparator).join(
         FluentIterable.from(getHasClasspathEntries(rule).getTransitiveClasspathDeps())
@@ -95,7 +101,7 @@ public class ClasspathMacroExpander
                   }
                 })
             .filter(Predicates.notNull())
-            .transform(filesystem.getAbsolutifier())
+            .transform(rule.getProjectFilesystem().getAbsolutifier())
             .transform(Functions.toStringFunction())
             .toSortedSet(Ordering.natural()));
   }
@@ -103,11 +109,12 @@ public class ClasspathMacroExpander
   @Override
   public Object extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
     return FluentIterable.from(
-            getHasClasspathEntries(resolve(target, resolver, input))
+            getHasClasspathEntries(resolve(target, cellNames, resolver, input))
                 .getTransitiveClasspathDeps())
         .filter(
             new Predicate<JavaLibrary>() {

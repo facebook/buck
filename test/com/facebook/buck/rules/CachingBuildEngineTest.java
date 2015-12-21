@@ -33,6 +33,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -40,16 +41,18 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.FakeJavaPackageFinder;
-import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -59,10 +62,8 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
@@ -74,16 +75,17 @@ import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -93,8 +95,12 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
@@ -103,6 +109,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Nullable;
 
@@ -113,11 +121,19 @@ import javax.annotation.Nullable;
 public class CachingBuildEngineTest extends EasyMockSupport {
 
   private static final BuildTarget BUILD_TARGET =
-      BuildTarget.builder("//src/com/facebook/orca", "orca").build();
+      BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
+  private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
+      new SourcePathResolver(
+          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
   private static final RuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyBuilderFactory(
           new NullFileHashCache(),
-          new SourcePathResolver(new BuildRuleResolver()));
+          DEFAULT_SOURCE_PATH_RESOLVER);
+  private static final DependencyFileRuleKeyBuilderFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
+      new DefaultDependencyFileRuleKeyBuilderFactory(
+          new NullFileHashCache(),
+          DEFAULT_SOURCE_PATH_RESOLVER,
+          NOOP_RULE_KEY_FACTORY);
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -144,13 +160,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       throws IOException, InterruptedException, ExecutionException, StepFailedException {
     final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
 
     // Create a dep for the build rule.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//src/com/facebook/orca:lib");
     FakeBuildRule dep = new FakeBuildRule(depTarget, resolver);
-    dep.setRuleKey(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
@@ -185,8 +204,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Add a build step so we can verify that the steps are executed.
     buildSteps.add(
@@ -204,7 +225,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     cachingBuildEngine.setBuildRuleResult(
         dep,
         BuildRuleSuccessType.FETCHED_FROM_CACHE,
-        CacheResult.skip());
+        CacheResult.miss());
 
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -212,7 +233,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
     verifyAll();
 
-    assertTrue(cache.hasArtifact(ruleToTest.getRuleKey()));
+    RuleKey ruleToTestKey = ruleKeyBuilderFactory.build(ruleToTest);
+    assertTrue(cache.hasArtifact(ruleToTestKey));
 
     // Verify the events logged to the BuckEventBus.
     List<BuckEvent> events = listener.getEvents();
@@ -222,15 +244,18 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(dep), buckEventBus),
+        configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.started(ruleToTest),
+            buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -245,12 +270,17 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       throws IOException, ExecutionException, InterruptedException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(BUILD_TARGET)
         .setProjectFilesystem(filesystem)
         .build();
     FakeBuildRule buildRule = new FakeBuildRule(
         buildRuleParams,
-        new SourcePathResolver(new BuildRuleResolver()));
+        resolver);
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
@@ -263,7 +293,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             .setArtifactCache(
                 new NoopArtifactCache() {
                   @Override
-                  public void store(
+                  public ListenableFuture<Void> store(
                       ImmutableSet<RuleKey> ruleKeys,
                       ImmutableMap<String, String> metadata,
                       Path output) {
@@ -272,6 +302,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     } catch (InterruptedException e) {
                       throw Throwables.propagate(e);
                     }
+                    return Futures.immediateFuture(null);
                   }
                 })
             .setEventBus(buckEventBus)
@@ -286,8 +317,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             service,
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
     BuildResult result = buildResult.get();
@@ -299,24 +332,40 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(events, Matchers.hasSize(6));
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(buildRule), buckEventBus).getEventName(),
+        configureTestEvent(
+            BuildRuleEvent.started(buildRule),
+            buckEventBus)
+            .getEventName(),
         eventIter.next().getEventName());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(buildRule), buckEventBus).getEventName(),
+        configureTestEvent(
+            BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
+            buckEventBus)
+            .getEventName(),
         eventIter.next().getEventName());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(buildRule), buckEventBus).getEventName(),
+        configureTestEvent(
+            BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
+            buckEventBus)
+            .getEventName(),
         eventIter.next().getEventName());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(buildRule), buckEventBus).getEventName(),
+        configureTestEvent(
+            BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
+            buckEventBus)
+            .getEventName(),
         eventIter.next().getEventName());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(buildRule), buckEventBus).getEventName(),
+        configureTestEvent(
+            BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
+            buckEventBus)
+            .getEventName(),
         eventIter.next().getEventName());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 buildRule,
+                BuildRuleKeys.of(ruleKeyBuilderFactory.build(buildRule)),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -331,6 +380,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   public void testArtifactFetchedFromCache()
       throws InterruptedException, ExecutionException, IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver);
 
     Step step = new AbstractExecutionStep("exploding step") {
       @Override
@@ -340,7 +395,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     };
     BuildRule buildRule = createRule(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         /* deps */ ImmutableSet.<BuildRule>of(),
         ImmutableList.of(step),
         /* postBuildSteps */ ImmutableList.<Step>of(),
@@ -355,7 +410,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         "Imagine this is the contents of a valid JAR file.");
     expect(
         artifactCache.fetch(
-            eq(buildRule.getRuleKey()),
+            eq(ruleKeyBuilderFactory.build(buildRule)),
             isA(Path.class)))
         .andDelegateTo(
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
@@ -363,7 +418,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = ImmutableBuildContext.builder()
-        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
+        .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
         .setStepRunner(stepRunner)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
@@ -384,8 +439,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(
         CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
@@ -407,8 +464,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void testArtifactFetchedFromCacheStillRunsPostBuildSteps()
       throws InterruptedException, ExecutionException, IOException {
-
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver);
 
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     StepRunner stepRunner = createStepRunner(buckEventBus);
@@ -423,7 +485,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuildRule buildRule = createRule(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         /* deps */ ImmutableSet.<BuildRule>of(),
         /* buildSteps */ ImmutableList.<Step>of(),
         /* postBuildSteps */ ImmutableList.of(buildStep),
@@ -436,14 +498,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         "Imagine this is the contents of a valid JAR file.");
     expect(
         artifactCache.fetch(
-            eq(buildRule.getRuleKey()),
+            eq(ruleKeyBuilderFactory.build(buildRule)),
             isA(Path.class)))
         .andDelegateTo(
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuildContext buildContext = ImmutableBuildContext.builder()
-        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
+        .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
         .setStepRunner(stepRunner)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
@@ -464,8 +526,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(
         CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
@@ -484,8 +548,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   public void testMatchingTopLevelRuleKeyAvoidsProcessingDepInShallowMode() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
@@ -495,11 +562,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Create a dep for the build rule.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//src/com/facebook/orca:lib");
     FakeBuildRule dep = new FakeBuildRule(depTarget, pathResolver);
-    dep.setRuleKey(new RuleKey("aaaa"));
     FakeBuildRule ruleToTest = new FakeBuildRule(BUILD_TARGET, filesystem, pathResolver, dep);
-    ruleToTest.setRuleKey(new RuleKey("bbbb"));
+    RuleKey ruleToTestKey = ruleKeyBuilderFactory.build(ruleToTest);
     filesystem.writeContentsToPath(
-        ruleToTest.getRuleKey().toString(),
+        ruleToTestKey.toString(),
         BuildInfo.getPathToMetadataDirectory(BUILD_TARGET)
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -522,8 +588,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     replayAll();
@@ -539,21 +607,28 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(dep), buckEventBus),
+        configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.started(ruleToTest),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -565,11 +640,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void testMatchingTopLevelRuleKeyStillProcessesDepInDeepMode() throws Exception {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ArtifactCache cache = new NoopArtifactCache();
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
@@ -582,9 +660,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .setProjectFilesystem(filesystem)
         .build();
     FakeBuildRule dep = new FakeBuildRule(ruleParams, pathResolver);
-    dep.setRuleKey(new RuleKey("aaaa"));
+    RuleKey depKey = ruleKeyBuilderFactory.build(dep);
     filesystem.writeContentsToPath(
-        dep.getRuleKey().toString(),
+        depKey.toString(),
         BuildInfo.getPathToMetadataDirectory(depTarget)
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -592,9 +670,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(depTarget)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
     FakeBuildRule ruleToTest = new FakeBuildRule(BUILD_TARGET, filesystem, pathResolver, dep);
-    ruleToTest.setRuleKey(new RuleKey("bbbb"));
+    RuleKey ruleToTestKey = ruleKeyBuilderFactory.build(ruleToTest);
     filesystem.writeContentsToPath(
-        ruleToTest.getRuleKey().toString(),
+        ruleToTestKey.toString(),
         BuildInfo.getPathToMetadataDirectory(BUILD_TARGET)
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -617,8 +695,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.DEEP,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -632,24 +712,33 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(dep), buckEventBus),
+        configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.started(ruleToTest),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(dep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.resumed(dep, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 dep,
+                BuildRuleKeys.of(depKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -661,6 +750,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -672,11 +762,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void testMatchingTopLevelRuleKeyStillProcessesRuntimeDeps() throws Exception {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     ArtifactCache cache = new NoopArtifactCache();
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
@@ -689,9 +782,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .build();
     FakeBuildRule transitiveRuntimeDep =
         new FakeBuildRule(ruleParams, pathResolver);
-    transitiveRuntimeDep.setRuleKey(new RuleKey("aaaa"));
+    RuleKey transitiveRuntimeDepKey = ruleKeyBuilderFactory.build(transitiveRuntimeDep);
     filesystem.writeContentsToPath(
-        transitiveRuntimeDep.getRuleKey().toString(),
+        transitiveRuntimeDepKey.toString(),
         BuildInfo.getPathToMetadataDirectory(transitiveRuntimeDep.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -706,9 +799,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             filesystem,
             pathResolver,
             transitiveRuntimeDep);
-    runtimeDep.setRuleKey(new RuleKey("bbbb"));
+    RuleKey runtimeDepKey = ruleKeyBuilderFactory.build(runtimeDep);
     filesystem.writeContentsToPath(
-        runtimeDep.getRuleKey().toString(),
+        runtimeDepKey.toString(),
         BuildInfo.getPathToMetadataDirectory(runtimeDep.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -722,9 +815,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         filesystem,
         pathResolver,
         runtimeDep);
-    ruleToTest.setRuleKey(new RuleKey("cccc"));
+    RuleKey ruleToTestKey = ruleKeyBuilderFactory.build(ruleToTest);
     filesystem.writeContentsToPath(
-        ruleToTest.getRuleKey().toString(),
+        ruleToTestKey.toString(),
         BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -747,8 +840,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -759,30 +854,45 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(events, Matchers.hasSize(12));
     Iterator<BuckEvent> eventIter = events.iterator();
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(transitiveRuntimeDep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.started(transitiveRuntimeDep),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(transitiveRuntimeDep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.suspended(transitiveRuntimeDep, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(runtimeDep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.started(runtimeDep),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(runtimeDep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.suspended(runtimeDep, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.started(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.started(ruleToTest),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.suspended(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(ruleToTest), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 ruleToTest,
+                BuildRuleKeys.of(ruleToTestKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -791,12 +901,15 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(runtimeDep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.resumed(runtimeDep, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 runtimeDep,
+                BuildRuleKeys.of(runtimeDepKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -805,12 +918,15 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.resumed(transitiveRuntimeDep), buckEventBus),
+        configureTestEvent(
+            BuildRuleEvent.resumed(transitiveRuntimeDep, ruleKeyBuilderFactory),
+            buckEventBus),
         eventIter.next());
     assertEquals(
         configureTestEvent(
             BuildRuleEvent.finished(
                 transitiveRuntimeDep,
+                BuildRuleKeys.of(transitiveRuntimeDepKey),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
                 Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
@@ -825,6 +941,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     ArtifactCache cache = new NoopArtifactCache();
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
@@ -841,13 +962,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         };
     BuildRule ruleToTest = createRule(
         filesystem,
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         /* deps */ ImmutableSet.<BuildRule>of(),
         /* buildSteps */ ImmutableList.<Step>of(),
         /* postBuildSteps */ ImmutableList.of(failingStep),
         /* pathToOutputFile */ null);
     filesystem.writeContentsToPath(
-        ruleToTest.getRuleKey().toString(),
+        ruleKeyBuilderFactory.build(ruleToTest).toString(),
         BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
@@ -870,8 +991,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -880,7 +1003,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void testBuildRuleLocallyWithCacheError() throws Exception {
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
 
@@ -912,8 +1037,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -938,11 +1065,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKey inputRuleKey = new RuleKey("aaaa");
+    final RuleKey inputRuleKey = new RuleKey("aaaa");
     final Path output = Paths.get("output");
-    BuildRule rule =
+    final BuildRule rule =
         new InputRuleKeyBuildRule(params, pathResolver) {
           @Override
           public ImmutableList<Step> getBuildSteps(
@@ -963,11 +1091,18 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY);
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    NOOP_RULE_KEY_FACTORY,
+                    new FakeRuleKeyBuilderFactory(ImmutableMap.of(
+                        rule.getBuildTarget(),
+                        inputRuleKey)),
+                    NOOP_RULE_KEY_FACTORY,
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -988,6 +1123,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
@@ -1001,11 +1141,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKey inputRuleKey = new RuleKey("aaaa");
+    final RuleKey inputRuleKey = new RuleKey("aaaa");
     final Path output = Paths.get("output");
-    BuildRule rule =
+    final BuildRule rule =
         new InputRuleKeyBuildRule(params, pathResolver) {
           @Override
           public ImmutableList<Step> getBuildSteps(
@@ -1046,11 +1184,17 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY);
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    ruleKeyBuilderFactory,
+                    new FakeRuleKeyBuilderFactory(
+                        ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
+                    NOOP_RULE_KEY_FACTORY,
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1060,12 +1204,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
-        equalTo(Optional.of(rule.getRuleKey())));
+        equalTo(Optional.of(ruleKeyBuilderFactory.build(rule))));
 
     // Verify that the artifact is *not* re-cached under the main rule key.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     assertThat(
-        cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
+        cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact).getType(),
         equalTo(CacheResultType.MISS));
   }
 
@@ -1074,6 +1218,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
@@ -1083,15 +1232,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Create a simple rule which just writes a file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    RuleKey inputRuleKey = new RuleKey("aaaa");
+    final RuleKey inputRuleKey = new RuleKey("aaaa");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     final Path output = Paths.get("output");
-    BuildRule rule =
+    final BuildRule rule =
         new InputRuleKeyBuildRule(params, pathResolver) {
           @Override
           public ImmutableList<Step> getBuildSteps(
@@ -1142,11 +1289,17 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY);
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    ruleKeyBuilderFactory,
+                    new FakeRuleKeyBuilderFactory(
+                        ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
+                    NOOP_RULE_KEY_FACTORY,
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1156,7 +1309,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
-        equalTo(Optional.of(rule.getRuleKey())));
+        equalTo(Optional.of(ruleKeyBuilderFactory.build(rule))));
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY),
         equalTo(Optional.of(inputRuleKey)));
@@ -1164,7 +1317,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Verify that the artifact is re-cached correctly under the main rule key.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     assertThat(
-        cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
+        cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact).getType(),
         equalTo(CacheResultType.HIT));
     assertEquals(
         new ZipInspector(artifact).getZipFileEntries(),
@@ -1175,17 +1328,30 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void depFileRuleKeyAndDepFileAreWrittenForSupportedRules() throws Exception {
     final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
-    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    final DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
             .build();
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            factory);
 
-    // Prepare an input file that should appear in the dep file.
-    final Path input = Paths.get("input_file");
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
     filesystem.writeContentsToPath("contents", input);
 
     // Create a simple rule which just writes a file.
@@ -1194,12 +1360,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKey depFileRuleKey = new RuleKey("aaaa");
     final Path output = Paths.get("output");
-    BuildRule rule =
+    final BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
           @Override
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
@@ -1208,12 +1373,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
-            return ImmutableList.of(input);
-          }
-          @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
           }
           @Override
           public Path getPathToOutput() {
@@ -1227,17 +1388,21 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY,
-            new FixedRuleKeyBuilderFactory(
-                ImmutableMap.of(rule.getBuildTarget(), depFileRuleKey),
-                fileHashCache));
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
 
     // Run the build.
+    RuleKey depFileRuleKey = depFilefactory.build(rule, ImmutableList.of(input));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
-    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
 
     // Verify the dep file rule key and dep file contents were written to disk.
     OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
@@ -1250,7 +1415,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Verify that the dep file rule key and dep file were written to the cached artifact.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
-    CacheResult cacheResult = cache.fetch(rule.getRuleKey(), fetchedArtifact);
+    CacheResult cacheResult =
+        cache.fetch(factory.build(rule), fetchedArtifact);
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1266,9 +1432,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void depFileRuleKeyMatchAvoidsBuilding() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
-    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    final DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
@@ -1286,12 +1457,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKey depFileRuleKey = new RuleKey("aaaa");
+    final RuleKey depFileRuleKey = new RuleKey("aaaa");
     final Path output = Paths.get("output");
     filesystem.touch(output);
-    BuildRule rule =
+    final BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
           @Override
           public ImmutableList<Step> getBuildSteps(
@@ -1306,12 +1475,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 });
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
-            return ImmutableList.of(input);
-          }
-          @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
           }
           @Override
           public Path getPathToOutput() {
@@ -1325,13 +1490,18 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY,
-            new FixedRuleKeyBuilderFactory(
-                ImmutableMap.of(rule.getBuildTarget(), depFileRuleKey),
-                fileHashCache));
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    ruleKeyBuilderFactory,
+                    NOOP_RULE_KEY_FACTORY,
+                    NOOP_RULE_KEY_FACTORY,
+                    new FakeRuleKeyBuilderFactory(
+                        ImmutableMap.of(rule.getBuildTarget(), depFileRuleKey),
+                        fileHashCache))));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -1365,6 +1535,22 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
             .build();
     FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            factory);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
 
     // Create a simple rule which just writes a file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1372,12 +1558,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final Path input = Paths.get("input_file");
     final Path output = Paths.get("output");
     BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
           @Override
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
@@ -1389,12 +1574,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
-            return ImmutableList.of(input);
-          }
-          @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
           }
           @Override
           public Path getPathToOutput() {
@@ -1404,11 +1585,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepare an input file that should appear in the dep file.
     filesystem.writeContentsToPath("something", input);
-    DependencyFileRuleKeyBuilderFactory factory =
-        new DependencyFileRuleKeyBuilderFactory(
-            fileHashCache,
-            new SourcePathResolver(new BuildRuleResolver()));
-    RuleKey depFileRuleKey = factory.newInstance(rule).setPath(input).build();
+    RuleKey depFileRuleKey = depFilefactory.build(rule, ImmutableList.of(input));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -1436,15 +1613,18 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY,
-            new DependencyFileRuleKeyBuilderFactory(
-                fileHashCache,
-                pathResolver));
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
-    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
   }
 
   @Test
@@ -1458,6 +1638,22 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
             .build();
     FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
 
     // Create a simple rule which just writes a file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1465,12 +1661,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final Path input = Paths.get("input_file");
     final Path output = Paths.get("output");
     BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
           @Override
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
@@ -1482,12 +1677,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
-          public ImmutableList<Path> getInputsAfterBuildingLocally() {
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
             return ImmutableList.of();
-          }
-          @Override
-          public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() {
-            return Optional.absent();
           }
           @Override
           public Path getPathToOutput() {
@@ -1497,11 +1688,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepare an input file that should appear in the dep file.
     filesystem.writeContentsToPath("something", input);
-    DependencyFileRuleKeyBuilderFactory factory =
-        new DependencyFileRuleKeyBuilderFactory(
-            fileHashCache,
-            new SourcePathResolver(new BuildRuleResolver()));
-    RuleKey depFileRuleKey = factory.newInstance(rule).setPath(input).build();
+    RuleKey depFileRuleKey = depFilefactory.build(rule, ImmutableList.of(input));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
@@ -1529,15 +1716,483 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            NOOP_RULE_KEY_FACTORY,
-            new DependencyFileRuleKeyBuilderFactory(
-                fileHashCache,
-                pathResolver));
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
-    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
+  }
+
+  @Test
+  public void manifestIsWrittenWhenBuiltLocally() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+    OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+    RuleKey depFileRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
+
+    // Verify that the manifest written to the cache is correct.
+    Path fetchedManifest = tmp.newFile("manifest").toPath();
+    CacheResult cacheResult =
+        cache.fetch(
+            cachingBuildEngine.getManifestRuleKey(rule),
+            fetchedManifest);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+    Manifest manifest = loadManifest(fetchedManifest);
+    assertThat(
+        manifest.toMap(),
+        equalTo(
+            ImmutableMap.of(
+                depFileRuleKey,
+                ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+
+    // Verify that the artifact is also cached via the dep file rule key.
+    Path fetchedArtifact = tmp.newFile("artifact").toPath();
+    cacheResult =
+        cache.fetch(
+            depFileRuleKey,
+            fetchedArtifact);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+  }
+
+  @Test
+  public void manifestIsUpdatedWhenBuiltLocally() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Seed the cache with an existing manifest with a dummy entry.
+    Manifest manifest = Manifest.fromMap(
+        ImmutableMap.of(new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    try (GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+      manifest.serialize(outputStream);
+    }
+    cache.store(
+        ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
+        ImmutableMap.<String, String>of(),
+        byteArrayOutputStream.toByteArray());
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+    OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+    RuleKey depFileRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
+
+    // Verify that the manifest written to the cache is correct.
+    Path fetchedManifest = tmp.newFile("manifest").toPath();
+    CacheResult cacheResult =
+        cache.fetch(
+            cachingBuildEngine.getManifestRuleKey(rule),
+            fetchedManifest);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+    manifest = loadManifest(fetchedManifest);
+    assertThat(
+        manifest.toMap(),
+        equalTo(
+            ImmutableMap.of(
+                depFileRuleKey,
+                ImmutableMap.of(input.toString(), fileHashCache.get(input)),
+                new RuleKey("abcd"),
+                ImmutableMap.of("some/path.h", HashCode.fromInt(12)))));
+
+    // Verify that the artifact is also cached via the dep file rule key.
+    Path fetchedArtifact = tmp.newFile("artifact").toPath();
+    cacheResult =
+        cache.fetch(
+            depFileRuleKey,
+            fetchedArtifact);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+  }
+
+  @Test
+  public void manifestIsTruncatedWhenGrowingPastSizeLimit() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Use a genrule to produce the input file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            1L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
+    // size.
+    Manifest manifest = Manifest.fromMap(
+        ImmutableMap.of(new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    try (GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+      manifest.serialize(outputStream);
+    }
+    cache.store(
+        ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
+        ImmutableMap.<String, String>of(),
+        byteArrayOutputStream.toByteArray());
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+    OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
+    RuleKey depFileRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
+
+    // Verify that the manifest is truncated and now only contains the newly written entry.
+    Path fetchedManifest = tmp.newFile("manifest").toPath();
+    CacheResult cacheResult =
+        cache.fetch(
+            cachingBuildEngine.getManifestRuleKey(rule),
+            fetchedManifest);
+    assertThat(
+        cacheResult.getType(),
+        equalTo(CacheResultType.HIT));
+    manifest = loadManifest(fetchedManifest);
+    assertThat(
+        manifest.toMap(),
+        equalTo(
+            ImmutableMap.of(
+                depFileRuleKey,
+                ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+  }
+
+  @Test
+  public void manifestBasedCacheHit() throws Exception {
+    final ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder()
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Prepare an input file that should appear in the dep file.
+    final Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("input")
+            .build(resolver, filesystem);
+    final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
+    filesystem.writeContentsToPath("contents", input);
+
+    // Create a simple rule which just writes a file.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
+            .build();
+    final Path output = Paths.get("output");
+    BuildRule rule =
+        new DepFileBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+          @Override
+          public ImmutableList<Step> getBuildSteps(
+              BuildContext context,
+              BuildableContext buildableContext) {
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
+          }
+          @Override
+          public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+            return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+          }
+          @Override
+          public Path getPathToOutput() {
+            return output;
+          }
+        };
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+            CachingBuildEngine.DepFiles.CACHE,
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    factory,
+                    factory,
+                    factory,
+                    depFilefactory)));
+
+    // Seed the cache with the manifest and a referenced artifact.
+    RuleKey artifactKey = new RuleKey("bbbb");
+    Manifest manifest = new Manifest();
+    manifest.addEntry(
+        fileHashCache,
+        artifactKey,
+        pathResolver,
+        ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, input)),
+        ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, input)));
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    try (GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+      manifest.serialize(outputStream);
+    }
+    cache.store(
+        ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule)),
+        ImmutableMap.<String, String>of(),
+        byteArrayOutputStream.toByteArray());
+    Path artifact = tmp.newFile("artifact.zip").toPath();
+    writeEntriesToZip(
+        artifact,
+        ImmutableMap.of(
+            BuildInfo.getPathToMetadataDirectory(target)
+                .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
+            new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+            output.toString(),
+            "stuff"));
+    cache.store(
+        ImmutableSet.of(artifactKey),
+        ImmutableMap.<String, String>of(),
+        artifact);
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(
+        getSuccess(result),
+        equalTo(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED));
   }
 
   @Test
@@ -1565,7 +2220,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule rule =
         new WriteFile(params, pathResolver, "something else", output, /* executable */ false);
@@ -1576,8 +2232,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1591,7 +2249,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void dependencyFailuresDoesNotOrphanOtherDependencies() throws Exception {
     ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
@@ -1617,7 +2276,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep2 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep2"))
-                .setDeps(ImmutableSortedSet.of(dep1))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep1))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1636,7 +2295,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep4 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep4"))
-                .setDeps(ImmutableSortedSet.of(dep3))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep3))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1647,7 +2306,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule rule =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
-                .setDeps(ImmutableSortedSet.of(dep2, dep4))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep2, dep4))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1660,8 +2319,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             service,
             fileHashCache,
             CachingBuildEngine.BuildMode.DEEP,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1692,7 +2353,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void runningWithKeepGoingBuildsAsMuchAsPossible() throws Exception {
     ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
@@ -1719,7 +2381,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep2 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep2"))
-                .setDeps(ImmutableSortedSet.of(dep1))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep1))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1738,7 +2400,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep4 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep4"))
-                .setDeps(ImmutableSortedSet.of(dep3))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep3))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1749,7 +2411,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule rule =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
-                .setDeps(ImmutableSortedSet.of(dep2, dep4))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep2, dep4))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1762,8 +2424,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             service,
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1793,8 +2457,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void abiRuleKeyIsWrittenForSupportedRules() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    final DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
@@ -1806,19 +2475,25 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            new AbiRuleKeyBuilderFactory(fileHashCache, pathResolver),
-            NOOP_RULE_KEY_FACTORY);
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    ruleKeyBuilderFactory,
+                    NOOP_RULE_KEY_FACTORY,
+                    new AbiRuleKeyBuilderFactory(
+                        fileHashCache,
+                        pathResolver,
+                        ruleKeyBuilderFactory),
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -1830,7 +2505,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Verify that the dep file rule key and dep file were written to the cached artifact.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
-    CacheResult cacheResult = cache.fetch(rule.getRuleKey(), fetchedArtifact);
+    CacheResult cacheResult =
+        cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact);
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1844,6 +2520,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     BuildContext buildContext =
         FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
@@ -1855,26 +2536,30 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
-    AbiRuleKeyBuilderFactory abiRuleKeyBuilderFactory = new AbiRuleKeyBuilderFactory(
+    final AbiRuleKeyBuilderFactory abiRuleKeyBuilderFactory = new AbiRuleKeyBuilderFactory(
         fileHashCache,
-        pathResolver);
+        pathResolver,
+        ruleKeyBuilderFactory);
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            abiRuleKeyBuilderFactory,
-            NOOP_RULE_KEY_FACTORY);
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    ruleKeyBuilderFactory,
+                    NOOP_RULE_KEY_FACTORY,
+                    abiRuleKeyBuilderFactory,
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
-        abiRuleKeyBuilderFactory.newInstance(rule).build().toString(),
+        abiRuleKeyBuilderFactory.build(rule).toString(),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY));
 
@@ -1905,26 +2590,33 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
-    AbiRuleKeyBuilderFactory abiRuleKeyBuilderFactory = new AbiRuleKeyBuilderFactory(
+    final AbiRuleKeyBuilderFactory abiRuleKeyBuilderFactory = new AbiRuleKeyBuilderFactory(
         fileHashCache,
-        pathResolver);
+        pathResolver,
+        NOOP_RULE_KEY_FACTORY);
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
-            NOOP_RULE_KEY_FACTORY,
-            abiRuleKeyBuilderFactory,
-            NOOP_RULE_KEY_FACTORY);
+            256L,
+            pathResolver,
+            Functions.constant(
+                new CachingBuildEngine.RuleKeyFactories(
+                    NOOP_RULE_KEY_FACTORY,
+                    NOOP_RULE_KEY_FACTORY,
+                    abiRuleKeyBuilderFactory,
+                    NOOP_DEP_FILE_RULE_KEY_FACTORY)));
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
-        new StringBuilder(abiRuleKeyBuilderFactory.newInstance(rule).build().toString())
+        new StringBuilder(abiRuleKeyBuilderFactory.build(rule).toString())
             .reverse()
             .toString(),
         BuildInfo.getPathToMetadataDirectory(target)
@@ -1942,8 +2634,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   @Test
-  public void getNumRulesToBuild() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void getNumRulesToBuild() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule rule3 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule3"))
             .setOut("out3")
@@ -1951,12 +2644,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule rule2 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule2"))
             .setOut("out2")
-            .setDeps(ImmutableSortedSet.of(rule3.getBuildTarget()))
+            .setSrcs(
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(rule3.getBuildTarget())))
             .build(resolver);
     BuildRule rule1 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule1"))
             .setOut("out1")
-            .setDeps(ImmutableSortedSet.of(rule2.getBuildTarget()))
+            .setSrcs(
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(rule2.getBuildTarget())))
             .build(resolver);
 
     // Create the build engine.
@@ -1965,8 +2662,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             MoreExecutors.newDirectExecutorService(),
             new NullFileHashCache(),
             CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DependencySchedulingOrder.RANDOM,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(rule1.getProjectFilesystem(), new BuildRuleResolver()));
+            256L,
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     assertThat(
         cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
@@ -1974,15 +2673,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
 
-  // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
-  // back to the cache.
+  // TODO(bolinfest): Test that when the success files match, nothing is built and nothing is
+  // written back to the cache.
 
-  // TODO(mbolin): Test that when the value in the success file does not agree with the current
+  // TODO(bolinfest): Test that when the value in the success file does not agree with the current
   // value, the rule is rebuilt and the result is written back to the cache.
 
-  // TODO(mbolin): Test that a failure when executing the build steps is propagated appropriately.
+  // TODO(bolinfest): Test that a failure when executing the build steps is propagated
+  // appropriately.
 
-  // TODO(mbolin): Test what happens when the cache's methods throw an exception.
+  // TODO(bolinfest): Test what happens when the cache's methods throw an exception.
 
   private BuildRule createRule(
       ProjectFilesystem filesystem,
@@ -1994,13 +2694,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    final FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
-            "/dev/null", "ae8c0f860a0ecad94ecede79b69460434eddbfbc"));
-
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(BUILD_TARGET)
         .setProjectFilesystem(filesystem)
-        .setDeps(sortedDeps)
-        .setFileHashCache(fileHashCache)
+        .setDeclaredDeps(sortedDeps)
         .build();
 
     return new BuildableAbstractCachingBuildRule(
@@ -2009,6 +2705,26 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         pathToOutputFile,
         buildSteps,
         postBuildSteps);
+  }
+
+  private Manifest loadManifest(Path path) throws IOException {
+    try (InputStream inputStream =
+             new GZIPInputStream(new BufferedInputStream(Files.newInputStream(path)))) {
+      return new Manifest(inputStream);
+    }
+  }
+
+  private BuildRuleSuccessType getSuccess(BuildResult result) {
+    switch (result.getStatus()) {
+      case FAIL:
+        throw Throwables.propagate(Preconditions.checkNotNull(result.getFailure()));
+      case CANCELED:
+        throw new RuntimeException("result is canceled");
+      case SUCCESS:
+        return result.getSuccess();
+      default:
+        throw new IllegalStateException();
+    }
   }
 
   private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
@@ -2102,7 +2818,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public void store(
+    public ListenableFuture<Void> store(
         ImmutableSet<RuleKey> ruleKeys,
         ImmutableMap<String, String> metadata,
         Path output) {
@@ -2138,41 +2854,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       return runtimeDeps;
     }
 
-  }
-
-  private static class FixedRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
-
-    private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
-    private final FileHashCache fileHashCache;
-
-    public FixedRuleKeyBuilderFactory(
-        ImmutableMap<BuildTarget, RuleKey> ruleKeys,
-        FileHashCache fileHashCache) {
-      this.ruleKeys = ruleKeys;
-      this.fileHashCache = fileHashCache;
-    }
-
-    public FixedRuleKeyBuilderFactory(ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
-      this(ruleKeys, new NullFileHashCache());
-    }
-
-    @Override
-    public RuleKeyBuilder newInstance(final BuildRule buildRule) {
-      SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-      return new RuleKeyBuilder(resolver, fileHashCache) {
-
-        @Override
-        public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
-          return this;
-        }
-
-        @Override
-        public RuleKey build() {
-          return ruleKeys.get(buildRule.getBuildTarget());
-        }
-
-      };
-    }
   }
 
   private abstract static class InputRuleKeyBuildRule

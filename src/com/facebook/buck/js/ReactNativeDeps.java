@@ -48,6 +48,7 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -66,7 +67,13 @@ public class ReactNativeDeps extends AbstractBuildRule
   private final ReactNativePlatform platform;
 
   @AddToRuleKey
+  private final Optional<String> packagerFlags;
+
+  @AddToRuleKey
   private final SourcePath jsPackager;
+
+  private final Path outputDir;
+  private final Path inputsHashFile;
 
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
@@ -76,12 +83,16 @@ public class ReactNativeDeps extends AbstractBuildRule
       SourcePath jsPackager,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath entryPath,
-      ReactNativePlatform platform) {
+      ReactNativePlatform platform,
+      Optional<String> packagerFlags) {
     super(ruleParams, resolver);
     this.jsPackager = jsPackager;
     this.srcs = srcs;
     this.entryPath = entryPath;
     this.platform = platform;
+    this.packagerFlags = packagerFlags;
+    this.outputDir = BuildTargets.getGenPath(getBuildTarget(), "%s");
+    this.inputsHashFile = outputDir.resolve("inputs_hash.txt");
     this.outputInitializer = new BuildOutputInitializer<>(ruleParams.getBuildTarget(), this);
   }
 
@@ -97,13 +108,22 @@ public class ReactNativeDeps extends AbstractBuildRule
     steps.add(new ShellStep(getProjectFilesystem().getRootPath()) {
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        return ImmutableList.of(
-            getResolver().getPath(jsPackager).toString(),
-            "list-dependencies",
-            platform.toString(),
-            getProjectFilesystem().resolve(getResolver().getPath(entryPath)).toString(),
-            "--output",
-            getProjectFilesystem().resolve(output).toString());
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        builder.add(
+          getResolver().getAbsolutePath(jsPackager).toString(),
+          "list-dependencies",
+          platform.toString(),
+          getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)).toString(),
+          "--output",
+          getProjectFilesystem().resolve(output).toString()
+        );
+
+        if (packagerFlags.isPresent()) {
+          builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
+        }
+
+        return builder.build();
       }
 
       @Override
@@ -112,9 +132,11 @@ public class ReactNativeDeps extends AbstractBuildRule
       }
     });
 
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
+
     steps.add(new AbstractExecutionStep("hash_js_inputs") {
       @Override
-      public int execute(ExecutionContext context) {
+      public int execute(ExecutionContext context) throws IOException {
         ImmutableList<Path> paths;
         try {
           paths = FluentIterable.from(getProjectFilesystem().readLines(output))
@@ -149,7 +171,9 @@ public class ReactNativeDeps extends AbstractBuildRule
           }
         }
 
-        buildableContext.addMetadata(METADATA_KEY_FOR_INPUTS_HASH, hasher.hash().toString());
+        String inputsHash = hasher.hash().toString();
+        buildableContext.addMetadata(METADATA_KEY_FOR_INPUTS_HASH, inputsHash);
+        getProjectFilesystem().writeContentsToPath(inputsHash, inputsHashFile);
         return 0;
       }
     });
@@ -160,11 +184,7 @@ public class ReactNativeDeps extends AbstractBuildRule
   @Override
   @Nullable
   public Path getPathToOutput() {
-    // We don't want to cache the output because
-    // 1. the output file will contain absolute paths (fixable but not worth it), and
-    // 2. we only care about the hash of files listed in the output file, which we record in the
-    //    "hash_js_inputs" step.
-    return null;
+    return outputDir;
   }
 
   public Sha1HashCode getInputsHash() {

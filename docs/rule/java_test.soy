@@ -106,6 +106,8 @@ A <code>java_test()</code> rule is used to define a set of
 
 {call buck.run_test_separately_arg /}
 
+{call buck.test_rule_timeout_ms /}
+
 {call buck.arg}
   {param name: 'std_out_log_level' /}
   {param default : 'FINE' /}
@@ -125,6 +127,14 @@ A <code>java_test()</code> rule is used to define a set of
 {/call}
 
 {call buck.visibility_arg /}
+
+{call buck.arg}
+  {param name: 'use_cxx_libraries' /}
+  {param default: 'False' /}
+  {param desc}
+  Whether or not to build and link against {call buck.cxx_library /} dependencies when testing.
+  {/param}
+{/call}
 
 {/param} // close args
 

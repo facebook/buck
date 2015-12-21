@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -29,8 +30,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.network.RemoteLogger;
@@ -259,13 +260,14 @@ public class RemoteLogUploaderEventListenerTest {
             hasJsonField("daemon", true)
         ));
 
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    FakeBuildRule buildRule = createFakeBuildRule("//build:rule1", resolver, new RuleKey("aaaa"));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    FakeBuildRule buildRule = createFakeBuildRule("//build:rule1", resolver);
     FakeBuildRule buildRule2 = createFakeBuildRule(
         "//build:rule2",
         resolver,
-        ImmutableSortedSet.<BuildRule>of(buildRule),
-        new RuleKey("aaaa"));
+        ImmutableSortedSet.<BuildRule>of(buildRule));
 
     singleSchemaTest(
         BuildRuleEvent.started(buildRule),
@@ -296,21 +298,17 @@ public class RemoteLogUploaderEventListenerTest {
 
   private FakeBuildRule createFakeBuildRule(
       String target,
-      SourcePathResolver resolver,
-      RuleKey ruleKey) {
-    return createFakeBuildRule(target, resolver, ImmutableSortedSet.<BuildRule>of(), ruleKey);
+      SourcePathResolver resolver) {
+    return createFakeBuildRule(target, resolver, ImmutableSortedSet.<BuildRule>of());
   }
 
   private FakeBuildRule createFakeBuildRule(
       String target,
       SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps,
-      RuleKey ruleKey) {
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(
+      ImmutableSortedSet<BuildRule> deps) {
+    return new FakeBuildRule(
         BuildTargetFactory.newInstance(target),
         resolver,
         deps);
-    fakeBuildRule.setRuleKey(ruleKey);
-    return fakeBuildRule;
   }
 }

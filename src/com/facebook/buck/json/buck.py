@@ -7,17 +7,18 @@
 
 import __builtin__
 import __future__
+from collections import namedtuple
 import functools
 import imp
 import inspect
-import json
 from pathlib import Path, PureWindowsPath, PurePath
 import optparse
 import os
 import os.path
+from pywatchman import bser
 import subprocess
 import sys
-
+import traceback
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
@@ -74,6 +75,7 @@ class BuildFileContext(object):
         self.watchman_project_prefix = watchman_project_prefix
         self.sync_cookie_state = sync_cookie_state
         self.watchman_error = watchman_error
+        self.diagnostics = set()
         self.rules = {}
 
 
@@ -87,6 +89,7 @@ class IncludeContext(object):
     def __init__(self):
         self.globals = {}
         self.includes = set()
+        self.diagnostics = set()
 
 
 class LazyBuildEnvPartial(object):
@@ -112,6 +115,9 @@ class LazyBuildEnvPartial(object):
         return self.func(*args, **updated_kwargs)
 
 
+DiagnosticMessageAndLevel = namedtuple('DiagnosticMessageAndLevel', ['message', 'level'])
+
+
 def provide_for_build(func):
     BUILD_FUNCTIONS.append(func)
     return func
@@ -123,7 +129,7 @@ def add_rule(rule, build_env):
         .format(rule['buck.type']))
 
     # Include the base path of the BUILD file so the reader consuming this
-    # JSON will know which BUILD file the rule came from.
+    # output will know which BUILD file the rule came from.
     if 'name' not in rule:
         raise ValueError(
             'rules must contain the field \'name\'.  Found %s.' % rule)
@@ -185,9 +191,13 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_b
                 build_env.watchman_watch_root,
                 build_env.watchman_project_prefix,
                 build_env.sync_cookie_state,
-                build_env.watchman_client)
+                build_env.watchman_client,
+                build_env.diagnostics)
         except build_env.watchman_error, e:
-            print >>sys.stderr, 'Watchman error, falling back to slow glob: ' + str(e)
+            build_env.diagnostics.add(
+                DiagnosticMessageAndLevel(
+                    message='Watchman error, falling back to slow glob: {0}'.format(e),
+                    level='error'))
             try:
                 build_env.watchman_client.close()
             except:
@@ -298,7 +308,7 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
 
 @memoized
 def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
-                  watchman_project_prefix, sync_cookie_state, watchman_client):
+                  watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics):
     assert includes, "The includes argument must be a non-empty list of strings."
 
     if watchman_project_prefix:
@@ -319,9 +329,10 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     query = ["query", watchman_watch_root, query_params]
     res = watchman_client.query(*query)
     if res.get('warning'):
-        print >> sys.stderr, 'Watchman warning from query {}: {}'.format(
-            query,
-            res.get('warning'))
+        diagnostics.add(
+            DiagnosticMessageAndLevel(
+                message='Watchman warning: {0}'.format(res.get('warning')),
+                level='warning'))
     result = res.get('files', [])
     return sorted(result)
 
@@ -331,7 +342,7 @@ def glob_internal(includes, excludes, include_dotfiles, search_base):
     def includes_iterator():
         for pattern in includes:
             for path in search_base.glob(pattern):
-                # TODO(user): Handle hidden files on Windows.
+                # TODO(bhamiltoncx): Handle hidden files on Windows.
                 if path.is_file() and (include_dotfiles or not path.name.startswith('.')):
                     yield path.relative_to(search_base)
 
@@ -484,7 +495,7 @@ class BuildFileProcessor(object):
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
         frame = inspect.currentframe()
-        while frame.f_globals['__name__'] == __name__:
+        while frame.f_globals['__name__'] in (__name__, '_functools'):
             frame = frame.f_back
         self._merge_globals(mod, frame.f_globals)
 
@@ -492,6 +503,9 @@ class BuildFileProcessor(object):
         # into the current build context.
         build_env.includes.add(path)
         build_env.includes.update(inner_env.includes)
+
+        # Pull in any diagnostics issued by the include.
+        build_env.diagnostics.update(inner_env.diagnostics)
 
     def _push_build_env(self, build_env):
         """
@@ -538,6 +552,7 @@ class BuildFileProcessor(object):
             self._merge_globals(mod, default_globals)
             build_env.includes.add(include_path)
             build_env.includes.update(inner_env.includes)
+            build_env.diagnostics.update(inner_env.diagnostics)
 
         # Build a new module for the given file, using the default globals
         # created above.
@@ -599,7 +614,7 @@ class BuildFileProcessor(object):
             path,
             implicit_includes=implicit_includes)
 
-    def process(self, path):
+    def process(self, path, diagnostics):
         """
         Process a build file returning a dict of it's rules and includes.
         """
@@ -608,6 +623,7 @@ class BuildFileProcessor(object):
             implicit_includes=self._implicit_includes)
         values = build_env.rules.values()
         values.append({"__includes": [path] + sorted(build_env.includes)})
+        diagnostics.update(build_env.diagnostics)
         return values
 
 
@@ -616,6 +632,60 @@ def cygwin_adjusted_path(path):
         return subprocess.check_output(['cygpath', path]).rstrip()
     else:
         return path
+
+
+def encode_result(values, diagnostics):
+    result = {'values': values}
+    if diagnostics:
+        encoded_diagnostics = []
+        for d in diagnostics:
+            encoded_diagnostics.append({
+                'message': d.message,
+                'level': d.level,
+            })
+        result['diagnostics'] = encoded_diagnostics
+    return bser.dumps(result)
+
+
+def filter_tb(entries):
+    for i in range(len(entries)):
+        # Filter out the beginning of the stack trace (any entries including the buck.py file)
+        if entries[i][0] != sys.argv[0]:
+            return entries[i:]
+    return []
+
+
+def format_traceback_and_exception():
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    filtered_traceback = filter_tb(traceback.extract_tb(exc_traceback))
+    formatted_traceback = ''.join(traceback.format_list(filtered_traceback))
+    formatted_exception = ''.join(traceback.format_exception_only(exc_type, exc_value))
+    return formatted_traceback + formatted_exception
+
+
+def process_with_diagnostics(build_file, build_file_processor, to_parent):
+    build_file = cygwin_adjusted_path(build_file)
+    diagnostics = set()
+    values = []
+    try:
+        values = build_file_processor.process(build_file.rstrip(), diagnostics=diagnostics)
+    except Exception as e:
+        # Control-C and sys.exit() don't emit diagnostics.
+        if not (e is KeyboardInterrupt or e is SystemExit):
+            diagnostics.add(
+                DiagnosticMessageAndLevel(
+                    message=format_traceback_and_exception(),
+                    level='fatal'))
+        raise e
+    finally:
+        to_parent.write(encode_result(values, diagnostics))
+        to_parent.flush()
+
+
+def silent_excepthook(exctype, value, tb):
+    # We already handle all exceptions by writing them to the parent, so
+    # no need to dump them again to stderr.
+    pass
 
 # Inexplicably, this script appears to run faster when the arguments passed
 # into it are absolute paths. However, we want the "buck.base_path" property
@@ -630,12 +700,12 @@ def cygwin_adjusted_path(path):
 # directories of generated files produced by Buck.
 #
 # All of the build rules that are parsed from the BUILD files will be printed
-# to stdout by a JSON parser. That means that printing out other information
-# for debugging purposes will likely break the JSON parsing, so be careful!
+# to stdout encoded in BSER. That means that printing out other information
+# for debugging purposes will break the BSER encoding, so be careful!
 
 
 def main():
-    # Our parent expects to read JSON from our stdout, so if anyone
+    # Our parent expects to read BSER from our stdout, so if anyone
     # uses print, buck will complain with a helpful "but I wanted an
     # array!" message and quit.  Redirect stdout to stderr so that
     # doesn't happen.  Actually dup2 the file handle so that writing
@@ -672,6 +742,12 @@ def main():
         dest='watchman_watch_root',
         help='Path to root of watchman watch as returned by `watchman watch-project`.')
     parser.add_option(
+        '--watchman_socket_path',
+        action='store',
+        type='string',
+        dest='watchman_socket_path',
+        help='Path to Unix domain socket/named pipe as returned by `watchman get-sockname`.')
+    parser.add_option(
         '--watchman_project_prefix',
         action='store',
         type='string',
@@ -687,6 +763,11 @@ def main():
         '--include',
         action='append',
         dest='include')
+    parser.add_option(
+        '--quiet',
+        action='store_true',
+        dest='quiet',
+        help='Stifles exception backtraces printed to stderr during parsing.')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -701,8 +782,6 @@ def main():
 
     watchman_client = None
     watchman_error = None
-    output_format = 'JSON'
-    output_encode = lambda val: json.dumps(val, sort_keys=True)
     if options.use_watchman_glob:
         import pywatchman
         client_args = {}
@@ -710,14 +789,11 @@ def main():
             # pywatchman expects a timeout as a nonnegative floating-point
             # value in seconds.
             client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
+        if options.watchman_socket_path is not None:
+            client_args['sockpath'] = options.watchman_socket_path
+            client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
         watchman_error = pywatchman.WatchmanError
-        try:
-            import pywatchman.bser as bser
-        except ImportError, e:
-            import pywatchman.pybser as bser
-        output_format = 'BSER'
-        output_encode = lambda val: bser.dumps(val)
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
@@ -731,21 +807,24 @@ def main():
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
 
-    to_parent.write(output_format + '\n')
-    to_parent.flush()
+    # While processing, we'll write exceptions as diagnostic messages
+    # to the parent then re-raise them to crash the process. While
+    # doing so, we don't want Python's default unhandled exception
+    # behavior of writing to stderr.
+    orig_excepthook = None
+    if options.quiet:
+        orig_excepthook = sys.excepthook
+        sys.excepthook = silent_excepthook
 
     for build_file in args:
-        build_file = cygwin_adjusted_path(build_file)
-        values = buildFileProcessor.process(build_file)
-        to_parent.write(output_encode(values))
-        to_parent.flush()
+        process_with_diagnostics(build_file, buildFileProcessor, to_parent)
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
-        build_file = cygwin_adjusted_path(build_file)
-        values = buildFileProcessor.process(build_file.rstrip())
-        to_parent.write(output_encode(values))
-        to_parent.flush()
+        process_with_diagnostics(build_file, buildFileProcessor, to_parent)
+
+    if options.quiet:
+        sys.excepthook = orig_excepthook
 
     # Python tries to flush/close stdout when it quits, and if there's a dead
     # pipe on the other end, it will spit some warnings to stderr. This breaks

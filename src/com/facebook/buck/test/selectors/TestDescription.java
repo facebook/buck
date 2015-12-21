@@ -42,12 +42,22 @@ public class TestDescription {
 
   @Override
   public boolean equals(Object obj) {
-    return (obj instanceof TestDescription) &&
-        this.hashCode() == obj.hashCode();
+    if (!(obj instanceof TestDescription)) {
+      return false;
+    }
+    TestDescription other = (TestDescription) obj;
+    return
+        Objects.equals(this.className, other.className) &&
+        Objects.equals(this.methodName, other.methodName);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(this.className, this.methodName);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("%s.%s", this.className, this.methodName);
   }
 }

@@ -11,6 +11,12 @@ android_prebuilt_aar(
   aar = '//:gen_aar-with-jsr',
 )
 
+android_prebuilt_aar(
+  name = 'aar-extra-res-entry',
+  aar = '//:gen_aar-with-extra-res-entry',
+  visibility = [ 'PUBLIC' ],
+)
+
 android_library(
   name = 'lib',
   srcs = [ 'ExampleActivity.java' ],

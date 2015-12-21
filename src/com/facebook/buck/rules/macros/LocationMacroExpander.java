@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 
@@ -28,7 +27,7 @@ import java.nio.file.Path;
 public class LocationMacroExpander extends BuildTargetMacroExpander {
 
   @Override
-  public String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
+  public String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException {
     Path output = rule.getPathToOutput();
     if (output == null) {
@@ -37,7 +36,7 @@ public class LocationMacroExpander extends BuildTargetMacroExpander {
               "%s used in location macro does not produce output",
               rule.getBuildTarget()));
     }
-    return filesystem.resolve(output).toString();
+    return rule.getProjectFilesystem().resolve(output).toString();
   }
 
 }

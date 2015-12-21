@@ -16,9 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -27,13 +24,10 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -71,54 +65,35 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) {
-
-    Preconditions.checkArgument(
-        type == Linker.LinkableDepType.STATIC,
-        "Only supporting static linking in OCaml");
-
+  public NativeLinkableInput getNativeLinkableInput() {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     // Add linker flags.
-    inputBuilder.addAllArgs(linkerFlags);
+    inputBuilder.addAllArgs(StringArg.from(linkerFlags));
 
     // Add arg and input for static library.
-    final Path staticLibraryPath =
-        OCamlBuildContext.getOutputPath(
-            staticLibraryTarget,
-            /* isLibrary */ true);
-    inputBuilder.addInputs(
-        new BuildTargetSourcePath(ocamlLibraryBuild.getBuildTarget()));
-    inputBuilder.addArgs(staticLibraryPath.toString());
+    inputBuilder.addArgs(
+        new SourcePathArg(
+            getResolver(),
+            new BuildTargetSourcePath(
+                ocamlLibraryBuild.getBuildTarget(),
+                OCamlBuildContext.getOutputPath(
+                    staticLibraryTarget.getUnflavoredBuildTarget(),
+                    /* isLibrary */ true))));
 
     // Add args and inputs for C object files.
-    inputBuilder.addAllInputs(objFiles);
-    inputBuilder.addAllArgs(
-        Iterables.transform(
-            getResolver().getAllPaths(objFiles),
-            Functions.toStringFunction()));
+    for (SourcePath objFile : objFiles) {
+      inputBuilder.addArgs(new SourcePathArg(getResolver(), objFile));
+    }
 
     return inputBuilder.build();
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform) {
-    return ImmutableMap.of();
-  }
-
-  @Override
   public Path getIncludeLibDir() {
-    return OCamlBuildContext.getCompileOutputDir(staticLibraryTarget, true);
+    return OCamlBuildContext.getCompileOutputDir(
+        staticLibraryTarget.getUnflavoredBuildTarget(),
+        true);
   }
 
   @Override

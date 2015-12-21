@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -24,7 +24,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.nio.file.Path;
 import java.util.EnumSet;
 
 
@@ -48,7 +47,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      Optional<Path> proGuardJarOverride,
+      Optional<SourcePath> proGuardJarOverride,
       String proGuardMaxHeapSize,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
@@ -76,7 +75,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         Optional.<String>absent(),
         rulesToExcludeFromDex,
         enhancementResult,
-        // reordering is not supported in instrumentation. TODO(user): add support
+        // reordering is not supported in instrumentation. TODO(dtarjan): add support
         Optional.<Boolean>absent(),
         Optional.<SourcePath>absent(),
         Optional.<SourcePath>absent(),

@@ -1,0 +1,7 @@
+apple_library(
+  name = 'TestLibrary',
+  info_plist = 'Info.plist',
+  srcs = ['TestClass.m'],
+  linker_flags = ['-lobjc'],
+  deps = ['//Libraries/TestLibraryDep:TestLibraryDep'],
+)

@@ -28,7 +28,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
@@ -36,12 +35,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class AppleConfig {
-  private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
-      Pattern.compile("([A-F0-9]{40}) \"(iPhone.*)\"");
+  private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
+  private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
+  private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
+
   private static final Logger LOG = Logger.get(AppleConfig.class);
 
   private final BuckConfig delegate;
@@ -64,6 +63,25 @@ public class AppleConfig {
       return Suppliers.ofInstance(Optional.of(developerDirectory));
     } else {
       return createAppleDeveloperDirectorySupplier(processExecutor);
+    }
+  }
+
+  /**
+   * If specified, the value of {@code [apple] xcode_developer_dir_for_tests} wrapped in a
+   * {@link Supplier}.
+   * Otherwise, this falls back to {@code [apple] xcode_developer_dir} and finally
+   * {@code xcode-select --print-path}.
+   */
+  public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplierForTests(
+      ProcessExecutor processExecutor) {
+    Optional<String> xcodeDeveloperDirectory =
+        delegate.getValue("apple", "xcode_developer_dir_for_tests");
+    if (xcodeDeveloperDirectory.isPresent()) {
+      Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+          Paths.get(xcodeDeveloperDirectory.get()));
+      return Suppliers.ofInstance(Optional.of(developerDirectory));
+    } else {
+      return getAppleDeveloperDirectorySupplier(processExecutor);
     }
   }
 
@@ -110,64 +128,6 @@ public class AppleConfig {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  /**
-   * @return a memoizing {@link Supplier} that caches the output of
-   *     {@code security -v -p codesigning} to find all valid code signing identities.
-   */
-  public static Supplier<ImmutableSet<CodeSignIdentity>> createCodeSignIdentitiesSupplier(
-      final ProcessExecutor processExecutor) {
-    return Suppliers.memoize(new Supplier<ImmutableSet<CodeSignIdentity>>() {
-      @Override
-      public ImmutableSet<CodeSignIdentity> get() {
-        ProcessExecutorParams processExecutorParams =
-            ProcessExecutorParams.builder()
-                .setCommand(
-                    ImmutableList.of(
-                        "security", "find-identity",
-                        "-v", "-p", "codesigning"))
-                .build();
-        // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
-        Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-        ProcessExecutor.Result result;
-        try {
-          result = processExecutor.launchAndExecute(
-              processExecutorParams,
-              options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>absent(),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
-        } catch (InterruptedException | IOException e) {
-          LOG.warn("Could not execute security, continuing without codesign identity.");
-          return ImmutableSet.of();
-        }
-
-        if (result.getExitCode() != 0) {
-          throw new RuntimeException("security -v -p codesigning failed: " + result.getStderr());
-        }
-
-        Matcher matcher = CODE_SIGN_IDENTITY_PATTERN.matcher(result.getStdout().get());
-        ImmutableSet.Builder<CodeSignIdentity> builder = ImmutableSet.builder();
-        while (matcher.find()) {
-          String hash = matcher.group(1);
-          String fullName = matcher.group(2);
-          CodeSignIdentity identity = CodeSignIdentity.builder()
-              .setHash(hash).setFullName(fullName).build();
-          builder.add(identity);
-          LOG.debug("Found code signing identity: " + identity.toString());
-        }
-        ImmutableSet<CodeSignIdentity> allValidIdentities = builder.build();
-        if (allValidIdentities.isEmpty()) {
-          LOG.warn("No valid code signing identities found.  Device build/install won't work.");
-        } else if (allValidIdentities.size() > 1) {
-          LOG.info(
-              "More than 1 valid identity found.  This could potentially  cause the wrong one to" +
-                  " be used unless explicitly specified via CODE_SIGN_IDENTITY.");
-        }
-        return allValidIdentities;
-      }
-    });
   }
 
   /**
@@ -246,12 +206,61 @@ public class AppleConfig {
     return delegate.getBuildTarget("apple", "device_helper_target");
   }
 
+  public Path getProvisioningProfileSearchPath() {
+    return getOptionalPath("apple", "provisioning_profile_search_path")
+        .or(Paths.get(System.getProperty("user.home") +
+                    "/Library/MobileDevice/Provisioning Profiles"));
+  }
+
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
     Optional<String> pathString = delegate.getValue(sectionName, propertyName);
     if (pathString.isPresent()) {
-      return Optional.of(Paths.get(pathString.get()));
+      return Optional.of(delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+              Paths.get(pathString.get())));
     } else {
       return Optional.absent();
     }
+  }
+
+  public boolean shouldAttemptToDetermineBestCxxPlatform() {
+    return delegate.getBooleanValue(
+        "apple",
+        "attempt_to_detect_best_platform",
+        false);
+  }
+
+  public boolean shouldUseHeaderMapsInXcodeProject() {
+    return delegate.getBooleanValue(
+        "apple",
+        "use_header_maps_in_xcode",
+        true);
+  }
+
+  public String getTestLogDirectoryEnvironmentVariable() {
+    return delegate.getValue(
+        "apple",
+        "test_log_directory_environment_variable")
+        .or(DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
+  }
+
+  public String getTestLogLevelEnvironmentVariable() {
+    return delegate.getValue(
+        "apple",
+        "test_log_level_environment_variable")
+        .or(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
+  }
+
+  public String getTestLogLevel() {
+    return delegate.getValue(
+        "apple",
+        "test_log_level")
+        .or(DEFAULT_TEST_LOG_LEVEL);
+  }
+
+  public AppleDebugFormat getDefaultDebugInfoFormat() {
+    return delegate.getEnum(
+        "apple",
+        "default_debug_info_format",
+        AppleDebugFormat.class).or(AppleDebugFormat.DWARF_AND_DSYM);
   }
 }

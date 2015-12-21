@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
+import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.project.Project;
@@ -59,6 +60,7 @@ public class BuckKillCommandHandler extends BuckCommandHandler {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project());
     buildManager.setBuilding(project, false);
     buildManager.setKilling(project, false);
+    project.getComponent(BuckModule.class).disconnect();
     BuckToolWindowFactory.outputConsoleMessage(
         project(),
         "Build aborted\n",

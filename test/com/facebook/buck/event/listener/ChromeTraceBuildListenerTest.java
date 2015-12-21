@@ -26,7 +26,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
@@ -34,23 +39,22 @@ import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.AnnotationProcessingEvent;
-import com.facebook.buck.java.tracing.JavacPhaseEvent;
+import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
+import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
@@ -166,10 +170,10 @@ public class ChromeTraceBuildListenerTest {
 
     FakeBuildRule rule = new FakeBuildRule(
         target,
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSortedSet.<BuildRule>of());
     RuleKey ruleKey = new RuleKey("abc123");
-    rule.setRuleKey(ruleKey);
     String stepShortName = "fakeStep";
     String stepDescription = "I'm a Fake Step!";
     UUID stepUuid = UUID.randomUUID();
@@ -194,16 +198,25 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(ArtifactCacheConnectEvent.finished(artifactCacheConnectEventStarted));
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.post(buildEventStarted);
-    ArtifactCacheEvent.Started artifactCacheEventStarted = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.FETCH,
+
+    HttpArtifactCacheEvent.Started artifactCacheEventStarted =
+        HttpArtifactCacheEvent.newFetchStartedEvent(
         ImmutableSet.of(ruleKey));
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
-        ArtifactCacheEvent.finished(
-            artifactCacheEventStarted,
-            CacheResult.hit("http")));
+        HttpArtifactCacheEvent.newFinishedEventBuilder(artifactCacheEventStarted)
+        .setFetchResult(CacheResult.hit("http"))
+        .build());
+
+    ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
+        ArtifactCompressionEvent.started(
+            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey));
+    eventBus.post(artifactCompressionStartedEvent);
+    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
+
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
+
 
     JavacPhaseEvent.Started runProcessorsStartedEvent = JavacPhaseEvent.started(
         target,
@@ -223,6 +236,18 @@ public class ChromeTraceBuildListenerTest {
         annotationRound,
         isLastRound);
     eventBus.post(annotationProcessingEventStarted);
+
+    HttpArtifactCacheEvent.Scheduled httpScheduled = HttpArtifactCacheEvent.newStoreScheduledEvent(
+        Optional.of("TARGET_ONE"), ImmutableSet.of(ruleKey));
+    HttpArtifactCacheEvent.Started httpStarted =
+        HttpArtifactCacheEvent.newStoreStartedEvent(httpScheduled);
+
+    eventBus.post(httpStarted);
+
+    HttpArtifactCacheEvent.Finished httpFinished =
+        HttpArtifactCacheEvent.newFinishedEventBuilder(httpStarted).build();
+
+    eventBus.post(httpFinished);
 
     final CompilerPluginDurationEvent.Started processingPartOneStarted =
         CompilerPluginDurationEvent.started(
@@ -247,6 +272,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(
         BuildRuleEvent.finished(
             rule,
+            BuildRuleKeys.of(ruleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
@@ -306,25 +332,37 @@ public class ChromeTraceBuildListenerTest {
 
     assertNextResult(
         resultListCopy,
-        "artifact_fetch",
+        "http_artifact_fetch",
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of("rule_key", "abc123"));
 
     assertNextResult(
         resultListCopy,
-        "artifact_fetch",
+        "http_artifact_fetch",
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "rule_key", "abc123",
             "success", "true",
             "cache_result", "HTTP_HIT"));
 
+    assertNextResult(
+        resultListCopy,
+        "artifact_compress",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("rule_key", "abc123"));
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_compress",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("rule_key", "abc123"));
+
     // BuildRuleEvent.Started
     assertNextResult(
         resultListCopy,
         "//fake:rule",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", "abc123"));
+        ImmutableMap.<String, String>of());
 
     assertNextResult(
         resultListCopy,
@@ -343,6 +381,21 @@ public class ChromeTraceBuildListenerTest {
         "com.facebook.FakeProcessor.process",
         ChromeTraceEvent.Phase.BEGIN,
         emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "http_artifact_store",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "rule_key", "abc123"));
+
+    assertNextResult(
+        resultListCopy,
+        "http_artifact_store",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "success", "true",
+            "rule_key", "abc123"));
 
     assertNextResult(
         resultListCopy,

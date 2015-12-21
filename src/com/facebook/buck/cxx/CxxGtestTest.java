@@ -63,12 +63,14 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
   private static final String NOTRUN = "notrun";
 
+  private final CxxLink binary;
   private final Tool executable;
   private final long maxTestOutputSize;
 
   public CxxGtestTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      CxxLink binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
@@ -77,19 +79,28 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately,
+      Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize) {
     super(
         params,
         resolver,
+        executable.getEnvironment(resolver),
         env,
         args,
         additionalDeps,
         labels,
         contacts,
         sourceUnderTest,
-        runTestSeparately);
+        runTestSeparately,
+        testRuleTimeoutMs);
+    this.binary = binary;
     this.executable = executable;
     this.maxTestOutputSize = maxTestOutputSize;
+  }
+
+  @Override
+  public Path getPathToOutput() {
+    return binary.getPathToOutput();
   }
 
   @Override
@@ -220,7 +231,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("gtest")
         .addAllCommand(executable.getCommandPrefix(getResolver()))
         .addAllCommand(getArgs().get())

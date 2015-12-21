@@ -21,15 +21,17 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -83,17 +85,12 @@ public class Build implements Closeable {
       };
 
   private final ActionGraph actionGraph;
-
+  private final BuildRuleResolver ruleResolver;
   private final ExecutionContext executionContext;
-
   private final ArtifactCache artifactCache;
-
   private final BuildEngine buildEngine;
-
   private final DefaultStepRunner stepRunner;
-
   private final JavaPackageFinder javaPackageFinder;
-
   private final Clock clock;
 
   /** Not set until {@link #executeBuild(Iterable, boolean)} is invoked. */
@@ -102,6 +99,7 @@ public class Build implements Closeable {
 
   public Build(
       ActionGraph actionGraph,
+      BuildRuleResolver ruleResolver,
       Optional<TargetDevice> targetDevice,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
@@ -111,6 +109,7 @@ public class Build implements Closeable {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
+      boolean shouldReportAbsolutePaths,
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
@@ -120,7 +119,7 @@ public class Build implements Closeable {
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions) {
     this.actionGraph = actionGraph;
-
+    this.ruleResolver = ruleResolver;
     this.executionContext = ExecutionContext.builder()
         .setConsole(console)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
@@ -128,6 +127,7 @@ public class Build implements Closeable {
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)
+        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths)
         .setEventBus(eventBus)
         .setPlatform(platform)
         .setEnvironment(environment)
@@ -146,6 +146,10 @@ public class Build implements Closeable {
 
   public ActionGraph getActionGraph() {
     return actionGraph;
+  }
+
+  public BuildRuleResolver getRuleResolver() {
+    return ruleResolver;
   }
 
   public ExecutionContext getExecutionContext() {
@@ -184,6 +188,7 @@ public class Build implements Closeable {
         .setBuildId(executionContext.getBuildId())
         .putAllEnvironment(executionContext.getEnvironment())
         .setKeepGoing(isKeepGoing)
+        .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
         .build();
 
     ImmutableSet<BuildTarget> targetsToBuild = FluentIterable.from(targetish)
@@ -199,11 +204,13 @@ public class Build implements Closeable {
             .transform(new Function<HasBuildTarget, BuildRule>() {
                          @Override
                          public BuildRule apply(HasBuildTarget hasBuildTarget) {
-                           return Preconditions.checkNotNull(
-                               actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()),
-                               "No build rule found for target %s in %s",
-                               hasBuildTarget.getBuildTarget(),
-                               actionGraph);
+                           try {
+                             return getRuleResolver().requireRule(hasBuildTarget.getBuildTarget());
+                           } catch (NoSuchBuildTargetException e) {
+                             throw new HumanReadableException(
+                                 "No build rule found for target %s",
+                                 hasBuildTarget.getBuildTarget());
+                           }
                          }
                        })
             .toSet());

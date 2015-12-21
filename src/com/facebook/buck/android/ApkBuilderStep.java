@@ -203,7 +203,7 @@ public class ApkBuilderStep implements Step {
     args.add(
         "java",
         "-classpath",
-        // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
+        // TODO(bolinfest): Make the directory that corresponds to $ANDROID_HOME a field that is
         // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
         "$ANDROID_HOME/tools/lib/sdklib.jar",
         "com.android.sdklib.build.ApkBuilderMain");

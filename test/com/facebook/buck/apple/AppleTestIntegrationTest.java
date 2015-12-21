@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -44,7 +45,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Ignore("Disabled due to CI flakiness t8307334")
 public class AppleTestIntegrationTest {
 
   @Rule
@@ -61,10 +61,8 @@ public class AppleTestIntegrationTest {
         this, "apple_test_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "Test")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(ImmutableFlavor.of("header-symlink-tree"))
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:Test#iphonesimulator-x86_64,private-headers");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -93,9 +91,7 @@ public class AppleTestIntegrationTest {
         this, "apple_test_info_plist_export_file", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
-        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -126,9 +122,7 @@ public class AppleTestIntegrationTest {
         this, "apple_test_framework_search_path", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
-        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -159,9 +153,7 @@ public class AppleTestIntegrationTest {
         this, "apple_test_info_plist_substitution", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
-        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -177,8 +169,7 @@ public class AppleTestIntegrationTest {
         this, "apple_test_default_platform", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -194,8 +185,7 @@ public class AppleTestIntegrationTest {
         this, "apple_test_with_deps", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -249,9 +239,7 @@ public class AppleTestIntegrationTest {
         this, "apple_test_with_resources", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
-        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -315,6 +303,7 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  @Ignore("Simulator-hosted app tests currently timing out in CI")
   public void successOnAppTestPassing() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -334,6 +323,7 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  @Ignore("Simulator-hosted app tests currently timing out in CI")
   public void exitCodeIsCorrectOnAppTestFailure() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -420,10 +410,11 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  @Ignore("Simulator-hosted app tests currently timing out in CI")
   public void successForAppTestWithXib() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "app_bundle_with_xib", tmp);
+        this, "app_bundle_with_xib_and_storyboard", tmp);
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("xctool"),

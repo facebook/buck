@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 
 import java.nio.file.Path;
 
@@ -27,7 +27,7 @@ import java.nio.file.Path;
  */
 public interface ImplicitInputsInferringDescription<T> {
 
-  public Iterable<Path> inferInputsFromConstructorArgs(
-      BuildTarget buildTarget,
+  Iterable<Path> inferInputsFromConstructorArgs(
+      UnflavoredBuildTarget buildTarget,
       T constructorArg);
 }

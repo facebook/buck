@@ -21,13 +21,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
@@ -58,7 +57,7 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Path aidl;
+    public SourcePath aidl;
 
     // import_path is an anomaly: it is a path that is relative to the project root rather than
     // relative to the build file directory.

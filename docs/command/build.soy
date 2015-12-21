@@ -116,24 +116,14 @@ Buck. To build a rule, pass its target to buck build:
 {/call}
 
 {call buck.param}
-  {param name: 'num-threads' /}
+  {param name: 'populate-cache' /}
   {param desc}
 
-  The number of threads that buck should use when executing the
-  build. This defaults to 1.25 times the number of processors in the
-  system (on systems with hyperthreading, this means that each core is
-  counted twice). The number of threads to use for building can also
-  be set by adding a "<code>threads</code>" key to the{sp}
-  "<code>build</code>" section of the <code>.buckconfig</code> file.
-
-  The order of precedence for setting the number of builds threads
-  (from highest to lowest) is: command line option,{sp}
-  <code>.buckconfig</code> setting, default value.
-
-  The number of active threads may not always be equal to this
-  argument.
+  Performs a cache population, which makes the output of all unchanged transitive dependencies available 
+  (if these outputs are available in the remote cache). Does not build changed or unavailable dependencies locally.
  {/param}
 {/call}
+
 
 {call buck.param}
   {param name: 'verbose' /}

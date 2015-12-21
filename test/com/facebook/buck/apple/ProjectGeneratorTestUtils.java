@@ -38,6 +38,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -75,7 +76,7 @@ public final class ProjectGeneratorTestUtils {
         value = ImmutableMap.of();
       } else if (field.getType().isAssignableFrom(Optional.class)) {
         Type nonOptionalType = Types.getFirstNonOptionalType(field);
-        TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+        TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
         TypeCoercer<?> typeCoercer = typeCoercerFactory.typeCoercerForType(nonOptionalType);
         value = typeCoercer.getOptionalValue();
       } else if (field.getType().isAssignableFrom(String.class)) {

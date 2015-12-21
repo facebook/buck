@@ -1,0 +1,126 @@
+{namespace buck.simulate}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck simulate' /}
+    {param prettify: true /}
+    {param description}
+      A command that simulates a build and outputs expected run time stats.
+    {/param}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+<p>
+Simulates a build for one or more specified targets and produces a report
+with runtime statistics.
+</p>
+
+<pre>{literal}{buck simulate //java/com/example/app:amazing}{/literal}</pre>
+
+{/param}
+{param params}
+
+{call buck.param}
+  {param name: 'rule-fallback-time-millis' /}
+  {param desc}
+  Specifies the default time in millis each BuildTarget node in the build graph
+  should take during the simulation. Defaults to 10 milliseconds.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'report-file' /}
+  {param desc}
+  File where the final report will be output to. The format of the file is JSON.
+  Defaults to 'buck_simulate_report.json'.
+  This is an example of a report file:
+
+  <p>
+  <pre class="prettyprint lang-js">
+  {literal}
+  {
+    "timestamp_millis" : 1446206932826,
+    "build_duration_millis" : 650,
+    "total_action_graph_nodes" : 672,
+    "used_action_graph_nodes" : 445,
+    "total_dependency_dag_edges" : 4137,
+    "build_targets" : [ "//programs:buck" ],
+    "number_of_threads" : 1000,
+    "action_graph_nodes_without_simulate_time" : 445,
+    "simulate_times_file" : "buck_simulate_times_2015-10-21.json",
+    "simulate_time_type" : "p60",
+    "simulate_default_millis" : 10
+  }
+  {/literal}
+  </pre>
+  </p>
+
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'num-threads' /}
+  {param desc}
+
+  The number of threads to simulate the build with. The simulation doesn't
+  actually instantiate any threads in the system.
+  Defaults to 1.25 times the number of processors in the system.
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'times-file' /}
+  {param desc}
+  A JSON file containing simulation times in millis for each BuildTarget node
+  in in the ActionGraph.
+
+  <p>
+  Here's an example of the format:
+  </p>
+
+  <pre class="prettyprint lang-js">
+  {literal}
+  {
+    "build_targets": {
+      "//target/number/one:release": {
+        "avg": 3.142857142857143,
+        "count": 21.0,
+        "p50": 1.0,
+        "p90": 2.0,
+        "p95": 26.0,
+        "p99": 28.400000000000002
+      },
+      "//target/number/two:release": {
+        "avg": 46.333333333333336,
+        "count": 21.0,
+        "p50": 10.0,
+        "p90": 26.0,
+        "p95": 128.0,
+        "p99": 541.6000000000004
+      },
+      "//target/number/three:release#dex": {
+        "avg": 284.875,
+        "count": 8.0,
+        "p50": 7.0,
+        "p90": 679.1999999999997,
+        "p95": 1447.0999999999988,
+        "p99": 2061.419999999999
+      }
+    }
+  }
+  {/literal}
+  </pre>
+
+ {/param}
+{/call}
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

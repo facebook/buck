@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -48,6 +50,7 @@ public class FrameworkPathTypeCoercerTest {
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException{
     frameworkPathTypeCoercer.coerce(
+        createCellRoots(projectFilesystem),
         projectFilesystem,
         pathRelativeToProjectRoot,
         "$FOOBAR/libfoo.a");

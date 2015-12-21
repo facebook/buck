@@ -239,7 +239,7 @@ class PEX(object):
   @classmethod
   def execute_interpreter(cls):
     force_interpreter = 'PEX_INTERPRETER' in os.environ
-    # TODO(user) Apparently os.unsetenv doesn't work on Windows
+    # TODO(wickman) Apparently os.unsetenv doesn't work on Windows
     os.unsetenv('PEX_INTERPRETER')
     TRACER.log('%s, dropping into interpreter' % (
         'PEX_INTERPRETER specified' if force_interpreter else 'No entry point specified'))

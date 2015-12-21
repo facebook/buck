@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -54,7 +55,8 @@ public class BuildCommandTest {
 
   @Before
   public void setUp() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
@@ -70,7 +72,7 @@ public class BuildCommandTest {
     };
     ruleToResult.put(
         rule1,
-        Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.skip())));
+        Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
     BuildRule rule2 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule2"),

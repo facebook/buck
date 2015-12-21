@@ -19,9 +19,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 
@@ -49,14 +46,10 @@ public class KnownBuildRuleTypesFactory {
   }
 
   public KnownBuildRuleTypes create(BuckConfig config) throws IOException, InterruptedException {
-    PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
-    PythonEnvironment pythonEnv = pyConfig.getPythonEnvironment(executor);
-
     return KnownBuildRuleTypes.createInstance(
         config,
         executor,
         directoryResolver,
-        pythonEnv,
         testTempDirOverride);
   }
 

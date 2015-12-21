@@ -44,8 +44,7 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_LEX_FLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
+  private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   @VisibleForTesting
@@ -73,16 +72,16 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       Archiver ar,
+      Tool ranlib,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
-      Optional<Tool> lex,
-      Optional<Tool> yacc,
       String sharedLibraryExtension,
+      String sharedLibraryVersionedExtensionFormat,
       Optional<DebugPathSanitizer> debugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
-    // TODO(user, agallagher): Generalize this so we don't need all these setters.
+    // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
     builder
@@ -90,7 +89,7 @@ public class CxxPlatforms {
         .setAs(getTool(flavor, "as", config).or(as))
         .setAspp(
             getTool(flavor, "aspp", config).transform(getPreprocessor(aspp.getClass())).or(aspp))
-        // TODO(user): Don't assume the compiler override specifies the same type of compiler as
+        // TODO(Coneko): Don't assume the compiler override specifies the same type of compiler as
         // the default one.
         .setCc(getTool(flavor, "cc", config).transform(getCompiler(cc.getClass())).or(cc))
         .setCxx(getTool(flavor, "cxx", config).transform(getCompiler(cxx.getClass())).or(cxx))
@@ -100,10 +99,10 @@ public class CxxPlatforms {
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
+        .setRanlib(getTool(flavor, "ranlib", config).or(ranlib))
         .setStrip(getTool(flavor, "strip", config).or(strip))
-        .setLex(getTool(flavor, "lex", config).or(lex))
-        .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(sharedLibraryExtension)
+        .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER))
         .setFlagMacros(flagMacros);
     builder.addAllCflags(cflags);
@@ -156,10 +155,11 @@ public class CxxPlatforms {
         .setAr(getTool(flavor, "ar", config)
                 .transform(getArchiver(defaultPlatform.getAr().getClass(), config))
                 .or(defaultPlatform.getAr()))
+        .setRanlib(getTool(flavor, "ranlib", config).or(defaultPlatform.getRanlib()))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
-        .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
-        .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
         .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
+        .setSharedLibraryVersionedExtensionFormat(
+            defaultPlatform.getSharedLibraryVersionedExtensionFormat())
         .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
 
     if (config.getDefaultPlatform().isPresent()) {
@@ -249,8 +249,7 @@ public class CxxPlatforms {
         .addAllCxxppflags(cxxflags)
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
-        .addAllLexFlags(config.getFlags("lexflags").or(DEFAULT_LEX_FLAGS))
-        .addAllYaccFlags(config.getFlags("yaccflags").or(DEFAULT_YACC_FLAGS));
+        .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));
   }
 
   public static void addToolFlagsFromCxxPlatform(
@@ -268,8 +267,7 @@ public class CxxPlatforms {
         .addAllCxxppflags(platform.getCxxppflags())
         .addAllLdflags(platform.getLdflags())
         .addAllArflags(platform.getArflags())
-        .addAllLexFlags(platform.getLexFlags())
-        .addAllYaccFlags(platform.getYaccFlags());
+        .addAllRanlibflags(platform.getRanlibflags());
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(

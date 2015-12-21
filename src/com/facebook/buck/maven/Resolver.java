@@ -360,7 +360,7 @@ public class Resolver {
           continue;
         }
 
-        // TODO(simons): Do we always want optional dependencies?
+        // TODO(shs96c): Do we always want optional dependencies?
 //        if (dependency.isOptional()) {
 //          continue;
 //        }
@@ -559,6 +559,10 @@ public class Resolver {
 
     @Override
     public int compareTo(Prebuilt that) {
+      if (this == that) {
+        return 0;
+      }
+
       return this.name.compareTo(that.name);
     }
   }

@@ -28,7 +28,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends AbstractCxxBuilder<T> {
+public abstract class AbstractCxxSourceBuilder<
+    T extends CxxConstructorArg,
+    U extends AbstractCxxSourceBuilder<T, U>>
+    extends AbstractCxxBuilder<T> {
 
   public AbstractCxxSourceBuilder(
       Description<T> description,
@@ -36,60 +39,62 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
     super(description, target);
   }
 
-  public AbstractCxxSourceBuilder<T> setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
+  public U setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
     arg.srcs = Optional.of(srcs);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaders(ImmutableSortedSet<SourcePath> headers)  {
+  public U setHeaders(ImmutableSortedSet<SourcePath> headers)  {
     arg.headers = Optional.of(SourceList.ofUnnamedSources(headers));
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
+  public U setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
     arg.headers = Optional.of(SourceList.ofNamedSources(headers));
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaders(SourceList headers)  {
+  public U setHeaders(SourceList headers)  {
     arg.headers = Optional.of(headers);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setCompilerFlags(ImmutableList<String> compilerFlags) {
+  public U setCompilerFlags(ImmutableList<String> compilerFlags) {
     arg.compilerFlags = Optional.of(compilerFlags);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
+  public U setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
     arg.preprocessorFlags = Optional.of(preprocessorFlags);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setLinkerFlags(ImmutableList<String> linkerFlags) {
+  public U setLinkerFlags(ImmutableList<String> linkerFlags) {
     arg.linkerFlags = Optional.of(linkerFlags);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setPlatformLinkerFlags(
+  public U setPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags) {
     arg.platformLinkerFlags = Optional.of(platformLinkerFlags);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+  public U setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
     arg.frameworks = Optional.of(frameworks);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setDeps(ImmutableSortedSet<BuildTarget> deps) {
+  public U setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.of(deps);
-    return this;
+    return getThis();
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaderNamespace(String namespace) {
+  public U setHeaderNamespace(String namespace) {
     arg.headerNamespace = Optional.of(namespace);
-    return this;
+    return getThis();
   }
+
+  protected abstract U getThis();
 
 }

@@ -16,23 +16,20 @@
 
 package com.facebook.buck.util.cache;
 
-import com.google.common.hash.HashCode;
+import com.facebook.buck.hashing.FileHashLoader;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
  * A cache which maps Paths to cached hashes of their contents,
  * based on a simplified subset of the java.util.Map&lt;Path, HashCode&gt; interface.
  */
-public interface FileHashCache {
+public interface FileHashCache extends FileHashLoader {
 
   boolean willGet(Path path);
 
   void invalidate(Path path);
 
   void invalidateAll();
-
-  HashCode get(Path path) throws IOException;
 
 }

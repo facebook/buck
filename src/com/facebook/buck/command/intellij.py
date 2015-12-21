@@ -183,7 +183,7 @@ def create_additional_excludes(modules):
                     # If we find a module that specifies the directory as the
                     # source folder, then keep all folders under that module.
                     #
-                    # TODO(royw): Be smarter here and actually keep track of
+                    # TODO(rowillia): Be smarter here and actually keep track of
                     # the additional directories being tracked by sub modules.
                     if source_folder['url'] != 'file://$MODULE_DIR$/gen':
                         found_relevant_source_folder = True
@@ -381,7 +381,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             elif dep_type == 'module':
                 dep_module_name = dep['moduleName']
 
-                # TODO(mbolin): Eliminate this special-case for jackson. It
+                # TODO(bolinfest): Eliminate this special-case for jackson. It
                 # exists because jackson is not an ordinary module: it is a
                 # module that functions as a library. Project.java should add
                 # it as such in project.json to eliminate this special case.

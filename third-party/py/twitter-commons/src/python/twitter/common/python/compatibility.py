@@ -18,7 +18,7 @@ from abc import ABCMeta
 from numbers import Integral, Real
 from sys import version_info as sys_version_info
 
-# TODO(user)  Since the io package is available in 2.6.x, use that instead of
+# TODO(wickman)  Since the io package is available in 2.6.x, use that instead of
 # cStringIO/StringIO
 try:
   # CPython 2.x

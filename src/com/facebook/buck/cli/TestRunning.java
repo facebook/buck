@@ -16,14 +16,15 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.java.JUnitStep.JACOCO_OUTPUT_DIR;
+import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_OUTPUT_DIR;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.DefaultJavaPackageFinder;
-import com.facebook.buck.java.GenerateCodeCoverageReportStep;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaTest;
+import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -48,7 +49,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -60,6 +60,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -94,7 +95,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -141,13 +141,14 @@ public class TestRunning {
           // We'll use the filesystem of the first rule under test. This will fail if there are any
           // tests from a different repo, but it'll help us bootstrap ourselves to being able to
           // support multiple repos
-          // TODO(user): Support tests in multiple repos
+          // TODO(t8220837): Support tests in multiple repos
           JavaLibrary library = rulesUnderTest.iterator().next();
           stepRunner.runStepForBuildTarget(
               new MakeCleanDirectoryStep(library.getProjectFilesystem(), JACOCO_OUTPUT_DIR),
               Optional.<BuildTarget>absent());
         } catch (StepFailedException e) {
-          params.getConsole().printBuildFailureWithoutStacktrace(e);
+          params.getBuckEventBus().post(
+              ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));
           return 1;
         }
       }
@@ -179,14 +180,6 @@ public class TestRunning {
     // Buck, not the test being run.
     Verbosity verbosity = params.getConsole().getVerbosity();
     final boolean printTestResults = (verbosity != Verbosity.SILENT);
-
-    // For grouping results!
-    final TestResultsGrouper grouper;
-    if (options.isIgnoreFailingDependencies()) {
-      grouper = new TestResultsGrouper(tests);
-    } else {
-      grouper = null;
-    }
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(buildEngine);
     final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
@@ -326,7 +319,6 @@ public class TestRunning {
             transformTestResults(
                 params,
                 testResults,
-                grouper,
                 testRun.getTest(),
                 testRun.getTestReportingCallback(),
                 testTargets,
@@ -359,7 +351,6 @@ public class TestRunning {
                           Optional.of(testRun.getTest().getBuildTarget()),
                           directExecutorService,
                           testStepRunningCallback),
-                      grouper,
                       testRun.getTest(),
                       testRun.getTestReportingCallback(),
                       testTargets,
@@ -437,7 +428,8 @@ public class TestRunning {
                 options.getCoverageReportTitle()),
             Optional.<BuildTarget>absent());
       } catch (StepFailedException e) {
-        params.getConsole().printBuildFailureWithoutStacktrace(e);
+        params.getBuckEventBus().post(
+            ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));
         return 1;
       }
     }
@@ -456,7 +448,6 @@ public class TestRunning {
   private static ListenableFuture<TestResults> transformTestResults(
       final CommandRunnerParams params,
       ListenableFuture<TestResults> originalTestResults,
-      @Nullable final TestResultsGrouper grouper,
       final TestRule testRule,
       final TestRule.TestReportingCallback testReportingCallback,
       final ImmutableSet<String> testTargets,
@@ -467,9 +458,7 @@ public class TestRunning {
     final SettableFuture<TestResults> transformedTestResults = SettableFuture.create();
     FutureCallback<TestResults> callback = new FutureCallback<TestResults>() {
 
-      private void postTestResults(TestResults testResults) {
-        testResults.setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet());
-        testResults.setTotalNumberOfTests(totalNumberOfTests);
+      private TestResults postTestResults(TestResults testResults) {
         if (!testRule.supportsStreamingTests()) {
           // For test rules which don't support streaming tests, we'll
           // stream test summary events after interpreting the
@@ -487,10 +476,16 @@ public class TestRunning {
           testReportingCallback.testsDidEnd(testResults.getTestCases());
           LOG.debug("Done simulating streaming test events for rule %s", testRule);
         }
+        TestResults transformedTestResults = TestResults.builder()
+            .from(testResults)
+            .setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet())
+            .setTotalNumberOfTests(totalNumberOfTests)
+            .build();
         params.getBuckEventBus().post(
             IndividualTestEvent.finished(
                 testTargets,
-                testResults));
+                transformedTestResults));
+        return transformedTestResults;
       }
 
       private String getStackTrace(Throwable throwable) {
@@ -504,14 +499,7 @@ public class TestRunning {
       public void onSuccess(TestResults testResults) {
         LOG.debug("Transforming successful test results %s", testResults);
         if (printTestResults) {
-          if (grouper == null) {
-            postTestResults(testResults);
-          } else {
-            Map<TestRule, TestResults> postableTestResultsMap = grouper.post(testRule, testResults);
-            for (TestResults rr : postableTestResultsMap.values()) {
-              postTestResults(rr);
-            }
-          }
+          postTestResults(testResults);
         }
         transformedTestResults.set(testResults);
       }
@@ -521,7 +509,7 @@ public class TestRunning {
         LOG.warn(throwable, "Test command step failed, marking %s as failed", testRule);
         // If the test command steps themselves fail, report this as special test result.
         TestResults testResults =
-            new TestResults(
+            TestResults.of(
                 testRule.getBuildTarget(),
                 ImmutableList.of(
                     new TestCaseSummary(
@@ -539,10 +527,13 @@ public class TestRunning {
                 testRule.getContacts(),
                 FluentIterable.from(
                     testRule.getLabels()).transform(Functions.toStringFunction()).toSet());
+        TestResults newTestResults;
         if (printTestResults) {
-          postTestResults(testResults);
+          newTestResults = postTestResults(testResults);
+        } else {
+          newTestResults = testResults;
         }
-        transformedTestResults.set(testResults);
+        transformedTestResults.set(newTestResults);
       }
     };
     Futures.addCallback(originalTestResults, callback);
@@ -563,7 +554,7 @@ public class TestRunning {
             .from(originalTestResults.getTestCases())
             .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
             .toList();
-        return new TestResults(
+        return TestResults.of(
             originalTestResults.getBuildTarget(),
             cachedTestResults,
             originalTestResults.getContacts(),
@@ -590,7 +581,7 @@ public class TestRunning {
     } else if (isRunningWithTestSelectors) {
       // As a feature to aid developers, we'll assume that when we are using test selectors,
       // we should always run each test (and never look at the cache.)
-      // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
+      // TODO(edwardspeyer) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&

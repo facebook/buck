@@ -22,6 +22,8 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreStrings;
@@ -69,6 +71,7 @@ public class MiniAapt implements Step {
 
   private static final String ID_DEFINITION_PREFIX = "@+id/";
   private static final String ITEM_TAG = "item";
+  private static final String CUSTOM_DRAWABLE_PREFIX = "app-";
 
   private static final XPathExpression ANDROID_ID_USAGE =
       createExpression("//@*[starts-with(., '@') and " +
@@ -92,17 +95,20 @@ public class MiniAapt implements Step {
     }
   };
 
+  private final SourcePathResolver resolver;
   private final ProjectFilesystem filesystem;
-  private final Path resDirectory;
+  private final SourcePath resDirectory;
   private final Path pathToTextSymbolsFile;
   private final ImmutableSet<Path> pathsToSymblolsOfDeps;
   private final AaptResourceCollector resourceCollector;
 
   public MiniAapt(
+      SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      Path resDirectory,
+      SourcePath resDirectory,
       Path pathToTextSymbolsFile,
       ImmutableSet<Path> pathsToSymblolsOfDeps) {
+    this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToTextSymbolsFile = pathToTextSymbolsFile;
@@ -204,7 +210,8 @@ public class MiniAapt implements Step {
    */
   private void collectResources(ProjectFilesystem filesystem, BuckEventBus eventBus)
       throws IOException, ResourceParseException {
-    Collection<Path> contents = filesystem.getDirectoryContents(resDirectory);
+    Collection<Path> contents = filesystem.getDirectoryContents(
+        resolver.getAbsolutePath(resDirectory));
     for (Path dir : contents) {
       if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(dir)) {
         if (!shouldIgnoreFile(dir, filesystem)) {
@@ -247,8 +254,40 @@ public class MiniAapt implements Step {
       int dotIndex = filename.indexOf('.');
       String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
 
+      RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(dirname));
+      if (rType == RType.DRAWABLE) {
+        processDrawables(filesystem, resourceFile);
+      } else {
+        resourceCollector.addIntResourceIfNotPresent(
+            rType,
+            resourceName);
+      }
+    }
+  }
+
+  void processDrawables(ProjectFilesystem filesystem, Path resourceFile)
+      throws IOException, ResourceParseException {
+    String filename = resourceFile.getFileName().toString();
+    int dotIndex = filename.indexOf('.');
+    String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
+
+    // Look into the XML file.
+    boolean isCustomDrawable = false;
+    if (filename.endsWith(".xml")) {
+      try (InputStream stream = filesystem.newFileInputStream(resourceFile)) {
+        Document dom = parseXml(resourceFile, stream);
+        Element root = dom.getDocumentElement();
+        isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
+      }
+    }
+
+    if (isCustomDrawable) {
+      resourceCollector.addCustomDrawableResourceIfNotPresent(
+          RType.DRAWABLE,
+          resourceName);
+    } else {
       resourceCollector.addIntResourceIfNotPresent(
-          Preconditions.checkNotNull(RESOURCE_TYPES.get(dirname)),
+          RType.DRAWABLE,
           resourceName);
     }
   }
@@ -296,6 +335,14 @@ public class MiniAapt implements Step {
     try (InputStream stream = filesystem.newFileInputStream(valuesFile)) {
       Document dom = parseXml(valuesFile, stream);
       Element root = dom.getDocumentElement();
+
+      // Exclude resources annotated with the attribute {@code exclude-from-resource-map}.
+      // This is useful to exclude using generated strings to build the
+      // resource map, which ensures a build break will show up at build time
+      // rather than being hidden until generated resources are updated.
+      if (root.getAttribute("exclude-from-buck-resource-map").equals("true")) {
+        return;
+      }
 
       for (Node node = root.getFirstChild(); node != null; node = node.getNextSibling()) {
         if (node.getNodeType() != Node.ELEMENT_NODE) {
@@ -370,8 +417,10 @@ public class MiniAapt implements Step {
       ProjectFilesystem filesystem,
       ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    for (Path path : filesystem.getFilesUnderPath(resDirectory, ENDS_WITH_XML)) {
-      String dirname = resDirectory.relativize(path).getName(0).toString();
+    Path absoluteResDir = resolver.getAbsolutePath(resDirectory);
+    Path relativeResDir = resolver.getRelativePath(resDirectory);
+    for (Path path : filesystem.getFilesUnderPath(absoluteResDir, ENDS_WITH_XML)) {
+      String dirname = relativeResDir.relativize(path).getName(0).toString();
       if (isAValuesDir(dirname)) {
         // Ignore files under values* directories.
         continue;

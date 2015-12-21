@@ -71,8 +71,9 @@ public class IntraDexReorderStep implements Step {
       String inputSubDir,
       String outputSubDir) {
     this.filesystem = filesystem;
-    this.reorderTool = reorderTool.transform(sourcePathResolver.getPathFunction()).get();
-    this.reorderDataFile = reorderDataFile.transform(sourcePathResolver.getPathFunction()).get();
+    this.reorderTool = reorderTool.transform(sourcePathResolver.deprecatedPathFunction()).get();
+    this.reorderDataFile =
+        reorderDataFile.transform(sourcePathResolver.deprecatedPathFunction()).get();
     this.inputPrimaryDexPath = inputPrimaryDexPath;
     this.outputPrimaryDexPath = outputPrimaryDexPath;
     this.secondaryDexMap = secondaryDexMap;

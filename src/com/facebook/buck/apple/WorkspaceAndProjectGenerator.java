@@ -17,19 +17,22 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -63,7 +66,6 @@ public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final ReactNativeBuckConfig reactNativeBuckConfig;
   private final TargetGraph projectGraph;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
@@ -82,15 +84,17 @@ public class WorkspaceAndProjectGenerator {
   private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.absent();
   private Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
-  private final Function<TargetNode<?>, Path> outputPathOfNode;
+  private final Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
   private final BuckEventBus buckEventBus;
+  private final boolean attemptToDetermineBestCxxPlatform;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
+  private final HalideBuckConfig halideBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
-      ReactNativeBuckConfig reactNativeBuckConfig,
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescription.Arg workspaceArguments,
       BuildTarget workspaceBuildTarget,
@@ -99,15 +103,17 @@ public class WorkspaceAndProjectGenerator {
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
       boolean parallelizeBuild,
+      boolean attemptToDetermineBestCxxPlatform,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       String buildFileName,
-      Function<TargetNode<?>, Path> outputPathOfNode,
-      BuckEventBus buckEventBus) {
+      Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
+      BuckEventBus buckEventBus,
+      HalideBuckConfig halideBuckConfig,
+      CxxBuckConfig cxxBuckConfig) {
     this.projectFilesystem = projectFilesystem;
-    this.reactNativeBuckConfig = reactNativeBuckConfig;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
@@ -121,9 +127,12 @@ public class WorkspaceAndProjectGenerator {
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildFileName = buildFileName;
-    this.outputPathOfNode = outputPathOfNode;
+    this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
     this.combinedProjectGenerator = Optional.absent();
+    this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
+    this.halideBuckConfig = halideBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
   }
 
   @VisibleForTesting
@@ -240,7 +249,6 @@ public class WorkspaceAndProjectGenerator {
           projectGraph,
           targetsInRequiredProjects,
           projectFilesystem,
-          reactNativeBuckConfig.getServer(),
           outputDirectory.getParent(),
           workspaceName,
           buildFileName,
@@ -251,8 +259,11 @@ public class WorkspaceAndProjectGenerator {
           environment,
           cxxPlatforms,
           defaultCxxPlatform,
-          outputPathOfNode,
-          buckEventBus)
+          sourcePathResolverForNode,
+          buckEventBus,
+          attemptToDetermineBestCxxPlatform,
+          halideBuckConfig,
+          cxxBuckConfig)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
@@ -301,7 +312,6 @@ public class WorkspaceAndProjectGenerator {
               projectGraph,
               rules,
               projectFilesystem,
-              reactNativeBuckConfig.getServer(),
               projectDirectory,
               projectName,
               buildFileName,
@@ -321,8 +331,11 @@ public class WorkspaceAndProjectGenerator {
               environment,
               cxxPlatforms,
               defaultCxxPlatform,
-              outputPathOfNode,
-              buckEventBus)
+              sourcePathResolverForNode,
+              buckEventBus,
+              attemptToDetermineBestCxxPlatform,
+              halideBuckConfig,
+              cxxBuckConfig)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
@@ -345,7 +358,6 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
             projectFilesystem,
-            reactNativeBuckConfig.getServer(),
             BuildTargets.getGenPath(workspaceBuildTarget, "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,
@@ -356,8 +368,11 @@ public class WorkspaceAndProjectGenerator {
             environment,
             cxxPlatforms,
             defaultCxxPlatform,
-            outputPathOfNode,
-            buckEventBus);
+            sourcePathResolverForNode,
+            buckEventBus,
+            attemptToDetermineBestCxxPlatform,
+            halideBuckConfig,
+            cxxBuckConfig);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
             .createXcodeProjects();
@@ -812,16 +827,20 @@ public class WorkspaceAndProjectGenerator {
       Optional<String> runnablePath;
       Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
       if (buildWithBuck && targetToBuildWithBuck.isPresent()) {
+        Optional<String> productName = getProductName(
+            schemeNameToSrcTargetNode.get(schemeName),
+            targetToBuildWithBuck);
+        String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
         runnablePath = Optional.of(
             projectFilesystem.resolve(
-                ProjectGenerator.getScratchPathForAppBundle(
-                    targetToBuildWithBuck.get())).toString());
+                ProjectGenerator.getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName)
+            ).toString());
       } else {
         runnablePath = Optional.absent();
       }
       Optional<String> remoteRunnablePath;
       if (schemeConfigArg.isRemoteRunnable.or(false)) {
-        // XXX TODO(user): Figure out the actual name of the binary to launch
+        // XXX TODO(bhamiltoncx): Figure out the actual name of the binary to launch
         remoteRunnablePath = Optional.of("/" + workspaceName);
       } else {
         remoteRunnablePath = Optional.absent();
@@ -845,5 +864,38 @@ public class WorkspaceAndProjectGenerator {
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
+  }
+
+  private Optional<String> getProductName(
+      ImmutableSet<Optional<TargetNode<?>>> targetNodes,
+      Optional<BuildTarget> targetToBuildWithBuck) {
+    Optional<String> productName = Optional.absent();
+    Optional<TargetNode<?>> buildWithBuckTargetNode = getTargetNodeForBuildTarget(
+        targetToBuildWithBuck,
+        targetNodes);
+    if (buildWithBuckTargetNode.isPresent() && targetToBuildWithBuck.isPresent()) {
+      productName = Optional.<String>of(
+          ProjectGenerator.getProductName(
+              buildWithBuckTargetNode.get(),
+              targetToBuildWithBuck.get()));
+    }
+    return productName;
+  }
+
+  private Optional<TargetNode<?>> getTargetNodeForBuildTarget(
+      Optional<BuildTarget> targetToBuildWithBuck,
+      ImmutableSet<Optional<TargetNode<?>>> targetNodes) {
+    Optional<TargetNode<?>> buildWithBuckTargetNode = Optional.absent();
+    for (Optional<TargetNode<?>> targetNode : targetNodes) {
+      if (targetNode.isPresent()) {
+        UnflavoredBuildTarget unflavoredBuildTarget =
+            targetNode.get().getBuildTarget().getUnflavoredBuildTarget();
+        if (unflavoredBuildTarget.equals(targetToBuildWithBuck.get().getUnflavoredBuildTarget())) {
+          buildWithBuckTargetNode = targetNode;
+          break;
+        }
+      }
+    }
+    return buildWithBuckTargetNode;
   }
 }

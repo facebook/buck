@@ -24,7 +24,6 @@ java_test(
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
     '//src/com/facebook/buck/json:json',
-    '//src/com/facebook/buck/json:raw_parser',
     '//third-party/java/gson:gson',
   ],
 )

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -32,10 +34,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -55,7 +58,7 @@ public class CxxSourceRuleFactoryTest {
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new CxxBuckConfig(new FakeBuckConfig()));
+      new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -69,7 +72,7 @@ public class CxxSourceRuleFactoryTest {
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
         resolver);
   }
@@ -78,13 +81,11 @@ public class CxxSourceRuleFactoryTest {
   public void createPreprocessBuildRulePropagatesCxxPreprocessorDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    FakeBuildRule dep = resolver.addToIndex(
-        new FakeBuildRule(
-            "//:dep1",
-            new SourcePathResolver(new BuildRuleResolver())));
+    FakeBuildRule dep = resolver.addToIndex(new FakeBuildRule("//:dep1", pathResolver));
 
     CxxPreprocessorInput cxxPreprocessorInput =
         CxxPreprocessorInput.builder()
@@ -129,15 +130,17 @@ public class CxxSourceRuleFactoryTest {
   public void preprocessFlagsFromPlatformArePropagated() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
-                    "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))));
+                    "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))
+                .build()));
 
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
 
@@ -154,7 +157,7 @@ public class CxxSourceRuleFactoryTest {
     String name = "source.cpp";
     CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
-        new TestSourcePath(name),
+        new FakeSourcePath(name),
         ImmutableList.<String>of());
 
     // Verify that platform flags make it to the compile rule.
@@ -167,7 +170,7 @@ public class CxxSourceRuleFactoryTest {
     assertNotEquals(
         -1,
         Collections.indexOfSubList(
-            cxxPreprocess.getPlatformPreprocessorFlags().get(),
+            cxxPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
             platformFlags));
     CxxPreprocessAndCompile cxxPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -179,13 +182,14 @@ public class CxxSourceRuleFactoryTest {
     assertNotEquals(
         -1,
         Collections.indexOfSubList(
-            cxxPreprocessAndCompile.getPlatformPreprocessorFlags().get(),
+            cxxPreprocessAndCompile.getPreprocessorDelegate().get().getPreprocessorCommand(),
             platformFlags));
   }
 
   @Test
   public void checkCorrectFlagsAreUsedForPreprocessBuildRules() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -202,23 +206,26 @@ public class CxxSourceRuleFactoryTest {
 
     ImmutableList<String> asppflags = ImmutableList.of("-asppflag", "-asppflag");
 
-    SourcePath cpp = new TestSourcePath("cpp");
+    SourcePath cpp = new FakeSourcePath("cpp");
     ImmutableList<String> cppflags = ImmutableList.of("-cppflag", "-cppflag");
 
-    SourcePath cxxpp = new TestSourcePath("cxxpp");
+    SourcePath cxxpp = new FakeSourcePath("cxxpp");
     ImmutableList<String> cxxppflags = ImmutableList.of("-cxxppflag", "-cxxppflag");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "cxx", ImmutableMap.<String, String>builder()
-                .put("asppflags", space.join(asppflags))
-                .put("cpp", sourcePathResolver.getPath(cpp).toString())
-                .put("cppflags", space.join(cppflags))
-                .put("cxxpp", sourcePathResolver.getPath(cxxpp).toString())
-                .put("cxxppflags", space.join(cxxppflags))
-                .build()),
-        filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "cxx", ImmutableMap.<String, String>builder()
+                    .put("asppflags", space.join(asppflags))
+                    .put("cpp", sourcePathResolver.deprecatedGetPath(cpp).toString())
+                    .put("cppflags", space.join(cppflags))
+                    .put("cxxpp", sourcePathResolver.deprecatedGetPath(cxxpp).toString())
+                    .put("cxxppflags", space.join(cxxppflags))
+                    .build()))
+        .setFilesystem(filesystem)
+        .build();
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -235,7 +242,7 @@ public class CxxSourceRuleFactoryTest {
         ImmutableList.of("-per-file-flag-for-c-file", "-and-another-one");
     CxxSource cSource = CxxSource.of(
         CxxSource.Type.C,
-        new TestSourcePath(cSourceName),
+        new FakeSourcePath(cSourceName),
         perFileFlagsForTestC);
     CxxPreprocessAndCompile cPreprocess =
         cxxSourceRuleFactory.requirePreprocessBuildRule(
@@ -243,9 +250,11 @@ public class CxxSourceRuleFactoryTest {
             cSourceName,
             cSource,
             CxxSourceRuleFactory.PicType.PDC);
-    assertContains(cPreprocess.getRulePreprocessorFlags().get(), explicitCppflags);
-    assertContains(cPreprocess.getPlatformPreprocessorFlags().get(), cppflags);
-    assertContains(cPreprocess.getRulePreprocessorFlags().get(), perFileFlagsForTestC);
+    ImmutableList<String> cPreprocessCommand =
+        cPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand();
+    assertContains(cPreprocessCommand, explicitCppflags);
+    assertContains(cPreprocessCommand, cppflags);
+    assertContains(cPreprocessCommand, perFileFlagsForTestC);
     CxxPreprocessAndCompile cPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
             buildRuleResolver,
@@ -260,7 +269,7 @@ public class CxxSourceRuleFactoryTest {
         ImmutableList.of("-per-file-flag-for-cpp-file");
     CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
-        new TestSourcePath(cxxSourceName),
+        new FakeSourcePath(cxxSourceName),
         perFileFlagsForTestCpp);
     CxxPreprocessAndCompile cxxPreprocess =
         cxxSourceRuleFactory.requirePreprocessBuildRule(
@@ -268,9 +277,11 @@ public class CxxSourceRuleFactoryTest {
             cxxSourceName,
             cxxSource,
             CxxSourceRuleFactory.PicType.PDC);
-    assertContains(cxxPreprocess.getRulePreprocessorFlags().get(), explicitCxxppflags);
-    assertContains(cxxPreprocess.getPlatformPreprocessorFlags().get(), cxxppflags);
-    assertContains(cxxPreprocess.getRulePreprocessorFlags().get(), perFileFlagsForTestCpp);
+    ImmutableList<String> cxxPreprocessCommand =
+        cxxPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand();
+    assertContains(cxxPreprocessCommand, explicitCxxppflags);
+    assertContains(cxxPreprocessCommand, cxxppflags);
+    assertContains(cxxPreprocessCommand, perFileFlagsForTestCpp);
     CxxPreprocessAndCompile cxxPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
             buildRuleResolver,
@@ -285,7 +296,7 @@ public class CxxSourceRuleFactoryTest {
         ImmutableList.of("-a-flag-for-s-file", "-another-one", "-one-more");
     CxxSource assemblerWithCppSource = CxxSource.of(
         CxxSource.Type.ASSEMBLER_WITH_CPP,
-        new TestSourcePath(assemblerWithCppSourceName),
+        new FakeSourcePath(assemblerWithCppSourceName),
         perFileFlagsForTestS);
     CxxPreprocessAndCompile assemblerWithCppPreprocess =
         cxxSourceRuleFactory.requirePreprocessBuildRule(
@@ -293,9 +304,11 @@ public class CxxSourceRuleFactoryTest {
             assemblerWithCppSourceName,
             assemblerWithCppSource,
             CxxSourceRuleFactory.PicType.PDC);
-    assertContains(assemblerWithCppPreprocess.getPlatformPreprocessorFlags().get(), asppflags);
     assertContains(
-        assemblerWithCppPreprocess.getRulePreprocessorFlags().get(),
+        assemblerWithCppPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
+         asppflags);
+    assertContains(
+        assemblerWithCppPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
         perFileFlagsForTestS);
     CxxPreprocessAndCompile assemblerWithCppPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -313,7 +326,8 @@ public class CxxSourceRuleFactoryTest {
   public void createCompileBuildRulePropagatesBuildRuleSourcePathDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
     resolver.addToIndex(dep);
@@ -361,7 +375,8 @@ public class CxxSourceRuleFactoryTest {
   public void createCompileBuildRulePicOption() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -376,7 +391,7 @@ public class CxxSourceRuleFactoryTest {
     String name = "foo/bar.ii";
     CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
-        new TestSourcePath(name),
+        new FakeSourcePath(name),
         ImmutableList.<String>of());
 
     // Verify building a non-PIC compile rule does *not* have the "-fPIC" flag and has the
@@ -412,7 +427,7 @@ public class CxxSourceRuleFactoryTest {
     name = "foo/bar.cpp";
     cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
-        new TestSourcePath(name),
+        new FakeSourcePath(name),
         ImmutableList.<String>of());
 
     // Verify building a non-PIC compile rule does *not* have the "-fPIC" flag and has the
@@ -452,14 +467,16 @@ public class CxxSourceRuleFactoryTest {
   public void compilerFlagsFromPlatformArePropagated() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
-                    "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))));
+                    "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))
+                .build()));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -474,7 +491,7 @@ public class CxxSourceRuleFactoryTest {
     String name = "source.ii";
     CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
-        new TestSourcePath(name),
+        new FakeSourcePath(name),
         ImmutableList.<String>of());
 
     // Verify that platform flags make it to the compile rule.
@@ -491,7 +508,7 @@ public class CxxSourceRuleFactoryTest {
     name = "source.cpp";
     cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
-        new TestSourcePath(name),
+        new FakeSourcePath(name),
         ImmutableList.<String>of());
 
     // Verify that platform flags make it to the compile rule.
@@ -505,13 +522,14 @@ public class CxxSourceRuleFactoryTest {
     assertNotEquals(
         -1,
         Collections.indexOfSubList(
-            cxxPreprocessAndCompile.getPlatformPreprocessorFlags().get(),
+            cxxPreprocessAndCompile.getPreprocessorDelegate().get().getPreprocessorCommand(),
             platformFlags));
   }
 
   @Test
   public void checkCorrectFlagsAreUsedForCompileBuildRules() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -520,27 +538,30 @@ public class CxxSourceRuleFactoryTest {
 
     ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-explicit-compilerflag");
 
-    SourcePath as = new TestSourcePath("as");
+    SourcePath as = new FakeSourcePath("as");
     ImmutableList<String> asflags = ImmutableList.of("-asflag", "-asflag");
 
-    SourcePath cc = new TestSourcePath("cc");
+    SourcePath cc = new FakeSourcePath("cc");
     ImmutableList<String> cflags = ImmutableList.of("-cflag", "-cflag");
 
-    SourcePath cxx = new TestSourcePath("cxx");
+    SourcePath cxx = new FakeSourcePath("cxx");
     ImmutableList<String> cxxflags = ImmutableList.of("-cxxflag", "-cxxflag");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
         ImmutableMap.of(
             "cxx", ImmutableMap.<String, String>builder()
-                .put("as", sourcePathResolver.getPath(as).toString())
+                .put("as", sourcePathResolver.deprecatedGetPath(as).toString())
                 .put("asflags", space.join(asflags))
-                .put("cc", sourcePathResolver.getPath(cc).toString())
+                .put("cc", sourcePathResolver.deprecatedGetPath(cc).toString())
                 .put("cflags", space.join(cflags))
-                .put("cxx", sourcePathResolver.getPath(cxx).toString())
+                .put("cxx", sourcePathResolver.deprecatedGetPath(cxx).toString())
                 .put("cxxflags", space.join(cxxflags))
-                .build()),
-        filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+                .build()))
+        .setFilesystem(filesystem)
+        .build();
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -556,7 +577,7 @@ public class CxxSourceRuleFactoryTest {
     List<String> cSourcePerFileFlags = ImmutableList.of("-c-source-par-file-flag");
     CxxSource cSource = CxxSource.of(
         CxxSource.Type.C_CPP_OUTPUT,
-        new TestSourcePath(cSourceName),
+        new FakeSourcePath(cSourceName),
         cSourcePerFileFlags);
     CxxPreprocessAndCompile cCompile =
         cxxSourceRuleFactory.requireCompileBuildRule(
@@ -572,7 +593,7 @@ public class CxxSourceRuleFactoryTest {
     cSourceName = "test.c";
     cSource = CxxSource.of(
         CxxSource.Type.C,
-        new TestSourcePath(cSourceName),
+        new FakeSourcePath(cSourceName),
         cSourcePerFileFlags);
     CxxPreprocessAndCompile cPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -591,7 +612,7 @@ public class CxxSourceRuleFactoryTest {
     CxxSource cxxSource =
         CxxSource.of(
             CxxSource.Type.CXX_CPP_OUTPUT,
-            new TestSourcePath(cxxSourceName),
+            new FakeSourcePath(cxxSourceName),
             cxxSourcePerFileFlags);
     CxxPreprocessAndCompile cxxCompile =
         cxxSourceRuleFactory.requireCompileBuildRule(
@@ -608,7 +629,7 @@ public class CxxSourceRuleFactoryTest {
     cxxSource =
         CxxSource.of(
             CxxSource.Type.CXX,
-            new TestSourcePath(cxxSourceName),
+            new FakeSourcePath(cxxSourceName),
             cxxSourcePerFileFlags);
     CxxPreprocessAndCompile cxxPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -627,7 +648,7 @@ public class CxxSourceRuleFactoryTest {
         ImmutableList.of("-c-cpp-output-source-par-file-flag");
     CxxSource cCppOutputSource = CxxSource.of(
         CxxSource.Type.C_CPP_OUTPUT,
-        new TestSourcePath(cCppOutputSourceName),
+        new FakeSourcePath(cCppOutputSourceName),
         cCppOutputSourcePerFileFlags);
     CxxPreprocessAndCompile cCppOutputCompile =
         cxxSourceRuleFactory.requireCompileBuildRule(
@@ -643,7 +664,7 @@ public class CxxSourceRuleFactoryTest {
     cCppOutputSourceName = "test2.c";
     cCppOutputSource = CxxSource.of(
         CxxSource.Type.C,
-        new TestSourcePath(cCppOutputSourceName),
+        new FakeSourcePath(cCppOutputSourceName),
         cCppOutputSourcePerFileFlags);
     CxxPreprocessAndCompile cCppOutputPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -665,7 +686,7 @@ public class CxxSourceRuleFactoryTest {
     List<String> assemblerSourcePerFileFlags = ImmutableList.of("-assember-source-par-file-flag");
     CxxSource assemblerSource = CxxSource.of(
         CxxSource.Type.ASSEMBLER,
-        new TestSourcePath(assemblerSourceName),
+        new FakeSourcePath(assemblerSourceName),
         assemblerSourcePerFileFlags);
     CxxPreprocessAndCompile assemblerCompile =
         cxxSourceRuleFactory.requireCompileBuildRule(
@@ -679,7 +700,7 @@ public class CxxSourceRuleFactoryTest {
     assemblerSourceName = "test.S";
     assemblerSource = CxxSource.of(
         CxxSource.Type.ASSEMBLER_WITH_CPP,
-        new TestSourcePath(assemblerSourceName),
+        new FakeSourcePath(assemblerSourceName),
         assemblerSourcePerFileFlags);
     CxxPreprocessAndCompile assemblerPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -696,7 +717,8 @@ public class CxxSourceRuleFactoryTest {
 
   @Test
   public void languageFlagsArePassed() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -769,14 +791,15 @@ public class CxxSourceRuleFactoryTest {
 
   @Test
      public void checkCorrectFlagsAreUsedForObjcAndObjcxx() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-fobjc-arc");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -792,7 +815,7 @@ public class CxxSourceRuleFactoryTest {
     String objcSourceName = "test.mi";
     CxxSource objcSource = CxxSource.of(
         CxxSource.Type.OBJC_CPP_OUTPUT,
-        new TestSourcePath(objcSourceName),
+        new FakeSourcePath(objcSourceName),
         ImmutableList.<String>of());
     CxxPreprocessAndCompile objcCompile =
         cxxSourceRuleFactory.requireCompileBuildRule(
@@ -805,7 +828,7 @@ public class CxxSourceRuleFactoryTest {
     objcSourceName = "test.m";
     objcSource = CxxSource.of(
         CxxSource.Type.OBJC,
-        new TestSourcePath(objcSourceName),
+        new FakeSourcePath(objcSourceName),
         ImmutableList.<String>of());
     CxxPreprocessAndCompile objcPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -819,7 +842,7 @@ public class CxxSourceRuleFactoryTest {
     String objcxxSourceName = "test.mii";
     CxxSource objcxxSource = CxxSource.of(
         CxxSource.Type.OBJCXX_CPP_OUTPUT,
-        new TestSourcePath(objcxxSourceName),
+        new FakeSourcePath(objcxxSourceName),
         ImmutableList.<String>of());
     CxxPreprocessAndCompile objcxxCompile =
         cxxSourceRuleFactory.requireCompileBuildRule(
@@ -832,7 +855,7 @@ public class CxxSourceRuleFactoryTest {
     objcxxSourceName = "test.mm";
     objcxxSource = CxxSource.of(
         CxxSource.Type.OBJCXX,
-        new TestSourcePath(objcxxSourceName),
+        new FakeSourcePath(objcxxSourceName),
         ImmutableList.<String>of());
     CxxPreprocessAndCompile objcxxPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -846,16 +869,17 @@ public class CxxSourceRuleFactoryTest {
 
   @Test
   public void checkPrefixHeaderIsIncluded() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     String prefixHeaderName = "test.pch";
-    SourcePath prefixHeaderSourcePath = new TestSourcePath(prefixHeaderName);
+    SourcePath prefixHeaderSourcePath = new FakeSourcePath(filesystem, prefixHeaderName);
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -870,7 +894,7 @@ public class CxxSourceRuleFactoryTest {
     String objcSourceName = "test.m";
     CxxSource objcSource = CxxSource.of(
         CxxSource.Type.OBJC,
-        new TestSourcePath(objcSourceName),
+        new FakeSourcePath(objcSourceName),
         ImmutableList.<String>of());
     CxxPreprocessAndCompile objcPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -881,7 +905,7 @@ public class CxxSourceRuleFactoryTest {
             CxxPreprocessMode.SEPARATE);
 
     ImmutableList<String> explicitPrefixHeaderRelatedFlags = ImmutableList.of(
-        "-include", prefixHeaderName);
+        "-include", filesystem.resolve(prefixHeaderName).toString());
 
     CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep();
     assertContains(step.getCommand(), explicitPrefixHeaderRelatedFlags);
@@ -889,12 +913,13 @@ public class CxxSourceRuleFactoryTest {
 
   @Test
   public void duplicateRuleFetchedFromResolver() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -910,7 +935,7 @@ public class CxxSourceRuleFactoryTest {
     String objcSourceName = "test.m";
     CxxSource objcSource = CxxSource.of(
         CxxSource.Type.OBJC,
-        new TestSourcePath(objcSourceName),
+        new FakeSourcePath(objcSourceName),
         ImmutableList.<String>of());
     CxxPreprocessAndCompile objcCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(

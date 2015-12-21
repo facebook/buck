@@ -1,0 +1,12 @@
+rule com.google.gson.** com.google.caliper.shaded.gson.@1
+rule com.google.common.** com.google.caliper.shaded.common.@1
+rule com.google.inject.** com.google.caliper.shaded.inject.@1
+rule com.google.monitoring.** com.google.caliper.shaded.monitoring.@1
+rule com.google.thirdparty.** com.google.caliper.shaded.thirdparty.@1
+rule com.sun.** com.google.caliper.shaded.com.sun.@1
+rule javax.inject.** com.google.caliper.shaded.javax.inject.@1
+rule javax.ws.** com.google.caliper.shaded.javax.ws.@1
+rule org.aopalliance.** com.google.caliper.shaded.org.aopalliance.@1
+rule org.apache.** com.google.caliper.shaded.org.apache.@1
+rule org.joda.** com.google.caliper.shaded.org.joda.@1
+rule org.objectweb.** com.google.caliper.shaded.org.objectweb.@1

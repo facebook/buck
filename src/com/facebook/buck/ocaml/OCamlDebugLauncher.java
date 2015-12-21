@@ -52,7 +52,7 @@ public class OCamlDebugLauncher extends AbstractBuildRule {
     buildableContext.recordArtifact(args.getOutput());
     return ImmutableList.of(
       new MkdirStep(getProjectFilesystem(), args.getOutput().getParent()),
-      new OCamlDebugLauncherStep(getProjectFilesystem(), args)
+      new OCamlDebugLauncherStep(getProjectFilesystem(), getResolver(), args)
     );
   }
 

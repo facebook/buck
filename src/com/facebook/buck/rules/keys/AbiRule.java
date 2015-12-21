@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 
 /**
@@ -29,10 +30,10 @@ public interface AbiRule {
   /**
    * Key for {@link OnDiskBuildInfo} to identify the ABI key for a build rule.
    */
-  public static final String ABI_KEY_ON_DISK_METADATA = "ABI_KEY";
+  String ABI_KEY_ON_DISK_METADATA = "ABI_KEY";
 
   /**
    * Returns a {@link Sha1HashCode} that represents the ABI of this rule's deps.
    */
-  public Sha1HashCode getAbiKeyForDeps();
+  Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory);
 }

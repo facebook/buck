@@ -24,6 +24,8 @@ import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +50,7 @@ public abstract class AbstractCommand implements Command {
   private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
   private static final String PROFILE_LONG_ARG = "--profile";
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
+  private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead.
@@ -65,6 +68,13 @@ public abstract class AbstractCommand implements Command {
   @Nullable
   private Integer numThreads = null;
 
+  @Nullable
+  @Option(name = LOAD_LIMIT_LONG_ARG,
+      aliases = "-L",
+      usage = "[Float] Do not start new jobs when system load is above this level." +
+          " See uptime(1).")
+  private Double loadLimit = null;
+
   @Option(
       name = "--config",
       aliases = {"-c"},
@@ -78,13 +88,18 @@ public abstract class AbstractCommand implements Command {
     // Parse command-line config overrides.
     for (Map.Entry<String, String> entry : configOverrides.entrySet()) {
       List<String> key = Splitter.on('.').limit(2).splitToList(entry.getKey());
+      String value = entry.getValue();
+      if (value == null) {
+        value = "";
+      }
       if (key.size() != 2) {
         throw new HumanReadableException(
             "Invalid config override \"%s=%s\".  Expected \"<section>.<field>=<value>\".",
             entry.getKey(),
-            entry.getValue());
+            value);
       }
-      builder.put(key.get(0), key.get(1), entry.getValue());
+
+      builder.put(key.get(0), key.get(1), value);
     }
     if (numThreads != null) {
       builder.put("build", "threads", String.valueOf(numThreads));
@@ -167,30 +182,34 @@ public abstract class AbstractCommand implements Command {
 
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
       BuckConfig config,
-      ImmutableSet<Path> ignorePaths,
       Iterable<String> targetsAsArgs) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =
         new CommandLineTargetNodeSpecParser(
             config,
-            new BuildTargetPatternTargetNodeParser(ignorePaths));
+            new BuildTargetPatternTargetNodeParser());
     for (String arg : targetsAsArgs) {
-      specs.add(parser.parse(arg));
+      specs.add(parser.parse(config.getCellRoots(), arg));
     }
     return specs.build();
   }
 
   /**
+   * @param buildTargetNames The build targets to parse, represented as strings.
    * @return A set of {@link BuildTarget}s for the input buildTargetNames.
    */
-  protected ImmutableSet<BuildTarget> getBuildTargets(Iterable<String> buildTargetNames) {
+  protected ImmutableSet<BuildTarget> getBuildTargets(
+      Function<Optional<String>, Path> cellNames,
+      Iterable<String> buildTargetNames) {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 
     // Parse all of the build targets specified by the user.
     for (String buildTargetName : buildTargetNames) {
-      buildTargets.add(BuildTargetParser.INSTANCE.parse(
+      buildTargets.add(
+          BuildTargetParser.INSTANCE.parse(
               buildTargetName,
-              BuildTargetPatternParser.fullyQualified()));
+              BuildTargetPatternParser.fullyQualified(),
+              cellNames));
     }
 
     return buildTargets.build();
@@ -208,6 +227,15 @@ public abstract class AbstractCommand implements Command {
         .build();
   }
 
+  public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
+    Double loadLimit = this.loadLimit;
+    if (loadLimit == null) {
+      loadLimit = (double) buckConfig.getLoadLimit();
+    }
+
+    return new ConcurrencyLimit(buckConfig.getNumThreads(), loadLimit);
+  }
+
   protected ImmutableList<String> getOptions() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     if (verbosityLevel != -1) {
@@ -217,6 +245,10 @@ public abstract class AbstractCommand implements Command {
     if (numThreads != null) {
       builder.add(NUM_THREADS_LONG_ARG);
       builder.add(numThreads.toString());
+    }
+    if (loadLimit != null) {
+      builder.add(LOAD_LIMIT_LONG_ARG);
+      builder.add(loadLimit.toString());
     }
     if (noCache) {
       builder.add(NO_CACHE_LONG_ARG);

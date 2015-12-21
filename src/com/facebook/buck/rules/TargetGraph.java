@@ -20,11 +20,15 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -35,22 +39,29 @@ import javax.annotation.Nullable;
 public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
 
   public static final TargetGraph EMPTY = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?>>());
+      new MutableDirectedGraph<TargetNode<?>>(),
+      ImmutableMap.<BuildTarget, TargetNode<?>>of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
 
-  public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
+  public TargetGraph(
+      MutableDirectedGraph<TargetNode<?>> graph,
+      ImmutableMap<BuildTarget, TargetNode<?>> index) {
     super(graph);
-    ImmutableMap.Builder<BuildTarget, TargetNode<?>> builder = ImmutableMap.builder();
-    for (TargetNode<?> node : graph.getNodes()) {
-      builder.put(node.getBuildTarget(), node);
-    }
-    this.targetsToNodes = builder.build();
+    this.targetsToNodes = index;
   }
 
   @Nullable
   public TargetNode<?> get(BuildTarget target) {
-    return targetsToNodes.get(target);
+    TargetNode<?> node = targetsToNodes.get(target);
+    if (node == null) {
+      node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
+      if (node == null) {
+        return null;
+      }
+      return node.withFlavors(target.getFlavors());
+    }
+    return node;
   }
 
   public Function<BuildTarget, TargetNode<?>> get() {
@@ -82,11 +93,21 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
    */
   public TargetGraph getSubgraph(Iterable<? extends TargetNode<?>> roots) {
     final MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
+    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
     new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
       @Override
       public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
         subgraph.addNode(node);
+        MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
+        if (node.getBuildTarget().isFlavored()) {
+          BuildTarget unflavoredBuildTarget = BuildTarget.of(
+              node.getBuildTarget().getUnflavoredBuildTarget());
+          MoreMaps.putCheckEquals(
+              index,
+              unflavoredBuildTarget,
+              targetsToNodes.get(unflavoredBuildTarget));
+        }
         ImmutableSet<TargetNode<?>> dependencies =
             ImmutableSet.copyOf(getAll(node.getDeps()));
         for (TargetNode<?> dependency : dependencies) {
@@ -96,6 +117,6 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       }
     }.start();
 
-    return new TargetGraph(subgraph);
+    return new TargetGraph(subgraph, ImmutableMap.copyOf(index));
   }
 }

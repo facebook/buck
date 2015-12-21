@@ -18,13 +18,16 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -94,6 +97,37 @@ public class ConfigTest {
     );
   }
 
+  @Test
+  public void testGetList() throws IOException {
+    String[] config = {"[a]", "  b = foo,bar,baz"};
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList<String> expected = builder.add("foo").add("bar").add("baz").build();
+    assertEquals(
+        expected,
+        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b")
+    );
+    assertEquals(
+        Optional.of(expected),
+        ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b")
+    );
+  }
+
+  @Test
+  public void testGetListWithCustomSplitChar() throws IOException {
+    String[] config = {"[a]", "  b = cool;story;bro"};
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList<String> expected = builder.add("cool").add("story").add("bro").build();
+    assertEquals(
+        expected,
+        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b", ';')
+    );
+    assertEquals(
+        Optional.of(expected),
+        ConfigBuilder.createFromText(config[0], config[1])
+            .getOptionalListWithoutComments("a", "b", ';')
+    );
+  }
+
   @Test(expected = HumanReadableException.class)
   public void testGetMalformedFloat() throws IOException {
     ConfigBuilder.createFromText("[a]", "  f = potato").getFloat("a", "f");
@@ -108,7 +142,8 @@ public class ConfigTest {
         "[cache]",
         "    mode ="));
     // Verify that no exception is thrown when a definition is overridden.
-    new Config(Inis.read(readerA), Inis.read(readerB));
+    Config config = new Config(Inis.read(readerA), Inis.read(readerB));
+    assertThat(config.getValue("cache", "mode"), Matchers.equalToObject(Optional.absent()));
   }
 
   private static enum TestEnum {

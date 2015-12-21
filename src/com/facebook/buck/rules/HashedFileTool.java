@@ -19,8 +19,10 @@ package com.facebook.buck.rules;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class HashedFileTool implements Tool {
@@ -41,7 +43,12 @@ public class HashedFileTool implements Tool {
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("path", path);
+    try {
+      return builder.setPath(path.toAbsolutePath(), path);
+    } catch (IOException e) {
+
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -57,6 +64,11 @@ public class HashedFileTool implements Tool {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return ImmutableList.of(path.toString());
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return ImmutableMap.of();
   }
 
 }

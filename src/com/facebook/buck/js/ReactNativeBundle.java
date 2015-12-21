@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -33,8 +34,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -48,6 +51,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   private final SourcePath entryPath;
 
   @AddToRuleKey
+  private final boolean isUnbundle;
+
+  @AddToRuleKey
   private final boolean isDevMode;
 
   @AddToRuleKey
@@ -59,6 +65,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @AddToRuleKey
   private final String bundleName;
 
+  @AddToRuleKey
+  private final Optional<String> packagerFlags;
+
   private final ReactNativeDeps depsFinder;
   private final Path jsOutputDir;
   private final Path resource;
@@ -67,15 +76,19 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       BuildRuleParams ruleParams,
       SourcePathResolver resolver,
       SourcePath entryPath,
+      boolean isUnbundle,
       boolean isDevMode,
       String bundleName,
+      Optional<String> packagerFlags,
       SourcePath jsPackager,
       ReactNativePlatform platform,
       ReactNativeDeps depsFinder) {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
+    this.isUnbundle = isUnbundle;
     this.isDevMode = isDevMode;
     this.bundleName = bundleName;
+    this.packagerFlags = packagerFlags;
     this.jsPackager = jsPackager;
     this.platform = platform;
     this.depsFinder = depsFinder;
@@ -105,10 +118,12 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return getBundleScript(
-                getResolver().getPath(jsPackager),
-                getProjectFilesystem().resolve(getResolver().getPath(entryPath)),
+                getResolver().getAbsolutePath(jsPackager),
+                getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
                 platform,
+                isUnbundle,
                 isDevMode,
+                packagerFlags,
                 getProjectFilesystem().resolve(jsOutput).toString(),
                 getProjectFilesystem().resolve(resource).toString(),
                 getProjectFilesystem().resolve(sourceMapOutput).toString());
@@ -147,7 +162,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() {
+  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return depsFinder.getInputsHash();
   }
 
@@ -155,18 +170,30 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       Path jsPackager,
       Path absoluteEntryPath,
       ReactNativePlatform platform,
+      boolean isUnbundle,
       boolean isDevMode,
+      Optional<String> packagerFlags,
       String absoluteBundleOutputPath,
       String absoluteResourceOutputPath,
       String absoluteSourceMapOutputPath) {
-    return ImmutableList.of(
-        jsPackager.toString(),
-        "bundle",
-        "--entry-file", absoluteEntryPath.toString(),
-        "--platform", platform.toString(),
-        "--dev", isDevMode ? "true" : "false",
-        "--bundle-output", absoluteBundleOutputPath,
-        "--assets-dest", absoluteResourceOutputPath,
-        "--sourcemap-output", absoluteSourceMapOutputPath);
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.add(
+      jsPackager.toString(),
+      isUnbundle ? "unbundle" : "bundle",
+      "--entry-file", absoluteEntryPath.toString(),
+      "--platform", platform.toString(),
+      "--dev", isDevMode ? "true" : "false",
+      "--bundle-output", absoluteBundleOutputPath,
+      "--assets-dest", absoluteResourceOutputPath,
+      "--sourcemap-output", absoluteSourceMapOutputPath
+    );
+
+
+    if (packagerFlags.isPresent()) {
+      builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
+    }
+
+    return builder.build();
   }
 }

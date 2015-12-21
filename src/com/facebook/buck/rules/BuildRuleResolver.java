@@ -17,17 +17,21 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
@@ -35,23 +39,47 @@ import java.util.Set;
  */
 public class BuildRuleResolver {
 
-  private final Map<BuildTarget, BuildRule> buildRuleIndex;
+  private final TargetGraph targetGraph;
+  private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
+  private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
+  private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
 
-  public BuildRuleResolver() {
-    this(Maps.<BuildTarget, BuildRule>newConcurrentMap());
-  }
+  public BuildRuleResolver(
+      TargetGraph targetGraph,
+      TargetNodeToBuildRuleTransformer buildRuleGenerator) {
+    this.targetGraph = targetGraph;
+    this.buildRuleGenerator = buildRuleGenerator;
+    this.buildRuleIndex = new ConcurrentHashMap<>();
+    this.metadataCache = CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
+              @Override
+              public Optional<?> load(Pair<BuildTarget, Class<?>> key) throws Exception {
+                TargetNode<?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
+                Preconditions.checkNotNull(
+                    node,
+                    "Required target for rule '%s' was not found in the target graph.",
+                    key);
 
-  @VisibleForTesting
-  public BuildRuleResolver(Map<BuildTarget, BuildRule> buildRuleIndex) {
-    this.buildRuleIndex = Maps.newHashMap(buildRuleIndex);
-  }
+                return load(node, key.getSecond());
+              }
 
-  @VisibleForTesting
-  public BuildRuleResolver(Set<? extends BuildRule> startingSet) {
-    this.buildRuleIndex = Maps.newConcurrentMap();
-    for (BuildRule buildRule : startingSet) {
-      this.buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
-    }
+              @SuppressWarnings("unchecked")
+              private <T, U> Optional<U> load(TargetNode<T> node, Class<U> metadataClass)
+                  throws NoSuchBuildTargetException {
+                Description<T> description = node.getDescription();
+                if (!(description instanceof MetadataProvidingDescription)) {
+                  return Optional.absent();
+                }
+                MetadataProvidingDescription<T> metadataProvidingDescription =
+                    (MetadataProvidingDescription<T>) description;
+                return metadataProvidingDescription.createMetadata(
+                    node.getBuildTarget(),
+                    BuildRuleResolver.this,
+                    node.getConstructorArg(),
+                    metadataClass);
+              }
+            });
   }
 
   /**
@@ -76,8 +104,54 @@ public class BuildRuleResolver {
     return Optional.fromNullable(buildRuleIndex.get(buildTarget));
   }
 
+  public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
+    BuildRule rule = buildRuleIndex.get(target);
+    if (rule != null) {
+      return rule;
+    }
+    TargetNode<?> node = targetGraph.get(target);
+    Preconditions.checkNotNull(
+        node,
+        "Required target for rule '%s' was not found in the target graph.",
+        target);
+    rule = buildRuleGenerator.transform(targetGraph, this, node);
+    BuildRule oldRule = buildRuleIndex.put(target, rule);
+    Preconditions.checkState(
+        oldRule == null || oldRule.equals(rule),
+        "Race condition while requiring rule for target '%s':\n" +
+            "created rule '%s' does not match existing rule '%s'.",
+        target,
+        rule,
+        oldRule);
+    return rule;
+  }
+
+  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets)
+      throws NoSuchBuildTargetException {
+    ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget target : buildTargets) {
+      rules.add(requireRule(target));
+    }
+    return rules.build();
+  }
+
   @SuppressWarnings("unchecked")
-  public <T extends BuildRule> Optional<T> getRuleOptionalWithType(
+  public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass)
+      throws NoSuchBuildTargetException {
+    try {
+      return (Optional<T>) metadataCache.get(
+          new Pair<BuildTarget, Class<?>>(target, metadataClass));
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof NoSuchBuildTargetException) {
+        throw (NoSuchBuildTargetException) cause;
+      }
+      throw new RuntimeException(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> Optional<T> getRuleOptionalWithType(
       BuildTarget buildTarget,
       Class<T> cls) {
     BuildRule rule = buildRuleIndex.get(buildTarget);

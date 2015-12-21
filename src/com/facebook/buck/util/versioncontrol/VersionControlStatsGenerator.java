@@ -60,6 +60,11 @@ public class VersionControlStatsGenerator {
     VersionControlCmdLineInterface vcCmdLineInterface =
         versionControlCmdLineInterfaceFactory.createCmdLineInterface();
 
+    if (!vcCmdLineInterface.isSupportedVersionControlSystem()) {
+      LOG.warn("Skipping generation of version control stats as unsupported repository type.");
+      return;
+    }
+
     boolean workingDirectoryChanges = vcCmdLineInterface.hasWorkingDirectoryChanges();
 
     String currentRevisionId = vcCmdLineInterface.currentRevisionId();

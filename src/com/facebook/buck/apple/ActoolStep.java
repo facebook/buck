@@ -20,6 +20,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
@@ -29,6 +30,7 @@ import java.util.SortedSet;
 public class ActoolStep extends ShellStep {
 
   private final String applePlatformName;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> actoolCommand;
   private final SortedSet<Path> assetCatalogDirs;
   private final Path output;
@@ -36,11 +38,13 @@ public class ActoolStep extends ShellStep {
   public ActoolStep(
       Path workingDirectory,
       String applePlatformName,
+      ImmutableMap<String, String> environment,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
       Path output) {
     super(workingDirectory);
     this.applePlatformName = applePlatformName;
+    this.environment = environment;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;
     this.output = output;
@@ -50,7 +54,7 @@ public class ActoolStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
-    //TODO(jakubzika): Let apps select their minimum target.
+    //TODO(k21): Let apps select their minimum target.
     String target = "7.0";
 
     commandBuilder.addAll(actoolCommand);
@@ -61,8 +65,9 @@ public class ActoolStep extends ShellStep {
         "--errors",
         "--platform", applePlatformName,
         "--minimum-deployment-target", target,
-        //TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
+        //TODO(k21): Let apps decide which device they want to target (iPhone / iPad / both)
         "--target-device", "iphone",
+        "--target-device", "ipad",
         "--compress-pngs",
         "--compile",
         output.toString());
@@ -70,6 +75,11 @@ public class ActoolStep extends ShellStep {
     commandBuilder.addAll(Iterables.transform(assetCatalogDirs, Functions.toStringFunction()));
 
     return commandBuilder.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

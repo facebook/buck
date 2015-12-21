@@ -17,6 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -37,6 +39,7 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
 
   @Override
   public E coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

@@ -16,17 +16,17 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -84,7 +84,8 @@ public class AuditInputCommand extends AbstractCommand {
         getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getConsole().printBuildFailure("Please specify at least one build target.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Please specify at least one build target."));
       return 1;
     }
 
@@ -95,7 +96,8 @@ public class AuditInputCommand extends AbstractCommand {
                      public BuildTarget apply(String input) {
                        return BuildTargetParser.INSTANCE.parse(
                            input,
-                           BuildTargetPatternParser.fullyQualified());
+                           BuildTargetPatternParser.fullyQualified(),
+                           params.getCell().getCellRoots());
                      }
                    })
         .toSet();
@@ -103,16 +105,19 @@ public class AuditInputCommand extends AbstractCommand {
     LOG.debug("Getting input for targets: %s", targets);
 
     TargetGraph graph;
-    try {
-      graph = params.getParser().buildTargetGraphForBuildTargets(
-          targets,
-          new ParserConfig(params.getBuckConfig()),
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Audit",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          getEnableProfiling());
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+          params.getCell(),
+          getEnableProfiling(),
+          pool.getExecutor(),
+          targets);
+    } catch (BuildFileParseException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 

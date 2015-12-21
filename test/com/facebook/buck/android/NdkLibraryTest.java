@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -44,7 +46,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -58,7 +59,7 @@ public class NdkLibraryTest {
   @Before
   public void setUp() {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(projectFilesystem,
         Optional.<String>absent(),
         new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
@@ -75,8 +76,9 @@ public class NdkLibraryTest {
   }
 
   @Test
-  public void testSimpleNdkLibraryRule() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  public void testSimpleNdkLibraryRule() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 
     String basePath = "java/src/com/facebook/base";
@@ -106,7 +108,7 @@ public class NdkLibraryTest {
                     "APP_BUILD_SCRIPT=%s " +
                     "NDK_OUT=%s " +
                     "NDK_LIBS_OUT=%s " +
-                    "BUCK_PROJECT_DIR=../../../../../. " +
+                    "BUCK_PROJECT_DIR=../../../../.. " +
                     "host-echo-build-step=%s " +
                     "--silent",
                 ndkBuildCommand,
@@ -119,7 +121,7 @@ public class NdkLibraryTest {
                 /* NDK_LIBS_OUT */ projectFilesystem.resolve(Paths.get(libbase, "libs")),
                 /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")
         ),
-        steps.subList(0, 1),
+        steps.subList(3, 4),
         executionContext);
   }
 }

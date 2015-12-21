@@ -18,11 +18,13 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -31,11 +33,12 @@ import org.junit.Test;
 public class AndroidTransitiveDependencyGraphTest {
 
   @Test
-  public void findManifestFilesWithTransitiveDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void findManifestFilesWithTransitiveDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep3 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep3"))
-            .setManifestFile(new TestSourcePath("manifest3.xml"))
+            .setManifestFile(new FakeSourcePath("manifest3.xml"))
             .build(resolver);
     BuildRule dep2 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep2"))
@@ -43,14 +46,14 @@ public class AndroidTransitiveDependencyGraphTest {
             .build(resolver);
     BuildRule dep1 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep1"))
-            .setManifestFile(new TestSourcePath("manifest1.xml"))
+            .setManifestFile(new FakeSourcePath("manifest1.xml"))
             .addDep(dep2.getBuildTarget())
             .build(resolver);
     assertThat(
         new AndroidTransitiveDependencyGraph(ImmutableSortedSet.of(dep1)).findManifestFiles(),
         Matchers.<SourcePath>containsInAnyOrder(
-            new TestSourcePath("manifest1.xml"),
-            new TestSourcePath("manifest3.xml")));
+            new FakeSourcePath("manifest1.xml"),
+            new FakeSourcePath("manifest3.xml")));
   }
 
 }

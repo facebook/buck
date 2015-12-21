@@ -30,6 +30,10 @@ abstract class AbstractQueryBuildTarget implements QueryTarget {
 
   @Override
   public int compareTo(QueryTarget other) {
+    if (this == other) {
+      return 0;
+    }
+
     return toString().compareTo(other.toString());
   }
 

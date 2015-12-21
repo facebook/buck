@@ -80,7 +80,7 @@ class PEP425(object):
   def get_platform_tag(cls):
     return cls.translate_platform_to_tag(get_supported_platform())
 
-  # TODO(user) This implementation is technically incorrect but we need to be able to
+  # TODO(wickman) This implementation is technically incorrect but we need to be able to
   # predict the supported tags of an interpreter that may not be on this machine or
   # of a different platform.  Alternatively we could store the manifest of supported tags
   # of a targeted platform in a file to be more correct.

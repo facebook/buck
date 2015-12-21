@@ -122,6 +122,45 @@ buck targets --print0 | xargs -0 buck build
   {/param}
 {/call}
 
+{call buck.param}
+  {param name: 'show-target-hash' /}
+  {param desc}
+  Prints each rule's target hash after the rule name. A target hash is created by finding all of the
+  transitive dependencies of the given target and hashing all of their attributes and files they
+  reference. For more details about how the referenced files are hashed see the {sp}
+  <code>--target-hash-file-mode</code> flag. The format of the data that is hashed is undocumented
+  and can change between Buck versions. Target hashes can be used to detect which targets are
+  affected when source files of BUCK files change: if a target is affected, its target hash will
+  be different after the change from what it was before.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'target-hash-file-mode' /}
+  {param desc}
+  Modifies how target hashes are computed. Can be either <code>PATHS_AND_CONTENTS</code> or {sp}
+  <code>PATHS_ONLY</code>. If set to <code>PATHS_AND_CONTENTS</code> (the default), the contents of
+  all files referenced from the targets will be used to compute the target hash. If set to {sp}
+  <code>PATHS_ONLY</code>, only files' paths contribute to the hash. <code>PATHS_ONLY</code> will
+  generally be faster because it does not need to read all of the referenced files, but it will not
+  detect file changes automatically. See <code>--target-hash-modified-paths</code> for another way
+  to handle changes to referenced files without losing the performance benefits.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'target-hash-modified-paths' /}
+  {param desc}
+  Modifies how target hashes are computed. This option is only effective when {sp}
+  <code>--target-hash-file-mode</code> is set to <code>PATHS_ONLY</code>, otherwise the actual
+  contents of the files are used to detect modifications and this option is ignored. If a target
+  or its dependencies reference a file from this set, the target's hash will be different than if
+  this option was omitted. Otherwise, the target's hash will be the same as if this option was
+  omitted. This option can be used to detect changes in referenced files if the list of modified
+  files is available from an external source, for example a source control system.
+  {/param}
+{/call}
+
 {/param}
 
 {/call}

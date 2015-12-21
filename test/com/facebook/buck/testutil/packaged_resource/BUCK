@@ -1,0 +1,15 @@
+java_library(
+  name = 'testutil',
+  srcs = [ 'PackagedResourceTestUtil.java' ],
+  resources = [
+    'testdata/packaged_resource_one',
+    'testdata/packaged_resource_two'
+  ],
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)

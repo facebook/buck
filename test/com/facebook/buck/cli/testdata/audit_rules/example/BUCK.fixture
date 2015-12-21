@@ -8,12 +8,10 @@ def my_genrule(
     srcs = [
       'foo.txt',
       'bar.txt',
+      '//fake:rule',
     ],
     bash = 'cat $SRCS > $OUT',
     out = out,
-    deps = [
-      '//fake:rule',
-    ],
     visibility = visibility,
   )
 

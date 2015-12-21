@@ -43,7 +43,8 @@
   {param desc}
     Specifies which IDE to create the project for.  When using a project slice, Buck tries to
     determine what type of IDE to use automatically based on the {call buck.build_target /}s
-    provided.
+    provided. Sometimes it is not possible to determine the type of IDE.
+    You can specify the default ide in the <code>[project]</code> section of your <code>.buckconfig</code> file.
   {/param}
 {/call}
 

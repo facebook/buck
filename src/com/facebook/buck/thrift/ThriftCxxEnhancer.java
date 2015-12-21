@@ -21,7 +21,10 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -35,11 +38,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
@@ -85,6 +90,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     final boolean templates = cpp2 || options.contains("templates");
     final boolean perfhash = !cpp2 && options.contains("perfhash");
     final boolean separateProcessmap = cpp2 && options.contains("separate_processmap");
+    final boolean fatal = cpp2 && options.contains("fatal");
 
     ImmutableSortedSet.Builder<String> sources = ImmutableSortedSet.naturalOrder();
 
@@ -106,6 +112,17 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     if (!bootstrap && !cpp2) {
       sources.add(base + "_reflection.h");
       sources.add(base + "_reflection.cpp");
+    }
+
+    if (fatal) {
+      final String[] suffixes = new String[] {
+        "", "_enum", "_union", "_struct", "_constant", "_service"
+      };
+
+      for (String suffix : suffixes) {
+        sources.add(base + "_fatal" + suffix + ".h");
+        sources.add(base + "_fatal" + suffix + ".cpp");
+      }
     }
 
     if (cpp2) {
@@ -202,7 +219,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       BuildRuleResolver resolver,
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
-      ImmutableSortedSet<BuildRule> deps) {
+      ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -221,8 +238,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Create language specific build params by using the deps we formed above.
     BuildRuleParams langParams = params.copyWithDeps(
-        Suppliers.ofInstance(allDeps),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(allDeps));
 
     // Merge the thrift generated headers with the ones passed in via the description.
     ImmutableSortedMap.Builder<String, SourcePath> headersBuilder =
@@ -267,11 +284,18 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
     langArgs.canBeAsset = Optional.absent();
 
+    // Since thrift generated C/C++ code uses lots of templates, just use exported deps throughout.
+    langArgs.exportedDeps =
+        Optional.of(
+            FluentIterable.from(allDeps)
+                .transform(HasBuildTarget.TO_TARGET)
+                .toSortedSet(Ordering.<BuildTarget>natural()));
+
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);
   }
 
   private ImmutableSet<BuildTarget> getImplicitDepsFromOptions(
-      BuildTarget target,
+      UnflavoredBuildTarget target,
       ImmutableSet<String> options) {
 
     ImmutableSet.Builder<BuildTarget> implicitDeps = ImmutableSet.builder();
@@ -295,14 +319,16 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (cpp2 && options.contains("compatibility")) {
       implicitDeps.add(thriftBuckConfig.getCppDep());
-      BuildTarget cppTarget = BuildTargets.createFlavoredBuildTarget(
-          target.getUnflavoredBuildTarget(),
-          CPP_FLAVOR);
+      BuildTarget cppTarget = BuildTargets.createFlavoredBuildTarget(target, CPP_FLAVOR);
       implicitDeps.add(cppTarget);
     }
 
     if (!cpp2 && options.contains("cob_style")) {
       implicitDeps.add(thriftBuckConfig.getCppAyncDep());
+    }
+
+    if (options.contains("fatal")) {
+      implicitDeps.add(thriftBuckConfig.getCpp2FatalDep());
     }
 
     return implicitDeps.build();
@@ -313,7 +339,9 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       BuildTarget target,
       ThriftConstructorArg arg) {
     Optional<ImmutableSet<String>> options = cpp2 ? arg.cpp2Options : arg.cppOptions;
-    return getImplicitDepsFromOptions(target, options.or(ImmutableSet.<String>of()));
+    return getImplicitDepsFromOptions(
+        target.getUnflavoredBuildTarget(),
+        options.or(ImmutableSet.<String>of()));
   }
 
   @Override

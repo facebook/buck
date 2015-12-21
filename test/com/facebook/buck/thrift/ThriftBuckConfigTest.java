@@ -20,14 +20,17 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -48,8 +51,9 @@ public class ThriftBuckConfigTest {
   @Test
   public void getCompilerFailsIfNothingSet() {
     // Setup an empty thrift buck config, missing the compiler.
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should fail since nothing was set.
@@ -65,16 +69,20 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerSucceedsIfJustCompilerPathIsSet() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Path thriftPath = Paths.get("thrift_path");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(thriftPath);
 
     // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftPath.toString())),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "thrift", ImmutableMap.of("compiler", thriftPath.toString())))
+        .setFilesystem(filesystem)
+        .build();
+
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
@@ -89,20 +97,21 @@ public class ThriftBuckConfigTest {
   }
 
   @Test
-  public void getCompilerSucceedsIfJustCompilerTargetIsSet() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void getCompilerSucceedsIfJustCompilerTargetIsSet() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
-            .setMain(new TestSourcePath("thrift.sh"))
+            .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
 
     // Add the thrift rule to the resolver.
     resolver.addToIndex(thriftRule);
 
     // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())));
+            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString()))).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
@@ -117,17 +126,20 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerThriftVsThrift2() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     // Setup an empty thrift buck config with thrift and thrift2 set..
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift",
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
             ImmutableMap.of(
-                "compiler", "thrift1",
-                "compiler2", "thrift2")),
-        filesystem);
+                "thrift",
+                ImmutableMap.of(
+                    "compiler", "thrift1",
+                    "compiler2", "thrift2")))
+        .setFilesystem(filesystem)
+        .build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Verify that thrift1 and thrift2 are selected correctly.
@@ -143,15 +155,18 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerThrift2FallsbackToThrift() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     // Setup an empty thrift buck config with thrift and thrift2 set..
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift",
-            ImmutableMap.of("compiler", "thrift1")),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "thrift",
+                ImmutableMap.of("compiler", "thrift1")))
+        .setFilesystem(filesystem)
+        .build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Verify that thrift2 falls back to the setting of thrift1.

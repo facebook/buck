@@ -22,14 +22,19 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
@@ -39,7 +44,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -53,7 +57,7 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
-    public Path getPathToTextSymbolsFile() {
+    public SourcePath getPathToTextSymbolsFile() {
       return null;
     }
 
@@ -87,8 +91,9 @@ public class RobolectricTestRuleTest {
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Test
-  public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
@@ -97,7 +102,7 @@ public class RobolectricTestRuleTest {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
       resDepsBuilder.add(
-          new ResourceRule(new TestSourcePath(path)));
+          new ResourceRule(new FakeSourcePath(path)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -118,8 +123,9 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
     filesystem.mkdirs(Paths.get("res1/values"));
@@ -160,8 +166,9 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void testRobolectricThrowsIfResourceDirNotThere() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void testRobolectricThrowsIfResourceDirNotThere() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
@@ -178,5 +185,32 @@ public class RobolectricTestRuleTest {
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("not_there"));
     }
+  }
+
+  @Test
+  public void runtimeDepsIncludeTransitiveResources() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+
+    BuildTarget genRuleTarget = BuildTargetFactory.newInstance("//:gen");
+    BuildRule genRule = GenruleBuilder.newGenruleBuilder(genRuleTarget)
+        .setOut("out")
+        .build(resolver);
+
+    BuildTarget res2RuleTarget = BuildTargetFactory.newInstance("//:res2");
+    AndroidResourceBuilder.createBuilder(res2RuleTarget)
+        .setRes(new BuildTargetSourcePath(genRuleTarget))
+        .setRDotJavaPackage("foo.bar")
+        .build(resolver);
+
+    BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
+        "//java/src/com/facebook/base/robolectricTest:robolectricTest");
+    RobolectricTest robolectricTest = (RobolectricTest) RobolectricTestBuilder
+        .createBuilder(robolectricBuildTarget)
+        .addDep(res2RuleTarget)
+        .build(resolver, filesystem);
+
+    assertThat(robolectricTest.getRuntimeDeps(), Matchers.hasItem(genRule));
   }
 }

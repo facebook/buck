@@ -13,7 +13,4 @@ genrule(
   name = 'overwrite',
   cmd = '$(exe //:overwrite_sh) > $OUT',
   out = 'dummy.txt',
-  deps = [
-    '//:overwrite_sh',
-  ],  
 )

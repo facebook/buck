@@ -16,15 +16,15 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -33,8 +33,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -49,27 +51,30 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testEmptyResources() {
-    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         DEFAULT_JAVAC_OPTIONS,
-        ResourceDependencyMode.FIRST_ORDER);
+        DependencyMode.FIRST_ORDER,
+        Optional.<String>absent());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
-        new BuildRuleResolver(),
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()),
         /* createdBuildableIfEmptyDeps */ false);
     assertFalse(result.isPresent());
   }
 
   @Test
   public void testBuildRuleResolverCaching() {
-    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         DEFAULT_JAVAC_OPTIONS,
-        ResourceDependencyMode.FIRST_ORDER);
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+        DependencyMode.FIRST_ORDER,
+        Optional.<String>absent());
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
         buildRuleResolver,
         /* createdBuildableIfEmptyDeps */ true);
@@ -82,32 +87,34 @@ public class AndroidLibraryGraphEnhancerTest {
   @Test
   public void testBuildableIsCreated() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res1"))
+            .setRes(new FakeSourcePath("android_res/com/example/res1"))
             .build());
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res2"))
+            .setRes(new FakeSourcePath("android_res/com/example/res2"))
             .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+        .setDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
         .build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
         DEFAULT_JAVAC_OPTIONS,
-        ResourceDependencyMode.FIRST_ORDER);
+        DependencyMode.FIRST_ORDER,
+        Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -131,25 +138,26 @@ public class AndroidLibraryGraphEnhancerTest {
   @Test
   public void testCreatedBuildableHasOverriddenJavacConfig() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res1"))
+            .setRes(new FakeSourcePath("android_res/com/example/res1"))
             .build());
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res2"))
+            .setRes(new FakeSourcePath("android_res/com/example/res2"))
             .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+        .setDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
         .build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
@@ -159,7 +167,8 @@ public class AndroidLibraryGraphEnhancerTest {
             .setSourceLevel("7")
             .setTargetLevel("7")
                     .build(),
-                ResourceDependencyMode.FIRST_ORDER);
+                DependencyMode.FIRST_ORDER,
+        Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -171,7 +180,8 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testDummyRDotJavaRuleInheritsJavacOptionsDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeBuildRule dep =
         resolver.addToIndex(
@@ -187,7 +197,8 @@ public class AndroidLibraryGraphEnhancerTest {
             target,
             new FakeBuildRuleParamsBuilder(target).build(),
             options,
-            ResourceDependencyMode.FIRST_ORDER);
+            DependencyMode.FIRST_ORDER,
+            Optional.<String>absent());
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver,

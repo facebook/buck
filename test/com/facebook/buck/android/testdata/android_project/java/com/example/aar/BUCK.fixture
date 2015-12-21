@@ -18,10 +18,6 @@ genrule(
   bash = './build_aar.sh $OUT $TMP AndroidManifest.xml $(location :primary) $(location :dep)',
   cmd_exe = 'build_aar.bat %OUT% %TMP% AndroidManifest.xml $(location :primary) $(location :dep)',
   out = 'example.aar',
-  deps = [
-    ':primary',
-    ':dep',
-  ],
 )
 
 android_prebuilt_aar(
@@ -57,7 +53,4 @@ genrule(
       'dir /s/b %TMP% | findstr /L .smali > %OUT%',
       ]),
   out = 'smali-files.txt',
-  deps = [
-    '//third-party/smali:baksmali'
-  ],
 )

@@ -1,0 +1,14 @@
+java_library(
+  name = 'args',
+  visibility = [ 'PUBLIC' ],
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules/macros:macros',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+)

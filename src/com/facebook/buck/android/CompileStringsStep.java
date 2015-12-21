@@ -100,7 +100,9 @@ public class CompileStringsStep implements Step {
   private final ImmutableList<Path> stringFiles;
   private final Path rDotTxtDir;
   private final Map<String, String> regionSpecificToBaseLocaleMap;
-  private final Map<String, Integer> resourceNameToIdMap;
+  private final Map<String, Integer> stringResourceNameToIdMap;
+  private final Map<String, Integer> pluralsResourceNameToIdMap;
+  private final Map<String, Integer> arrayResourceNameToIdMap;
   private final Function<String, Path> pathBuilder;
 
   /**
@@ -124,13 +126,20 @@ public class CompileStringsStep implements Step {
     this.rDotTxtDir = rDotTxtDir;
     this.pathBuilder = pathBuilder;
     this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
-    this.resourceNameToIdMap = Maps.newHashMap();
+    this.stringResourceNameToIdMap = Maps.newHashMap();
+    this.pluralsResourceNameToIdMap = Maps.newHashMap();
+    this.arrayResourceNameToIdMap = Maps.newHashMap();
   }
 
   @Override
   public int execute(ExecutionContext context) {
     try {
-      buildResourceNameToIdMap(filesystem, rDotTxtDir.resolve("R.txt"), resourceNameToIdMap);
+      buildResourceNameToIdMap(
+          filesystem,
+          rDotTxtDir.resolve("R.txt"),
+          stringResourceNameToIdMap,
+          pluralsResourceNameToIdMap,
+          arrayResourceNameToIdMap);
     } catch (IOException e) {
       context.logError(e, "Failure parsing R.txt file.");
       return 1;
@@ -239,7 +248,9 @@ public class CompileStringsStep implements Step {
   public static void buildResourceNameToIdMap(
       ProjectFilesystem filesystem,
       Path pathToRDotTxtFile,
-      Map<String, Integer> resultMap
+      Map<String, Integer> stringResourceNameToIdMap,
+      Map<String, Integer> pluralsResourceNameToIdMap,
+      Map<String, Integer> arrayResourceNameToIdMap
   ) throws IOException {
     List<String> fileLines = filesystem.readLines(pathToRDotTxtFile);
     for (String line : fileLines) {
@@ -247,7 +258,23 @@ public class CompileStringsStep implements Step {
       if (!matcher.matches()) {
         continue;
       }
-      resultMap.put(matcher.group(2), Integer.parseInt(matcher.group(3), 16));
+
+      String type = matcher.group(1);
+      String resourceName = matcher.group(2);
+      Integer resourceId = Integer.parseInt(matcher.group(3), 16);
+      switch (type) {
+        case "string":
+          stringResourceNameToIdMap.put(resourceName, resourceId);
+          break;
+        case "plurals":
+          pluralsResourceNameToIdMap.put(resourceName, resourceId);
+          break;
+        case "array":
+          arrayResourceNameToIdMap.put(resourceName, resourceId);
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid resource type: " + type);
+      }
     }
   }
 
@@ -287,10 +314,10 @@ public class CompileStringsStep implements Step {
     for (int i = 0; i < stringNodes.getLength(); ++i) {
       Node node = stringNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
-      if (!resourceNameToIdMap.containsKey(resourceName)) {
+      if (!stringResourceNameToIdMap.containsKey(resourceName)) {
         continue;
       }
-      int resourceId = Preconditions.checkNotNull(resourceNameToIdMap.get(resourceName));
+      int resourceId = Preconditions.checkNotNull(stringResourceNameToIdMap.get(resourceName));
       // Ignore a resource if it has already been found.
       if (!stringsMap.containsKey(resourceId)) {
         stringsMap.put(resourceId, node.getTextContent());
@@ -309,10 +336,10 @@ public class CompileStringsStep implements Step {
     for (int i = 0; i < pluralNodes.getLength(); ++i) {
       Node node = pluralNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
-      if (!resourceNameToIdMap.containsKey(resourceName)) {
+      if (!pluralsResourceNameToIdMap.containsKey(resourceName)) {
         continue;
       }
-      int resourceId = Preconditions.checkNotNull(resourceNameToIdMap.get(resourceName));
+      int resourceId = Preconditions.checkNotNull(pluralsResourceNameToIdMap.get(resourceName));
 
       // Ignore a resource if it has already been found.
       if (pluralsMap.containsKey(resourceId)) {
@@ -339,11 +366,11 @@ public class CompileStringsStep implements Step {
       Node node = arrayNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
       // Ignore a resource if R.txt does not contain an entry for it.
-      if (!resourceNameToIdMap.containsKey(resourceName)) {
+      if (!arrayResourceNameToIdMap.containsKey(resourceName)) {
         continue;
       }
 
-      int resourceId = Preconditions.checkNotNull(resourceNameToIdMap.get(resourceName));
+      int resourceId = Preconditions.checkNotNull(arrayResourceNameToIdMap.get(resourceName));
       // Ignore a resource if it has already been found.
       if (arraysMap.containsKey(resourceId)) {
         continue;
@@ -366,8 +393,18 @@ public class CompileStringsStep implements Step {
    * Used in unit tests to inject the resource name to id map.
    */
   @VisibleForTesting
-  void addResourceNameToIdMap(Map<String, Integer> nameToIdMap) {
-    resourceNameToIdMap.putAll(nameToIdMap);
+  void addStringResourceNameToIdMap(Map<String, Integer> nameToIdMap) {
+    stringResourceNameToIdMap.putAll(nameToIdMap);
+  }
+
+  @VisibleForTesting
+  void addPluralsResourceNameToIdMap(Map<String, Integer> nameToIdMap) {
+    pluralsResourceNameToIdMap.putAll(nameToIdMap);
+  }
+
+  @VisibleForTesting
+  void addArrayResourceNameToIdMap(Map<String, Integer> nameToIdMap) {
+    arrayResourceNameToIdMap.putAll(nameToIdMap);
   }
 
   @Override

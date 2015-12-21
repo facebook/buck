@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.Javac.SRC_ZIP;
+import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -36,6 +37,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,7 +67,7 @@ public class GenAidl extends AbstractBuildRule {
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
   @AddToRuleKey
-  private final Path aidlFilePath;
+  private final SourcePath aidlFilePath;
   @AddToRuleKey
   private final String importPath;
   private final Path output;
@@ -74,7 +76,7 @@ public class GenAidl extends AbstractBuildRule {
   GenAidl(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path aidlFilePath,
+      SourcePath aidlFilePath,
       String importPath) {
     super(params, resolver);
     this.aidlFilePath = aidlFilePath;
@@ -111,7 +113,7 @@ public class GenAidl extends AbstractBuildRule {
     AidlStep command = new AidlStep(
         getProjectFilesystem(),
         target,
-        aidlFilePath,
+        getResolver().getAbsolutePath(aidlFilePath),
         ImmutableSet.of(importPath),
         outputDirectory);
     commands.add(command);
@@ -121,7 +123,7 @@ public class GenAidl extends AbstractBuildRule {
 
     // Warn the user if the genDirectory is not under the output directory.
     if (!importPath.startsWith(target.getBasePath().toString())) {
-      // TODO(simons): Make this fatal. Give people some time to clean up their rules.
+      // TODO(shs96c): Make this fatal. Give people some time to clean up their rules.
       context.getEventBus().post(
           ConsoleEvent.warning(
               "%s, gen_aidl import path (%s) should be a child of %s",
@@ -136,7 +138,7 @@ public class GenAidl extends AbstractBuildRule {
         new JarDirectoryStep(
             getProjectFilesystem(),
             output,
-            ImmutableSet.of(outputDirectory),
+            ImmutableSortedSet.of(outputDirectory),
             /* main class */ null,
             /* manifest */ null));
     buildableContext.recordArtifact(output);

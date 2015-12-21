@@ -1,0 +1,14 @@
+lua_binary(
+  name = 'simple',
+  main_module = 'simple',
+  deps = [
+    ':simple-lib',
+  ],
+)
+
+lua_library(
+  name = 'simple-lib',
+  srcs = [
+    'simple.lua',
+  ],
+)

@@ -24,15 +24,17 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.HumanReadableException;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -50,23 +52,15 @@ public class AppleBundleIntegrationTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private boolean checkCodeSigning(ProjectWorkspace workspace, String relativeBundlePath)
+  private boolean checkCodeSigning(String relativeBundlePath)
       throws IOException, InterruptedException {
-    String absoluteBundlePath = tmp.getRootPath()
+    Path absoluteBundlePath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve(Paths.get(relativeBundlePath))
-        .toString();
+        .resolve(Paths.get(relativeBundlePath));
 
-    ProcessExecutor.Result result = workspace.runCommand("codesign", "-vvvv", absoluteBundlePath);
-    if (result.getExitCode() != 0) {
-      return false;
-    }
-
-    if (result.getStderr().isPresent()) {
-      return result.getStderr().get().contains(": satisfies its Designated Requirement");
-    } else {
-      return false;
-    }
+    return CodeSigning.hasValidSignature(
+        new ProcessExecutor(new TestConsole()),
+        absoluteBundlePath);
   }
 
   @Test
@@ -74,11 +68,11 @@ public class AppleBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "simple_application_bundle",
+        "simple_application_bundle_no_debug",
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify();
 
@@ -86,9 +80,11 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+                .resolve(
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/DemoApp.app/" +
+                        "DemoApp")));
 
-    assertFalse(checkCodeSigning(workspace, "DemoApp#iphonesimulator-x86_64/DemoApp.app"));
+    assertFalse(checkCodeSigning("DemoApp#iphonesimulator-x86_64,no-debug/DemoApp.app"));
   }
 
   @Test
@@ -102,7 +98,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphoneos-arm64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphoneos-arm64,no-debug").assertSuccess();
 
     workspace.verify();
 
@@ -110,9 +106,12 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphoneos-arm64/DemoApp.app/DemoApp")));
+                .resolve(
+                    "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app/" +
+                        "DemoApp")));
 
-    assertTrue(checkCodeSigning(workspace, "DemoApp#iphoneos-arm64/DemoApp.app"));
+    assertTrue(
+        checkCodeSigning("DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app"));
   }
 
   @Test
@@ -127,7 +126,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphoneos-arm64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphoneos-arm64,no-debug").assertSuccess();
 
     workspace.verify();
 
@@ -135,9 +134,11 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphoneos-arm64/DemoApp.app/DemoApp")));
+                .resolve(
+                    "DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app/DemoApp")));
 
-    assertTrue(checkCodeSigning(workspace, "DemoApp#iphoneos-arm64/DemoApp.app"));
+    assertTrue(
+        checkCodeSigning("DemoApp#iphoneos-arm64,no-debug,no-include-frameworks/DemoApp.app"));
   }
 
   @Test
@@ -145,16 +146,20 @@ public class AppleBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "simple_fat_application_bundle",
+        "simple_fat_application_bundle_no_debug",
         tmp);
     workspace.setUp();
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64")
+    workspace.runBuckCommand(
+        "build",
+        "//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64,no-debug")
         .assertSuccess();
     workspace.verify();
 
     Path outputFile = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve("DemoApp#iphonesimulator-i386,iphonesimulator-x86_64/DemoApp.app/DemoApp");
+        .resolve(
+            "DemoApp#iphonesimulator-i386,iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
+                "DemoApp.app/DemoApp");
 
     assertTrue(Files.exists(outputFile));
     ProcessExecutor.Result result = workspace.runCommand(
@@ -169,14 +174,16 @@ public class AppleBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "simple_application_bundle",
+        "simple_application_bundle_no_debug",
         tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand("targets", "--show-output", "//:DemoApp");
+        .runBuckCommand("targets", "--show-output", "//:DemoApp#no-debug");
     result.assertSuccess();
-    assertEquals("//:DemoApp buck-out/gen/DemoApp/DemoApp.app", result.getStdout().trim());
+    assertEquals(
+        "//:DemoApp#no-debug buck-out/gen/DemoApp#no-debug,no-include-frameworks/DemoApp.app",
+        result.getStdout().trim());
   }
 
   @Test
@@ -189,18 +196,19 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand("targets", "--show-output", "//:DemoExtension");
+        .runBuckCommand("targets", "--show-output", "//:DemoExtension#no-debug");
     result.assertSuccess();
     assertEquals(
-        "//:DemoExtension buck-out/gen/DemoExtension/DemoExtension.appex",
+        "//:DemoExtension#no-debug buck-out/gen/DemoExtension#no-debug,no-include-frameworks/" +
+            "DemoExtension.appex",
         result.getStdout().trim());
 
     result = workspace
-        .runBuckCommand("build", "//:DemoExtension");
+        .runBuckCommand("build", "//:DemoExtension#no-debug");
     result.assertSuccess();
     Path outputBinary = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve("DemoExtension/DemoExtension.appex/DemoExtension");
+        .resolve("DemoExtension#no-debug,no-include-frameworks/DemoExtension.appex/DemoExtension");
     assertTrue(
         String.format(
             "Extension binary could not be found inside the appex dir [%s].",
@@ -218,20 +226,22 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand("targets", "--show-output", "//:DemoAppWithExtension");
+        .runBuckCommand("targets", "--show-output", "//:DemoAppWithExtension#no-debug");
     result.assertSuccess();
     assertEquals(
-        "//:DemoAppWithExtension buck-out/gen/DemoAppWithExtension/DemoAppWithExtension.app",
+        "//:DemoAppWithExtension#no-debug " +
+            "buck-out/gen/DemoAppWithExtension#no-debug,no-include-frameworks/" +
+            "DemoAppWithExtension.app",
         result.getStdout().trim());
 
     result = workspace
-        .runBuckCommand("build", "//:DemoAppWithExtension");
+        .runBuckCommand("build", "//:DemoAppWithExtension#no-debug");
     result.assertSuccess();
     Path bundleDir = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve("DemoAppWithExtension/DemoAppWithExtension.app");
+        .resolve("DemoAppWithExtension#no-debug,no-include-frameworks/DemoAppWithExtension.app");
     assertTrue(Files.exists(bundleDir.resolve("DemoAppWithExtension")));
-    assertTrue(Files.exists(bundleDir.resolve("DemoExtension.appex/DemoExtension")));
+    assertTrue(Files.exists(bundleDir.resolve("PlugIns/DemoExtension.appex/DemoExtension")));
   }
 
   @Test
@@ -239,20 +249,23 @@ public class AppleBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "simple_application_bundle",
+        "simple_application_bundle_dwarf_and_dsym",
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace
+        .runBuckCommand("build", "//:DemoApp#dwarf-and-dsym,iphonesimulator-x86_64")
+        .assertSuccess();
 
     workspace.verify();
 
     Path bundlePath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app");
+        .resolve(
+            "DemoApp#dwarf-and-dsym,iphonesimulator-x86_64,no-include-frameworks/DemoApp.app");
     Path dwarfPath = bundlePath
         .getParent()
-        .resolve("DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+        .resolve("DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp");
     Path binaryPath = bundlePath.resolve("DemoApp");
     assertTrue(Files.exists(dwarfPath));
     String dwarfdumpMainStdout =
@@ -287,7 +300,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify();
   }
@@ -307,7 +320,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertFailure();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertFailure();
   }
 
   @Test
@@ -326,7 +339,7 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/DemoApp")));
+                .resolve("DemoApp#no-debug,no-include-frameworks/DemoApp.app/DemoApp")));
   }
 
   @Test
@@ -337,7 +350,7 @@ public class AppleBundleIntegrationTest {
         "default_platform_in_buckconfig_flavored_app_bundle",
         tmp);
     workspace.setUp();
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify();
 
@@ -345,7 +358,9 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+                .resolve(
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
+                        "DemoApp.app/DemoApp")));
   }
 
   @Test
@@ -356,14 +371,14 @@ public class AppleBundleIntegrationTest {
         "apple_asset_catalogs_are_included_in_bundle",
         tmp);
     workspace.setUp();
-    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#no-debug").assertSuccess();
 
     System.err.println(tmp.getRootPath());
     assertTrue(
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/Assets.car")));
+                .resolve("DemoApp#no-debug,no-include-frameworks/DemoApp.app/Assets.car")));
 
     workspace.verify();
   }
@@ -377,7 +392,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify();
 
@@ -385,7 +400,29 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+                .resolve(
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
+                        "DemoApp.app/DemoApp")));
+  }
+
+  @Test
+  public void productNameChangesBundleAndBinaryNames() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "application_bundle_with_product_name",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve(
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/" +
+                    "BrandNewProduct.app/BrandNewProduct")));
   }
 
   @Test
@@ -397,23 +434,90 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertFailure();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertFailure();
   }
 
   @Test
-  public void xibIsCompiledToNib() throws IOException {
+  public void resourcesAreCompiled() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "app_bundle_with_xib",
+        "app_bundle_with_xib_and_storyboard",
         tmp);
     workspace.setUp();
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
+
+    workspace.verify();
 
     assertTrue(
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/AppViewController.nib")));
+                .resolve(
+                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/DemoApp.app/" +
+                        "AppViewController.nib")));
+  }
+
+  @Test
+  public void watchApplicationBundle() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "watch_application_bundle",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#no-debug").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve(
+                    "DemoApp#no-debug,no-include-frameworks/DemoApp.app/Watch/" +
+                        "DemoWatchApp.app/DemoWatchApp")));
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve(
+                    "DemoApp#no-debug,no-include-frameworks/DemoApp.app/Watch/" +
+                        "DemoWatchApp.app/PlugIns/DemoWatchAppExtension.appex/" +
+                        "DemoWatchAppExtension")));
+  }
+
+  @Test
+  public void testTargetOutputForAppleBundle() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path genDir = tmp.getRootPath().relativize(tmp.getRootPath().resolve(BuckConstant.GEN_DIR));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result;
+    // test no-debug output
+    result = workspace.runBuckCommand(
+        "targets",
+        "--show-output",
+        "//:DemoApp#no-debug");
+    result.assertSuccess();
+    assertThat(result.getStdout(),
+        Matchers.startsWith("//:DemoApp#no-debug " +
+            genDir.resolve("DemoApp#no-debug,no-include-frameworks/DemoApp.app").toString()));
+
+    // test debug output
+    result = workspace.runBuckCommand(
+        "targets",
+        "--show-output",
+        "//:DemoApp#dwarf-and-dsym");
+    result.assertSuccess();
+    assertThat(result.getStdout(),
+        Matchers.startsWith("//:DemoApp#dwarf-and-dsym " +
+            genDir.resolve("DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app").toString()));
   }
 }

@@ -22,17 +22,15 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -59,6 +57,7 @@ public class RuleKeyBuilder {
   private final SourcePathResolver resolver;
   private final Hasher hasher;
   private final FileHashCache hashCache;
+  private final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
   private Stack<String> keyStack;
 
   @Nullable
@@ -66,10 +65,12 @@ public class RuleKeyBuilder {
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
-      FileHashCache hashCache) {
+      FileHashCache hashCache,
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     this.resolver = resolver;
     this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
     this.hashCache = hashCache;
+    this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
     this.keyStack = new Stack<>();
     if (logger.isVerboseEnabled()) {
       this.logElms = Lists.newArrayList();
@@ -98,15 +99,44 @@ public class RuleKeyBuilder {
       feed(sourcePath.toString().getBytes());
       return setSingleValue(buildRule.get());
     } else {
-      Optional<Path> relativePath = resolver.getRelativePath(sourcePath);
-      Preconditions.checkState(relativePath.isPresent());
-      Path path = relativePath.get();
-      return setSingleValue(path);
+      // The original version of this expected the path to be relative, however, sometimes the
+      // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
+      // grab the relative path to the output. We also need to hash the contents of the absolute
+      // path no matter what.
+      Path ideallyRelative;
+      try {
+        ideallyRelative = resolver.getRelativePath(sourcePath);
+      } catch (IllegalStateException e) {
+        // Expected relative path was absolute. Yay.
+        ideallyRelative = resolver.getAbsolutePath(sourcePath);
+      }
+      Path absolutePath = resolver.getAbsolutePath(sourcePath);
+      try {
+        return setPath(absolutePath, ideallyRelative);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
+  protected RuleKeyBuilder setNonHashingSourcePath(SourcePath sourcePath) {
+    String pathForKey;
+    if (sourcePath instanceof ResourceSourcePath) {
+      pathForKey = ((ResourceSourcePath) sourcePath).getResourceIdentifier();
+    } else {
+      pathForKey = resolver.getRelativePath(sourcePath).toString();
+    }
+
+    if (logElms != null) {
+      logElms.add(String.format("path(%s):", pathForKey));
+    }
+
+    feed(pathForKey.getBytes());
+    return this;
+  }
+
   protected RuleKeyBuilder setBuildRule(BuildRule rule) {
-    return setSingleValue(rule.getRuleKey());
+    return setSingleValue(defaultRuleKeyBuilderFactory.build(rule));
   }
 
   /**
@@ -118,7 +148,10 @@ public class RuleKeyBuilder {
       SourcePathResolver resolver,
       FileHashCache hashCache,
       RuleKeyAppendable appendable) {
-    RuleKeyBuilder subKeyBuilder = new RuleKeyBuilder(resolver, hashCache);
+    RuleKeyBuilder subKeyBuilder = new RuleKeyBuilder(
+        resolver,
+        hashCache,
+        defaultRuleKeyBuilderFactory);
     appendable.appendToRuleKey(subKeyBuilder);
     return subKeyBuilder.build();
   }
@@ -188,16 +221,6 @@ public class RuleKeyBuilder {
         return feed("}".getBytes());
       }
 
-      if (val instanceof Multimap) {
-        feed("{".getBytes());
-        for (Map.Entry<?, ?> entry : ((Multimap<?, ?>) val).asMap().entrySet()) {
-          setReflectively(key, entry.getKey());
-          feed(" -> ".getBytes());
-          setReflectively(key, entry.getValue());
-        }
-        return feed("}".getBytes());
-      }
-
       if (val instanceof Supplier) {
         Object newVal = ((Supplier<?>) val).get();
         return setReflectively(key, newVal);
@@ -216,21 +239,28 @@ public class RuleKeyBuilder {
   // that's being used for compilation or some such). This does mean that if a user renames a
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
-  public RuleKeyBuilder setPath(Path path) throws IOException {
-    HashCode sha1 = hashCache.get(path);
+  public RuleKeyBuilder setPath(Path absolutePath, Path ideallyRelative) throws IOException {
+    // TODO(shs96c): Enable this precondition once setPath(Path) has been removed.
+    // Preconditions.checkState(absolutePath.isAbsolute());
+    HashCode sha1 = hashCache.get(absolutePath);
     if (sha1 == null) {
-      throw new RuntimeException("No SHA for " + path);
+      throw new RuntimeException("No SHA for " + absolutePath);
     }
-    if (logElms != null) {
-      logElms.add(String.format("path(%s:%s):", path, sha1));
-    }
-    if (path.isAbsolute()) {
+
+    Path addToKey;
+    if (ideallyRelative.isAbsolute()) {
       logger.warn(
-          "Attempting to add absolute path to rule key. Only using file name: %s", path);
-      feed(path.getFileName().toString().getBytes());
+          "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
+      addToKey = ideallyRelative.getFileName();
     } else {
-      feed(path.toString().getBytes());
+      addToKey = ideallyRelative;
     }
+
+    if (logElms != null) {
+      logElms.add(String.format("path(%s:%s):", addToKey, sha1));
+    }
+
+    feed(addToKey.toString().getBytes());
     feed(sha1.toString().getBytes());
     return this;
   }
@@ -265,11 +295,8 @@ public class RuleKeyBuilder {
         throw new RuntimeException(("Unhandled number type: " + val.getClass()));
       }
     } else if (val instanceof Path) {
-      try {
-        setPath((Path) val);
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
-      }
+      throw new HumanReadableException(
+          "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
     } else if (val instanceof String) {
       if (logElms != null) {
         logElms.add(String.format("string(\"%s\"):", val));
@@ -301,6 +328,10 @@ public class RuleKeyBuilder {
       }
     } else if (val instanceof SourcePath) {
       return setSourcePath((SourcePath) val);
+    } else if (val instanceof NonHashableSourcePathContainer) {
+      NonHashableSourcePathContainer nonHashableSourcePathContainer =
+          (NonHashableSourcePathContainer) val;
+      return setNonHashingSourcePath(nonHashableSourcePathContainer.getSourcePath());
     } else if (val instanceof SourceRoot) {
       if (logElms != null) {
         logElms.add(String.format("sourceroot(%s):", val));
@@ -317,6 +348,11 @@ public class RuleKeyBuilder {
       feed("]".getBytes());
     } else if (val instanceof Sha1HashCode) {
       setSingleValue(((Sha1HashCode) val).getHash());
+    } else if (val instanceof byte[]) {
+      if (logElms != null) {
+        logElms.add(String.format("byteArray(%s):", val));
+      }
+      feed((byte[]) val);
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }

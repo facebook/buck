@@ -23,6 +23,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -54,8 +55,8 @@ public class ConstructorArgMarshaller {
    * additional paths to ones relative to the project root, and to allow {@link BuildTarget}
    * instances to be fully qualified.
    */
-  public ConstructorArgMarshaller() {
-    this.typeCoercerFactory = new TypeCoercerFactory();
+  public ConstructorArgMarshaller(TypeCoercerFactory typeCoercerFactory) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.coercedTypes = CacheBuilder.newBuilder().build();
   }
 
@@ -82,6 +83,7 @@ public class ConstructorArgMarshaller {
    * @param visibilityPatterns A builder to be populated with the visibility patterns.
    */
   public void populate(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto,
@@ -89,17 +91,19 @@ public class ConstructorArgMarshaller {
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
       Map<String, ?> instance) throws ConstructorArgMarshalException, NoSuchBuildTargetException {
     populate(
+        cellRoots,
         filesystem,
         params,
         dto,
         declaredDeps,
         instance,
         /* populate all fields, optional and required */ false);
-    populateVisibilityPatterns(visibilityPatterns, instance);
+    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance);
   }
 
   @VisibleForTesting
   void populate(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto,
@@ -113,7 +117,7 @@ public class ConstructorArgMarshaller {
         continue;
       }
       try {
-        info.setFromParams(filesystem, params, dto, instance);
+        info.setFromParams(cellRoots, filesystem, params, dto, instance);
       } catch (ParamInfoException e) {
         throw new ConstructorArgMarshalException(e.getMessage(), e);
       }
@@ -128,21 +132,26 @@ public class ConstructorArgMarshaller {
       ParamInfo<T> paramInfo,
       final ImmutableSet.Builder<BuildTarget> declaredDeps,
       Object dto) {
-    paramInfo.traverse(
-        new ParamInfo.Traversal() {
-          @Override
-          public void traverse(Object object) {
-            if (!(object instanceof BuildTarget)) {
-              return;
+
+    if (paramInfo.isDep()) {
+      paramInfo.traverse(
+          new ParamInfo.Traversal() {
+            @Override
+            public void traverse(Object object) {
+              if (!(object instanceof BuildTarget)) {
+                return;
+              }
+              declaredDeps.add((BuildTarget) object);
             }
-            declaredDeps.add((BuildTarget) object);
-          }
-        },
-        (T) dto);
+          },
+          (T) dto);
+
+    }
   }
 
   @SuppressWarnings("unchecked")
   private void populateVisibilityPatterns(
+      Function<Optional<String>, Path> cellNames,
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
       Map<String, ?> instance) throws NoSuchBuildTargetException {
     Object value = instance.get("visibility");
@@ -154,7 +163,7 @@ public class ConstructorArgMarshaller {
 
       for (String visibility : (List<String>) value) {
         visibilityPatterns.add(
-            BuildTargetPatternParser.forVisibilityArgument().parse(visibility));
+            BuildTargetPatternParser.forVisibilityArgument().parse(cellNames, visibility));
       }
     }
   }

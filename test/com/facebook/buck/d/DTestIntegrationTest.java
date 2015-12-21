@@ -31,13 +31,14 @@ public class DTestIntegrationTest {
 
   @Test
   public void failingTest() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:failing_test");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:failing_test");
     result.assertTestFailure();
     assertTrue(
         "test reports correct location on failure. stderr:\n" + result.getStderr(),
@@ -46,13 +47,42 @@ public class DTestIntegrationTest {
 
   @Test
   public void passingTest() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:passing_test");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:passing_test");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testDTestTimeout() throws Exception {
+    Assumptions.assumeDCompilerUsable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "test", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:test-spinning");
+    result.assertSpecialExitCode("test should fail", 42);
+    String stderr = result.getStderr();
+    assertTrue(stderr, stderr.contains("Timed out after 500 ms running test command"));
+  }
+
+  @Test
+  public void withCxx() throws Exception {
+    Assumptions.assumeDCompilerUsable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "test", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:with_cxx");
     result.assertSuccess();
   }
 }

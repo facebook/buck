@@ -19,18 +19,20 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -71,9 +73,10 @@ public class PythonPackagedBinaryTest {
     PythonBinary binary = new PythonPackagedBinary(
         new FakeBuildRuleParamsBuilder("//:bin").build(),
         resolver,
+        PythonTestUtils.PYTHON_PLATFORM,
         PEX,
         ImmutableList.<String>of(),
-        Paths.get("dummy_path_to_pex_runner"),
+        new HashedFileTool(Paths.get("dummy_path_to_pex_runner")),
         ".pex",
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         "main",
@@ -89,13 +92,14 @@ public class PythonPackagedBinaryTest {
         ImmutableSortedSet.<BuildRule>of());
 
     // Calculate and return the rule key.
-    RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(binary);
-    return builder.build();
+    return ruleKeyBuilderFactory.build(binary);
   }
 
   @Test
   public void testRuleKeysFromModuleLayouts() throws IOException {
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Create two different sources, which we'll swap in as different modules.
     Path main = tmpDir.newFile().toPath();
@@ -110,37 +114,34 @@ public class PythonPackagedBinaryTest {
     Path source2Relative = MorePaths.relativize(tmpDir.getRoot().toPath(), source2);
 
     // Setup a rulekey builder factory.
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of(
-                    mainRelative.toString(), Strings.repeat("a", 40),
-                    source1Relative.toString(), Strings.repeat("b", 40),
-                    source2Relative.toString(), Strings.repeat("c", 40))),
-            resolver);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            mainRelative.toString(), Strings.repeat("a", 40),
+            source1Relative.toString(), Strings.repeat("b", 40),
+            source2Relative.toString(), Strings.repeat("c", 40)));
 
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
     RuleKey pair1 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
     RuleKey pair2 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
     RuleKey pair3 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
     RuleKey pair4 = getRuleKeyForModuleLayout(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source1Relative,

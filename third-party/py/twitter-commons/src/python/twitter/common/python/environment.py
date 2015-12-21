@@ -130,7 +130,7 @@ class PEXEnvironment(Environment):
     if not self._pex_info.zip_safe and os.path.isfile(self._pex):
       self.update_module_paths(self.force_local(self._pex, self._pex_info))
 
-    # TODO(user)  Implement dynamic fetchers if pex_info requirements specify dynamic=True
+    # TODO(wickman)  Implement dynamic fetchers if pex_info requirements specify dynamic=True
     # or a non-empty repository.
     all_reqs = [Requirement.parse(req) for req, _, _ in self._pex_info.requirements]
 

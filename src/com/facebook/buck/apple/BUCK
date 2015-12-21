@@ -9,7 +9,11 @@ java_immutables_library(
   ],
   resources = [
     'build-with-buck.st',
+    'codesign.st',
+    'codesign.py',
+    'fix-uuid.st',
     'rn-package.st',
+    'fix_uuid.py',
   ],
   deps = [
     '//src/com/facebook/buck/apple/clang:headermap',
@@ -17,7 +21,10 @@ java_immutables_library(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/file:rules',
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/halide:rules',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/js:js',
     '//src/com/facebook/buck/log:api',
@@ -25,15 +32,16 @@ java_immutables_library(
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules/coercer:coercer',
     '//src/com/facebook/buck/rules/keys:keys',
     '//src/com/facebook/buck/rules/macros:macros',
-    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/shell:rules',
+    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
-    '//src/com/facebook/buck/test/selectors:selectors',
-    '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/test/result/type:type',
+    '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:escaper',
     '//src/com/facebook/buck/util:exceptions',
@@ -48,10 +56,23 @@ java_immutables_library(
     '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/stringtemplate:stringtemplate',
-     '//src/com/facebook/buck/event:event',
   ],
   visibility = [
     'PUBLIC'
-  ]
-,
+  ],
+)
+
+python_library(
+  name = 'fixuuid',
+  srcs = [
+    'fix_uuid.py',
+  ],
+  deps = [],
+)
+
+python_test(
+  name = 'fixuuid_test',
+  srcs = ['fix_uuid_test.py'],
+  resources = glob(['uuid_test_app/**/*']),
+  deps = [':fixuuid'],
 )

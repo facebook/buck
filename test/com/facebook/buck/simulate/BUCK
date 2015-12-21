@@ -1,0 +1,34 @@
+java_test(
+  name = 'simulate',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/jvm/java/tracing:tracing',
+    '//src/com/facebook/buck/jvm/java:rules',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rule_key',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/simulate:simulate',
+    '//src/com/facebook/buck/step:step',
+    '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/jvm/java:testutil',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/junit:junit',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+  resources = [
+    'testdata/simulate_times.json',
+  ]
+)

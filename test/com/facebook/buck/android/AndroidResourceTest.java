@@ -18,9 +18,11 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidResource.BuildOutput;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -31,27 +33,29 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
@@ -60,33 +64,29 @@ public class AndroidResourceTest {
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    String commonHash = Strings.repeat("a", 40);
-    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
-            "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
-            "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
-            "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
-    BuildTarget buildTarget =
-        BuildTarget.builder("//java/src/com/facebook/base", "res").build();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setFileHashCache(fakeFileHashCache)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
 
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
         .setBuildRuleParams(params)
-        .setRes(new TestSourcePath("java/src/com/facebook/base/res"))
+        .setRes(new FakeSourcePath("java/src/com/facebook/base/res"))
         .setResSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/res/drawable/A.xml")))
+                new FakeSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/res/drawable/A.xml")))
         .setRDotJavaPackage("com.facebook")
-        .setAssets(new TestSourcePath("java/src/com/facebook/base/assets"))
+        .setAssets(new FakeSourcePath("java/src/com/facebook/base/assets"))
         .setAssetsSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+                new FakeSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
             new PathSourcePath(
                 projectFilesystem,
@@ -96,34 +96,37 @@ public class AndroidResourceTest {
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
         .setBuildRuleParams(params)
-        .setRes(new TestSourcePath("java/src/com/facebook/base/res"))
+        .setRes(new FakeSourcePath("java/src/com/facebook/base/res"))
         .setResSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/res/drawable/C.xml")))
+                new FakeSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/res/drawable/C.xml")))
         .setRDotJavaPackage("com.facebook")
-        .setAssets(new TestSourcePath("java/src/com/facebook/base/assets"))
+        .setAssets(new FakeSourcePath("java/src/com/facebook/base/assets"))
         .setAssetsSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+                new FakeSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
             new PathSourcePath(
                 projectFilesystem,
                 Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(ImmutableMap.of(
-                "java/src/com/facebook/base/AndroidManifest.xml", "bbbbbbbbbb",
-                "java/src/com/facebook/base/assets/drawable/A.xml", "cccccccccccc",
-                "java/src/com/facebook/base/assets/drawable/B.xml", "aaaaaaaaaaaa",
-                "java/src/com/facebook/base/res/drawable/A.xml", "dddddddddd",
-                "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
-                )),
-            pathResolver);
-    RuleKey ruleKey1 =
-        factory.newInstance(androidResource1).build();
-    RuleKey ruleKey2 =
-        factory.newInstance(androidResource2).build();
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            "java/src/com/facebook/base/AndroidManifest.xml", "bbbbbbbbbb",
+            "java/src/com/facebook/base/assets/drawable/A.xml", "cccccccccccc",
+            "java/src/com/facebook/base/assets/drawable/B.xml", "aaaaaaaaaaaa",
+            "java/src/com/facebook/base/res/drawable/A.xml", "dddddddddd",
+            "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
+        ));
+    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+        androidResource1);
+    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+        androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.",
@@ -133,7 +136,8 @@ public class AndroidResourceTest {
 
   @Test
   public void testAbiKeyExcludesEmptyResources() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     BuildRule resourceRule1 = ruleResolver.addToIndex(
@@ -141,7 +145,7 @@ public class AndroidResourceTest {
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(new TestSourcePath("android_res/com/example/res1"))
+            .setRes(new FakeSourcePath("android_res/com/example/res1"))
             .build());
     setAndroidResourceBuildOutput(resourceRule1, "a");
     BuildRule resourceRule2 = ruleResolver.addToIndex(
@@ -160,7 +164,7 @@ public class AndroidResourceTest {
             .setDeps(deps)
             .setBuildRuleParams(
                 new FakeBuildRuleParamsBuilder(target)
-                    .setDeps(deps)
+                    .setDeclaredDeps(deps)
                     .build())
             .build());
 
@@ -172,60 +176,25 @@ public class AndroidResourceTest {
                 buildableContext)
             .isEmpty());
 
-    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
-        ImmutableList.of((HasAndroidResourceDeps) resourceRule1));
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
-        expectedSha1.getHash());
-  }
-
-  @Test
-  public void testAdditionalAbiKey() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/example:res2");
-    String additionalAbiKey = Strings.repeat("d", 40);
-    BuildRule resourceRule2 = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
-            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
-            .setAdditionalAbiKey(
-                Optional.of(Suppliers.ofInstance(Sha1HashCode.of(additionalAbiKey))))
-            .setBuildRuleParams(
-                new FakeBuildRuleParamsBuilder(target).build())
-            .build());
-
-    FakeBuildableContext buildableContext = new FakeBuildableContext();
-    assertTrue(
-        resourceRule2
-            .getBuildSteps(
-                EasyMock.createMock(BuildContext.class),
-                buildableContext)
-            .isEmpty());
-
-    Sha1HashCode expectedSha1 = Sha1HashCode.fromHashCode(
-        Hashing.sha1().newHasher()
-            .putUnencodedChars(Hashing.sha1().newHasher().hash().toString())
-            .putUnencodedChars(additionalAbiKey)
-            .hash());
-
-    buildableContext.assertContainsMetadataMapping(
-        AndroidResource.METADATA_KEY_FOR_ABI,
-        expectedSha1.getHash());
+        Hashing.sha1().newHasher().hash().toString());
   }
 
   @Test
   public void testGetRDotJavaPackageWhenPackageIsSpecified() {
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        new TestSourcePath("foo/res"),
-        ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
+        new FakeSourcePath("foo/res"),
+        ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
+        Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ "com.example.android",
         /* assets */ null,
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
+        Optional.<SourcePath>absent(),
         /* manifestFile */ null,
         /* hasWhitelistedStrings */ false);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
@@ -236,13 +205,16 @@ public class AndroidResourceTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        new TestSourcePath("foo/res"),
-        ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
+        new FakeSourcePath("foo/res"),
+        ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
+        Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ null,
         /* assets */ null,
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
+        Optional.<SourcePath>absent(),
         /* manifestFile */ new PathSourcePath(
             projectFilesystem,
             Paths.get("foo/AndroidManifest.xml")),
@@ -252,6 +224,48 @@ public class AndroidResourceTest {
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE, "com.ex.pkg");
     androidResource.initializeFromDisk(onDiskBuildInfo);
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
+  }
+
+  @Test
+  public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    AndroidResource dep =
+        (AndroidResource) AndroidResourceBuilder
+            .createBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setManifest(new FakeSourcePath("manifest"))
+            .setRes(Paths.get("res"))
+            .build(resolver, filesystem);
+    AndroidResource resource =
+        (AndroidResource) AndroidResourceBuilder
+            .createBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver, filesystem);
+
+    filesystem.writeContentsToPath(
+        "something",
+        pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+    RuleKey original = new InputBasedRuleKeyBuilderFactory(
+        fileHashCache,
+        pathResolver,
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver))
+        .build(resource);
+
+    fileHashCache.invalidateAll();
+
+    filesystem.writeContentsToPath(
+        "something else",
+        pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+    RuleKey changed = new InputBasedRuleKeyBuilderFactory(
+        fileHashCache,
+        pathResolver,
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver))
+        .build(resource);
+
+    assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule, String hashChar) {

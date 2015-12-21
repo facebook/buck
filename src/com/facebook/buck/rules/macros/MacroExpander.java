@@ -16,11 +16,14 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.nio.file.Path;
 
 public interface MacroExpander {
 
@@ -29,19 +32,20 @@ public interface MacroExpander {
    */
   String expand(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
       String input)
       throws MacroException;
 
   /**
-   * @return additional {@link BuildRule}s which provide output which is consumed by the expanded
+   * @return {@link BuildRule}s which provide output which is consumed by the expanded
    *     form of this macro.  These are intended to become dependencies of {@code BuildRule}s that
    *     use this macro.  In many cases, this may just be the {@link BuildRule}s resolved from the
    *     {@link BuildTarget}s returned by {@link #extractParseTimeDeps}.
    */
-  ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException;
@@ -52,7 +56,10 @@ public interface MacroExpander {
    *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
    *     to extract implicit dependencies hidden behind macros.
    */
-  ImmutableList<BuildTarget> extractParseTimeDeps(BuildTarget target, String input)
+  ImmutableList<BuildTarget> extractParseTimeDeps(
+      BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
+      String input)
       throws MacroException;
 
   /**
@@ -60,8 +67,8 @@ public interface MacroExpander {
    */
   Object extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException;
-
 }

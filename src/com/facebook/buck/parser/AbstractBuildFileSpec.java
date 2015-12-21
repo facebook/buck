@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
@@ -45,25 +46,13 @@ abstract class AbstractBuildFileSpec {
   // and that the paths enumerated here should be ignored.
   @Value.Parameter
   abstract boolean isRecursive();
-  @Value.Parameter
-  abstract ImmutableSet<Path> getRecursiveIgnorePaths();
-
-  public static BuildFileSpec fromRecursivePath(Path basePath, ImmutableSet<Path> ignorePaths) {
-    return BuildFileSpec.of(basePath, /* recursive */ true, ignorePaths);
-  }
 
   public static BuildFileSpec fromRecursivePath(Path basePath) {
-    return BuildFileSpec.of(
-        basePath,
-        /* recursive */ true,
-        /* ignorePaths */ ImmutableSet.<Path>of());
+    return BuildFileSpec.of(basePath, /* recursive */ true);
   }
 
   public static BuildFileSpec fromPath(Path basePath) {
-    return BuildFileSpec.of(
-        basePath,
-        /* recursive */ false,
-        ImmutableSet.<Path>of());
+    return BuildFileSpec.of(basePath, /* recursive */ false);
   }
 
   public static BuildFileSpec fromBuildTarget(BuildTarget target) {
@@ -74,14 +63,14 @@ abstract class AbstractBuildFileSpec {
    * Find all build in the given {@link ProjectFilesystem}, and pass each to the given callable.
    */
   public void forEachBuildFile(
-      ProjectFilesystem filesystem,
+      final ProjectFilesystem filesystem,
       final String buildFileName,
       final Function<Path, Void> function)
       throws IOException {
 
     // If non-recursive, we just want the build file in the target spec's given base dir.
     if (!isRecursive()) {
-      function.apply(getBasePath().resolve(buildFileName));
+      function.apply(filesystem.resolve(getBasePath().resolve(buildFileName)));
       return;
     }
 
@@ -95,7 +84,7 @@ abstract class AbstractBuildFileSpec {
               BasicFileAttributes attrs)
               throws IOException {
             // Skip sub-dirs that we should ignore.
-            if (getRecursiveIgnorePaths().contains(dir)) {
+            if (filesystem.isIgnored(dir)) {
               return FileVisitResult.SKIP_SUBTREE;
             }
             return FileVisitResult.CONTINUE;
@@ -106,8 +95,9 @@ abstract class AbstractBuildFileSpec {
               Path file,
               BasicFileAttributes attrs)
               throws IOException {
-            if (buildFileName.equals(file.getFileName().toString())) {
-              function.apply(file);
+            if (buildFileName.equals(file.getFileName().toString()) &&
+                !filesystem.isIgnored(file)) {
+              function.apply(filesystem.resolve(file));
             }
             return FileVisitResult.CONTINUE;
           }
@@ -134,14 +124,12 @@ abstract class AbstractBuildFileSpec {
   /**
    * @return paths to build files that this spec match in the given {@link ProjectFilesystem}.
    */
-  public ImmutableSet<Path> findBuildFiles(
-      ProjectFilesystem filesystem,
-      String buildFileName) throws IOException {
+  public ImmutableSet<Path> findBuildFiles(Cell cell) throws IOException {
     final ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
 
     forEachBuildFile(
-        filesystem,
-        buildFileName,
+        cell.getFilesystem(),
+        cell.getBuildFileName(),
         new Function<Path, Void>() {
           @Override
           public Void apply(Path buildFile) {

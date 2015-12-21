@@ -14,10 +14,10 @@
   <property name="tracing-api.src.dir" value="com/facebook/buck/event/api/" />
   <property name="tracing-api.classes.dir" value="${build.dir}/tracing-api/classes" />
   <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
-  <property name="javac-tracing.src.dir" value="com/facebook/buck/java/tracing" />
+  <property name="javac-tracing.src.dir" value="com/facebook/buck/jvm/java/tracing" />
   <property name="javac-tracing.classes.dir" value="${build.dir}/javac-tracing/classes" />
   <property name="javac-tracing.jar" value="${build.dir}/javac-tracing/javac-tracing-compiler-plugin.jar" />
-  <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/pex.py" />
+  <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/make_pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties" />
@@ -27,7 +27,6 @@
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="javadoc-with-android.dir" value="${build.dir}/javadoc-with-android" />
   <property name="javadoc-all.dir" value="${build.dir}/javadoc-all" />
-  <property name="client.dir" value="third-party/nailgun" />
   <property name="test.class" value="Test" />
   <property name="test.debug_port" value="8787" />
   <property name="lint.outputpath" value="${build.dir}/lint.output" />
@@ -42,6 +41,9 @@
 
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
+  <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
+
+  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
@@ -70,10 +72,11 @@
     <include name="jsr/jsr305.jar" />
     <include name="android/sdklib.jar" />
     <include name="nailgun/nailgun-server-0.9.2-SNAPSHOT.jar" />
-    <include name="jna/jna-4.1.0.jar" />
+    <include name="jna/jna-4.2.0.jar" />
   </fileset>
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
+    <include name="ObjCBridge/ObjCBridge.jar" />
     <include name="android/sdk-common-24.2.3.jar" />
     <include name="android/common-24.2.3.jar" />
     <include name="android/layoutlib-api-24.2.3.jar" />
@@ -81,6 +84,7 @@
     <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
+    <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar"/>
     <include name="eclipse/org.eclipse.core.jobs_3.6.1.v20141014-1248.jar"/>
@@ -103,8 +107,8 @@
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jimfs/jimfs-1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
-    <include name="okhttp/okhttp-2.2.0.jar" />
-    <include name="okio/okio-1.2.0.jar" />
+    <include name="okhttp/okhttp-2.6.0.jar" />
+    <include name="okio/okio-1.6.0.jar" />
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
     <include name="slf4j/slf4j-api-1.7.2.jar" />
     <include name="stringtemplate/ST-4.0.8.jar" />
@@ -129,12 +133,17 @@
     <include name="slf4j/slf4j-api-1.7.5.jar" />
   </fileset>
 
-  <path id="classpath-no-src">
+  <path id="classpath-no-src-no-aosp">
     <fileset refid="buck.jars" />
     <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
+  </path>
+
+  <path id="classpath-no-src">
+    <path refid="classpath-no-src-no-aosp" />
+    <pathelement location="${aosp.classes.dir}" />
   </path>
 
   <path id="classpath">
@@ -162,7 +171,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
+  <target name="default" depends="compile, dx, javac-tracing, report-generator-jar" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -180,7 +189,7 @@
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
-           includes="com/facebook/buck/junit/**,src/com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/java/runner/**"
+           includes="com/facebook/buck/log/AppendableLogRecord.java,com/facebook/buck/testrunner/**,com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/jvm/java/runner/**"
            destdir="${testrunner.classes.dir}"
            classpathref="junit"
            debug="on"
@@ -204,6 +213,8 @@
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
         <include name="${javac-tracing.src.dir}/JavacPhaseTracer.java" />
+        <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
+        <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
       </javac-params>
     </ecj>
     <jar destfile="${bootstrapper.jar}">
@@ -249,6 +260,8 @@
     <mkdir dir="${javac-tracing.classes.dir}" />
     <ecj destdir="${javac-tracing.classes.dir}" classpathref="javac-tracing.classpath">
       <javac-params>
+        <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
+        <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
         <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
       </javac-params>
     </ecj>
@@ -258,7 +271,7 @@
 
     <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
      TranslatingJavacPhaseTracer -->
-    <copy file="${javac-tracing.jar}" todir="${classes.dir}/com/facebook/buck/java/tracing" />
+    <copy file="${javac-tracing.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/tracing" />
   </target>
 
   <path id="immutables-classpath">
@@ -275,7 +288,7 @@
     <contains text="org.immutables" />
     <exclude name="com/facebook/buck/android/support/**" />
     <exclude name="com/facebook/buck/cli/quickstart/**" />
-    <exclude name="com/facebook/buck/junit/**" />
+    <exclude name="com/facebook/buck/testrunner/**" />
     <!-- Only run javac on immutables files which have changed since the last build. -->
     <modified>
       <param name="cache.cachefile" value="${build.dir}/immutables.modified.properties" />
@@ -395,29 +408,12 @@
   </target>
 
   <target name="compile"
-          depends="compile-testrunner, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
+          depends="compile-testrunner, compile-aosp, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
     <!-- Copy in scripts we need at run time when using an unpacked buck -->
     <copy file="src/com/facebook/buck/json/buck.py" todir="${classes.dir}/com/facebook/buck/json"/>
-
-    <!--
-      Compile code from AOSP using the default compiler.
-      Using ecj spits out too many warnings that are not our responsibility to fix.
-    -->
-    <javac destdir="${classes.dir}"
-           classpathref="classpath"
-           debug="on"
-           deprecation="on"
-           includeAntRuntime="no"
-           >
-      <src path="${aosp.src.dir}" />
-
-      <compilerarg value="-Xlint:rawtypes" />
-      <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:serial" />
-    </javac>
 
     <ecj>
       <javac-params>
@@ -431,7 +427,7 @@
           <exclude name="com/facebook/buck/cli/quickstart/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/intellij/plugin/**" />
-          <exclude name="com/facebook/buck/junit/**" />
+          <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
         <or>
           <filename name="${javac-tracing.src.dir}/JavacPhaseEvent.java" />
@@ -536,10 +532,10 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.5.201505241946.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
       <fileset dir="${classes.dir}">
-          <include name="com/facebook/buck/java/coverage/ReportGenerator.class"/>
+          <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
       </fileset>
       <manifest>
-        <attribute name="Main-Class" value="com.facebook.buck.java.coverage.ReportGenerator" />
+        <attribute name="Main-Class" value="com.facebook.buck.jvm.java.coverage.ReportGenerator" />
       </manifest>
     </jar>
   </target>
@@ -547,6 +543,7 @@
   <path id="tests.run.classpath">
     <path refid="classpath" />
     <fileset dir="${third-party.dir}/java">
+      <include name="caliper/caliper-1.0-all.jar" />
       <include name="cglib/cglib-nodep-2.2.jar" />
       <include name="easymock/easymock-3.3.1.jar" />
       <include name="hamcrest/hamcrest-junit-2.0.0.0.jar" />
@@ -630,7 +627,7 @@
         which lives in the javac-tracing-compiler-plugin.jar, which is loaded dynamically at
         runtime. This test is run in the Buck build, which is capable of more isolated testing
         than the Ant build is. -->
-        <exclude name="com/facebook/buck/java/tracing/TracingTaskListenerCleanerTest.java" />
+        <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />
       </javac-params>
     </ecj>
   </target>
@@ -667,11 +664,11 @@
       <!-- Java and android -->
       <batchtest fork="yes">
         <fileset dir="${test.dir}">
-          <include name="com/facebook/buck/java/**/*${test.class}.java" />
+          <include name="com/facebook/buck/jvm/java/**/*${test.class}.java" />
           <include name="com/facebook/buck/android/**/*${test.class}.java" />
           <include name="com/facebook/buck/dalvik/**/*${test.class}.java" />
 
-          <exclude name="com/facebook/buck/java/tracing/TracingTaskListenerCleanerTest.java" />
+          <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />
           <exclude name="**/testdata/**" />
         </fileset>
       </batchtest>
@@ -705,7 +702,7 @@
           <include name="**/*${test.class}.java" />
 
           <exclude name="**/testdata/**" />
-          <exclude name="com/facebook/buck/java/**" />
+          <exclude name="com/facebook/buck/jvm/java/**" />
           <exclude name="com/facebook/buck/android/**" />
           <exclude name="com/facebook/buck/dalvik/**" />
           <exclude name="com/facebook/buck/apple/**" />
@@ -723,14 +720,14 @@
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
-      <env key="PYTHONPATH" path="${pathlib.dir}" />
+      <env key="PYTHONPATH" path="${buck.pythonpath}" />
       <arg value="src/com/facebook/buck/json/buck_test.py" />
     </exec>
   </target>
 
   <target name="class-loader-py-test" description="tests BUCK's class loader setup">
       <exec executable="python" failonerror="true">
-          <env key="PYTHONPATH" path="${pathlib.dir}" />
+          <env key="PYTHONPATH" path="${buck.pythonpath}" />
           <arg value="test/com/facebook/buck/cli/bootstrapper/class_loader_test.py" />
       </exec>
   </target>
@@ -851,7 +848,7 @@
   <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpath="third-party/java/forbiddenapis/forbiddenapis-1.8.jar"/>
 
   <target name="forbidden-checks" depends="compile">
-    <forbiddenapis internalRuntimeForbidden="true" classpathref="classpath" dir="${classes.dir}">
+    <forbiddenapis internalRuntimeForbidden="true" classpathref="classpath" dir="${classes.dir}" suppressAnnotation="**.SuppressForbidden">
       <bundledsignatures name="jdk-unsafe-1.7"/>
       <bundledsignatures name="jdk-deprecated-1.7"/>
       <signaturesFileset file="config/forbiddenapis.txt"/>
@@ -859,7 +856,7 @@
   </target>
 
   <target name="forbidden-checks-tests" depends="compile-tests">
-    <forbiddenapis internalRuntimeForbidden="true" classpathref="tests.compile.classpath" dir="${testclasses.dir}">
+    <forbiddenapis internalRuntimeForbidden="true" classpathref="tests.compile.classpath" dir="${testclasses.dir}" suppressAnnotation="**.SuppressForbidden">
       <bundledsignatures name="jdk-unsafe-1.7"/>
       <bundledsignatures name="jdk-deprecated-1.7"/>
       <signaturesFileset file="config/forbiddenapis.txt"/>
@@ -974,18 +971,8 @@
     </exec>
   </target>
 
-  <target name="travis" depends="test, verify-javadoc, lint" />
-
-  <target name="client" description="install nailgun buckd c client (non Windows only)">
-    <mkdir dir="${build.dir}" />
-    <exec dir="${basedir}"
-          executable="gcc"
-          failonerror="true"
-          osfamily="unix">
-      <arg line="-Wall -pedantic -O3 -o ${build.dir}/ng ${client.dir}/nailgun-client/ng.c" />
-    </exec>
-  </target>
+  <target name="travis" depends="verify-javadoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
-  <target name="all" depends="jar, test, javadoc, client" />
+  <target name="all" depends="jar, test, javadoc" />
 </project>

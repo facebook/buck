@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,7 +113,10 @@ public class CxxLibraryIntegrationTest {
   @Test
   public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
     workspace.runBuckBuild("//foo:dep_one").assertSuccess();
   }
 

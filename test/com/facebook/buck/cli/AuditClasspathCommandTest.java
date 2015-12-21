@@ -22,18 +22,17 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.java.JavaTestBuilder;
-import com.facebook.buck.java.KeystoreBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaTestBuilder;
+import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,13 +62,11 @@ public class AuditClasspathCommandTest {
         .build();
     targetGraphTransformer = new TargetGraphToActionGraph(
         BuckEventBusFactory.newInstance(),
-        new BuildTargetNodeToBuildRuleTransformer(),
-        new NullFileHashCache());
+        new BuildTargetNodeToBuildRuleTransformer());
   }
 
   @Test
-  public void testClassPathOutput()
-      throws IOException, InterruptedException {
+  public void testClassPathOutput() throws Exception {
     // Test that no output is created.
     auditClasspathCommand.printClasspath(
         params,
@@ -96,14 +93,14 @@ public class AuditClasspathCommandTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     TargetNode<?> keystoreNode = KeystoreBuilder
         .createBuilder(keystoreTarget)
-        .setStore(Paths.get("debug.keystore"))
-        .setProperties(Paths.get("keystore.properties"))
+        .setStore(new FakeSourcePath("debug.keystore"))
+        .setProperties(new FakeSourcePath("keystore.properties"))
         .build();
 
     BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");
     TargetNode<?> testAndroidNode = AndroidBinaryBuilder
         .createBuilder(testAndroidTarget)
-        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
         .build();
@@ -199,7 +196,7 @@ public class AuditClasspathCommandTest {
       "}");
 
   @Test
-  public void testJsonClassPathOutput() throws IOException {
+  public void testJsonClassPathOutput() throws Exception {
     // Build a DependencyGraph of build rules manually.
 
     BuildTarget javaTarget = BuildTargetFactory.newInstance("//:test-java-library");

@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
@@ -36,6 +37,7 @@ public class BuckConfigTestUtils {
     return createFromReader(
         reader,
         projectFilesystem,
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }
@@ -43,12 +45,14 @@ public class BuckConfigTestUtils {
   public static BuckConfig createFromReader(
       Reader reader,
       ProjectFilesystem projectFilesystem,
+      Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
     return BuckConfig.createFromReaders(
         ImmutableMap.of(Paths.get("FAKE.buckconfig"), reader),
         projectFilesystem,
+        architecture,
         platform,
         environment);
   }

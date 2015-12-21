@@ -55,7 +55,7 @@ files and provides various flags to control how they are linked and exported.
 
 {call cxx_common.exported_headers_arg /}
 
-{call cxx_common.platform_exported_headers_arg /}
+{call cxx_common.exported_platform_headers_arg /}
 
 {call cxx_common.header_namespace_arg /}
 
@@ -64,6 +64,10 @@ files and provides various flags to control how they are linked and exported.
 {call cxx_common.exported_platform_preprocessor_flags_arg /}
 
 {call cxx_common.exported_linker_flags_arg /}
+
+{call cxx_common.force_static /}
+
+{call cxx_common.exported_deps_arg /}
 
 {call buck.visibility_arg /}
 

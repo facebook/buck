@@ -21,10 +21,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
@@ -32,6 +34,8 @@ import com.google.common.jimfs.Jimfs;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -45,10 +49,13 @@ import java.util.List;
 
 public class StackedDownloaderTest {
 
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
   @Test
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
     Downloader downloader = StackedDownloader.createFromConfig(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Optional.<Path>absent());
 
     assertNotNull(downloader);
@@ -60,7 +67,7 @@ public class StackedDownloaderTest {
   @Test
   public void shouldAddOnDiskAndroidReposIfPresentInSdk() throws IOException {
     Downloader downloader = StackedDownloader.createFromConfig(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Optional.<Path>absent());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
@@ -76,7 +83,7 @@ public class StackedDownloaderTest {
     Files.createDirectories(googleM2);
 
     downloader = StackedDownloader.createFromConfig(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Optional.of(sdkRoot));
     downloaders = unpackDownloaders(downloader);
 
@@ -98,11 +105,13 @@ public class StackedDownloaderTest {
     // Set up a config so we expect to see both a local and a remote maven repo.
     Path projectRoot = vfs.getPath("/opt/local/src");
     Files.createDirectories(projectRoot);
-    FakeBuckConfig config = new FakeBuckConfig(
-        new ProjectFilesystem(projectRoot),
-        "[maven_repositories]",
-        "local = " + m2Root.toString(),
-        "central = https://repo1.maven.org/maven2");
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(new ProjectFilesystem(projectRoot))
+        .setSections(
+            "[maven_repositories]",
+            "local = " + m2Root.toString(),
+            "central = https://repo1.maven.org/maven2")
+        .build();
 
     Downloader downloader = StackedDownloader.createFromConfig(config, Optional.<Path>absent());
 
@@ -125,9 +134,11 @@ public class StackedDownloaderTest {
   @Test
   public void shouldFallBackToTheDeprecatedMechanismForCreatingMavenRepos() throws IOException {
     // Set up a config so we expect to see both a local and a remote maven repo.
-    FakeBuckConfig config = new FakeBuckConfig(
-        "[download]",
-        "maven_repo = https://repo1.maven.org/maven2");
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            "maven_repo = https://repo1.maven.org/maven2")
+        .build();
 
     Downloader downloader = StackedDownloader.createFromConfig(config, Optional.<Path>absent());
 
@@ -185,4 +196,43 @@ public class StackedDownloaderTest {
       throw new RuntimeException(e);
     }
   }
+
+  @Test
+  public void shouldThrowReadableExceptionWhenUrlPathDoesntExist() {
+    String pathNotExist = "file://not/a/valid/path";
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            String.format("maven_repo = %s", pathNotExist))
+        .build();
+
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        String.format(
+            "Error occurred when attempting to use %s " +
+                "as a local Maven repository as configured", pathNotExist));
+
+    StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+  }
+
+  @Test
+  public void shouldThrowReadableExceptionWhenPathDoesntExist() {
+    String pathNotExist = "//not/a/valid/path";
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            String.format("maven_repo = %s", pathNotExist))
+        .build();
+
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        String.format(
+            "Error occurred when attempting to use %s " +
+                "as a local Maven repository as configured", pathNotExist));
+
+    StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+  }
+
 }

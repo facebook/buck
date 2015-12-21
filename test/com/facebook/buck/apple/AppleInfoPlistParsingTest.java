@@ -37,7 +37,8 @@ public class AppleInfoPlistParsingTest {
   public void infoPlistParsingReturnsBundleID() throws IOException {
     Optional<String> bundleID;
     try (InputStream in =
-             getClass().getResourceAsStream("testdata/simple_application_bundle/Info.plist")) {
+             getClass().getResourceAsStream(
+                 "testdata/simple_application_bundle_no_debug/Info.plist")) {
       Preconditions.checkState(in != null);
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
     }

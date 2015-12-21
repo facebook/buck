@@ -17,9 +17,12 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -34,7 +37,10 @@ import java.nio.file.Paths;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath> {
+abstract class AbstractFrameworkPath implements
+    Comparable<AbstractFrameworkPath>,
+    RuleKeyAppendable {
+
   /**
    * The type of framework entry this object represents.
    */
@@ -107,40 +113,6 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
     };
   }
 
-  public static Function<FrameworkPath, Path> getExpandedSearchPathFunction(
-      final Function<SourcePath, Path> sourcePathResolver,
-      final Function<SourceTreePath, Path> sourceTreePathResolver) {
-    return new Function<FrameworkPath, Path>() {
-      @Override
-      public Path apply(FrameworkPath input) {
-        return getExpandFunction(
-            sourcePathResolver,
-            sourceTreePathResolver
-        ).apply(input).getParent();
-      }
-    };
-  }
-
-  public static Function<FrameworkPath, Path> getExpandFunction(
-      final Function<SourcePath, Path> sourcePathResolver,
-      final Function<SourceTreePath, Path> sourceTreePathResolver) {
-    return new Function<FrameworkPath, Path>() {
-      @Override
-      public Path apply(FrameworkPath input) {
-        switch (input.getType()) {
-          case SOURCE_TREE_PATH:
-            return Preconditions.checkNotNull(
-                sourceTreePathResolver.apply(input.getSourceTreePath().get()));
-          case SOURCE_PATH:
-            return Preconditions
-                .checkNotNull(sourcePathResolver.apply(input.getSourcePath().get()));
-          default:
-            throw new RuntimeException("Unhandled type: " + input.getType());
-        }
-      }
-    };
-  }
-
   @Value.Check
   protected void check() {
     switch (getType()) {
@@ -159,6 +131,10 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
 
   @Override
   public int compareTo(AbstractFrameworkPath o) {
+    if (this == o) {
+      return 0;
+    }
+
     int typeComparisonResult = getType().ordinal() - o.getType().ordinal();
     if (typeComparisonResult != 0) {
       return typeComparisonResult;
@@ -171,6 +147,15 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
       default:
         throw new RuntimeException("Unhandled type: " + getType());
     }
+  }
+
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    builder.setReflectively("sourcePath", getSourcePath());
+    builder.setReflectively(
+        "sourceTree",
+        getSourceTreePath().transform(Functions.toStringFunction()));
+    return builder;
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {

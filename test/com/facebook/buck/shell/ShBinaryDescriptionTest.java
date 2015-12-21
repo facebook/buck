@@ -18,9 +18,13 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -28,9 +32,10 @@ import org.junit.Test;
 public class ShBinaryDescriptionTest {
 
   @Test
-  public void mainIsIncludedInCommand() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    TestSourcePath main = new TestSourcePath("main.sh");
+  public void mainIsIncludedInCommand() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    FakeSourcePath main = new FakeSourcePath("main.sh");
     ShBinary shBinary =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
@@ -38,6 +43,22 @@ public class ShBinaryDescriptionTest {
     assertThat(
         shBinary.getExecutableCommand().getInputs(),
         Matchers.hasItem(main));
+  }
+
+  @Test
+  public void resourcesAreIncludedInCommand() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    FakeSourcePath main = new FakeSourcePath("main.sh");
+    FakeSourcePath resource = new FakeSourcePath("resource.dat");
+    ShBinary shBinary =
+        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setMain(main)
+            .setResources(ImmutableSet.<SourcePath>of(resource))
+            .build(resolver);
+    assertThat(
+        shBinary.getExecutableCommand().getInputs(),
+        Matchers.hasItem(resource));
   }
 
 }

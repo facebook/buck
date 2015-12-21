@@ -67,11 +67,13 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
+  private final CxxLink binary;
   private final Tool executable;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      CxxLink binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
@@ -79,18 +81,27 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Optional<Long> testRuleTimeoutMs) {
     super(
         params,
         resolver,
+        executable.getEnvironment(resolver),
         env,
         args,
         additionalDeps,
         labels,
         contacts,
         sourceUnderTest,
-        runTestSeparately);
+        runTestSeparately,
+        testRuleTimeoutMs);
+    this.binary = binary;
     this.executable = executable;
+  }
+
+  @Override
+  public Path getPathToOutput() {
+    return binary.getPathToOutput();
   }
 
   @Override
@@ -230,7 +241,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("boost")
         .addAllCommand(executable.getCommandPrefix(getResolver()))
         .addAllCommand(getArgs().get())

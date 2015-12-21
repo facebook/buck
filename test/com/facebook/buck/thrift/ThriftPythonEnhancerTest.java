@@ -19,21 +19,24 @@ package com.facebook.buck.thrift;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
+import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,14 +51,20 @@ import java.nio.file.Paths;
 public class ThriftPythonEnhancerTest {
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#python");
-  private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
+  private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder().build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
-  private static final ThriftPythonEnhancer ENHANCER = new ThriftPythonEnhancer(
-      THRIFT_BUCK_CONFIG,
-      ThriftPythonEnhancer.Type.NORMAL);
-  private static final ThriftPythonEnhancer TWISTED_ENHANCER = new ThriftPythonEnhancer(
-      THRIFT_BUCK_CONFIG,
-      ThriftPythonEnhancer.Type.TWISTED);
+  private static final ThriftPythonEnhancer ENHANCER =
+      new ThriftPythonEnhancer(
+          THRIFT_BUCK_CONFIG,
+          ThriftPythonEnhancer.Type.NORMAL);
+  private static final ThriftPythonEnhancer TWISTED_ENHANCER =
+      new ThriftPythonEnhancer(
+          THRIFT_BUCK_CONFIG,
+          ThriftPythonEnhancer.Type.TWISTED);
+  private static final ThriftPythonEnhancer ASYNCIO_ENHANCER =
+      new ThriftPythonEnhancer(
+          THRIFT_BUCK_CONFIG,
+          ThriftPythonEnhancer.Type.ASYNCIO);
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
@@ -63,7 +72,7 @@ public class ThriftPythonEnhancerTest {
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
         resolver);
   }
@@ -75,11 +84,11 @@ public class ThriftPythonEnhancerTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         resolver,
         new CommandTool.Builder()
-            .addArg(new TestSourcePath("compiler"))
+            .addArg(new FakeSourcePath("compiler"))
             .build(),
         ImmutableList.<String>of(),
         Paths.get("output"),
-        new TestSourcePath("source"),
+        new FakeSourcePath("source"),
         "language",
         ImmutableSet.<String>of(),
         ImmutableList.<Path>of(),
@@ -109,6 +118,13 @@ public class ThriftPythonEnhancerTest {
         .build();
   }
 
+  private ImmutableSet<String> addAsyncio(ImmutableSet<String> options) {
+    return ImmutableSet.<String>builder()
+        .add("asyncio")
+        .addAll(options)
+        .build();
+  }
+
   @Test
   public void getOptions() {
     ThriftConstructorArg arg = new ThriftConstructorArg();
@@ -133,6 +149,9 @@ public class ThriftPythonEnhancerTest {
     assertEquals(
         addTwisted(options),
         TWISTED_ENHANCER.getOptions(TARGET, arg));
+    assertEquals(
+        addAsyncio(options),
+        ASYNCIO_ENHANCER.getOptions(TARGET, arg));
 
     // Test absent options.
     arg.pyOptions = Optional.absent();
@@ -142,6 +161,9 @@ public class ThriftPythonEnhancerTest {
     assertEquals(
         addTwisted(ImmutableSet.<String>of()),
         TWISTED_ENHANCER.getOptions(TARGET, arg));
+    assertEquals(
+        addAsyncio(ImmutableSet.<String>of()),
+        ASYNCIO_ENHANCER.getOptions(TARGET, arg));
   }
 
   private void expectImplicitDeps(
@@ -162,20 +184,27 @@ public class ThriftPythonEnhancerTest {
     // Setup enhancers which set all appropriate values in the config.
     ImmutableMap<String, BuildTarget> config = ImmutableMap.of(
         "python_library", BuildTargetFactory.newInstance("//:python_library"),
-        "python_twisted_library", BuildTargetFactory.newInstance("//:python_twisted_library"));
+        "python_twisted_library", BuildTargetFactory.newInstance("//:python_twisted_library"),
+        "python_asyncio_library", BuildTargetFactory.newInstance("//:python_asyncio_library"));
     ImmutableMap.Builder<String, String> strConfig = ImmutableMap.builder();
     for (ImmutableMap.Entry<String, BuildTarget> ent : config.entrySet()) {
       strConfig.put(ent.getKey(), ent.getValue().toString());
     }
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of("thrift", strConfig.build()));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
+        ImmutableMap.of("thrift", strConfig.build())).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
-    ThriftPythonEnhancer enhancer = new ThriftPythonEnhancer(
-        thriftBuckConfig,
-        ThriftPythonEnhancer.Type.NORMAL);
-    ThriftPythonEnhancer twistedEnhancer = new ThriftPythonEnhancer(
-        thriftBuckConfig,
-        ThriftPythonEnhancer.Type.TWISTED);
+    ThriftPythonEnhancer enhancer =
+        new ThriftPythonEnhancer(
+            thriftBuckConfig,
+            ThriftPythonEnhancer.Type.NORMAL);
+    ThriftPythonEnhancer twistedEnhancer =
+        new ThriftPythonEnhancer(
+            thriftBuckConfig,
+            ThriftPythonEnhancer.Type.TWISTED);
+    ThriftPythonEnhancer asyncioEnhancer =
+        new ThriftPythonEnhancer(
+            thriftBuckConfig,
+            ThriftPythonEnhancer.Type.ASYNCIO);
 
     // With no options we just need to find the python thrift library.
     expectImplicitDeps(
@@ -191,11 +220,20 @@ public class ThriftPythonEnhancerTest {
         ImmutableSet.of(
             config.get("python_library"),
             config.get("python_twisted_library")));
+
+    // With the asyncio enhancer option we also expect the asyncio library.
+    expectImplicitDeps(
+        asyncioEnhancer,
+        ImmutableSet.of("asyncio"),
+        ImmutableSet.of(
+            config.get("python_library"),
+            config.get("python_asyncio_library")));
   }
 
   @Test
   public void createBuildRule() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams = new FakeBuildRuleParamsBuilder(TARGET).build();
 
@@ -230,7 +268,8 @@ public class ThriftPythonEnhancerTest {
   @Test
   public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         new FakeBuildRuleParamsBuilder(target).build();
@@ -256,7 +295,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : normal.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -270,7 +310,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : baseModule.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyBaseModule.get())));
     }
   }
@@ -278,7 +319,8 @@ public class ThriftPythonEnhancerTest {
   @Test
   public void twistedBaseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         new FakeBuildRuleParamsBuilder(target).build();
@@ -304,7 +346,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : normal.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -318,8 +361,60 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : baseModule.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyTwistedBaseModule.get())));
+    }
+  }
+
+  @Test
+  public void asyncioBaseModule() {
+    BuildTarget target = BuildTargetFactory.newInstance("//test:test");
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRuleParams flavoredParams =
+        new FakeBuildRuleParamsBuilder(target).build();
+
+    // Add a dummy dependency to the constructor arg to make sure it gets through.
+    ThriftConstructorArg arg = new ThriftConstructorArg();
+    arg.pyOptions = Optional.absent();
+
+    // Setup up some thrift inputs to pass to the createBuildRule method.
+    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
+        "test.thrift", new ThriftSource(
+            createFakeThriftCompiler("//:thrift_source", pathResolver),
+            ImmutableList.<String>of(),
+            Paths.get("output")));
+
+    // Verify that not setting the base module parameter defaults to the build target base path.
+    arg.pyAsyncioBaseModule = Optional.absent();
+    PythonLibrary normal =
+        ASYNCIO_ENHANCER.createBuildRule(
+            TargetGraph.EMPTY,
+            flavoredParams,
+            resolver,
+            arg,
+            sources,
+            ImmutableSortedSet.<BuildRule>of());
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+        normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+      assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
+    }
+
+    // Verify that setting the base module uses it correctly.
+    arg.pyAsyncioBaseModule = Optional.of("blah");
+    PythonLibrary baseModule =
+        ASYNCIO_ENHANCER.createBuildRule(
+            TargetGraph.EMPTY,
+            flavoredParams,
+            resolver,
+            arg,
+            sources,
+            ImmutableSortedSet.<BuildRule>of());
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+        baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
+      assertTrue(ent.getKey().startsWith(Paths.get(arg.pyAsyncioBaseModule.get())));
     }
   }
 

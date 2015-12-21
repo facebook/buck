@@ -19,11 +19,10 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AaptPackageResources.BuildOutput;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.AccumulateClassNamesStep;
-import com.facebook.buck.java.HasJavaClassHashes;
-import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.JavacStep;
+import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
+import com.facebook.buck.jvm.core.HasJavaClassHashes;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -45,7 +44,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -53,7 +51,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
@@ -61,15 +58,10 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Packages the resources using {@code aapt}.
@@ -92,6 +84,8 @@ public class AaptPackageResources extends AbstractBuildRule
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final ImmutableSet<SourcePath> assetsDirectories;
   @AddToRuleKey
+  private final Optional<String> resourceUnionPackage;
+  @AddToRuleKey
   private final PackageType packageType;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private final JavacOptions javacOptions;
@@ -99,7 +93,6 @@ public class AaptPackageResources extends AbstractBuildRule
   private final boolean rDotJavaNeedsDexing;
   @AddToRuleKey
   private final boolean shouldBuildStringSourceMap;
-  private final boolean shouldWarnIfMissingResource;
   @AddToRuleKey
   private final boolean skipCrunchPngs;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -111,22 +104,22 @@ public class AaptPackageResources extends AbstractBuildRule
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       ImmutableSet<SourcePath> assetsDirectories,
+      Optional<String> resourceUnionPackage,
       PackageType packageType,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap,
-      boolean shouldWarnIfMissingResources,
       boolean skipCrunchPngs) {
     super(params, resolver);
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;
     this.assetsDirectories = assetsDirectories;
+    this.resourceUnionPackage = resourceUnionPackage;
     this.packageType = packageType;
     this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
-    this.shouldWarnIfMissingResource = shouldWarnIfMissingResources;
     this.skipCrunchPngs = skipCrunchPngs;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
@@ -206,57 +199,8 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new MkdirAndSymlinkFileStep(
             getProjectFilesystem(),
-            getResolver().getPath(manifest),
+            getResolver().getAbsolutePath(manifest),
             getAndroidManifestXml()));
-
-    // Copy the transitive closure of files in assets to a single directory, if any.
-    // TODO(mbolin): Older versions of aapt did not support multiple -A flags, so we can probably
-    // eliminate this now.
-    Step collectAssets = new Step() {
-      @Override
-      public int execute(ExecutionContext context) throws IOException, InterruptedException {
-        // This must be done in a Command because the files and directories that are specified may
-        // not exist at the time this Command is created because the previous Commands have not run
-        // yet.
-        ImmutableList.Builder<Step> commands = ImmutableList.builder();
-        try {
-          createAllAssetsDirectory(
-              ImmutableSet.copyOf(getResolver().getAllPaths(assetsDirectories)),
-              commands,
-              getProjectFilesystem());
-        } catch (IOException e) {
-          context.logError(e, "Error creating all assets directory in %s.", getBuildTarget());
-          return 1;
-        }
-
-        for (Step command : commands.build()) {
-          int exitCode = command.execute(context);
-          if (exitCode != 0) {
-            throw new HumanReadableException("Error running " + command.getDescription(context));
-          }
-        }
-
-        return 0;
-      }
-
-      @Override
-      public String getShortName() {
-        return "symlink_assets";
-      }
-
-      @Override
-      public String getDescription(ExecutionContext context) {
-        return getShortName();
-      }
-    };
-    steps.add(collectAssets);
-
-    Optional<Path> assetsDirectory;
-    if (assetsDirectories.isEmpty()) {
-      assetsDirectory = Optional.absent();
-    } else {
-      assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
-    }
 
     steps.add(new MkdirStep(getProjectFilesystem(), getResourceApkPath().getParent()));
 
@@ -276,7 +220,8 @@ public class AaptPackageResources extends AbstractBuildRule
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
-            assetsDirectory,
+            FluentIterable.from(getResolver().getAllAbsolutePaths(assetsDirectories))
+                .toSortedSet(Ordering.<Path>natural()),
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,
@@ -362,10 +307,11 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotTxtDir = getPathToRDotTxtDir();
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
         getProjectFilesystem(),
+        getResolver(),
         resourceDeps,
         getPathToRDotTxtFile(),
-        shouldWarnIfMissingResource,
-        rDotJavaSrc);
+        rDotJavaSrc,
+        resourceUnionPackage);
     steps.add(mergeStep);
 
     if (shouldBuildStringSourceMap) {
@@ -391,7 +337,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaBin));
 
     JavacStep javacStep = RDotJava.createJavacStepForUberRDotJavaFiles(
-        ImmutableSet.copyOf(mergeStep.getRDotJavaFiles()),
+        mergeStep.getRDotJavaFiles(),
         rDotJavaBin,
         javacOptions,
         getBuildTarget(),
@@ -426,66 +372,10 @@ public class AaptPackageResources extends AbstractBuildRule
   }
 
   /**
-   * Given a set of assets directories to include in the APK (which may be empty), return the path
-   * to the directory that contains the union of all the assets. If any work needs to be done to
-   * create such a directory, the appropriate commands should be added to the {@code commands}
-   * list builder.
-   * <p>
-   * If there are no assets (i.e., {@code assetsDirectories} is empty), then the return value will
-   * be an empty {@link Optional}.
-   */
-  @VisibleForTesting
-  Optional<Path> createAllAssetsDirectory(
-      Set<Path> assetsDirectories,
-      ImmutableList.Builder<Step> steps,
-      ProjectFilesystem filesystem) throws IOException {
-    if (assetsDirectories.isEmpty()) {
-      return Optional.absent();
-    }
-
-    // Due to a limitation of aapt, only one assets directory can be specified, so if multiple are
-    // specified in Buck, then all of the contents must be symlinked to a single directory.
-    Path destination = getPathToAllAssetsDirectory();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destination));
-    final ImmutableMap.Builder<Path, Path> allAssets = ImmutableMap.builder();
-
-    for (final Path assetsDirectory : assetsDirectories) {
-      if (!filesystem.exists(assetsDirectory)) {
-        continue;
-      }
-      filesystem.walkRelativeFileTree(
-          assetsDirectory, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-              if (!AaptStep.isSilentlyIgnored(file)) {
-                allAssets.put(assetsDirectory.relativize(file), file);
-              }
-              return FileVisitResult.CONTINUE;
-            }
-          });
-    }
-
-    for (Map.Entry<Path, Path> entry : allAssets.build().entrySet()) {
-      steps.add(
-          new MkdirAndSymlinkFileStep(
-              getProjectFilesystem(),
-              entry.getValue(),
-              destination.resolve(entry.getKey())));
-    }
-
-    return Optional.of(destination);
-  }
-
-  /**
    * @return Path to the unsigned APK generated by this {@link com.facebook.buck.rules.BuildRule}.
    */
   public Path getResourceApkPath() {
     return BuildTargets.getGenPath(getBuildTarget(), "%s.unsigned.ap_");
-  }
-
-  @VisibleForTesting
-  Path getPathToAllAssetsDirectory() {
-    return BuildTargets.getScratchPath(getBuildTarget(), "__assets_%s__");
   }
 
   public Sha1HashCode getResourcePackageHash() {

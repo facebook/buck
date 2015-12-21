@@ -16,13 +16,17 @@
 
 package com.facebook.buck.thrift;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -34,11 +38,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
@@ -53,7 +57,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -65,7 +68,7 @@ public class ThriftLibraryDescriptionTest {
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
         resolver);
   }
@@ -76,7 +79,7 @@ public class ThriftLibraryDescriptionTest {
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
         resolver);
   }
@@ -88,7 +91,7 @@ public class ThriftLibraryDescriptionTest {
       BuildRule... deps) {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build();
     try {
       return new HeaderSymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
@@ -178,8 +181,9 @@ public class ThriftLibraryDescriptionTest {
   }
 
   @Test
-  public void createThriftCompilerBuildRulesHasCorrectDeps() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void createThriftCompilerBuildRulesHasCorrectDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -208,10 +212,12 @@ public class ThriftLibraryDescriptionTest {
     filesystem.touch(thriftPath);
 
     // Setup an thrift buck config, with the path to the thrift compiler set.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
         ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftPath.toString())),
-        filesystem);
+            "thrift", ImmutableMap.of("compiler", thriftPath.toString())))
+        .setFilesystem(filesystem)
+        .build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -219,7 +225,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup a simple thrift source.
     String sourceName = "test.thrift";
-    SourcePath sourcePath = new TestSourcePath(sourceName);
+    SourcePath sourcePath = new FakeSourcePath(sourceName);
 
     // Generate these rules using no deps.
     ImmutableMap<String, ThriftCompiler> rules =
@@ -243,7 +249,7 @@ public class ThriftLibraryDescriptionTest {
         rule.getDeps());
 
     // Lets do this again, but pass in a ThriftLibrary deps, wrapping some includes we need.
-    Path includeRoot = desc.getIncludeRoot(unflavoredTarget);
+    Path includeRoot = filesystem.resolve(desc.getIncludeRoot(unflavoredTarget));
     HeaderSymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
         pathResolver,
@@ -307,16 +313,18 @@ public class ThriftLibraryDescriptionTest {
     // Create a build rule that represents the thrift rule.
     ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
-            .setMain(new TestSourcePath("thrift.sh"))
+            .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));
 
     // Setup an empty thrift buck config, and set compiler target.
-    buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())),
-        filesystem);
+    buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())))
+        .setFilesystem(filesystem)
+        .build();
     thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -345,17 +353,17 @@ public class ThriftLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleForUnflavoredTargetCreateThriftLibrary() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void createBuildRuleForUnflavoredTargetCreateThriftLibrary() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
         new FakeBuildRuleParamsBuilder(unflavoredTarget).build();
+    ProjectFilesystem filesystem = unflavoredParams.getProjectFilesystem();
 
     // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, ImmutableMap<String, String>>of(),
-        ImmutableMap.<String, String>of());
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -363,11 +371,11 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup the thrift source.
     String sourceName = "test.thrift";
-    SourcePath source = new TestSourcePath(sourceName);
+    SourcePath source = new FakeSourcePath(sourceName);
 
     // Create a dep and verify it gets attached.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
-    Path depIncludeRoot = desc.getIncludeRoot(depTarget);
+    Path depIncludeRoot = filesystem.resolve(desc.getIncludeRoot(depTarget));
     HeaderSymlinkTree depIncludeSymlinkTree =
         createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
@@ -393,13 +401,14 @@ public class ThriftLibraryDescriptionTest {
         ImmutableSortedSet.of(dep),
         me.getThriftDeps());
     assertEquals(
-        desc.getIncludeRoot(unflavoredTarget),
+        filesystem.resolve(desc.getIncludeRoot(unflavoredTarget)),
         me.getIncludeTreeRule().getIncludePath());
   }
 
   @Test
-  public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -439,22 +448,22 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup a normal thrift source file.
     final String thriftSourceName2 = "bar.thrift";
-    SourcePath thriftSource2 = new TestSourcePath(thriftSourceName2);
+    SourcePath thriftSource2 = new FakeSourcePath(thriftSourceName2);
     final ImmutableList<String> thriftServices2 = ImmutableList.of();
 
     // Create a build rule that represents the thrift rule.
     final ShBinary thriftRule =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
-            .setMain(new TestSourcePath("thrift.sh"))
+            .setMain(new FakeSourcePath("thrift.sh"))
             .build(resolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));
 
     // Setup a simple description with an empty config.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())));
+            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString()))).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -542,7 +551,7 @@ public class ThriftLibraryDescriptionTest {
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
 
     // Setup an empty thrift buck config and description.
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -553,6 +562,7 @@ public class ThriftLibraryDescriptionTest {
     // Now call the find deps methods and verify it returns nothing.
     Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
         unflavoredTarget,
+        createCellRoots(null),
         constructorArg);
     assertEquals(
         ImmutableList.<BuildTarget>of(),
@@ -563,9 +573,10 @@ public class ThriftLibraryDescriptionTest {
   public void findDepsFromParamsSetsUpDepsForFlavoredTarget() {
     // Create the thrift target and implicit dep.
     BuildTarget thriftTarget = BuildTargetFactory.newInstance("//bar:thrift_compiler");
-    FakeBuildRule implicitDep = createFakeBuildRule(
-        "//foo:implicit_dep",
-        new SourcePathResolver(new BuildRuleResolver()));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    FakeBuildRule implicitDep = createFakeBuildRule("//foo:implicit_dep", resolver);
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";
@@ -578,9 +589,9 @@ public class ThriftLibraryDescriptionTest {
         flavor);
 
     // Setup an empty thrift buck config and description.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftTarget.toString())));
+            "thrift", ImmutableMap.of("compiler", thriftTarget.toString()))).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLanguageSpecificEnhancer enhancer =
         new FakeThriftLanguageSpecificEnhancer(
@@ -598,6 +609,7 @@ public class ThriftLibraryDescriptionTest {
     // Now call the find deps methods and verify it returns nothing.
     Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
         flavoredTarget,
+        createCellRoots(null),
         constructorArg);
     assertEquals(
         ImmutableSet.<BuildTarget>builder()

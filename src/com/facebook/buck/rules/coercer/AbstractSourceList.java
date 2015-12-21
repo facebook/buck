@@ -71,4 +71,15 @@ abstract class AbstractSourceList {
         Optional.of(namedSources));
   }
 
+  public boolean isEmpty() {
+    switch (getType()) {
+      case UNNAMED:
+        return getUnnamedSources().get().isEmpty();
+      case NAMED:
+        return getNamedSources().get().isEmpty();
+      default:
+        throw new IllegalStateException("unexpected type: " + getType());
+    }
+  }
+
 }

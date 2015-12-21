@@ -49,7 +49,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
 
     // EGGs are versioned to the version of Python they were built it, but the EGG for this test
     // doesn't actually matter.
-    String version = new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder())
+    String version = new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
         .getPythonEnvironment(
             new ProcessExecutor(
                 new Console(

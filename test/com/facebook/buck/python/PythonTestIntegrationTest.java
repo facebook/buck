@@ -18,11 +18,19 @@ package com.facebook.buck.python;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.VersionStringComparator;
+import com.google.common.base.Splitter;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,6 +72,37 @@ public class PythonTestIntegrationTest {
     // Test if setting environment during test execution works
     ProcessResult result = workspace.runBuckCommand("test", "//:test-env");
     result.assertSuccess();
+  }
+
+  @Test
+  public void testPythonSkippedResult() throws IOException, InterruptedException {
+    assumePythonVersionIsAtLeast("2.7", "unittest skip support was added in Python-2.7");
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-skip").assertSuccess();
+    assertThat(result.getStderr(), containsString("1 Skipped"));
+  }
+
+  @Test
+  public void testPythonTestTimeout() throws IOException {
+      ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
+      String stderr = result.getStderr();
+      result.assertSpecialExitCode("test should fail", 42);
+      assertTrue(stderr, stderr.contains("Following test case timed out: //:test-spinning"));
+  }
+
+  private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
+      throws InterruptedException {
+    PythonVersion pythonVersion =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPythonEnvironment(new ProcessExecutor(new TestConsole()))
+            .getPythonVersion();
+    String actualVersion = Splitter.on(' ').splitToList(pythonVersion.getVersionString()).get(1);
+    assumeTrue(
+        String.format(
+            "Needs at least Python-%s, but found Python-%s: %s",
+            expectedVersion,
+            actualVersion,
+            message),
+        new VersionStringComparator().compare(actualVersion, expectedVersion) >= 0);
   }
 
 }

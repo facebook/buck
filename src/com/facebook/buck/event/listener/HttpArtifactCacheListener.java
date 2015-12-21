@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.network.HiveRowFormatter;
 import com.facebook.buck.util.network.RemoteLogger;

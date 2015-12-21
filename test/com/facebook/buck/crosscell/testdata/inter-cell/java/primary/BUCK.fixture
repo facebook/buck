@@ -1,0 +1,16 @@
+
+java_library(
+  name = 'lib',
+  srcs = glob(['*.java']),
+  deps = [
+    '@secondary//:lib',
+  ],
+)
+
+java_binary(
+  name = 'java-binary',
+  main_class = 'com.example.Main',
+  deps = [
+    ':lib',
+  ],
+)

@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>1.2</version>
+  <version>2.2</version>
   <category>Build</category>
 
   <description><![CDATA[
@@ -19,10 +19,22 @@
     ]]></description>
 
   <change-notes><![CDATA[
+
+  <ul>
+      <li>
+        <b>2.2</b>
+        Fetch build status via websocket.
+        Publish build status notifications.
+      </li>
+
+      <li>
+        <b>1.1</b>
       1. Formatter for buck file
       2. Buck dependencies sorter
       3. Annotator for wrong buck dependency target
       4. Line commenter
+      </li>
+   </ul>
     ]]>
   </change-notes>
 
@@ -93,7 +105,7 @@
           class="com.facebook.buck.intellij.plugin.actions.GoToBuckFile"
           text="Go to Buck file"
           description="Go to Buck file for this source file.">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Z"/>
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
       <add-to-group anchor="first" group-id="BuildMenu"/>
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
@@ -101,7 +113,7 @@
 
     <group id="buck.BuildGroup">
       <action class="com.facebook.buck.intellij.plugin.actions.ChooseTargetAction" id="buck.ChooseTarget">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
       </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallAction" id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
@@ -115,6 +127,8 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.ConnectToBuck" id="buck.connect" />
+      <action class="com.facebook.buck.intellij.plugin.actions.DisconnectFromBuck" id="buck.disconnect" />
     </group>
   </actions>
 
@@ -125,4 +139,10 @@
     </component>
   </application-components>
 
+    <project-components>
+        <component>
+            <implementation-class>com.facebook.buck.intellij.plugin.config.BuckModule</implementation-class>
+            <loadForDefaultProject />
+        </component>
+    </project-components>
 </idea-plugin>

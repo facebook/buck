@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.file.ExplodingDownloader;
@@ -31,14 +32,16 @@ import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.PrebuiltJarDescription;
+import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -96,7 +99,7 @@ public class ResolverIntegrationTest {
   @BeforeClass
   public static void createParser() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = new ParserConfig(buckConfig);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         buckConfig,
@@ -116,6 +119,7 @@ public class ResolverIntegrationTest {
             .setDescriptions(descriptions)
             .build());
     buildFileParser = parserFactory.createParser(
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance());

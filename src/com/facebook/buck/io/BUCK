@@ -1,18 +1,22 @@
 WATCHMAN_SRCS = [
   'Watchman.java',
+  'WatchmanClient.java',
+  'WatchmanSocketClient.java',
 ]
 java_library(
   name = 'watchman',
   srcs = WATCHMAN_SRCS,
   deps = [
     ':executable-finder',
+    '//src/com/facebook/buck/bser:bser',
+    '//src/com/facebook/buck/io/unixsocket:unixsocket',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson',
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
@@ -51,6 +55,7 @@ java_library(
     # the number of dependencies to an absolute minimum.
     '//src/com/facebook/buck/cli:low-level-config',
     '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util/environment:env-filter',

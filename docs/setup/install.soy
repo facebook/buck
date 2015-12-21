@@ -16,12 +16,25 @@ There are two ways to install Buck:
 <ol>
 <h2 id="os-x-install"><li>Install with Homebrew</li></h2>
 
-To install Buck on OS X, use <a href="http://brew.sh/">Homebrew</a> (first
-make sure <a href="https://developer.apple.com/xcode/download/">Xcode<a> and
-the <a href="https://developer.apple.com/downloads/">Command Line Tools</a> are installed
-and up to date):
+<p>
+  To install Buck on OS X, use <a href="http://brew.sh/">Homebrew</a> (first
+  make sure <a href="https://developer.apple.com/xcode/download/">Xcode<a> and
+  the <a href="https://developer.apple.com/downloads/">Command Line Tools</a> are installed
+  and up to date).  You have two choices when using Homebrew.  You can choose to get the latest
+  binary <a href="https://github.com/facebook/buck/releases/latest">release</a> (which happens
+  roughly every week):
+</p>
 
-<p />
+{literal}<pre>
+brew update
+brew tap facebook/fb
+brew install buck
+</pre>
+{/literal}
+
+<p>
+  Or, you can get the latest and greatest code and build it locally:
+</p>
 
 {literal}<pre>
 brew update
@@ -35,6 +48,8 @@ brew install --HEAD buck
 To manually build Buck, download and install the following prerequisites:
 <ul>
   <li>
+    <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html"
+      >Oracle JDK 8</a> or{sp}
     <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html"
       >Oracle JDK 7</a>
   </li>

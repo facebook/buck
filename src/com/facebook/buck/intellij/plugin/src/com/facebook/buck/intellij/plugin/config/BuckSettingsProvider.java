@@ -93,7 +93,7 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
     /**
      * Path to buck executable.
      *
-     * TODO(user): Use Buck's ExecutableFinder class.
+     * TODO(t7982097): Use Buck's ExecutableFinder class.
      */
     public String buckExecutable = BuckExecutableDetector.detect();
 

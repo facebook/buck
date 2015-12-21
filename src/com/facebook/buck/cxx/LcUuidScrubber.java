@@ -31,6 +31,10 @@ public class LcUuidScrubber implements FileScrubber {
 
   @Override
   public void scrubFile(FileChannel file) throws IOException, ScrubException {
+    if (!Machos.isMacho(file)) {
+      return;
+    }
+
     long size = file.size();
     MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
 

@@ -16,27 +16,44 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
+import java.util.Collections;
+
 public class IosReactNativeLibraryDescription
-    implements Description<ReactNativeLibraryArgs>, Flavored {
+    implements
+    Description<ReactNativeLibraryArgs>,
+    Flavored,
+    ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
-  private final ReactNativeBuckConfig buckConfig;
+  private final Supplier<SourcePath> packager;
 
-  public IosReactNativeLibraryDescription(ReactNativeBuckConfig buckConfig) {
+  public IosReactNativeLibraryDescription(final ReactNativeBuckConfig buckConfig) {
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
-    this.buckConfig = buckConfig;
+    this.packager = new Supplier<SourcePath>() {
+      @Override
+      public SourcePath get() {
+        return buckConfig.getPackager();
+      }
+    };
   }
 
   @Override
@@ -63,7 +80,12 @@ public class IosReactNativeLibraryDescription
     return ReactNativeFlavors.validateFlavors(flavors);
   }
 
-  public SourcePath getReactNativePackager() {
-    return buckConfig.getPackager();
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      ReactNativeLibraryArgs constructorArg) {
+    return SourcePaths.filterBuildTargetSourcePaths(Collections.singleton(packager.get()));
   }
+
 }

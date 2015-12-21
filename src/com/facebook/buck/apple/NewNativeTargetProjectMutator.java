@@ -34,6 +34,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
@@ -55,9 +56,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import org.stringtemplate.v4.ST;
@@ -95,23 +98,25 @@ public class NewNativeTargetProjectMutator {
   private Path productOutputPath = Paths.get("");
   private String productName = "";
   private String targetName = "";
+  private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
+      ImmutableMap.of();
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private Optional<SourcePath> prefixHeader = Optional.absent();
+  private Optional<SourcePath> infoPlist = Optional.absent();
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> recursiveResources = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> directResources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs = ImmutableSet.of();
-  private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
-  private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
   private boolean skipRNBundle = false;
-  private Collection<Path> additionalRunScripts = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -139,6 +144,12 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setTargetName(String targetName) {
     this.targetName = targetName;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setLangPreprocessorFlags(
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+    this.langPreprocessorFlags = langPreprocessorFlags;
     return this;
   }
 
@@ -176,6 +187,11 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setInfoPlist(Optional<SourcePath> infoPlist) {
+    this.infoPlist = infoPlist;
+    return this;
+  }
+
   public NewNativeTargetProjectMutator setFrameworks(Set<FrameworkPath> frameworks) {
     this.frameworks = ImmutableSet.copyOf(frameworks);
     return this;
@@ -198,7 +214,14 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
+  public NewNativeTargetProjectMutator setPreBuildRunScriptPhasesFromTargetNodes(
+      Iterable<TargetNode<?>> nodes) {
+    preBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(
+      Iterable<PBXShellScriptBuildPhase> phases) {
     preBuildRunScriptPhases = phases;
     return this;
   }
@@ -208,7 +231,14 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
+  public NewNativeTargetProjectMutator setPostBuildRunScriptPhasesFromTargetNodes(
+      Iterable<TargetNode<?>> nodes) {
+    postBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(
+      Iterable<PBXShellScriptBuildPhase> phases) {
     postBuildRunScriptPhases = phases;
     return this;
   }
@@ -216,10 +246,6 @@ public class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator skipReactNativeBundle(boolean skipRNBundle) {
     this.skipRNBundle = skipRNBundle;
     return this;
-  }
-
-  public void setAdditionalRunScripts(Collection<Path> scripts) {
-    additionalRunScripts = scripts;
   }
 
   /**
@@ -256,7 +282,6 @@ public class NewNativeTargetProjectMutator {
     addResourcesBuildPhase(target, targetGroup);
     target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
-    addRawScriptBuildPhases(target);
 
     // Product
 
@@ -302,6 +327,14 @@ public class NewNativeTargetProjectMutator {
           pathRelativizer.outputPathToSourcePath(prefixHeader.get()),
           Optional.<String>absent());
       sourcesGroup.getOrCreateFileReferenceBySourceTreePath(prefixHeaderSourceTreePath);
+    }
+
+    if (infoPlist.isPresent()) {
+      SourceTreePath infoPlistSourceTreePath = new SourceTreePath(
+          PBXReference.SourceTree.GROUP,
+          pathRelativizer.outputPathToSourcePath(infoPlist.get()),
+          Optional.<String>absent());
+      sourcesGroup.getOrCreateFileReferenceBySourceTreePath(infoPlistSourceTreePath);
     }
 
     if (!sourcesBuildPhase.getFiles().isEmpty()) {
@@ -366,15 +399,27 @@ public class NewNativeTargetProjectMutator {
       SourceWithFlags sourceWithFlags,
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase) {
+    SourceTreePath sourceTreePath = new SourceTreePath(
+        PBXReference.SourceTree.SOURCE_ROOT,
+        pathRelativizer.outputDirToRootRelative(
+            sourcePathResolver.apply(sourceWithFlags.getSourcePath())),
+        Optional.<String>absent());
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputDirToRootRelative(
-                sourcePathResolver.apply(sourceWithFlags.getSourcePath())),
-            Optional.<String>absent()));
+        sourceTreePath);
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
-    List<String> customFlags = sourceWithFlags.getFlags();
+
+    ImmutableList<String> customLangPreprocessorFlags = ImmutableList.of();
+    Optional<CxxSource.Type> sourceType = CxxSource.Type.fromExtension(
+        Files.getFileExtension(sourceTreePath.toString()));
+    if (sourceType.isPresent() && langPreprocessorFlags.containsKey(sourceType.get())) {
+      customLangPreprocessorFlags = langPreprocessorFlags.get(sourceType.get());
+    }
+
+    ImmutableList<String> customFlags = ImmutableList.copyOf(
+        Iterables.concat(
+            customLangPreprocessorFlags,
+            sourceWithFlags.getFlags()));
     if (!customFlags.isEmpty()) {
       NSDictionary settings = new NSDictionary();
       settings.put("COMPILER_FLAGS", Joiner.on(' ').join(customFlags));
@@ -517,7 +562,7 @@ public class NewNativeTargetProjectMutator {
     }
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
-      resourceDirsBuilder.addAll(arg.dirs);
+      resourceDirsBuilder.addAll(Iterables.transform(arg.dirs, sourcePathResolver));
     }
   }
 
@@ -580,12 +625,12 @@ public class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addRunScriptBuildPhases(
-      PBXNativeTarget target,
-      Iterable<TargetNode<?>> nodes) throws NoSuchBuildTargetException{
+  private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
+      Iterable<TargetNode<?>> nodes) throws IllegalStateException {
+    ImmutableList.Builder<PBXShellScriptBuildPhase> builder =
+      ImmutableList.builder();
     for (TargetNode<?> node : nodes) {
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-      target.getBuildPhases().add(shellScriptBuildPhase);
       if (XcodePrebuildScriptDescription.TYPE.equals(node.getType()) ||
           XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
         XcodeScriptDescriptionArg arg = (XcodeScriptDescriptionArg) node.getConstructorArg();
@@ -605,13 +650,15 @@ public class NewNativeTargetProjectMutator {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");
       }
+      builder.add(shellScriptBuildPhase);
     }
+    return builder.build();
   }
 
-  private void addRawScriptBuildPhases(PBXNativeTarget target) {
-    for (Path runScript : additionalRunScripts) {
-      PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
-      phase.setShellScript(runScript.toString());
+  private void addRunScriptBuildPhases(
+      PBXNativeTarget target,
+      Iterable<PBXShellScriptBuildPhase> phases) {
+    for (PBXShellScriptBuildPhase phase : phases) {
       target.getBuildPhases().add(phase);
     }
   }

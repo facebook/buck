@@ -33,13 +33,13 @@ public class DLibraryIntegrationTest {
 
   @Test
   public void compileAndRun() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "library", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//:greet").assertSuccess();
+    workspace.runBuckBuild("-v", "10", "//:greet").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:greet");
     buildLog.assertTargetBuiltLocally("//:greeting");

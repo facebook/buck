@@ -20,10 +20,10 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
-import com.facebook.buck.java.Classpaths;
-import com.facebook.buck.java.HasClasspathEntries;
-import com.facebook.buck.java.JarDirectoryStep;
-import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.jvm.java.Classpaths;
+import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
@@ -43,6 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -103,7 +105,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            Preconditions.checkNotNull(androidResource.getPathToOutput()),
+            getResolver().getAbsolutePath(
+                Preconditions.checkNotNull(androidResource.getPathToTextSymbolsFile())),
             temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
@@ -119,10 +122,11 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     // Create our Uber-jar, and place it in the tmp folder.
-    commands.add(new JarDirectoryStep(
+    commands.add(
+        new JarDirectoryStep(
             getProjectFilesystem(),
             temp.resolve("classes.jar"),
-            ImmutableSet.copyOf(getTransitiveClasspathEntries().values()),
+            ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values()),
             null,
             null));
 
@@ -140,12 +144,14 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     for (SourcePath dir : nativeLibAssetsDirectories) {
       CopyNativeLibraries.copyNativeLibrary(
           getProjectFilesystem(),
-          getResolver().getPath(dir),
+          getResolver().getAbsolutePath(dir),
           temp.resolve("assets").resolve("lib"),
-          ImmutableSet.<TargetCpuType>of(), commands);
+          ImmutableSet.<TargetCpuType>of(),
+          commands);
     }
 
     // do the zipping
+    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
     commands.add(
         new ZipStep(
             getProjectFilesystem(),

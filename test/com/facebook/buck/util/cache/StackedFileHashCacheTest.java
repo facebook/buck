@@ -18,11 +18,12 @@ package com.facebook.buck.util.cache;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.Config;
+import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -92,9 +93,12 @@ public class StackedFileHashCacheTest {
 
   @Test
   public void skipsFirstCacheBecauseIgnored() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = world.txt");
     Path path = Paths.get("world.txt");
     Path fullPath = tmp.getRootPath().resolve(path);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath(), ImmutableSet.of(path));
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath(), config);
     filesystem.touch(path);
     DefaultFileHashCache innerCache = new DefaultFileHashCache(filesystem);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));

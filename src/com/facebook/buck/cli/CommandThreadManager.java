@@ -56,6 +56,7 @@ public class CommandThreadManager implements AutoCloseable {
 
   public CommandThreadManager(
       String name,
+      WorkQueueExecutionOrder workQueueExecutionOrder,
       ConcurrencyLimit concurrencyLimit,
       long shutdownTimeout,
       TimeUnit shutdownTimeoutUnit) {
@@ -74,13 +75,22 @@ public class CommandThreadManager implements AutoCloseable {
                               }
                             }))
                     .build(),
+                workQueueExecutionOrder.newWorkQueue(),
                 concurrencyLimit));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
   }
 
-  public CommandThreadManager(String name, ConcurrencyLimit concurrencyLimit) {
-    this(name, concurrencyLimit, DEFAULT_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
+  public CommandThreadManager(
+      String name,
+      WorkQueueExecutionOrder workQueueExecutionOrder,
+      ConcurrencyLimit concurrencyLimit) {
+    this(
+        name,
+        workQueueExecutionOrder,
+        concurrencyLimit,
+        DEFAULT_SHUTDOWN_TIMEOUT,
+        DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
   }
 
   public ListeningExecutorService getExecutor() {

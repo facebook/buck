@@ -21,11 +21,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuckPyFunction;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
@@ -105,10 +107,11 @@ public class AuditRulesCommand extends AbstractCommand {
             .setBuildFileName(parserConfig.getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(
-              // TODO(simons): When we land dynamic loading, this MUST change.
+              // TODO(shs96c): When we land dynamic loading, this MUST change.
               params.getCell().getAllDescriptions())
             .build());
     try (ProjectBuildFileParser parser = factory.createParser(
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
         params.getConsole(),
         params.getEnvironment(),
         params.getBuckEventBus())) {
@@ -186,7 +189,7 @@ public class AuditRulesCommand extends AbstractCommand {
       properties.addAll(customProperties);
 
       // Add common properties that should be displayed last.
-      properties.addAll(LAST_PROPERTIES);
+      properties.addAll(Sets.intersection(LAST_PROPERTIES, rawRule.keySet()));
 
       // Write out the properties and their corresponding values.
       for (String property : properties) {

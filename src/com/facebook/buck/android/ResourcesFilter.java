@@ -66,6 +66,9 @@ public class ResourcesFilter extends AbstractBuildRule
   static enum ResourceCompressionMode {
     DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
     ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
+    ENABLED_STRINGS_ONLY(
+        /* isCompressResources */ false,
+        /* isStoreStringsAsAssets */ true),
     ENABLED_WITH_STRINGS_AS_ASSETS(
       /* isCompressResources */ true,
       /* isStoreStringsAsAssets */ true),
@@ -135,8 +138,8 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths =
-        ImmutableSet.copyOf(getResolver().getAllPaths(whitelistedStringDirs));
-    ImmutableList<Path> resPaths = getResolver().getAllPaths(resDirectories);
+        ImmutableSet.copyOf(getResolver().deprecatedAllPaths(whitelistedStringDirs));
+    ImmutableList<Path> resPaths = getResolver().deprecatedAllPaths(resDirectories);
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
         resPaths,
         whitelistedStringPaths,

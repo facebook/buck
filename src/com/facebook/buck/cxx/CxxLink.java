@@ -16,95 +16,47 @@
 
 package com.facebook.buck.cxx;
 
-import static com.google.common.base.Predicates.notNull;
-
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
-
 public class CxxLink
     extends AbstractBuildRule
-    implements RuleKeyAppendable, SupportsInputBasedRuleKey {
+    implements SupportsInputBasedRuleKey {
 
   @AddToRuleKey
   private final Linker linker;
   @AddToRuleKey(stringify = true)
   private final Path output;
-  @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableList<SourcePath> inputs;
-  // We need to make sure we sanitize paths in the arguments, so add them to the rule key
-  // in `appendToRuleKey` where we can first filter the args through the sanitizer.
-  private final ImmutableList<String> args;
-  private final ImmutableSet<Path> frameworkRoots;
-  private final ImmutableSet<Path> libraries;
-  private final DebugPathSanitizer sanitizer;
+  private final ImmutableList<Arg> args;
 
   public CxxLink(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Linker linker,
       Path output,
-      ImmutableList<SourcePath> inputs,
-      ImmutableList<String> args,
-      ImmutableSet<Path> frameworkRoots,
-      ImmutableSet<Path> libraries,
-      DebugPathSanitizer sanitizer) {
+      ImmutableList<Arg> args) {
     super(params, resolver);
     this.linker = linker;
     this.output = output;
-    this.inputs = inputs;
     this.args = args;
-    this.frameworkRoots = frameworkRoots;
-    this.libraries = libraries;
-    this.sanitizer = sanitizer;
-  }
-
-  @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
-        .setReflectively(
-            "args",
-            FluentIterable.from(args)
-                .transform(sanitizer.sanitize(Optional.<Path>absent()))
-                .toList())
-        .setReflectively(
-            "frameworkRoots",
-            FluentIterable.from(frameworkRoots)
-                .transform(Functions.toStringFunction())
-                .transform(sanitizer.sanitize(Optional.<Path>absent()))
-                .toList())
-        .setReflectively(
-            "libraries",
-            FluentIterable.from(libraries)
-                .transform(Functions.toStringFunction())
-                .transform(sanitizer.sanitize(Optional.<Path>absent()))
-                .toList());
   }
 
   @Override
@@ -114,23 +66,31 @@ public class CxxLink
     buildableContext.recordArtifact(output);
     Path argFilePath = getProjectFilesystem().getRootPath().resolve(
         BuildTargets.getScratchPath(getBuildTarget(), "%s__argfile.txt"));
+
+    // Try to find all the cell roots used during the link.  This isn't technically correct since,
+    // in theory not all inputs need to come from build rules, but it probably works in practice.
+    // One way that we know would work is exposing every known cell root paths, since the only rules
+    // that we built (and therefore need to scrub) will be in one of those roots.
+    ImmutableSet.Builder<Path> cellRoots = ImmutableSet.builder();
+    for (BuildRule dep : getDeps()) {
+      cellRoots.add(dep.getProjectFilesystem().getRootPath());
+    }
+
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new CxxPrepareForLinkStep(
             argFilePath,
             output,
-            args,
-            frameworkRoots,
-            getLibrarySearchDirectories(),
-            getLibraryNames()),
+            Arg.stringify(args)),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
+            linker.getEnvironment(getResolver()),
             linker.getCommandPrefix(getResolver()),
             argFilePath),
         new FileScrubberStep(
             getProjectFilesystem(),
             output,
-            linker.getScrubbers(getProjectFilesystem().getRootPath())));
+            linker.getScrubbers(cellRoots.build())));
   }
 
   @Override
@@ -146,41 +106,8 @@ public class CxxLink
     return output;
   }
 
-  public ImmutableList<String> getArgs() {
-    return args;
-  }
-
   @VisibleForTesting
-  ImmutableList<SourcePath> getInputs() {
-    return inputs;
+  public ImmutableList<String> getArgs() {
+    return Arg.stringify(args);
   }
-
-  private ImmutableSet<Path> getLibrarySearchDirectories() {
-    return FluentIterable.from(libraries)
-        .transform(
-            new Function<Path, Path>() {
-              @Nullable
-              @Override
-              public Path apply(Path input) {
-                return input.getParent();
-              }
-            }
-        ).filter(notNull())
-        .toSet();
-  }
-
-  private ImmutableSet<String> getLibraryNames() {
-    return FluentIterable.from(libraries)
-        .transform(
-            new Function<Path, String>() {
-              @Override
-              public String apply(Path fileName) {
-                return MorePaths.stripPathPrefixAndExtension(fileName, "lib");
-              }
-            }
-            // libraries set can contain path-qualified libraries, or just library search paths.
-            // Assume these end in '../lib' and filter out here.
-        ).filter(MoreStrings.NON_EMPTY)
-        .toSet();
-    }
-  }
+}

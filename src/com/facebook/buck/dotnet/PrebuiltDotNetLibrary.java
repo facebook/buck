@@ -44,7 +44,7 @@ public class PrebuiltDotNetLibrary extends AbstractBuildRule {
 
     this.assembly = assembly;
 
-    Path resolvedPath = resolver.getResolvedPath(assembly);
+    Path resolvedPath = resolver.getAbsolutePath(assembly);
     this.output = BuildTargets.getGenPath(params.getBuildTarget(), "%s")
         .resolve(resolvedPath.getFileName());
   }
@@ -60,7 +60,7 @@ public class PrebuiltDotNetLibrary extends AbstractBuildRule {
     steps.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            getResolver().getResolvedPath(assembly),
+            getResolver().getAbsolutePath(assembly),
             output));
 
     return steps.build();

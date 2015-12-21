@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -43,4 +45,16 @@ public class ShTestIntegrationTest {
     workspace.runBuckCommand("test", "//foo:test").assertSuccess();
   }
 
+  @Test
+  public void timeout() throws IOException {
+    Assume.assumeTrue(
+        ImmutableSet.of(Platform.MACOS, Platform.LINUX).contains(Platform.detect()));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "sh_test_timeout", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spin");
+    String stderr = result.getStderr();
+    result.assertSpecialExitCode("test should fail", 42);
+    assertTrue(stderr, stderr.contains("Timed out running test: //:test-spin"));
+  }
 }

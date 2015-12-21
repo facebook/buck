@@ -28,7 +28,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
@@ -44,7 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 
 import java.io.BufferedReader;
@@ -54,8 +52,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.file.Files;
@@ -84,25 +80,19 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static final Path PATH_TO_PYWATCHMAN = Paths.get(
       System.getProperty(
           "buck.path_to_pywatchman",
-          "build/pywatchman"));
+          "third-party/py/pywatchman"));
 
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
-
-  private enum BuckPyOutputFormat {
-    JSON,
-    BSER
-  };
 
   private final ImmutableMap<String, String> environment;
 
   private Optional<Path> pathToBuckPy;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
-  private BuckPyOutputFormat buckPyOutputFormat;
-  @Nullable BuildFileToJsonParser buckPyStdoutParser;
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
+  private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final BserDeserializer bserDeserializer;
@@ -117,11 +107,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   protected ProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
+      ConstructorArgMarshaller marshaller,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor) {
     this.pathToBuckPy = Optional.absent();
     this.options = options;
+    this.marshaller = marshaller;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
@@ -185,35 +177,16 @@ public class ProjectBuildFileParser implements AutoCloseable {
           ProjectBuildFileParser.class.getSimpleName(),
           new InputStreamConsumer(
               stderr,
-              // We don't want to copy the output to stderr directly;
-              // we'll post console events instead.
-              new PrintStream(ByteStreams.nullOutputStream()),
-              Ansi.withoutTty(),
-              /* flagOutputWrittenToStream */ true,
-              Optional.<InputStreamConsumer.Handler>of(
-                  new InputStreamConsumer.Handler() {
-                    @Override
-                    public void handleLine(String line) {
-                      buckEventBus.post(
-                          ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
-                    }
-                  })));
+              new InputStreamConsumer.Handler() {
+                @Override
+                public void handleLine(String line) {
+                  buckEventBus.post(
+                      ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
+                }
+              }));
       stderrConsumer.start();
 
       buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
-
-      Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
-      // We explicitly do not close this reader, since it closes the underlying stream.
-      BufferedReader bufferedReader = new BufferedReader(reader);
-      String format = bufferedReader.readLine();
-      if (format == null) {
-        throw new RuntimeException("Cannot determine buck.py output format");
-      }
-      buckPyOutputFormat = BuckPyOutputFormat.valueOf(format);
-
-      if (buckPyOutputFormat == BuckPyOutputFormat.JSON) {
-        buckPyStdoutParser = new BuildFileToJsonParser(reader);
-      }
     }
   }
 
@@ -253,6 +226,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--watchman_watch_root", options.getWatchman().getWatchRoot().get());
     }
 
+    if (options.getWatchman().getSocketPath().isPresent()) {
+      argBuilder.add(
+          "--watchman_socket_path",
+          options.getWatchman().getSocketPath().get().toAbsolutePath().toString());
+    }
+
     if (options.getWatchmanQueryTimeoutMs().isPresent()) {
       argBuilder.add(
           "--watchman_query_timeout_ms",
@@ -261,6 +240,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
     argBuilder.add("--build_file_name", options.getBuildFileName());
+
+    // Tell the parser not to print exceptions to stderr.
+    argBuilder.add("--quiet");
 
     // Add the --include flags.
     for (String include : options.getDefaultIncludes()) {
@@ -301,9 +283,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   @VisibleForTesting
-  @SuppressWarnings("unchecked")
   protected List<Map<String, Object>> getAllRulesInternal(Path buildFile)
-      throws IOException {
+      throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();
 
@@ -312,34 +293,97 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkNotNull(buckPyProcess);
 
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
+    int numRules = 0;
     buckEventBus.post(parseBuckFileStarted);
-    String buildFileString = buildFile.toString();
-    LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
-    buckPyStdinWriter.write(buildFileString);
-    buckPyStdinWriter.newLine();
-    buckPyStdinWriter.flush();
+    try {
+      String buildFileString = buildFile.toString();
+      LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
+      buckPyStdinWriter.write(buildFileString);
+      buckPyStdinWriter.newLine();
+      buckPyStdinWriter.flush();
 
-    LOG.debug("Parsing output of process %s using format %s...", buckPyProcess, buckPyOutputFormat);
-    List<Map<String, Object>> result;
-    if (buckPyOutputFormat == BuckPyOutputFormat.BSER) {
+      LOG.debug("Parsing output of process %s...", buckPyProcess);
+      List<Map<String, Object>> result;
       try {
         Object deserializedValue = bserDeserializer.deserializeBserValue(
             buckPyProcess.getInputStream());
-        Preconditions.checkState(deserializedValue instanceof List<?>);
-        result = (List<Map<String, Object>>) deserializedValue;
+        result = handleDeserializedValue(buildFile, deserializedValue, buckEventBus);
       } catch (BserDeserializer.BserEofException e) {
         LOG.warn(e, "Parser exited while decoding BSER data");
         throw new IOException("Parser exited unexpectedly", e);
       }
-    } else {
-      Preconditions.checkNotNull(buckPyStdoutParser);
-      result = buckPyStdoutParser.nextRules();
+      LOG.verbose("Got rules: %s", result);
+      numRules = result.size();
+      LOG.debug("Parsed %d rules from process", numRules);
+      return result;
+    } finally {
+      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, numRules));
     }
-    LOG.verbose("Got rules: %s", result);
-    int numRules = result.size();
-    LOG.debug("Parsed %d rules from process", numRules);
-    buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, numRules));
-    return result;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<Map<String, Object>> handleDeserializedValue(
+      Path buildFile,
+      Object deserializedValue,
+      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
+    if (!(deserializedValue instanceof Map<?, ?>)) {
+      throw new IOException(
+          String.format("Invalid parser output (expected map, got %s)", deserializedValue));
+    }
+    Map<String, Object> decodedResult = (Map<String, Object>) deserializedValue;
+    Object diagnostics = decodedResult.get("diagnostics");
+    if (diagnostics != null) {
+      if (!(diagnostics instanceof List<?>)) {
+        throw new IOException(
+            String.format("Invalid parser diagnostics (expected list, got %s)", diagnostics));
+      }
+      List<Map<String, String>> diagnosticsList = (List<Map<String, String>>) diagnostics;
+      handleDiagnostics(buildFile, diagnosticsList, buckEventBus);
+    }
+    Object values = decodedResult.get("values");
+    if (!(values instanceof List<?>)) {
+      throw new IOException(
+          String.format("Invalid parser values (expected list, got %s)", values));
+    }
+    return (List<Map<String, Object>>) values;
+  }
+
+  private static void handleDiagnostics(
+      Path buildFile,
+      List<Map<String, String>> diagnosticsList,
+      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
+    for (Map<String, String> diagnostic : diagnosticsList) {
+      String level = diagnostic.get("level");
+      String message = diagnostic.get("message");
+      if (level == null || message == null) {
+        throw new IOException(
+            String.format("Invalid diagnostic(level=%s, message=%s)", level, message));
+      }
+      switch (level) {
+        case "warning":
+          LOG.warn("Warning raised by BUCK file parser for file %s: %s", buildFile, message);
+          buckEventBus.post(
+              ConsoleEvent.warning("Warning raised by BUCK file parser: %s", message));
+          break;
+        case "error":
+          LOG.warn("Error raised by BUCK file parser for file %s: %s", buildFile, message);
+          buckEventBus.post(
+              ConsoleEvent.severe("Error raised by BUCK file parser: %s", message));
+          break;
+        case "fatal":
+          LOG.warn("Fatal error raised by BUCK file parser for file %s: %s", buildFile, message);
+          throw BuildFileParseException.createForBuildFileParseError(
+              buildFile,
+              new IOException(message));
+        default:
+          LOG.warn(
+              "Unknown diagnostic (level %s) raised by BUCK file parser for build file %s: %s",
+              level,
+              buildFile,
+              message);
+          break;
+      }
+    }
   }
 
   @Override
@@ -355,14 +399,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
         // Check isInitialized implications (to avoid Eradicate warnings).
         Preconditions.checkNotNull(buckPyStdinWriter);
         Preconditions.checkNotNull(buckPyProcess);
-
-        if (buckPyStdoutParser != null) {
-          try {
-            buckPyStdoutParser.close();
-          } catch (IOException e) {
-            // This is bad, but we swallow this so we can still close the other objects.
-          }
-        }
 
         // Allow buck.py to terminate gracefully.
         try {
@@ -455,7 +491,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // We currently create a temporary buck.py per instance of this class, rather than a single one
     // for the life of this buck invocation. We do this since this is generated in parallel we end
     // up with strange InterruptedExceptions being thrown.
-    // TODO(simons): This would be the ideal thing to do.
+    // TODO(shs96c): This would be the ideal thing to do.
     //    Path buckDotPy =
     //        projectRoot.toPath().resolve(BuckConstant.BIN_DIR).resolve("generated-buck.py");
     Path buckDotPy = Files.createTempFile("buck", ".py");
@@ -476,8 +512,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
 
-      ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
-      BuckPyFunction function = new BuckPyFunction(inspector);
+      BuckPyFunction function = new BuckPyFunction(marshaller);
       for (Description<?> description : descriptions) {
         out.write(function.toPythonFunction(
             description.getBuildRuleType(),

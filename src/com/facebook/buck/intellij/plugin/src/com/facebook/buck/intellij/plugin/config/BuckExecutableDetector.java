@@ -41,7 +41,7 @@ public final class BuckExecutableDetector {
   }
 
   private static String detectForUnix() {
-    // TODO(user): Use Buck's ExecutableFinder class here.
+    // TODO(t7982097): Use Buck's ExecutableFinder class here.
     for (String p : UNIX_PATHS) {
       File f = new File(p, UNIX_EXECUTABLE);
       if (f.exists()) {

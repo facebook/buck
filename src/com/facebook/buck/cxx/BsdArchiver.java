@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Tool;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
@@ -48,9 +49,10 @@ public class BsdArchiver implements Archiver {
           "invalid global header");
 
       byte[] marker = ObjectFileScrubbers.getBytes(map, 3);
-      ObjectFileScrubbers.checkArchive(
-          Arrays.equals(LONG_NAME_MARKER, marker),
-          "unexpected short symbol table name");
+      if (!Arrays.equals(LONG_NAME_MARKER, marker)) {
+        // This file isn't actually made with BSD ar; skip scrubbing it.
+        return;
+      }
 
       int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(map, 13);
 
@@ -140,6 +142,11 @@ public class BsdArchiver implements Archiver {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return tool.getCommandPrefix(resolver);
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override

@@ -6,10 +6,9 @@
   "buck.type" : "genrule",
   "cmd" : "$(classpath :test-library)",
   "cmdExe" : null,
-  "deps" : [ ":A" ],
   "name" : "B",
   "out" : "B.txt",
-  "srcs" : [ ],
+  "srcs" : [":A"],
   "visibility" : [ ]
 }
 ]

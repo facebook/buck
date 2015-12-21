@@ -170,7 +170,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     Map<Integer, String> stringsMap = Maps.newHashMap();
     CompileStringsStep step = createNonExecutingStep();
-    step.addResourceNameToIdMap(ImmutableMap.of(
+    step.addStringResourceNameToIdMap(ImmutableMap.of(
         "name1", 1,
         "name2", 2,
         "name3", 3,
@@ -208,7 +208,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     Map<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newHashMap();
     CompileStringsStep step = createNonExecutingStep();
-    step.addResourceNameToIdMap(ImmutableMap.of(
+    step.addPluralsResourceNameToIdMap(ImmutableMap.of(
         "name1", 1,
         "name2", 2,
         "name3", 3));
@@ -249,7 +249,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     Map<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap();
     CompileStringsStep step = createNonExecutingStep();
-    step.addResourceNameToIdMap(ImmutableMap.of(
+    step.addArrayResourceNameToIdMap(ImmutableMap.of(
         "name1", 1,
         "name2", 2,
         "name3", 3));
@@ -260,6 +260,54 @@ public class CompileStringsStepTest extends EasyMockSupport {
         ImmutableMap.of(
             1, ImmutableList.of("Value12", "Value11"),
             2, ImmutableList.of("Value21")),
+        arraysMap);
+  }
+
+  @Test
+  public void testScrapeNodesWithSameName() throws IOException, SAXException {
+    String xmlInput =
+        "<string name='name1'>1</string>" +
+        "<plurals name='name1'>" +
+            "<item quantity='one'>2</item>" +
+            "<item quantity='other'>3</item>" +
+        "</plurals>" +
+        "<string-array name='name1'>" +
+            "<item>4</item>" +
+            "<item>5</item>" +
+        "</string-array>";
+
+
+    NodeList stringNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
+        .getElementsByTagName("string");
+    NodeList pluralsNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
+        .getElementsByTagName("plurals");
+    NodeList arrayNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
+        .getElementsByTagName("string-array");
+
+    Map<Integer, String> stringMap = Maps.newTreeMap();
+    Map<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newTreeMap();
+    Map<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap();
+
+    CompileStringsStep step = createNonExecutingStep();
+    step.addStringResourceNameToIdMap(ImmutableMap.of("name1", 1));
+    step.addPluralsResourceNameToIdMap(ImmutableMap.of("name1", 2));
+    step.addArrayResourceNameToIdMap(ImmutableMap.of("name1", 3));
+
+    step.scrapeStringNodes(stringNodes, stringMap);
+    step.scrapePluralsNodes(pluralsNodes, pluralsMap);
+    step.scrapeStringArrayNodes(arrayNodes, arraysMap);
+
+    assertEquals(
+        "Incorrect map of resource id to string.",
+        ImmutableMap.of(1, "1"),
+        stringMap);
+    assertEquals(
+        "Incorrect map of resource id to plurals.",
+        ImmutableMap.of(2, ImmutableMap.of("one", "2", "other", "3")),
+        pluralsMap);
+    assertEquals(
+        "Incorrect map of resource id to string arrays.",
+        ImmutableMap.of(3, ImmutableList.of("4", "5")),
         arraysMap);
   }
 
@@ -354,7 +402,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
     public FakeProjectFileSystem() {
-      super(Paths.get("."));
+      super(Paths.get(".").toAbsolutePath());
     }
 
     @Override

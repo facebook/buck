@@ -16,15 +16,17 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.Pair;
 import com.google.common.base.Function;
 
 /**
  * Responsible for converting a {@link TargetGraph} to a graph of some other type, typically of
  * {@link BuildRule}s, but there's not requirement for this to be the case.
  */
-public interface TargetGraphTransformer extends Function<TargetGraph, ActionGraph> {
+public interface TargetGraphTransformer
+    extends Function<TargetGraph, Pair<ActionGraph, BuildRuleResolver>> {
 
   @Override
-  ActionGraph apply(TargetGraph input);
+  Pair<ActionGraph, BuildRuleResolver> apply(TargetGraph input);
 
 }

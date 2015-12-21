@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 
 /**
  * Apes the API of JUnit's <code>TemporaryFolder</code> but returns {@link Path} references and can
@@ -44,7 +45,7 @@ public class TemporaryPaths extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-    root = Files.createTempDirectory("junit-temp-path");
+    root = Files.createTempDirectory("junit-temp-path").toRealPath();
   }
 
   public Path getRoot() {
@@ -111,7 +112,9 @@ public class TemporaryPaths extends ExternalResource {
 
     if (Files.exists(toCreate)) {
       throw new IOException(
-          "a folder with the name \'" + name + "\' already exists in the test folder");
+          String.format(
+              "a folder with the name '%s' already exists in the test folder",
+              Arrays.toString(name)));
     }
 
     return Files.createDirectories(toCreate);

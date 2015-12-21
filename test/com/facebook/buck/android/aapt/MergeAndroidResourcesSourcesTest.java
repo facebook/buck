@@ -18,15 +18,17 @@ package com.facebook.buck.android.aapt;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -105,12 +107,15 @@ public class MergeAndroidResourcesSourcesTest {
         .setProjectFilesystem(filesystem)
         .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
-        new TestSourcePath("res_in_1"),
-        new TestSourcePath("res_in_2"));
+        new FakeSourcePath(filesystem, "res_in_1"),
+        new FakeSourcePath(filesystem, "res_in_2"));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(
             buildRuleParams,
-            new SourcePathResolver(new BuildRuleResolver()),
+            new SourcePathResolver(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new BuildTargetNodeToBuildRuleTransformer())),
             directories);
 
     ImmutableList<Step> steps = mergeAndroidResourceSourcesStep.getBuildSteps(
@@ -122,13 +127,14 @@ public class MergeAndroidResourcesSourcesTest {
             Matchers.hasProperty("shortName", Matchers.equalTo("rm_&&_mkdir")),
             Matchers.instanceOf(MergeAndroidResourceSourcesStep.class)
         ));
+    String resIn1 = filesystem.getRootPath().resolve("res_in_1").toString();
+    String resIn2 = filesystem.getRootPath().resolve("res_in_2").toString();
+
     assertThat(
         FluentIterable.from(steps).transform(stepDescriptionFunction),
         Matchers.contains(
             Matchers.stringContainsInOrder("rm", "mkdir"),
-            Matchers.equalTo(
-                "merge-resources res_in_1,res_in_2 -> " +
-                    "buck-out/gen/__merged_resources_output_folder__")
+            Matchers.startsWith(String.format("merge-resources %s,%s -> ", resIn1, resIn2))
         )
     );
   }
@@ -139,7 +145,6 @@ public class MergeAndroidResourcesSourcesTest {
     File outFolder = tmp.newFolder("out");
 
     MergeAndroidResourceSourcesStep step = new MergeAndroidResourceSourcesStep(
-        filesystem,
         ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")),
         outFolder.toPath()
     );

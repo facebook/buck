@@ -33,7 +33,6 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.testutil.TestConsole;
@@ -484,37 +483,33 @@ public class DaemonIntegrationTest {
 
     Object daemon = Main.getDaemon(
         new TestCellBuilder().setBuckConfig(
-            new FakeBuckConfig(
-                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
+            FakeBuckConfig.builder().setSections(
+                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.GlobHandler.PYTHON,
-        ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
             new TestCellBuilder().setBuckConfig(
-                new FakeBuckConfig(
-                    ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
+                FakeBuckConfig.builder()
+                    .setSections(
+                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue")))
+                    .build())
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
         Main.getDaemon(
             new TestCellBuilder().setBuckConfig(
-                new FakeBuckConfig(
+                FakeBuckConfig.builder().setSections(
                     ImmutableMap.of(
                         "somesection",
-                        ImmutableMap.of("somename", "someothervalue"))))
+                        ImmutableMap.of("somename", "someothervalue"))).build())
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
 
@@ -555,8 +550,6 @@ public class DaemonIntegrationTest {
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.GlobHandler.PYTHON,
-        ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
 
     assertNotEquals(
@@ -570,8 +563,6 @@ public class DaemonIntegrationTest {
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
 }

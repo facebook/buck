@@ -32,9 +32,9 @@ public class MkdirStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot;
 
-  public MkdirStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
+  public MkdirStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRootOrJustAbsolute) {
     this.filesystem = filesystem;
-    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
+    this.pathRelativeToProjectRoot = pathRelativeToProjectRootOrJustAbsolute;
   }
 
   @Override

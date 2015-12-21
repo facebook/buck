@@ -16,9 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MoreFiles;
@@ -39,14 +41,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import java.io.IOException;
@@ -55,7 +56,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -117,18 +117,6 @@ public class BuildInfoRecorder {
     JsonArray out = new JsonArray();
     for (String str : values) {
       out.add(new JsonPrimitive(str));
-    }
-    return out.toString();
-  }
-
-  private String toJson(Multimap<String, String> multimap) {
-    JsonObject out = new JsonObject();
-    for (Map.Entry<String, Collection<String>> entry : multimap.asMap().entrySet()) {
-      JsonArray values = new JsonArray();
-      for (String value : entry.getValue()) {
-        values.add(new JsonPrimitive(value));
-      }
-      out.add(entry.getKey(), values);
     }
     return out.toString();
   }
@@ -199,10 +187,6 @@ public class BuildInfoRecorder {
   }
 
   public void addMetadata(String key, Iterable<String> value) {
-    addMetadata(key, toJson(value));
-  }
-
-  public void addMetadata(String key, Multimap<String, String> value) {
     addMetadata(key, toJson(value));
   }
 
@@ -297,8 +281,8 @@ public class BuildInfoRecorder {
       return;
     }
 
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.COMPRESS,
+    ArtifactCompressionEvent.Started started = ArtifactCompressionEvent.started(
+        ArtifactCompressionEvent.Operation.COMPRESS,
         ruleKeys);
     eventBus.post(started);
 
@@ -319,16 +303,24 @@ public class BuildInfoRecorder {
       e.printStackTrace();
       return;
     } finally {
-      eventBus.post(ArtifactCacheEvent.finished(started));
+      eventBus.post(ArtifactCompressionEvent.finished(started));
     }
 
     // Store the artifact, including any additional metadata.
-    artifactCache.store(ruleKeys, buildMetadata, zip);
-    try {
-      Files.delete(zip);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    final Path finalZip = zip;
+    ListenableFuture<Void> storeFuture = artifactCache.store(ruleKeys, buildMetadata, zip);
+    storeFuture.addListener(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Files.delete(finalZip);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        },
+        directExecutor());
   }
 
   /**

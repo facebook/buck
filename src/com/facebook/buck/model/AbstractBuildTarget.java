@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -32,8 +33,6 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.SortedSet;
 
-import javax.annotation.Nullable;
-
 @JsonAutoDetect(
     fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -42,11 +41,12 @@ import javax.annotation.Nullable;
 @Value.Immutable
 abstract class AbstractBuildTarget
     implements
-        Comparable<AbstractBuildTarget>,
-        HasUnflavoredBuildTarget,
-        HasBuildTarget {
+    Comparable<AbstractBuildTarget>,
+    HasBuildTarget {
 
-  @Override
+  private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
+      Ordering.<Flavor>natural().lexicographical();
+
   @Value.Parameter
   public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
 
@@ -64,6 +64,10 @@ abstract class AbstractBuildTarget
   @JsonProperty("cell")
   public Optional<String> getCell() {
     return getUnflavoredBuildTarget().getCell();
+  }
+
+  public Path getCellPath() {
+    return getUnflavoredBuildTarget().getCellPath();
   }
 
   @JsonProperty("baseName")
@@ -146,11 +150,11 @@ abstract class AbstractBuildTarget
         .setUnflavoredBuildTarget(buildTarget);
   }
 
-  public static BuildTarget.Builder builder(String baseName, String shortName) {
+  public static BuildTarget.Builder builder(Path cellPath, String baseName, String shortName) {
     return BuildTarget
         .builder()
         .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(Optional.<String>absent(), baseName, shortName));
+            UnflavoredBuildTarget.of(cellPath, Optional.<String>absent(), baseName, shortName));
   }
 
   /** @return {@link #getFullyQualifiedName()} */
@@ -160,9 +164,15 @@ abstract class AbstractBuildTarget
   }
 
   @Override
-  public int compareTo(@Nullable AbstractBuildTarget target) {
-    Preconditions.checkNotNull(target);
-    return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
+  public int compareTo(AbstractBuildTarget o) {
+    if (this == o) {
+      return 0;
+    }
+
+    return ComparisonChain.start()
+        .compare(getUnflavoredBuildTarget(), o.getUnflavoredBuildTarget())
+        .compare(getFlavors(), o.getFlavors(), LEXICOGRAPHICAL_ORDERING)
+        .result();
   }
 
   @Override
@@ -182,7 +192,10 @@ abstract class AbstractBuildTarget
   }
 
   public BuildTarget withoutCell() {
-    return BuildTarget.builder(getBaseName(), getShortName())
+    return BuildTarget.builder(
+        getUnflavoredBuildTarget().getCellPath(),
+        getBaseName(),
+        getShortName())
         .addAllFlavors(getFlavors())
         .build();
 

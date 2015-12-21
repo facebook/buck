@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -44,7 +44,7 @@ public class FakeBuildContext {
   /**
    * User still needs to invoke {@link ImmutableBuildContext.Builder#setActionGraph(ActionGraph)}
    * and {@link ImmutableBuildContext.Builder#setJavaPackageFinder(
-   * com.facebook.buck.java.JavaPackageFinder)}
+   * com.facebook.buck.jvm.core.JavaPackageFinder)}
    * before the {@link ImmutableBuildContext.Builder#build()} method of the builder can be invoked.
    */
   public static ImmutableBuildContext.Builder newBuilder() {

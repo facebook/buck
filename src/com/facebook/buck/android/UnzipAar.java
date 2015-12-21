@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JarDirectoryStepHelper;
+import com.facebook.buck.jvm.java.JarDirectoryStepHelper;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
@@ -43,7 +44,7 @@ import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,6 +62,9 @@ public class UnzipAar extends AbstractBuildRule
   private final SourcePath aarFile;
   private final Path unpackDirectory;
   private final Path uberClassesJar;
+  private final Path pathToTextSymbolsDir;
+  private final Path pathToTextSymbolsFile;
+  private final Path pathToRDotJavaPackageFile;
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
   UnzipAar(
@@ -74,6 +78,9 @@ public class UnzipAar extends AbstractBuildRule
     this.uberClassesJar = BuildTargets.getScratchPath(
         buildTarget,
         "__uber_classes_%s__/classes.jar");
+    pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
+    pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
+    pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
@@ -86,10 +93,13 @@ public class UnzipAar extends AbstractBuildRule
     steps.add(
         new UnzipStep(
             getProjectFilesystem(),
-            getResolver().getPath(aarFile),
+            getResolver().getAbsolutePath(aarFile),
             unpackDirectory));
     steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
-    steps.add(new MkdirStep(getProjectFilesystem(), getResolver().getPath(getAssetsDirectory())));
+    steps.add(
+        new MkdirStep(
+            getProjectFilesystem(),
+            getResolver().getAbsolutePath(getAssetsDirectory())));
     steps.add(new MkdirStep(getProjectFilesystem(), getNativeLibsDirectory()));
     steps.add(new TouchStep(getProjectFilesystem(), getTextSymbolsFile()));
 
@@ -130,7 +140,7 @@ public class UnzipAar extends AbstractBuildRule
           }
         } else {
           // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
-          ImmutableSet.Builder<Path> entriesToJarBuilder = ImmutableSet.builder();
+          ImmutableSortedSet.Builder<Path> entriesToJarBuilder = ImmutableSortedSet.naturalOrder();
           entriesToJarBuilder.add(classesJar);
           try {
             entriesToJarBuilder.addAll(
@@ -140,14 +150,14 @@ public class UnzipAar extends AbstractBuildRule
             return 1;
           }
 
-          ImmutableSet<Path> entriesToJar = entriesToJarBuilder.build();
+          ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
           try {
             JarDirectoryStepHelper.createJarFile(
                 getProjectFilesystem(),
                 uberClassesJar,
                 entriesToJar,
-                /* mainClass */ null,
-                /* manifestFile */ null,
+                /* mainClass */ Optional.<String>absent(),
+                /* manifestFile */ Optional.<Path>absent(),
                 /* mergeManifests */ true,
                 /* blacklist */ ImmutableList.<Pattern>of(),
                 context);
@@ -160,19 +170,27 @@ public class UnzipAar extends AbstractBuildRule
       }
     });
 
-    steps.add(new ExtractFromAndroidManifestStep(
-        getAndroidManifest(),
-        getProjectFilesystem(),
-        buildableContext,
-        METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE));
-    steps.add(new RecordFileSha1Step(
-        getProjectFilesystem(),
-        getTextSymbolsFile(),
-        METADATA_KEY_FOR_R_DOT_TXT_SHA1,
-        buildableContext));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTextSymbolsDir));
+    steps.add(
+        new ExtractFromAndroidManifestStep(
+            getAndroidManifest(),
+            getProjectFilesystem(),
+            buildableContext,
+            METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
+            pathToRDotJavaPackageFile));
+    steps.add(
+        new RecordFileSha1Step(
+            getProjectFilesystem(),
+            getTextSymbolsFile(),
+            METADATA_KEY_FOR_R_DOT_TXT_SHA1,
+            buildableContext));
+    steps.add(
+        CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
 
     buildableContext.recordArtifact(unpackDirectory);
     buildableContext.recordArtifact(uberClassesJar);
+    buildableContext.recordArtifact(pathToTextSymbolsFile);
+    buildableContext.recordArtifact(pathToRDotJavaPackageFile);
     return steps.build();
   }
 
@@ -203,7 +221,7 @@ public class UnzipAar extends AbstractBuildRule
   @Override
   @Nullable
   public Path getPathToOutput() {
-    return null;
+    return pathToTextSymbolsDir;
   }
 
   Path getPathToClassesJar() {

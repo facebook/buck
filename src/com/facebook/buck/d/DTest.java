@@ -25,10 +25,9 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -38,6 +37,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -51,30 +51,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule {
+public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunnerRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<Label> labels;
   private ImmutableSet<BuildRule> sourceUnderTest;
+  private final Path testBinary;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public DTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableList<SourcePath> inputs,
+      Path testBinary,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
-      ImmutableSet<BuildRule> sourceUnderTest,
-      Tool compiler) {
-    super(
-        params,
-        resolver,
-        inputs,
-        ImmutableList.of("-unittest"),
-        BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()),
-        compiler);
+      Optional<Long> testRuleTimeoutMs,
+      ImmutableSet<BuildRule> sourceUnderTest) {
+    super(params, resolver);
     this.contacts = contacts;
     this.labels = labels;
     this.sourceUnderTest = sourceUnderTest;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.testBinary = testBinary;
   }
 
   @Override
@@ -83,7 +80,7 @@ public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule
   }
 
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(getPathToOutput()).toString());
+    return ImmutableList.of(projectFilesystem.resolve(testBinary).toString());
   }
 
   @Override
@@ -189,7 +186,7 @@ public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule
             testOutput,
             /* stderr */ "");
 
-        return new TestResults(
+        return TestResults.of(
             getBuildTarget(),
             ImmutableList.of(
                 new TestCaseSummary(
@@ -217,6 +214,7 @@ public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule
               getProjectFilesystem(),
               getShellCommand(),
               getPathToTestExitCode(),
+              testRuleTimeoutMs,
               getPathToTestOutput()));
     }
   }
@@ -236,12 +234,11 @@ public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("dunit")
         .setCommand(getShellCommand())
         .setLabels(getLabels())
         .setContacts(getContacts())
         .build();
   }
-
 }

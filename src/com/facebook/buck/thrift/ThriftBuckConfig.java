@@ -79,6 +79,10 @@ public class ThriftBuckConfig {
     return delegate.getRequiredBuildTarget(SECTION, "cpp2_library");
   }
 
+  public BuildTarget getCpp2FatalDep() {
+    return delegate.getRequiredBuildTarget(SECTION, "cpp2_fatal_library");
+  }
+
   public BuildTarget getCppAyncDep() {
     return delegate.getRequiredBuildTarget(SECTION, "cpp_async_library");
   }
@@ -101,6 +105,10 @@ public class ThriftBuckConfig {
 
   public BuildTarget getPythonTwistedDep() {
     return delegate.getRequiredBuildTarget(SECTION, "python_twisted_library");
+  }
+
+  public BuildTarget getPythonAsyncioDep() {
+    return delegate.getRequiredBuildTarget(SECTION, "python_asyncio_library");
   }
 
 }

@@ -67,7 +67,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
     // If the skeleton is a BuildTargetSourcePath, then its build rule must also be in the deps.
     // The skeleton does not appear to be in either params.getDeclaredDeps() or
     // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
-    // TODO(simons): t4744625 This should happen automagically.
+    // TODO(shs96c): t4744625 This should happen automagically.
     ImmutableSortedSet<BuildRule> newDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(
             pathResolver.filterBuildRuleInputs(

@@ -17,6 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -36,7 +38,9 @@ import java.nio.file.Path;
  * Description for a core_data_model rule, which identifies a model file
  * for use with Apple's Core Data.
  */
-public class CoreDataModelDescription implements Description<CoreDataModelDescription.Arg> {
+public class CoreDataModelDescription implements
+    Description<CoreDataModelDescription.Arg>,
+    Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("core_data_model");
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
@@ -81,5 +85,10 @@ public class CoreDataModelDescription implements Description<CoreDataModelDescri
   @SuppressFieldNotInitialized
   public static class Arg {
     public Path path;
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 }

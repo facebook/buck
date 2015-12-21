@@ -20,14 +20,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class AndroidResourceRuleBuilder {
 
@@ -45,13 +41,12 @@ public class AndroidResourceRuleBuilder {
     private BuildRuleParams buildRuleParams;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private SourcePath res;
-    private ImmutableSortedSet<Path> resSrcs = ImmutableSortedSet.of();
+    private ImmutableSortedSet<? extends SourcePath> resSrcs = ImmutableSortedSet.of();
     private String rDotJavaPackage;
     private SourcePath assets;
-    private ImmutableSortedSet<Path> assetsSrcs = ImmutableSortedSet.of();
+    private ImmutableSortedSet<? extends SourcePath> assetsSrcs = ImmutableSortedSet.of();
     private SourcePath manifest;
     private boolean hasWhitelistedStrings = false;
-    private Optional<Supplier<Sha1HashCode>> additionalAbiKey = Optional.absent();
 
     public AndroidResource build() {
       return new AndroidResource(
@@ -60,12 +55,13 @@ public class AndroidResourceRuleBuilder {
           deps,
           res,
           resSrcs,
+          Optional.<SourcePath>absent(),
           rDotJavaPackage,
           assets,
           assetsSrcs,
+          Optional.<SourcePath>absent(),
           manifest,
-          hasWhitelistedStrings,
-          additionalAbiKey);
+          hasWhitelistedStrings);
     }
 
     public Builder setBuildRuleParams(BuildRuleParams params) {
@@ -93,7 +89,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setResSrcs(ImmutableSortedSet<Path> resSrcs) {
+    public Builder setResSrcs(ImmutableSortedSet<? extends SourcePath> resSrcs) {
       this.resSrcs = resSrcs;
       return this;
     }
@@ -108,7 +104,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setAssetsSrcs(ImmutableSortedSet<Path> assetsSrcs) {
+    public Builder setAssetsSrcs(ImmutableSortedSet<? extends SourcePath> assetsSrcs) {
       this.assetsSrcs = assetsSrcs;
       return this;
     }
@@ -118,15 +114,6 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setHasWhitelistedStrings(boolean hasWhitelistedStrings) {
-      this.hasWhitelistedStrings = hasWhitelistedStrings;
-      return this;
-    }
-
-    public Builder setAdditionalAbiKey(Optional<Supplier<Sha1HashCode>> additionalAbiKey) {
-      this.additionalAbiKey = additionalAbiKey;
-      return this;
-    }
   }
 
 }

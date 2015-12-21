@@ -46,6 +46,10 @@ public class IosReactNativeLibraryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
   }
 
+  private Path createPath(String first, String... more) {
+    return tmpFolder.getRootPath().getFileSystem().getPath(first, more);
+  }
+
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
@@ -54,17 +58,36 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testBundleOutputContainsJSAndResources() throws IOException {
-    workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+    workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        createPath(
+            "buck-out",
+            "gen",
+            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
+  }
+
+  @Test
+  public void testUnbundleOutputContainsJSAndResources() throws IOException {
+    workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
+
+    workspace.verify(
+        createPath(
+            "buck-out",
+            "gen",
+            "DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
   }
 
   @Test
   public void testFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
-    workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle").assertSuccess();
+    workspace
+        .runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle,no-debug")
+        .assertSuccess();
 
     Path appDir = workspace.getPath(
-        "buck-out/gen/DemoApp#iphonesimulator-x86_64,rn_no_bundle/DemoApp.app");
+        "buck-out/gen/" +
+            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks,rn_no_bundle/" +
+            "DemoApp.app");
     assertTrue(Files.isDirectory(appDir));
 
     Path bundle = appDir.resolve("Apps/DemoApp/DemoApp.bundle");

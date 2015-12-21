@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.google.common.collect.ImmutableMap;
 
@@ -32,41 +33,41 @@ public class VersionControlBuckConfigTest {
 
   @Test
   public void givenHgCmdInConfigThenReturnHgCmdFromConfig() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.of(VersionControlBuckConfig.HG_CMD_SETTING_KEY, HG_CMD)));
+            ImmutableMap.of(VersionControlBuckConfig.HG_CMD_SETTING_KEY, HG_CMD))).build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(HG_CMD, is(equalTo(config.getHgCmd())));
   }
 
   @Test
   public void givenHgCmdNotInConfigThenReturnDefault() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.<String, String>of())).build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(VersionControlBuckConfig.HG_CMD_DEFAULT, is(equalTo(config.getHgCmd())));
   }
 
   @Test
   public void givenGenerateStatisticsInConfigThenReturnGenerateStatisticsFromConfig() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             VersionControlBuckConfig.VC_SECTION_KEY,
             ImmutableMap.of(
-                VersionControlBuckConfig.GENERATE_STATISTICS_KEY, GENERATE_STATISTICS)));
+                VersionControlBuckConfig.GENERATE_STATISTICS_KEY, GENERATE_STATISTICS))).build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(GENERATE_STATISTICS_RESULT, is(equalTo(config.shouldGenerateStatistics())));
   }
 
   @Test
   public void givenGenerateStatisticsNotInConfigThenReturnDefault() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.<String, String>of())).build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(
         VersionControlBuckConfig.GENERATE_STATISTICS_DEFAULT,

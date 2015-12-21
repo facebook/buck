@@ -53,6 +53,17 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_str',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+  resource_compression = 'enabled_strings_only',
+)
+
+android_binary(
   name = 'app_comp_str',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',

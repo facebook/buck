@@ -16,16 +16,17 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -68,13 +69,13 @@ public final class CxxInferEnhancer {
 
 
   public static CxxInferReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
-      CxxInferTools inferTools) {
+      CxxInferTools inferTools,
+      CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
     Optional<CxxInferReport> existingRule = resolver.getRuleOptionalWithType(
         params.getBuildTarget(), CxxInferReport.class);
     if (existingRule.isPresent()) {
@@ -86,13 +87,13 @@ public final class CxxInferEnhancer {
         .withFlavor(INFER_ANALYZE);
 
     CxxInferAnalyze analysisRule = requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-        targetGraph,
         paramsWithoutInferFlavorWithInferAnalyzeFlavor,
         resolver,
         pathResolver,
         cxxPlatform,
         args,
-        inferTools);
+        inferTools,
+        sourceFilter);
     return createInferReportRule(
         params,
         resolver,
@@ -101,13 +102,13 @@ public final class CxxInferEnhancer {
   }
 
   public static CxxInferAnalyze requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
-      CxxInferTools inferTools) {
+      CxxInferTools inferTools,
+      CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
 
     BuildTarget inferAnalyzeBuildTarget = createInferAnalyzeBuildTarget(params.getBuildTarget());
 
@@ -120,17 +121,9 @@ public final class CxxInferEnhancer {
     BuildRuleParams paramsWithoutInferFlavor = params.withoutFlavor(INFER_ANALYZE);
 
     ImmutableMap<Path, SourcePath> headers = CxxDescriptionEnhancer.parseHeaders(
-        paramsWithoutInferFlavor,
-        resolver,
-        cxxPlatform,
-        args);
-    ImmutableMap<String, SourcePath> lexSrcs = CxxDescriptionEnhancer.parseLexSources(
-        paramsWithoutInferFlavor,
-        resolver,
-        args);
-    ImmutableMap<String, SourcePath> yaccSrcs = CxxDescriptionEnhancer.parseYaccSources(
-        paramsWithoutInferFlavor,
-        resolver,
+        paramsWithoutInferFlavor.getBuildTarget(),
+        pathResolver,
+        Optional.of(cxxPlatform),
         args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
@@ -140,9 +133,6 @@ public final class CxxInferEnhancer {
         resolver,
         pathResolver,
         cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        lexSrcs,
-        yaccSrcs,
         headers,
         HeaderVisibility.PRIVATE);
 
@@ -150,15 +140,12 @@ public final class CxxInferEnhancer {
 
     if (args instanceof CxxBinaryDescription.Arg) {
       preprocessorInputs = computePreprocessorInputForCxxBinaryDescriptionArg(
-          targetGraph,
           paramsWithoutInferFlavor,
-          pathResolver,
           cxxPlatform,
           (CxxBinaryDescription.Arg) args,
           headerSymlinkTree);
     } else if (args instanceof CxxLibraryDescription.Arg) {
       preprocessorInputs = computePreprocessorInputForCxxLibraryDescriptionArg(
-          targetGraph,
           paramsWithoutInferFlavor,
           resolver,
           pathResolver,
@@ -171,32 +158,14 @@ public final class CxxInferEnhancer {
 
     // Build all the transitive dependencies build rules with the Infer's flavor
     ImmutableSet<CxxInferAnalyze> transitiveDepsLibraryRules = requireTransitiveDependentLibraries(
-        targetGraph,
         cxxPlatform,
         paramsWithoutInferFlavor.getDeps());
 
-    // Setup the rules to run lex/yacc.
-    CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.requireLexYaccSources(
-            paramsWithoutInferFlavor,
-            resolver,
-            pathResolver,
-            cxxPlatform,
-            lexSrcs,
-            yaccSrcs);
-
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
-        paramsWithoutInferFlavor,
-        resolver,
+        paramsWithoutInferFlavor.getBuildTarget(),
+        pathResolver,
         cxxPlatform,
         args);
-
-    // The complete list of input sources.
-    ImmutableMap<String, CxxSource> sources =
-        ImmutableMap.<String, CxxSource>builder()
-            .putAll(srcs)
-            .putAll(lexYaccSources.getCxxSources())
-            .build();
 
     CxxInferCaptureAndAnalyzeRules cxxInferCaptureAndAnalyzeRules =
         new CxxInferCaptureAndAnalyzeRules(
@@ -204,7 +173,7 @@ public final class CxxInferEnhancer {
               paramsWithoutInferFlavor,
               resolver,
               cxxPlatform,
-              sources,
+              srcs,
               CxxSourceRuleFactory.PicType.PDC,
               inferTools,
               preprocessorInputs,
@@ -212,7 +181,8 @@ public final class CxxInferEnhancer {
                   args.compilerFlags,
                   args.platformCompilerFlags,
                   cxxPlatform),
-              args.prefixHeader),
+              args.prefixHeader,
+              sourceFilter),
             transitiveDepsLibraryRules);
 
     return createInferAnalyzeRule(
@@ -225,41 +195,33 @@ public final class CxxInferEnhancer {
   }
 
   private static ImmutableSet<CxxInferAnalyze> requireTransitiveDependentLibraries(
-      final TargetGraph targetGraph,
       final CxxPlatform cxxPlatform,
-      final Iterable<? extends BuildRule> deps) {
+      final Iterable<? extends BuildRule> deps) throws NoSuchBuildTargetException {
     final ImmutableSet.Builder<CxxInferAnalyze> depsBuilder = ImmutableSet.builder();
-
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(deps) {
-          @Override
-          public ImmutableSet<BuildRule> visit(BuildRule buildRule) {
-            if (buildRule instanceof CxxLibrary) {
-              CxxLibrary library = (CxxLibrary) buildRule;
-              depsBuilder.add(
-                  (CxxInferAnalyze) library.requireBuildRule(
-                      targetGraph,
-                      INFER_ANALYZE,
-                      cxxPlatform.getFlavor()));
-              return buildRule.getDeps();
-            }
-            return ImmutableSet.of();
-          }
-        };
-    visitor.start();
+    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule buildRule) throws NoSuchBuildTargetException {
+        if (buildRule instanceof CxxLibrary) {
+          CxxLibrary library = (CxxLibrary) buildRule;
+          depsBuilder.add(
+              (CxxInferAnalyze) library.requireBuildRule(
+                  INFER_ANALYZE,
+                  cxxPlatform.getFlavor()));
+          return buildRule.getDeps();
+        }
+        return ImmutableSet.of();
+      }
+    }.start();
     return depsBuilder.build();
   }
 
   private static ImmutableList<CxxPreprocessorInput>
   computePreprocessorInputForCxxBinaryDescriptionArg(
-      TargetGraph targetGraph,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      HeaderSymlinkTree headerSymlinkTree) {
+      HeaderSymlinkTree headerSymlinkTree) throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-        targetGraph,
         params,
         cxxPlatform,
         CxxFlags.getLanguageFlags(
@@ -268,12 +230,8 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            args.frameworks,
-            cxxPlatform,
-            pathResolver),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            targetGraph,
             cxxPlatform,
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -281,15 +239,13 @@ public final class CxxInferEnhancer {
 
   private static ImmutableList<CxxPreprocessorInput>
   computePreprocessorInputForCxxLibraryDescriptionArg(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.Arg args,
-      HeaderSymlinkTree headerSymlinkTree) {
+      HeaderSymlinkTree headerSymlinkTree) throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-        targetGraph,
         params,
         cxxPlatform,
         CxxFlags.getLanguageFlags(
@@ -298,9 +254,8 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.<FrameworkPath>of(),
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
-            targetGraph,
             params,
             resolver,
             pathResolver,
@@ -310,11 +265,12 @@ public final class CxxInferEnhancer {
                 args.exportedPlatformPreprocessorFlags,
                 args.exportedLangPreprocessorFlags,
                 cxxPlatform),
-            CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
-            CxxDescriptionEnhancer.getFrameworkSearchPaths(
-                args.frameworks,
-                cxxPlatform,
-                pathResolver)));
+            CxxDescriptionEnhancer.parseExportedHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                Optional.of(cxxPlatform),
+                args),
+            args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
   }
 
   private static ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(
@@ -326,7 +282,8 @@ public final class CxxInferEnhancer {
       CxxInferTools inferTools,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputs,
       ImmutableList<String> compilerFlags,
-      Optional<SourcePath> prefixHeader) {
+      Optional<SourcePath> prefixHeader,
+      CxxInferSourceFilter sourceFilter) {
 
     CxxSourceRuleFactory factory =
         new CxxSourceRuleFactory(
@@ -340,7 +297,8 @@ public final class CxxInferEnhancer {
     return factory.createInferCaptureBuildRules(
         sources,
         picType,
-        inferTools);
+        inferTools,
+        sourceFilter);
   }
 
   private static CxxInferAnalyze createInferAnalyzeRule(

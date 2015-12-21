@@ -25,13 +25,19 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.core.IsEqual;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,6 +65,9 @@ public class MiniAaptTest {
         .build();
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final SourcePathResolver resolver =
+      new SourcePathResolver(
+          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -69,8 +78,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
 
@@ -130,8 +140,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
@@ -168,6 +179,119 @@ public class MiniAaptTest {
     assertTrue(foundElement);
   }
 
+  @Test
+  public void testParsingValuesExcludedFromResMap() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<resources exclude-from-buck-resource-map=\"true\">",
+        "<string name=\"hello\">Hello, <xliff:g id=\"name\">%s</xliff:g>!</string>",
+        "</resources>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        resolver,
+        filesystem,
+        new FakeSourcePath(filesystem, "res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertTrue(definitions.isEmpty());
+  }
+
+  @Test
+  public void testParsingValuesNotExcludedFromResMap() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<resources exclude-from-buck-resource-map=\"false\">",
+        "<string name=\"hello\">Hello, <xliff:g id=\"name\">%s</xliff:g>!</string>",
+        "</resources>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        resolver,
+        filesystem,
+        new FakeSourcePath(filesystem, "res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertEquals(
+        definitions,
+        ImmutableSet.<RDotTxtEntry>of(new FakeRDotTxtEntry(IdType.INT, RType.STRING, "hello")));
+  }
+
+  @Test
+  public void testParsingAndroidDrawables() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\">",
+        "  xmlns:fbui=\"http://schemas.android.com/apk/res-auto\"",
+        "  android:src=\"@drawable/other_bitmap\"",
+        "  >",
+        "</bitmap>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("android_drawable.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        resolver,
+        filesystem,
+        new FakeSourcePath(filesystem, "res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processDrawables(filesystem, Paths.get("android_drawable.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertThat(
+        definitions,
+        IsEqual.equalToObject(
+            ImmutableSet.<RDotTxtEntry>of(
+                new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "android_drawable"))));
+  }
+
+  @Test
+  public void testParsingCustomDrawables() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<app-network xmlns:android=\"http://schemas.android.com/apk/res/android\">",
+        "  xmlns:fbui=\"http://schemas.android.com/apk/res-auto\"",
+        "  fbui:imageUri=\"http://facebook.com\"",
+        "  android:width=\"128px\"",
+        "  android:height=\"128px\"",
+        "  fbui:density=\"160\"",
+        "  >",
+        "</app-network>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("custom_drawable.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        resolver,
+        filesystem,
+        new FakeSourcePath(filesystem, "res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processDrawables(filesystem, Paths.get("custom_drawable.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertThat(
+        definitions,
+        IsEqual.equalToObject(
+            ImmutableSet.<RDotTxtEntry>of(
+                new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "custom_drawable", true))));
+  }
+
   @Test(expected = ResourceParseException.class)
   public void testInvalidResourceType() throws IOException, ResourceParseException {
     ImmutableList<String> lines = ImmutableList.<String>builder().add(
@@ -180,8 +304,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
@@ -199,8 +324,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
@@ -221,8 +347,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     try {
@@ -248,8 +375,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     try {
@@ -275,8 +403,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
@@ -296,8 +425,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(rDotTxt, depRTxt);
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.of(depRTxt));
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
@@ -329,8 +459,9 @@ public class MiniAaptTest {
     filesystem.writeLinesToPath(lines, resource);
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     aapt.processXmlFile(filesystem, resource, ImmutableSet.<RDotTxtEntry>builder());
@@ -351,8 +482,9 @@ public class MiniAaptTest {
         Paths.get("res/values/value.xml~"));
 
     MiniAapt aapt = new MiniAapt(
+        resolver,
         filesystem,
-        Paths.get("res"),
+        new FakeSourcePath(filesystem, "res"),
         Paths.get("R.txt"),
         ImmutableSet.<Path>of());
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable"));
@@ -369,5 +501,35 @@ public class MiniAaptTest {
             new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "nine_patch"),
             new FakeRDotTxtEntry(IdType.INT, RType.TRANSITION, "some_transition")),
         aapt.getResourceCollector().getResources());
+  }
+
+  @Test
+  public void testDotSeparatedResourceNames() throws
+      IOException, XPathExpressionException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<LinearLayout>",
+        "<Button android:id=\"@+id/button1\" ",
+        "android:text=\"@string/com.buckbuild.taskname\" />",
+        "</LinearLayout>")
+        .build();
+
+    Path resource = Paths.get("resource.xml");
+    filesystem.writeLinesToPath(lines, resource);
+
+    MiniAapt aapt = new MiniAapt(
+        resolver,
+        filesystem,
+        new FakeSourcePath(filesystem, "res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+
+    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
+    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
+
+    assertEquals(
+        references.build(),
+        ImmutableSet.<RDotTxtEntry>of(
+            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "com_buckbuild_taskname")));
   }
 }

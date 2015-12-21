@@ -16,6 +16,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -31,25 +32,33 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.Locale;
 
 /**
  * Implementation of {@code AbstractConsoleEventBusListener} for terminals that don't support ansi.
  */
 public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListener {
+  private final Locale locale;
   private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
 
   public SimpleConsoleEventBusListener(
       Console console,
       Clock clock,
-      TestResultSummaryVerbosity summaryVerbosity) {
-    super(console, clock);
+      TestResultSummaryVerbosity summaryVerbosity,
+      Locale locale,
+      Path testLogPath) {
+    super(console, clock, locale);
+    this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.testFormatter = new TestResultFormatter(
         console.getAnsi(),
         console.getVerbosity(),
-        summaryVerbosity);
+        summaryVerbosity,
+        locale,
+        Optional.of(testLogPath));
   }
 
   @Override
@@ -81,6 +90,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         buildFinished,
         getApproximateBuildProgress(),
         lines);
+
+    Optional<String> httpStatus = renderHttpUploads();
+    if (httpStatus.isPresent()) {
+      lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus.get());
+    }
+
     printLines(lines);
   }
 
@@ -138,15 +153,37 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
-      String line = String.format("BUILT %s", finished.getBuildRule().getFullyQualifiedName());
+      String line = String.format(
+          locale,
+          "BUILT %s",
+          finished.getBuildRule().getFullyQualifiedName());
       if (ruleCount.isPresent()) {
         line += String.format(
+            locale,
             " (%d/%d JOBS)",
             numRulesCompleted.get(),
             ruleCount.get());
       }
       console.getStdErr().println(line);
     }
+  }
+
+  @Override
+  @Subscribe
+  public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
+    super.onHttpArtifactCacheShutdownEvent(event);
+
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    logEventPair("HTTP CACHE UPLOAD",
+        renderHttpUploads(),
+        clock.currentTimeMillis(),
+        0L,
+        firstHttpCacheUploadScheduled.get(),
+        httpShutdownEvent,
+        Optional.<Double>absent(),
+        lines);
+
+    printLines(lines);
   }
 
   private void printLines(ImmutableList.Builder<String> lines) {

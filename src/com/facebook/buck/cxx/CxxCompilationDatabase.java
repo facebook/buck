@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -42,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,8 +53,11 @@ import java.util.Set;
 public class CxxCompilationDatabase extends AbstractBuildRule implements HasPostBuildSteps {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
 
+  @AddToRuleKey
   private final CxxPreprocessMode preprocessMode;
+  @AddToRuleKey
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
+  @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
 
   public static CxxCompilationDatabase createCompilationDatabase(
@@ -173,25 +176,22 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       ProjectFilesystem inputFilesystem = preprocessRule.or(compileRule).getProjectFilesystem();
 
       String fileToCompile = inputFilesystem
-          .resolve(getResolver().getPath(inputSourcePath))
+          .resolve(getResolver().getAbsolutePath(inputSourcePath))
           .toString();
-      ImmutableList<String> args = preprocessRule.isPresent() ?
-          compileRule.getCompileCommandCombinedWithPreprocessBuildRule(preprocessRule.get()) :
-          compileRule.getCommand();
-      return new CxxCompilationDatabaseEntry(
-          /* directory */ getProjectFilesystem().resolve(getBuildTarget().getBasePath()).toString(),
+      ImmutableList<String> arguments = compileRule.getCommand(preprocessRule);
+      return CxxCompilationDatabaseEntry.of(
+          inputFilesystem.getRootPath().toString(),
           fileToCompile,
-          args);
+          arguments);
     }
 
     private int writeOutput(
         Iterable<CxxCompilationDatabaseEntry> entries,
         ExecutionContext context) {
-      Gson gson = new Gson();
       try {
         OutputStream outputStream = getProjectFilesystem().newFileOutputStream(
             getPathToOutput());
-        outputStream.write(gson.toJson(entries).getBytes());
+        outputStream.write(context.getObjectMapper().writeValueAsBytes(entries));
         outputStream.close();
       } catch (IOException e) {
         logError(e, context);

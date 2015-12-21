@@ -57,6 +57,10 @@ public class BuildId implements Comparable<BuildId> {
 
   @Override
   public int compareTo(BuildId other) {
+    if (this == other) {
+      return 0;
+    }
+
     if (other == null) {
       return 1;
     }

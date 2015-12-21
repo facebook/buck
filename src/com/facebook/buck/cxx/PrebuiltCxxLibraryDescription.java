@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -32,6 +32,9 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.MacroException;
@@ -203,12 +206,8 @@ public class PrebuiltCxxLibraryDescription
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
-        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        /* includeLexYaccHeaders */ false,
-        ImmutableMap.<String, SourcePath>of(),
-        ImmutableMap.<String, SourcePath>of(),
         parseExportedHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC);
   }
@@ -245,11 +244,10 @@ public class PrebuiltCxxLibraryDescription
    * @return a {@link CxxLink} rule for a shared library version of this prebuilt C/C++ library.
    */
   private <A extends Arg> BuildRule createSharedLibraryBuildRule(
-      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
@@ -272,23 +270,31 @@ public class PrebuiltCxxLibraryDescription
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath = BuildTargets.getGenPath(sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        targetGraph,
         cxxPlatform,
         params,
         pathResolver,
-        /* extraLdFlags */ ImmutableList.<String>of(),
         sharedTarget,
         Linker.LinkType.SHARED,
         Optional.of(soname),
         builtSharedLibraryPath,
-        ImmutableList.<SourcePath>of(
-            new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath)),
-        /* extraInputs */ ImmutableList.<SourcePath>of(),
+        ImmutableList.<com.facebook.buck.rules.args.Arg>builder()
+            .addAll(
+                StringArg.from(
+                    CxxFlags.getFlags(
+                        args.exportedLinkerFlags,
+                        args.exportedPlatformLinkerFlags,
+                        cxxPlatform)))
+            .addAll(
+                cxxPlatform.getLd().linkWhole(
+                    new SourcePathArg(
+                        pathResolver,
+                        new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath))))
+            .build(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
   }
 
   @Override
@@ -296,7 +302,7 @@ public class PrebuiltCxxLibraryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      final A args) {
+      final A args) throws NoSuchBuildTargetException {
     if (args.includeDirs.get().size() > 0) {
       LOG.warn(
           "Build target %s uses `include_dirs` which is deprecated. Use `exported_headers` instead",
@@ -305,16 +311,10 @@ public class PrebuiltCxxLibraryDescription
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
-    Optional<Map.Entry<Flavor, Type>> type;
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform;
-    try {
-      type = LIBRARY_TYPE.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-      platform = cxxPlatforms.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-    }
+    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
+        params.getBuildTarget());
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(
+        params.getBuildTarget());
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the
@@ -329,7 +329,6 @@ public class PrebuiltCxxLibraryDescription
             args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
-            targetGraph,
             params,
             resolver,
             platform.get().getValue(),
@@ -358,6 +357,9 @@ public class PrebuiltCxxLibraryDescription
         params,
         resolver,
         pathResolver,
+        FluentIterable.from(args.exportedDeps.get())
+            .transform(resolver.getRuleFunction())
+            .filter(NativeLinkable.class),
         includeDirs,
         args.libDir,
         args.libName,
@@ -381,10 +383,29 @@ public class PrebuiltCxxLibraryDescription
           }
         },
         args.soname,
-        args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
+        args.linkWithoutSoname.or(false),
+        args.forceStatic.or(false),
         args.headerOnly.or(false),
         args.linkWhole.or(false),
-        args.provided.or(false));
+        args.provided.or(false),
+        new Function<CxxPlatform, Boolean>() {
+          @Override
+          public Boolean apply(CxxPlatform cxxPlatform) {
+            if (args.exportedHeaders.isPresent() && !args.exportedHeaders.get().isEmpty()) {
+              return true;
+            }
+            if (args.exportedPlatformHeaders.isPresent()) {
+              for (SourceList sourceList :
+                   args.exportedPlatformHeaders.get()
+                       .getMatchingValues(cxxPlatform.getFlavor().toString())) {
+                if (!sourceList.isEmpty()) {
+                  return true;
+                }
+              }
+            }
+            return false;
+          }
+        });
   }
 
   @SuppressFieldNotInitialized
@@ -407,7 +428,9 @@ public class PrebuiltCxxLibraryDescription
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
+    public Optional<Boolean> linkWithoutSoname;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   }
 
 }

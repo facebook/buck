@@ -18,10 +18,16 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,7 +37,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -41,16 +50,20 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 public class AppleBinaryDescription
-    implements Description<AppleNativeTargetDescriptionArg>, Flavored {
+    implements Description<AppleBinaryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
+  public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      APP_FLAVOR,
       CxxCompilationDatabase.COMPILATION_DATABASE);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -61,15 +74,25 @@ public class AppleBinaryDescription
   };
 
   private final CxxBinaryDescription delegate;
-
+  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final CxxPlatform defaultCxxPlatform;
+  private final CodeSignIdentityStore codeSignIdentityStore;
+  private final ProvisioningProfileStore provisioningProfileStore;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
-      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      CxxPlatform defaultCxxPlatform,
+      CodeSignIdentityStore codeSignIdentityStore,
+      ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
-    this.platformFlavorsToAppleCxxPlatforms =
-        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
+    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
+    this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.codeSignIdentityStore = codeSignIdentityStore;
+    this.provisioningProfileStore = provisioningProfileStore;
   }
 
   @Override
@@ -78,8 +101,8 @@ public class AppleBinaryDescription
   }
 
   @Override
-  public AppleNativeTargetDescriptionArg createUnpopulatedConstructorArg() {
-    return new AppleNativeTargetDescriptionArg();
+  public AppleBinaryDescription.Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
@@ -106,11 +129,63 @@ public class AppleBinaryDescription
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
+  public <A extends AppleBinaryDescription.Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
+    if (params.getBuildTarget().getFlavors().contains(APP_FLAVOR)) {
+      if (!args.infoPlist.isPresent()) {
+        throw new HumanReadableException(
+            "Cannot create application for apple_binary '%s':\n",
+            "No value specified for 'info_plist' attribute.",
+            params.getBuildTarget().getUnflavoredBuildTarget());
+      }
+      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
+        CxxPlatform cxxPlatform =
+            cxxPlatformFlavorDomain.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+        ApplePlatform applePlatform =
+            Preconditions
+                .checkNotNull(platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor()))
+                .getAppleSdk()
+                .getApplePlatform();
+        if (applePlatform.getAppIncludesFrameworks()) {
+          return resolver.requireRule(
+              BuildTarget.builder(params.getBuildTarget())
+                  .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                  .build());
+        }
+        return resolver.requireRule(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build());
+      }
+      BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();
+      return AppleDescriptions.createAppleBundle(
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          platformFlavorsToAppleCxxPlatforms,
+          targetGraph,
+          params,
+          resolver,
+          codeSignIdentityStore,
+          provisioningProfileStore,
+          binaryTarget,
+          Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP),
+          Optional.<String>absent(),
+          args.infoPlist.get(),
+          args.infoPlistSubstitutions,
+          args.deps.get(),
+          args.getTests());
+    }
+    return createBinary(targetGraph, params, resolver, args);
+  }
+
+  private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) throws NoSuchBuildTargetException {
     Optional<FatBinaryInfo> fatBinaryInfo = FatBinaryInfo.create(
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
@@ -118,26 +193,58 @@ public class AppleBinaryDescription
     if (fatBinaryInfo.isPresent()) {
       return createFatBinaryBuildRule(targetGraph, params, resolver, args, fatBinaryInfo.get());
     } else {
-      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-      AppleDescriptions.populateCxxBinaryDescriptionArg(
-          new SourcePathResolver(resolver),
-          delegateArg,
-          args,
-          params.getBuildTarget());
+      Optional<Path> stubBinaryPath = Optional.absent();
+      Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
+      if (appleCxxPlatform.isPresent() && (!args.srcs.isPresent() || args.srcs.get().isEmpty())) {
+        stubBinaryPath = appleCxxPlatform.get().getStubBinary();
+      }
 
-      return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+      if (stubBinaryPath.isPresent()) {
+        try {
+          return new WriteFile(
+              params,
+              new SourcePathResolver(resolver),
+              Files.readAllBytes(stubBinaryPath.get()),
+              BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
+              true);
+        } catch (IOException e) {
+          throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
+        }
+      } else {
+        CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+        AppleDescriptions.populateCxxBinaryDescriptionArg(
+            new SourcePathResolver(resolver),
+
+            delegateArg,
+            args,
+            params.getBuildTarget());
+
+        return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+      }
     }
+  }
+
+  private Optional<AppleCxxPlatform> getAppleCxxPlatformFromParams(BuildRuleParams params) {
+    Optional<CxxPlatform> cxxPlatform = delegate.getCxxPlatforms()
+        .getValue(params.getBuildTarget());
+
+    AppleCxxPlatform appleCxxPlatform = null;
+    if (cxxPlatform.isPresent()) {
+      appleCxxPlatform = platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.get().getFlavor());
+    }
+
+    return Optional.fromNullable(appleCxxPlatform);
   }
 
   /**
    * Create a fat binary rule.
    */
-  private <A extends AppleNativeTargetDescriptionArg> BuildRule createFatBinaryBuildRule(
+  private <A extends AppleBinaryDescription.Arg> BuildRule createFatBinaryBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
-      FatBinaryInfo fatBinaryInfo) {
+      FatBinaryInfo fatBinaryInfo) throws NoSuchBuildTargetException {
     ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
     for (BuildTarget thinTarget : fatBinaryInfo.getThinTargets()) {
       if (resolver.getRuleOptional(thinTarget).isPresent()) {
@@ -165,4 +272,11 @@ public class AppleBinaryDescription
         inputs,
         BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
   }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AppleNativeTargetDescriptionArg {
+    public Optional<SourcePath> infoPlist;
+    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
+  }
+
 }

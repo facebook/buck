@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -46,6 +46,7 @@ public class BuckCommand extends AbstractContainerCommand {
       @SubCommand(name = "quickstart", impl = QuickstartCommand.class),
       @SubCommand(name = "run", impl = RunCommand.class),
       @SubCommand(name = "server", impl = ServerCommand.class),
+      @SubCommand(name = "simulate", impl = SimulateCommand.class),
       @SubCommand(name = "targets", impl = TargetsCommand.class),
       @SubCommand(name = "test", impl = TestCommand.class),
       @SubCommand(name = "uninstall", impl = UninstallCommand.class),

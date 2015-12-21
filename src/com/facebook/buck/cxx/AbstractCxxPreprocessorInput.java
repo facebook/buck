@@ -18,8 +18,10 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -70,11 +72,11 @@ abstract class AbstractCxxPreprocessorInput {
         }
       };
 
-  public static final Function<CxxPreprocessorInput, ImmutableSet<Path>> GET_FRAMEWORK_ROOTS =
-      new Function<CxxPreprocessorInput, ImmutableSet<Path>>() {
+  public static final Function<CxxPreprocessorInput, ImmutableSet<FrameworkPath>> GET_FRAMEWORKS =
+      new Function<CxxPreprocessorInput, ImmutableSet<FrameworkPath>>() {
         @Override
-        public ImmutableSet<Path> apply(CxxPreprocessorInput input) {
-          return input.getFrameworkRoots();
+        public ImmutableSet<FrameworkPath> apply(CxxPreprocessorInput input) {
+          return input.getFrameworks();
         }
       };
 
@@ -103,9 +105,31 @@ abstract class AbstractCxxPreprocessorInput {
   @Value.Parameter
   public abstract Set<Path> getHeaderMaps();
 
-  // Directories where frameworks are stored.
+  // Framework paths.
   @Value.Parameter
-  public abstract Set<Path> getFrameworkRoots();
+  public abstract Set<FrameworkPath> getFrameworks();
+
+  @Value.Check
+  protected void validateAssumptions() {
+    for (Path root : getIncludeRoots()) {
+      Preconditions.checkState(
+          root.isAbsolute(),
+          "Expected include root to be absolute: %s",
+          root);
+    }
+    for (Path root : getSystemIncludeRoots()) {
+      Preconditions.checkState(
+          root.isAbsolute(),
+          "Expected system include root to be absolute: %s",
+          root);
+    }
+    for (Path map : getHeaderMaps()) {
+      Preconditions.checkState(
+          map.isAbsolute(),
+          "Expected header map path to be absolute: %s",
+          map);
+    }
+  }
 
   public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
@@ -119,7 +143,7 @@ abstract class AbstractCxxPreprocessorInput {
     ImmutableSet.Builder<Path> includeRoots = ImmutableSet.builder();
     ImmutableSet.Builder<Path> systemIncludeRoots = ImmutableSet.builder();
     ImmutableSet.Builder<Path> headerMaps = ImmutableSet.builder();
-    ImmutableSet.Builder<Path> frameworkRoots = ImmutableSet.builder();
+    ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
@@ -133,7 +157,7 @@ abstract class AbstractCxxPreprocessorInput {
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
       headerMaps.addAll(input.getHeaderMaps());
-      frameworkRoots.addAll(input.getFrameworkRoots());
+      frameworks.addAll(input.getFrameworks());
     }
 
     return CxxPreprocessorInput.of(
@@ -146,7 +170,7 @@ abstract class AbstractCxxPreprocessorInput {
         includeRoots.build(),
         systemIncludeRoots.build(),
         headerMaps.build(),
-        frameworkRoots.build());
+        frameworks.build());
   }
 
 }

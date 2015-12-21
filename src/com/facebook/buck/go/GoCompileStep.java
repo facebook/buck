@@ -21,11 +21,13 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
 public class GoCompileStep extends ShellStep {
 
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compilerCommandPrefix;
   private final Path packageName;
   private final ImmutableList<String> flags;
@@ -35,6 +37,7 @@ public class GoCompileStep extends ShellStep {
 
   public GoCompileStep(
       Path workingDirectory,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> compilerCommandPrefix,
       ImmutableList<String> flags,
       Path packageName,
@@ -42,6 +45,7 @@ public class GoCompileStep extends ShellStep {
       ImmutableList<Path> includeDirectories,
       Path output) {
     super(workingDirectory);
+    this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;
     this.packageName = packageName;
@@ -74,6 +78,11 @@ public class GoCompileStep extends ShellStep {
             }));
 
     return commandBuilder.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return environment;
   }
 
   @Override

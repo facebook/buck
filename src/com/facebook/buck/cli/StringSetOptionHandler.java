@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
@@ -29,7 +28,6 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -77,16 +75,8 @@ public class StringSetOptionHandler extends OptionHandler<Supplier<ImmutableSet<
       if (param.charAt(0) == '-') {
         break;
       }
-      Iterator<String> values = Splitter.on(' ')
-          .trimResults()
-          .omitEmptyStrings()
-          .split(param)
-          .iterator();
-      if (values.hasNext()) {
-        hasValues = true;
-        builder.addAll(values);
-      }
-
+      hasValues = true;
+      builder.add(param);
       counter++;
     }
 

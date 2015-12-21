@@ -24,14 +24,15 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -118,7 +119,7 @@ public class AndroidBinaryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     ResourceCompressionMode compressionMode = getCompressionMode(args);
 
     BuildTarget target = params.getBuildTarget();
@@ -175,11 +176,11 @@ public class AndroidBinaryDescription
         new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
 
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        targetGraph,
         params,
         resolver,
         compressionMode,
         resourceFilter,
+        args.resourceUnionPackage,
         addFallbackLocales(args.locales.or(ImmutableSet.<String>of())),
         args.manifest,
         packageType,
@@ -249,8 +250,8 @@ public class AndroidBinaryDescription
         exopackageModes,
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
-            resolver,
-            params.getProjectFilesystem()),
+            params.getCellRoots(),
+            resolver),
         args.preprocessJavaClassesBash,
         rulesToExcludeFromDex,
         result,
@@ -349,6 +350,7 @@ public class AndroidBinaryDescription
     public Optional<SourcePath> secondaryDexTailClassesFile;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
+    public Optional<String> resourceUnionPackage;
     public Optional<ImmutableSet<String>> locales;
     public Optional<Boolean> buildStringSourceMap;
     public Optional<Set<TargetCpuType>> cpuFilters;

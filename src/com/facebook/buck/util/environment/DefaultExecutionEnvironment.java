@@ -15,37 +15,33 @@
  */
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.network.HostnameFetching;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.sun.management.OperatingSystemMXBean;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
-  private static final String HARDWARE_PORT_WI_FI = "Hardware Port: Wi-Fi";
-  private static final Pattern DEVICE_PATTERN = Pattern.compile("Device: (\\w*)");
-  private static final Pattern SSID_PATTERN =
-      Pattern.compile("Current Wi\\-Fi Network: (.*)$", Pattern.MULTILINE);
   private static final long  MEGABYTE = 1024L * 1024L;
+
+  // Buck's own integration tests will run with this system property
+  // set to false.
+  //
+  // Otherwise, we would need to add libjcocoa.dylib to
+  // java.library.path, which could interfere with external Java
+  // tests' own C library dependencies.
+  private static final boolean ENABLE_OBJC = Boolean.getBoolean("buck.enable_objc");
   private final Platform platform;
-  private final ProcessExecutor processExecutor;
   private final ImmutableMap<String, String> environment;
   private final Properties properties;
 
   public DefaultExecutionEnvironment(
-      ProcessExecutor processExecutor,
       ImmutableMap<String, String> environment,
       Properties properties) {
     this.platform = Platform.detect();
-    this.processExecutor = processExecutor;
     this.environment = environment;
     this.properties = properties;
   }
@@ -85,27 +81,9 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public Optional<String> getWifiSsid() throws InterruptedException {
-    // TODO(royw): Support Linux and Windows.
-    if (getPlatform().equals(Platform.MACOS)) {
-      try {
-        ProcessExecutor.Result allNetworksResult = this.processExecutor.execute(
-            Runtime.getRuntime().exec("networksetup -listallhardwareports"));
-
-        if (allNetworksResult.getExitCode() == 0) {
-          String allNetworks = allNetworksResult.getStdout().get();
-          Optional<String> wifiNetwork = parseNetworksetupOutputForWifi(allNetworks);
-          if (wifiNetwork.isPresent()) {
-            ProcessExecutor.Result wifiNameResult = this.processExecutor.execute(
-                Runtime.getRuntime().exec("networksetup -getairportnetwork " + wifiNetwork.get()));
-
-            if (wifiNameResult.getExitCode() == 0) {
-              return parseWifiSsid(wifiNameResult.getStdout().get());
-            }
-          }
-        }
-      } catch (IOException e) {
-        return Optional.absent();
-      }
+    // TODO(rowillia): Support Linux and Windows.
+    if (ENABLE_OBJC) {
+      return MacWifiSsidFinder.findCurrentSsid();
     }
     return Optional.absent();
   }
@@ -119,35 +97,5 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   @Override
   public String getProperty(String key, String defaultValue) {
     return properties.getProperty(key, defaultValue);
-  }
-
-  @VisibleForTesting
-  static Optional<String> parseNetworksetupOutputForWifi(String listAllHardwareOutput) {
-    Iterable<String> lines = Splitter.on("\n")
-        .trimResults()
-        .omitEmptyStrings()
-        .split(listAllHardwareOutput);
-
-    boolean foundWifiLine = false;
-    for (String line : lines) {
-      if (line.equals(HARDWARE_PORT_WI_FI)) {
-        foundWifiLine = true;
-      } else if (foundWifiLine) {
-        Matcher match = DEVICE_PATTERN.matcher(line);
-        if (match.matches()) {
-          return Optional.of(match.group(1));
-        }
-      }
-    }
-    return Optional.absent();
-  }
-
-  @VisibleForTesting
-  static Optional<String> parseWifiSsid(String getAirportOutput) {
-    Matcher match = SSID_PATTERN.matcher(getAirportOutput);
-    if (match.find()) {
-      return Optional.of(match.group(1));
-    }
-    return Optional.absent();
   }
 }

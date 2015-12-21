@@ -203,7 +203,7 @@ public final class FileTypes {
           .put("sit", "archive.stuffit")
           .put("storyboard", "file.storyboard")
           .put("strings", "text.plist.strings")
-          .put("stringsdict", "text.plist.stringsdict")
+          .put("stringsdict", "file.bplist")
           .put("tar", "archive.tar")
           .put("tbd", "sourcecode.text-based-dylib-definition")
           .put("tcc", "sourcecode.cpp.cpp")

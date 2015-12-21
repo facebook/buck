@@ -18,12 +18,9 @@ package com.facebook.buck.file;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 
 import org.easymock.EasyMock;
@@ -43,7 +40,7 @@ public class HttpDownloaderTest {
   private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
   @Test
-  public void shouldThrowAnExceptionIfTheStatusCodeIsNot200()
+  public void shouldReturnFalseIfTheStatusCodeIsNot200()
       throws IOException, URISyntaxException {
     final HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
     EasyMock.expect(connection.getResponseCode()).andStubReturn(HTTP_FORBIDDEN);
@@ -57,12 +54,8 @@ public class HttpDownloaderTest {
             return connection;
           }
         };
-    try {
-      downloader.fetch(eventBus, new URI("http://example.com"), neverUsed);
-      fail();
-    } catch (HumanReadableException e) {
-      assertTrue(e.getMessage().contains("Unable to download"));
-    }
+    boolean result = downloader.fetch(eventBus, new URI("http://example.com"), neverUsed);
+    assertFalse(result);
 
     EasyMock.verify(connection);
   }

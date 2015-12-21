@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -39,7 +40,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of(""));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -58,7 +59,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of("[\"bar\",\"biz\",\"baz\"]"));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(buildTarget,
         projectFilesystem);
     assertThat(
@@ -76,7 +77,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of("[]"));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(buildTarget,
         projectFilesystem);
     assertThat(
@@ -94,7 +95,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of(""));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -113,7 +114,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of("Some Invalid Json"));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -133,7 +134,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of(hash));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -152,7 +153,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of(""));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -171,7 +172,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of("Not A Valid Hash"));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -192,7 +193,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of(key));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -212,7 +213,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of(""));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
@@ -232,7 +233,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of("Not A Valid Rule Key"));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);

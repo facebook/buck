@@ -21,6 +21,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
@@ -42,6 +44,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
 
   @Override
   public SourcePath coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
@@ -52,12 +55,14 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
             ((String) object).startsWith("@"))) {
       BuildTarget buildTarget =
           buildTargetTypeCoercer.coerce(
+              cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               object);
       return new BuildTargetSourcePath(buildTarget);
     } else {
       Path path = pathTypeCoercer.coerce(
+          cellRoots,
           filesystem,
           pathRelativeToProjectRoot,
           object);

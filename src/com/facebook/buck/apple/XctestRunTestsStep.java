@@ -24,12 +24,15 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Runs {@code xctest} on logic or application tests paired with a host.
@@ -42,22 +45,28 @@ public class XctestRunTestsStep implements Step {
   private static final Logger LOG = Logger.get(XctestRunTestsStep.class);
 
   private final ProjectFilesystem filesystem;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> xctest;
   private final String testArgument; // -XCTest or -SenTest
   private final Path logicTestBundlePath;
   private final Path outputPath;
+  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
 
   public XctestRunTestsStep(
       ProjectFilesystem filesystem,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> xctest,
       String testArgument,
       Path logicTestBundlePath,
-      Path outputPath) {
+      Path outputPath,
+      Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
     this.filesystem = filesystem;
+    this.environment = environment;
     this.xctest = xctest;
     this.testArgument = testArgument;
     this.logicTestBundlePath = logicTestBundlePath;
     this.outputPath = outputPath;
+    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
   }
 
   @Override
@@ -75,12 +84,19 @@ public class XctestRunTestsStep implements Step {
   }
 
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
-    ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
+    Map<String, String> environment = new HashMap<>();
     environment.putAll(context.getEnvironment());
+    Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
+    if (xcodeDeveloperDir.isPresent()) {
+      environment.put("DEVELOPER_DIR", xcodeDeveloperDir.get().toString());
+    } else {
+      throw new RuntimeException("Cannot determine xcode developer dir");
+    }
+    environment.putAll(this.environment);
     // if (appTestHostAppPath.isPresent()) {
     //   TODO(grp): Pass XCBundleInjection environment.
     // }
-    return environment.build();
+    return ImmutableMap.copyOf(environment);
   }
 
   @Override

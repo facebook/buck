@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
@@ -69,7 +70,7 @@ public class PublisherIntegrationTest {
     File jar = artifactDir.resolve(String.format(fileNameTemplate, extension)).toFile();
     File pom = artifactDir.resolve(String.format(fileNameTemplate, "pom")).toFile();
 
-    publisher.publish(groupId, artifactName, version, jar, pom);
+    publisher.publish(groupId, artifactName, version, ImmutableList.of(jar, pom));
 
     List<String> putRequestsInvoked = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertFalse(putRequestsInvoked.isEmpty());

@@ -28,6 +28,7 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -59,6 +60,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -139,6 +141,7 @@ public class AdbHelper {
    */
   @Nullable
   @VisibleForTesting
+  @SuppressForbidden
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
       console.printBuildFailure("No devices are found.");
@@ -237,6 +240,7 @@ public class AdbHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
+  @SuppressForbidden
   public List<IDevice> getDevices(boolean quiet) throws InterruptedException {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
@@ -286,6 +290,7 @@ public class AdbHelper {
    *  devices will be used to install the apk if needed.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
+  @SuppressForbidden
   public boolean adbCall(
       AdbCallable adbCallable,
       boolean quiet) throws InterruptedException {
@@ -517,8 +522,9 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
+  @SuppressForbidden
   public boolean installApk(
-      InstallableApk installableApk,
+      final InstallableApk installableApk,
       final boolean installViaSd,
       final boolean quiet) throws InterruptedException {
     Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
@@ -534,7 +540,8 @@ public class AdbHelper {
       getBuckEventBus().post(started);
     }
 
-    final File apk = installableApk.getApkPath().toFile();
+    final File apk = installableApk.getProjectFilesystem().resolve(
+        installableApk.getApkPath()).toFile();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
@@ -543,8 +550,9 @@ public class AdbHelper {
           }
 
           @Override
+          @SuppressForbidden
           public String toString() {
-            return "install apk";
+            return String.format("install apk %s", installableApk.getBuildTarget().toString());
           }
         },
         quiet);
@@ -562,6 +570,7 @@ public class AdbHelper {
    * Installs apk on specific device. Reports success or failure to console.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
+  @SuppressForbidden
   public boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd, boolean quiet) {
     String name;
     if (device.isEmulator()) {
@@ -601,6 +610,7 @@ public class AdbHelper {
   }
 
   @VisibleForTesting
+  @SuppressForbidden
   protected boolean isDeviceTempWritable(IDevice device, String name) {
     StringBuilder loggingInfo = new StringBuilder();
     try {
@@ -615,7 +625,7 @@ public class AdbHelper {
             output.matches("\\Adrwx....-x +[0-9]+ +shell +shell.* /data/local/tmp[\\r\\n]*\\z"))) {
           loggingInfo.append(
               String.format(
-                  java.util.Locale.ENGLISH,
+                  Locale.ENGLISH,
                   "Bad ls output for /data/local/tmp: '%s'\n",
                   output));
         }
@@ -625,7 +635,7 @@ public class AdbHelper {
         if (!output.matches("\\Aexo[\\r\\n]*\\z")) {
           loggingInfo.append(
               String.format(
-                  java.util.Locale.ENGLISH,
+                  Locale.ENGLISH,
                   "Bad echo/cat output for /data/local/tmp: '%s'\n",
                   output));
         }
@@ -634,7 +644,7 @@ public class AdbHelper {
       } catch (CommandFailedException e) {
         loggingInfo.append(
             String.format(
-                java.util.Locale.ENGLISH,
+                Locale.ENGLISH,
                 "Failed (%d) '%s':\n%s\n",
                 e.exitCode,
                 e.command,
@@ -680,6 +690,7 @@ public class AdbHelper {
   /**
    * Installs apk on device, copying apk to external storage first.
    */
+  @SuppressForbidden
   private String deviceInstallPackageViaSd(IDevice device, String apk) {
     try {
       // Figure out where the SD card is mounted.
@@ -719,12 +730,14 @@ public class AdbHelper {
     return value;
   }
 
+  @SuppressForbidden
   public int startActivity(
       InstallableApk installableApk,
       @Nullable String activity) throws IOException, InterruptedException {
 
     // Might need the package name and activities from the AndroidManifest.
-    Path pathToManifest = installableApk.getManifestPath();
+    Path pathToManifest = installableApk.getProjectFilesystem().resolve(
+        installableApk.getManifestPath());
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
         pathToManifest, installableApk.getProjectFilesystem());
 
@@ -784,6 +797,7 @@ public class AdbHelper {
 
   @VisibleForTesting
   @Nullable
+  @SuppressForbidden
   String deviceStartActivity(IDevice device, String activityToRun) {
     try {
       AdbHelper.ErrorParsingReceiver receiver = new AdbHelper.ErrorParsingReceiver() {
@@ -844,6 +858,7 @@ public class AdbHelper {
    * {@link com.facebook.buck.cli.UninstallCommand}.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
+  @SuppressForbidden
   private boolean uninstallApkFromDevice(IDevice device, String packageName, boolean keepData) {
     String name;
     if (device.isEmulator()) {
@@ -898,7 +913,7 @@ public class AdbHelper {
         @Override
         @Nullable
         protected String matchForError(String line) {
-          return line.toLowerCase().contains("failure") ? line : null;
+          return line.toLowerCase(Locale.US).contains("failure") ? line : null;
         }
       };
       device.executeShellCommand(
@@ -917,7 +932,8 @@ public class AdbHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
-    Path pathToManifest = androidBinaryRule.getManifestPath();
+    Path pathToManifest = androidBinaryRule.getProjectFilesystem().resolve(
+        androidBinaryRule.getManifestPath());
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file
     // and the rule has not been built yet.
@@ -938,7 +954,8 @@ public class AdbHelper {
 
   public static String tryToExtractInstrumentationTestRunnerFromManifest(
       InstallableApk androidBinaryRule) {
-    Path pathToManifest = androidBinaryRule.getManifestPath();
+    Path pathToManifest = androidBinaryRule.getProjectFilesystem().resolve(
+        androidBinaryRule.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
       throw new HumanReadableException(

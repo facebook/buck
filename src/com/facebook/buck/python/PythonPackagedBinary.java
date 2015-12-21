@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -48,9 +47,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final Tool builder;
   @AddToRuleKey
   private final ImmutableList<String> buildArgs;
-  private final Path pathToPexExecuter;
-  @AddToRuleKey
-  private final String pexExtension;
+  private final Tool pathToPexExecuter;
   @AddToRuleKey
   private final String mainModule;
   @AddToRuleKey
@@ -62,19 +59,19 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   protected PythonPackagedBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      PythonPlatform pythonPlatform,
       Tool builder,
       ImmutableList<String> buildArgs,
-      Path pathToPexExecuter,
+      Tool pathToPexExecuter,
       String pexExtension,
       PythonEnvironment pythonEnvironment,
       String mainModule,
       PythonPackageComponents components,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
-    super(params, resolver, mainModule, components);
+    super(params, resolver, pythonPlatform, mainModule, components, pexExtension);
     this.builder = builder;
     this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;
-    this.pexExtension = pexExtension;
     this.pythonEnvironment = pythonEnvironment;
     this.mainModule = mainModule;
     this.components = components;
@@ -86,19 +83,9 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     return OUTPUT_TYPE;
   }
 
-  public Path getBinPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s" + pexExtension);
-  }
-
-  @Override
-  public Path getPathToOutput() {
-    return getBinPath();
-  }
-
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new PathSourcePath(getProjectFilesystem(), pathToPexExecuter))
+    return new CommandTool.Builder(pathToPexExecuter)
         .addArg(new BuildTargetSourcePath(getBuildTarget(), getBinPath()))
         .build();
   }
@@ -122,6 +109,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     steps.add(
         new PexStep(
             getProjectFilesystem(),
+            builder.getEnvironment(getResolver()),
             ImmutableList.<String>builder()
                 .addAll(builder.getCommandPrefix(getResolver()))
                 .addAll(buildArgs)
@@ -133,7 +121,8 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             getResolver().getMappedPaths(components.getModules()),
             getResolver().getMappedPaths(components.getResources()),
             getResolver().getMappedPaths(components.getNativeLibraries()),
-            ImmutableSet.copyOf(getResolver().getAllPaths(components.getPrebuiltLibraries())),
+            ImmutableSet.copyOf(
+                getResolver().deprecatedAllPaths(components.getPrebuiltLibraries())),
             components.isZipSafe().or(true)));
 
     // Record the executable package for caching.

@@ -43,6 +43,32 @@ cxx_library(
   srcs = [
     'foo.c',
   ],
+  deps = [
+    ':bar',
+  ],
+)
+
+cxx_library(
+  name = 'bar',
+  headers = [
+    'bar.h',
+  ],
+  srcs = [
+    'bar.c',
+  ],
+  deps = [
+    ':func',
+  ],
+)
+
+cxx_library(
+  name = 'func',
+  headers = [
+    'func.h',
+  ],
+  srcs = [
+    'func.c',
+  ],
 )
 
 python_binary(
@@ -52,6 +78,11 @@ python_binary(
     ':lib',
     ':extra',
   ],
+)
+
+sh_binary(
+  name = 'pex_tool',
+  main = 'pex_tool.sh',
 )
 
 genrule(

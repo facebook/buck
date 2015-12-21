@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -122,7 +122,7 @@ public class SplitZipStepTest {
             /* useLinearAllocSplitDex */ true,
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("List"),
-            Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
+            Optional.<SourcePath>of(new FakeSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
             /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
@@ -214,7 +214,7 @@ public class SplitZipStepTest {
             /* useLinearAllocSplitDex */ true,
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
-            Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
+            Optional.<SourcePath>of(new FakeSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
             /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),

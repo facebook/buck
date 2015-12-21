@@ -20,12 +20,15 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -39,19 +42,19 @@ public class BuildRuleParams {
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
   private final ProjectFilesystem projectFilesystem;
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private final Function<Optional<String>, Path> cellRoots;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
       final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
       ProjectFilesystem projectFilesystem,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      Function<Optional<String>, Path> cellRoots) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
-    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+    this.cellRoots = cellRoots;
 
     this.totalDeps = Suppliers.memoize(
         new Supplier<ImmutableSortedSet<BuildRule>>() {
@@ -109,7 +112,7 @@ public class BuildRuleParams {
         declaredDeps,
         extraDeps,
         projectFilesystem,
-        ruleKeyBuilderFactory);
+        cellRoots);
   }
 
   public BuildRuleParams withoutFlavor(Flavor flavor) {
@@ -146,6 +149,10 @@ public class BuildRuleParams {
     return buildTarget;
   }
 
+  public Function<Optional<String>, Path> getCellRoots() {
+    return cellRoots;
+  }
+
   public ImmutableSortedSet<BuildRule> getDeps() {
     return totalDeps.get();
   }
@@ -164,10 +171,6 @@ public class BuildRuleParams {
 
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
-  }
-
-  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
-    return ruleKeyBuilderFactory;
   }
 
 }

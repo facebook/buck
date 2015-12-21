@@ -23,8 +23,10 @@ import static org.hamcrest.Matchers.containsString;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -74,6 +76,27 @@ public class MainIntegrationTest {
         .assertSuccess();
   }
 
+  @Test
+  public void testConfigRemoval() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "includes_removals", tmp);
+    workspace.setUp();
+    // BUCK file defines `ide` as idea, now lets switch to undefined one!
+    // It should produce exception as we want explicit ide setting.
+    try {
+      workspace.runBuckCommand("project", "--config", "project.ide=");
+    } catch (HumanReadableException e) {
+      assertThat(e.getHumanReadableErrorMessage(),
+          Matchers.stringContainsInOrder(
+              "Please specify ide using --ide option " +
+                  "or set ide in .buckconfig"));
+    } catch (Exception e) {
+      // other exceptions are not expected
+      throw e;
+    }
+  }
+
+
   private String getUsageString() {
     return Joiner.on('\n').join(
         "buck build tool",
@@ -94,6 +117,7 @@ public class MainIntegrationTest {
         "  quickstart  generates a default project directory",
         "  run         runs a target as a command",
         "  server      query and control the http server",
+        "  simulate    timed simulation of a build without running the steps",
         "  targets     prints the list of buildable targets",
         "  test        builds and runs the tests for the specified target",
         "  uninstall   uninstalls an APK",

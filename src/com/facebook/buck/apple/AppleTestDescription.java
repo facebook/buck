@@ -20,44 +20,55 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,6 +84,7 @@ public class AppleTestDescription implements
    */
   private static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
   private static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
+  private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       LIBRARY_FLAVOR, BUNDLE_FLAVOR);
@@ -90,7 +102,9 @@ public class AppleTestDescription implements
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
-  private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
+  private final CodeSignIdentityStore codeSignIdentityStore;
+  private final ProvisioningProfileStore provisioningProfileStore;
+  private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -99,7 +113,9 @@ public class AppleTestDescription implements
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities) {
+      CodeSignIdentityStore codeSignIdentityStore,
+      ProvisioningProfileStore provisioningProfileStore,
+      Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.appleConfig = appleConfig;
     this.appleBundleDescription = appleBundleDescription;
     this.appleLibraryDescription = appleLibraryDescription;
@@ -107,7 +123,9 @@ public class AppleTestDescription implements
     this.platformFlavorsToAppleCxxPlatforms =
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.allValidCodeSignIdentities = allValidCodeSignIdentities;
+    this.codeSignIdentityStore = codeSignIdentityStore;
+    this.provisioningProfileStore = provisioningProfileStore;
+    this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
   }
 
   @Override
@@ -131,7 +149,7 @@ public class AppleTestDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     String extension = args.extension.isLeft() ?
         args.extension.getLeft().toFileExtension() :
         args.extension.getRight();
@@ -158,18 +176,13 @@ public class AppleTestDescription implements
       extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
     }
 
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatformFlavorDomain
-          .getValue(params.getBuildTarget().getFlavors())
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
-    }
+    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain
+        .getValue(params.getBuildTarget())
+        .or(defaultCxxPlatform);
 
     Optional<AppleBundle> testHostApp;
     Optional<SourcePath> testHostAppBinarySourcePath;
-    ImmutableSet<BuildRule> blacklist;
+    ImmutableSet<BuildTarget> blacklist;
     if (args.testHostApp.isPresent()) {
       TargetNode<?> testHostAppNode = targetGraph.get(args.testHostApp.get());
       Preconditions.checkNotNull(testHostAppNode);
@@ -205,18 +218,17 @@ public class AppleTestDescription implements
                               resolver,
                               testHostAppNode.getExtraDeps()))),
                   resolver,
-                  testHostAppDescription));
+                  testHostAppDescription).getAppleBundle());
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
           new BuildTargetSourcePath(testHostAppDescription.binary));
 
-      Pair<MutableDirectedGraph<BuildRule>, Map<BuildTarget, Linker.LinkableDepType>>
-          transitiveDependencies = NativeLinkables.getTransitiveNativeLinkableInput(
-            cxxPlatform,
-            testHostApp.get().getBinary().get().getDeps(),
-            Linker.LinkableDepType.STATIC,
-            Predicates.alwaysTrue());
-
-      blacklist = ImmutableSet.copyOf(transitiveDependencies.getFirst().getNodes());
+      ImmutableMap<BuildTarget, NativeLinkable> roots =
+          NativeLinkables.getNativeLinkableRoots(
+              testHostApp.get().getBinary().get().getDeps(),
+              Predicates.alwaysTrue());
+      ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+          NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, roots.values());
+      blacklist = ImmutableSet.copyOf(nativeLinkables.keySet());
     } else {
       testHostApp = Optional.absent();
       testHostAppBinarySourcePath = Optional.absent();
@@ -224,7 +236,6 @@ public class AppleTestDescription implements
     }
 
     BuildRule library = appleLibraryDescription.createBuildRule(
-        targetGraph,
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget())
                 .addAllFlavors(extraFlavorsBuilder.build())
@@ -284,7 +295,7 @@ public class AppleTestDescription implements
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
-    AppleBundle bundle = new AppleBundle(
+    BuildRule bundle = new AppleBundle(
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
             // We have to add back the original deps here, since they're likely
@@ -308,6 +319,7 @@ public class AppleTestDescription implements
             params.getExtraDeps()),
         sourcePathResolver,
         args.extension,
+        args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions.get(),
         Optional.of(library),
@@ -315,30 +327,66 @@ public class AppleTestDescription implements
         resourceDirs,
         resourceFiles,
         dirsContainingResourceDirsBuilder.build(),
-        ImmutableSet.<SourcePath>of(),
+        ImmutableMap.<SourcePath, String>of(),
         Optional.of(resourceVariantFiles),
-        appleCxxPlatform.getIbtool(),
-        appleCxxPlatform.getDsymutil(),
-        appleCxxPlatform.getCxxPlatform().getStrip(),
+        ImmutableSet.<SourcePath>of(),
+        appleCxxPlatform,
         assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
-        appleCxxPlatform.getAppleSdk(),
-        allValidCodeSignIdentities,
-        args.provisioningProfileSearchPath,
-        AppleBundle.DebugInfoFormat.NONE);
+        codeSignIdentityStore,
+        provisioningProfileStore);
 
 
-    Optional<BuildRule> xctoolZipBuildRule;
+    // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
+    // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
+    // can use that directly.
+    Optional<SourcePath> xctool;
     if (appleConfig.getXctoolZipTarget().isPresent()) {
-      xctoolZipBuildRule = Optional.of(
-          resolver.getRule(appleConfig.getXctoolZipTarget().get()));
+      final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
+      BuildTarget unzipXctoolTarget =
+          BuildTarget.builder(xctoolZipBuildRule.getBuildTarget())
+              .addFlavors(UNZIP_XCTOOL_FLAVOR)
+              .build();
+      final Path outputDirectory = BuildTargets.getGenPath(unzipXctoolTarget, "%s/unzipped");
+      if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
+        BuildRuleParams unzipXctoolParams =
+            params.copyWithChanges(
+                unzipXctoolTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        resolver.addToIndex(
+            new AbstractBuildRule(unzipXctoolParams, sourcePathResolver) {
+              @Override
+              public ImmutableList<Step> getBuildSteps(
+                  BuildContext context,
+                  BuildableContext buildableContext) {
+                buildableContext.recordArtifact(outputDirectory);
+                return ImmutableList.of(
+                    new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory),
+                    new UnzipStep(
+                        getProjectFilesystem(),
+                        Preconditions.checkNotNull(xctoolZipBuildRule.getPathToOutput()),
+                        outputDirectory));
+              }
+              @Override
+              public Path getPathToOutput() {
+                return outputDirectory;
+              }
+            });
+      }
+      xctool =
+          Optional.<SourcePath>of(
+              new BuildTargetSourcePath(unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
+    } else if (appleConfig.getXctoolPath().isPresent()) {
+      xctool =
+          Optional.<SourcePath>of(
+              new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
     } else {
-      xctoolZipBuildRule = Optional.absent();
+      xctool = Optional.absent();
     }
 
     return new AppleTest(
-        appleConfig.getXctoolPath(),
-        xctoolZipBuildRule,
+        xctool,
         appleConfig.getXctoolStutterTimeoutMs(),
         appleCxxPlatform.getXctest(),
         appleCxxPlatform.getOtest(),
@@ -355,14 +403,19 @@ public class AppleTestDescription implements
         extension,
         args.contacts.get(),
         args.labels.get(),
-        args.getRunTestSeparately());
+        args.getRunTestSeparately(),
+        xcodeDeveloperDirectorySupplier,
+        appleConfig.getTestLogDirectoryEnvironmentVariable(),
+        appleConfig.getTestLogLevelEnvironmentVariable(),
+        appleConfig.getTestLogLevel());
   }
 
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       AppleTestDescription.Arg constructorArg) {
-    // TODO(user, coneko): This should technically only be a runtime dependency;
+    // TODO(bhamiltoncx, Coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to
     // the bundle and test rule.
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
@@ -386,7 +439,7 @@ public class AppleTestDescription implements
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
-    public Optional<SourcePath> provisioningProfileSearchPath;
+    public Optional<String> productName;
 
     public Optional<ImmutableMap<String, String>> destinationSpecifier;
 

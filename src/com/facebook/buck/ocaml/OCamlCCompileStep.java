@@ -19,6 +19,8 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
@@ -33,46 +35,12 @@ import java.nio.file.Path;
  */
 public class OCamlCCompileStep extends ShellStep {
 
-  public static class Args implements RuleKeyAppendable {
-    public final Path ocamlCompiler;
-    public final ImmutableList<String> cCompiler;
-    public final ImmutableList<String> flags;
-    public final Path output;
-    public final Path input;
-    private final ImmutableMap<Path, SourcePath> includes;
-
-    public Args(
-        ImmutableList<String> cCompiler,
-        Path ocamlCompiler,
-        Path output,
-        Path input,
-        ImmutableList<String> flags,
-        ImmutableMap<Path, SourcePath> includes) {
-      this.cCompiler = cCompiler;
-      this.ocamlCompiler = ocamlCompiler;
-      this.output = output;
-      this.input = input;
-      this.flags = flags;
-      this.includes = includes;
-    }
-
-    @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      builder.setReflectively("cCompiler", cCompiler);
-      builder.setReflectively("ocamlCompiler", ocamlCompiler);
-      // TODO(user): Ensure that this is not an absolute path.
-      builder.setReflectively("output", output.toString());
-      builder.setReflectively("input", input);
-      builder.setReflectively("flags", flags);
-      builder.setReflectively("includes", includes);
-      return builder;
-    }
-  }
-
+  private final SourcePathResolver resolver;
   private final Args args;
 
-  OCamlCCompileStep(Path workingDirectory, Args args) {
+  OCamlCCompileStep(SourcePathResolver resolver, Path workingDirectory, Args args) {
     super(workingDirectory);
+    this.resolver = resolver;
     this.args = args;
   }
 
@@ -84,7 +52,7 @@ public class OCamlCCompileStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(args.ocamlCompiler.toString())
+        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
         .add("-cc", args.cCompiler.get(0))
         .addAll(
@@ -99,8 +67,51 @@ public class OCamlCCompileStep extends ShellStep {
         .add("-ccopt", "-Wextra")
         .add("-ccopt", String.format("-o %s", args.output.toString()))
         .addAll(args.flags)
-        .add(args.input.toString())
+        .add(resolver.getAbsolutePath(args.input).toString())
         .build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return args.environment;
+  }
+
+  public static class Args implements RuleKeyAppendable {
+    public final ImmutableMap<String, String> environment;
+    public final Tool ocamlCompiler;
+    public final ImmutableList<String> cCompiler;
+    public final ImmutableList<String> flags;
+    public final Path output;
+    public final SourcePath input;
+    public final ImmutableMap<Path, SourcePath> includes;
+
+    public Args(
+        ImmutableMap<String, String> environment,
+        ImmutableList<String> cCompiler,
+        Tool ocamlCompiler,
+        Path output,
+        SourcePath input,
+        ImmutableList<String> flags,
+        ImmutableMap<Path, SourcePath> includes) {
+      this.environment = environment;
+      this.cCompiler = cCompiler;
+      this.ocamlCompiler = ocamlCompiler;
+      this.output = output;
+      this.input = input;
+      this.flags = flags;
+      this.includes = includes;
+    }
+
+    @Override
+    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+      builder.setReflectively("cCompiler", cCompiler);
+      builder.setReflectively("ocamlCompiler", ocamlCompiler);
+      builder.setReflectively("output", output.toString());
+      builder.setReflectively("input", input);
+      builder.setReflectively("flags", flags);
+      builder.setReflectively("includes", includes.values());
+      return builder;
+    }
   }
 
 }

@@ -1,0 +1,29 @@
+go_library(
+  name = 'lib',
+  srcs = ['lib.go'],
+  package_name = 'lib',
+)
+
+go_test(
+  name = 'test-success',
+  srcs = ['lib.go', 'lib_test.go'],
+  package_name = 'lib',
+)
+
+go_test(
+  name = 'test-failure',
+  srcs = ['bad_test.go'],
+  deps = [':lib'],
+)
+
+go_test(
+  name = 'test-panic',
+  srcs = ['panic_test.go'],
+  deps = [':lib'],
+)
+
+go_test(
+  name = 'test-spinning',
+  srcs = ['test_spinning.go'],
+  test_rule_timeout_ms = 500,
+)

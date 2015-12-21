@@ -27,7 +27,7 @@ abstract class RustAssumptions {
   public static void assumeRustCompilerAvailable() throws InterruptedException, IOException {
     Throwable exception = null;
     try {
-      new RustBuckConfig(new FakeBuckConfig()).getRustCompiler();
+      new RustBuckConfig(FakeBuckConfig.builder().build()).getRustCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }

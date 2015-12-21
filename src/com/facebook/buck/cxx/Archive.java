@@ -23,6 +23,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -35,10 +39,12 @@ import java.nio.file.Path;
  * A {@link com.facebook.buck.rules.BuildRule} which builds an "ar" archive from input files
  * represented as {@link com.facebook.buck.rules.SourcePath}.
  */
-public class Archive extends AbstractBuildRule {
+public class Archive extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   @AddToRuleKey
   private final Archiver archiver;
+  @AddToRuleKey
+  private final Tool ranlib;
   @AddToRuleKey(stringify = true)
   private final Path output;
   @AddToRuleKey
@@ -48,10 +54,12 @@ public class Archive extends AbstractBuildRule {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Archiver archiver,
+      Tool ranlib,
       Path output,
       ImmutableList<SourcePath> inputs) {
     super(params, resolver);
     this.archiver = archiver;
+    this.ranlib = ranlib;
     this.output = output;
     this.inputs = inputs;
   }
@@ -69,9 +77,24 @@ public class Archive extends AbstractBuildRule {
         new RmStep(getProjectFilesystem(), output, /* shouldForceDeletion */ true),
         new ArchiveStep(
             getProjectFilesystem().getRootPath(),
+            archiver.getEnvironment(getResolver()),
             archiver.getCommandPrefix(getResolver()),
             output,
-            getResolver().getAllPaths(inputs)),
+            getResolver().getAllAbsolutePaths(inputs)),
+        new ShellStep(getProjectFilesystem().getRootPath()) {
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            return ImmutableList.<String>builder()
+                .addAll(ranlib.getCommandPrefix(getResolver()))
+                .add(output.toString())
+                .build();
+          }
+
+          @Override
+          public String getShortName() {
+            return "ranlib";
+          }
+        },
         new FileScrubberStep(getProjectFilesystem(), output, archiver.getScrubbers()));
   }
 

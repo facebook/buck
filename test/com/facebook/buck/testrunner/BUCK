@@ -1,0 +1,19 @@
+java_test(
+  name = 'testrunner',
+  srcs = glob(['*.java']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/testrunner:junit',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/test/result/type:type',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+  ],
+)

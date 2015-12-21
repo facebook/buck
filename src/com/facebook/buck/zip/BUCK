@@ -63,7 +63,7 @@ java_library(
   visibility = [
     '//src/com/facebook/buck/android/...',
     '//src/com/facebook/buck/apple:rules',
-    '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/jvm/java:rules',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/thrift:rules',
     '//test/com/facebook/buck/zip:zip',
@@ -80,8 +80,9 @@ java_library(
   deps = [
     ':steps',
     '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/jvm/java:support',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/step:step',

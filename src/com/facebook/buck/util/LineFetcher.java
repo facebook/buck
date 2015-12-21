@@ -49,17 +49,20 @@ public class LineFetcher implements AutoCloseable {
       return null;
     }
 
-    for (int lineEnd = 0; lineEnd < read; lineEnd++) {
-      if (isLineEnd(readBuffer[lineEnd])) {
-        pushUnreadBack(lineEnd, read);
-        return new String(readBuffer, 0, lineEnd);
+    StringBuilder builder = new StringBuilder();
+    while (read != -1) {
+      for (int lineEnd = 0; lineEnd < read; lineEnd++) {
+        if (isLineEnd(readBuffer[lineEnd])) {
+          pushUnreadBack(lineEnd, read);
+          builder.append(new String(readBuffer, 0, lineEnd));
+          return builder.toString();
+        }
       }
+      builder.append(new String(readBuffer, 0, read));
+      read = inputReader.read(readBuffer);
     }
 
-    String thisSection = new String(readBuffer, 0, read);
-    String nextSection = readLine();
-
-    return nextSection == null ? thisSection : thisSection + nextSection;
+    return builder.toString();
   }
 
   private boolean isLineEnd(char c) {

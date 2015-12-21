@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
@@ -64,13 +63,11 @@ interface AbstractCxxPlatform {
   Archiver getAr();
   List<String> getArflags();
 
-  Optional<Tool> getLex();
-  List<String> getLexFlags();
-
-  Optional<Tool> getYacc();
-  List<String> getYaccFlags();
+  Tool getRanlib();
+  List<String> getRanlibflags();
 
   String getSharedLibraryExtension();
+  String getSharedLibraryVersionedExtensionFormat();
 
   DebugPathSanitizer getDebugPathSanitizer();
 

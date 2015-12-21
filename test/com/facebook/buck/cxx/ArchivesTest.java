@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -26,10 +27,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
@@ -44,15 +47,18 @@ public class ArchivesTest {
 
   private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(
       new HashedFileTool(Paths.get("ar")));
+  private static final Tool DEFAULT_RANLIB = new HashedFileTool(Paths.get("ranlib"));
+
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
-      new TestSourcePath("a.o"),
-      new TestSourcePath("b.o"),
-      new TestSourcePath("c.o"));
+      new FakeSourcePath("a.o"),
+      new FakeSourcePath("b.o"),
+      new FakeSourcePath("c.o"));
 
   @Test
-  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
@@ -72,9 +78,10 @@ public class ArchivesTest {
         target,
         params,
         DEFAULT_ARCHIVER,
+        DEFAULT_RANLIB,
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
-            new TestSourcePath("simple.o"),
+            new FakeSourcePath("simple.o"),
             new BuildTargetSourcePath(genrule1.getBuildTarget()),
             new BuildTargetSourcePath(genrule2.getBuildTarget())));
 
@@ -87,7 +94,9 @@ public class ArchivesTest {
 
   @Test
   public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     // Create an `Archive` rule using build params with an existing dependency,
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
@@ -99,13 +108,14 @@ public class ArchivesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
-            .setDeps(ImmutableSortedSet.of(dep))
+            .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .build();
     Archive archive = Archives.createArchiveRule(
         pathResolver,
         target,
         params,
         DEFAULT_ARCHIVER,
+        DEFAULT_RANLIB,
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS);
 

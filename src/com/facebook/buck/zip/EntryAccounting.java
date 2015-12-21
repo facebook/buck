@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 
@@ -35,6 +36,15 @@ import java.util.zip.ZipEntry;
  * write the entry to a zip file.
  */
 class EntryAccounting {
+
+  private static final ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
+      @Override
+      protected Calendar initialValue() {
+        // We explicitly use the US locale to get a Gregorian calendar (zip file timestamps
+        // are encoded using the year, month, date, etc. in the Gregorian calendar).
+        return Calendar.getInstance(Locale.US);
+      }
+  };
 
   private static final int DATA_DESCRIPTOR_FLAG = 1 << 3;
   private static final int UTF8_NAMES_FLAG = 1 << 11;
@@ -91,11 +101,9 @@ class EntryAccounting {
    * @return The time of the entry in DOS format.
    */
   public long getTime() {
-    // It'd be nice to use a Calendar for this, but (and here's the fun bit), that's a Really Bad
-    // Idea since the calendar's internal time representation keeps ticking once set. Instead, do
-    // this long way.
-
-    Calendar instance = Calendar.getInstance();
+    // Calendar objects aren't thread-safe, but they're quite expensive to create, so we'll re-use
+    // them per thread.
+    Calendar instance = CALENDAR.get();
     instance.setTimeInMillis(entry.getTime());
 
     int year = instance.get(Calendar.YEAR);
@@ -154,7 +162,13 @@ class EntryAccounting {
   }
 
   public int getRequiredExtractVersion() {
-    return method.getRequiredExtractVersion();
+    int requiredExtractVersion = method.getRequiredExtractVersion();
+    // Set the creator system indicator if we have UNIX-style file attributes.
+    // http://forensicswiki.org/wiki/Zip#External_file_attributes
+    if (externalAttributes >= (1 << 16)) {
+      requiredExtractVersion |= (3 << 8);
+    }
+    return requiredExtractVersion;
   }
 
   public long getExternalAttributes() {

@@ -41,6 +41,7 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A 'rdeps(u, x, [, depth])' expression, which finds the reverse dependencies of the given
@@ -80,17 +81,17 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
       throws QueryException, InterruptedException {
-    Set<T> universeSet = args.get(0).getExpression().eval(env);
-    env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
+    Set<T> universeSet = args.get(0).getExpression().eval(env, executor);
+    env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE, executor);
     final Predicate<T> inUniversePredicate = Predicates.in(env.getTransitiveClosure(universeSet));
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
     Set<T> visited = new LinkedHashSet<>();
-    Set<T> argumentSet = args.get(1).getExpression().eval(env);
+    Set<T> argumentSet = args.get(1).getExpression().eval(env, executor);
     Collection<T> current = argumentSet;
 
     int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;

@@ -1,0 +1,85 @@
+java_library(
+  name = 'base',
+  srcs = [
+    'BaseRunner.java',
+    'CheckDependency.java',
+    'TestResult.java',
+  ],
+  exported_deps = [
+    '//src/com/facebook/buck/test/result/type:type',
+    '//src/com/facebook/buck/test/selectors:selectors',
+  ],
+)
+
+java_library(
+  name = 'junit',
+  srcs = [
+    'BuckBlockJUnit4ClassRunner.java',
+    'DelegateRunnerWithTimeout.java',
+    'DelegateRunNotifier.java',
+    'JulLogFormatter.java',
+    'JUnitMain.java',
+    'JUnitRunner.java',
+    'SameThreadFailOnTimeout.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/testrunner:junit',
+  ],
+  deps = [
+    ':base',
+    # IMPORTANT! This library limits itself to types that are available in both the JDK and Android
+    # Java API. The objective is to limit the set of files added to the ClassLoader that runs the
+    # test, as not to interfere with the results of the test.
+    '//third-party/java/junit:junit',
+    '//src/com/facebook/buck/log:appendablelogrecord',
+    '//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner',
+    '//src/com/facebook/buck/jvm/java/runner:runner',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/testrunner:testrunner',
+  ],
+)
+
+java_library(
+  name = 'testng',
+  srcs = [
+    'TestNGMain.java',
+    'TestNGRunner.java',
+  ],
+  deps = [
+    ':base',
+    '//third-party/java/testng:testng',
+  ],
+  visibility = [
+  ],
+)
+
+java_binary(
+  name = 'testrunner-bin',
+  deps = [
+    ':testng',
+    ':junit',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+# Strip out classes we don't want automatically added to the classpath for
+# tests, leaving just the extra buck classes.
+genrule(
+  name = 'testrunner-bin-fixed',
+  out = 'testrunner-bin-fixed.jar',
+  cmd = ' '.join([
+    '$(exe //py/buck/zip:munger)',
+    '--input=$(location :testrunner-bin)',
+    '--output=$OUT',
+    '--include=com/facebook/buck/',
+  ]),
+  srcs = [
+    ':testrunner-bin',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

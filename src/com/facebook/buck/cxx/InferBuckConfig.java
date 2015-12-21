@@ -35,4 +35,8 @@ public class InferBuckConfig {
     return delegate.getPath(INFER_SECTION_PREFIX, name);
   }
 
+  public Optional<String> getValue(String name) {
+    return delegate.getValue(INFER_SECTION_PREFIX, name);
+  }
+
 }

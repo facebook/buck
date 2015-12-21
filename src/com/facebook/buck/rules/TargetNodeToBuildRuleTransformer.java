@@ -23,8 +23,7 @@ public interface TargetNodeToBuildRuleTransformer {
   <T> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      TargetNode<T> targetNode,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      TargetNode<T> targetNode)
       throws NoSuchBuildTargetException;
 
 }

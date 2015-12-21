@@ -16,25 +16,39 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Preconditions;
+
 import java.util.Objects;
 
 /**
  * Abstract base class for implementations of {@link SourcePath}.
  */
-abstract class AbstractSourcePath implements SourcePath {
+abstract class AbstractSourcePath<T extends AbstractSourcePath<T>> implements SourcePath {
 
   /**
    * @return An opaque representation of the source path in a stable manner.
    */
   protected abstract Object asReference();
 
+  protected abstract int compareReferences(T o);
+
+  @SuppressWarnings("unchecked")
   @Override
   public int compareTo(SourcePath o) {
     if (o == this) {
       return 0;
     }
 
-    return toString().compareTo(o.toString());
+    int result = this.getClass().getName().compareTo(o.getClass().getName());
+    if (result != 0) {
+      return result;
+    }
+
+    Preconditions.checkState(
+        this.getClass().equals(o.getClass()),
+        "Classes are different but have the same name.");
+
+    return this.compareReferences((T) o);
   }
 
   @Override
@@ -48,7 +62,7 @@ abstract class AbstractSourcePath implements SourcePath {
       return false;
     }
 
-    AbstractSourcePath that = (AbstractSourcePath) other;
+    AbstractSourcePath<?> that = (AbstractSourcePath<?>) other;
 
     return Objects.equals(this.asReference(), that.asReference());
   }

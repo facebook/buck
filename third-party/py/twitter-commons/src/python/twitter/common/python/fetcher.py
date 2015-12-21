@@ -36,7 +36,7 @@ class PyPIFetcher(FetcherBase):
     last, _, _ = socket.gethostbyname_ex('last.' + base)
     assert last.endswith(cls.PYPI_BASE)
     last_prefix = last.split('.')[0]
-    # TODO(user) Is implementing > z really necessary?
+    # TODO(wickman) Is implementing > z really necessary?
     last_prefix = 'z' if len(last_prefix) > 1 else last_prefix[0]
     return ['%c.%s' % (letter, base) for letter in crange('a', last_prefix)]
 

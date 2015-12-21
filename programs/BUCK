@@ -43,28 +43,24 @@ BUCK_CORE_RESOURCES = {
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
     'dx': '//third-party/java/dx:etc_dx',
     'jacoco_agent_jar': '//third-party/java/jacoco:agent',
+    # The name of this resource is important, since it needs to have this filename in the PEX.
+    "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
     'logging_config_file': '//config:logging.properties',
     'native_exopackage_fake_path': '//assets/android:native-exopackage-fakes.apk',
     'path_to_asm_jar': '//third-party/java/asm:asm',
     'path_to_intellij_py': '//src/com/facebook/buck/command:intellij.py',
     'path_to_pathlib_py': '//third-party/py/pathlib:pathlib.py',
     'path_to_pex': '//src/com/facebook/buck/python:pex',
-    'path_to_python_test_main': '//src/com/facebook/buck/python:__test_main__.py',
     'path_to_pywatchman': '//third-party/py/pywatchman:pywatchman-archive',
     'path_to_sh_binary_template': '//src/com/facebook/buck/shell:sh_binary_template',
-    'report_generator_jar': '//src/com/facebook/buck/java/coverage:report-generator',
-    'testrunner_classes': '//src/com/facebook/buck/junit:junit-bin-fixed',
+    'report_generator_jar': '//src/com/facebook/buck/jvm/java/coverage:report-generator',
+    'testrunner_classes': '//src/com/facebook/buck/testrunner:testrunner-bin-fixed',
 
     # TODO(#5448619): We currently don't have a great way of packaging up
     # entire directories into a PEX file, so for now, we aren't pulling in
     # the following resources.
     #':path_to_static_content',
 }
-
-BUCK_WITH_NAILGUN_RESOURCES = {
-    'buck_client': '//third-party/nailgun:ng',
-}
-BUCK_WITH_NAILGUN_RESOURCES.update(BUCK_CORE_RESOURCES)
 
 python_library(
   name='bucklib',
@@ -76,8 +72,9 @@ python_library(
     'timing.py',
     'tracing.py',
   ],
-  resources=BUCK_WITH_NAILGUN_RESOURCES,
+  resources=BUCK_CORE_RESOURCES,
   deps = [
+    '//third-party/nailgun:ng',
     ':subprocutils',
     ':buck_version',
   ],
@@ -89,31 +86,6 @@ python_binary(
   deps=[
     ':bucklib',
     ':subprocutils',
-  ],
-)
-
-python_library(
-  name='bucklib-no-nailgun',
-  srcs=[
-    'buck_project.py',
-    'buck_tool.py',
-    'buck_repo.py',
-    'buck_package.py',
-    'timing.py',
-    'tracing.py',
-  ],
-  resources=BUCK_CORE_RESOURCES,
-  deps = [
-    ':subprocutils',
-    ':buck_version',
-  ],
-)
-
-python_binary(
-  name='buck-no-nailgun',
-  main='buck.py',
-  deps=[
-    ':bucklib-no-nailgun',
   ],
 )
 

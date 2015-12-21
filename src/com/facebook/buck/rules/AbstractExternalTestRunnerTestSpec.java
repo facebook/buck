@@ -16,11 +16,20 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializable;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import com.google.common.base.Functions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.io.IOException;
 
 /**
  * A JSON-serializable structure that gets passed to external test runners.
@@ -31,38 +40,66 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractExternalTestRunnerTestSpec {
+abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
 
   /**
    * @return the build target of this rule.
    */
-  String getTarget();
+  public abstract BuildTarget getTarget();
 
   /**
    * @return a test-specific type string which classifies the test class, so the external runner
    *     knows how to parse the output.
    */
-  String getType();
+  public abstract String getType();
 
   /**
    * @return the command the external test runner must invoke to run the test.
    */
 
-  ImmutableList<String> getCommand();
+  public abstract ImmutableList<String> getCommand();
 
   /**
    * @return environment variables the external test runner should provide for the test command.
    */
-  ImmutableMap<String, String> getEnv();
+  public abstract ImmutableMap<String, String> getEnv();
 
   /**
    * @return test labels.
    */
-  ImmutableList<Label> getLabels();
+  public abstract ImmutableList<Label> getLabels();
 
   /**
    * @return test contacts.
    */
-  ImmutableList<String> getContacts();
+  public abstract ImmutableList<String> getContacts();
+
+  @Override
+  public void serialize(
+      JsonGenerator jsonGenerator,
+      SerializerProvider serializerProvider)
+      throws IOException {
+    jsonGenerator.writeStartObject();
+    jsonGenerator.writeStringField("target", getTarget().toString());
+    jsonGenerator.writeStringField("type", getType());
+    jsonGenerator.writeObjectField("command", getCommand());
+    jsonGenerator.writeObjectField("env", getEnv());
+    jsonGenerator.writeObjectField(
+        "labels",
+        FluentIterable.from(getLabels())
+            .transform(Functions.toStringFunction())
+            .toList());
+    jsonGenerator.writeObjectField("contacts", getContacts());
+    jsonGenerator.writeEndObject();
+  }
+
+  @Override
+  public void serializeWithType(
+      JsonGenerator jsonGenerator,
+      SerializerProvider serializerProvider,
+      TypeSerializer typeSerializer)
+      throws IOException {
+    serialize(jsonGenerator, serializerProvider);
+  }
 
 }

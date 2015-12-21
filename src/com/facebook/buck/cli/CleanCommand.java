@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.intellij.Project;
+import com.facebook.buck.jvm.java.intellij.Project;
 import com.facebook.buck.util.BuckConstant;
 
 import org.kohsuke.args4j.Option;
@@ -57,7 +57,7 @@ public class CleanCommand extends AbstractCommand {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     if (isCleanBuckProjectFiles()) {
       // Delete directories that were created for the purpose of `buck project`.
-      // TODO(mbolin): Unify these two directories under a single buck-ide directory,
+      // TODO(bolinfest): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
       projectFilesystem.deleteRecursivelyIfExists(Project.ANDROID_GEN_PATH);
       projectFilesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);

@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -28,9 +29,21 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+
+import java.io.IOException;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.util.Locale;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,19 +53,44 @@ public class TestResultFormatterTest {
   private TestResultSummary successTest;
   private TestResultSummary failingTest;
   private String stackTrace;
+  private FileSystem vfs;
+  private Path logPath;
 
   private TestResultFormatter createSilentFormatter() {
     return new TestResultFormatter(
         new Ansi(false),
         Verbosity.COMMANDS,
-        TestResultSummaryVerbosity.of(false, false));
+        TestResultSummaryVerbosity.of(false, false),
+        Locale.US,
+        Optional.of(logPath));
   }
 
   private TestResultFormatter createNoisyFormatter() {
     return new TestResultFormatter(
         new Ansi(false),
         Verbosity.COMMANDS,
-        TestResultSummaryVerbosity.of(true, true));
+        TestResultSummaryVerbosity.of(true, true),
+        Locale.US,
+        Optional.of(logPath));
+  }
+
+  private TestResultFormatter createFormatterWithMaxLogLines(int logLines) {
+    return new TestResultFormatter(
+        new Ansi(false),
+        Verbosity.COMMANDS,
+        TestResultSummaryVerbosity.builder()
+            .setIncludeStdOut(false)
+            .setIncludeStdErr(false)
+            .setMaxDebugLogLines(logLines)
+            .build(),
+        Locale.US,
+        Optional.of(logPath));
+  }
+
+  @Before
+  public void createTestLogFile() {
+    vfs = Jimfs.newFileSystem(Configuration.unix());
+    logPath = vfs.getPath("log.txt");
   }
 
   @Before
@@ -196,7 +234,41 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(builder, ImmutableList.of(results));
+
+    assertEquals("TESTS PASSED", toString(builder));
+  }
+
+  @Test
+  public void allTestsPassingShouldIncludeNonEmptyTestLogs() throws IOException {
+    Path testLogPath = vfs.getPath("test-log.txt");
+    Files.write(testLogPath, ImmutableList.of("Hello world"), StandardCharsets.UTF_8);
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    TestResults results = FakeTestResults.withTestLogs(
+        ImmutableList.of(summary),
+        ImmutableList.of(testLogPath));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(builder, ImmutableList.of(results));
+
+    assertEquals("Updated test logs: log.txt\nTESTS PASSED", toString(builder));
+  }
+
+  @Test
+  public void allTestsPassingShouldNotEmptyTestLogs() throws IOException {
+    Path testLogPath = vfs.getPath("test-log.txt");
+    Files.write(testLogPath, new byte[0]);
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    TestResults results = FakeTestResults.withTestLogs(
+        ImmutableList.of(summary),
+        ImmutableList.of(testLogPath));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));
@@ -209,7 +281,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest, failingTest));
-    TestResults results = new TestResults(
+    TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
         /* contacts */ ImmutableSet.<String>of(),
@@ -242,7 +314,7 @@ public class TestResultFormatterTest {
                 null,
                 null,
                 null)));
-    TestResults results = new TestResults(
+    TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
         /* contacts */ ImmutableSet.<String>of(),
@@ -263,7 +335,7 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
@@ -273,11 +345,42 @@ public class TestResultFormatterTest {
   }
 
   @Test
+  public void shouldUseDecimalCommaForGerman() {
+    TestResultFormatter formatter = new TestResultFormatter(
+        new Ansi(false),
+        Verbosity.COMMANDS,
+        TestResultSummaryVerbosity.of(false, false),
+        Locale.GERMAN,
+        Optional.of(logPath));
+
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest",
+        ImmutableList.of(
+            new TestResultSummary(
+                "com.example.FooTest",
+                "successTest",
+                ResultType.SUCCESS,
+                12300,
+                /*message*/ null,
+                /*stacktrace*/ null,
+                "good stdout",
+                "good stderr")));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    assertEquals(
+        "PASS     12,3s  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
+        toString(builder));
+  }
+
+  @Test
   public void shouldOutputStackTraceStdOutAndStdErrOfFailingTest() {
     TestResultFormatter formatter = createNoisyFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
@@ -301,11 +404,171 @@ public class TestResultFormatterTest {
   }
 
   @Test
+  public void shouldNotOutputLogLinesOfFailingTestWhenLogIsEmpty() throws IOException {
+    TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(failingTest));
+    Files.write(logPath, new byte[0]);
+
+    TestResults results = TestResults.builder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
+        .setTestCases(ImmutableList.of(summary))
+        .addTestLogPaths(logPath)
+        .build();
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    String expected = String.format(Joiner.on('\n').join(
+        "FAIL     200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
+        "FAILURE %s %s: %s",
+        "%s"),
+        failingTest.getTestCaseName(),
+        failingTest.getTestName(),
+        failingTest.getMessage(),
+        stackTrace);
+
+    assertEquals(expected, toString(builder));
+  }
+
+  @Test
+  public void shouldOutputLogLinesOfFailingTest() throws IOException {
+    TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(failingTest));
+    Files.write(
+        logPath,
+        ImmutableList.of("This is a debug log", "Here's another one"),
+        StandardCharsets.UTF_8);
+
+    TestResults results = TestResults.builder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
+        .setTestCases(ImmutableList.of(summary))
+        .addTestLogPaths(logPath)
+        .build();
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    String expected = String.format(Joiner.on('\n').join(
+        "FAIL     200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
+        "FAILURE %s %s: %s",
+        "%s",
+        "====TEST LOGS====",
+        "Logs from log.txt:",
+        "This is a debug log",
+        "Here's another one"),
+        failingTest.getTestCaseName(),
+        failingTest.getTestName(),
+        failingTest.getMessage(),
+        stackTrace);
+
+    assertEquals(expected, toString(builder));
+  }
+
+  @Test
+  public void shouldNotOutputLogPathInlineForPassingTest() throws IOException {
+    TestResultFormatter formatter = createFormatterWithMaxLogLines(10);
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    Files.write(
+        logPath,
+        ImmutableList.of("This is a debug log", "Here's another one"),
+        StandardCharsets.UTF_8);
+
+    TestResults results = TestResults.builder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
+        .setTestCases(ImmutableList.of(summary))
+        .addTestLogPaths(logPath)
+        .build();
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    assertEquals(
+        "PASS     500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
+        toString(builder));
+  }
+
+  @Test
+  public void shouldOutputTruncatedLogLinesOfFailingTest() throws IOException {
+    TestResultFormatter formatter = createFormatterWithMaxLogLines(3);
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(failingTest));
+    Files.write(
+        logPath,
+        ImmutableList.of(
+            "This log won't appear", "This one will", "Another one", "Should be last"),
+        StandardCharsets.UTF_8);
+
+    TestResults results = TestResults.builder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
+        .setTestCases(ImmutableList.of(summary))
+        .addTestLogPaths(logPath)
+        .build();
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    String expected = String.format(Joiner.on('\n').join(
+        "FAIL     200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
+        "FAILURE %s %s: %s",
+        "%s",
+        "====TEST LOGS====",
+        "Last 3 test log lines from log.txt:",
+        "This one will",
+        "Another one",
+        "Should be last"),
+        failingTest.getTestCaseName(),
+        failingTest.getTestName(),
+        failingTest.getMessage(),
+        stackTrace);
+
+    assertEquals(expected, toString(builder));
+  }
+
+  @Test
+  public void shouldNotOutputLogLinesOfFailingTestIfMaxLinesIsZero() throws IOException {
+    TestResultFormatter formatter = createFormatterWithMaxLogLines(0);
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(failingTest));
+    Files.write(
+        logPath,
+        ImmutableList.of("None", "of", "these", "will", "appear"),
+        StandardCharsets.UTF_8);
+
+    TestResults results = TestResults.builder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//foo:bar"))
+        .setTestCases(ImmutableList.of(summary))
+        .addTestLogPaths(logPath)
+        .build();
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    String expected = String.format(Joiner.on('\n').join(
+        "FAIL     200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
+        "FAILURE %s %s: %s",
+        "%s"),
+        failingTest.getTestCaseName(),
+        failingTest.getTestName(),
+        failingTest.getMessage(),
+        stackTrace);
+
+    assertEquals(expected, toString(builder));
+  }
+
+  @Test
   public void shouldNotOutputStackTraceStdOutAndStdErrOfFailingTest() {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);

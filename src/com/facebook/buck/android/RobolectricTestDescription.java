@@ -16,14 +16,15 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
+import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
+
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.CalculateAbi;
-import com.facebook.buck.java.JavaLibraryDescription;
-import com.facebook.buck.java.JavaTestDescription;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -49,17 +51,17 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   public static final BuildRuleType TYPE = BuildRuleType.of("robolectric_test");
 
   private final JavacOptions templateOptions;
-  private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
   private final Optional<Path> testTempDirOverride;
 
   public RobolectricTestDescription(
       JavacOptions templateOptions,
-      Optional<Long> testRuleTimeoutMs,
+      Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform,
       Optional<Path> testTempDirOverride) {
     this.templateOptions = templateOptions;
-    this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
     this.testTempDirOverride = testTempDirOverride;
   }
@@ -79,29 +81,26 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableList<String> vmArgs = args.vmArgs.get();
 
-    JavacOptions.Builder javacOptionsBuilder =
-        JavaLibraryDescription.getJavacOptions(
+
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            templateOptions,
+            params,
+            resolver,
             pathResolver,
-            args,
-            templateOptions);
-    AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
-            resolver);
-    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
-    JavacOptions javacOptions = javacOptionsBuilder.build();
+            args);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions,
-        ResourceDependencyMode.TRANSITIVE);
+        DependencyMode.TRANSITIVE,
+        Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ true);
@@ -118,7 +117,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
-            targetGraph,
             params,
             args.useCxxLibraries,
             pathResolver,
@@ -143,9 +141,10 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                             javacOptions.getInputs(pathResolver)))),
                 pathResolver,
                 args.srcs.get(),
-                JavaLibraryDescription.validateResources(
+                validateResources(
                     pathResolver,
-                    args, params.getProjectFilesystem()),
+                    params.getProjectFilesystem(),
+                    args.resources.get()),
                 args.labels.get(),
                 args.contacts.get(),
                 args.proguardConfig.transform(
@@ -162,7 +161,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.resourcesRoot,
                 args.mavenCoords,
                 dummyRDotJava,
-                testRuleTimeoutMs,
+                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel,

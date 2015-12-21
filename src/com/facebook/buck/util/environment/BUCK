@@ -1,10 +1,15 @@
 PLATFORM_SRCS = [
+  'Architecture.java',
   'Platform.java',
 ]
 
 java_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
+  deps = [
+    '//src/com/facebook/buck/log:api',
+    '//third-party/java/guava:guava',
+  ],
   visibility = [
     'PUBLIC',
   ],
@@ -35,7 +40,10 @@ java_immutables_library(
   deps = [
     ':env-filter',
     ':platform',
+    '//third-party/java/ObjCBridge:ObjCBridge',
     '//third-party/java/guava:guava',
+    '//third-party/java/jna:jna',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:tristate',
     '//src/com/facebook/buck/util:util',

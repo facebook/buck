@@ -16,13 +16,18 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,30 +36,42 @@ import java.util.Set;
 
 public class CodeSignStep implements Step {
   private final Path workingDirectory;
+  private final SourcePathResolver resolver;
   private final Path pathToSign;
   private final Path pathToSigningEntitlements;
-  private final String codeSignIdentity;
+  private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
+  private final Optional<Tool> codesignAllocatePath;
 
   public CodeSignStep(
       Path workingDirectory,
+      SourcePathResolver resolver,
       Path pathToSign,
       Path pathToSigningEntitlements,
-      String codeSignIdentity) {
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      Optional<Tool> codesignAllocatePath) {
     this.workingDirectory = workingDirectory;
+    this.resolver = resolver;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
-    this.codeSignIdentity = codeSignIdentity;
+    this.codeSignIdentitySupplier = codeSignIdentitySupplier;
+    this.codesignAllocatePath = codesignAllocatePath;
   }
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
+    ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
+    if (codesignAllocatePath.isPresent()) {
+      ImmutableList<String> commandPrefix = codesignAllocatePath.get().getCommandPrefix(resolver);
+      paramsBuilder.setEnvironment(
+          ImmutableMap.of("CODESIGN_ALLOCATE", Joiner.on(" ").join(commandPrefix)));
+    }
     ProcessExecutorParams processExecutorParams =
-        ProcessExecutorParams.builder()
+        paramsBuilder
             .setCommand(
                 ImmutableList.of(
                     "codesign",
                     "--force",
-                    "--sign", codeSignIdentity,
+                    "--sign", getIdentityArg(codeSignIdentitySupplier.get()),
                     "--entitlements", pathToSigningEntitlements.toString(),
                     pathToSign.toString()))
             .setDirectory(workingDirectory.toFile())
@@ -90,5 +107,16 @@ public class CodeSignStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("code-sign %s",
         pathToSign);
+  }
+
+  /**
+   * Convert a {@link CodeSignIdentity} into a string argument for the codesign tool.
+   */
+  private static String getIdentityArg(CodeSignIdentity identity) {
+    if (identity.getFingerprint().isPresent()) {
+      return identity.getFingerprint().get().toString().toUpperCase();
+    } else {
+      return "-"; // ad-hoc
+    }
   }
 }

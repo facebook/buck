@@ -102,11 +102,12 @@ abstract class RustLinkable extends AbstractBuildRule {
         new SymlinkFilesIntoDirectoryStep(
             getProjectFilesystem(),
             getProjectFilesystem().getRootPath(),
-            getResolver().getAllPaths(srcs),
+            getResolver().deprecatedAllPaths(srcs),
             scratchDir),
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new RustCompileStep(
             getProjectFilesystem().getRootPath(),
+            compiler.getEnvironment(getResolver()),
             compiler.getCommandPrefix(getResolver()),
             flags,
             features,
@@ -118,7 +119,7 @@ abstract class RustLinkable extends AbstractBuildRule {
   @VisibleForTesting
   Path getCrateRoot() {
     ImmutableList<Path> candidates = ImmutableList.copyOf(
-        FluentIterable.from(getResolver().getAllPaths(srcs))
+        FluentIterable.from(getResolver().deprecatedAllPaths(srcs))
             .filter(
                 new Predicate<Path>() {
                   @Override

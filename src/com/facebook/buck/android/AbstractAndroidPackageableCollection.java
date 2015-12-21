@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaNativeLinkable;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -29,7 +29,6 @@ import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +41,7 @@ import java.util.Set;
 interface AbstractAndroidPackageableCollection {
 
   @Value.Immutable
-  abstract static class AbstractResourceDetails {
+  abstract class AbstractResourceDetails {
 
     /**
      * A list of "res" directories that should be passed to the aapt command to build the APK,
@@ -84,12 +83,12 @@ interface AbstractAndroidPackageableCollection {
   /**
    * Native libraries.
    */
-  List<JavaNativeLinkable> getNativeLinkables();
+  ImmutableList<NativeLinkable> getNativeLinkables();
 
   /**
    * Native libraries to be packaged as assets.
    */
-  List<JavaNativeLinkable> getNativeLinkablesAssets();
+  ImmutableList<NativeLinkable> getNativeLinkablesAssets();
 
   /**
    * Directories containing native libraries.
@@ -133,13 +132,13 @@ interface AbstractAndroidPackageableCollection {
   ImmutableSet<SourcePath> getPathsToThirdPartyJars();
 
   /**
-   * {@link com.facebook.buck.java.JavaLibrary} rules whose output will be dexed and included in
+   * {@link com.facebook.buck.jvm.java.JavaLibrary} rules whose output will be dexed and included in
    * the package.
    */
   Set<BuildTarget> getJavaLibrariesToDex();
 
   /**
-   * See {@link com.facebook.buck.java.JavaLibrary#getClassNamesToHashes()}
+   * See {@link com.facebook.buck.jvm.java.JavaLibrary#getClassNamesToHashes()}
    */
   Supplier<Map<String, HashCode>> getClassNamesToHashesSupplier();
 }

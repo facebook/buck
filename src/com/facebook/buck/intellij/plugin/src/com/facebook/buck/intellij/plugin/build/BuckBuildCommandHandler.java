@@ -39,7 +39,6 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
       "Using watchman",
   };
 
-  private static final String UNKNOWN_ERROR_MESSAGE = "Unknown error";
   private static final String ERROR_PREFIX_FOR_MESSAGE = "BUILD FAILED:";
   private static final Pattern[] ERROR_PATTERNS = new Pattern[]{
       Pattern.compile(ERROR_PREFIX_FOR_MESSAGE + ".*"),
@@ -71,7 +70,6 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
       new ConsoleViewContentType(
           "BUCK_GREEN_OUTPUT", TextAttributesKey.createTextAttributesKey("CONSOLE_GREEN_OUTPUT"));
 
-  private boolean showFailedNotification = false;
   private String currentErrorMessage;
 
   public BuckBuildCommandHandler(
@@ -83,12 +81,6 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
 
   @Override
   protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
-    while (lines.hasNext()) {
-      boolean failed = parseOutputLine(lines.next());
-      if (!showFailedNotification) {
-        showFailedNotification = failed;
-      }
-    }
   }
 
   @Override
@@ -117,15 +109,15 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
     BuckBuildManager.getInstance(project()).setBuilding(project, false);
 
     // Popup notification if needed.
-    if (showFailedNotification && !BuckToolWindowFactory.isToolWindowVisible(project)) {
-      if (currentErrorMessage == null) {
-        currentErrorMessage = UNKNOWN_ERROR_MESSAGE;
-      } else {
-        currentErrorMessage = currentErrorMessage.replaceAll(ERROR_PREFIX_FOR_MESSAGE, "");
-      }
-      BuckBuildNotification.createBuildFailedNotification(
-          command.name(), currentErrorMessage).notify(project);
-    }
+//    if (showFailedNotification && !BuckToolWindowFactory.isToolWindowVisible(project)) {
+//      if (currentErrorMessage == null) {
+//        currentErrorMessage = UNKNOWN_ERROR_MESSAGE;
+//      } else {
+//        currentErrorMessage = currentErrorMessage.replaceAll(ERROR_PREFIX_FOR_MESSAGE, "");
+//      }
+//      BuckBuildNotification.createBuildFailedNotification(
+//          command.name(), currentErrorMessage).notify(project);
+//    }
   }
 
   /**

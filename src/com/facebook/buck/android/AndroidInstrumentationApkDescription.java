@@ -21,11 +21,12 @@ import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.java.Classpaths;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.Classpaths;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -86,7 +87,7 @@ public class AndroidInstrumentationApkDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
       throw new HumanReadableException(
@@ -115,11 +116,11 @@ public class AndroidInstrumentationApkDescription
 
     Path primaryDexPath = AndroidBinary.getPrimaryDexPath(params.getBuildTarget());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        targetGraph,
         params,
         resolver,
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* resourceUnionPackage */ Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         args.manifest,
         PackageType.INSTRUMENTED,

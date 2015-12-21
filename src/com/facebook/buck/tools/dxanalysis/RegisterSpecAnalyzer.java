@@ -39,7 +39,7 @@ import java.util.Locale;
  */
 public class RegisterSpecAnalyzer {
 
-  // TODO(user): Infer this automatically.
+  // TODO(or_not): Infer this automatically.
   private static final ImmutableSet<String> RISKY_TYPES = ImmutableSet.of(
       "com/android/dx/rop/code/RegisterSpec",
       "com/android/dx/rop/type/TypeBearer",

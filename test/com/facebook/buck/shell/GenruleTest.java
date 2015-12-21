@@ -24,25 +24,26 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaBinaryRuleBuilder;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.ExecutionContext;
@@ -64,7 +65,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
@@ -80,14 +80,6 @@ import java.util.List;
 public class GenruleTest {
 
   private ProjectFilesystem filesystem;
-
-  private RuleKey generateRuleKey(
-      RuleKeyBuilderFactory factory,
-      AbstractBuildRule rule) {
-
-    RuleKeyBuilder builder = factory.newInstance(rule);
-    return builder.build();
-  }
 
   @Before
   public void newFakeFilesystem() {
@@ -110,7 +102,8 @@ public class GenruleTest {
      * )
      */
 
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     createSampleJavaBinaryRule(ruleResolver);
 
     // From the Python object, create a GenruleBuildRuleFactory to create a Genrule.Builder
@@ -122,7 +115,7 @@ public class GenruleTest {
 //    EasyMock.replay(parser);
 
     BuildTarget buildTarget =
-        BuildTarget.builder("//src/com/facebook/katana", "katana_manifest").build();
+        BuildTargetFactory.newInstance("//src/com/facebook/katana:katana_manifest");
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(buildTarget)
         .setCmd("python convert_to_katana.py AndroidManifest.xml > $OUT")
@@ -229,10 +222,11 @@ public class GenruleTest {
   }
 
   @Test
-  public void testDepsEnvironmentVariableIsComplete() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildTarget depTarget = BuildTarget.builder("//foo", "bar").build();
-    BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(new BuildRuleResolver())) {
+  public void testDepsEnvironmentVariableIsComplete() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(resolver)) {
       @Override
       public Path getPathToOutput() {
         return Paths.get("buck-out/gen/foo/bar.jar");
@@ -242,12 +236,11 @@ public class GenruleTest {
 
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(
-            BuildTarget.builder(
-                "//foo",
-                "baz").build())
+            BuildTargetFactory.newInstance("//foo:baz"))
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
-        .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+        .setSrcs(
+            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(dep.getBuildTarget())))
         .build(resolver, filesystem);
 
     AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
@@ -281,9 +274,10 @@ public class GenruleTest {
   }
 
   @Test
-  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws IOException {
+  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     BuildRule rule = GenruleBuilder
         .newGenruleBuilder(target)
@@ -316,7 +310,8 @@ public class GenruleTest {
     assertEquals(Paths.get(baseTmpPath + "other/place.txt"), linkCmd.getTarget());
   }
 
-  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
+  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver)
+      throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildRule javaLibrary = JavaLibraryBuilder
@@ -333,8 +328,9 @@ public class GenruleTest {
   }
 
   @Test
-  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
     Path sdkDir = Paths.get("/opt/users/android_sdk");
     Path ndkDir = Paths.get("/opt/users/android_ndk");
@@ -368,8 +364,9 @@ public class GenruleTest {
   }
 
   @Test
-  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     Genrule genrule = (Genrule) GenruleBuilder.newGenruleBuilder(target)
         .setBash("echo something > $OUT")
@@ -383,8 +380,9 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGetShellCommand() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void testGetShellCommand() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     String bash = "rm -rf /usr";
     String cmdExe = "rmdir /s /q C:\\Windows";
     String cmd = "echo \"Hello\"";
@@ -440,13 +438,16 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGetOutputNameMethod() {
+  public void testGetOutputNameMethod() throws Exception {
     {
       String name = "out.txt";
       Genrule genrule = (Genrule) GenruleBuilder
           .newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
           .setOut(name)
-          .build(new BuildRuleResolver());
+          .build(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new BuildTargetNodeToBuildRuleTransformer()));
       assertEquals(name, genrule.getOutputName());
     }
     {
@@ -454,29 +455,33 @@ public class GenruleTest {
       Genrule genrule = (Genrule) GenruleBuilder
           .newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
           .setOut(name)
-          .build(new BuildRuleResolver());
+          .build(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY,
+                  new BuildTargetNodeToBuildRuleTransformer()));
       assertEquals(name, genrule.getOutputName());
     }
   }
 
   @Test
-  public void thatChangingOutChangesRuleKey() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void thatChangingOutChangesRuleKey() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
-    RuleKey key1 = generateRuleKey(
-        ruleKeyBuilderFactory,
-        (Genrule) GenruleBuilder
+
+    RuleKey key1 = ruleKeyBuilderFactory.build(
+        GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule1"))
             .setOut("foo")
             .build(resolver));
-    RuleKey key2 = generateRuleKey(
-        ruleKeyBuilderFactory,
-        (Genrule) GenruleBuilder
+
+    RuleKey key2 = ruleKeyBuilderFactory.build(
+        GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
             .setOut("bar")
             .build(resolver));
@@ -486,7 +491,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void inputBasedRuleKeyLocationMacro() throws IOException {
+  public void inputBasedRuleKeyLocationMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -494,7 +499,8 @@ public class GenruleTest {
             .setOut("output");
 
     // Create an initial input-based rule key
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
@@ -509,15 +515,17 @@ public class GenruleTest {
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
 
     // Change the genrule's command, which will change its normal rule key, but since we're keeping
     // its output the same, the input-based rule key for the consuming rule will stay the same.
     // This is because the input-based rule key for the consuming rule only cares about the contents
     // of the output this rule produces.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
         .setOut("dep.out")
         .setCmd("something else")
@@ -530,14 +538,16 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
     assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
@@ -548,13 +558,14 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 
   @Test
-  public void inputBasedRuleKeyExecutableMacro() throws IOException {
+  public void inputBasedRuleKeyExecutableMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -562,7 +573,8 @@ public class GenruleTest {
             .setOut("output");
 
     // Create an initial input-based rule key
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
@@ -577,21 +589,25 @@ public class GenruleTest {
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
 
     // Change the dep's resource list, which will change its normal rule key, but since we're
     // keeping its output the same, the input-based rule key for the consuming rule will stay the
     // same.  This is because the input-based rule key for the consuming rule only cares about the
     // contents of the output this rule produces.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    Genrule extra =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:extra"))
+            .setOut("something")
+            .build(resolver);
     new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
         .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
-        .setResources(
-            ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, Paths.get("resource"))))
+        .setDeps(ImmutableSortedSet.of(extra.getBuildTarget()))
         .build(resolver, filesystem);
-    filesystem.writeContentsToPath("res", Paths.get("resource"));
     rule = ruleBuilder.build(resolver);
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
@@ -600,14 +616,16 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
     assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
@@ -617,13 +635,14 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 
   @Test
-  public void inputBasedRuleKeyClasspathMacro() throws IOException {
+  public void inputBasedRuleKeyClasspathMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -631,7 +650,8 @@ public class GenruleTest {
             .setOut("output");
 
     // Create an initial input-based rule key
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     JavaLibrary dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
@@ -646,15 +666,17 @@ public class GenruleTest {
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
 
     // Change the dep's resource root, which will change its normal rule key, but since we're
     // keeping its output JAR the same, the input-based rule key for the consuming rule will stay
     // the same.  This is because the input-based rule key for the consuming rule only cares about
     // the contents of the output this rule produces.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
         .addSrc(Paths.get("source.java"))
         .setResourcesRoot(Paths.get("resource_root"))
@@ -667,14 +689,16 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
     assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
-    resolver = new BuildRuleResolver();
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
@@ -684,8 +708,9 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
-            new SourcePathResolver(resolver));
-    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+            new SourcePathResolver(resolver),
+            defaultRuleKeyBuilderFactory);
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 

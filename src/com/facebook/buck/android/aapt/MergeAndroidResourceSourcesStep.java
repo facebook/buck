@@ -25,11 +25,11 @@ import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.ILogger;
 import com.facebook.buck.android.BuckEventAndroidLogger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -43,17 +43,15 @@ public class MergeAndroidResourceSourcesStep implements Step {
 
   private static final Logger LOG = Logger.get(MergeAndroidResourceSourcesStep.class);
 
-  private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> resPaths;
   private final Path outFolderPath;
 
   public MergeAndroidResourceSourcesStep(
-      ProjectFilesystem filesystem,
       ImmutableList<Path> resPaths,
       Path outFolderPath) {
-    this.filesystem = filesystem;
     this.resPaths = resPaths;
     this.outFolderPath = outFolderPath;
+    Preconditions.checkArgument(outFolderPath.isAbsolute());
   }
 
   @Override
@@ -61,14 +59,15 @@ public class MergeAndroidResourceSourcesStep implements Step {
     ResourceMerger merger = new ResourceMerger();
     try {
       for (Path resPath : resPaths) {
+        Preconditions.checkState(resPath.isAbsolute());
         ResourceSet set = new ResourceSet(resPath.toString());
         set.setNormalizeResources(false);
-        set.addSource(filesystem.resolve(resPath).toFile());
+        set.addSource(resPath.toFile());
         set.loadFromFiles(new ResourcesSetLoadLogger(context.getBuckEventBus()));
         merger.addDataSet(set);
       }
       MergedResourceWriter writer = new MergedResourceWriter(
-          filesystem.resolve(outFolderPath).toFile(),
+          outFolderPath.toFile(),
           new NoopPngCruncher(),
           /* crunchPng */ false,
           /* crunch9Patch */ false);

@@ -17,157 +17,59 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.Files;
 
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxDescriptionEnhancerTest {
 
   @Test
-  public void createLexYaccBuildRules() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    // Setup our C++ buck config with the paths to the lex/yacc binaries.
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path lexPath = Paths.get("lex");
-    filesystem.touch(lexPath);
-    Path yaccPath = Paths.get("yacc");
-    filesystem.touch(yaccPath);
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "cxx", ImmutableMap.of(
-                "lex", lexPath.toString(),
-                "yacc", yaccPath.toString())),
-        filesystem);
-    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
-
-    // Setup the target name and build params.
-    BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-
-    // Setup a genrule that generates our lex source.
-    String lexSourceName = "test.ll";
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule_lex");
-    Genrule genrule = (Genrule) GenruleBuilder
-        .newGenruleBuilder(genruleTarget)
-        .setOut(lexSourceName)
-        .build(resolver);
-    SourcePath lexSource = new BuildTargetSourcePath(genrule.getBuildTarget());
-
-    // Use a regular path for our yacc source.
-    String yaccSourceName = "test.yy";
-    SourcePath yaccSource = new TestSourcePath(yaccSourceName);
-
-    // Build the rules.
-    CxxHeaderSourceSpec actual = CxxDescriptionEnhancer.createLexYaccBuildRules(
-        params,
-        resolver,
-        cxxBuckConfig,
-        ImmutableList.<String>of(),
-        ImmutableMap.of(lexSourceName, lexSource),
-        ImmutableList.<String>of(),
-        ImmutableMap.of(yaccSourceName, yaccSource));
-
-    // Grab the generated lex rule and verify it has the genrule as a dep.
-    Lex lex = (Lex) resolver.getRule(
-        CxxDescriptionEnhancer.createLexBuildTarget(target, lexSourceName));
-    assertNotNull(lex);
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(genrule),
-        lex.getDeps());
-
-    // Grab the generated yacc rule and verify it has no deps.
-    Yacc yacc = (Yacc) resolver.getRule(
-        CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName));
-    assertNotNull(yacc);
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(),
-        yacc.getDeps());
-
-    // Check the header/source spec is correct.
-    Path lexOutputSource = CxxDescriptionEnhancer.getLexSourceOutputPath(target, lexSourceName);
-    Path lexOutputHeader = CxxDescriptionEnhancer.getLexHeaderOutputPath(target, lexSourceName);
-    Path yaccOutputPrefix =
-        CxxDescriptionEnhancer.getYaccOutputPrefix(
-            target,
-            Files.getNameWithoutExtension(yaccSourceName));
-    Path yaccOutputSource = Yacc.getSourceOutputPath(yaccOutputPrefix);
-    Path yaccOutputHeader = Yacc.getHeaderOutputPath(yaccOutputPrefix);
-    CxxHeaderSourceSpec expected =
-        CxxHeaderSourceSpec.of(
-            ImmutableMap.<Path, SourcePath>of(
-                target.getBasePath().resolve(lexSourceName + ".h"),
-                new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputHeader),
-                target.getBasePath().resolve(yaccSourceName + ".h"),
-                new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputHeader)),
-            ImmutableMap.of(
-                lexSourceName + ".cc",
-                CxxSource.of(
-                    CxxSource.Type.CXX,
-                    new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputSource),
-                    ImmutableList.<String>of()),
-                yaccSourceName + ".cc",
-                CxxSource.of(
-                    CxxSource.Type.CXX,
-                    new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputSource),
-                    ImmutableList.<String>of())));
-    assertEquals(expected, actual);
-  }
-
-  @Test
   public void libraryTestIncludesPrivateHeadersOfLibraryUnderTest() throws Exception {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    ProjectFilesystem filesystem = libParams.getProjectFilesystem();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
-        Paths.get("symlink/tree/lib"),
+        filesystem.resolve("symlink/tree/lib"),
         BuildTargetFactory.newInstance("//:privateheader"),
         BuildTargetFactory.newInstance("//:privatesymlink"),
-        Paths.get("private/symlink/tree/lib"),
+        filesystem.resolve("private/symlink/tree/lib"),
         new FakeBuildRule("//:archive", pathResolver),
-        Paths.get("output/path/lib.a"),
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
         "lib.so",
@@ -176,19 +78,17 @@ public class CxxDescriptionEnhancerTest {
     );
 
     BuildRuleParams testParams = new FakeBuildRuleParamsBuilder(testTarget)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<Path>of(),
+            ImmutableSet.<FrameworkPath>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                TargetGraph.EMPTY,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -197,28 +97,30 @@ public class CxxDescriptionEnhancerTest {
         "Test of library should include both public and private headers",
         CxxPreprocessorInput.concat(combinedInput).getIncludeRoots(),
         hasItems(
-            Paths.get("symlink/tree/lib"),
-            Paths.get("private/symlink/tree/lib")));
+            filesystem.resolve("symlink/tree/lib"),
+            filesystem.resolve("private/symlink/tree/lib")));
   }
 
   @Test
   public void nonTestLibraryDepDoesNotIncludePrivateHeadersOfLibrary() throws Exception {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    ProjectFilesystem filesystem = libParams.getProjectFilesystem();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
-        Paths.get("symlink/tree/lib"),
+        filesystem.resolve("symlink/tree/lib"),
         BuildTargetFactory.newInstance("//:privateheader"),
         BuildTargetFactory.newInstance("//:privatesymlink"),
-        Paths.get("private/symlink/tree/lib"),
+        filesystem.resolve("private/symlink/tree/lib"),
         new FakeBuildRule("//:archive", pathResolver),
-        Paths.get("output/path/lib.a"),
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
         "lib.so",
@@ -228,19 +130,17 @@ public class CxxDescriptionEnhancerTest {
 
     BuildTarget otherLibDepTarget = BuildTargetFactory.newInstance("//:other");
     BuildRuleParams otherLibDepParams = new FakeBuildRuleParamsBuilder(otherLibDepTarget)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> otherInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            TargetGraph.EMPTY,
             otherLibDepParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<Path>of(),
+            ImmutableSet.<FrameworkPath>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                TargetGraph.EMPTY,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(otherLibDepParams.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -249,8 +149,8 @@ public class CxxDescriptionEnhancerTest {
         "Non-test rule with library dep should include public and not private headers",
         CxxPreprocessorInput.concat(otherInput).getIncludeRoots(),
         allOf(
-            hasItem(Paths.get("symlink/tree/lib")),
-            not(hasItem(Paths.get("private/symlink/tree/lib")))));
+            hasItem(filesystem.resolve("symlink/tree/lib")),
+            not(hasItem(filesystem.resolve("private/symlink/tree/lib")))));
   }
 
   @Test
@@ -266,4 +166,20 @@ public class CxxDescriptionEnhancerTest {
             CxxPlatformUtils.DEFAULT_PLATFORM));
   }
 
+  @Test
+  public void testSonameExpansion() {
+    assertThat(soname("libfoo.so", "dylib", "%s.dylib"), equalTo("libfoo.so"));
+    assertThat(soname("libfoo.$(ext)", "good", "%s.bad"), equalTo("libfoo.good"));
+    assertThat(soname("libfoo.$(ext 2.3)", "bad", "%s.good"), equalTo("libfoo.2.3.good"));
+    assertThat(soname("libfoo.$(ext 2.3)", "bad", "good.%s"), equalTo("libfoo.good.2.3"));
+    assertThat(soname("libfoo.$(ext 2.3)", "bad", "windows"), equalTo("libfoo.windows"));
+  }
+
+  /**
+   * Just a helper to make this shorter to write.
+   */
+  private static String soname(String declared, String extension, String versionedFormat) {
+    return CxxDescriptionEnhancer.getNonDefaultSharedLibrarySoname(
+        declared, extension, versionedFormat);
+  }
 }

@@ -20,6 +20,8 @@ import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.file.Path;
 
@@ -40,11 +42,12 @@ public class DummyArtifactCache extends NoopArtifactCache {
   }
 
   @Override
-  public void store(
+  public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       Path output) {
     storeKey = Iterables.getFirst(ruleKeys, null);
+    return Futures.immediateFuture(null);
   }
 
   @Override

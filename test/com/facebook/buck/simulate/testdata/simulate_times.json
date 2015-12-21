@@ -1,0 +1,22 @@
+{
+  "build_targets":
+  {
+    "//lovely/target":
+    {
+      "p50": 50,
+      "p95": 95,
+      "avg": 42
+    },
+    "//my/super/duper/target":
+    {
+      "p50": 50,
+      "p95": 95,
+      "avg": 42
+    }
+  },
+  "other_fields":
+  {
+    "something_completely_different": 21,
+    "and yet a different thing": 84
+  }
+}

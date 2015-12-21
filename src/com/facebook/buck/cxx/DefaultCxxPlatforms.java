@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -44,8 +43,7 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_CXX_FRONTEND = Paths.get("/usr/bin/g++");
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
   private static final Path DEFAULT_STRIP = Paths.get("/usr/bin/strip");
-  private static final Path DEFAULT_LEX = Paths.get("/usr/bin/flex");
-  private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
+  private static final Path DEFAULT_RANLIB = Paths.get("/usr/bin/ranlib");
 
   private static final Path DEFAULT_OSX_C_FRONTEND = Paths.get("/usr/bin/clang");
   private static final Path DEFAULT_OSX_CXX_FRONTEND = Paths.get("/usr/bin/clang++");
@@ -71,24 +69,27 @@ public class DefaultCxxPlatforms {
           ImmutableList.<String>of(),
           new HashedFileTool(DEFAULT_STRIP),
           new BsdArchiver(new HashedFileTool(DEFAULT_AR)),
+          new HashedFileTool(DEFAULT_RANLIB),
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
-          Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
-          Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
           "dylib",
+          ".%s.dylib",
           Optional.<DebugPathSanitizer>absent(),
           ImmutableMap.<String, String>of());
     }
 
     String sharedLibraryExtension;
+    String sharedLibraryVersionedExtensionFormat;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
+        sharedLibraryVersionedExtensionFormat = "so.%s";
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
+        sharedLibraryVersionedExtensionFormat = "dll";
         break;
       //$CASES-OMITTED$
       default:
@@ -108,13 +109,13 @@ public class DefaultCxxPlatforms {
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_STRIP),
         new GnuArchiver(new HashedFileTool(DEFAULT_AR)),
+        new HashedFileTool(DEFAULT_RANLIB),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
-        Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
-        Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
         sharedLibraryExtension,
+        sharedLibraryVersionedExtensionFormat,
         Optional.<DebugPathSanitizer>absent(),
         ImmutableMap.<String, String>of());
   }

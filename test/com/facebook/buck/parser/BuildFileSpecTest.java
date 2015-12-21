@@ -18,7 +18,11 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.Config;
+import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
@@ -36,7 +40,7 @@ public class BuildFileSpecTest {
   public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void recursiveVsNonRecursive() throws IOException {
+  public void recursiveVsNonRecursive() throws IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
@@ -48,36 +52,42 @@ public class BuildFileSpecTest {
 
     // Test a non-recursive spec.
     BuildFileSpec nonRecursiveSpec = BuildFileSpec.fromPath(buildFile.getParent());
-    ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(buildFile);
-    ImmutableSet<Path> actualBuildFiles = nonRecursiveSpec.findBuildFiles(filesystem, "BUCK");
+    ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    ImmutableSet<Path> actualBuildFiles = nonRecursiveSpec.findBuildFiles(cell);
     assertEquals(expectedBuildFiles, actualBuildFiles);
 
     // Test a recursive spec.
     BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
-    expectedBuildFiles = ImmutableSet.of(buildFile, nestedBuildFile);
-    actualBuildFiles = recursiveSpec.findBuildFiles(filesystem, "BUCK");
+    expectedBuildFiles =
+        ImmutableSet.of(filesystem.resolve(buildFile), filesystem.resolve(nestedBuildFile));
+    actualBuildFiles = recursiveSpec.findBuildFiles(cell);
     assertEquals(expectedBuildFiles, actualBuildFiles);
   }
 
   @Test
-  public void recursiveIgnorePaths() throws IOException {
-    // NOTE(agallagher): FakeProjectFilesystem doesn't currently support a proper walkFileTree
-    // method, so use a real one here to test ignore dirs.
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+  public void recursiveIgnorePaths() throws IOException, InterruptedException {
+    Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = a/b");
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath(), config);
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);
 
-    Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
+
     filesystem.mkdirs(ignoredBuildFile.getParent());
     filesystem.writeContentsToPath("", ignoredBuildFile);
 
     // Test a recursive spec with an ignored dir.
-    ImmutableSet<Path> ignore = ImmutableSet.of(ignoredBuildFile.getParent());
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent(), ignore);
-    ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(buildFile);
-    ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(filesystem, "BUCK");
+
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
+    ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(cell);
     assertEquals(expectedBuildFiles, actualBuildFiles);
   }
 
 }
+

@@ -15,7 +15,9 @@
 The root of your project may contain a configuration file named <code>.buckjavaargs</code>. If
 present, Buck will read this file and append any flags specified in it when launching its java
 process. Note the flags are only used when launching the main Buck java process, and not any other
-java tools Buck will invoke.
+java tools Buck will invoke.  The content of this file is split into individual arguments
+according to the rules of Python's <code>shlex.split</code>.  On POSIX systems, Bourne shell
+quoting rules apply.
 
 <p>
 
@@ -24,6 +26,26 @@ For example, to specify a larger heap size:
 {literal}<pre>
 -Xmx2g</pre>{/literal}
 
+
+</div> // close overview
+
+{call buck.footer /}
+
+{call buck.header}
+  {param title: '.buckjavaargs.local' /}
+  {param description}
+    An optional file that specifies additional java command line arguments to pass to Buck,
+    overriding <code>.buckjavaargs</code>.
+  {/param}
+{/call}
+
+<div class="{css overview}">
+
+<code>.buckjavaargs.local</code> works the same way as <code>.buckjavaargs</code>;
+options given in the former are added to Java's command line after the options
+given in the latter.  It may be useful to configure your source management system
+to ignore <code>.buckjavaargs.local</code>, allowing developers to customize
+Java options without risking checking in changes to a shared <code>.buckjavaargs</code>.
 
 </div> // close overview
 

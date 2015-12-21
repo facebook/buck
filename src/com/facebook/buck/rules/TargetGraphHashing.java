@@ -18,15 +18,14 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.hashing.StringHashing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -58,34 +57,14 @@ public class TargetGraphHashing {
   public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
       ProjectFilesystem projectFilesystem,
       TargetGraph targetGraph,
-      Function<BuildTarget, HashCode> buildTargetToRuleHashCode,
-      BuildTarget... roots
-    ) throws IOException {
-    return hashTargetGraph(
-        projectFilesystem,
-        targetGraph,
-        buildTargetToRuleHashCode,
-        ImmutableList.copyOf(roots)
-    );
-  }
-
-  /**
-   * Given a {@link TargetGraph} and any number of root nodes to traverse,
-   * returns a map of {@code (BuildTarget, HashCode)} pairs for all root
-   * build targets and their dependencies.
-   */
-  public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
-      ProjectFilesystem projectFilesystem,
-      TargetGraph targetGraph,
-      Function<BuildTarget, HashCode> buildTargetToRuleHashCode,
-      Iterable<BuildTarget> roots
-    ) throws IOException {
+      FileHashLoader fileHashLoader,
+      Iterable<BuildTarget> roots) throws IOException {
     try {
       Map<BuildTarget, HashCode> buildTargetHashes = new HashMap<>();
       TargetGraphHashingTraversal traversal = new TargetGraphHashingTraversal(
           projectFilesystem,
           targetGraph,
-          buildTargetToRuleHashCode,
+          fileHashLoader,
           buildTargetHashes);
       traversal.traverse(targetGraph.getAll(roots));
       return ImmutableMap.copyOf(buildTargetHashes);
@@ -98,17 +77,17 @@ public class TargetGraphHashing {
       extends AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>> {
     private final ProjectFilesystem projectFilesystem;
     private final TargetGraph targetGraph;
-    private final Function<BuildTarget, HashCode> buildTargetToRuleHashCode;
+    private final FileHashLoader fileHashLoader;
     private final Map<BuildTarget, HashCode> buildTargetHashes;
 
     public TargetGraphHashingTraversal(
         ProjectFilesystem projectFilesystem,
         TargetGraph targetGraph,
-        Function<BuildTarget, HashCode> buildTargetToRuleHashCode,
+        FileHashLoader fileHashLoader,
         Map<BuildTarget, HashCode> buildTargetHashes) {
       this.projectFilesystem = projectFilesystem;
       this.targetGraph = targetGraph;
-      this.buildTargetToRuleHashCode = buildTargetToRuleHashCode;
+      this.fileHashLoader = fileHashLoader;
       this.buildTargetHashes = buildTargetHashes;
     }
 
@@ -142,12 +121,12 @@ public class TargetGraphHashing {
       LOG.verbose("Hashing node %s", node);
       // Hash the node's build target and rules.
       StringHashing.hashStringAndLength(hasher, node.getBuildTarget().toString());
-      HashCode targetRuleHashCode = buildTargetToRuleHashCode.apply(node.getBuildTarget());
+      HashCode targetRuleHashCode = node.getRawInputsHashCode();
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
 
       // Hash the contents of all input files and directories.
-      PathHashing.hashPaths(hasher, projectFilesystem, node.getInputs());
+      PathHashing.hashPaths(hasher, fileHashLoader, projectFilesystem, node.getInputs());
 
       // We've already visited the dependencies (this is a depth-first traversal), so
       // hash each dependency's build target and that build target's own hash.

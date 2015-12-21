@@ -24,12 +24,14 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.java.FakeJavaPackageFinder;
-import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
@@ -60,19 +62,19 @@ public class CommandRunnerParamsForTesting {
       ObjectMapper objectMapper,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     return new CommandRunnerParams(
         console,
         cell,
         Main.createAndroidPlatformTargetSupplier(
             androidDirectoryResolver,
-            new AndroidBuckConfig(new FakeBuckConfig(), platform),
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
             eventBus),
         artifactCache,
         eventBus,
-        Parser.createBuildFileParser(
-            cell,
-            /* useWatchmanGlob */ false,
-            ParserConfig.AllowSymlinks.ALLOW),
+        new Parser(
+            new ParserConfig(cell.getBuckConfig()),
+            typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory)),
         platform,
         environment,
         javaPackageFinder,
@@ -93,7 +95,7 @@ public class CommandRunnerParamsForTesting {
     private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
-    private BuckConfig config = new FakeBuckConfig();
+    private BuckConfig config = FakeBuckConfig.builder().build();
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());

@@ -1,0 +1,16 @@
+java_binary(
+  name = 'jarjar',
+  deps = [
+    ':jarjar_prebuilt',
+  ],
+  main_class = 'com.tonicsystems.jarjar.Main',
+  visibility = [
+    '//third-party/java/...',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jarjar_prebuilt',
+  binary_jar = 'jarjar-1.4.jar',
+)
+

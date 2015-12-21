@@ -39,6 +39,7 @@ import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * A allpaths(from, to) expression, which computes all paths between the
@@ -71,13 +72,15 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      Executor executor) throws QueryException, InterruptedException {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 
-    Set<T> fromSet = from.eval(env);
-    Set<T> toSet = to.eval(env);
+    Set<T> fromSet = from.eval(env, executor);
+    Set<T> toSet = to.eval(env, executor);
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;
@@ -85,7 +88,7 @@ public class AllPathsFunction implements QueryFunction {
     //    the reverse dependencies. This will effectively compute the intersection between the nodes
     //    reachable from the "from" set and the reverse transitive closure of the "to" set.
 
-    env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE);
+    env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE, executor);
 
     Set<T> reachableFromX = env.getTransitiveClosure(fromSet);
     Set<T> result = MoreSets.intersection(reachableFromX, toSet);

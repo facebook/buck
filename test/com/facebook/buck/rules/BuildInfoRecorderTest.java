@@ -44,6 +44,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -170,7 +172,7 @@ public class BuildInfoRecorderTest {
             return true;
           }
           @Override
-          public void store(
+          public ListenableFuture<Void> store(
               ImmutableSet<RuleKey> ruleKeys,
               ImmutableMap<String, String> metadata,
               Path output) {
@@ -204,6 +206,7 @@ public class BuildInfoRecorderTest {
             } catch (IOException e) {
               throw Throwables.propagate(e);
             }
+            return Futures.immediateFuture(null);
           }
         };
 

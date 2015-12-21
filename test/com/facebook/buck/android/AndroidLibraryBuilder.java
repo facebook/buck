@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -43,7 +43,9 @@ public class AndroidLibraryBuilder extends AbstractNodeBuilder<AndroidLibraryDes
   }
 
   public AndroidLibraryBuilder addProcessorBuildTarget(BuildTarget processorRule) {
-    arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, processorRule);
+    arg.annotationProcessorDeps = amend(
+        arg.annotationProcessorDeps,
+        processorRule);
     return this;
   }
 

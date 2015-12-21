@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -31,23 +32,27 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DependencyFileRuleKeyBuilderFactoryTest {
 
   @Test
-  public void ruleKeyDoesNotChangeIfInputContentsChanges() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void ruleKeyDoesNotChangeIfInputContentsChanges() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path output = Paths.get("output");
@@ -59,29 +64,44 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             .build(resolver, filesystem);
 
     // Build a rule key with a particular hash set for the output for the above rule.
-    FakeFileHashCache hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(
-                output,
-                HashCode.fromInt(0)));
+    FakeFileHashCache hashCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            output,
+            HashCode.fromInt(0)));
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory1 = new DefaultRuleKeyBuilderFactory(
+        hashCache,
+        pathResolver);
+
     RuleKey inputKey1 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            hashCache,
+            pathResolver,
+            defaultRuleKeyBuilderFactory1)
+            .build(rule, ImmutableList.<Path>of());
 
     // Now, build a rule key with a different hash for the output for the above rule.
-    hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(
-                output,
-                HashCode.fromInt(1)));
+    hashCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            output,
+            HashCode.fromInt(1)));
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory2 = new DefaultRuleKeyBuilderFactory(
+        hashCache,
+        pathResolver);
+
     RuleKey inputKey2 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            hashCache,
+            pathResolver,
+            defaultRuleKeyBuilderFactory2)
+            .build(rule, ImmutableList.<Path>of());
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
 
   @Test
-  public void ruleKeyDoesNotChangeIfInputContentsInRuleKeyAppendableChanges() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+  public void ruleKeyDoesNotChangeIfInputContentsInRuleKeyAppendableChanges() throws IOException {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
@@ -95,22 +115,36 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
         };
 
     // Build a rule key with a particular hash set for the output for the above rule.
-    FakeFileHashCache hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(
-                output,
-                HashCode.fromInt(0)));
+    FakeFileHashCache hashCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            filesystem.resolve(output),
+            HashCode.fromInt(0)));
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory1 = new DefaultRuleKeyBuilderFactory(
+        hashCache,
+        pathResolver);
+
     RuleKey inputKey1 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            hashCache,
+            pathResolver,
+            defaultRuleKeyBuilderFactory1)
+            .build(rule, ImmutableList.<Path>of());
 
     // Now, build a rule key with a different hash for the output for the above rule.
-    hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(
-                output,
-                HashCode.fromInt(1)));
+    hashCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            filesystem.resolve(output),
+            HashCode.fromInt(1)));
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory2 = new DefaultRuleKeyBuilderFactory(
+        hashCache,
+        pathResolver);
+
     RuleKey inputKey2 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DefaultDependencyFileRuleKeyBuilderFactory(
+            hashCache,
+            pathResolver,
+            defaultRuleKeyBuilderFactory2)
+            .build(rule, ImmutableList.<Path>of());
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }

@@ -32,10 +32,10 @@ Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
 {template .package_name_arg}
 {call buck.arg}
   {param name : 'package_name' /}
-  {param default : 'path relative to the buck root' /}
+  {param default : 'go.prefix + path relative to the buck root' /}
   {param desc}
   Sets the full name of the package being compiled. This defaults to the path from the buck root.
-  (e.g. given a ./.buckconfig, a rule in ./a/b/BUCK defaults to package "a/b"
+  (e.g. given a ./.buckconfig, a rule in ./a/b/BUCK defaults to package "a/b")
   {/param}
 {/call}
 {/template}

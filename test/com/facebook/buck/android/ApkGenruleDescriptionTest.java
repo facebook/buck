@@ -18,7 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.Genrule;
 import com.google.common.base.Optional;
 
@@ -39,8 +41,9 @@ import java.nio.file.Paths;
 public class ApkGenruleDescriptionTest {
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     InstallableApk installableApk =
         ruleResolver.addToIndex(

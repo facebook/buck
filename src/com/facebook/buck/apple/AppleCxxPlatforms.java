@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.BsdArchiver;
 import com.facebook.buck.cxx.ClangCompiler;
@@ -32,6 +34,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -41,6 +44,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -75,7 +80,7 @@ public class AppleCxxPlatforms {
       AppleSdk targetSdk,
       String minVersion,
       String targetArchitecture,
-      AppleSdkPaths sdkPaths,
+      final AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       ExecutableFinder executableFinder) {
 
@@ -94,35 +99,17 @@ public class AppleCxxPlatforms {
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
-    // TODO(user): Add more and better cflags.
+    // TODO(bhamiltoncx): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
-    switch (targetSdk.getApplePlatform().getName()) {
-      case ApplePlatform.Name.IPHONEOS:
-        cflagsBuilder.add("-mios-version-min=" + minVersion);
-        break;
-      case ApplePlatform.Name.IPHONESIMULATOR:
-        cflagsBuilder.add("-mios-simulator-version-min=" + minVersion);
-        break;
-      case ApplePlatform.Name.WATCHOS:
-        cflagsBuilder.add("-mwatchos-version-min=" + minVersion);
-        break;
-      case ApplePlatform.Name.WATCHSIMULATOR:
-        cflagsBuilder.add("-mwatchos-simulator-version-min=" + minVersion);
-        break;
-      default:
-        // For Mac builds, -mmacosx-version-min=<version>.
-        cflagsBuilder.add(
-            "-m" + targetSdk.getApplePlatform().getName() + "-version-min=" + minVersion);
-        break;
-    }
+    cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
     // Some flags are common to both asm and C.
     ImmutableList<String> asflags = cflagsBuilder.build();
 
     ImmutableList<String> ldflags =
-        ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
+        ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion(), "-ObjC"));
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
     versionsBuilder.add(targetSdk.getVersion());
@@ -147,6 +134,12 @@ public class AppleCxxPlatforms {
         getToolPath("ar", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
         "apple-ar",
+        version);
+
+    Tool ranlib = new VersionedTool(
+        getToolPath("ranlib", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of("-s"),
+        "apple-ranlib",
         version);
 
     Tool strip = new VersionedTool(
@@ -191,6 +184,20 @@ public class AppleCxxPlatforms {
         "apple-lipo",
         version);
 
+    Tool lldb = new VersionedTool(
+        getToolPath("lldb", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "lldb",
+        version);
+
+    Optional<Path> stubBinaryPath = targetSdk.getApplePlatform().getStubBinaryPath().transform(
+        new Function<Path, Path>() {
+          @Override
+          public Path apply(Path input) {
+            return sdkPaths.getSdkPath().resolve(input);
+          }
+        });
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -220,42 +227,57 @@ public class AppleCxxPlatforms {
     }
     ImmutableMap<String, String> macros = macrosBuilder.build();
 
+    Optional<String> buildVersion;
+    try (InputStream versionPlist =
+             Files.newInputStream(sdkPaths.getPlatformPath().resolve("version.plist"))) {
+      NSDictionary versionInfo = (NSDictionary) PropertyListParser.parse(versionPlist);
+      buildVersion = Optional.of(versionInfo.objectForKey("ProductBuildVersion").toString());
+    } catch (Exception e) {
+      buildVersion = Optional.absent();
+    }
+
     CxxPlatform cxxPlatform = CxxPlatforms.build(
-        targetFlavor,
-        config,
-        clangPath,
-        new ClangPreprocessor(clangPath),
-        new ClangCompiler(clangPath),
-        new ClangCompiler(clangXxPath),
-        new ClangPreprocessor(clangPath),
-        new ClangPreprocessor(clangXxPath),
-        new DarwinLinker(clangXxPath),
+      targetFlavor,
+      config,
+      clangPath,
+      new ClangPreprocessor(clangPath),
+      new ClangCompiler(clangPath),
+      new ClangCompiler(clangXxPath),
+      new ClangPreprocessor(clangPath),
+      new ClangPreprocessor(clangXxPath),
+      new DarwinLinker(clangXxPath),
         ImmutableList.<String>builder()
-            .addAll(cflags)
-            .addAll(ldflags)
-            .build(),
-        strip,
-        new BsdArchiver(ar),
-        asflags,
-        ImmutableList.<String>of(),
-        cflags,
-        ImmutableList.<String>of(),
-        getOptionalTool("lex", toolSearchPaths, executableFinder, version),
-        getOptionalTool("yacc", toolSearchPaths, executableFinder, version),
-        "dylib",
-        Optional.of(debugPathSanitizer),
-        macros);
+          .addAll(cflags)
+          .addAll(ldflags)
+          .build(),
+      strip,
+      new BsdArchiver(ar),
+      ranlib,
+      asflags,
+      ImmutableList.<String>of(),
+      cflags,
+      ImmutableList.<String>of(),
+      "dylib",
+      "%s.dylib",
+      Optional.of(debugPathSanitizer),
+      macros);
 
     return AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
         .setAppleSdk(targetSdk)
         .setAppleSdkPaths(sdkPaths)
+        .setMinVersion(minVersion)
+        .setBuildVersion(buildVersion)
         .setActool(actool)
         .setIbtool(ibtool)
         .setXctest(xctest)
         .setOtest(otest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)
+        .setStubBinary(stubBinaryPath)
+        .setLldb(lldb)
+        .setCodesignAllocate(
+            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version))
         .build();
   }
 

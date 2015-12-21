@@ -17,9 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-
-import java.nio.file.Path;
 
 public class ProGuardConfig {
 
@@ -33,12 +32,8 @@ public class ProGuardConfig {
    * @return The path to the proguard.jar file that is overridden by the current project.  If not
    * specified, the Android platform proguard.jar will be used.
    */
-  public Optional<Path> getProguardJarOverride() {
-    Optional<String> pathString = delegate.getValue("tools", "proguard");
-    if (pathString.isPresent()) {
-      return delegate.checkPathExists(pathString.get(), "Overridden proguard path not found: ");
-    }
-    return Optional.absent();
+  public Optional<SourcePath> getProguardJarOverride() {
+    return delegate.getSourcePath("tools", "proguard");
   }
 
   /**

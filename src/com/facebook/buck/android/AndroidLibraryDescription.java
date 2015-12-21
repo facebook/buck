@@ -16,13 +16,13 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
-import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.CalculateAbi;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaLibraryDescription;
-import com.facebook.buck.java.JavaSourceJar;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.common.ResourceValidator;
+import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -81,26 +82,21 @@ public class AndroidLibraryDescription
       return new JavaSourceJar(params, pathResolver, args.srcs.get(), args.mavenCoords);
     }
 
-    JavacOptions.Builder javacOptionsBuilder =
-        JavaLibraryDescription.getJavacOptions(
-            pathResolver,
-            args,
-            defaultOptions);
-
-    AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
-        params.getBuildTarget(),
-        params.getProjectFilesystem(),
-        resolver);
-    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
-
-    JavacOptions javacOptions = javacOptionsBuilder.build();
+    JavacOptions javacOptions = JavacOptionsFactory.create(
+        defaultOptions,
+        params,
+        resolver,
+        pathResolver,
+        args
+    );
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions,
-        ResourceDependencyMode.FIRST_ORDER);
+        DependencyMode.FIRST_ORDER,
+        args.resourceUnionPackage);
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
@@ -143,10 +139,9 @@ public class AndroidLibraryDescription
                               javacOptions.getInputs(pathResolver)))),
                   pathResolver,
                   args.srcs.get(),
-                  JavaLibraryDescription.validateResources(
+                  ResourceValidator.validateResources(
                       pathResolver,
-                      args,
-                      params.getProjectFilesystem()),
+                      params.getProjectFilesystem(), args.resources.get()),
                   args.proguardConfig.transform(
                       SourcePaths.toSourcePath(params.getProjectFilesystem())),
                   args.postprocessClassesCommands.get(),
@@ -158,7 +153,6 @@ public class AndroidLibraryDescription
                   args.resourcesRoot,
                   args.mavenCoords,
                   args.manifest,
-                  /* isPrebuiltAar */ false,
                   args.tests.get()));
 
       resolver.addToIndex(
@@ -182,5 +176,6 @@ public class AndroidLibraryDescription
   @SuppressFieldNotInitialized
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
+    public Optional<String> resourceUnionPackage;
   }
 }

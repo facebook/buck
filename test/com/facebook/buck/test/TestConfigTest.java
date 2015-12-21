@@ -37,7 +37,7 @@ public class TestConfigTest {
 
   @Test
   public void testDefaultSummaryVerbosity() throws IOException {
-    TestResultSummaryVerbosity summaryVerbosity = new TestConfig(new FakeBuckConfig())
+    TestResultSummaryVerbosity summaryVerbosity = new TestConfig(FakeBuckConfig.builder().build())
         .getResultSummaryVerbosity();
     assertTrue(summaryVerbosity.getIncludeStdErr());
     assertTrue(summaryVerbosity.getIncludeStdOut());

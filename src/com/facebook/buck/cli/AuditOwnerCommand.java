@@ -16,15 +16,16 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -144,19 +145,19 @@ public class AuditOwnerCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
         params.getCell().getFilesystem(),
-        parserConfig.getBuildFileName());
+        params.getCell().getBuildFileName());
     try {
       OwnersReport report = buildOwnersReport(
           params,
-          parserConfig,
           buildFileTree,
           getArguments(),
           isGuessForDeletedEnabled());
       printReport(params, report);
     } catch (BuildFileParseException | BuildTargetException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return BUILD_TARGET_ERROR;
     }
     return 0;
@@ -164,13 +165,14 @@ public class AuditOwnerCommand extends AbstractCommand {
 
   static OwnersReport buildOwnersReport(
       CommandRunnerParams params,
-      ParserConfig parserConfig,
       BuildFileTree buildFileTree,
       Iterable<String> arguments,
       boolean guessForDeletedEnabled)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    final Path rootPath = params.getCell().getFilesystem().getRootPath();
-    Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
+    ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
+    final Path rootPath = cellFilesystem.getRootPath();
+    Preconditions.checkState(rootPath.isAbsolute());
+    Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
     OwnersReport report = OwnersReport.emptyReport();
 
     for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
@@ -185,42 +187,24 @@ public class AuditOwnerCommand extends AbstractCommand {
         continue;
       }
 
-      Path buckFile = basePath.get().resolve(parserConfig.getBuildFileName());
-      Preconditions.checkState(params.getCell().getFilesystem().exists(buckFile));
-
-      // Get the target base name.
-      Preconditions.checkState(rootPath.isAbsolute());
-      Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
-      String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
+      Path buckFile = cellFilesystem.resolve(basePath.get())
+          .resolve(params.getCell().getBuildFileName());
+      Preconditions.checkState(cellFilesystem.exists(buckFile));
 
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
         try {
-          List<Map<String, Object>> buildFileTargets = params.getParser().parseBuildFile(
+          targetNodes.put(
               buckFile,
-              parserConfig,
-              params.getEnvironment(),
-              params.getConsole(),
-              params.getBuckEventBus());
+              params.getParser().getAllTargetNodes(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  /* enable profiling */ false,
+                  buckFile));
+        } catch (BuildFileParseException e) {
+          Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
+          String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
 
-          for (Map<String, Object> buildFileTarget : buildFileTargets) {
-            if (!buildFileTarget.containsKey("name")) {
-              continue;
-            }
-
-            BuildTarget target = BuildTarget.builder(
-                targetBaseName,
-                (String) buildFileTarget.get("name")).build();
-
-            if (!targetNodes.containsKey(buckFile)) {
-              targetNodes.put(buckFile, Lists.<TargetNode<?>>newArrayList());
-            }
-            TargetNode<?> parsedTargetNode = params.getParser().getTargetNode(target);
-            if (parsedTargetNode != null) {
-              targetNodes.get(buckFile).add(parsedTargetNode);
-            }
-          }
-        } catch (BuildFileParseException | BuildTargetException e) {
           params
               .getConsole()
               .getStdErr()

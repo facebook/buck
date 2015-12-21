@@ -32,9 +32,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.java.DefaultJavaPackageFinder;
-import com.facebook.buck.java.FakeJavaLibrary;
-import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.FakeJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -50,12 +50,14 @@ import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -116,9 +118,12 @@ public class TestRunningTest {
     assertTrue(MorePaths.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
-        new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
+        BuildTargetFactory.newInstance("//foo:bar"),
+        resolver).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
@@ -145,9 +150,12 @@ public class TestRunningTest {
     assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
-        new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
+        BuildTargetFactory.newInstance("//foo:bar"),
+        resolver).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
@@ -172,9 +180,12 @@ public class TestRunningTest {
     assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
-        new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
+        BuildTargetFactory.newInstance("//foo:bar"),
+        resolver).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
@@ -198,9 +209,12 @@ public class TestRunningTest {
     assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
-        new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
+        BuildTargetFactory.newInstance("//foo:bar"),
+        resolver).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
@@ -237,9 +251,12 @@ public class TestRunningTest {
     expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot).times(2);
     expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements).times(2);
 
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
-        new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
+        BuildTargetFactory.newInstance("//foo:bar"),
+        resolver).setJavaSrcs(javaSrcs);
 
     replay(defaultJavaPackageFinder);
 
@@ -300,7 +317,7 @@ public class TestRunningTest {
     TestCaseSummary testCase = new TestCaseSummary("TestCase", resultList);
     List<TestCaseSummary> testCases = ImmutableList.of(testCase);
 
-    TestResults testResults = new TestResults(testCases);
+    TestResults testResults = FakeTestResults.of(testCases);
     List<TestResults> testResultsList = ImmutableList.of(testResults);
 
     // Call the XML generation method with our test data.
@@ -401,9 +418,10 @@ public class TestRunningTest {
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.<Label>of(Label.of("windows")),
+        ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
@@ -433,13 +451,14 @@ public class TestRunningTest {
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.<Label>of(Label.of("windows")),
+        ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.miss());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine);
@@ -464,9 +483,10 @@ public class TestRunningTest {
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.<Label>of(Label.of("windows")),
+        ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSortedSet.<BuildRule>of()) {
 
       @Override
@@ -479,7 +499,7 @@ public class TestRunningTest {
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.skip());
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
@@ -512,7 +532,7 @@ public class TestRunningTest {
             0,
             atomicExecutionOrder);
     final TestResults fakeTestResults =
-        new TestResults(
+        FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
                     "TestCase",
@@ -529,7 +549,8 @@ public class TestRunningTest {
     BuildTarget separateTest1Target = BuildTargetFactory.newInstance("//:test1");
     FakeTestRule separateTest1 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(separateTest1Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("separateTestStep1OutputDir")),
         true, // runTestSeparately
@@ -550,7 +571,8 @@ public class TestRunningTest {
     BuildTarget separateTest2Target = BuildTargetFactory.newInstance("//:test2");
     FakeTestRule separateTest2 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(separateTest2Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("separateTestStep2OutputDir")),
         true, // runTestSeparately
@@ -571,7 +593,8 @@ public class TestRunningTest {
     BuildTarget separateTest3Target = BuildTargetFactory.newInstance("//:test3");
     FakeTestRule separateTest3 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(separateTest3Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("separateTestStep3OutputDir")),
         true, // runTestSeparately
@@ -590,11 +613,11 @@ public class TestRunningTest {
     FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
         ImmutableMap.of(
             separateTest1Target,
-            BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.skip()),
+            BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.miss()),
             separateTest2Target,
-            BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.skip()),
+            BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.miss()),
             separateTest3Target,
-            BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.skip())
+            BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())
         ),
         ImmutableMap.of(
             separateTest1Target, new RuleKey("00"),
@@ -648,7 +671,7 @@ public class TestRunningTest {
             0,
             atomicExecutionOrder);
     final TestResults fakeTestResults =
-        new TestResults(
+        FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
                     "TestCase",
@@ -666,7 +689,8 @@ public class TestRunningTest {
     BuildTarget separateTest1Target = BuildTargetFactory.newInstance("//:test1");
     FakeTestRule separateTest1 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(separateTest1Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("separateTestStep1OutputDir")),
         true, // runTestSeparately
@@ -687,7 +711,8 @@ public class TestRunningTest {
     BuildTarget separateTest2Target = BuildTargetFactory.newInstance("//:test2");
     FakeTestRule separateTest2 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(separateTest2Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("separateTestStep2OutputDir")),
         true, // runTestSeparately
@@ -708,7 +733,8 @@ public class TestRunningTest {
     BuildTarget separateTest3Target = BuildTargetFactory.newInstance("//:test3");
     FakeTestRule separateTest3 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(separateTest3Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("separateTestStep3OutputDir")),
         true, // runTestSeparately
@@ -729,7 +755,8 @@ public class TestRunningTest {
     BuildTarget parallelTest1Target = BuildTargetFactory.newInstance("//:paralleltest1");
     FakeTestRule parallelTest1 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(parallelTest1Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("parallelTestStep1OutputDir")),
         false, // runTestSeparately
@@ -750,7 +777,8 @@ public class TestRunningTest {
     BuildTarget parallelTest2Target = BuildTargetFactory.newInstance("//:paralleltest2");
     FakeTestRule parallelTest2 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(parallelTest2Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("parallelTestStep2OutputDir")),
         false, // runTestSeparately
@@ -771,7 +799,8 @@ public class TestRunningTest {
     BuildTarget parallelTest3Target = BuildTargetFactory.newInstance("//:paralleltest3");
     FakeTestRule parallelTest3 = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(parallelTest3Target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("parallelTestStep3OutputDir")),
         false, // runTestSeparately
@@ -791,22 +820,22 @@ public class TestRunningTest {
         ImmutableMap.<BuildTarget, BuildResult>builder()
             .put(
                 separateTest1Target,
-                BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 separateTest2Target,
-                BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 separateTest3Target,
-                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 parallelTest1Target,
-                BuildResult.success(parallelTest1, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest1, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 parallelTest2Target,
-                BuildResult.success(parallelTest2, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest2, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 parallelTest3Target,
-                BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.miss()))
             .build(),
         ImmutableMap.<BuildTarget, RuleKey>builder()
             .put(separateTest1Target, new RuleKey("00"))
@@ -904,7 +933,7 @@ public class TestRunningTest {
         .builder()
         .build();
     final TestResults failingTestResults =
-        new TestResults(
+        FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
                     "TestCase",
@@ -921,7 +950,8 @@ public class TestRunningTest {
     BuildTarget failingTestTarget = BuildTargetFactory.newInstance("//:failingtest");
     FakeTestRule failingTest = new FakeTestRule(
         new FakeBuildRuleParamsBuilder(failingTestTarget).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSet.<Label>of(),
         Optional.of(Paths.get("failingTestStep1OutputDir")),
         true, // runTestSeparately
@@ -937,7 +967,7 @@ public class TestRunningTest {
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
     FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
         ImmutableMap.of(
-            failingTestTarget, BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.skip())
+            failingTestTarget, BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.miss())
         ),
         ImmutableMap.of(
             failingTestTarget, new RuleKey("00")

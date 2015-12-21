@@ -22,7 +22,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
     <!-- Checks that FIXME is not used in comments.  TODO is preferred.
     -->
     <property name="format" value="((//.*)|(\*.*))FIXME" />
-    <property name="message" value='TODO is preferred to FIXME.  e.g. "TODO(royw): Refactor when v2 is released."' />
+    <property name="message" value='TODO is preferred to FIXME.  e.g. "TODO(rowillia): Refactor when v2 is released."' />
   </module>
 
   <module name="RegexpSingleline">
@@ -30,7 +30,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
          by an open paren.)
     -->
     <property name="format" value="((//.*)|(\*.*))TODO[^(^s]" />
-    <property name="message" value='All TODOs should be named.  e.g. "TODO(royw): Refactor when v2 is released."' />
+    <property name="message" value='All TODOs should be named.  e.g. "TODO(rowillia): Refactor when v2 is released."' />
   </module>
 
   <module name="RegexpSingleline">

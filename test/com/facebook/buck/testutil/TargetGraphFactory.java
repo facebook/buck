@@ -24,16 +24,24 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class TargetGraphFactory {
 
   private TargetGraphFactory() {}
 
   public static TargetGraph newInstance(Iterable<TargetNode<?>> nodes) {
-    ImmutableMap.Builder<BuildTarget, TargetNode<?>> builder = ImmutableMap.builder();
+    Map<BuildTarget, TargetNode<?>> builder = new HashMap<>();
     for (TargetNode<?> node : nodes) {
       builder.put(node.getBuildTarget(), node);
+      BuildTarget unflavoredTarget =
+          BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
+      if (node.getBuildTarget().isFlavored() && !builder.containsKey(unflavoredTarget)) {
+        builder.put(unflavoredTarget, node);
+      }
     }
-    ImmutableMap<BuildTarget, TargetNode<?>> map = builder.build();
+    ImmutableMap<BuildTarget, TargetNode<?>> map = ImmutableMap.copyOf(builder);
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     for (TargetNode<?> node : map.values()) {
@@ -42,7 +50,7 @@ public class TargetGraphFactory {
         graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
       }
     }
-    return new TargetGraph(graph);
+    return new TargetGraph(graph, map);
   }
 
   public static TargetGraph newInstance(TargetNode<?>... nodes) {

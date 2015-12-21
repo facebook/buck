@@ -22,6 +22,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.BuildRuleWithAppleBundle;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
@@ -29,28 +30,27 @@ import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.ReactNativeBuckConfig;
-import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -60,6 +60,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
@@ -67,10 +68,9 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -180,90 +180,149 @@ public class InstallCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    // Make sure that only one build target is specified.
-    if (getArguments().size() != 1) {
-      params.getConsole().getStdErr().println(
-          "Must specify exactly one rule.");
-      return 1;
-    }
-
-    // TODO(user): Cache argument parsing.
-    Optional<String> helperTarget = Optional.absent();
-    try {
-      TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
-          params.getBuckConfig(),
-          params.getCell().getFilesystem().getIgnorePaths(),
-          getArguments()).get(0);
-
-      BuildTarget target = params.getParser().resolveTargetSpec(
-          spec,
-          new ParserConfig(params.getBuckConfig()),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          getEnableProfiling()).iterator().next();
-      TargetNode<?> node = params.getParser().getTargetNode(target);
-      if (node != null &&
-          node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
-        for (Flavor flavor : node.getBuildTarget().getFlavors()) {
-          if (ApplePlatform.needsInstallHelper(flavor.getName())) {
-            AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
-
-            Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
-            if (deviceHelperTarget.isPresent()) {
-              helperTarget = Optional.of(deviceHelperTarget.get().toString());
-            }
-          }
-        }
-      }
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
-
-    // Build the specified target.
-    int exitCode = super.run(params, helperTarget);
+    int exitCode = checkArguments(params);
     if (exitCode != 0) {
       return exitCode;
     }
 
-    Build build = super.getBuild();
-    ActionGraph graph = build.getActionGraph();
-    BuildRule buildRule = Preconditions.checkNotNull(
-        graph.findBuildRuleByTarget(getBuildTargets().get(0)));
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Install",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      // Get the helper targets if present
+      ImmutableSet<String> installHelperTargets;
+      try {
+        installHelperTargets = getInstallHelperTargets(params, pool.getExecutor());
+      } catch (BuildTargetException | BuildFileParseException e) {
+        params.getBuckEventBus().post(
+            ConsoleEvent.severe(
+                MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
+      }
 
-    if (buildRule instanceof InstallableApk) {
-      ExecutionContext.Builder builder = ExecutionContext.builder()
-          .setExecutionContext(build.getExecutionContext())
-          .setAdbOptions(Optional.<AdbOptions>of(adbOptions(params.getBuckConfig())))
-          .setTargetDeviceOptions(Optional.<TargetDeviceOptions>of(targetDeviceOptions()));
-      return installApk(
-          params,
-          (InstallableApk) buildRule,
-          builder.build());
-    } else if (buildRule instanceof AppleBundle) {
-      AppleBundle appleBundle = (AppleBundle) buildRule;
-      InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
-      params.getBuckEventBus().post(started);
-      InstallResult installResult = installAppleBundle(
-          params,
-          appleBundle,
-          appleBundle.getProjectFilesystem(),
-          build.getExecutionContext().getProcessExecutor());
-      params.getBuckEventBus().post(InstallEvent.finished(
-          started,
-          installResult.getExitCode() == 0,
-          installResult.getLaunchedPid()));
-      return installResult.getExitCode();
-    } else {
-      params.getConsole().printBuildFailure(
-          String.format(
-              "Specified rule %s must be of type android_binary() or apk_genrule() or " +
-                  "apple_bundle() but was %s().\n",
-              buildRule.getFullyQualifiedName(),
-              buildRule.getType()));
-      return 1;
+      // Build the targets
+      exitCode = super.run(params, pool.getExecutor(), installHelperTargets);
+      if (exitCode != 0) {
+        return exitCode;
+      }
     }
+
+    // Install the targets
+    try {
+      exitCode = install(params);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    }
+    if (exitCode != 0) {
+      return exitCode;
+    }
+    return exitCode;
+  }
+
+  private int install(CommandRunnerParams params)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
+
+    Build build = super.getBuild();
+    int exitCode = 0;
+
+    for (BuildTarget buildTarget : getBuildTargets()) {
+
+      BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
+
+      if (buildRule instanceof InstallableApk) {
+        ExecutionContext.Builder builder = ExecutionContext.builder()
+            .setExecutionContext(build.getExecutionContext())
+            .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
+            .setTargetDeviceOptions(Optional.of(targetDeviceOptions()));
+        exitCode = installApk(
+            params,
+            (InstallableApk) buildRule,
+            builder.build());
+        if (exitCode != 0) {
+          return exitCode;
+        }
+      } else if (buildRule instanceof BuildRuleWithAppleBundle) {
+        AppleBundle appleBundle = ((BuildRuleWithAppleBundle) buildRule).getAppleBundle();
+        InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
+        params.getBuckEventBus().post(started);
+        InstallResult installResult = installAppleBundle(
+            params,
+            appleBundle,
+            appleBundle.getProjectFilesystem(),
+            build.getExecutionContext().getProcessExecutor());
+        params.getBuckEventBus().post(
+            InstallEvent.finished(
+                started,
+                installResult.getExitCode() == 0,
+                installResult.getLaunchedPid()));
+        exitCode = installResult.getExitCode();
+        if (exitCode != 0) {
+          return exitCode;
+        }
+      } else {
+        params.getBuckEventBus().post(
+            ConsoleEvent.severe(
+                String.format(
+                    "Specified rule %s must be of type android_binary() or apk_genrule() or " +
+                        "apple_bundle() but was %s().\n",
+                    buildRule.getFullyQualifiedName(),
+                    buildRule.getType())));
+        return 1;
+      }
+
+
+    }
+    return exitCode;
+  }
+
+  private ImmutableSet<String> getInstallHelperTargets(
+      CommandRunnerParams params,
+      Executor executor)
+      throws IOException, InterruptedException, BuildTargetException, BuildFileParseException{
+
+    ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
+    for (int index = 0; index < getArguments().size(); index++) {
+
+      // TODO(ryu2): Cache argument parsing
+        TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
+            params.getBuckConfig(),
+            getArguments()).get(index);
+
+        BuildTarget target = params.getParser().resolveTargetSpec(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableProfiling(),
+            executor,
+            spec).iterator().next();
+
+        TargetNode<?> node = params.getParser().getTargetNode(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableProfiling(),
+            target);
+
+        if (node != null &&
+            node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
+          for (Flavor flavor : node.getBuildTarget().getFlavors()) {
+            if (ApplePlatform.needsInstallHelper(flavor.getName())) {
+              AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+
+              Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
+              Optionals.addIfPresent(
+                  Optionals.bind(deviceHelperTarget,
+                      new Function<BuildTarget, Optional<String>>() {
+                        @Override
+                        public Optional<String> apply(BuildTarget input) {
+                          return !input.toString().isEmpty()
+                              ? Optional.of(input.toString())
+                              : Optional.<String>absent();
+                        }}),
+                  installHelperTargets);
+              }
+            }
+          }
+        }
+    return installHelperTargets.build();
   }
 
   private int installApk(
@@ -301,35 +360,35 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor) throws IOException, InterruptedException {
-    switch (appleBundle.getPlatformName()) {
-      case ApplePlatform.Name.IPHONESIMULATOR:
-        return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
-            processExecutor);
-      case ApplePlatform.Name.IPHONEOS:
-        return installAppleBundleForDevice(params, appleBundle, projectFilesystem,
-            processExecutor);
-      default:
-        params.getConsole().printBuildFailure("Install not yet supported for platform " +
-            appleBundle.getPlatformName() + ".");
-        return FAILURE;
+      ProcessExecutor processExecutor)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
+    if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONESIMULATOR.getName())) {
+      return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
+          processExecutor);
     }
+    if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONEOS.getName())) {
+      return installAppleBundleForDevice(params, appleBundle, projectFilesystem,
+          processExecutor);
+    }
+    params.getConsole().printBuildFailure("Install not yet supported for platform " +
+        appleBundle.getPlatformName() + ".");
+    return FAILURE;
   }
 
   private InstallResult installAppleBundleForDevice(
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor) throws IOException, InterruptedException {
-    // TODO(user): This should be shared with the build and passed down.
+      ProcessExecutor processExecutor)
+      throws IOException, InterruptedException, NoSuchBuildTargetException {
+    // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
 
     final Path helperPath;
     Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
     if (helperTarget.isPresent()) {
-      Build build = super.getBuild();
-      ActionGraph graph = build.getActionGraph();
-      BuildRule buildRule = graph.findBuildRuleByTarget(helperTarget.get());
+      BuildRuleResolver resolver = super.getBuild().getRuleResolver();
+      BuildRule buildRule = resolver.requireRule(helperTarget.get());
       if (buildRule == null) {
         params.getConsole().printBuildFailure(
             String.format(
@@ -447,7 +506,7 @@ public class InstallCommand extends BuildCommand {
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
 
-    // TODO(user): This should be shared with the build and passed down.
+    // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     Optional<Path> xcodeDeveloperPath = appleConfig.getAppleDeveloperDirectorySupplier(
         processExecutor).get();
@@ -593,19 +652,6 @@ public class InstallCommand extends BuildCommand {
       return FAILURE;
     }
 
-    if (ReactNativeFlavors.skipBundling(appleBundle.getBuildTarget())) {
-      ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(params.getBuckConfig());
-      if (buckConfig.getServer().isPresent()) {
-        int exitCode = launchReactNativeServer(
-            processExecutor,
-            projectFilesystem.resolve(buckConfig.getServer().get()),
-            params.getBuckEventBus());
-        if (exitCode != 0) {
-          return InstallResult.builder().setExitCode(exitCode).build();
-        }
-      }
-    }
-
     if (run) {
       return launchAppleBundle(
           params,
@@ -730,29 +776,6 @@ public class InstallCommand extends BuildCommand {
     } else {
       return defaultSimulator;
     }
-  }
-
-  private int launchReactNativeServer(
-      ProcessExecutor processExecutor,
-      Path reactNativeServerInitScript,
-      BuckEventBus eventBus) throws IOException, InterruptedException {
-    ProcessExecutorParams processExecutorParams =
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of(reactNativeServerInitScript.toString()))
-            .build();
-    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor.Result result = processExecutor.launchAndExecute(
-        processExecutorParams,
-        options,
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
-    LOG.debug("React Native server: %s", result.getStdout());
-    if (result.getExitCode() != 0) {
-      eventBus.post(ConsoleEvent.severe(
-              "Error starting the RN server: %s", result.getStderr().or("")));
-    }
-    return result.getExitCode();
   }
 
   @Override

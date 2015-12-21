@@ -29,7 +29,7 @@ public class AppleNativeIntegrationTestUtils {
   private AppleNativeIntegrationTestUtils() {}
 
   public static boolean isApplePlatformAvailable(final ApplePlatform platform) {
-    BuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     AppleConfig appleConfig = new AppleConfig(buckConfig);
     Console console = new TestConsole();
     ProcessExecutor executor = new ProcessExecutor(console);

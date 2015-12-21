@@ -16,14 +16,17 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -60,8 +63,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsForWatchOS() throws IOException {
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -77,8 +79,8 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsForWatchSimulator() throws IOException {
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build()));
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHSIMULATOR));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -95,8 +97,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-            ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
@@ -118,10 +119,9 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#" +
+            "default," + CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -146,6 +146,128 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryBuildsFramework() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+    result.assertSuccess();
+
+    Path frameworkPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve(
+            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+                "TestLibrary.framework");
+    assertThat(Files.exists(frameworkPath), is(true));
+    assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
+    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(libraryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void frameworkContainsFrameworkDependencies() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_with_library_dependencies", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+    result.assertSuccess();
+
+    Path frameworkPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve(
+            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+                "TestLibrary.framework");
+    assertThat(Files.exists(frameworkPath), is(true));
+    Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
+    assertThat(Files.exists(frameworksPath), is(true));
+    Path depPath =
+        frameworksPath.resolve("TestLibraryDep.framework/Contents/MacOS/TestLibraryDep");
+    assertThat(Files.exists(depPath), is(true));
+    assertThat(
+        workspace.runCommand("file", depPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+    Path transitiveDepPath =
+        frameworksPath.resolve(
+            "TestLibraryTransitiveDep.framework/Contents/MacOS/TestLibraryTransitiveDep");
+    assertThat(Files.exists(transitiveDepPath), is(true));
+    assertThat(
+        workspace.runCommand("file", transitiveDepPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void frameworkDependenciesDoNotContainTransitiveDependencies() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_with_library_dependencies", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+    result.assertSuccess();
+
+    Path frameworkPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve(
+            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+                "TestLibrary.framework");
+    assertThat(Files.exists(frameworkPath), is(true));
+    Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
+    assertThat(Files.exists(frameworksPath), is(true));
+    Path depFrameworksPath =
+        frameworksPath.resolve("TestLibraryDep.framework/Contents/Frameworks");
+    assertThat(Files.exists(depFrameworksPath), is(false));
+  }
+
+  @Test
+  public void noIncludeFrameworksDoesntContainFrameworkDependencies() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_with_library_dependencies", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-include-frameworks");
+    result.assertSuccess();
+
+    Path frameworkPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve(
+            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64,no-include-frameworks/" +
+                "TestLibrary.framework");
+    assertThat(Files.exists(frameworkPath), is(true));
+    assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
+    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(libraryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+    Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
+    assertThat(Files.exists(frameworksPath), is(false));
+  }
+
+  @Test
   public void testAppleLibraryExportedHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
@@ -153,10 +275,9 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#" +
+            "default," + CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());

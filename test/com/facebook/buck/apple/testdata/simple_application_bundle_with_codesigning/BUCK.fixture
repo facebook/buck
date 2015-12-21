@@ -3,7 +3,6 @@ apple_bundle(
   binary = ':DemoAppBinary',
   extension = 'app',
   info_plist = 'Info.plist',
-  provisioning_profile_search_path = 'provisioning_profiles',
 )
 
 apple_binary(

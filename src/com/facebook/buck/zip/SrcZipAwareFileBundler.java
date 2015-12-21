@@ -17,16 +17,16 @@
 package com.facebook.buck.zip;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.Javac;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,29 +51,31 @@ public class SrcZipAwareFileBundler {
       Iterable<SourcePath> toCopy,
       boolean junkPaths) {
 
-    ImmutableMap.Builder<Path, Path> links = ImmutableMap.builder();
-
     for (SourcePath sourcePath : toCopy) {
-      Path resolved = resolver.getPath(sourcePath);
+      Path absolute = resolver.getAbsolutePath(sourcePath);
 
-      if (resolved.toString().endsWith(Javac.SRC_ZIP) ||
-          resolved.toString().endsWith(Javac.SRC_JAR)) {
-        steps.add(new UnzipStep(filesystem, resolved, destinationDir));
+      if (absolute.toString().endsWith(Javac.SRC_ZIP) ||
+          absolute.toString().endsWith(Javac.SRC_JAR)) {
+        steps.add(new UnzipStep(filesystem, absolute, destinationDir));
         continue;
       }
 
-      if (Files.isDirectory(resolved)) {
-        throw new HumanReadableException("Cowardly refusing to copy a directory: " + resolved);
+      if (Files.isDirectory(absolute)) {
+        throw new HumanReadableException("Cowardly refusing to copy a directory: " + absolute);
       }
 
       Path destination;
-      if (!junkPaths && resolved.startsWith(basePath)) {
-        destination = basePath.relativize(resolved);
+      Path relative = resolver.getRelativePath(sourcePath);
+      if (!junkPaths && relative.startsWith(basePath)) {
+        destination = basePath.relativize(relative);
       } else {
-        destination = resolved.getFileName();
+        destination = absolute.getFileName();
       }
-      links.put(destination, resolved);
+      destination = destinationDir.resolve(destination);
+      if (destination.getParent() != null) {
+        steps.add(new MkdirStep(filesystem, destination.getParent()));
+      }
+      steps.add(CopyStep.forFile(filesystem, absolute, destination));
     }
-    steps.add(new SymlinkTreeStep(filesystem, destinationDir, links.build()));
   }
 }

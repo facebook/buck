@@ -1,6 +1,4 @@
-genrule(
+java_library(
   name = 'base',
   deps = [':bad-dep'],
-  srcs = [],
-  out = '',
 )

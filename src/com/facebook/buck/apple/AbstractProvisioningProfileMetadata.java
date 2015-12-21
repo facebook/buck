@@ -16,19 +16,19 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSArray;
+import com.dd.plist.NSData;
 import com.dd.plist.NSDate;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
@@ -37,6 +37,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 import org.immutables.value.Value;
 
@@ -57,8 +61,10 @@ import java.util.regex.Pattern;
 abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable {
   private static final Pattern BUNDLE_ID_PATTERN = Pattern.compile("^([A-Z0-9]{10,10})\\.(.+)$");
 
-  /** Returns a (prefix, identifier) pair which the profile is valid for;
-   *  e.g. (ABCDE12345, com.example.TestApp) or (ABCDE12345, *)
+  /**
+   * Returns a (prefix, identifier) pair for which the profile is valid.
+   *
+   * e.g. (ABCDE12345, com.example.TestApp) or (ABCDE12345, *)
    */
   public abstract Pair<String, String> getAppID();
 
@@ -66,16 +72,23 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
   public abstract String getUUID();
 
-  public abstract Optional<Path> getProfilePath();
+  public abstract Path getProfilePath();
 
-  /** Returns key/value pairs of the "Entitlements" dictionary of the embedded plist.
+  /**
+   * Key/value pairs of the "Entitlements" dictionary in the embedded plist.
    */
   public abstract ImmutableMap<String, NSObject> getEntitlements();
 
-  /** Takes a application identifier and splits it into prefix and bundle ID.
+  /**
+   * SHA1 hashes of the certificates in the "DeveloperCertificates" section.
+   */
+  public abstract ImmutableSet<HashCode> getDeveloperCertificateFingerprints();
+
+  /**
+   * Takes a application identifier and splits it into prefix and bundle ID.
    *
-   *  Prefix is always a ten-character alphanumeric sequence.
-   *  Bundle ID may be a fully-qualified name or a wildcard ending in *.
+   * Prefix is always a ten-character alphanumeric sequence.
+   * Bundle ID may be a fully-qualified name or a wildcard ending in *.
    */
   public static Pair<String, String> splitAppID(String appID) throws Exception {
     Matcher matcher = BUNDLE_ID_PATTERN.matcher(appID);
@@ -112,7 +125,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
             /* timeOutMs */ Optional.<Long>absent(),
             /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     if (result.getExitCode() != 0) {
-      throw new HumanReadableException("Invalid provisioning profile: " + profilePath +
+      throw new IOException("Invalid provisioning profile: " + profilePath +
           ": " + result.getStderr());
     }
 
@@ -121,8 +134,17 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
           result.getStdout().get().getBytes());
       Date expirationDate = ((NSDate) plist.get("ExpirationDate")).getDate();
       String uuid = ((NSString) plist.get("UUID")).getContent();
-      ImmutableMap.Builder<String, NSObject> builder =
-          ImmutableMap.<String, NSObject>builder();
+
+      ImmutableSet.Builder<HashCode> certificateFingerprints = ImmutableSet.builder();
+      NSArray certificates = (NSArray) plist.get("DeveloperCertificates");
+      HashFunction hasher = Hashing.sha1();
+      if (certificates != null) {
+        for (NSObject item : certificates.getArray()) {
+          certificateFingerprints.add(hasher.hashBytes(((NSData) item).bytes()));
+        }
+      }
+
+      ImmutableMap.Builder<String, NSObject> builder = ImmutableMap.builder();
       NSDictionary entitlements = ((NSDictionary) plist.get("Entitlements"));
       for (String key : entitlements.keySet()) {
         builder = builder.put(key, entitlements.objectForKey(key));
@@ -133,8 +155,9 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
           .setAppID(ProvisioningProfileMetadata.splitAppID(appID))
           .setExpirationDate(expirationDate)
           .setUUID(uuid)
-          .setProfilePath(Optional.<Path>of(profilePath))
+          .setProfilePath(profilePath)
           .setEntitlements(builder.build())
+          .setDeveloperCertificateFingerprints(certificateFingerprints.build())
           .build();
     } catch (Exception e) {
       throw new IllegalArgumentException("Malformed embedded plist: " + e);

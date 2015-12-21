@@ -97,7 +97,12 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
         }
       };
 
-  private static final Pattern TEXT_SYMBOLS_LINE = Pattern.compile("(\\S+) (\\S+) (\\S+) (.+)");
+  // An identifier for custom drawables.
+  public static final String CUSTOM_DRAWABLE_IDENTIFIER = "#";
+  private static final Pattern TEXT_SYMBOLS_LINE =
+      Pattern.compile(
+          "(\\S+) (\\S+) (\\S+) ([^" + CUSTOM_DRAWABLE_IDENTIFIER + "]+)" +
+          "( " + CUSTOM_DRAWABLE_IDENTIFIER + ")?");
 
   // A symbols file may look like:
   //
@@ -114,24 +119,38 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
   // - the type of the resource
   // - the name of the resource
   // - the value of the resource id
+  //
+  // Custom drawables will have an additional column to denote them.
+  //    int drawable custom_drawable 0x07f01250 #
   public final IdType idType;
   public final RType type;
   public final String name;
   public final String idValue;
+  public final boolean custom;
 
   public RDotTxtEntry(
       IdType idType,
       RType type,
       String name,
       String idValue) {
+    this(idType, type, name, idValue, false);
+  }
+
+  public RDotTxtEntry(
+      IdType idType,
+      RType type,
+      String name,
+      String idValue,
+      boolean custom) {
     this.idType = idType;
     this.type = type;
     this.name = name;
     this.idValue = idValue;
+    this.custom = custom;
   }
 
   public RDotTxtEntry copyWithNewIdValue(String newIdValue) {
-    return new RDotTxtEntry(idType, type, name, newIdValue);
+    return new RDotTxtEntry(idType, type, name, newIdValue, custom);
   }
 
   public static Optional<RDotTxtEntry> parse(String rDotTxtLine) {
@@ -144,8 +163,9 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     RType type = RType.valueOf(matcher.group(2).toUpperCase());
     String name = matcher.group(3);
     String idValue = matcher.group(4);
+    boolean custom = matcher.group(5) != null;
 
-    return Optional.of(new RDotTxtEntry(idType, type, name, idValue));
+    return Optional.of(new RDotTxtEntry(idType, type, name, idValue, custom));
   }
 
   public static Iterable<RDotTxtEntry> readResources(
@@ -163,6 +183,10 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
    */
   @Override
   public int compareTo(RDotTxtEntry that) {
+    if (this == that) {
+      return 0;
+    }
+
     return ComparisonChain.start()
         .compare(this.type, that.type)
         .compare(this.name, that.name)

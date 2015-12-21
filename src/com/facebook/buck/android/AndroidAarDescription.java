@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -91,7 +92,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       TargetGraph targetGraph,
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
 
     UnflavoredBuildTarget originalBuildTarget =
         originalBuildRuleParams.getBuildTarget().checkUnflavored();
@@ -160,9 +161,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(
-                manifest,
-                assembleAssetsDirectories,
-                assembleResourceDirectories)),
+            manifest,
+            assembleAssetsDirectories,
+            assembleResourceDirectories)),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     AndroidResource androidResource = new AndroidResource(
@@ -174,10 +175,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             .addAll(originalBuildRuleParams.getDeclaredDeps().get())
             .build(),
         new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
-        /* resSrcs */ ImmutableSortedSet.<Path>of(),
+        /* resSrcs */ ImmutableSortedSet.<SourcePath>of(),
+        Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ null,
         new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
+        Optional.<SourcePath>absent(),
         new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
@@ -191,7 +194,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of()
         );
     Optional<CopyNativeLibraries> nativeLibrariesOptional =
-        packageableGraphEnhancer.getCopyNativeLibraries(targetGraph, packageableCollection);
+        packageableGraphEnhancer.getCopyNativeLibraries(packageableCollection);
     if (nativeLibrariesOptional.isPresent()) {
       aarExtraDepsBuilder.add(resolver.addToIndex(nativeLibrariesOptional.get()));
     }

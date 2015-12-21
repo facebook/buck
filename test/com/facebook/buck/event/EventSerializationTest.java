@@ -19,24 +19,26 @@ package com.facebook.buck.event;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -90,8 +92,8 @@ public class EventSerializationTest {
 
   @Test
   public void testParseEventFinished() throws IOException {
-    ParseEvent.Started started = ParseEvent.started(ImmutableList.<BuildTarget>of(
-            BuildTarget.builder("//base", "short").addFlavors(ImmutableFlavor.of("flv")).build()));
+    ParseEvent.Started started = ParseEvent.started(ImmutableList.of(
+            BuildTargetFactory.newInstance("//base:short#flv")));
     ParseEvent.Finished event = ParseEvent.finished(started, Optional.<TargetGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
@@ -129,22 +131,25 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventStarted() throws IOException {
-    BuildRuleEvent.Started event = BuildRuleEvent.started(generateFakeBuildRule());
+    BuildRule rule = generateFakeBuildRule();
+    BuildRuleEvent.Started event = BuildRuleEvent.started(rule);
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-        "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"," +
+        "\"type\":\"BuildRuleStarted\"," +
         "\"eventKey\":{\"value\":1024186770}}",
         message);
   }
 
   @Test
   public void testBuildRuleEventFinished() throws IOException {
+    BuildRule rule = generateFakeBuildRule();
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
-            generateFakeBuildRule(),
+            rule,
+            BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.<BuildRuleSuccessType>absent(),
@@ -157,7 +162,7 @@ public class EventSerializationTest {
             "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
             "\"present\":false},\"cacheError\":{\"present\":false}," +
             "\"metadata\":{\"present\":false}}, \"buildRule\":{\"type\":" +
-            "\"fake_build_rule\",\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\"," +
+            "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
             "\"type\":\"BuildRuleFinished\"," +
             "\"eventKey\":{\"value\":1024186770}}",
         message);
@@ -243,12 +248,11 @@ public class EventSerializationTest {
 
   private BuildRule generateFakeBuildRule() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
-    FakeBuildRule result = new FakeBuildRule(
+    return new FakeBuildRule(
         buildTarget,
-        new SourcePathResolver(new BuildRuleResolver()),
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
         ImmutableSortedSet.<BuildRule>of());
-    result.setRuleKey(new RuleKey("aaaa"));
-    return result;
   }
 
   private TestResults generateFakeTestResults() {
@@ -258,7 +262,7 @@ public class EventSerializationTest {
     TestCaseSummary testCase = new TestCaseSummary(testCaseName,
         ImmutableList.of(testResultSummary));
     ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
-    return new TestResults(testCases);
+    return FakeTestResults.of(testCases);
   }
 
   private void matchJsonObjects(String path, JsonNode expected, JsonNode actual) {

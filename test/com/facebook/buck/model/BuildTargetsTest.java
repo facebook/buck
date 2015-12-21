@@ -16,22 +16,32 @@
 
 package com.facebook.buck.model;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class BuildTargetsTest {
+
+  private static final Path ROOT = Paths.get("/opt/src/buck");
 
   @Test
   public void testCreateFlavoredBuildTarget() {
-    BuildTarget fooBar = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fooBar = BuildTarget.builder(ROOT, "//foo", "bar").build();
     BuildTarget fooBarBaz =
         BuildTargets.createFlavoredBuildTarget(fooBar.checkUnflavored(), ImmutableFlavor.of("baz"));
     assertTrue(fooBarBaz.isFlavored());
@@ -41,14 +51,14 @@ public class BuildTargetsTest {
   @Test(expected = IllegalStateException.class)
   public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz = BuildTarget
-        .builder("//foo", "bar")
+        .builder(ROOT, "//foo", "bar")
         .addFlavors(ImmutableFlavor.of("baz"))
         .build();
     fooBarBaz.checkUnflavored();
   }
 
   @Test
-  public void propagateFlavorDomain() {
+  public void propagateFlavorDomainWithSingleFlavor() {
     BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor");
     Flavor flavor = ImmutableFlavor.of("flavor");
     FlavorDomain<?> domain = new FlavorDomain<>(
@@ -60,7 +70,28 @@ public class BuildTargetsTest {
         ImmutableList.<FlavorDomain<?>>of(domain),
         ImmutableList.of(child));
     assertEquals(
-        ImmutableSortedSet.<BuildTarget>of(BuildTarget.builder(child).addFlavors(flavor).build()),
+        ImmutableSortedSet.of(BuildTarget.builder(child).addFlavors(flavor).build()),
+        result);
+  }
+
+  @Test
+  public void propagateFlavorDomainWithMultipleFlavors() {
+    BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor,flavor2");
+    Flavor flavor = ImmutableFlavor.of("flavor");
+    Flavor flavor2 = ImmutableFlavor.of("flavor2");
+    FlavorDomain<?> domain = new FlavorDomain<>(
+        "test",
+        ImmutableMap.of(flavor, "something", flavor2, "something2"));
+    BuildTarget child = BuildTargetFactory.newInstance("//:child");
+    ImmutableSortedSet<BuildTarget> result = BuildTargets.propagateFlavorDomains(
+        parent,
+        ImmutableList.<FlavorDomain<?>>of(domain),
+        ImmutableList.of(child));
+    assertEquals(
+        ImmutableSortedSet.of(BuildTarget.builder(child)
+                .addFlavors(flavor)
+                .addFlavors(flavor2)
+                .build()),
         result);
   }
 
@@ -102,4 +133,19 @@ public class BuildTargetsTest {
     }
   }
 
+  @Test
+  public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
+    ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
+    ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
+
+    BuildTarget targetOne = BuildTargetFactory.newInstance(rootOne, "//foo:bar");
+    BuildTarget targetTwo = BuildTargetFactory.newInstance(rootTwo, "//foo:bar");
+
+    BuildTargetPattern pattern = new SingletonBuildTargetPattern(
+        rootOne.getRootPath(),
+        "//foo:other");
+    boolean isVisible = BuildTargets.isVisibleTo(targetTwo, ImmutableSet.of(pattern), targetOne);
+
+    assertThat(isVisible, is(false));
+  }
 }

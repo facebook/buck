@@ -16,16 +16,24 @@
 
 package com.facebook.buck.rules;
 
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Functions;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.NullFileHashCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import org.junit.Test;
@@ -33,10 +41,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
-/**
- * Unit tests for {@link TargetGraphHashing}.
- */
 public class TargetGraphHashingTest {
 
   @Test
@@ -48,36 +54,10 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            Functions.forMap(ImmutableMap.<BuildTarget, HashCode>of()))
+            new NullFileHashCache(),
+            ImmutableList.<BuildTarget>of())
             .entrySet(),
         empty());
-  }
-
-  @Test
-  public void oneNodeTargetGraphHasExpectedHash() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-
-    TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
-        projectFilesystem,
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableMap.of(Paths.get("foo/FooLib.java"), "Hello world"));
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
-
-    ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
-        HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7")
-    );
-
-    assertThat(
-        TargetGraphHashing.hashTargetGraph(
-            projectFilesystem,
-            targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
-                    HashCode.fromLong(64738))),
-            node.getBuildTarget()),
-        equalTo(expectedTargetHashes));
   }
 
   @Test
@@ -85,26 +65,38 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
-        projectFilesystem,
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableMap.of(Paths.get("foo/FooLib.java"), "Goodbye world"));
+        BuildTargetFactory.newInstance("//foo:lib"),
+        HashCode.fromLong(64738),
+        ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
-    ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
-        HashCode.fromString("6cb8ac509e591d722c2902a08be8738649a620b9")
-    );
+    FileHashCache baseCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef")));
 
+    FileHashCache modifiedCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
+
+    Map<BuildTarget, HashCode> baseResult = TargetGraphHashing.hashTargetGraph(
+        projectFilesystem,
+        targetGraph,
+        baseCache,
+        ImmutableList.of(node.getBuildTarget()));
+
+    Map<BuildTarget, HashCode> modifiedResult = TargetGraphHashing.hashTargetGraph(
+        projectFilesystem,
+        targetGraph,
+        modifiedCache,
+        ImmutableList.of(node.getBuildTarget()));
+
+    assertThat(baseResult, aMapWithSize(1));
+    assertThat(baseResult, hasKey(node.getBuildTarget()));
+    assertThat(modifiedResult, aMapWithSize(1));
+    assertThat(modifiedResult, hasKey(node.getBuildTarget()));
     assertThat(
-        TargetGraphHashing.hashTargetGraph(
-            projectFilesystem,
-            targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
-                    HashCode.fromLong(64738))),
-            node.getBuildTarget()),
-        equalTo(expectedTargetHashes));
+        modifiedResult.get(node.getBuildTarget()),
+        not(equalTo(baseResult.get(node.getBuildTarget()))));
   }
 
   @Test
@@ -112,87 +104,133 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     TargetNode<?> nodeA = createJavaLibraryTargetNodeWithSrcs(
-        projectFilesystem,
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableMap.of(Paths.get("foo/FooLib.java"), "Hello world"));
+        BuildTargetFactory.newInstance("//foo:lib"),
+        HashCode.fromLong(64738),
+        ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetNode<?> nodeB = createJavaLibraryTargetNodeWithSrcs(
+        BuildTargetFactory.newInstance("//bar:lib"),
+        HashCode.fromLong(49152),
+        ImmutableSet.of(Paths.get("bar/BarLib.java")));
+    TargetGraph targetGraphA = TargetGraphFactory.newInstance(nodeA);
+    TargetGraph targetGraphB = TargetGraphFactory.newInstance(nodeB);
+    TargetGraph commonTargetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
+
+    FileHashCache fileHashCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
+            projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
+
+    Map<BuildTarget, HashCode> resultsA = TargetGraphHashing.hashTargetGraph(
         projectFilesystem,
-        BuildTarget.builder("//bar", "lib").build(),
-        ImmutableMap.of(Paths.get("bar/BarLib.java"), "Hello world"));
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
+        targetGraphA,
+        fileHashCache,
+        ImmutableList.of(nodeA.getBuildTarget()));
 
-    ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
-        HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7"),
-        BuildTarget.builder("//bar", "lib").build(),
-        HashCode.fromString("55f239830db5afd6ee64574eb974e0ec058bb8f8")
-    );
+    Map<BuildTarget, HashCode> resultsB = TargetGraphHashing.hashTargetGraph(
+        projectFilesystem,
+        targetGraphB,
+        fileHashCache,
+        ImmutableList.of(nodeB.getBuildTarget()));
 
+    Map<BuildTarget, HashCode> commonResults = TargetGraphHashing.hashTargetGraph(
+        projectFilesystem,
+        commonTargetGraph,
+        fileHashCache,
+        ImmutableList.of(nodeA.getBuildTarget(), nodeB.getBuildTarget()));
+
+    assertThat(resultsA, aMapWithSize(1));
+    assertThat(resultsA, hasKey(nodeA.getBuildTarget()));
+    assertThat(resultsB, aMapWithSize(1));
+    assertThat(resultsB, hasKey(nodeB.getBuildTarget()));
+    assertThat(commonResults, aMapWithSize(2));
+    assertThat(commonResults, hasKey(nodeA.getBuildTarget()));
+    assertThat(commonResults, hasKey(nodeB.getBuildTarget()));
     assertThat(
-        TargetGraphHashing.hashTargetGraph(
-            projectFilesystem,
-            targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
-                    HashCode.fromLong(64738),
-                    BuildTarget.builder("//bar", "lib").build(),
-                    HashCode.fromLong(49152))),
-            nodeA.getBuildTarget(),
-            nodeB.getBuildTarget()),
-        equalTo(expectedTargetHashes));
+        resultsA.get(nodeA.getBuildTarget()),
+        equalTo(commonResults.get(nodeA.getBuildTarget())));
+    assertThat(
+        resultsB.get(nodeB.getBuildTarget()),
+        equalTo(commonResults.get(nodeB.getBuildTarget())));
+  }
+
+  private TargetGraph createGraphWithANodeAndADep(
+      BuildTarget nodeTarget,
+      HashCode nodeHash,
+      BuildTarget depTarget,
+      HashCode depHash) {
+    TargetNode<?> dep = createJavaLibraryTargetNodeWithSrcs(
+        depTarget,
+        depHash,
+        ImmutableSet.of(Paths.get("dep/DepLib.java")));
+    TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
+        nodeTarget,
+        nodeHash,
+        ImmutableSet.of(Paths.get("foo/FooLib.java")),
+        dep);
+    return TargetGraphFactory.newInstance(node, dep);
   }
 
   @Test
   public void hashChangesForDependentNodeWhenDepsChange() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    TargetNode<?> nodeA = createJavaLibraryTargetNodeWithSrcs(
-        projectFilesystem,
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableMap.of(Paths.get("foo/FooLib.java"), "Hello world"));
-    // Same as twoNodeIndependentRootsTargetGraphHasExpectedHashes, except
-    // now nodeB depends on nodeA.
-    TargetNode<?> nodeB = createJavaLibraryTargetNodeWithSrcs(
-        projectFilesystem,
-        BuildTarget.builder("//bar", "lib").build(),
-        ImmutableMap.of(Paths.get("bar/BarLib.java"), "Hello world"),
-        nodeA);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
+    BuildTarget nodeTarget = BuildTargetFactory.newInstance("//foo:lib");
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//dep:lib");
 
-    ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
-        HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7"),
-        BuildTarget.builder("//bar", "lib").build(),
-        HashCode.fromString("f5441f7d7c2ece03c68bc3c620496dc1195a5a32")
-    );
+    TargetGraph targetGraphA = createGraphWithANodeAndADep(
+        nodeTarget,
+        HashCode.fromLong(12345),
+        depTarget,
+        HashCode.fromLong(64738));
 
+    TargetGraph targetGraphB = createGraphWithANodeAndADep(
+        nodeTarget,
+        HashCode.fromLong(12345),
+        depTarget,
+        HashCode.fromLong(84552));
+
+    FileHashCache fileHashCache = new FakeFileHashCache(
+        ImmutableMap.of(
+            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
+            projectFilesystem.resolve("dep/DepLib.java"), HashCode.fromString("123456")));
+
+    Map<BuildTarget, HashCode> resultA = TargetGraphHashing.hashTargetGraph(
+        projectFilesystem,
+        targetGraphA,
+        fileHashCache,
+        ImmutableList.of(nodeTarget));
+
+    Map<BuildTarget, HashCode> resultB = TargetGraphHashing.hashTargetGraph(
+        projectFilesystem,
+        targetGraphB,
+        fileHashCache,
+        ImmutableList.of(nodeTarget));
+
+    assertThat(resultA, aMapWithSize(2));
+    assertThat(resultA, hasKey(nodeTarget));
+    assertThat(resultA, hasKey(depTarget));
+    assertThat(resultB, aMapWithSize(2));
+    assertThat(resultB, hasKey(nodeTarget));
+    assertThat(resultB, hasKey(depTarget));
     assertThat(
-        TargetGraphHashing.hashTargetGraph(
-            projectFilesystem,
-            targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
-                    HashCode.fromLong(64738),
-                    BuildTarget.builder("//bar", "lib").build(),
-                    HashCode.fromLong(49152))),
-            nodeB.getBuildTarget()),
-        equalTo(expectedTargetHashes));
+        resultA.get(nodeTarget),
+        not(equalTo(resultB.get(nodeTarget))));
+    assertThat(
+        resultA.get(depTarget),
+        not(equalTo(resultB.get(depTarget))));
   }
 
   private static TargetNode<?> createJavaLibraryTargetNodeWithSrcs(
-      FakeProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableMap<Path, String> srcs,
-      TargetNode<?>... deps) throws IOException {
-    JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
+      HashCode hashCode,
+      ImmutableSet<Path> srcs,
+      TargetNode<?>... deps) {
+    JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget, hashCode);
     for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
-    for (ImmutableMap.Entry<Path, String> entry : srcs.entrySet()) {
-      projectFilesystem.writeContentsToPath(entry.getValue(), entry.getKey());
-      targetNodeBuilder.addSrc(entry.getKey());
+    for (Path src : srcs) {
+      targetNodeBuilder.addSrc(src);
     }
     return targetNodeBuilder.build();
   }

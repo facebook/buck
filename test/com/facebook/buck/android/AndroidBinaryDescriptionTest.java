@@ -18,15 +18,17 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -38,8 +40,9 @@ import java.nio.file.Paths;
 public class AndroidBinaryDescriptionTest {
 
   @Test
-  public void testNoDxRulesBecomeFirstOrderDeps() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule transitiveDep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
@@ -55,12 +58,12 @@ public class AndroidBinaryDescriptionTest {
             new Keystore(
                 new FakeBuildRuleParamsBuilder("//:keystore").build(),
                 pathResolver,
-                Paths.get("store"),
-                Paths.get("properties")));
+                new FakeSourcePath("store"),
+                new FakeSourcePath("properties")));
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     AndroidBinary androidBinary =
         (AndroidBinary) AndroidBinaryBuilder.createBuilder(target)
-            .setManifest(new TestSourcePath("manifest.xml"))
+            .setManifest(new FakeSourcePath("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))

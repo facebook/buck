@@ -27,7 +27,6 @@ import com.google.common.primitives.Shorts;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
@@ -48,36 +47,60 @@ public class ObjectFileScrubbers {
       @SuppressWarnings("PMD.AvoidUsingOctalValues")
       @Override
       public void scrubFile(FileChannel file) throws IOException, ScrubException {
-        MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
         try {
-
+          ByteBuffer header = ByteBuffer.allocate(expectedGlobalHeader.length);
+          file.read(header, 0);
           // Grab the global header chunk and verify it's accurate.
-          byte[] globalHeader = getBytes(map, expectedGlobalHeader.length);
+          header.position(0);
+          byte[] globalHeader = getBytes(header, expectedGlobalHeader.length);
           checkArchive(
               Arrays.equals(expectedGlobalHeader, globalHeader),
               "invalid global header");
 
           // Iterate over all the file meta-data entries, injecting zero's for timestamp,
           // UID, and GID.
-          while (map.hasRemaining()) {
-        /* File name */ getBytes(map, 16);
+          final int entrySize =
+              16 /* fileName */ +
+              12 /* file modification time */ +
+              6 /* owner ID */ +
+              6 /* group ID */ +
+              8 /* file mode */ +
+              10 /* file size */ +
+              2 /* file magic */;
+
+          int start = expectedGlobalHeader.length;
+          ByteBuffer buffer = ByteBuffer.allocate(entrySize);
+          while (start < file.size()) {
+            checkArchive(file.size() - start >= entrySize, "Invalid entry metadata format");
+
+            buffer.clear();
+            int read = file.read(buffer, start);
+            checkArchive(read == entrySize, "Not all bytes have been read");
+
+            buffer.position(0); // position points just past the last byte read, so need to reset
+            /* File name */ getBytes(buffer, 16);
 
             // Inject 0's for the non-deterministic meta-data entries.
-        /* File modification timestamp */ putIntAsDecimalString(map, 12, 0);
-        /* Owner ID */ putIntAsDecimalString(map, 6, 0);
-        /* Group ID */ putIntAsDecimalString(map, 6, 0);
+            /* File modification timestamp */ putIntAsDecimalString(buffer, 12, 0);
+            /* Owner ID */ putIntAsDecimalString(buffer, 6, 0);
+            /* Group ID */ putIntAsDecimalString(buffer, 6, 0);
 
-        /* File mode */ putIntAsOctalString(map, 8, 0100644);
-            int fileSize = getDecimalStringAsInt(map, 10);
+            /* File mode */ putIntAsOctalString(buffer, 8, 0100644);
+            int fileSize = getDecimalStringAsInt(buffer, 10);
 
             // Lastly, grab the file magic entry and verify it's accurate.
-            byte[] fileMagic = getBytes(map, 2);
+            byte[] fileMagic = getBytes(buffer, 2);
             checkArchive(
                 Arrays.equals(END_OF_FILE_HEADER_MARKER, fileMagic),
                 "invalid file magic");
 
+            // write the changes
+            buffer.position(0); // position points just past the last byte accessed, need to reset
+            int written = file.write(buffer, start);
+            checkArchive(written == entrySize, "Not all bytes have been written");
+
             // Skip the file data.
-            map.position(map.position() + fileSize + fileSize % 2);
+            start += entrySize + fileSize + fileSize % 2;
           }
 
           // Convert any low-level exceptions to `ArchiveExceptions`s.
@@ -85,7 +108,6 @@ public class ObjectFileScrubbers {
           throw new ScrubException(e.getMessage());
         }
       }
-
     };
   }
 

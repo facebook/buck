@@ -16,7 +16,9 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -25,13 +27,10 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class DTestDescription implements Description<DTestDescription.Arg> {
@@ -39,9 +38,16 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
   private static final BuildRuleType TYPE = BuildRuleType.of("d_test");
 
   private final DBuckConfig dBuckConfig;
+  private final CxxPlatform cxxPlatform;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
 
-  public DTestDescription(DBuckConfig dBuckConfig) {
+  public DTestDescription(
+      DBuckConfig dBuckConfig,
+      Optional<Long> defaultTestRuleTimeoutMs,
+      CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -58,31 +64,44 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      BuildRuleResolver buildRuleResolver,
+      A args) throws NoSuchBuildTargetException {
+
+    BuildTarget target = params.getBuildTarget();
+
+    // Create a helper rule to build the test binary.
+    // The rule needs its own target so that we can depend on it without creating cycles.
+    BuildTarget binaryTarget = DDescriptionUtils.createBuildTargetForFile(
+        target,
+        "build-",
+        target.getFullyQualifiedName(),
+        cxxPlatform);
+    BuildRule binaryRule = DDescriptionUtils.createNativeLinkable(
+        params.copyWithBuildTarget(binaryTarget),
+        args.srcs,
+        ImmutableList.of("-unittest"),
+        buildRuleResolver,
+        cxxPlatform,
+        dBuckConfig);
+
     return new DTest(
-        params,
-        new SourcePathResolver(resolver),
-        ImmutableList.<SourcePath>builder()
-            .addAll(args.srcs)
-            .addAll(
-                FluentIterable.from(params.getDeps())
-                    .filter(DLibrary.class)
-                    .transform(
-                        SourcePaths.getToBuildTargetSourcePath()))
-            .build(),
+        params.appendExtraDeps(ImmutableList.of(binaryRule)),
+        new SourcePathResolver(buildRuleResolver),
+        binaryRule.getPathToOutput(),
         args.contacts.get(),
         args.labels.get(),
-        resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
-        dBuckConfig.getDCompiler());
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+        buildRuleResolver.getAllRules(
+            args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public ImmutableSet<SourcePath> srcs;
+    public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
   }
 }

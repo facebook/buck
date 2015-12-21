@@ -1,0 +1,86 @@
+java_library(
+  name = 'tracing',
+  srcs = [
+    'JavacPhaseEvent.java',
+    'JavacPhaseEventLogger.java',
+    'TranslatingJavacPhaseTracer.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
+  resources = [
+    ':javac-tracing-compiler-plugin',
+  ],
+  exported_deps = [
+    ':api',
+  ],
+  provided_deps = [
+    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
+    ':api',
+  ],
+  deps = [
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:util',
+    '//third-party/java/guava:guava',
+    '//third-party/java/infer-annotations:infer-annotations',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/jvm/java:support',
+    '//test/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+    '//test/com/facebook/buck/simulate:simulate',
+  ],
+)
+
+java_binary(
+  name = 'javac-tracing-compiler-plugin',
+  deps = [
+    ':compiler-plugin',
+  ],
+)
+
+java_library(
+  name = 'compiler-plugin',
+  srcs = [
+    'TracingTaskListener.java',
+    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
+    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
+  provided_deps = [
+    # Tools.jar is the compiler itself, and will already be present at runtime;
+    # don't need to depend on it strongly.
+    '//third-party/java/jdk:compiler-tree-api',
+
+    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
+    ':api',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
+)
+
+java_library(
+  name = 'api',
+  srcs = [
+    'JavacPhaseTracer.java',
+    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
+    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
+  ],
+  deps = [
+    # Don't add deps; this is a super-light API that is loaded within javac. It can't access
+    # code outside of Buck's bootstrapper.
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
+    '//src/com/facebook/buck/jvm/java:support',
+    '//test/com/facebook/buck/jvm/java/tracing:tracing',
+  ],
+)

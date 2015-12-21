@@ -17,12 +17,12 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 public interface PythonPackagable {
 
   PythonPackageComponents getPythonPackageComponents(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform);
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException;
 
 }

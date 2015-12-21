@@ -22,9 +22,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
-
-import javax.annotation.Nullable;
 
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
@@ -36,17 +35,24 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
-  @Nullable private volatile RuleKey ruleKey;
+
+  private final Supplier<String> typeSupplier = Suppliers.memoize(
+      new Supplier<String>() {
+        @Override
+        public String get() {
+          return getTypeForClass();
+        }
+      });
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
+    this.extraDeps = buildRuleParams.getExtraDeps();
     this.deps = buildRuleParams.getTotalDeps();
-    this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.resolver = resolver;
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
@@ -75,9 +81,20 @@ public abstract class AbstractBuildRule implements BuildRule {
     return declaredDeps.get();
   }
 
+  public final ImmutableSortedSet<BuildRule> deprecatedGetExtraDeps() {
+    return extraDeps.get();
+  }
+
   @Override
   public final String getType() {
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getClass().getSimpleName());
+    return typeSupplier.get();
+  }
+
+  private String getTypeForClass() {
+    return CaseFormat
+        .UPPER_CAMEL
+        .to(CaseFormat.LOWER_UNDERSCORE, getClass().getSimpleName())
+        .intern();
   }
 
   public final SourcePathResolver getResolver() {
@@ -91,6 +108,10 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final int compareTo(BuildRule that) {
+    if (this == that) {
+      return 0;
+    }
+
     return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
 
@@ -111,21 +132,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public final String toString() {
     return getFullyQualifiedName();
-  }
-
-  /**
-   * This method should be overridden only for unit testing.
-   */
-  @Override
-  public RuleKey getRuleKey() {
-    if (ruleKey == null) {
-      synchronized (this) {
-        if (ruleKey == null) {
-          ruleKey = ruleKeyBuilderFactory.newInstance(this).build();
-        }
-      }
-    }
-    return ruleKey;
   }
 
 }

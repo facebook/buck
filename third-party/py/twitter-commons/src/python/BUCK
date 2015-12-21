@@ -3,7 +3,10 @@ python_library(
   base_module = '',
   srcs = glob(['**/*.py']),
   deps = [
-    '//third-party/py/setuptools:pkg_resources',
+    # Although the twitter sources actually import `pkg_resources`, we
+    # intentionally avoid a dependency here, as our custom PEX-builder
+    # frontend manually finds the `pkg_resources` locations.
+    #'//third-party/py/setuptools:pkg_resources',
   ],
   visibility = [
     'PUBLIC',

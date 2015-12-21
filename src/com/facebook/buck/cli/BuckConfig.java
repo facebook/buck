@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
@@ -37,6 +37,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.Beta;
@@ -45,6 +46,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -93,6 +95,27 @@ public class BuckConfig {
     }
   };
 
+  private final Function<Optional<String>, Path> cellToPath =
+      new Function<Optional<String>, Path>() {
+        @Override
+        public Path apply(Optional<String> cellName) {
+          if (!cellName.isPresent()) {
+            return projectFilesystem.getRootPath();
+          }
+          Optional<Path> root = getPath("repositories", cellName.get(), false);
+          if (!root.isPresent()) {
+            throw new HumanReadableException(
+                "Unable to find repository '%s' in cell rooted at: %s",
+                cellName.get(),
+                projectFilesystem.getRootPath());
+          }
+          Path path = MorePaths.expandHomeDir(root.get());
+          return projectFilesystem.resolve(path).normalize();
+        }
+      };
+
+  private final Architecture architecture;
+
   private final Config config;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
@@ -106,10 +129,12 @@ public class BuckConfig {
   public BuckConfig(
       Config config,
       ProjectFilesystem projectFilesystem,
+      Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
+    this.architecture = architecture;
 
     // We could create this Map on demand; however, in practice, it is almost always needed when
     // BuckConfig is needed because CommandLineBuildTargetNormalizer needs it.
@@ -153,6 +178,7 @@ public class BuckConfig {
   static BuckConfig createFromReaders(
       Map<Path, Reader> readers,
       ProjectFilesystem projectFilesystem,
+      Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
@@ -174,8 +200,13 @@ public class BuckConfig {
     return new BuckConfig(
         config,
         projectFilesystem,
+        architecture,
         platform,
         environment);
+  }
+
+  public Architecture getArchitecture() {
+    return architecture;
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -193,6 +224,20 @@ public class BuckConfig {
 
   public ImmutableList<String> getListWithoutComments(String section, String field) {
     return config.getListWithoutComments(section, field);
+  }
+
+  public ImmutableList<String> getListWithoutComments(
+      String section, String field, char splitChar) {
+    return config.getListWithoutComments(section, field, splitChar);
+  }
+
+  public Function<Optional<String>, Path> getCellRoots() {
+    return cellToPath;
+  }
+
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String section, String field) {
+    return config.getOptionalListWithoutComments(section, field);
   }
 
   @Nullable
@@ -221,7 +266,29 @@ public class BuckConfig {
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
     return BuildTargetParser.INSTANCE.parse(
         target,
-        BuildTargetPatternParser.fullyQualified());
+        BuildTargetPatternParser.fullyQualified(),
+        getCellRoots());
+  }
+
+  public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
+    ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
+    if (targetsToForce.size() == 0) {
+      return ImmutableList.<BuildTarget>of();
+    }
+    ImmutableList<BuildTarget> targets = ImmutableList.copyOf(FluentIterable
+        .from(targetsToForce)
+        .transform(
+            new Function<String, BuildTarget>() {
+              @Override
+              public BuildTarget apply(String input) {
+                String expandedAlias = getBuildTargetForAliasAsString(input);
+                if (expandedAlias != null) {
+                  input = expandedAlias;
+                }
+                return getBuildTargetForFullyQualifiedTarget(input);
+              }
+            }));
+    return targets;
   }
 
   /**
@@ -322,7 +389,7 @@ public class BuckConfig {
    * alias defined earlier in the {@code alias} section. The mapping produced by this method
    * reflects the result of resolving all aliases as values in the {@code alias} section.
    */
-  private static ImmutableMap<String, BuildTarget> createAliasToBuildTargetMap(
+  private ImmutableMap<String, BuildTarget> createAliasToBuildTargetMap(
       ImmutableMap<String, String> rawAliasMap) {
     // We use a LinkedHashMap rather than an ImmutableMap.Builder because we want both (1) order to
     // be preserved, and (2) the ability to inspect the Map while building it up.
@@ -344,7 +411,8 @@ public class BuckConfig {
         // and just grab everything between "//" and ":" and assume it's a valid base path.
         buildTarget = BuildTargetParser.INSTANCE.parse(
             value,
-            BuildTargetPatternParser.fullyQualified());
+            BuildTargetPatternParser.fullyQualified(),
+            getCellRoots());
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }
@@ -493,6 +561,10 @@ public class BuckConfig {
     }
   }
 
+  public Platform getPlatform() {
+    return platform;
+  }
+
   public Optional<URI> getRemoteLogUrl() {
     return getValue("log", "remote_log_url").transform(TO_URI);
   }
@@ -546,16 +618,17 @@ public class BuckConfig {
   }
 
   @Override
+  public String toString() {
+    return String.format("%s (config=%s)", super.toString(), config);
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hashCode(config);
   }
 
   public ImmutableMap<String, String> getEnvironment() {
     return environment;
-  }
-
-  public Platform getPlatform() {
-    return platform;
   }
 
   public String[] getEnv(String propertyName, String separator) {
@@ -575,12 +648,40 @@ public class BuckConfig {
   }
 
   /**
+   * @return the dependency scheduling order
+   */
+  public CachingBuildEngine.DependencySchedulingOrder getDependencySchedulingOrder() {
+    return getEnum(
+        "build",
+        "dependency_scheduling_order",
+        CachingBuildEngine.DependencySchedulingOrder.class)
+        .or(CachingBuildEngine.DependencySchedulingOrder.RANDOM);
+  }
+
+  /**
    * @return the mode with which to run the build engine.
    */
   public CachingBuildEngine.DepFiles getBuildDepFiles() {
-    return getBooleanValue("build", "depfiles", true) ?
-        CachingBuildEngine.DepFiles.ENABLED :
-        CachingBuildEngine.DepFiles.DISABLED;
+    return getEnum("build", "depfiles", CachingBuildEngine.DepFiles.class)
+        .or(CachingBuildEngine.DepFiles.ENABLED);
+  }
+
+  /**
+   * @return the maximum number of entries to support in the depfile cache.
+   */
+  public long getBuildMaxDepFileCacheEntries() {
+    return getLong("build", "max_depfile_cache_entries").or(256L);
+  }
+
+  /**
+   * @return the selected execution order of the build work queue.
+   */
+  public WorkQueueExecutionOrder getWorkQueueExecutionOrder() {
+    return getEnum(
+        "build",
+        "work_queue_execution_order",
+        WorkQueueExecutionOrder.class)
+        .or(WorkQueueExecutionOrder.LIFO);
   }
 
   /**
@@ -588,6 +689,11 @@ public class BuckConfig {
    */
   public Optional<Path> getPath(String sectionName, String name) {
     return getPath(sectionName, name, true);
+  }
+
+  public Path getRequiredPath(String section, String field) {
+    Optional<Path> path = getPath(section, field);
+    return required(section, field, path);
   }
 
   /**

@@ -22,8 +22,11 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -54,15 +57,24 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
+  }
+
+  @Override
+  public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
     return ImmutableList.of(
-        new OsoSymbolsScrubber(linkingDirectory),
+        new OsoSymbolsScrubber(cellRoots),
         new LcUuidScrubber());
   }
 
   @Override
-  public Iterable<String> linkWhole(String input) {
-    return Linkers.iXlinker("-force_load", input);
+  public Iterable<Arg> linkWhole(Arg input) {
+    return ImmutableList.of(
+        new StringArg("-Xlinker"),
+        new StringArg("-force_load"),
+        new StringArg("-Xlinker"),
+        input);
   }
 
   @Override

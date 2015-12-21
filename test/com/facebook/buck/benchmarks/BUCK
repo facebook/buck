@@ -1,0 +1,15 @@
+java_binary(
+  name = 'benchmarks',
+  deps = [
+    '//test/com/facebook/buck/parser:benchmarks',
+    '//third-party/java/caliper:caliper',
+  ],
+  main_class = 'com.google.caliper.runner.CaliperMain',
+  # Get rid of singing information as including it will cause the .jar to not verify.
+  blacklist = [
+    '.*SF',
+    '.*RSA',
+    '.*DSA',
+  ],
+)
+

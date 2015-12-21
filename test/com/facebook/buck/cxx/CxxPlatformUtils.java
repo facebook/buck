@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Paths;
 
@@ -37,8 +39,16 @@ public class CxxPlatformUtils {
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
           .setStrip(new HashedFileTool(Paths.get("tool")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))
-          .setSharedLibraryExtension(".so")
+          .setRanlib(new HashedFileTool(Paths.get("ranlib")))
+          .setSharedLibraryExtension("so")
+          .setSharedLibraryVersionedExtensionFormat("so.%s")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
+
+    public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(
+                DEFAULT_PLATFORM.getFlavor(), DEFAULT_PLATFORM));
 
 }

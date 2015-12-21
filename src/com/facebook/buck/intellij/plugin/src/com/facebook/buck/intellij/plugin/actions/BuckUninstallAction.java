@@ -21,13 +21,12 @@ import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 
 /**git st
  * Run buck uninstall command.
  */
-public class BuckUninstallAction extends DumbAwareAction {
+public class BuckUninstallAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck uninstall";
   public static final String ACTION_DESCRIPTION = "Run buck uninstall command";
@@ -38,8 +37,8 @@ public class BuckUninstallAction extends DumbAwareAction {
 
   @Override
   public void update(AnActionEvent e) {
-    Project project = e.getProject();
-    if (project != null) {
+    if (preUpdateCheck(e)) {
+      Project project = e.getProject();
       e.getPresentation().setEnabled(!BuckBuildManager.getInstance(project).isBuilding());
     }
   }

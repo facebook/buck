@@ -52,8 +52,9 @@ import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
-import com.facebook.buck.apple.CodeSignIdentity;
+import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.CoreDataModelDescription;
+import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
@@ -64,7 +65,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.cxx.CxxPythonExtensionDescription;
+import com.facebook.buck.python.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
@@ -82,21 +83,29 @@ import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
+import com.facebook.buck.go.GoTestDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
+import com.facebook.buck.halide.HalideBuckConfig;
+import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaBinaryDescription;
-import com.facebook.buck.java.JavaBuckConfig;
-import com.facebook.buck.java.JavaLibraryDescription;
-import com.facebook.buck.java.JavaTestDescription;
-import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.KeystoreDescription;
-import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBuckConfig;
+import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
+import com.facebook.buck.jvm.java.JavaBinaryDescription;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.KeystoreDescription;
+import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.lua.LuaBinaryDescription;
+import com.facebook.buck.lua.LuaBuckConfig;
+import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.ocaml.OCamlBinaryDescription;
@@ -106,8 +115,8 @@ import com.facebook.buck.ocaml.PrebuiltOCamlLibraryDescription;
 import com.facebook.buck.python.PrebuiltPythonLibraryDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibraryDescription;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.rust.RustBinaryDescription;
 import com.facebook.buck.rust.RustBuckConfig;
@@ -203,13 +212,11 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
-      PythonEnvironment pythonEnv,
       Optional<Path> testTempDirOverride) throws InterruptedException, IOException {
     return createBuilder(
         config,
         processExecutor,
         androidDirectoryResolver,
-        pythonEnv,
         testTempDirOverride).build();
   }
 
@@ -265,7 +272,6 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
-      PythonEnvironment pythonEnv,
       Optional<Path> testTempDirOverride) throws InterruptedException, IOException {
 
     Platform platform = Platform.detect();
@@ -279,6 +285,7 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
+
     ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatformsBuilder =
         ImmutableMap.builder();
     buildAppleCxxPlatforms(
@@ -314,6 +321,7 @@ public class KnownBuildRuleTypes {
               compiler,
               androidConfig.getNdkCxxRuntime().or(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
               androidConfig.getNdkAppPlatform().or(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
+              androidConfig.getNdkCpuAbis().or(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
               platform));
     }
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
@@ -378,14 +386,29 @@ public class KnownBuildRuleTypes {
 
     GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor);
 
+    HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
+    ImmutableList<PythonPlatform> pythonPlatformsList =
+        pyConfig.getPythonPlatforms(processExecutor);
+    ImmutableMap.Builder<Flavor, PythonPlatform> pythonPlatformsMapBuilder = ImmutableMap.builder();
+    for (PythonPlatform pythonPlatform : pythonPlatformsList) {
+      pythonPlatformsMapBuilder.put(pythonPlatform.getFlavor(), pythonPlatform);
+    }
+    ImmutableMap<Flavor, PythonPlatform> pythonPlatformsMap = pythonPlatformsMapBuilder.build();
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        new FlavorDomain<>("Python Platform", pythonPlatformsMap);
     PythonBinaryDescription pythonBinaryDescription =
-        new PythonBinaryDescription(pyConfig, pythonEnv, defaultCxxPlatform, cxxPlatforms);
+        new PythonBinaryDescription(
+            pyConfig,
+            pythonPlatforms,
+            defaultCxxPlatform,
+            cxxPlatforms);
 
     // Look up the timeout to apply to entire test rules.
-    Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
+    Optional<Long> defaultTestRuleTimeoutMs = config.getLong("test", "rule_timeout");
 
 
     // Prepare the downloader if we're allowing mid-build downloads
@@ -404,14 +427,11 @@ public class KnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
-    JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
-        .build();
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
-            cxxBuckConfig,
             inferBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms,
@@ -423,14 +443,29 @@ public class KnownBuildRuleTypes {
         cxxPlatforms,
         cxxBuckConfig.getPreprocessMode());
 
+    CodeSignIdentityStore codeSignIdentityStore =
+        CodeSignIdentityStore.fromSystem(processExecutor);
+    ProvisioningProfileStore provisioningProfileStore =
+        ProvisioningProfileStore.fromSearchPath(appleConfig.getProvisioningProfileSearchPath());
+
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
             cxxLibraryDescription,
-            cxxPlatforms);
+            cxxPlatforms,
+            platformFlavorsToAppleCxxPlatforms,
+            defaultCxxPlatform,
+            codeSignIdentityStore,
+            provisioningProfileStore);
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription =
-        new AppleBinaryDescription(cxxBinaryDescription, platformFlavorsToAppleCxxPlatforms);
+        new AppleBinaryDescription(
+            cxxBinaryDescription,
+            cxxPlatforms,
+            platformFlavorsToAppleCxxPlatforms,
+            defaultCxxPlatform,
+            codeSignIdentityStore,
+            provisioningProfileStore);
     builder.register(appleBinaryDescription);
 
     // Create an executor service exclusively for the smart dexing step.
@@ -440,26 +475,24 @@ public class KnownBuildRuleTypes {
                 SmartDexingStep.determineOptimalThreadCount(),
                 new CommandThreadFactory("SmartDexing")));
 
-    Supplier<ImmutableSet<CodeSignIdentity>> codeSignIdentitiesSupplier =
-        AppleConfig.createCodeSignIdentitiesSupplier(processExecutor);
 
     builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
-            androidBinaryOptions,
+            defaultJavacOptions,
             proGuardConfig,
             ndkCxxPlatforms,
             dxExecutorService));
-    builder.register(new AndroidBuildConfigDescription(androidBinaryOptions));
+    builder.register(new AndroidBuildConfigDescription(defaultJavacOptions));
     builder.register(new AndroidInstrumentationApkDescription(
             proGuardConfig,
-            androidBinaryOptions,
+            defaultJavacOptions,
             ndkCxxPlatforms,
             dxExecutorService));
-    builder.register(new AndroidInstrumentationTestDescription(testRuleTimeoutMs));
-    builder.register(new AndroidLibraryDescription(androidBinaryOptions));
+    builder.register(new AndroidInstrumentationTestDescription(defaultTestRuleTimeoutMs));
+    builder.register(new AndroidLibraryDescription(defaultJavacOptions));
     builder.register(new AndroidManifestDescription());
-    builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));
+    builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
@@ -472,7 +505,9 @@ public class KnownBuildRuleTypes {
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
-            codeSignIdentitiesSupplier.get());
+            codeSignIdentityStore,
+            provisioningProfileStore,
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(
@@ -483,32 +518,55 @@ public class KnownBuildRuleTypes {
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
-            codeSignIdentitiesSupplier.get()));
+            codeSignIdentityStore,
+            provisioningProfileStore,
+            appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor)));
     builder.register(new CoreDataModelDescription());
     builder.register(new CSharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
-    builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatforms));
-    builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
-    builder.register(new DBinaryDescription(dBuckConfig));
+    builder.register(
+        new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
+    builder.register(
+        new CxxTestDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            defaultTestRuleTimeoutMs));
+    builder.register(new DBinaryDescription(dBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig));
-    builder.register(new DTestDescription(dBuckConfig));
+    builder.register(new DTestDescription(
+            dBuckConfig, defaultTestRuleTimeoutMs, defaultCxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
     builder.register(new GoBinaryDescription(goBuckConfig, defaultCxxPlatform));
     builder.register(new GoLibraryDescription(goBuckConfig));
+    builder.register(
+        new GoTestDescription(
+            goBuckConfig,
+            defaultTestRuleTimeoutMs,
+            defaultCxxPlatform));
+    builder.register(new GroovyLibraryDescription(new GroovyBuckConfig(config)));
     builder.register(new GwtBinaryDescription());
+    builder.register(
+      new HalideLibraryDescription(
+        defaultCxxPlatform,
+        cxxPlatforms,
+        cxxBuckConfig.getPreprocessMode(),
+        halideBuckConfig));
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(
         new JavaTestDescription(
             defaultJavacOptions,
-            testRuleTimeoutMs,
+            defaultTestRuleTimeoutMs,
             defaultCxxPlatform,
             testTempDirOverride));
     builder.register(new KeystoreDescription());
+    builder.register(new LuaBinaryDescription(new LuaBuckConfig(config, new ExecutableFinder())));
+    builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
@@ -526,18 +584,20 @@ public class KnownBuildRuleTypes {
         new PythonTestDescription(
             pythonBinaryDescription,
             pyConfig,
+            pythonPlatforms,
             defaultCxxPlatform,
+            defaultTestRuleTimeoutMs,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(
-            androidBinaryOptions,
-            testRuleTimeoutMs,
+            defaultJavacOptions,
+            defaultTestRuleTimeoutMs,
             defaultCxxPlatform,
             testTempDirOverride));
     builder.register(new RustBinaryDescription(rustBuckConfig));
     builder.register(new RustLibraryDescription(rustBuckConfig));
     builder.register(new ShBinaryDescription());
-    builder.register(new ShTestDescription());
+    builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
     builder.register(
         new ThriftLibraryDescription(
@@ -553,7 +613,8 @@ public class KnownBuildRuleTypes {
                     cxxLibraryDescription,
                     /* cpp2 */ true),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
+                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED),
+                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.ASYNCIO))));
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
     builder.register(new XcodeWorkspaceConfigDescription());

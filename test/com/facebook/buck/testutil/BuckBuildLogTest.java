@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class BuckBuildLogTest {
 
   @Test
@@ -31,9 +33,9 @@ public class BuckBuildLogTest {
         "735 INFO  BuildRuleFinished(//example/base:two): " +
             "FAIL MISS MISSING 489e1b85f804dc0f66545f2ce06f57ee85204747",
         "735 INFO  BuildRuleFinished(//example/base:three): " +
-            "SUCCESS SKIP MATCHING_RULE_KEY 489e1b85f804dc0f66545f2ce06f57ee85204747");
+            "SUCCESS MISS MATCHING_RULE_KEY 489e1b85f804dc0f66545f2ce06f57ee85204747");
 
-    BuckBuildLog buildLog = BuckBuildLog.fromLogContents(buildLogLines);
+    BuckBuildLog buildLog = BuckBuildLog.fromLogContents(Paths.get("/spoof"), buildLogLines);
     buildLog.assertTargetBuiltLocally("//example/base:one");
     buildLog.assertTargetFailed("//example/base:two");
     buildLog.assertTargetHadMatchingRuleKey("//example/base:three");

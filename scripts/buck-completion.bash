@@ -94,7 +94,7 @@ function _buck_completion_run() {
 }
 
 function _buck_completion_try_build() {
-  _buck_completion_try_long_arg "--help --no-cache --num-threads --verbose" \
+  _buck_completion_try_long_arg "--help --no-cache --num-threads --verbose --populate-cache" \
     || _buck_completion_try_target "$@"
 }
 
@@ -156,6 +156,7 @@ function _buck_completion_try_install() {
 
 function _buck_completion_try_project() {
   _buck_completion_try_long_arg "
+      --build-with-buck
       --combined-project
       --help
       --ide
