@@ -85,6 +85,7 @@ java_library(
     '//src/com/facebook/buck/jvm/java:config',
     '//src/com/facebook/buck/jvm/groovy:rules',
     '//src/com/facebook/buck/jvm/java/intellij:intellij',
+    '//src/com/facebook/buck/jvm/scala:rules',
     '//src/com/facebook/buck/js:js',
     '//src/com/facebook/buck/ocaml:rules',
     '//src/com/facebook/buck/parser:config',

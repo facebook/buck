@@ -1,0 +1,3 @@
+[scala]
+library = //:scala-library
+compiler = //:scala-compiler
