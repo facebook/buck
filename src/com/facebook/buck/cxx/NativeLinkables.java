@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -136,16 +137,36 @@ public class NativeLinkables {
     return result.build();
   }
 
+  @VisibleForTesting
+  protected static Linker.LinkableDepType getLinkStyle(
+      NativeLinkable.Linkage preferredLinkage,
+      Linker.LinkableDepType requestedLinkStyle) {
+    Linker.LinkableDepType linkStyle;
+    switch (preferredLinkage) {
+      case SHARED:
+        linkStyle = Linker.LinkableDepType.SHARED;
+        break;
+      case STATIC:
+        linkStyle =
+            requestedLinkStyle == Linker.LinkableDepType.SHARED ?
+                Linker.LinkableDepType.STATIC_PIC :
+                Linker.LinkableDepType.STATIC;
+        break;
+      case ANY:
+        linkStyle = requestedLinkStyle;
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+    return linkStyle;
+  }
+
   public static NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle,
       NativeLinkable nativeLinkable) throws NoSuchBuildTargetException {
     NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
-    return nativeLinkable.getNativeLinkableInput(
-        cxxPlatform,
-        link == NativeLinkable.Linkage.STATIC && linkStyle == Linker.LinkableDepType.SHARED ?
-            Linker.LinkableDepType.STATIC_PIC :
-            linkStyle);
+    return nativeLinkable.getNativeLinkableInput(cxxPlatform, getLinkStyle(link, linkStyle));
   }
 
   /**
