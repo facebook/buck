@@ -32,6 +32,7 @@ public class VerbosityParserTest {
     assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse());
     assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("-v"));
     assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("--verbose"));
+    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("run hello -- -v no"));
 
     assertSame(Verbosity.COMMANDS_AND_OUTPUT, VerbosityParser.parse("--verbose", "5"));
 

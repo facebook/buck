@@ -37,7 +37,7 @@ public class VerbosityParser {
   private VerbosityParser() {}
 
   public static Verbosity parse(String... args) {
-    for (int i = 0; i < args.length; i++) {
+    for (int i = 0; i < args.length && !"--".equals(args[i]); i++) {
       String arg = args[i];
       if ((VERBOSE_LONG_ARG.equals(arg) || VERBOSE_SHORT_ARG.equals(arg)) && i < args.length - 1) {
         String nextArg = args[i + 1];
