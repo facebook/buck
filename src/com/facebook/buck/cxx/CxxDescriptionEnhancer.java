@@ -567,7 +567,8 @@ public class CxxDescriptionEnhancer {
         args.platformCompilerFlags,
         args.prefixHeader,
         args.linkerFlags,
-        args.platformLinkerFlags);
+        args.platformLinkerFlags,
+        args.cxxRuntimeType);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -586,7 +587,8 @@ public class CxxDescriptionEnhancer {
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<ImmutableList<String>> linkerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType)
       throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     Path linkOutput = getLinkOutputPath(params.getBuildTarget());
@@ -702,6 +704,7 @@ public class CxxDescriptionEnhancer {
             argsBuilder.build(),
             linkStyle,
             params.getDeps(),
+            cxxRuntimeType,
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of(),
             frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));

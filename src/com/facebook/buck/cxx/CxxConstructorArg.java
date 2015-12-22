@@ -50,6 +50,7 @@ public class CxxConstructorArg implements HasTests {
   public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<String> headerNamespace;
+  public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
 
   @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
 

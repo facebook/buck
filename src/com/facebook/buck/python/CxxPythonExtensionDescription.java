@@ -236,6 +236,7 @@ public class CxxPythonExtensionDescription implements
         getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
+        args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));

@@ -164,6 +164,7 @@ public class HalideLibraryDescription implements
     Optional<ImmutableSortedSet<FrameworkPath>>
       frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     Optional<SourcePath> prefixHeader = Optional.absent();
+    Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.absent();
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
@@ -182,7 +183,8 @@ public class HalideLibraryDescription implements
             platformCompilerFlags,
             prefixHeader,
             linkerFlags,
-            platformLinkerFlags);
+            platformLinkerFlags,
+            cxxRuntimeType);
 
     BuildRuleParams binParams = params.copyWithBuildTarget(target);
     binParams.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));

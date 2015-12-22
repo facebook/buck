@@ -292,6 +292,7 @@ public class PrebuiltCxxLibraryDescription
             .build(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
