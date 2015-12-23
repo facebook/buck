@@ -30,7 +30,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.facebook.buck.util.MoreSets;
@@ -48,7 +47,7 @@ import java.util.concurrent.Executor;
  *
  * <pre>expr ::= ALLPATHS '(' expr ',' expr ')'</pre>
  */
-public class AllPathsFunction implements QueryFunction {
+public class AllPathsFunction extends QueryFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION);

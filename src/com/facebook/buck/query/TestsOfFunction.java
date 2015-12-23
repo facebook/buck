@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.query;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +30,7 @@ import java.util.concurrent.Executor;
  *
  * <pre>expr ::= TESTSOF '(' expr ')'</pre>
  */
-public class TestsOfFunction implements QueryFunction {
+public class TestsOfFunction extends QueryFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION);

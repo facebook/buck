@@ -31,7 +31,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
@@ -47,7 +46,7 @@ import java.util.concurrent.Executor;
  *
  * <pre>expr ::= LABELS '(' WORD ',' expr ')'</pre>
  */
-public class LabelsFunction implements QueryFunction {
+public class LabelsFunction extends QueryFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
