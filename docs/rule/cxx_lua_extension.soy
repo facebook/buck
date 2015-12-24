@@ -1,0 +1,98 @@
+{namespace cxx_lua_extension}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cxx_lua_extension()' /}
+    {param prettify: true /}
+    {param description}
+      A cxx_lua_extension() rule builds a native Lua extension module from C/C++ source files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A cxx_lua_extension() rule is a variant of a C/C++ library which is built as a Lua module. As such,
+it has a module name formed by the <code>base_module</code> parameter and the rule name and implictly
+depends on Lua C library (configured via the {call buckconfig.lua_cxx_library /} parameter.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call lua_common.base_module_arg /}
+
+{call cxx_common.srcs_arg /}
+
+{call cxx_common.platform_srcs_arg /}
+
+{call cxx_common.headers_arg /}
+
+{call cxx_common.platform_headers_arg /}
+
+{call cxx_common.header_namespace_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.platform_preprocessor_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.platform_compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call cxx_common.platform_linker_flags_arg /}
+
+{call buck.tests_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds a Lua extension from a single .cpp file.
+cxx_lua_extension(
+  name = 'mymodule',
+  base_module = 'foo.bar',
+  srcs = [
+    'mymodule.cpp',
+  ],
+  compiler_flags = [
+    '-fno-omit-frame-pointer',
+  ],
+)
+
+# A library rule which has a single source importing the above extension.
+lua_library(
+  name = 'utils',
+  srcs = [
+    'utils.lua',
+  ],
+  deps = [
+    ':mymodule',
+  ],
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-lua">
+-- The `utils.lua` source, wrapped by the `utils` rule above.
+
+-- Import the C/C++ extension build above.
+require "foo.bar.mymodule"
+
+...
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

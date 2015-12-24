@@ -63,6 +63,7 @@ public class LuaBinaryIntegrationTest {
 
   private ProjectWorkspace workspace;
   private Path lua;
+  private boolean luaDevel;
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
@@ -92,27 +93,28 @@ public class LuaBinaryIntegrationTest {
     lua = luaOptional.get();
 
     // Try to detect if a Lua devel package is available, which is needed to C/C++ support.
+    CxxPlatform cxxPlatform =
+        DefaultCxxPlatforms.build(
+            Platform.detect(),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    ProcessBuilder builder = new ProcessBuilder();
+    builder.command(
+        ImmutableList.<String>builder()
+            .addAll(
+                cxxPlatform.getCc().getCommandPrefix(
+                    new SourcePathResolver(
+                        new BuildRuleResolver(
+                            TargetGraph.EMPTY,
+                            new BuildTargetNodeToBuildRuleTransformer()))))
+            .add("-includelua.h", "-E", "-")
+            .build());
+    builder.redirectInput(ProcessBuilder.Redirect.PIPE);
+    Process process = builder.start();
+    process.getOutputStream().close();
+    int exitCode = process.waitFor();
+    luaDevel = exitCode == 0;
     if (starterType == LuaBinaryDescription.StarterType.NATIVE) {
-      CxxPlatform cxxPlatform =
-          DefaultCxxPlatforms.build(
-              Platform.detect(),
-              new CxxBuckConfig(FakeBuckConfig.builder().build()));
-      ProcessBuilder builder = new ProcessBuilder();
-      builder.command(
-          ImmutableList.<String>builder()
-              .addAll(
-                  cxxPlatform.getCc().getCommandPrefix(
-                      new SourcePathResolver(
-                          new BuildRuleResolver(
-                              TargetGraph.EMPTY,
-                              new BuildTargetNodeToBuildRuleTransformer()))))
-              .add("-includelua.h", "-E", "-")
-              .build());
-      builder.redirectInput(ProcessBuilder.Redirect.PIPE);
-      Process process = builder.start();
-      process.getOutputStream().close();
-      int exitCode = process.waitFor();
-      assumeTrue("Lua devel package required for native starter", exitCode == 0);
+      assumeTrue("Lua devel package required for native starter", luaDevel);
     }
 
     // Setup the workspace.
@@ -194,6 +196,29 @@ public class LuaBinaryIntegrationTest {
                 Matchers.endsWith(arg0.toString()),
                 Matchers.equalTo("hello"),
                 Matchers.equalTo("world"))));
+  }
+
+  @Test
+  public void nativeExtension() throws Exception {
+    assumeTrue(luaDevel);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("run", "//:native").assertSuccess();
+    assertThat(
+        result.getStdout() + result.getStderr(),
+        result.getStdout().trim(),
+        Matchers.equalTo("hello world"));
+  }
+
+  @Test
+  public void nativeExtensionWithDep() throws Exception {
+    assumeThat(starterType, Matchers.not(Matchers.equalTo(LuaBinaryDescription.StarterType.PURE)));
+    assumeTrue(luaDevel);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("run", "//:native_with_dep").assertSuccess();
+    assertThat(
+        result.getStdout() + result.getStderr(),
+        result.getStdout().trim(),
+        Matchers.equalTo("hello world"));
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws IOException {

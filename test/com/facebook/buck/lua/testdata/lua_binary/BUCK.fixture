@@ -12,3 +12,46 @@ lua_library(
     'simple.lua',
   ],
 )
+
+lua_binary(
+  name = 'native',
+  main_module = 'foo',
+  deps = [
+    ':foo',
+  ],
+)
+
+cxx_lua_extension(
+  name = 'foo',
+  srcs = [
+    'foo.c',
+  ],
+)
+
+lua_binary(
+  name = 'native_with_dep',
+  main_module = 'bar',
+  deps = [
+    ':bar',
+  ],
+)
+
+cxx_lua_extension(
+  name = 'bar',
+  srcs = [
+    'bar.c',
+  ],
+  deps = [
+    ':dep',
+  ],
+)
+
+cxx_library(
+  name = 'dep',
+  headers = [
+    'dep.h',
+  ],
+  srcs = [
+    'dep.c',
+  ],
+)

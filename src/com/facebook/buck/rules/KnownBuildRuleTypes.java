@@ -106,8 +106,10 @@ import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.lua.CxxLuaExtensionDescription;
 import com.facebook.buck.lua.LuaBinaryDescription;
 import com.facebook.buck.lua.LuaBuckConfig;
+import com.facebook.buck.lua.LuaConfig;
 import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -456,6 +458,8 @@ public class KnownBuildRuleTypes {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
+    LuaConfig luaConfig = new LuaBuckConfig(config, new ExecutableFinder());
+
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
             inferBuckConfig,
@@ -555,6 +559,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CSharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
+    builder.register(new CxxLuaExtensionDescription(luaConfig, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.register(
@@ -608,11 +613,7 @@ public class KnownBuildRuleTypes {
             testTempDirOverride));
     builder.register(new KeystoreDescription());
     builder.register(
-        new LuaBinaryDescription(
-            new LuaBuckConfig(config, new ExecutableFinder()),
-            cxxBuckConfig,
-            defaultCxxPlatform,
-            cxxPlatforms));
+        new LuaBinaryDescription(luaConfig, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);

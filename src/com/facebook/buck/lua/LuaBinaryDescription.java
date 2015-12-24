@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -379,6 +380,13 @@ public class LuaBinaryDescription implements
           LuaPackageable packageable = (LuaPackageable) rule;
           LuaPackageComponents.addComponents(builder, packageable.getLuaPackageComponents());
           deps = rule.getDeps();
+        } else if (rule instanceof CxxLuaExtension) {
+          CxxLuaExtension extension = (CxxLuaExtension) rule;
+          builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
+          nativeLinkables.putAll(
+              Maps.uniqueIndex(
+                  extension.getSharedNativeLinkTargetDeps(cxxPlatform),
+                  HasBuildTarget.TO_TARGET));
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
           nativeLinkables.put(linkable.getBuildTarget(), linkable);

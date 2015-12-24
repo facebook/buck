@@ -226,6 +226,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'prebuilt_native_library',
         ],
         'lua': [
+            'cxx_lua_extension',
             'lua_binary',
             'lua_library',
         ],
@@ -640,6 +641,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .java_library}
 {call .ruleLink}{param name : 'java_library' /}{/call}
+{/template}
+
+/***/
+{template .cxx_lua_extension}
+{call .ruleLink}{param name : 'cxx_lua_extension' /}{/call}
 {/template}
 
 /***/
