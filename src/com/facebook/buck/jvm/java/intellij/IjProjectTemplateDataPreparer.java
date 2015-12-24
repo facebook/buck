@@ -173,10 +173,6 @@ public class IjProjectTemplateDataPreparer {
     }
   }
 
-  public static Path getModuleOutputFilePath(String name) {
-    return IjProjectWriter.MODULES_PREFIX.resolve(name + ".iml");
-  }
-
   @Value.Immutable
   @BuckStyleImmutable
   public abstract static class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
@@ -313,7 +309,7 @@ public class IjProjectTemplateDataPreparer {
 
   public ContentRoot getContentRoot(IjModule module) throws IOException {
     Path moduleBasePath = module.getModuleBasePath();
-    Path moduleLocation = getModuleOutputFilePath(module.getName());
+    Path moduleLocation = module.getModuleImlFilePath();
     final Path moduleLocationBasePath =
         (moduleLocation.getParent() == null) ? Paths.get("") : moduleLocation.getParent();
     ImmutableSet<IjFolder> sourcesAndExcludes = FluentIterable.from(module.getFolders())
@@ -359,7 +355,7 @@ public class IjProjectTemplateDataPreparer {
             new Function<IjModule, ModuleIndexEntry>() {
               @Override
               public ModuleIndexEntry apply(IjModule module) {
-                Path moduleOutputFilePath = getModuleOutputFilePath(module.getName());
+                Path moduleOutputFilePath = module.getModuleImlFilePath();
                 String fileUrl = toProjectDirRelativeString(moduleOutputFilePath);
                 // The root project module cannot belong to any group.
                 String group = (module.getModuleBasePath().toString().isEmpty()) ? null : "modules";

@@ -80,7 +80,7 @@ public class IjProjectWriter {
 
   private void writeModule(IjModule module) throws IOException {
     projectFilesystem.mkdirs(MODULES_PREFIX);
-    Path path = IjProjectTemplateDataPreparer.getModuleOutputFilePath(module.getName());
+    Path path = module.getModuleImlFilePath();
 
     ST moduleContents = getST(StringTemplateFile.MODULE_TEMPLATE);
 

@@ -86,13 +86,13 @@ public class IjProjectDataPreparerTest {
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
     ContentRoot contentRoot = dataPreparer.getContentRoot(baseModule);
-    assertEquals("file://$MODULE_DIR$/../../java/com/example/base", contentRoot.getUrl());
+    assertEquals("file://$MODULE_DIR$", contentRoot.getUrl());
 
     IjSourceFolder baseSourceFolder = contentRoot.getFolders().first();
     assertEquals("sourceFolder", baseSourceFolder.getType());
     assertFalse(baseSourceFolder.getIsTestSource());
     assertEquals("com.example.base", baseSourceFolder.getPackagePrefix());
-    assertEquals("file://$MODULE_DIR$/../../java/com/example/base", baseSourceFolder.getUrl());
+    assertEquals("file://$MODULE_DIR$", baseSourceFolder.getUrl());
 
     assertThat(
         dataPreparer.getDependencies(baseModule),
@@ -307,18 +307,18 @@ public class IjProjectDataPreparerTest {
     assertEquals(
         ImmutableSet.of(
             ModuleIndexEntry.builder()
-                .setFileUrl("file://$PROJECT_DIR$/.idea/modules/project_root.iml")
-                .setFilePath(Paths.get(".idea/modules/project_root.iml"))
+                .setFileUrl("file://$PROJECT_DIR$/project_root.iml")
+                .setFilePath(Paths.get("project_root.iml"))
                 .build(),
             ModuleIndexEntry.builder()
                 .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/.idea/modules/java_com_example_base.iml")
-                .setFilePath(Paths.get(".idea/modules/java_com_example_base.iml"))
+                .setFileUrl("file://$PROJECT_DIR$/java/com/example/base/java_com_example_base.iml")
+                .setFilePath(Paths.get("java/com/example/base/java_com_example_base.iml"))
                 .build(),
             ModuleIndexEntry.builder()
                 .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/.idea/modules/javatests_com_example_base.iml")
-                .setFilePath(Paths.get(".idea/modules/javatests_com_example_base.iml"))
+                .setFileUrl("file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml")
+                .setFilePath(Paths.get("javatests/com/example/base/javatests_com_example_base.iml"))
                 .build()
         ),
         dataPreparer.getModuleIndexEntries());
