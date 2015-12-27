@@ -148,6 +148,12 @@ public class AppleCxxPlatforms {
         "apple-strip",
         version);
 
+    Tool nm = new VersionedTool(
+        getToolPath("nm", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-nm",
+        version);
+
     Tool actool = new VersionedTool(
         getToolPath("actool", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
@@ -253,6 +259,7 @@ public class AppleCxxPlatforms {
       strip,
       new BsdArchiver(ar),
       ranlib,
+      nm,
       asflags,
       ImmutableList.<String>of(),
       cflags,

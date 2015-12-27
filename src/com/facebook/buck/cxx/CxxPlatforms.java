@@ -73,6 +73,7 @@ public class CxxPlatforms {
       Tool strip,
       Archiver ar,
       Tool ranlib,
+      Tool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
@@ -101,6 +102,7 @@ public class CxxPlatforms {
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
         .setRanlib(getTool(flavor, "ranlib", config).or(ranlib))
         .setStrip(getTool(flavor, "strip", config).or(strip))
+        .setSymbolNameTool(new PosixNmSymbolNameTool(getTool(flavor, "nm", config).or(nm)))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER))
@@ -157,6 +159,7 @@ public class CxxPlatforms {
                 .or(defaultPlatform.getAr()))
         .setRanlib(getTool(flavor, "ranlib", config).or(defaultPlatform.getRanlib()))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
+        .setSymbolNameTool(defaultPlatform.getSymbolNameTool())
         .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
         .setSharedLibraryVersionedExtensionFormat(
             defaultPlatform.getSharedLibraryVersionedExtensionFormat())

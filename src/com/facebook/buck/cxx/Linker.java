@@ -17,6 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
@@ -60,6 +66,24 @@ public interface Linker extends Tool {
    * @return the name of the environment variable for the shared library runtime search path.
    */
   String searchPathEnvVar();
+
+  /**
+   * Generate a necessary linker arguments to propagate undefined symbols to a link command.  May
+   * need to create a {@link BuildRule}, in which case, {@code target} will be used as its name.
+   *
+   * @param target the name to give any {@link BuildRule} that needs to be created to facilitate
+   *               generating the arguments,
+   * @param symbolFiles the symbols files, each listing undefined symbols, one per line, to add to
+   *                    the link.
+   * @return the list of linker arguments needed to propagate the list of undefined symbols to the
+   *         link command.
+   */
+  ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
+      BuildRuleParams baseParams,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      BuildTarget target,
+      Iterable<? extends SourcePath> symbolFiles);
 
   /**
    * The various ways to link an output file.

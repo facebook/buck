@@ -66,6 +66,8 @@ interface AbstractCxxPlatform {
   Tool getRanlib();
   List<String> getRanlibflags();
 
+  SymbolNameTool getSymbolNameTool();
+
   String getSharedLibraryExtension();
   String getSharedLibraryVersionedExtensionFormat();
 

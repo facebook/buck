@@ -54,7 +54,7 @@ public class OmnibusTest {
             ImmutableList.<NativeLinkable>of());
     assertThat(
         spec.getGraph().getNodes(),
-        Matchers.containsInAnyOrder(a.getBuildTarget(), b.getBuildTarget(), root.getBuildTarget()));
+        Matchers.containsInAnyOrder(a.getBuildTarget(), b.getBuildTarget()));
     assertThat(
         spec.getBody().keySet(),
         Matchers.containsInAnyOrder(a.getBuildTarget(), b.getBuildTarget()));
@@ -112,7 +112,7 @@ public class OmnibusTest {
             ImmutableList.<NativeLinkable>of());
     assertThat(
         spec.getGraph().getNodes(),
-        Matchers.containsInAnyOrder(a.getBuildTarget(), root.getBuildTarget()));
+        Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(
         spec.getBody().keySet(),
         Matchers.containsInAnyOrder(a.getBuildTarget()));
@@ -121,7 +121,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.containsInAnyOrder(b.getBuildTarget()));
+        Matchers.<BuildTarget>empty());
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(b.getBuildTarget()));
@@ -175,7 +175,7 @@ public class OmnibusTest {
             ImmutableList.<NativeLinkable>of());
     assertThat(
         spec.getGraph().getNodes(),
-        Matchers.containsInAnyOrder(a.getBuildTarget(), root.getBuildTarget()));
+        Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(
         spec.getBody().keySet(),
         Matchers.containsInAnyOrder(a.getBuildTarget()));
@@ -184,7 +184,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.containsInAnyOrder(c.getBuildTarget()));
+        Matchers.<BuildTarget>empty());
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(b.getBuildTarget(), c.getBuildTarget()));
@@ -242,7 +242,7 @@ public class OmnibusTest {
             ImmutableList.of(excludedRoot));
     assertThat(
         spec.getGraph().getNodes(),
-        Matchers.containsInAnyOrder(a.getBuildTarget(), root.getBuildTarget()));
+        Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(
         spec.getBody().keySet(),
         Matchers.containsInAnyOrder(a.getBuildTarget()));
@@ -307,7 +307,7 @@ public class OmnibusTest {
             ImmutableList.of(excludedRoot));
     assertThat(
         spec.getGraph().getNodes(),
-        Matchers.containsInAnyOrder(root.getBuildTarget()));
+        Matchers.<BuildTarget>empty());
     assertThat(
         spec.getBody().keySet(),
         Matchers.<BuildTarget>empty());
@@ -316,7 +316,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.containsInAnyOrder(a.getBuildTarget()));
+        Matchers.<BuildTarget>empty());
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(excludedRoot.getBuildTarget(), a.getBuildTarget()));

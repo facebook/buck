@@ -46,8 +46,10 @@ import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -165,7 +167,7 @@ public class Omnibus {
     // nodes to include in the omnibus link.
     final MutableDirectedGraph<BuildTarget> graphBuilder = new MutableDirectedGraph<>();
     final Set<BuildTarget> deps = new LinkedHashSet<>();
-    new AbstractBreadthFirstTraversal<BuildTarget>(roots.keySet()) {
+    new AbstractBreadthFirstTraversal<BuildTarget>(Sets.difference(rootDeps.keySet(), excluded)) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
         graphBuilder.addNode(target);
@@ -301,6 +303,33 @@ public class Omnibus {
     return ImmutableSharedLibrary.of(rootSoname, new BuildTargetSourcePath(rootTarget));
   }
 
+  private static ImmutableList<Arg> createUndefinedSymbolsArgs(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends SourcePath> linkerInputs) {
+    SourcePath undefinedSymbolsFile =
+        cxxPlatform.getSymbolNameTool()
+            .createUndefinedSymbolsFile(
+                params,
+                ruleResolver,
+                pathResolver,
+                BuildTarget.builder(params.getBuildTarget())
+                    .addFlavors(ImmutableFlavor.of("omnibus-undefined-symbols-file"))
+                    .build(),
+                linkerInputs);
+    return cxxPlatform.getLd()
+        .createUndefinedSymbolsLinkerArgs(
+            params,
+            ruleResolver,
+            pathResolver,
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(ImmutableFlavor.of("omnibus-undefined-symbols-args"))
+                .build(),
+            ImmutableList.of(undefinedSymbolsFile));
+  }
+
   // Create a build rule to link the giant merged omnibus library described by the given spec.
   protected static SharedLibrary createOmnibus(
       BuildRuleParams params,
@@ -311,6 +340,25 @@ public class Omnibus {
       throws NoSuchBuildTargetException {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // For roots that aren't dependencies of nodes in the body, we extract their undefined symbols
+    // to add to the link so that required symbols get pulled into the merged library.
+    List<SourcePath> undefinedSymbolsOnlyRoots = new ArrayList<>();
+    for (BuildTarget target :
+         Sets.difference(spec.getRoots().keySet(), spec.getGraph().getNodes())) {
+      undefinedSymbolsOnlyRoots.add(
+          new BuildTargetSourcePath(
+              getRootTarget(
+                  params.getBuildTarget(),
+                  target)));
+    }
+    argsBuilder.addAll(
+        createUndefinedSymbolsArgs(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            undefinedSymbolsOnlyRoots));
 
     // Walk the graph in topological order, appending each nodes contributions to the link.
     ImmutableList<BuildTarget> targets =
@@ -326,7 +374,8 @@ public class Omnibus {
             new SourcePathArg(
                 pathResolver,
                 new BuildTargetSourcePath(
-                    getRootTarget(params.getBuildTarget(),
+                    getRootTarget(
+                        params.getBuildTarget(),
                         root.getBuildTarget()))));
         continue;
       }
@@ -452,13 +501,13 @@ public class Omnibus {
     @Value.Check
     public void verify() {
 
-      // Verify that all the root, body, and dep nodes are in the graph.
+      // Verify that all the graph is composed entirely off root and body nodes.
       Preconditions.checkState(
-          getGraph().getNodes().equals(
-              ImmutableSet.<BuildTarget>builder()
-                  .addAll(getRoots().keySet())
-                  .addAll(getBody().keySet())
-                  .build()));
+          ImmutableSet.<BuildTarget>builder()
+              .addAll(getRoots().keySet())
+              .addAll(getBody().keySet())
+              .build()
+              .containsAll(getGraph().getNodes()));
 
       // Verify that the root, body, and excluded nodes are distinct and that deps are a subset
       // of the excluded nodes.

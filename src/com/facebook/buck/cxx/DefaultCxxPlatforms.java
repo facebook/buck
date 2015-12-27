@@ -44,6 +44,7 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
   private static final Path DEFAULT_STRIP = Paths.get("/usr/bin/strip");
   private static final Path DEFAULT_RANLIB = Paths.get("/usr/bin/ranlib");
+  private static final Path DEFAULT_NM = Paths.get("/usr/bin/nm");
 
   private static final Path DEFAULT_OSX_C_FRONTEND = Paths.get("/usr/bin/clang");
   private static final Path DEFAULT_OSX_CXX_FRONTEND = Paths.get("/usr/bin/clang++");
@@ -70,6 +71,7 @@ public class DefaultCxxPlatforms {
           new HashedFileTool(DEFAULT_STRIP),
           new BsdArchiver(new HashedFileTool(DEFAULT_AR)),
           new HashedFileTool(DEFAULT_RANLIB),
+          new HashedFileTool(DEFAULT_NM),
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
@@ -110,6 +112,7 @@ public class DefaultCxxPlatforms {
         new HashedFileTool(DEFAULT_STRIP),
         new GnuArchiver(new HashedFileTool(DEFAULT_AR)),
         new HashedFileTool(DEFAULT_RANLIB),
+        new HashedFileTool(DEFAULT_NM),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
