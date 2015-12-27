@@ -26,6 +26,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 
+import java.nio.file.Path;
+
 public abstract class CxxPythonExtension extends NoopBuildRule implements PythonPackagable {
 
   public CxxPythonExtension(
@@ -39,6 +41,8 @@ public abstract class CxxPythonExtension extends NoopBuildRule implements Python
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
+
+  public abstract Path getModule();
 
   @Override
   public abstract PythonPackageComponents getPythonPackageComponents(

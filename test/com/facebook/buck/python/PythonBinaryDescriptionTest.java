@@ -21,8 +21,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -61,8 +63,17 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class PythonBinaryDescriptionTest {
+
+  private static final BuildTarget PYTHON2_DEP_TARGET =
+      BuildTargetFactory.newInstance("//:python2_dep");
+  private static final PythonPlatform PY2 =
+      PythonPlatform.of(
+          ImmutableFlavor.of("py2"),
+          new PythonEnvironment(Paths.get("python2"), PythonVersion.of("2.6")),
+          Optional.of(PYTHON2_DEP_TARGET));
 
   @Test
   public void thatComponentSourcePathDepsPropagateProperly() throws Exception {
@@ -445,6 +456,63 @@ public class PythonBinaryDescriptionTest {
             binary.getComponents().getNativeLibraries().keySet(),
             Functions.toStringFunction()),
         Matchers.containsInAnyOrder("libtransitive_dep.so", "libdep.so", "libcxx.so"));
+  }
+
+  @Test
+  public void extensionDepUsingMergedNativeLinkStrategy() throws Exception {
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        new FlavorDomain<>(
+            "Python Platform",
+            ImmutableMap.of(PY2.getFlavor(), PY2));
+
+    PrebuiltCxxLibraryBuilder python2Builder =
+        new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
+            .setHeaderOnly(true)
+            .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
+
+    CxxPythonExtensionBuilder extensionBuilder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:extension"),
+            pythonPlatforms,
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    extensionBuilder.setBaseModule("hello");
+
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public NativeLinkStrategy getNativeLinkStrategy() {
+            return NativeLinkStrategy.MERGED;
+          }
+        };
+    PythonBinaryBuilder binaryBuilder =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            pythonPlatforms,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                python2Builder.build(),
+                extensionBuilder.build(),
+                binaryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    python2Builder.build(resolver);
+    extensionBuilder.build(resolver);
+    PythonBinary binary = (PythonBinary) binaryBuilder.build(resolver);
+    assertThat(
+        binary.getComponents().getNativeLibraries().entrySet(),
+        Matchers.<Map.Entry<Path, SourcePath>>empty());
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getModules().keySet(),
+            Functions.toStringFunction()),
+        Matchers.containsInAnyOrder("hello/extension.so"));
   }
 
 }

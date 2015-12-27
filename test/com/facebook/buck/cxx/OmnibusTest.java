@@ -81,7 +81,8 @@ public class OmnibusTest {
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.<NativeLinkable>of())
+            .toSonameMap();
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
@@ -139,7 +140,8 @@ public class OmnibusTest {
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.<NativeLinkable>of())
+            .toSonameMap();
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -202,7 +204,8 @@ public class OmnibusTest {
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.<NativeLinkable>of())
+            .toSonameMap();
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -269,7 +272,8 @@ public class OmnibusTest {
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.of(excludedRoot));
+            ImmutableList.of(excludedRoot))
+            .toSonameMap();
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -334,7 +338,8 @@ public class OmnibusTest {
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.of(excludedRoot));
+            ImmutableList.of(excludedRoot))
+            .toSonameMap();
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(

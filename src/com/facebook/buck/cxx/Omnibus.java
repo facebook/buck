@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -300,7 +301,7 @@ public class Omnibus {
             rootSoname,
             argsBuilder.build()));
 
-    return ImmutableSharedLibrary.of(rootSoname, new BuildTargetSourcePath(rootTarget));
+    return SharedLibrary.of(rootSoname, new BuildTargetSourcePath(rootTarget));
   }
 
   private static ImmutableList<Arg> createUndefinedSymbolsArgs(
@@ -423,7 +424,7 @@ public class Omnibus {
             omnibusSoname,
             argsBuilder.build()));
 
-    return ImmutableSharedLibrary.of(omnibusSoname, new BuildTargetSourcePath(omnibusTarget));
+    return SharedLibrary.of(omnibusSoname, new BuildTargetSourcePath(omnibusTarget));
   }
 
   /**
@@ -438,7 +439,7 @@ public class Omnibus {
    * @return a map of shared library names to their containing {@link SourcePath}s.
    * @throws NoSuchBuildTargetException
    */
-  public static ImmutableMap<String, SourcePath> getSharedLibraries(
+  public static OmnibusLibraries getSharedLibraries(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -447,7 +448,7 @@ public class Omnibus {
       Iterable<? extends NativeLinkable> nativeLinkableRoots)
       throws NoSuchBuildTargetException {
 
-    ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+    OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
 
     OmnibusSpec spec = buildSpec(cxxPlatform, nativeLinkTargetRoots, nativeLinkableRoots);
 
@@ -460,19 +461,22 @@ public class Omnibus {
     for (SharedNativeLinkTarget root : spec.getRoots().values()) {
       SharedLibrary lib =
           createRoot(params, ruleResolver, pathResolver, cxxPlatform, spec, dummyOmnibus, root);
-      libs.put(lib.getSoname(), lib.getPath());
+      libs.putRoots(root.getBuildTarget(), lib);
     }
 
     // If there are any body nodes, generate the giant merged omnibus library.
     if (!spec.getBody().isEmpty()) {
       SharedLibrary omnibus = createOmnibus(params, ruleResolver, pathResolver, cxxPlatform, spec);
-      libs.put(omnibus.getSoname(), omnibus.getPath());
+      libs.addLibraries(omnibus);
     }
 
     // Lastly, add in any shared libraries from excluded nodes the normal way.
     for (NativeLinkable nativeLinkable : spec.getExcluded().values()) {
       if (nativeLinkable.getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC) {
-        libs.putAll(nativeLinkable.getSharedLibraries(cxxPlatform));
+        for (Map.Entry<String, SourcePath> ent :
+             nativeLinkable.getSharedLibraries(cxxPlatform).entrySet()) {
+          libs.addLibraries(SharedLibrary.of(ent.getKey(), ent.getValue()));
+        }
       }
     }
 
@@ -523,13 +527,34 @@ public class Omnibus {
   }
 
   @Value.Immutable
-  interface SharedLibrary {
+  @BuckStyleImmutable
+  interface AbstractSharedLibrary {
 
     @Value.Parameter
     String getSoname();
 
     @Value.Parameter
     SourcePath getPath();
+
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractOmnibusLibraries {
+
+    @Value.Parameter
+    public abstract ImmutableMap<BuildTarget, SharedLibrary> getRoots();
+
+    @Value.Parameter
+    public abstract ImmutableList<SharedLibrary> getLibraries();
+
+    public ImmutableMap<String, SourcePath> toSonameMap() {
+      ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+      for (SharedLibrary lib : Iterables.concat(getRoots().values(), getLibraries())) {
+        libs.put(lib.getSoname(), lib.getPath());
+      }
+      return libs.build();
+    }
 
   }
 

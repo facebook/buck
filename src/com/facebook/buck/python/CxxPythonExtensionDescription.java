@@ -311,6 +311,11 @@ public class CxxPythonExtensionDescription implements
       }
 
       @Override
+      public Path getModule() {
+        return module;
+      }
+
+      @Override
       public PythonPackageComponents getPythonPackageComponents(
           PythonPlatform pythonPlatform,
           CxxPlatform cxxPlatform)
