@@ -15,3 +15,9 @@ apple_test(
   srcs = [ '7-test.txt' ],
   deps = [ ':seven' ],
 )
+
+apple_library(
+  name = 'nine',
+  srcs = [ 'lib/9.txt' ],
+  deps = [ ],
+)

@@ -54,6 +54,7 @@ a few extensions.
     <ul style="line-height:0.5em">
         <li><a href="#allpaths"><code>allpaths</code></a></li>
         <li><a href="#attrfilter"><code>attrfilter</code></a></li>
+        <li><a href="#buildfile"><code>buildfile</code></a></li>
         <li><a href="#deps"><code>deps</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
@@ -141,6 +142,7 @@ expr ::= word
        | expr - expr
        | allpaths(expr, expr)
        | attrfilter(word, word, expr)
+       | buildfile(expr)
        | deps(expr)
        | deps(expr, depth)
        | filter(word, expr)
@@ -361,6 +363,32 @@ dictionary.
 <p>
 For example, <code>attrfilter(deps, '//foo:bar', '//...')</code> filters the
 build targets in the repository that depend on <code>'//foo:bar'</code>.
+</p>
+
+
+{call .section}
+{param anchor: 'buildfile' /}
+{param title: 'Build files of targets: buildfile'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= buildfile(expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>buildfile(expression)</code> operator evaluates to the build files
+that define the targets that result from the evaluation
+of <code>expression</code>.
+</p>
+
+<p>
+In order to find the build file associated with a file, the <code>owner</code>
+{sp}operator can be combined with <code>buildfile</code>.
+For example, <code>buildfile(owner('foo/bar/main.cpp'))</code> first finds the
+targets that own <code>foo/bar/main.cpp</code> and then find the build files
+that define these targets, e.g. <code>foo/bar/BUCK</code>.
 </p>
 
 
@@ -807,6 +835,22 @@ buck query --json "testsof(deps('%s'))" //examples:one //examples:three
 }
 {/literal}
 </pre>
+
+
+<p>
+Resolve multiple aliases. Suppose there is an alias
+{sp}<code>{literal}app = //apps/myapp:app{/literal}</code> and another
+{sp}<code>{literal}lib = //libraries/mylib:lib{/literal}</code>.
+<p>
+
+<p>
+<pre>buck query "buildfile(owner('examples/1.cpp'))"</pre>
+<pre class="prettyprint lang-js">
+{literal}
+example/BUCK
+{/literal}
+</pre>
+</p>
 
 {/param}
 
