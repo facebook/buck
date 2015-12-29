@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -257,9 +258,24 @@ public class JavacStep implements Step {
       Path outputDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    final ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    javacOptions.appendOptionsToList(builder, filesystem.getAbsolutifier());
+    javacOptions.appendOptionsTo(new AbstractJavacOptions.OptionsConsumer() {
+      @Override
+      public void addOptionValue(String option, String value) {
+        builder.add("-" + option).add(value);
+      }
+
+      @Override
+      public void addFlag(String flagName) {
+        builder.add("-" + flagName);
+      }
+
+      @Override
+      public void addExtras(Collection<String> extras) {
+        builder.addAll(extras);
+      }
+    }, filesystem.getAbsolutifier());
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
