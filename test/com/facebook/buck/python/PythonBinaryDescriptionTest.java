@@ -515,4 +515,56 @@ public class PythonBinaryDescriptionTest {
         Matchers.containsInAnyOrder("hello/extension.so"));
   }
 
+  @Test
+  public void transitiveDepsOfLibsWithPrebuiltNativeLibsAreNotIncludedInMergedLink()
+      throws Exception {
+    CxxLibraryBuilder transitiveCxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_cxx"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_cxx.c"))));
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxLibraryBuilder.getTarget()));
+    PythonLibraryBuilder pythonLibraryBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceList.ofUnnamedSources(
+                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("prebuilt.so"))))
+            .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public NativeLinkStrategy getNativeLinkStrategy() {
+            return NativeLinkStrategy.MERGED;
+          }
+        };
+    PythonBinaryBuilder pythonBinaryBuilder =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    pythonBinaryBuilder.setMainModule("main");
+    pythonBinaryBuilder.setDeps(ImmutableSortedSet.of(pythonLibraryBuilder.getTarget()));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                transitiveCxxLibraryBuilder.build(),
+                cxxLibraryBuilder.build(),
+                pythonLibraryBuilder.build(),
+                pythonBinaryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    transitiveCxxLibraryBuilder.build(resolver);
+    cxxLibraryBuilder.build(resolver);
+    pythonLibraryBuilder.build(resolver);
+    PythonBinary binary = (PythonBinary) pythonBinaryBuilder.build(resolver);
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getNativeLibraries().keySet(),
+            Functions.toStringFunction()),
+        Matchers.hasItem("libtransitive_cxx.so"));
+  }
+
 }

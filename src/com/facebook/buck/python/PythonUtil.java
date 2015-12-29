@@ -39,13 +39,12 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -161,6 +160,7 @@ public class PythonUtil {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 excludedNativeLinkableRoots.add(linkable.getBuildTarget());
+                nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
               }
             }
           }
@@ -178,11 +178,12 @@ public class PythonUtil {
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
 
-      // Include all native link targets we found which aren't excluded.
-      List<SharedNativeLinkTarget> includedNativeLinkTargetRoots = new ArrayList<>();
+      // Include all native link targets we found which aren't explicitly excluded.
+      Map<BuildTarget, SharedNativeLinkTarget> includedNativeLinkTargetRoots =
+          new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, SharedNativeLinkTarget> ent : nativeLinkTargetRoots.entrySet()) {
         if (!excludedNativeLinkableRoots.contains(ent.getKey())) {
-          includedNativeLinkTargetRoots.add(ent.getValue());
+          includedNativeLinkTargetRoots.put(ent.getKey(), ent.getValue());
         }
       }
 
@@ -191,7 +192,7 @@ public class PythonUtil {
       for (CxxPythonExtension extension : extensions.values()) {
         SharedNativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
         includedExtensions.put(target.getBuildTarget(), extension);
-        includedNativeLinkTargetRoots.add(target);
+        includedNativeLinkTargetRoots.put(target.getBuildTarget(), target);
       }
 
       OmnibusLibraries libraries =
@@ -200,8 +201,10 @@ public class PythonUtil {
               ruleResolver,
               pathResolver,
               cxxPlatform,
-              includedNativeLinkTargetRoots,
-              nativeLinkableRoots.values());
+              includedNativeLinkTargetRoots.values(),
+              Maps.filterKeys(
+                  nativeLinkableRoots,
+                  Predicates.not(Predicates.in(includedNativeLinkTargetRoots.keySet()))).values());
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.
