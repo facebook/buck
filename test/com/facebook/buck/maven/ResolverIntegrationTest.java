@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.AfterClass;
@@ -62,6 +63,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -141,6 +143,16 @@ public class ResolverIntegrationTest {
         thirdPartyRelative,
         localRepo,
         httpd.getUri("/").toString());
+  }
+
+  @Test
+  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnce()
+  throws IOException, RepositoryException {
+    resolver.resolve("com.example:A-depends-on-B-and-C:jar:1.0");
+    Path groupDir = thirdParty.resolve("example");
+    assertTrue(Files.exists(groupDir));
+    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
+    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar")));
   }
 
   @Test
