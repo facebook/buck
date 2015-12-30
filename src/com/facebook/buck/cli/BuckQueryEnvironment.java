@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 
+import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -27,11 +29,13 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +44,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -245,6 +250,32 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target)
       throws QueryException, InterruptedException {
     return getTargetsFromBuildTargetsContainer(TargetNodes.getTestTargetsForNode(getNode(target)));
+  }
+
+  @Override
+  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets)
+      throws InterruptedException, QueryException {
+    final ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
+    final Path rootPath = cellFilesystem.getRootPath();
+    Preconditions.checkState(rootPath.isAbsolute());
+
+    ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
+    for (QueryTarget target : targets) {
+      Preconditions.checkState(target instanceof QueryBuildTarget);
+      BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+
+      Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
+      Preconditions.checkState(path.isPresent());
+
+      Path buildFilePath = MorePaths.relativize(
+          rootPath,
+          cellFilesystem
+              .resolve(path.get())
+              .resolve(params.getCell().getBuildFileName()));
+      Preconditions.checkState(cellFilesystem.exists(buildFilePath));
+      builder.add(QueryFileTarget.of(buildFilePath));
+    }
+    return builder.build();
   }
 
   @Override

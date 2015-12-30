@@ -49,6 +49,7 @@ import javax.annotation.Nullable;
  * The query language is documented at docs/command/query.soy
  */
 public interface QueryEnvironment<T> {
+
   /**
    * Type of an argument of a user-defined query function.
    */
@@ -213,6 +214,9 @@ public interface QueryEnvironment<T> {
   /** Returns the tests associated with the given target. */
   ImmutableSet<T> getTestsForTarget(T target) throws InterruptedException, QueryException;
 
+  /** Returns the build files that define the given targets. */
+  ImmutableSet<T> getBuildFiles(Set<T> targets) throws InterruptedException, QueryException;
+
   /** Returns the targets that own one or more of the given files. */
   ImmutableSet<T> getFileOwners(ImmutableList<String> files)
       throws InterruptedException, QueryException;
@@ -238,6 +242,7 @@ public interface QueryEnvironment<T> {
       ImmutableList.of(
           new AllPathsFunction(),
           new AttrFilterFunction(),
+          new BuildFileFunction(),
           new DepsFunction(),
           new FilterFunction(),
           new KindFunction(),

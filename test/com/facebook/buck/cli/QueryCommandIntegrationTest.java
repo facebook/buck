@@ -564,4 +564,36 @@ public class QueryCommandIntegrationTest {
         is(equalTo(parseJSON(workspace.getFileContents("stdout-attr-e2e-filter.json")))));
   }
 
+  @Test
+  public void testBuildFileFunction() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "buildfile(owner('example/1.txt'))");
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("example/BUCK\n")));
+  }
+
+  @Test
+  public void testBuildFileFunctionJson() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "buildfile(owner('%s'))",
+        "example/app/lib/9.txt",
+        "other/8-test.txt");
+
+    result.assertSuccess();
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-buildfile-eight-nine.json")))));
+  }
 }
