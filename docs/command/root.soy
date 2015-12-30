@@ -1,0 +1,31 @@
+{namespace buck.root}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck root' /}
+    {param prettify: true /}
+    {param description}
+      A command that prints the absolute path to the root of the buck project.
+    {/param}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+<p>
+  A command that prints out the absolute path to the root directory of the current buck project.
+  This is useful from within scripts to help with navigating the project tree.
+</p>
+<pre>buck root<br>
+/home/buck/example</pre>
+
+{/param} // overview
+{param params}
+This command takes no parameters.
+{/param}
+{/call} // buck.command
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}
