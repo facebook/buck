@@ -405,28 +405,6 @@ public class Resolver {
     for (String coord : mavenCoords) {
       DefaultArtifact artifact = new DefaultArtifact(coord);
       collectRequest.addDependency(new Dependency(artifact, JavaScopes.RUNTIME));
-
-      ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-      descriptorRequest.setArtifact(artifact);
-      // Setting this appears to have exactly zero effect on the returned values. *sigh*
-//      descriptorRequest.setRequestContext(JavaScopes.RUNTIME);
-      descriptorRequest.setRepositories(repos);
-      ArtifactDescriptorResult descriptorResult = repoSys.readArtifactDescriptor(
-          session,
-          descriptorRequest);
-
-      for (Dependency dependency : descriptorResult.getDependencies()) {
-        if (isTestTime(dependency)) {
-          continue;
-        }
-        collectRequest.addDependency(dependency);
-      }
-      for (Dependency dependency : descriptorResult.getManagedDependencies()) {
-        if (isTestTime(dependency)) {
-          continue;
-        }
-        collectRequest.addManagedDependency(dependency);
-      }
     }
 
     DependencyFilter filter = DependencyFilterUtils.classpathFilter(JavaScopes.RUNTIME);
