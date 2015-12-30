@@ -17,6 +17,11 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.slb.HttpLoadBalancer;
+import com.facebook.buck.slb.HttpService;
+import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.SingleUriService;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -135,7 +140,8 @@ public class ArtifactCaches {
                     buckConfig.getHostToReportToRemoteCacheServer(),
                     buckEventBus,
                     projectFilesystem,
-                    httpWriteExecutorService));
+                    httpWriteExecutorService,
+                    buckConfig));
           }
           break;
       }
@@ -183,22 +189,12 @@ public class ArtifactCaches {
       final String hostToReportToRemote,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
-      ListeningExecutorService httpWriteExecutorService) {
-    String cacheName = cacheDescription.getName()
-        .transform(new Function<String, String>() {
-                     @Override
-                     public String apply(String input) {
-                       return "http-" + input;
-                     }
-                   })
-        .or("http");
-    URI url = cacheDescription.getUrl();
-    int timeoutSeconds = cacheDescription.getTimeoutSeconds();
-    boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
+      ListeningExecutorService httpWriteExecutorService,
+      ArtifactCacheBuckConfig config) {
 
     // Setup the default client to use.
-    OkHttpClient client = new OkHttpClient();
-    client.networkInterceptors().add(
+    OkHttpClient storeClient = new OkHttpClient();
+    storeClient.networkInterceptors().add(
         new Interceptor() {
           @Override
           public Response intercept(Chain chain) throws IOException {
@@ -209,8 +205,9 @@ public class ArtifactCaches {
                     .build());
           }
         });
-    client.setConnectTimeout(timeoutSeconds, TimeUnit.SECONDS);
-    client.setConnectionPool(
+    int timeoutSeconds = cacheDescription.getTimeoutSeconds();
+    storeClient.setConnectTimeout(timeoutSeconds, TimeUnit.SECONDS);
+    storeClient.setConnectionPool(
         new ConnectionPool(
             // It's important that this number is greater than the `-j` parallelism,
             // as if it's too small, we'll overflow the reusable connection pool and
@@ -222,7 +219,7 @@ public class ArtifactCaches {
             /* keepAliveDurationMs */ TimeUnit.MINUTES.toMillis(5)));
 
     // For fetches, use a client with a read timeout.
-    OkHttpClient fetchClient = client.clone();
+    OkHttpClient fetchClient = storeClient.clone();
     fetchClient.setReadTimeout(timeoutSeconds, TimeUnit.SECONDS);
 
     final ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
@@ -230,7 +227,7 @@ public class ArtifactCaches {
 
     // If write headers are specified, add them to every default client request.
     if (!writeHeaders.isEmpty()) {
-      client.networkInterceptors().add(
+      storeClient.networkInterceptors().add(
           new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
@@ -254,15 +251,43 @@ public class ArtifactCaches {
           });
     }
 
+    HttpService fetchService = null;
+    HttpService storeService = null;
+    switch (config.getLoadBalancingType()) {
+      case CLIENT_SLB:
+        HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(
+            new DefaultClock());
+        fetchService = new LoadBalancedService(clientSideSlb, fetchClient);
+        storeService = new LoadBalancedService(clientSideSlb, storeClient);
+        break;
+
+      case SINGLE_SERVER:
+        URI url = cacheDescription.getUrl();
+        fetchService = new SingleUriService(url, fetchClient);
+        storeService = new SingleUriService(url, storeClient);
+        break;
+
+      default:
+        throw new IllegalArgumentException("Unknown HttpLoadBalancer type: " +
+            config.getLoadBalancingType());
+    }
+
+    String cacheName = cacheDescription.getName()
+        .transform(new Function<String, String>() {
+          @Override
+          public String apply(String input) {
+            return "http-" + input;
+          }
+        })
+        .or("http");
+    boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
     return new HttpArtifactCache(
         cacheName,
-        fetchClient,
-        client,
-        url,
+        fetchService,
+        storeService,
         doStore,
         projectFilesystem,
         buckEventBus,
         httpWriteExecutorService);
   }
-
 }

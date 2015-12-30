@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
@@ -41,7 +42,9 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -50,7 +53,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -61,11 +63,16 @@ import okio.Buffer;
 
 public class HttpArtifactCacheTest {
 
+  private static final String SERVER = "http://localhost";
+
   private static final BuckEventBus BUCK_EVENT_BUS =
       new BuckEventBus(new IncrementingFakeClock(), new BuildId());
   private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
   private static final ListeningExecutorService DIRECT_EXECUTOR_SERVICE =
       MoreExecutors.newDirectExecutorService();
+
+  private HttpService fetchService;
+  private HttpService storeService;
 
   private ResponseBody createResponseBody(
       ImmutableSet<RuleKey> ruleKeys,
@@ -96,21 +103,27 @@ public class HttpArtifactCacheTest {
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }
 
+  @Before
+  public void setUp() {
+    this.fetchService = EasyMock.createMock(HttpService.class);
+    this.storeService = EasyMock.createMock(HttpService.class);
+  }
+
   @Test
   public void testFetchNotFound() throws Exception {
     final List<Response> responseList = Lists.newArrayList();
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
             Response response =
                 new Response.Builder()
                     .code(HttpURLConnection.HTTP_NOT_FOUND)
@@ -118,7 +131,7 @@ public class HttpArtifactCacheTest {
                         ResponseBody.create(
                             MediaType.parse("application/octet-stream"), "extraneous"))
                     .protocol(Protocol.HTTP_1_1)
-                    .request(request)
+                    .request(requestBuilder.url(SERVER + path).build())
                     .build();
             responseList.add(response);
             return response;
@@ -145,15 +158,16 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER + path).build();
             Response response =
                 new Response.Builder()
                     .request(request)
@@ -183,21 +197,22 @@ public class HttpArtifactCacheTest {
   public void testFetchUrl() throws Exception {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final String expectedUri =
-        "http://localhost:8080/path/artifacts/key/00000000000000000000000000000000";
+        "/artifacts/key/00000000000000000000000000000000";
 
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080/path/"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
-            assertEquals(expectedUri, request.uri().toString());
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER + path).build();
+            assertEquals(expectedUri, request.url().getPath());
             return new Response.Builder()
                 .request(request)
                 .protocol(Protocol.HTTP_1_1)
@@ -223,15 +238,16 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER + path).build();
             Response response =
                 new Response.Builder()
                     .request(request)
@@ -266,15 +282,16 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER + path).build();
             Response response =
                 new Response.Builder()
                     .request(request)
@@ -307,15 +324,15 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
             throw new IOException();
           }
         };
@@ -337,15 +354,16 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response storeCall(Request request) throws IOException {
+          protected Response storeCall(Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER).build();
             hasCalled.set(true);
 
             Buffer buf = new Buffer();
@@ -394,15 +412,14 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response storeCall(Request request) throws IOException {
+          protected Response storeCall(Request.Builder requestBuilder) throws IOException {
             throw new IOException();
           }
         };
@@ -426,15 +443,15 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response storeCall(Request request) throws IOException {
+          protected Response storeCall(Request.Builder requestBuilder) throws IOException {
+            Request request = requestBuilder.url(SERVER).build();
             Buffer buf = new Buffer();
             request.body().writeTo(buf);
             try (DataInputStream in =
@@ -471,15 +488,16 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER + path).build();
             return new Response.Builder()
                 .request(request)
                 .protocol(Protocol.HTTP_1_1)
@@ -510,15 +528,16 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
-            null,
-            null,
-            new URI("http://localhost:8080"),
+            fetchService,
+            storeService,
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE) {
           @Override
-          protected Response fetchCall(Request request) throws IOException {
+          protected Response fetchCall(String path, Request.Builder requestBuilder)
+              throws IOException {
+            Request request = requestBuilder.url(SERVER + path).build();
             return new Response.Builder()
                 .request(request)
                 .protocol(Protocol.HTTP_1_1)

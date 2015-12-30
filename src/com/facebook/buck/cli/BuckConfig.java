@@ -592,6 +592,10 @@ public class BuckConfig {
     return config.getLong(sectionName, propertyName);
   }
 
+  public Optional<Float> getFloat(String sectionName, String propertyName) {
+    return config.getFloat(sectionName, propertyName);
+  }
+
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
     return config.getBooleanValue(sectionName, propertyName, defaultValue);
   }
