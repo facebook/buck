@@ -64,7 +64,8 @@ public class CxxLinkableEnhancer {
       BuildTarget target,
       Path output,
       ImmutableList<Arg> args,
-      Linker.LinkableDepType depType) {
+      Linker.LinkableDepType depType,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
 
     final Linker linker = cxxPlatform.getLd();
 
@@ -80,7 +81,11 @@ public class CxxLinkableEnhancer {
     argsBuilder.addAll(args);
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(depType)));
+    Linker.LinkableDepType runtimeDepType = depType;
+    if (cxxRuntimeType.or(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
+      runtimeDepType = Linker.LinkableDepType.STATIC;
+    }
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
@@ -122,6 +127,7 @@ public class CxxLinkableEnhancer {
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
@@ -196,7 +202,8 @@ public class CxxLinkableEnhancer {
         target,
         output,
         allArgs,
-        depType);
+        depType,
+        cxxRuntimeType);
   }
 
   private static ImmutableSortedSet<FrameworkPath> mergeFrameworks(
@@ -333,7 +340,8 @@ public class CxxLinkableEnhancer {
             .addAll(StringArg.from(cxxPlatform.getLd().soname(soname)))
             .addAll(args)
             .build(),
-        Linker.LinkableDepType.SHARED);
+        Linker.LinkableDepType.SHARED,
+        Optional.<Linker.CxxRuntimeType>absent());
   }
 
 }

@@ -111,6 +111,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
@@ -227,6 +228,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -331,6 +333,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -368,6 +371,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -421,6 +425,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -491,6 +496,7 @@ AppleSdkPaths appleSdkPaths =
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -610,6 +616,7 @@ AppleSdkPaths appleSdkPaths =
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -669,6 +676,7 @@ AppleSdkPaths appleSdkPaths =
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -818,6 +826,7 @@ AppleSdkPaths appleSdkPaths =
                   new FakeSourcePath("input.o")),
               Linker.LinkableDepType.SHARED,
               ImmutableList.<BuildRule>of(),
+              Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),
               ImmutableSet.<FrameworkPath>of());

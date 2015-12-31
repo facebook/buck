@@ -490,12 +490,18 @@ public class InstallCommand extends BuildCommand {
         if (helper.runBundleOnDevice(selectedUdid, appleBundleId.get())) {
           return InstallResult.builder().setExitCode(0).build();
         } else {
+          params.getConsole().printBuildFailure(
+              "Failed to run " + appleBundle.getFullyQualifiedName() + " on device " +
+                  selectedUdid + " (" + connectedDevices.get(selectedUdid) + ")");
           return FAILURE;
         }
       } else {
         return InstallResult.builder().setExitCode(0).build();
       }
     } else {
+      params.getConsole().printBuildFailure(
+          "Failed to install " + appleBundle.getFullyQualifiedName() + " to device " +
+              selectedUdid + " (" + connectedDevices.get(selectedUdid) + ")");
       return FAILURE;
     }
   }

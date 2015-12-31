@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.DefaultPreprocessor;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
@@ -405,6 +406,9 @@ public class NdkCxxPlatforms {
             "-Wl,--as-needed")
         .setStrip(
             getGccTool(ndkRoot, targetConfiguration, host, "strip", version, executableFinder))
+        .setSymbolNameTool(
+            new PosixNmSymbolNameTool(
+                getGccTool(ndkRoot, targetConfiguration, host, "nm", version, executableFinder)))
         .setAr(
             new GnuArchiver(
                 getGccTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder)))

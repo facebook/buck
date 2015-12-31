@@ -298,4 +298,23 @@ public class NativeLinkablesTest {
         Matchers.not(Matchers.hasItem(c.getBuildTarget())));
   }
 
+  @Test
+  public void getLinkStyle() {
+    assertThat(
+        NativeLinkables.getLinkStyle(
+            NativeLinkable.Linkage.STATIC,
+            Linker.LinkableDepType.SHARED),
+        Matchers.equalTo(Linker.LinkableDepType.STATIC_PIC));
+    assertThat(
+        NativeLinkables.getLinkStyle(
+            NativeLinkable.Linkage.SHARED,
+            Linker.LinkableDepType.STATIC),
+        Matchers.equalTo(Linker.LinkableDepType.SHARED));
+    assertThat(
+        NativeLinkables.getLinkStyle(
+            NativeLinkable.Linkage.ANY,
+            Linker.LinkableDepType.STATIC),
+        Matchers.equalTo(Linker.LinkableDepType.STATIC));
+  }
+
 }

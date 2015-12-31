@@ -18,8 +18,11 @@ package com.facebook.buck.jvm.java;
 
 
 import static com.facebook.buck.jvm.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -36,7 +39,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
@@ -171,9 +173,9 @@ public class JavaBuckConfigTest {
     JavacOptions jse6 = JavacOptions.builder(options).setSourceLevel("6").build();
     JavacOptions jse7 = JavacOptions.builder(options).setSourceLevel("7").build();
 
-    assertFalse(isOptionContaining(jse5, "-bootclasspath"));
-    assertTrue(isOptionContaining(jse6, "-bootclasspath one.jar"));
-    assertTrue(isOptionContaining(jse7, "-bootclasspath two.jar"));
+    assertOptionKeyAbsent(jse5, "bootclasspath");
+    assertOptionsContains(jse6, "bootclasspath", "one.jar");
+    assertOptionsContains(jse7, "bootclasspath", "two.jar");
   }
 
   @Test
@@ -204,12 +206,23 @@ public class JavaBuckConfigTest {
         ((ExternalJavac) javacOptions.getJavac()).getPath());
   }
 
-  private boolean isOptionContaining(JavacOptions options, String expectedParameter) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    options.appendOptionsToList(builder, Functions.<Path>identity());
-    String joined = Joiner.on(" ").join(builder.build());
+  private void assertOptionKeyAbsent(JavacOptions options, String key) {
+    OptionAccumulator optionsConsumer = visitOptions(options);
+    assertThat(optionsConsumer.keyVals, not(hasKey(key)));
+  }
 
-    return joined.contains(expectedParameter);
+  private void assertOptionsContains(
+      JavacOptions options,
+      String key,
+      String value) {
+    OptionAccumulator optionsConsumer = visitOptions(options);
+    assertThat(optionsConsumer.keyVals, hasEntry(key, value));
+  }
+
+  private OptionAccumulator visitOptions(JavacOptions options) {
+    OptionAccumulator optionsConsumer = new OptionAccumulator();
+    options.appendOptionsTo(optionsConsumer, Functions.<Path>identity());
+    return optionsConsumer;
   }
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)

@@ -51,6 +51,7 @@ import javax.annotation.Nullable;
  * The query language is documented at docs/command/query.soy
  */
 public interface QueryEnvironment<T> {
+
   /**
    * Type of an argument of a user-defined query function.
    */
@@ -82,10 +83,17 @@ public interface QueryEnvironment<T> {
     @Override
     public String toString() {
       switch (getType()) {
-        case WORD: return "'" + getWord() + "'";
-        case EXPRESSION: return Preconditions.checkNotNull(getExpression()).toString();
-        case INTEGER: return Integer.toString(getInteger());
-        default: throw new IllegalStateException();
+        case WORD:
+          return "'" + Preconditions.checkNotNull(getWord()) + "'";
+
+        case EXPRESSION:
+          return Preconditions.checkNotNull(getExpression()).toString();
+
+        case INTEGER:
+          return Integer.toString(getInteger());
+
+        default:
+          throw new IllegalStateException();
       }
     }
   }
@@ -97,7 +105,7 @@ public interface QueryEnvironment<T> {
     /**
      * Name of the function as it appears in the query language.
      */
-    abstract String getName();
+    public abstract String getName();
 
     /**
      * The number of arguments that are required. The rest is optional.
@@ -105,19 +113,19 @@ public interface QueryEnvironment<T> {
      * <p>This should be greater than or equal to zero and at smaller than or equal to the length
      * of the list returned by {@link #getArgumentTypes}.
      */
-    abstract int getMandatoryArguments();
+    public abstract int getMandatoryArguments();
 
     /**
      * The types of the arguments of the function.
      */
-    abstract ImmutableList<ArgumentType> getArgumentTypes();
+    public abstract ImmutableList<ArgumentType> getArgumentTypes();
 
     /**
      * Called when a user-defined function is to be evaluated.
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned
      *     by {@link #getArgumentTypes} and {@link #getMandatoryArguments}*/
-    abstract <T> Set<T> eval(
+    public abstract <T> Set<T> eval(
         QueryEnvironment<T> env,
         ImmutableList<Argument> args,
         Executor executor)
@@ -128,8 +136,8 @@ public interface QueryEnvironment<T> {
       return this == other || (other instanceof QueryFunction && equalTo((QueryFunction) other));
     }
 
-    private boolean equalTo(QueryFunction another) {
-      return getName().equals(another.getName());
+    private boolean equalTo(QueryFunction other) {
+      return getName().equals(other.getName());
     }
 
     @Override
@@ -175,6 +183,9 @@ public interface QueryEnvironment<T> {
   /** Returns the tests associated with the given target. */
   ImmutableSet<T> getTestsForTarget(T target) throws InterruptedException, QueryException;
 
+  /** Returns the build files that define the given targets. */
+  ImmutableSet<T> getBuildFiles(Set<T> targets) throws InterruptedException, QueryException;
+
   /** Returns the targets that own one or more of the given files. */
   ImmutableSet<T> getFileOwners(ImmutableList<String> files)
       throws InterruptedException, QueryException;
@@ -200,6 +211,7 @@ public interface QueryEnvironment<T> {
       ImmutableList.of(
           new AllPathsFunction(),
           new AttrFilterFunction(),
+          new BuildFileFunction(),
           new DepsFunction(),
           new FilterFunction(),
           new KindFunction(),

@@ -18,6 +18,8 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.OmnibusLibraries;
+import com.facebook.buck.cxx.SharedLibrary;
 import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Omnibus;
@@ -37,13 +39,12 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -159,6 +160,7 @@ public class PythonUtil {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 excludedNativeLinkableRoots.add(linkable.getBuildTarget());
+                nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
               }
             }
           }
@@ -172,34 +174,59 @@ public class PythonUtil {
       }
     }.start();
 
-    // Collect up native libraries.
-    ImmutableMap<String, SourcePath> sharedLibs;
-
     // For the merged strategy, build up the lists of included native linkable roots, and the
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
 
-      // Include all native link targets we found which aren't excluded.
-      List<SharedNativeLinkTarget> includedNativeLinkTargetRoots = new ArrayList<>();
+      // Include all native link targets we found which aren't explicitly excluded.
+      Map<BuildTarget, SharedNativeLinkTarget> includedNativeLinkTargetRoots =
+          new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, SharedNativeLinkTarget> ent : nativeLinkTargetRoots.entrySet()) {
         if (!excludedNativeLinkableRoots.contains(ent.getKey())) {
-          includedNativeLinkTargetRoots.add(ent.getValue());
+          includedNativeLinkTargetRoots.put(ent.getKey(), ent.getValue());
         }
       }
 
       // All C/C++ python extensions are included native link targets.
+      Map<BuildTarget, CxxPythonExtension> includedExtensions = new LinkedHashMap<>();
       for (CxxPythonExtension extension : extensions.values()) {
-        includedNativeLinkTargetRoots.add(extension.getNativeLinkTarget(pythonPlatform));
+        SharedNativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
+        includedExtensions.put(target.getBuildTarget(), extension);
+        includedNativeLinkTargetRoots.put(target.getBuildTarget(), target);
       }
 
-      sharedLibs =
+      OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               params,
               ruleResolver,
               pathResolver,
               cxxPlatform,
-              includedNativeLinkTargetRoots,
-              nativeLinkableRoots.values());
+              includedNativeLinkTargetRoots.values(),
+              Maps.filterKeys(
+                  nativeLinkableRoots,
+                  Predicates.not(Predicates.in(includedNativeLinkTargetRoots.keySet()))).values());
+
+      // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
+      // Otherwise, add it as a native library.
+      for (Map.Entry<BuildTarget, SharedLibrary> root : libraries.getRoots().entrySet()) {
+        CxxPythonExtension extension = includedExtensions.get(root.getKey());
+        if (extension != null) {
+          allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
+        } else {
+          allComponents.addNativeLibraries(
+              Paths.get(root.getValue().getSoname()),
+              root.getValue().getPath(),
+              root.getKey());
+        }
+      }
+
+      // Add all remaining libraries as native libraries.
+      for (SharedLibrary library : libraries.getLibraries()) {
+        allComponents.addNativeLibraries(
+            Paths.get(library.getSoname()),
+            library.getPath(),
+            params.getBuildTarget());
+      }
     } else {
 
       // For regular linking, add all extensions via the package components interface.
@@ -209,20 +236,20 @@ public class PythonUtil {
             entry.getKey());
       }
 
-      sharedLibs =
+      // Add all the native libraries.
+      ImmutableMap<String, SourcePath> libs =
           NativeLinkables.getTransitiveSharedLibraries(
               cxxPlatform,
               params.getDeps(),
               Predicates.instanceOf(PythonPackagable.class));
+      for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
+        allComponents.addNativeLibraries(
+            Paths.get(ent.getKey()),
+            ent.getValue(),
+            params.getBuildTarget());
+      }
     }
 
-    // Add all the native libraries.
-    for (Map.Entry<String, SourcePath> ent : sharedLibs.entrySet()) {
-      allComponents.addNativeLibraries(
-          Paths.get(ent.getKey()),
-          ent.getValue(),
-          params.getBuildTarget());
-    }
 
     return allComponents.build();
   }

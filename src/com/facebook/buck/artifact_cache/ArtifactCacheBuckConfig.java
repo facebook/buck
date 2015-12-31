@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -79,23 +80,41 @@ public class ArtifactCacheBuckConfig {
   private static final String SERVED_CACHE_ENABLED_FIELD_NAME = "serve_local_cache";
   private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.readonly.name();
   private static final String SERVED_CACHE_READ_MODE_FIELD_NAME = "served_local_cache_mode";
+  private static final String LOAD_BALANCING_TYPE = "load_balancing_type";
+  private static final LoadBalancingType DEFAULT_LOAD_BALANCING_TYPE =
+      LoadBalancingType.SINGLE_SERVER;
 
+  public enum LoadBalancingType {
+    SINGLE_SERVER,
+    CLIENT_SLB,
+  }
 
   private final BuckConfig buckConfig;
+  private final SlbBuckConfig slbConfig;
 
   public ArtifactCacheBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
+    this.slbConfig = new SlbBuckConfig(buckConfig, CACHE_SECTION_NAME);
+  }
+
+  public SlbBuckConfig getSlbConfig() {
+    return slbConfig;
+  }
+
+  public LoadBalancingType getLoadBalancingType() {
+    return buckConfig.getEnum(CACHE_SECTION_NAME, LOAD_BALANCING_TYPE, LoadBalancingType.class)
+        .or(DEFAULT_LOAD_BALANCING_TYPE);
   }
 
   public int getHttpMaxConcurrentWrites() {
     return Integer.valueOf(
-        buckConfig.getValue("cache", "http_max_concurrent_writes")
+        buckConfig.getValue(CACHE_SECTION_NAME, "http_max_concurrent_writes")
             .or(DEFAULT_HTTP_MAX_CONCURRENT_WRITES));
   }
 
   public int getHttpWriterShutdownTimeout() {
     return Integer.valueOf(
-        buckConfig.getValue("cache", "http_writer_shutdown_timeout_seconds")
+        buckConfig.getValue(CACHE_SECTION_NAME, "http_writer_shutdown_timeout_seconds")
             .or(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
   }
 

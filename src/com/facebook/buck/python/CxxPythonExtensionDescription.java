@@ -236,6 +236,7 @@ public class CxxPythonExtensionDescription implements
         getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
+        args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));
@@ -307,6 +308,11 @@ public class CxxPythonExtensionDescription implements
                 pythonPlatform.getFlavor(),
                 cxxPlatform.getFlavor(),
                 CxxDescriptionEnhancer.SHARED_FLAVOR));
+      }
+
+      @Override
+      public Path getModule() {
+        return module;
       }
 
       @Override

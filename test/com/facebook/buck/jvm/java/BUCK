@@ -6,6 +6,7 @@ java_library(
     'JavaLibraryBuilder.java',
     'JavaTestBuilder.java',
     'KeystoreBuilder.java',
+    'OptionAccumulator.java',
     'PrebuiltJarBuilder.java',
   ],
   exported_deps = [

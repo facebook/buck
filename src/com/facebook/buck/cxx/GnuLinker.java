@@ -17,18 +17,43 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.WriteFileStep;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A specialization of {@link Linker} containing information specific to the GNU implementation.
@@ -94,11 +119,100 @@ public class GnuLinker implements Linker {
     return "LD_LIBRARY_PATH";
   }
 
+  /**
+   * Write all undefined symbols given in {@code symbolFiles} into a linker script wrapped in
+   * `EXTERN` commands.
+   *
+   * @param target the name given to the {@link BuildRule} which creates the linker script.
+   * @return the list of arguments which pass the linker script containing the undefined symbols to
+   *         link.
+   */
+  @Override
+  public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
+      BuildRuleParams baseParams,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      BuildTarget target,
+      Iterable<? extends SourcePath> symbolFiles) {
+    ruleResolver.addToIndex(
+        new UndefinedSymbolsLinkerScript(
+            baseParams.copyWithChanges(
+                target,
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(symbolFiles))),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            symbolFiles));
+    return ImmutableList.<Arg>of(
+        new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)));
+  }
+
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());
+  }
+
+  // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined
+  // symbols.
+  private static class UndefinedSymbolsLinkerScript extends AbstractBuildRule {
+
+    @AddToRuleKey
+    private final Iterable<? extends SourcePath> symbolFiles;
+
+    public UndefinedSymbolsLinkerScript(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver,
+        Iterable<? extends SourcePath> symbolFiles) {
+      super(buildRuleParams, resolver);
+      this.symbolFiles = symbolFiles;
+    }
+
+    private Path getLinkerScript() {
+      return BuildTargets.getGenPath(getBuildTarget(), "%s/linker_script.txt");
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
+      final Path linkerScript = getLinkerScript();
+      buildableContext.recordArtifact(linkerScript);
+      return ImmutableList.of(
+          new MkdirStep(getProjectFilesystem(), linkerScript.getParent()),
+          new WriteFileStep(
+              getProjectFilesystem(),
+              new Supplier<String>() {
+                @Override
+                public String get() {
+                  Set<String> symbols = new LinkedHashSet<>();
+                  for (SourcePath path : symbolFiles) {
+                    try {
+                      symbols.addAll(
+                          Files.readAllLines(
+                              getResolver().getAbsolutePath(path),
+                              Charsets.UTF_8));
+                    } catch (IOException e) {
+                      throw Throwables.propagate(e);
+                    }
+                  }
+                  List<String> lines = new ArrayList<>();
+                  for (String symbol : symbols) {
+                    lines.add(String.format("EXTERN(\"%s\")", symbol));
+                  }
+                  return Joiner.on(System.lineSeparator()).join(lines);
+                }
+              },
+              linkerScript,
+              /* executable */ false));
+    }
+
+    @Override
+    public Path getPathToOutput() {
+      return getLinkerScript();
+    }
+
   }
 
 }

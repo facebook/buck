@@ -61,6 +61,7 @@ public class CxxPlatformsTest {
           .setCxxpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("borland"))))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
           .setStrip(new HashedFileTool(Paths.get("borland")))
+          .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
           .setRanlib(new HashedFileTool(Paths.get("borland")))
           .setSharedLibraryExtension(".so")

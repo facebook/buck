@@ -177,6 +177,7 @@ public class CxxLinkableEnhancerTest {
             new BuildTargetSourcePath(genrule2.getBuildTarget())),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -217,6 +218,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -266,6 +268,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -298,6 +301,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -316,6 +320,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -334,6 +339,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -377,6 +383,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -397,6 +404,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.SHARED,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -437,6 +445,7 @@ public class CxxLinkableEnhancerTest {
               DEFAULT_INPUTS,
               ent.getKey(),
               ImmutableSortedSet.<BuildRule>of(),
+              Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),
               ImmutableSet.<FrameworkPath>of());
@@ -508,6 +517,7 @@ public class CxxLinkableEnhancerTest {
             new FakeSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -541,6 +551,7 @@ public class CxxLinkableEnhancerTest {
             new FakeSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -561,6 +572,7 @@ public class CxxLinkableEnhancerTest {
             new FakeSourcePath("another.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(
             new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
             ImmutableSet.<BuildTarget>of(),

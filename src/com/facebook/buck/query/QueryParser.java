@@ -225,16 +225,17 @@ final class QueryParser {
             tokenKind = TokenKind.COMMA;
             switch (type) {
               case EXPRESSION:
-                argsBuilder.add(Argument.of(type, parseExpression(), null, 0));
+                argsBuilder.add(Argument.of(type, parseExpression(), /*word*/ null, /*integer*/ 0));
                 break;
 
               case WORD:
-                argsBuilder.add(Argument.of(
-                        type, null, Preconditions.checkNotNull(consume(TokenKind.WORD)), 0));
+                String wordArg = Preconditions.checkNotNull(consume(TokenKind.WORD));
+                argsBuilder.add(Argument.of(type, /*expression*/ null, wordArg, /*integer*/ 0));
                 break;
 
               case INTEGER:
-                argsBuilder.add(Argument.of(type, null, null, consumeIntLiteral()));
+                int intLiteral = consumeIntLiteral();
+                argsBuilder.add(Argument.of(type, /*expression*/ null, /*word*/ null, intLiteral));
                 break;
 
               default:

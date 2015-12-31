@@ -17,7 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -87,6 +90,16 @@ public class WindowsLinker implements Linker {
   @Override
   public String searchPathEnvVar() {
     return "PATH";
+  }
+
+  @Override
+  public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
+      BuildRuleParams baseParams,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      BuildTarget target,
+      Iterable<? extends SourcePath> symbolFiles) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
