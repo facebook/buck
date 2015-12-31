@@ -245,6 +245,9 @@ public class Omnibus {
     // won't drop its runtime reference to it.
     argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().getNoAsNeededSharedLibsFlags()));
 
+    // Since we're linking against a dummy libomnibus, ignore undefined symbols.
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().getIgnoreUndefinedSymbolsFlags()));
+
     // Add the args for the root link target first.
     NativeLinkableInput input = root.getSharedNativeLinkTargetInput(cxxPlatform);
     argsBuilder.addAll(input.getArgs());

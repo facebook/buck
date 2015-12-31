@@ -153,6 +153,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public Iterable<String> getIgnoreUndefinedSymbolsFlags() {
+    return Linkers.iXlinker("--allow-shlib-undefined");
+  }
+
+  @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("tool", tool)
