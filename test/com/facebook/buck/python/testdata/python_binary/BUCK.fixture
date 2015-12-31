@@ -90,3 +90,48 @@ genrule(
   out = 'out',
   cmd = 'touch $OUT',
 )
+
+cxx_library(
+  name = 'platform_a',
+  exported_preprocessor_flags = [
+    '-DPLATFORM_A',
+  ],
+  srcs = [
+    'platform_a.c',
+  ],
+)
+
+cxx_library(
+  name = 'platform_b',
+  exported_preprocessor_flags = [
+    '-DPLATFORM_B',
+  ],
+  srcs = [
+    'platform_b.c',
+  ],
+)
+
+cxx_python_extension(
+  name = 'extension',
+  srcs = [
+    'extension.c',
+  ],
+)
+
+python_binary(
+  name = 'binary_with_extension_a',
+  main_module = 'extension',
+  platform = 'a',
+  deps = [
+    ':extension',
+  ],
+)
+
+python_binary(
+  name = 'binary_with_extension_b',
+  main_module = 'extension',
+  platform = 'b',
+  deps = [
+    ':extension',
+  ],
+)

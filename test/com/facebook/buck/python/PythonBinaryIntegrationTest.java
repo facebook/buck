@@ -264,6 +264,18 @@ public class PythonBinaryIntegrationTest {
     assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
   }
 
+  @Test
+  public void multiplePythonHomes() throws Exception {
+    assumeThat(Platform.detect(), not(Matchers.is(Platform.WINDOWS)));
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "python#a.library=//:platform_a",
+            "-c", "python#b.library=//:platform_b",
+            "//:binary_with_extension_a",
+            "//:binary_with_extension_b");
+    result.assertSuccess();
+  }
+
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig =
         Config.createDefaultConfig(
