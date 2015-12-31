@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import com.google.common.collect.ComparisonChain;
 
+import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -30,6 +31,8 @@ public class Pair<FIRST, SECOND> {
 
   private FIRST first;
   private SECOND second;
+  private WeakReference<Integer> hashCache = null;
+  private WeakReference<String> stringCache = null;
 
   public Pair(FIRST first, SECOND second) {
     this.first = first;
@@ -57,12 +60,42 @@ public class Pair<FIRST, SECOND> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(first, second);
+    synchronized (this) {
+      if (hashCache == null) {
+        return calculateHashAndCache();
+      }
+      Integer hash = hashCache.get();
+      if (hash == null) {
+        return calculateHashAndCache();
+      }
+      return hash;
+    }
+  }
+
+  private int calculateHashAndCache() {
+    int hash = Objects.hash(first, second);
+    hashCache = new WeakReference<>(hash);
+    return hash;
   }
 
   @Override
   public String toString() {
-    return String.format("Pair(%s, %s)", first, second);
+    synchronized (this) {
+      if (stringCache == null) {
+        return createStringAndCache();
+      }
+      String string = stringCache.get();
+      if (string == null) {
+        return createStringAndCache();
+      }
+      return string;
+    }
+  }
+
+  private String createStringAndCache() {
+    String string = String.format("Pair(%s, %s)", first, second);
+    stringCache = new WeakReference<>(string);
+    return string;
   }
 
   /**

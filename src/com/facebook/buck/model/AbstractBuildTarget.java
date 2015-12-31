@@ -38,7 +38,7 @@ import java.util.SortedSet;
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 @BuckStyleImmutable
-@Value.Immutable
+@Value.Immutable(prehash = true)
 abstract class AbstractBuildTarget
     implements
     Comparable<AbstractBuildTarget>,
