@@ -148,6 +148,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public Iterable<String> getNoAsNeededSharedLibsFlags() {
+    return Linkers.iXlinker("--no-as-needed");
+  }
+
+  @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("tool", tool)

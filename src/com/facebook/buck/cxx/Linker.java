@@ -68,6 +68,12 @@ public interface Linker extends Tool {
   String searchPathEnvVar();
 
   /**
+   * @return arguments to pass to the linker to disable dropping runtime references to shared libs
+   *     which do not resolve symbols as link-time.
+   */
+  Iterable<String> getNoAsNeededSharedLibsFlags();
+
+  /**
    * Generate a necessary linker arguments to propagate undefined symbols to a link command.  May
    * need to create a {@link BuildRule}, in which case, {@code target} will be used as its name.
    *

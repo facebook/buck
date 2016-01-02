@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -239,6 +240,10 @@ public class Omnibus {
       throws NoSuchBuildTargetException {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // Since the dummy omnibus library doesn't actually contain any symbols, make sure the linker
+    // won't drop its runtime reference to it.
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().getNoAsNeededSharedLibsFlags()));
 
     // Add the args for the root link target first.
     NativeLinkableInput input = root.getSharedNativeLinkTargetInput(cxxPlatform);
