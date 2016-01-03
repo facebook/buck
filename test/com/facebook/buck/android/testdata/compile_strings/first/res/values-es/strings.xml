@@ -1,6 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name='name1_1'>Value11</string>
-  <string name='name1_2'>Value12</string>
+  <string name='name1_1' gender="unknown">Value11</string>
+  <string name='name1_1_f1gender' gender="female">Value11f1</string>
+  <string name='name1_1_m2gender' gender="male">Value11m2</string>
+  <string name='name1_2_m2gender' gender="male">Value12m2</string>
+  <string name='name1_2' gender="unknown">Value12</string>
   <string name='name1_3'>Value13</string>
 </resources>

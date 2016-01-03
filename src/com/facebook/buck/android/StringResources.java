@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -38,17 +39,26 @@ import java.util.TreeMap;
 public class StringResources {
 
   /**
+   * The values here need to be lowercase as we follow the standard in android xml files of using
+   * lower case
+   */
+  enum Gender {
+    unknown,
+    female,
+    male
+  }
+  /**
    * Bump this whenever there's a change in the file format. The parser can decide to abort parsing
    * if the version it finds in the file does not match it's own version, thereby avoiding
    * potential data corruption issues.
    */
-  private static final int FORMAT_VERSION = 1;
+  private static final int FORMAT_VERSION = 2;
 
-  public final SortedMap<Integer, String> strings;
-  public final SortedMap<Integer, ImmutableMap<String, String>> plurals;
+  public final SortedMap<Integer, EnumMap<Gender, String>> strings;
+  public final SortedMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> plurals;
   // This is not a TreeMultimap because we only want the keys to be sorted by their natural
   // ordering, not the values array. The values should be in the same order as insertion.
-  public final SortedMap<Integer, ImmutableList<String>> arrays;
+  public final SortedMap<Integer, EnumMap<Gender, ImmutableList<String>>> arrays;
 
   /**
    * These are the 6 fixed plural categories for string resources in Android. This mapping is not
@@ -72,19 +82,20 @@ public class StringResources {
   private static Charset charset = Charsets.UTF_8;
 
   public StringResources(
-      SortedMap<Integer, String> strings,
-      SortedMap<Integer, ImmutableMap<String, String>> plurals,
-      SortedMap<Integer, ImmutableList<String>> arrays) {
+      SortedMap<Integer, EnumMap<Gender, String>> strings,
+      SortedMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> plurals,
+      SortedMap<Integer, EnumMap<Gender, ImmutableList<String>>> arrays) {
     this.strings = strings;
     this.plurals = plurals;
     this.arrays = arrays;
   }
 
   public StringResources getMergedResources(StringResources otherResources) {
-    TreeMap<Integer, String> stringsMap = Maps.newTreeMap(otherResources.strings);
-    TreeMap<Integer, ImmutableMap<String, String>> pluralsMap =
+    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = Maps.newTreeMap(otherResources.strings);
+    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap =
         Maps.newTreeMap(otherResources.plurals);
-    TreeMap<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap(otherResources.arrays);
+    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap =
+        Maps.newTreeMap(otherResources.arrays);
 
     stringsMap.putAll(strings);
     pluralsMap.putAll(plurals);
@@ -99,20 +110,25 @@ public class StringResources {
    * <p>
    * <pre>
    *   [Int: Version]
+   *
    *   [Int: # of strings]
    *   [Int: Smallest resource id among strings]
-   *   [Short: resource id delta][Short: length of the string] x # of strings
-   *   [Byte array of the string value] x # of strings
+   *   [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Short: length of
+   *    the string]] x #genders] x # of strings
+   *   [Byte array of the string value] x # summation of genders over # of strings
+   *
    *   [Int: # of plurals]
    *   [Int: Smallest resource id among plurals]
-   *   [[Short: resource id delta][Byte: #categories][[Byte: category][Short: length of plural
-   *   value]] x #categories] x # of plurals
-   *   [Byte array of plural value] x Summation of plural categories over # of plurals
+   *   [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Byte: #categories]
+   *    [[Byte: category] [Short: length of plural value]] x #categories] x # of genders]
+   *    x # of plurals
+   *   [Byte array of plural value] x Summation of genders over plural categories over # of plurals
+   *
    *   [Int: # of arrays]
    *   [Int: Smallest resource id among arrays]
-   *   [[Short: resource id delta][Int: #elements][Short: length of element] x #elements] x # of
-   *   arrays
-   *   [Byte array of string value] x Summation of array elements over # of arrays
+   *   [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Int: #elements]
+   *    [Short: length of element] x # phaof elements] x # of genders] x # of arrays
+   *   [Byte array of string value] x Summation of genders over array elements over # of arrays
    * </pre>
    */
   public byte[] getBinaryFileContent() {
@@ -134,6 +150,15 @@ public class StringResources {
     }
   }
 
+  /**
+   * Writes the metadata and strings in the following format to the output stream:
+   * [Int: # of strings]
+   * [Int: Smallest resource id among strings]
+   * [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Short: length of
+   *    the string] [Byte array of the string value]] x #genders] x # of strings
+   * @param outputStream
+   * @throws IOException
+   */
   private void writeStrings(DataOutputStream outputStream) throws IOException {
     outputStream.writeInt(strings.size());
     if (strings.isEmpty()) {
@@ -143,11 +168,17 @@ public class StringResources {
     outputStream.writeInt(previousResourceId);
 
     try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
-      for (Map.Entry<Integer, String> entry : strings.entrySet()) {
-        byte[] resourceBytes = getUnescapedStringBytes(entry.getValue());
+      for (Map.Entry<Integer, EnumMap<Gender, String>> entry : strings.entrySet()) {
         writeShort(outputStream, entry.getKey() - previousResourceId);
-        writeShort(outputStream, resourceBytes.length);
-        dataStream.write(resourceBytes, 0, resourceBytes.length);
+        EnumMap<Gender, String> genderMap = entry.getValue();
+        outputStream.writeByte(genderMap.size());
+
+        for (Map.Entry<Gender, String> gender : genderMap.entrySet()) {
+          outputStream.writeByte(gender.getKey().ordinal());
+          byte[] genderValue = getUnescapedStringBytes(gender.getValue());
+          writeShort(outputStream, genderValue.length);
+          dataStream.write(genderValue);
+        }
 
         previousResourceId = entry.getKey();
       }
@@ -155,6 +186,17 @@ public class StringResources {
     }
   }
 
+  /**
+   * Writes the metadata and strings in the following format to the output stream:
+   * [Int: # of plurals]
+   * [Int: Smallest resource id among plurals]
+   * [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Byte: #categories]
+   *  [[Byte: category] [Short: length of plural value]] x #categories] x # of genders]
+   *  x # of plurals
+   * [Byte array of plural value] x Summation of gedners over plural categories over # of plurals
+   * @param outputStream
+   * @throws IOException
+   */
   private void writePlurals(DataOutputStream outputStream) throws IOException {
     outputStream.writeInt(plurals.size());
     if (plurals.isEmpty()) {
@@ -164,19 +206,28 @@ public class StringResources {
     outputStream.writeInt(previousResourceId);
 
     try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
-      for (Map.Entry<Integer, ImmutableMap<String, String>> entry : plurals.entrySet()) {
+      for (Map.Entry<Integer, EnumMap<Gender, ImmutableMap<String, String>>> entry :
+          plurals.entrySet()) {
         writeShort(outputStream, entry.getKey() - previousResourceId);
-        ImmutableMap<String, String> categoryMap = entry.getValue();
-        outputStream.writeByte(categoryMap.size());
 
-        for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
-          outputStream.writeByte(
-              Preconditions.checkNotNull(
-                  PLURAL_CATEGORY_MAP.get(cat.getKey()))
-                  .byteValue());
-          byte[] pluralValue = getUnescapedStringBytes(cat.getValue());
-          writeShort(outputStream, pluralValue.length);
-          dataStream.write(pluralValue);
+        EnumMap<Gender, ImmutableMap<String, String>> genderMap = entry.getValue();
+        outputStream.writeByte(genderMap.size());
+
+        for (Map.Entry<Gender, ImmutableMap<String, String>> gender : genderMap.entrySet()) {
+          outputStream.writeByte(gender.getKey().ordinal());
+
+          ImmutableMap<String, String> categoryMap = gender.getValue();
+          outputStream.writeByte(categoryMap.size());
+
+          for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
+            outputStream.writeByte(
+                Preconditions.checkNotNull(
+                    PLURAL_CATEGORY_MAP.get(cat.getKey()))
+                    .byteValue());
+            byte[] pluralValue = getUnescapedStringBytes(cat.getValue());
+            writeShort(outputStream, pluralValue.length);
+            dataStream.write(pluralValue);
+          }
         }
 
         previousResourceId = entry.getKey();
@@ -186,6 +237,16 @@ public class StringResources {
     }
   }
 
+  /**
+   * Writes the metadata and strings in the following format to the output stream:
+   * [Int: # of arrays]
+   * [Int: Smallest resource id among arrays]
+   * [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Int: #elements]
+   *  [[Short: length of element] x # of elements]] x # of genders] x # of arrays
+   * [Byte array of string value] x Summation of genders over array elements over # of arrays
+   * @param outputStream
+   * @throws IOException
+   */
   private void writeArrays(DataOutputStream outputStream) throws IOException {
     outputStream.writeInt(arrays.keySet().size());
     if (arrays.keySet().isEmpty()) {
@@ -193,19 +254,26 @@ public class StringResources {
     }
     int previousResourceId = arrays.firstKey();
     outputStream.writeInt(previousResourceId);
+
     try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
-      for (int resourceId : arrays.keySet()) {
-        writeShort(outputStream, resourceId - previousResourceId);
-        ImmutableList<String> arrayValues = arrays.get(resourceId);
-        outputStream.writeInt(arrayValues.size());
+      for (Map.Entry<Integer, EnumMap<Gender, ImmutableList<String>>> entry : arrays.entrySet()) {
+        writeShort(outputStream, entry.getKey() - previousResourceId);
 
-        for (String arrayValue : arrayValues) {
-          byte[] byteValue = getUnescapedStringBytes(arrayValue);
-          writeShort(outputStream, byteValue.length);
-          dataStream.write(byteValue);
+        EnumMap<Gender, ImmutableList<String>> genderMap = entry.getValue();
+        outputStream.writeByte(genderMap.size());
+
+        for (Map.Entry<Gender, ImmutableList<String>> gender : genderMap.entrySet()) {
+          outputStream.writeByte(gender.getKey().ordinal());
+
+          ImmutableList<String> arrayElements = gender.getValue();
+          outputStream.writeByte(arrayElements.size());
+          for (String arrayValue : arrayElements) {
+            byte[] byteValue = getUnescapedStringBytes(arrayValue);
+            writeShort(outputStream, byteValue.length);
+            dataStream.write(byteValue);
+          }
         }
-
-        previousResourceId = resourceId;
+        previousResourceId = entry.getKey();
       }
       outputStream.write(dataStream.toByteArray());
     }

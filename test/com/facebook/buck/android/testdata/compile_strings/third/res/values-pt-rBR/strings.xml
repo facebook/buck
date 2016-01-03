@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name='name3_1'>Value311</string>
+  <string name='name3_1' gender="unknown">Value311</string>
+  <string name='name3_1_m2gender' gender="male">Value311m2</string>
 </resources>
