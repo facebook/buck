@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -560,6 +561,39 @@ public class IjModuleGraphTest {
         Matchers.equalTo(ImmutableMap.<IjProjectElement, IjModuleGraph.DependencyType>of(
                 papayaModule, IjModuleGraph.DependencyType.PROD,
                 guavaModule, IjModuleGraph.DependencyType.PROD)));
+  }
+
+  @Test
+  public void testModuleAggregationDoesNotCoalesceAndroidResources() {
+    TargetNode<?> blah1 = AndroidResourceBuilder
+        .createBuilder(
+            BuildTargetFactory.newInstance("//android_res/com/example/blah/blah/blah:res"))
+        .build();
+
+    TargetNode<?> blah2 = AndroidResourceBuilder
+        .createBuilder(
+            BuildTargetFactory.newInstance("//android_res/com/example/blah/blah/blah2:res"))
+        .build();
+
+     TargetNode<?> commonApp = AndroidLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addDep(blah1.getBuildTarget())
+        .addDep(blah2.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(blah1, blah2, commonApp),
+        ImmutableMap.<TargetNode<?>, Path>of(),
+        Functions.constant(Optional.<Path>absent()),
+        IjModuleGraph.AggregationMode.SHALLOW);
+
+    IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
+    IjModule blah2Module = getModuleForTarget(moduleGraph, blah2);
+
+    assertThat(blah1Module, Matchers.not(Matchers.equalTo(blah2Module)));
+    assertThat(
+        blah1Module.getModuleBasePath(),
+        Matchers.not(Matchers.equalTo(blah2Module.getModuleBasePath())));
   }
 
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {

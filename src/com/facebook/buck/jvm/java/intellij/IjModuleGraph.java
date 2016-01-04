@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -153,7 +154,11 @@ public class IjModuleGraph {
             new Function<TargetNode<?>, Path>() {
               @Override
               public Path apply(TargetNode<?> input) {
-                return basePathTransform.apply(input.getBuildTarget().getBasePath());
+                if (!(input.getConstructorArg() instanceof AndroidResourceDescription.Arg)) {
+                  return basePathTransform.apply(input.getBuildTarget().getBasePath());
+                }
+
+                return input.getBuildTarget().getBasePath();
               }
             });
 
