@@ -163,7 +163,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     renderScheduler.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
-        SuperConsoleEventBusListener.this.render();
+        try {
+          SuperConsoleEventBusListener.this.render();
+        } catch (Error | RuntimeException e) {
+          LOG.error(e, "Rendering exception");
+          throw e;
+        }
       }
     }, /* initialDelay */ renderInterval, /* period */ renderInterval, timeUnit);
   }
@@ -178,6 +183,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @VisibleForTesting
   synchronized void render() {
+    LOG.verbose("Rendering");
     String lastRenderClear = clearLastRender();
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
     ImmutableList<String> logLines = createLogRenderLines();
