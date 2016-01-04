@@ -436,85 +436,175 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'cache' /}{/call}
+{call buckconfig.section}
+  {param name: 'cache' /}
+  {param description}
+    This section configures build artifact caching, which can be disabled (default), on the
+    filesystem, or in a distributed cache that can be shared among developers.  Note that the{sp}
+    {call buckconfig.cache_mode /} setting determines which other properties, if any, are relevant
+    to the caching configuration; the irrelevant properties are ignored.
+  {/param}
+{/call}
 
-This section configures build artifact caching, which can be disabled
-(default), on the filesystem, or in a distributed cache that can be shared
-among developers. Note that the <code>mode</code> property determines which
-other properties, if any, are relevant to caching configuration; the irrelevant
-properties are ignored. The following example configures Buck to use both
-directory-based and http caching.
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'mode' /}
+  {param example_value: 'dir, http' /}
+  {param description}
+    A comma-separated set of caching policies to use.  The valid values are:
+    <ul>
+      <li>
+        <code>dir</code>: Use a directory-based cached on the local filesystem.
+      </li>
+      <li>
+        <code>http</code>: Use an http-based cache.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[cache]
-    # Build artifact caching configuration.
-    #
-    # mode is a comma-separated set of caching mechanisms to use:
-    #   dir       : Use a directory-based cache.
-    #   http      : Use an http cache.
-    #
-    # The default set is empty.
-    mode = dir, http
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir' /}
+  {param example_value: 'buck-cache' /}
+  {param description}
+    The directory path relative to the project root that is used for directory-based caching (
+    {call buckconfig.cache_mode /} must contain <code>dir</code>).  This defaults to{sp}
+    <code>buck-cache</code>.
+  {/param}
+{/call}
 
-    # Directory path used for directory-based caching. The default directory
-    # is buck-cache.
-    dir = buck-cache
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir_max_size' /}
+  {param example_value: '10GB' /}
+  {param description}
+    The maximum cache size for directory-based caching ({call buckconfig.cache_mode /} must contain
+    {sp}<code>dir</code>).  The default size is unlimited.
+  {/param}
+{/call}
 
-    # The maximum cache size for directory-based caching. The default size
-    # is unlimited.
-    dir_max_size = 10GB
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
+    directory-based caching ({call buckconfig.cache_mode /} must contain <code>dir</code>).
+  {/param}
+{/call}
 
-    # Whether the directory-based cache is readonly or readwrite. The default
-    # is readwrite.
-    dir_mode = readwrite
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_url' /}
+  {param example_value: 'http://localhost:8080' /}
+  {param description}
+    The URL to use to contact the cache when using http-based caching{sp}
+    ({call buckconfig.cache_mode /} must contain <code>http</code>).  Buck communicates with the
+    server using a <a href="{ROOT}concept/http_cache_api.html">simple API</a>.
 
-    # URL for http cache. The default is http://localhost:8080.
-    http_url = http://localhost:8080
+  {/param}
+{/call}
 
-    # Whether the http cache is readonly or readwrite. The default is
-    # readwrite.
-    http_mode = readwrite
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
+    http-based caching ({call buckconfig.cache_mode /} must contain <code>http</code>).
+  {/param}
+{/call}
 
-    # HTTP headers to use when reading from the cache.
-    # Multiple headers are separated with a semicolon.
-    #
-    # The default set is empty.
-    http_read_headers = User-Agent: buck
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_read_headers' /}
+  {param example_value: 'User-Agent: buck' /}
+  {param description}
+    A semicolon-separated set of HTTP headers to use when reading from the cache when using
+    http-based caching ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default
+    is no headers.
+  {/param}
+{/call}
 
-    # HTTP headers to use when writing to the cache.
-    # Multiple headers are separated with a semicolon.
-    #
-    # The default set is empty.
-    http_write_headers = Authorization: XXXXXXX; User-Agent: buck
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_write_headers' /}
+  {param example_value: 'Authorization: XXXXXXX; User-Agent: buck' /}
+  {param description}
+    A semicolon-separated set of HTTP headers to use when writing to the cache when using http-based
+    caching ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is no
+    headers.
+  {/param}
+{/call}
 
-    # Timeout for http requests (defaults to 3 seconds).
-    http_timeout_seconds = 3
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_timeout_seconds' /}
+  {param example_value: '3' /}
+  {param description}
+    Dictates the timeout per connection when using http-based caching{sp}
+    ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is <code>3</code>.
+  {/param}
+{/call}
 
-    # The number of writer threads to use to upload to the http cache (defaults to 1)
-    # Note: when using multiple http caches (see below) the writer thread pool is shared.
-    http_max_concurrent_writes = 2
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_max_concurrent_writes' /}
+  {param example_value: '1' /}
+  {param description}
+    The numver of writer threads to use to upload to the http cache when using http-based caching
+    {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
+    <code>1</code>.  Note that when using multiple http caches (see below), the writer thread pool
+    is shared between them all.
+  {/param}
+{/call}
 
-    # The length of time to wait, after the build has complete, for any remaining
-    # http cache uploads to complete before forcefully shutting down the writer thread pool.
-    # (Defaults to 1800 seconds == 30 minutes)
-    http_writer_shutdown_timeout_seconds = 600
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_writer_shutdown_timeout_seconds' /}
+  {param example_value: '1800' /}
+  {param description}
+    The length of time to wait after the build completes for any remaining http cache uploads to
+    complete before forecfully shutting down the writer thread pool when using http-based caching
+    {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
+    <code>1800</code> (30 minutes).
+  {/param}
+{/call}
 
-    # Make the directory-based cache available to other hosts on the network via the
-    # buck httpserver (which must also be enabled for this to work).
-    serve_local_cache = true
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'serve_local_cache' /}
+  {param example_value: 'false' /}
+  {param description}
+    Make the directory-based cache ({call buckconfig.cache_mode /} must contain <code>dir</code>)
+    available to other hosts on the network via Buck's HTTP server (enabled under{sp}
+    {call buckconfig.httpserver /}).
+  {/param}
+{/call}
 
-    # Whether other hosts on the network are able to write to the directory-based
-    # cache (the default is readonly).
-    served_local_cache_mode = readwrite
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'served_local_cache_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when{sp}
+    {call buckconfig.cache_serve_local_cache /} is enabled.
+  {/param}
+{/call}
 
-<p>It is also possible to configure multiple http caches using the syntax below. The caches will be
-used <b>serially</b> in the order in which their names are specified in{sp}
-<code>http_cache_names</code>. If an artifact is found further along the list an attempt to store
-it earlier in the list will be made. In the example below, if the artifact is found in the{sp}
-<code>global</code> cache it will be stored in the <code>local</code> cache, but not in the{sp}
-<code>regional-ro</code> cache (as that one is not writeable).</p>
-
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_cache_names' /}
+  {param description}
+    A comma-separated list of names used to configure multiple caches.  The caches will be used
+    <b>serially</b> in the order in which their names are specified here.  If an artifact is found
+    further along in the list, an attempt to store it in the caches earlier in the list will be
+    made.  In the following example, if the artifact is found in the <code>global</code> cache, it
+    will be stored in the <code>local</code> cache, but not <code>regional-ro</code> cache (as that
+    one is <code>readonly</code>.
+  {/param}
+  {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
 [cache]
     mode = http
@@ -533,11 +623,8 @@ it earlier in the list will be made. In the example below, if the artifact is fo
     http_url = http://global.com/
     http_timeout_seconds = 42
 </pre>{/literal}
-
-
-Buck communicates with the http cache using a
-{sp}<a href="{ROOT}concept/http_cache_api.html">simple API</a>.
-
+  {/param}
+{/call}
 
 {call .section}{param title: 'color' /}{/call}
 
