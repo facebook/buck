@@ -22,9 +22,11 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -37,8 +39,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class TestResultFormatter {
 
@@ -50,6 +55,7 @@ public class TestResultFormatter {
   private final TestResultSummaryVerbosity summaryVerbosity;
   private final Locale locale;
   private final Optional<Path> testLogsPath;
+  private final TimeZone timeZone;
 
   public enum FormatMode {
       BEFORE_TEST_RUN,
@@ -62,11 +68,23 @@ public class TestResultFormatter {
       TestResultSummaryVerbosity summaryVerbosity,
       Locale locale,
       Optional<Path> testLogsPath) {
+    this(ansi, verbosity, summaryVerbosity, locale, testLogsPath, TimeZone.getDefault());
+  }
+
+  @VisibleForTesting
+  TestResultFormatter(
+      Ansi ansi,
+      Verbosity verbosity,
+      TestResultSummaryVerbosity summaryVerbosity,
+      Locale locale,
+      Optional<Path> testLogsPath,
+      TimeZone timeZone) {
     this.ansi = ansi;
     this.verbosity = verbosity;
     this.summaryVerbosity = summaryVerbosity;
     this.locale = locale;
     this.testLogsPath = testLogsPath;
+    this.timeZone = timeZone;
   }
 
   public void runStarted(
@@ -208,7 +226,10 @@ public class TestResultFormatter {
     }
   }
 
-  public void runComplete(ImmutableList.Builder<String> addTo, List<TestResults> completedResults) {
+  public void runComplete(
+      ImmutableList.Builder<String> addTo,
+      List<TestResults> completedResults,
+      List<TestStatusMessage> testStatusMessages) {
     // Print whether each test succeeded or failed.
     boolean isAllTestsPassed = true;
     boolean isAnyAssumptionViolated = false;
@@ -253,6 +274,24 @@ public class TestResultFormatter {
         addTo.add(ansi.asHighlightedSuccessText("TESTS PASSED"));
       }
     } else {
+      if (!testStatusMessages.isEmpty()) {
+        addTo.add("====TEST STATUS MESSAGES====");
+        SimpleDateFormat timestampFormat = new SimpleDateFormat(
+            "[yyyy-MM-dd HH:mm:ss.SSS]",
+            Locale.US);
+        timestampFormat.setTimeZone(timeZone);
+
+        for (TestStatusMessage testStatusMessage : testStatusMessages) {
+          addTo.add(
+              String.format(
+                  locale,
+                  "%s[%s] %s",
+                  timestampFormat.format(new Date(testStatusMessage.getTimestampMillis())),
+                  testStatusMessage.getLevel(),
+                  testStatusMessage.getMessage()));
+        }
+      }
+
       addTo.add(
           ansi.asHighlightedFailureText(
               String.format(

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
@@ -137,7 +138,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void testRunCompleted(TestRunEvent.Finished event) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    testFormatter.runComplete(lines, event.getResults());
+    testFormatter.runComplete(
+        lines,
+        event.getResults(),
+        ImmutableList.<TestStatusMessage>of());
     printLines(lines);
   }
 

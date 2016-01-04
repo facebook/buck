@@ -24,6 +24,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
@@ -43,7 +44,10 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.util.logging.Level;
+
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +66,8 @@ public class TestResultFormatterTest {
         Verbosity.COMMANDS,
         TestResultSummaryVerbosity.of(false, false),
         Locale.US,
-        Optional.of(logPath));
+        Optional.of(logPath),
+        TimeZone.getTimeZone("America/Los_Angeles"));
   }
 
   private TestResultFormatter createNoisyFormatter() {
@@ -71,7 +76,8 @@ public class TestResultFormatterTest {
         Verbosity.COMMANDS,
         TestResultSummaryVerbosity.of(true, true),
         Locale.US,
-        Optional.of(logPath));
+        Optional.of(logPath),
+        TimeZone.getTimeZone("America/Los_Angeles"));
   }
 
   private TestResultFormatter createFormatterWithMaxLogLines(int logLines) {
@@ -84,7 +90,8 @@ public class TestResultFormatterTest {
             .setMaxDebugLogLines(logLines)
             .build(),
         Locale.US,
-        Optional.of(logPath));
+        Optional.of(logPath),
+        TimeZone.getTimeZone("America/Los_Angeles"));
   }
 
   @Before
@@ -224,7 +231,10 @@ public class TestResultFormatterTest {
     TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runComplete(builder, ImmutableList.<TestResults>of());
+    formatter.runComplete(
+        builder,
+        ImmutableList.<TestResults>of(),
+        ImmutableList.<TestStatusMessage>of());
 
     assertEquals("NO TESTS RAN", toString(builder));
   }
@@ -237,7 +247,10 @@ public class TestResultFormatterTest {
     TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runComplete(builder, ImmutableList.of(results));
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.<TestStatusMessage>of());
 
     assertEquals("TESTS PASSED", toString(builder));
   }
@@ -254,7 +267,10 @@ public class TestResultFormatterTest {
         ImmutableList.of(testLogPath));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runComplete(builder, ImmutableList.of(results));
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.<TestStatusMessage>of());
 
     assertEquals("Updated test logs: log.txt\nTESTS PASSED", toString(builder));
   }
@@ -271,7 +287,26 @@ public class TestResultFormatterTest {
         ImmutableList.of(testLogPath));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runComplete(builder, ImmutableList.of(results));
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.<TestStatusMessage>of());
+
+    assertEquals("TESTS PASSED", toString(builder));
+  }
+
+  @Test
+  public void allTestsPassingShouldNotShowTestStatusMessages() throws IOException {
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest));
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.of(TestStatusMessage.of("Hello world", Level.INFO, 12345L)));
 
     assertEquals("TESTS PASSED", toString(builder));
   }
@@ -288,9 +323,38 @@ public class TestResultFormatterTest {
         /* labels */ ImmutableSet.<String>of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runComplete(builder, ImmutableList.of(results));
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.<TestStatusMessage>of());
 
     String expectedOutput = Joiner.on('\n').join(
+        "TESTS FAILED: 1 FAILURE",
+        "Failed target: //foo:bar",
+        "FAIL com.example.FooTest");
+    assertEquals(expectedOutput, toString(builder));
+  }
+
+  @Test
+  public void failingTestShouldShowTestStatusMessages() throws IOException {
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(successTest, failingTest));
+    TestResults results = TestResults.of(
+        BuildTargetFactory.newInstance("//foo:bar"),
+        ImmutableList.of(summary),
+        /* contacts */ ImmutableSet.<String>of(),
+        /* labels */ ImmutableSet.<String>of());
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.of(TestStatusMessage.of("Hello world", Level.INFO, 1450473060000L)));
+
+    String expectedOutput = Joiner.on('\n').join(
+        "====TEST STATUS MESSAGES====",
+        "[2015-12-18 13:11:00.000][INFO] Hello world",
         "TESTS FAILED: 1 FAILURE",
         "Failed target: //foo:bar",
         "FAIL com.example.FooTest");
@@ -321,7 +385,10 @@ public class TestResultFormatterTest {
         /* labels */ ImmutableSet.<String>of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runComplete(builder, ImmutableList.of(results));
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.<TestStatusMessage>of());
 
     String expectedOutput = Joiner.on('\n').join(
         "TESTS FAILED: 2 FAILURES",
@@ -351,7 +418,8 @@ public class TestResultFormatterTest {
         Verbosity.COMMANDS,
         TestResultSummaryVerbosity.of(false, false),
         Locale.GERMAN,
-        Optional.of(logPath));
+        Optional.of(logPath),
+        TimeZone.getTimeZone("America/Los_Angeles"));
 
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest",

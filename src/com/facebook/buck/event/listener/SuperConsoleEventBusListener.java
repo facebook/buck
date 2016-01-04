@@ -34,6 +34,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
@@ -548,7 +549,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     for (TestResults results : finished.getResults()) {
       testFormatter.reportResult(builder, results);
     }
-    testFormatter.runComplete(builder, finished.getResults());
+    testFormatter.runComplete(
+        builder,
+        finished.getResults(),
+        ImmutableList.<TestStatusMessage>of());
     String testOutput;
     synchronized (testReportBuilder) {
       testReportBuilder.addAll(builder.build());
