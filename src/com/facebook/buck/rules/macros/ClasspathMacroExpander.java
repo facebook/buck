@@ -97,11 +97,13 @@ public class ClasspathMacroExpander
                   @Nullable
                   @Override
                   public Path apply(JavaLibrary input) {
-                    return input.getPathToOutput();
+                    return input.getPathToOutput() == null
+                        ? null
+                        : input.getProjectFilesystem()
+                              .resolve(input.getPathToOutput());
                   }
                 })
             .filter(Predicates.notNull())
-            .transform(rule.getProjectFilesystem().getAbsolutifier())
             .transform(Functions.toStringFunction())
             .toSortedSet(Ordering.natural()));
   }
