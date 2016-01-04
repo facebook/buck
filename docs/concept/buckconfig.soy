@@ -138,25 +138,24 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'android' /}{/call}
+{call buckconfig.section}
+  {param name: 'android' /}
+  {param description}
+    This section configures android-specific build behavior.
+  {/param}
+{/call}
 
-Specify the version of the Android SDK that all Android code
-in the project should be built against as follows:
-
-{literal}<pre class="prettyprint lang-ini">
-[android]
-  target = Google Inc.:Google APIs:21
-</pre>{/literal}
-
-<p>
-
-If the SDK version is not specified in your <code>.buckconfig</code> file,
-the version of the SDK that Buck has chosen will be printed to the console.
-
-<p>
-
-You can find the list of valid values on your system by running{sp}
-<code>android list targets --compact</code>.
+{call buckconfig.entry}
+  {param section: 'android' /}
+  {param name: 'target' /}
+  {param example_value: 'Google Inc.:Google APIs:21' /}
+  {param description}
+    This specifies the version of the Android SDK that all Android code in the project should be
+    built against.  Even if not specified, the version that Buck chose to use will be printed to the
+    console during the build.  A list of valid values on your system can be found by running{sp}
+    <code>android list targets --compact</code>.
+  {/param}
+{/call}
 
 {call .section}{param title: 'apple' /}{/call}
 
