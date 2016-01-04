@@ -311,68 +311,113 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'build' /}{/call}
+{call buckconfig.section}
+  {param name: 'build' /}
+  {param description}
+    This section includes settings that control build engine behavior.
+  {/param}
+{/call}
 
-This section includes settings that control build engine behavior.
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'engine_mode' /}
+  {param example_value: 'shallow' /}
+  {param description}
+    This has two possible values that change the behavior of how Buck operates when building a{sp}
+    {call buck.build_target /}:
+    <ul>
+      <li>
+        <code>shallow</code> (default): only the required transitive dependencies of a{sp}
+        {call buck.build_target /} are materialized locally.  Cache hits can result in missing
+        transitive dependencies that are not needed for the final output.
+      </li>
+      <li>
+        <code>deep</code>: ensure that all transitive dependencies of a {call buck.build_target /}
+        {sp}are materialized locally.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[build]
-  # Build engine mode.
-  #
-  # engine_mode is one of:
-  #   deep     : When building a target, ensure that all transitive
-  #              dependencies of that target are materialized locally.
-  #   shallow  : When building a target, don't require that it's
-  #              transitive dependencies are materialized locally.
-  #
-  # The default is shallow.
-  engine_mode = shallow
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'depfiles' /}
+  {param example_value: 'enabled' /}
+  {param description}
+    Configures the use of dependency files for rules that support them.  This is an optimization
+    that is useful when dependencies are over-specified and the rule can dynamically determine the
+    subset of dependencies it actually needs.  The possible values are:
+    <ul>
+      <li>
+        <code>enabled</code> (default): Use dependency files to avoid unnecessary rebuilds.
+      </li>
+      <li>
+        <code>cache</code>: Use dependency files to avoid unnecessary rebuilds and to store/fetch
+        artifacts to/from the cache.
+      </li>
+      <li>
+        <code>disabled</code>: Do not use dependency files for rebuild detection.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
-  # Configures use of dependency files for rules that support them. This
-  # is an optimization useful when dependencies are overspecified and the
-  # rule can dynamically determine a subset of dependencies it actually
-  # needs.  Enabled by default.
-  #   disabled : Don't use dependency files for rebuild detection.
-  #   enabled  : Use dependency files locally to avoid rebuilds locally.
-  #   cache    : Use dependency files locally and to store/fetch artifacts
-  #              to/from the cache.
-  depfiles = enabled
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'max_depfile_cache_entries' /}
+  {param example_value: '256' /}
+  {param description}
+    Sets the maximum size of the depfile cache for each input source file.  This is only used when
+    setting {call buckconfig.build_depfiles /} to <code>cache</code>.  An ideal setting for this
+    should be big enough for the working set of all possible header states that a given unchanged
+    source file uses.
+  {/param}
+{/call}
 
-  # Sets the maximum size of the depfile cache for each input source file,
-  # used when setting `depfiles` to `cache` above.  An ideal setting for
-  # this should be big enough for the working set of all possible header
-  # states that a given unchanged source file uses.
-  max_depfile_cache_entries = 256
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'work_queue_execution_order' /}
+  {param example_value: 'LIFO' /}
+  {param description}
+    Configures the order in which the build engine executes scheduled jobs.  The supported values
+    are:
+    <ul>
+      <li>
+        <code>LIFO</code> (default): Last in, first out.  This mode will prefer building all
+        dependencies of a target before build other targets.  Jobs at different depths in the
+        dependency graph are likely to be evenly spread throughout the build.
+      </li>
+      <li>
+        <code>FIFO</code>: First in, first out.  In this mode, all jobs will first check the cache
+        before building their dependencies.  Execution order of jobs is likely to be mostly ordered
+        by their depth in the dependency graph.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
-  # Configures order in which the build engine executes scheduled jobs.
-  # Supported values:
-  #   LIFO     : Last in, first out. This mode will prefer building all
-  #              dependencies of a target before building other targets.
-  #              Jobs at different depths in the dependency graph are
-  #              likely to be evenly spread throughout the build.
-  #   FIFO     : First in, first out. In this mode all jobs will first
-  #              check the cache before building their dependencies.
-  #              Execution order of jobs is likely to be mostly ordered
-  #              by their depth in the dependency graph.
-  work_queue_execution_order = LIFO
-
-  # Determines whether dependencies will be scheduled in deterministic
-  # or random order.
-  # Supported values:
-  #   RANDOM   : Randomly shuffle dependencies before scheduling them.
-  #              This mode should improve the cache hits if multiple
-  #              machines that use the same cache start building the
-  #              same target at the same time. It might also help
-  #              surface issues with rules depending on side effects
-  #              of other rules they don't depend on.
-  #   SORTED   : Sort dependencies in stable order before scheduling
-  #              them. Note this does not mean that jobs will always
-  #              be executed in the same order because that also
-  #              depends on the number of running threads and races
-  #              between them.
-  dependency_scheduling_order = RANDOM
-</pre>{/literal}
-
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'dependency_scheduling_order' /}
+  {param example_value: 'RANDOM' /}
+  {param description}
+    Determines whether dependencies will be scheduled in a deterministic or random order.  The
+    supported values are:
+    <ul>
+      <li>
+        <code>RANDOM</code> (default): Randomly shuffle dependencies before scheduling them.  This
+        mode should improve the cache hits if multiple machines that use the same cache start
+        building the same target at the same time.  It may also help surface issues with rules
+        depending on side effects of other rules that they do not depend on.
+      </li>
+      <li>
+        <code>SORTED</code>: First sort dependencies in a stable order before scheduling them.  Note
+        that this does not mean that jobs will always be executed in the same order because that
+        also depends on the number of running threads and races between them.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
 {call .section}{param title: 'buildfile' /}{/call}
 
