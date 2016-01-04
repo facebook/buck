@@ -28,19 +28,24 @@ def safe_copy(source, dest, overwrite=False):
     shutil.copyfile(source, temp_dest)
     os.rename(temp_dest, dest)
 
-  try:
-    os.link(source, dest)
-  except OSError as e:
-    if e.errno == errno.EEXIST:
-      # File already exists.  If overwrite=True, write otherwise skip.
-      if overwrite:
+  if hasattr(os, 'link'):
+    try:
+      os.link(source, dest)
+    except OSError as e:
+      if e.errno == errno.EEXIST:
+        # File already exists.  If overwrite=True, write otherwise skip.
+        if overwrite:
+          do_copy()
+      elif e.errno == errno.EXDEV:
+        # Hard link across devices, fall back on copying
         do_copy()
-    elif e.errno == errno.EXDEV:
-      # Hard link across devices, fall back on copying
+      else:
+        raise
+  elif os.path.exists(dest):
+    if overwrite:
       do_copy()
-    else:
-      raise
-
+  else:
+    do_copy()
 
 # See http://stackoverflow.com/questions/2572172/referencing-other-modules-in-atexit
 class MktempTeardownRegistry(object):
