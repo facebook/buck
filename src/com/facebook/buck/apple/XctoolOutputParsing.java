@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -31,6 +32,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
@@ -197,6 +199,37 @@ public class XctoolOutputParsing {
         eventCallback.handleEndTestEvent(gson.fromJson(element, EndTestEvent.class));
         break;
     }
+  }
+
+  public static Optional<TestStatusMessage> testStatusMessageForStatusEvent(
+      StatusEvent statusEvent) {
+    if (statusEvent.message == null || statusEvent.level == null) {
+      LOG.warn("Ignoring invalid status (message or level is null): %s", statusEvent);
+      return Optional.absent();
+    }
+    Level level;
+    switch (statusEvent.level) {
+      case "Verbose":
+        level = Level.FINER;
+        break;
+      case "Debug":
+        level = Level.FINE;
+        break;
+      case "Info":
+        level = Level.INFO;
+        break;
+      case "Warning":
+        level = Level.WARNING;
+        break;
+      case "Error":
+        level = Level.SEVERE;
+        break;
+      default:
+        LOG.warn("Ignoring invalid status (unknown level %s)", statusEvent.level);
+        return Optional.absent();
+    }
+    long timeMillis = (long) (statusEvent.timestamp * TimeUnit.SECONDS.toMillis(1));
+    return Optional.of(TestStatusMessage.of(statusEvent.message, level, timeMillis));
   }
 
   public static TestResultSummary testResultSummaryForEndTestEvent(EndTestEvent endTestEvent) {

@@ -23,6 +23,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestStatusMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -41,6 +42,8 @@ public interface TestRule extends HasBuildTarget {
    */
   interface TestReportingCallback {
     void testsDidBegin();
+    void statusDidBegin(TestStatusMessage status);
+    void statusDidEnd(TestStatusMessage status);
     void testDidBegin(String testCaseName, String testName);
     void testDidEnd(TestResultSummary testResultSummary);
     void testsDidEnd(List<TestCaseSummary> testCaseSummaries);
@@ -55,6 +58,12 @@ public interface TestRule extends HasBuildTarget {
 
     @Override
     public void testDidBegin(String testCaseName, String testName) { }
+
+    @Override
+    public void statusDidBegin(TestStatusMessage status) { }
+
+    @Override
+    public void statusDidEnd(TestStatusMessage status) { }
 
     @Override
     public void testDidEnd(TestResultSummary testResultSummary) { }

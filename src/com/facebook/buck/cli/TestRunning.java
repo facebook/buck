@@ -49,6 +49,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -201,6 +202,16 @@ public class TestRunning {
           @Override
           public void testsDidBegin() {
             LOG.debug("Tests for rule %s began", test.getBuildTarget());
+          }
+
+          @Override
+          public void statusDidBegin(TestStatusMessage status) {
+            LOG.debug("Test status did begin: %s", status);
+          }
+
+          @Override
+          public void statusDidEnd(TestStatusMessage status) {
+            LOG.debug("Test status did end: %s", status);
           }
 
           @Override

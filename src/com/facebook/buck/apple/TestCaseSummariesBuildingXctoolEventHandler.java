@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestStatusMessage;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -86,10 +87,20 @@ public class TestCaseSummariesBuildingXctoolEventHandler
 
   @Override
   public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
+    Optional<TestStatusMessage> message = XctoolOutputParsing.testStatusMessageForStatusEvent(
+        event);
+    if (message.isPresent()) {
+      testReportingCallback.statusDidBegin(message.get());
+    }
   }
 
   @Override
   public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
+    Optional<TestStatusMessage> message = XctoolOutputParsing.testStatusMessageForStatusEvent(
+        event);
+    if (message.isPresent()) {
+      testReportingCallback.statusDidEnd(message.get());
+    }
   }
 
   @Override

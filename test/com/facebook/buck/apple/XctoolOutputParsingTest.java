@@ -27,6 +27,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.test.TestStatusMessage;
+
+import com.google.common.base.Optional;
 
 import org.junit.Test;
 
@@ -34,6 +37,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Level;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -262,5 +266,47 @@ public class XctoolOutputParsingTest {
     assertThat(endOcunitEvent.timestamp, closeTo(1432065859.751992, EPSILON));
     assertThat(endOcunitEvent.message, nullValue(String.class));
     assertThat(endOcunitEvent.succeeded, is(false));
+  }
+
+  @Test
+  public void validEventParsesToStatusMessage() {
+    XctoolOutputParsing.StatusEvent statusEvent = new XctoolOutputParsing.StatusEvent();
+    statusEvent.message = "Hello world";
+    statusEvent.level = "Info";
+    statusEvent.timestamp = 123.456;
+
+    Optional<TestStatusMessage> testStatusMessage =
+        XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
+    assertThat(
+        testStatusMessage,
+        equalTo(Optional.of(TestStatusMessage.of("Hello world", Level.INFO, 123456L))));
+  }
+
+  @Test
+  public void invalidEventLevelParsesToAbsent() {
+    XctoolOutputParsing.StatusEvent statusEvent = new XctoolOutputParsing.StatusEvent();
+    statusEvent.message = "Hello world";
+    statusEvent.level = "BALEETED";
+    statusEvent.timestamp = 123.456;
+
+    Optional<TestStatusMessage> testStatusMessage =
+        XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
+    assertThat(
+        testStatusMessage,
+        equalTo(Optional.<TestStatusMessage>absent()));
+  }
+
+  @Test
+  public void invalidEventMessageParsesToAbsent() {
+    XctoolOutputParsing.StatusEvent statusEvent = new XctoolOutputParsing.StatusEvent();
+    statusEvent.message = null;
+    statusEvent.level = "Info";
+    statusEvent.timestamp = 123.456;
+
+    Optional<TestStatusMessage> testStatusMessage =
+        XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
+    assertThat(
+        testStatusMessage,
+        equalTo(Optional.<TestStatusMessage>absent()));
   }
 }
