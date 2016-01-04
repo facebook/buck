@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
@@ -95,6 +96,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -198,6 +200,8 @@ public class TestRunning {
           !options.getTestSelectorList().isEmpty());
 
       final Map<String, UUID> testUUIDMap = new HashMap<>();
+      final AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
+          new AtomicReference<>();
       TestRule.TestReportingCallback testReportingCallback = new TestRule.TestReportingCallback() {
           @Override
           public void testsDidBegin() {
@@ -205,13 +209,30 @@ public class TestRunning {
           }
 
           @Override
-          public void statusDidBegin(TestStatusMessage status) {
-            LOG.debug("Test status did begin: %s", status);
+          public void statusDidBegin(TestStatusMessage didBeginMessage) {
+            LOG.debug("Test status did begin: %s", didBeginMessage);
+            TestStatusMessageEvent.Started startedEvent = TestStatusMessageEvent.started(
+                didBeginMessage);
+            TestStatusMessageEvent.Started previousEvent =
+                currentTestStatusMessageEvent.getAndSet(startedEvent);
+            Preconditions.checkState(
+                previousEvent == null,
+                "Received begin status before end status (%s)",
+                previousEvent);
+            params.getBuckEventBus().post(startedEvent);
           }
 
           @Override
-          public void statusDidEnd(TestStatusMessage status) {
-            LOG.debug("Test status did end: %s", status);
+          public void statusDidEnd(TestStatusMessage didEndMessage) {
+            LOG.debug("Test status did end: %s", didEndMessage);
+            TestStatusMessageEvent.Started previousEvent = currentTestStatusMessageEvent.getAndSet(
+                null);
+            Preconditions.checkState(
+                previousEvent != null,
+                "Received end status before begin status (%s)",
+                previousEvent);
+            params.getBuckEventBus().post(
+                TestStatusMessageEvent.finished(previousEvent, didEndMessage));
           }
 
           @Override
