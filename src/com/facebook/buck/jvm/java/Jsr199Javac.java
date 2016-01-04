@@ -36,7 +36,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -63,7 +62,6 @@ import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
@@ -140,19 +138,51 @@ public abstract class Jsr199Javac implements Javac {
 
     StandardJavaFileManager fileManager =
         fileManagerFactory.or(DEFAULT_FILE_MANAGER_FACTORY).create(compiler);
-
-    Iterable<? extends JavaFileObject> compilationUnits = ImmutableSet.of();
     try {
-      compilationUnits = createCompilationUnits(
-          fileManager,
-          filesystem.getAbsolutifier(),
-          javaSourceFilePaths);
-    } catch (IOException e) {
-      close(fileManager, compilationUnits);
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    }
+      Iterable<? extends JavaFileObject> compilationUnits;
+      try {
+        compilationUnits = createCompilationUnits(
+            fileManager,
+            filesystem.getAbsolutifier(),
+            javaSourceFilePaths);
+      } catch (IOException e) {
+        LOG.warn(e, "Error building compilation units");
+        return 1;
+      }
 
+      try {
+        return buildWithClasspath(
+            context,
+            filesystem,
+            invokingRule,
+            options,
+            javaSourceFilePaths,
+            pathToSrcsList,
+            compiler,
+            fileManager,
+            compilationUnits);
+      } finally {
+        close(compilationUnits);
+      }
+    } finally {
+      try {
+        fileManager.close();
+      } catch (IOException e) {
+        LOG.warn(e, "Unable to close java filemanager. We may be leaking memory.");
+      }
+    }
+  }
+
+  private int buildWithClasspath(
+      ExecutionContext context,
+      ProjectFilesystem filesystem,
+      BuildTarget invokingRule,
+      ImmutableList<String> options,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList,
+      JavaCompiler compiler,
+      StandardJavaFileManager fileManager,
+      Iterable<? extends JavaFileObject> compilationUnits) {
     if (pathToSrcsList.isPresent()) {
       // write javaSourceFilePaths to classes file
       // for buck user to have a list of all .java files to be compiled
@@ -164,7 +194,6 @@ public abstract class Jsr199Javac implements Javac {
                 .transform(ARGFILES_ESCAPER),
             pathToSrcsList.get());
       } catch (IOException e) {
-        close(fileManager, compilationUnits);
         context.logError(
             e,
             "Cannot write list of .java files to compile to %s file! Terminating compilation.",
@@ -212,8 +241,6 @@ public abstract class Jsr199Javac implements Javac {
         isSuccess = compilationTask.call();
       } catch (IOException e) {
         LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
-      } finally {
-        close(fileManager, compilationUnits);
       }
     } finally {
       // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
@@ -252,23 +279,14 @@ public abstract class Jsr199Javac implements Javac {
     }
   }
 
-  private void close(
-      JavaFileManager fileManager,
-      Iterable<? extends JavaFileObject> compilationUnits) {
-    try {
-      fileManager.close();
-    } catch (IOException e) {
-      LOG.warn(e, "Unable to close java filemanager. We may be leaking memory.");
-    }
-
+  private void close(Iterable<? extends JavaFileObject> compilationUnits) {
     for (JavaFileObject unit : compilationUnits) {
-      if (!(unit instanceof ZipEntryJavaFileObject)) {
-        continue;
-      }
-      try {
-        ((ZipEntryJavaFileObject) unit).close();
-      } catch (IOException e) {
-        LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
+      if (unit instanceof Closeable) {
+        try {
+          ((Closeable) unit).close();
+        } catch (IOException e) {
+          LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
+        }
       }
     }
   }
