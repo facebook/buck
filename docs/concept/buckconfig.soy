@@ -419,21 +419,22 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'buildfile' /}{/call}
+{call buckconfig.section}
+  {param name: 'buildfile' /}
+  {param description}
+    This section includes settings that control build file behavior.
+  {/param}
+{/call}
 
-This section may define an <code>includes</code> property that can specify a
-path to a file of macros and constants that will automatically be included in
-every build file. Therefore, defining the following:
-
-{literal}<pre class="prettyprint lang-ini">
-[buildfile]
-  includes = //core/DEFS
-</pre>{/literal}
-
-is the equivalent of manually invoking <code>include_defs('//core/DEFS')</code>
-{sp}at the start of every build file. See
-{sp}<a href="{ROOT}function/include_defs.html"><code>include_defs()</code></a>
-{sp}for more details.
+{call buckconfig.entry}
+  {param section: 'buildfile' /}
+  {param name: 'includes' /}
+  {param example_value: '//core/DEFS' /}
+  {param description}
+    This sets a list of paths to files that will be automatically included by every build file.
+    This is equivalent to calling {call buck.fn_include_defs /} in every build file.
+  {/param}
+{/call}
 
 {call .section}{param title: 'cache' /}{/call}
 
