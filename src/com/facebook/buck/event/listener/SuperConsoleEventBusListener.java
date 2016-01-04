@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
@@ -47,6 +48,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
@@ -354,6 +356,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             currentTimeMillis,
             threadsToRunningTestRuleEvent,
             threadsToRunningTestSummaryEvent,
+            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
             threadsToRunningStep,
             accumulatedRuleTime);
         renderLines(renderer, lines);

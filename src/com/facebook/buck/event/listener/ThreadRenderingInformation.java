@@ -20,12 +20,14 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.google.common.base.Optional;
 
 class ThreadRenderingInformation {
   private final Optional<BuildTarget> buildTarget;
   private final Optional<? extends AbstractBuckEvent> startEvent;
   private final Optional<? extends TestSummaryEvent> testSummary;
+  private final Optional<? extends TestStatusMessageEvent> testStatusMessage;
   private final Optional<? extends LeafEvent> runningStep;
   private final long elapsedTimeMs;
 
@@ -33,11 +35,13 @@ class ThreadRenderingInformation {
       Optional<BuildTarget> buildTarget,
       Optional<? extends AbstractBuckEvent> startEvent,
       Optional<? extends TestSummaryEvent> testSummary,
+      Optional<? extends TestStatusMessageEvent> testStatusMessage,
       Optional<? extends LeafEvent> runningStep,
       long elapsedTimeMs) {
     this.buildTarget = buildTarget;
     this.startEvent = startEvent;
     this.testSummary = testSummary;
+    this.testStatusMessage = testStatusMessage;
     this.runningStep = runningStep;
     this.elapsedTimeMs = elapsedTimeMs;
   }
@@ -52,6 +56,10 @@ class ThreadRenderingInformation {
 
   public Optional<? extends TestSummaryEvent> getTestSummary() {
     return testSummary;
+  }
+
+  public Optional<? extends TestStatusMessageEvent> getTestStatusMessage() {
+    return testStatusMessage;
   }
 
   public Optional<? extends LeafEvent> getRunningStep() {

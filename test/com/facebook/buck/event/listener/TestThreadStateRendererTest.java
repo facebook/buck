@@ -24,9 +24,11 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestRuleEvent;
+import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 
 public class TestThreadStateRendererTest {
 
@@ -63,6 +66,7 @@ public class TestThreadStateRendererTest {
             2100,
             ImmutableMap.<Long, Optional<? extends TestRuleEvent>>of(),
             ImmutableMap.<Long, Optional<? extends TestSummaryEvent>>of(),
+            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
             ImmutableMap.<Long, Optional<? extends LeafEvent>>of(),
             ImmutableMap.<BuildTarget, AtomicLong>of()),
         is(equalTo(ImmutableList.<String>of())));
@@ -85,6 +89,7 @@ public class TestThreadStateRendererTest {
                 4L, Optional.<TestSummaryEvent>absent(),
                 5L, Optional.<TestSummaryEvent>absent(),
                 8L, createTestSummaryEventOptional(1, 3800, "Test Case B", "Test B")),
+            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
             ImmutableMap.of(
                 1L, createStepStartedEventOptional(1, 1500, "step A"),
                 3L, Optional.<LeafEvent>absent(),
@@ -106,6 +111,49 @@ public class TestThreadStateRendererTest {
   }
 
   @Test
+  public void withTestStatusMessageEvents() {
+    assertThat(
+        createRendererAndRenderLines(
+            4200,
+            ImmutableMap.of(
+                1L, createTestStartedEventOptional(1, 1200, TARGET2),
+                3L, createTestStartedEventOptional(3, 2300, TARGET3),
+                4L, createTestStartedEventOptional(4, 1100, TARGET1),
+                5L, Optional.<TestRuleEvent>absent(),
+                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+            ImmutableMap.of(
+                1L, Optional.<TestSummaryEvent>absent(),
+                3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
+                4L, Optional.<TestSummaryEvent>absent(),
+                5L, Optional.<TestSummaryEvent>absent(),
+                8L, Optional.<TestSummaryEvent>absent()),
+            ImmutableMap.of(
+                1L, Optional.<TestStatusMessageEvent>absent(),
+                3L, Optional.<TestStatusMessageEvent>absent(),
+                4L, Optional.<TestStatusMessageEvent>absent(),
+                5L, Optional.<TestStatusMessageEvent>absent(),
+                8L, createTestStatusMessageEventOptional(1, 3800, "Installing Sim", Level.INFO)),
+            ImmutableMap.of(
+                1L, createStepStartedEventOptional(1, 1500, "step A"),
+                3L, Optional.<LeafEvent>absent(),
+                4L, Optional.<LeafEvent>absent(),
+                5L, Optional.<LeafEvent>absent(),
+                8L, createStepStartedEventOptional(1, 3700, "step B")),
+            ImmutableMap.of(
+                TARGET1, new AtomicLong(200),
+                TARGET2, new AtomicLong(1400),
+                TARGET3, new AtomicLong(700),
+                TARGET4, new AtomicLong(0))),
+        is(equalTo(
+            ImmutableList.of(
+                " |=> //:target2...  4.4s (running step A[2.7s])",
+                " |=> //:target3...  2.6s (running Test A[2.6s])",
+                " |=> //:target1...  3.3s",
+                " |=> IDLE",
+                " |=> //:target4...  1.2s (running Installing Sim[0.4s])"))));
+  }
+
+  @Test
   public void withMissingInformation() {
     // SuperConsoleEventBusListener stores the data it passes to the renderer in a map that might
     // be concurrently modified from other threads. It is important that the renderer can handle
@@ -122,6 +170,7 @@ public class TestThreadStateRendererTest {
                 1L, Optional.<TestSummaryEvent>absent(),
                 4L, Optional.<TestSummaryEvent>absent(),
                 5L, Optional.<TestSummaryEvent>absent()),
+            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
             ImmutableMap.of(
                 1L, createStepStartedEventOptional(1, 1500, "step A"),
                 3L, Optional.<LeafEvent>absent(),
@@ -164,6 +213,23 @@ public class TestThreadStateRendererTest {
             threadId));
   }
 
+  private static Optional<? extends TestStatusMessageEvent> createTestStatusMessageEventOptional(
+      long threadId,
+      long timeMs,
+      String message,
+      Level level) {
+    return Optional.of(
+        TestEventConfigerator.configureTestEventAtTime(
+            TestStatusMessageEvent.started(
+                TestStatusMessage.of(
+                    message,
+                    level,
+                    timeMs)),
+            timeMs,
+            TimeUnit.MILLISECONDS,
+            threadId));
+  }
+
   private static Optional<? extends LeafEvent> createStepStartedEventOptional(
       long threadId,
       long timeMs,
@@ -180,6 +246,7 @@ public class TestThreadStateRendererTest {
       long timeMs,
       Map<Long, Optional<? extends TestRuleEvent>> testEvents,
       Map<Long, Optional<? extends TestSummaryEvent>> testSummaries,
+      Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessages,
       Map<Long, Optional<? extends LeafEvent>> runningSteps,
       Map<BuildTarget, AtomicLong> accumulatedTimes) {
     TestThreadStateRenderer renderer = new TestThreadStateRenderer(
@@ -188,6 +255,7 @@ public class TestThreadStateRendererTest {
         timeMs,
         testEvents,
         testSummaries,
+        testStatusMessages,
         runningSteps,
         accumulatedTimes);
     ImmutableList.Builder<String> lines = ImmutableList.builder();
