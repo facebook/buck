@@ -34,4 +34,29 @@
   {/if}
 {/template}
 
+/**
+ * @param section The section the entry is in.
+ * @param entry The name of the entry to link to.
+ */
+{template .entry_link}
+<a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{$section}.{$entry}</a>
+{/template}
+
+
+/***/
+{template .apple_xctool_path}
+{call .entry_link}
+  {param section : 'apple' /}
+  {param entry : 'xctool_path' /}
+{/call}
+{/template}
+
+/***/
+{template .apple_xctool_zip_target}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'xctool_zip_target' /}
+{/call}
+{/template}
+
 {/namespace}

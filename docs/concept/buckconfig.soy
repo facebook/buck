@@ -157,126 +157,159 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'apple' /}{/call}
+{call buckconfig.section}
+  {param name: 'apple' /}
+  {param description}
+    This section includes settings that control settings that are specific to Apple platform rules.
+  {/param}
+{/call}
 
-This section includes settings that control settings that are specific to Apple platform rules.
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'xcode_developer_dir' /}
+  {param example_value: 'path/to/developer/directory' /}
+  {param description}
+    By default, Buck will use the output of <code>xcode-select --print-path</code> to determine
+    where Xcode's developer directory is.  However, you can specify a directory in the config to
+    override whatever value that would return.
+  {/param}
+{/call}
 
-<p>
-  By default, Buck will use the output of <code>xcode-select --print-path</code> to determine where
-  Xcode's developer directory is.  However, you can specify a directory in the config to override
-  whatever value that would return.
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[apple]
-  xcode_developer_dir = path/to/developer/directory
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'xcode_developer_dir_for_tests' /}
+  {param example_value: 'path/to/developer/directory/for_tests' /}
+  {param description}
+    Optionally override the Xcode developer directory for running tests, if you want them to be run
+    with a different Xcode version than the version used for building.  If absent, falls back
+    to <code>xcode_developer_dir</code> and finally <code>xcode-select --print-path</code>.
+  {/param}
+{/call}
 
-<p>
-  Optionally override the Xcode developer directory for running tests, if you want them to be run
-  with a different Xcode version than the version used for building.  If absent, falls back
-  to <code>xcode_developer_dir</code> and finally <code>xcode-select --print-path</code>.
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[apple]
-  xcode_developer_dir_for_tests = path/to/developer/directory/for_tests
-</pre>{/literal}
-
-<p>
-  For each platform, you can specify the target SDK version to use.  The format is
-  {sp}<code>{lb}platform{rb}_target_sdk_version</code>.
-</p>
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'target_sdk_version' /}
+  {param description}
+    For each platform, you can specify the target SDK version to use.  The format is
+    {sp}<code>{lb}platform{rb}_target_sdk_version</code>.
+  {/param}
+  {param raw_example}
 {literal}<pre class = "prettyprint lang-ini">
 [apple]
   iphonesimulator_target_sdk_version = 7.0
   iphoneos_target_sdk_version = 7.0
   macosx_target_sdk_version = 10.9
 </pre>{/literal}
+  {/param}
+{/call}
 
-<p>
-  If you want to run tests with Buck, you will need to get
-  {sp}<a href="https://github.com/facebook/xctool"><code>xctool</code></a> and tell Buck where to
-  find it.  You can specify the path to a binary or a {call buck.build_target /} that will produce a
-  zipped version of <code>xctool</code>.
-</p>
-{literal}<pre class = "prettyprint lang-ini">
-[apple]
-  xctool_path = path/to/binary/of/xctool
-  # -or-
-  xctool_zip_target = //path/to/target/that/creates:xctool-zip
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'xctool_path' /}
+  {param example_value: 'path/to/binary/of/xctool' /}
+  {param description}
+    If you want to run tests with Buck, you will need to get
+    {sp}<a href="https://github.com/facebook/xctool"><code>xctool</code></a> and tell Buck where to
+    find it.  This setting lets you specify a path to a binary.  You should use either this setting
+    or {call buckconfig.apple_xctool_zip_target /}.
+  {/param}
+{/call}
 
-<p>
-  When running Apple tests via <code>xctool</code>, Buck can set environment variables to
-  tell the tests where to write debug logs and what log level to use. By default, Buck
-  tells <code>xctool</code> to set two environment variables named <code>FB_LOG_DIRECTORY</code>
-  and <code>FB_LOG_LEVEL</code> when running tests which you can read from your test environment:
-</p>
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'xctool_zip_target' /}
+  {param example_value: '//path/to/target/that/creates:xctool-zip' /}
+  {param description}
+    If you want to run tests with Buck, you will need to get
+    {sp}<a href="https://github.com/facebook/xctool"><code>xctool</code></a> and tell Buck where to
+    find it.  This setting lets you specify a {call buck.build_target /}.  You should use either
+    this setting or {call buckconfig.apple_xctool_path /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'test_log' /}
+  {param description}
+    When running Apple tests via <code>xctool</code>, Buck can set environment variables to
+    tell the tests where to write debug logs and what log level to use. By default, Buck
+    tells <code>xctool</code> to set two environment variables named <code>FB_LOG_DIRECTORY</code>
+    and <code>FB_LOG_LEVEL</code> when running tests which you can read from your test environment:
+
 {literal}<pre class="prettyprint lang-sh">
   FB_LOG_DIRECTORY=buck-out/gen/path/to/logs
   FB_LOG_LEVEL=debug
 </pre>{/literal}
-<p>
-  You can override the default names for these enviroment variables and the value for
-  the debug log level via the following config settings:
-</p>
+
+    You can override the default names for these environment variables and the value for the debug
+    log level via the following config settings:
+  {/param}
+  {param raw_example}
 {literal}<pre class="prettyprint lang-init">
   [apple]
     test_log_directory_environment_variable=MY_LOG_DIRECTORY
     test_log_level_environmant_variable=MY_LOG_LEVEL
     test_log_level=verbose
 </pre>{/literal}
+  {/param}
+{/call}
 
-<p>
-  This setting is passed directly to <code>xctool</code>, and then to <code>xcodebuild</code> as
-  the <code>-destination</code> argument.  See the
-  {sp}<a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/xcodebuild.1.html">
-  man page</a> for the proper syntax.
-</p>
-{literal}<pre class = "prettyprint lang-ini">
-[apple]
-  xctool_default_destination_specifier = platform=iOS Simulator
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'xctool_default_destination_specifier' /}
+  {param example_value: 'platform=iOS Simulator' /}
+  {param description}
+    This setting is passed directly to <code>xctool</code>, and then to <code>xcodebuild</code> as
+    the <code>-destination</code> argument.  See the
+    {sp}<a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/xcodebuild.1.html">
+    man page</a> for the proper syntax.
+  {/param}
+{/call}
 
-<p>
-  <code>default_debug_info_format</code> setting controls the default debug info format. If you
-  don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug data
-  by specifying <code>NONE</code> value.
-</p>
-{literal}<pre class = "prettyprint lang-ini">
-[apple]
-  default_debug_info_format = DWARF_AND_DSYM
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'default_debug_info_format' /}
+  {param example_value: 'DWARF_AND_DSYM' /}
+  {param description}
+    <code>default_debug_info_format</code> setting controls the default debug info format. If you
+    don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug
+    data by specifying <code>NONE</code> value.
+  {/param}
+{/call}
 
-<p>
-  If you want to have Buck be able to install to devices, you need to provide the path to the
-  {sp}<a href="https://github.com/samdmarshall/SDMMobileDevice"><code>iOSConsole</code></a> binary.
-</p>
-{literal}<pre class = "prettyprint lang-ini">
-[apple]
-  device_helper_path = third-party/iOSConsole/iOSConsole
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'device_helper_path' /}
+  {param example_value: 'third-party/iOSConsole/iOSConsole' /}
+  {param description}
+    If you want to have Buck be able to install to devices, you need to provide the path to the{sp}
+    <a href="https://github.com/samdmarshall/SDMMobileDevice"><code>iOSConsole</code></a> binary.
+  {/param}
+{/call}
 
-<p>
-  Specifies a path where Buck will look for provisioning profiles (files with extension <code>
-  .mobileprovision</code>) that it can use to provision the application to be used on a device.
-  You can specify either an absolute path or one relative to the project root.  If unspecified,
-  Buck will look in <code>~/Library/MobileDevice/Provisioning Profiles</code>.
-</p>
-{literal}<pre class = "prettyprint lang-ini">
-[apple]
-  provisioning_profile_search_path = path/to/provisioning/profiles
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'provisioning_profile_search_path' /}
+  {param example_value: 'path/to/provisioning/profiles' /}
+  {param description}
+    Specifies a path where Buck will look for provisioning profiles (files with extension <code>
+    .mobileprovision</code>) that it can use to provision the application to be used on a device.
+    You can specify either an absolute path or one relative to the project root.  If unspecified,
+    Buck will look in <code>~/Library/MobileDevice/Provisioning Profiles</code>.
+  {/param}
+{/call}
 
-<p>
-  Xcode projects generated by Buck by default use header maps for header search paths. This speeds
-  up builds for large projects over using regular directory header search paths, but breaks some
-  Xcode features, like header file name autocompletion. If that is an issue, use the following
-  option to disable the use of header maps.
-</p>
-{literal}<pre class = "prettyprint lang-ini">
-[apple]
-  use_header_maps_in_xcode = false
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'use_header_maps_in_xcode' /}
+  {param example_value: 'false' /}
+  {param description}
+    Xcode projects generated by Buck by default use header maps for header search paths. This speeds
+    up builds for large projects over using regular directory header search paths, but breaks some
+    Xcode features, like header file name autocompletion. If that is an issue, use the following
+    option to disable the use of header maps.
+  {/param}
+{/call}
 
 {call .section}{param title: 'build' /}{/call}
 
