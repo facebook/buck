@@ -61,7 +61,11 @@ public class MorePaths {
   }
 
   public static String pathWithUnixSeparators(Path path) {
-    return path.toString().replace("\\", "/");
+    return path.toString().replace('\\', '/');
+  }
+
+  public static String pathWithWindowsSeparators(Path path) {
+    return path.toString().replace('/', '\\');
   }
 
   public static String pathWithPlatformSeparators(String path) {
@@ -70,7 +74,7 @@ public class MorePaths {
 
   public static String pathWithPlatformSeparators(Path path) {
     if (Platform.detect() == Platform.WINDOWS) {
-      return path.toString().replace("/", "\\");
+      return pathWithWindowsSeparators(path);
     } else {
       return pathWithUnixSeparators(path);
     }
