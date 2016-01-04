@@ -129,6 +129,15 @@ public final class BuckModule implements ProjectComponent {
                 mClient = new BuckClient(port, mEventHandler);
                 // Initiate connecting
                 this.mClient.connect();
+            } else {
+                BuckToolWindowFactory.outputConsoleMessage(mProject,
+                    "Your buck server is turned off.\n" +
+                        "It's possible that it can't get a port.\n" +
+                        "Try adding to your '.buckconfig.local' file:\n" +
+                        "[httpserver]\n" +
+                        "    port = 0\n" +
+                        "After that press the 'Connect to buck' button.\n",
+                    ConsoleViewContentType.ERROR_OUTPUT);
             }
         }
     }
