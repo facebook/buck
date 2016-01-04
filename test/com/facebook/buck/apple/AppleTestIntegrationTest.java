@@ -35,7 +35,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -303,7 +302,6 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  @Ignore("Simulator-hosted app tests currently timing out in CI")
   public void successOnAppTestPassing() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -323,7 +321,6 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  @Ignore("Simulator-hosted app tests currently timing out in CI")
   public void exitCodeIsCorrectOnAppTestFailure() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -410,7 +407,6 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  @Ignore("Simulator-hosted app tests currently timing out in CI")
   public void successForAppTestWithXib() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
