@@ -1,0 +1,37 @@
+{namespace buckconfig}
+
+/**
+ * @param name The name of the section.
+ * @param description Some text describing the section.
+ */
+{template .section}
+  <h2 id="{$name}">[{$name}] <a class="inline-link" href="#{$name}">#</a></h2>
+  <p>
+    {$description|noAutoescape}
+  </p>
+{/template}
+
+/**
+ * @param section The name of the section for this setting.
+ * @param name The name of this setting.
+ * @param description The description of this setting.
+ * @param? example_value An example value for this setting.
+ * @param? raw_example Raw HTML to show the example.
+ */
+{template .entry}
+  <h3 id="{$section}.{$name}">{$name} <a class="inline-link" href="#{$section}.{$name}">#</a></h3>
+  <p>
+    {$description|noAutoescape}
+  </p>
+  {if isNonnull($example_value)}
+    <pre class="prettyprint lang-ini">
+    [{$section}]{\n}{sp}{sp}
+      {$name} = {$example_value}
+    </pre>
+  {/if}
+  {if isNonnull($raw_example)}
+    {$raw_example|noAutoescape}
+  {/if}
+{/template}
+
+{/namespace}

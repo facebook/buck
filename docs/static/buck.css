@@ -302,6 +302,16 @@ footer {
   font-weight: bold;
 }
 
+.inline-link {
+  font-size: small;
+  vertical-align: top;
+  display: none;
+}
+
+:hover > .inline-link {
+  display: inline;
+}
+
 /* For use in a <td> */
 .measurement {
   text-align: right;
