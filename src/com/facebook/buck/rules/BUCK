@@ -219,6 +219,7 @@ java_immutables_library(
     'TargetGraphAndTargets.java',
     'TestRule.java',
     'TestRunEvent.java',
+    'TestStatusMessageEvent.java',
     'TestSummaryEvent.java',
   ],
   tests = [
