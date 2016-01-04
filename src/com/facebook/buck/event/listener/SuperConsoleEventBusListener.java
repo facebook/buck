@@ -48,7 +48,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
@@ -89,6 +88,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       threadsToRunningTestRuleEvent;
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
+  private final ConcurrentMap<Long, Optional<? extends TestStatusMessageEvent>>
+      threadsToRunningTestStatusMessageEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
 
   // Time previously suspended runs of this rule.
@@ -115,6 +116,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final AtomicReference<TestRunEvent.Finished> testRunFinished;
 
   private final ImmutableList.Builder<String> testReportBuilder = ImmutableList.builder();
+  private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
+      ImmutableList.builder();
 
   private int lastNumLinesPrinted;
 
@@ -140,6 +143,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.threadsToRunningTestRuleEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
     this.threadsToRunningTestSummaryEvent = new ConcurrentHashMap<>(
+        executionEnvironment.getAvailableCores());
+    this.threadsToRunningTestStatusMessageEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.accumulatedRuleTime = new ConcurrentHashMap<>();
@@ -356,7 +361,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             currentTimeMillis,
             threadsToRunningTestRuleEvent,
             threadsToRunningTestSummaryEvent,
-            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
+            threadsToRunningTestStatusMessageEvent,
             threadsToRunningStep,
             accumulatedRuleTime);
         renderLines(renderer, lines);
@@ -552,10 +557,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     for (TestResults results : finished.getResults()) {
       testFormatter.reportResult(builder, results);
     }
-    testFormatter.runComplete(
-        builder,
-        finished.getResults(),
-        ImmutableList.<TestStatusMessage>of());
+    ImmutableList<TestStatusMessage> testStatusMessages;
+    synchronized (testStatusMessageBuilder) {
+      testStatusMessages = testStatusMessageBuilder.build();
+    }
+    testFormatter.runComplete(builder, finished.getResults(), testStatusMessages);
     String testOutput;
     synchronized (testReportBuilder) {
       testReportBuilder.addAll(builder.build());
@@ -578,6 +584,24 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void testRuleFinished(TestRuleEvent.Finished finished) {
     threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.<TestRuleEvent>absent());
     accumulatedRuleTime.remove(finished.getBuildTarget());
+  }
+
+  @Subscribe
+  public void testStatusMessageStarted(TestStatusMessageEvent.Started started) {
+    threadsToRunningTestStatusMessageEvent.put(started.getThreadId(), Optional.of(started));
+    synchronized (testStatusMessageBuilder) {
+      testStatusMessageBuilder.add(started.getTestStatusMessage());
+    }
+  }
+
+  @Subscribe
+  public void testStatusMessageFinished(TestStatusMessageEvent.Finished finished) {
+    threadsToRunningTestStatusMessageEvent.put(
+        finished.getThreadId(),
+        Optional.<TestStatusMessageEvent>absent());
+    synchronized (testStatusMessageBuilder) {
+      testStatusMessageBuilder.add(finished.getTestStatusMessage());
+    }
   }
 
   @Subscribe
