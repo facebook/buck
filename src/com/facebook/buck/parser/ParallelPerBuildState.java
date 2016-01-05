@@ -65,7 +65,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   private static final Logger LOG = Logger.get(ParallelPerBuildState.class);
-  private final ParallelDaemonicParserState permState;
+  private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
@@ -114,7 +114,7 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   private final CountDownLatch completionNotifier;
 
   public ParallelPerBuildState(
-      ParallelDaemonicParserState permState,
+      DaemonicParserState permState,
       ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       Cell rootCell,

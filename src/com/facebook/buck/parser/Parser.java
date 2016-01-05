@@ -75,12 +75,10 @@ public class Parser {
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller) {
-    this.permState = parserConfig.getEnableParallelParsing() ?
-        new ParallelDaemonicParserState(
-            typeCoercerFactory,
-            marshaller,
-            parserConfig.getNumParsingThreads()) :
-        new SerialDaemonicParserState(typeCoercerFactory, marshaller);
+    this.permState = new DaemonicParserState(
+        typeCoercerFactory,
+        marshaller,
+        parserConfig.getNumParsingThreads());
     this.marshaller = marshaller;
   }
 
@@ -312,10 +310,9 @@ public class Parser {
     eventBus.post(parseStart);
 
     TargetGraph targetGraph = null;
-    Preconditions.checkState(permState instanceof ParallelDaemonicParserState);
     try (final ParallelPerBuildState state =
             new ParallelPerBuildState(
-                (ParallelDaemonicParserState) permState,
+                permState,
                 marshaller,
                 eventBus,
                 rootCell,
@@ -421,11 +418,10 @@ public class Parser {
     ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
 
     if (parserConfig.getEnableParallelParsing()) {
-      Preconditions.checkState(permState instanceof ParallelDaemonicParserState);
       try (
           ParallelPerBuildState state =
               new ParallelPerBuildState(
-                  (ParallelDaemonicParserState) permState,
+                  permState,
                   marshaller,
                   eventBus,
                   rootCell,
@@ -563,11 +559,10 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
     if (parserConfig.getEnableParallelParsing()) {
-      Preconditions.checkState(permState instanceof ParallelDaemonicParserState);
       try (
           ParallelPerBuildState state =
               new ParallelPerBuildState(
-                  (ParallelDaemonicParserState) permState,
+                  permState,
                   marshaller,
                   eventBus,
                   rootCell,
