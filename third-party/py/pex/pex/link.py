@@ -73,7 +73,9 @@ class Link(object):
     """
     purl = urlparse.urlparse(url)
     if purl.scheme == '':
-      purl = urlparse.urlparse(self._normalize(url))
+      purl = urlparse.urlparse(self._normalize(url), allow_fragments=False)
+    elif purl.scheme == 'file':
+      purl = urlparse.urlparse(url, allow_fragments=False)
     self._url = purl
 
   def __ne__(self, other):

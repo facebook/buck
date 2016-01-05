@@ -5,3 +5,4 @@ License: Apache 2.0
 Local modifications:
  - Only imported the pex source (no tests/docs).
  - Fixed usage of os.link (does not exist on windows).
+ - Fixed prebuilt package resolution when pexs have '#' in the name.
