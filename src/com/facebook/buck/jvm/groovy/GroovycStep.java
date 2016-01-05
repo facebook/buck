@@ -17,25 +17,32 @@
 package com.facebook.buck.jvm.groovy;
 
 import static com.google.common.base.Functions.toStringFunction;
+import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.OptionsConsumer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 
 class GroovycStep implements Step {
   private final Tool groovyc;
   private final Optional<ImmutableList<String>> extraArguments;
+  private final JavacOptions javacOptions;
   private final SourcePathResolver resolver;
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
@@ -45,6 +52,7 @@ class GroovycStep implements Step {
   GroovycStep(
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments,
+      JavacOptions javacOptions,
       SourcePathResolver resolver,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
@@ -52,6 +60,7 @@ class GroovycStep implements Step {
       ProjectFilesystem filesystem) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
+    this.javacOptions = javacOptions;
     this.resolver = resolver;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -61,7 +70,6 @@ class GroovycStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
-
     ProcessBuilder processBuilder = new ProcessBuilder(createCommand());
 
     Map<String, String> env = processBuilder.environment();
@@ -74,7 +82,6 @@ class GroovycStep implements Step {
       exitCode = context.getProcessExecutor().execute(processBuilder.start()).getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
-      return exitCode;
     }
 
     return exitCode;
@@ -91,14 +98,65 @@ class GroovycStep implements Step {
   }
 
   private ImmutableList<String> createCommand() {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.addAll(groovyc.getCommandPrefix(resolver))
+    final ImmutableList.Builder<String> command = ImmutableList.builder();
+
+    command.addAll(groovyc.getCommandPrefix(resolver));
+
+    String classpath =
+        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, toStringFunction()));
+    command
         .add("-cp")
-        .add(Joiner.on(":").join(transform(declaredClasspathEntries, toStringFunction())))
+        .add(classpath.isEmpty() ? "''" : classpath)
         .add("-d")
-        .add(outputDirectory.toString())
-        .addAll(extraArguments.or(ImmutableList.<String>of()))
-        .addAll(transform(sourceFilePaths, toStringFunction()));
+        .add(outputDirectory.toString());
+    addCrossCompilationOptions(command);
+
+    command.addAll(extraArguments.or(ImmutableList.<String>of()))
+           .addAll(transform(sourceFilePaths, toStringFunction()));
     return command.build();
+  }
+
+  private void addCrossCompilationOptions(final ImmutableList.Builder<String> command) {
+    if (shouldCrossCompile()) {
+      command.add("-j");
+      javacOptions.appendOptionsTo(new OptionsConsumer() {
+        @Override
+        public void addOptionValue(String option, String value) {
+          // Explicitly disallow the setting of sourcepath in a cross compilation context.
+          // The implementation of `appendOptionsTo` provides a blank default, which
+          // confuses the cross compilations step's javac (it won't find any class files
+          // compiled by groovyc).
+          if (option.equals("sourcepath")) {
+            return;
+          }
+          command.add("-J" + String.format("%s=%s", option, value));
+        }
+
+        @Override
+        public void addFlag(String flagName) {
+          command.add("-F" + flagName);
+        }
+
+        @Override
+        public void addExtras(Collection<String> extras) {
+          for (String extra : extras) {
+            if (extra.startsWith("-")) {
+              addFlag(extra.substring(1));
+            } else {
+              addFlag(extra);
+            }
+          }
+        }
+      }, filesystem.getAbsolutifier());
+    }
+  }
+
+  private boolean shouldCrossCompile() {
+    return any(sourceFilePaths, new Predicate<Path>() {
+      @Override
+      public boolean apply(Path input) {
+        return input.toString().endsWith(".java");
+      }
+    });
   }
 }

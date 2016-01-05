@@ -396,7 +396,11 @@ public class ProjectWorkspace {
         "ANDROID_NDK",
         "ANDROID_NDK_REPOSITORY",
         "ANDROID_SDK",
+        // TODO(grumpyjames) Write an equivalent of the groovyc and startGroovy
+        // scripts provided by the groovy distribution in order to remove these two.
         "GROOVY_HOME",
+        "JAVA_HOME",
+
         "NDK_HOME",
         "PATH",
         "PATHEXT",

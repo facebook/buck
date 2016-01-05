@@ -1,0 +1,8 @@
+groovy_library(
+  name = 'xcompile',
+  srcs = ['Token.groovy', 'SwitchOnStrings.java'],
+  visibility = [
+    'PUBLIC',
+  ],
+  source = "1.6"
+)

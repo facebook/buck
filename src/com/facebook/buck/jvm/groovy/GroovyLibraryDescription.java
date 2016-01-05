@@ -20,6 +20,9 @@ import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,10 +48,14 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
   public static final BuildRuleType TYPE = BuildRuleType.of("groovy_library");
 
   private final GroovyBuckConfig groovyBuckConfig;
+  // For cross compilation
+  private final JavacOptions defaultJavacOptions;
 
   public GroovyLibraryDescription(
-      GroovyBuckConfig groovyBuckConfig) {
+      GroovyBuckConfig groovyBuckConfig,
+      JavacOptions defaultJavacOptions) {
     this.groovyBuckConfig = groovyBuckConfig;
+    this.defaultJavacOptions = defaultJavacOptions;
   }
 
   @Override
@@ -99,7 +106,13 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new GroovycToJarStepFactory(
                     groovyBuckConfig.getGroovyCompiler().get(),
-                    args.extraArguments),
+                    args.extraGroovycArguments,
+                    JavacOptionsFactory.create(
+                        defaultJavacOptions,
+                        params,
+                        resolver,
+                        pathResolver,
+                        args)),
                 Optional.<Path>absent(),
                 Optional.<String>absent(),
                 ImmutableSortedSet.<BuildTarget>of()));
@@ -115,13 +128,12 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends JvmLibraryArg {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
-    public Optional<ImmutableList<String>> extraArguments;
+    public Optional<ImmutableList<String>> extraGroovycArguments;
     public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
-
 }

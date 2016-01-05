@@ -64,6 +64,7 @@ java_immutables_library(
     'JavaInMemoryFileObject.java',
     'Jsr199Javac.java',
     'MavenPublishable.java',
+    'OptionsConsumer.java',
     'StandardJavaFileManagerFactory.java',
     'TracingProcessorWrapper.java',
   ],

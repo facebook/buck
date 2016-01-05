@@ -1,0 +1,10 @@
+groovy_library(
+  name = 'javacextras',
+  srcs = ['UnsafeGenerics.java'],
+  visibility = [
+    'PUBLIC',
+  ],
+  extra_arguments = [
+    '-Werror',
+  ]
+)

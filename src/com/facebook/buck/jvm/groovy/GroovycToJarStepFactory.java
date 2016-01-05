@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.groovy;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -36,12 +37,15 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
 
   private final Tool groovyc;
   private final Optional<ImmutableList<String>> extraArguments;
+  private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
       Tool groovyc,
-      Optional<ImmutableList<String>> extraArguments) {
+      Optional<ImmutableList<String>> extraArguments,
+      JavacOptions javacOptions) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
+    this.javacOptions = javacOptions;
   }
 
   @Override
@@ -63,6 +67,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
         new GroovycStep(
             groovyc,
             extraArguments,
+            javacOptions,
             resolver,
             outputDirectory,
             sourceFilePaths,
@@ -73,6 +78,8 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     groovyc.appendToRuleKey(builder);
-    return builder.setReflectively("extraArguments", extraArguments);
+    return builder
+        .setReflectively("extraArguments", extraArguments)
+        .setReflectively("javacOptions", javacOptions);
   }
 }
