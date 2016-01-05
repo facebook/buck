@@ -943,29 +943,40 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'halide' /}{/call}
+{call buckconfig.section}
+  {param name: 'halide' /}
+  {param description}
+    This section configures the <a href="http://halide-lang.org/">Halide</a> platform mappings and
+    toolchain.
+  {/param}
+{/call}
 
-<p>
-  This section defines the C++ platform flavor to Halide target mapping. Each
-  key should begin with the prefix <code>target_</code>, followed by the flavor
-  name. The corresponding value should be the Halide target string to use when
-  building for that flavor. For example:
-</p>
+{call buckconfig.entry}
+  {param section: 'halide' /}
+  {param name: 'target' /}
+  {param description}
+    This defines the C++ platform flavor to Halide target mapping.  Each key should begin with the
+    prefix <code>target_</code>, followed by the flavor name.  The corresponding value should be the
+    Halide target string to use when building for that flavor.
+  {/param}
+  {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
 [halide]
   target_iphonesimulator-x86_64 = x86-64-osx
   target_iphoneos-arm64         = arm-64-ios
 </pre>{/literal}
+  {/param}
+{/call}
 
-<p>
-  This section may also include an optional path to a shell script which should
-  be used for invoking the Halide AOT "compiler" when building projects that
-  include Halide targets in Xcode. For example:
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[halide]
-  xcode_compile_script = //path/to/script.sh
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'halide' /}
+  {param name: 'xcode_compile_script' /}
+  {param example_value: '//path/to/script.sh' /}
+  {param description}
+    The optional path to a shells cript which should be used for invoke the Halid AOT "compiler"
+    when building proejcts that include Haldie targets in Xcode.
+  {/param}
+{/call}
 
 {call .section}{param title: 'java' /}{/call}
 
