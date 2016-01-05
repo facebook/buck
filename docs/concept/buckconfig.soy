@@ -978,50 +978,85 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'java' /}{/call}
+{call buckconfig.section}
+  {param name: 'java' /}
+  {param description}
+    This section configures the Java toolchain.
+  {/param}
+{/call}
 
-This section may define a <code>src_roots</code> property that specifies
-file paths to roots of Java code (where a root contains a tree
-of Java folders where the folder structure mirrors the package structure).
-This list of paths is comma-delimited. Paths that start with a slash are
-relative to the root of the project. All other paths can match a folder
-anywhere in the tree. For example:
-{literal}<pre class="prettyprint lang-ini">
-[java]
-  src_roots = src, /java/, /javatests/
-</pre>{/literal}
-Will match the <code>java</code> and <code>javatests</code> folders in the
-root of the project, as well as any folder named <code>src</code> in the
-project.
-<p>
-<strong>Note:</strong> This is primarily used as a hack to help determine
-where resources from a <code>java_library()</code> should be placed within the
-generated JAR file. Hopefully <code>src_roots</code> will be removed at some
-point.
-<p>
-This section may also contain an "extra_arguments" property, which provides
-a comma-separated list of options to give to the Java compiler.
-<p>
-"source_level" and "target_level" specify the version of Java for source files
-and generated code, respectively.  Both default to "7".
-<p>
-Use "skip_checking_missing_deps" to skip analyzing build failure to find missing
-dependencies.
-<p>
-You can also specify how the compiler output to the .jar file should be spooled by setting
-"jar_spool_mode":
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'src_roots' /}
+  {param example_value: 'src, /java/, /javatests/' /}
+  {param description}
+    The paths to roots of Java coode (where a root contains a tree of Java folders where the folder
+    structure mirrors the package structure).  This list of paths is comma-delimited.  Paths that
+    start with a slash are relative to the root of the project, and all other paths can match a
+    folder anywhere in the tree.  In the example below, we match all folders named <code>src</code>,
+    and <code>java</code> and <code>javatests</code> at the root of the project.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[java]
-  jar_spool_mode = direct_to_jar
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'extra_arguments' /}
+  {param example_value: '-g' /}
+  {param description}
+    A comma-delimited list of flags to pass the Java compiler.
+  {/param}
+{/call}
 
-By default, it is <code>intermediate_to_disk</code> which writes the intermediate
-.class files from the compiler output to disk. The .class files are then packed into a .jar file.
-If you change it to <code>direct_to_jar</code>, the compiler output will be directly written
-to a .jar file retaining the intermediate .class files in memory. When <code>jar_spool_mode</code>
-is set to <code>direct_to_jar</code>, the compiler output will still be written to disk if there
-are postprocessing commands specified during the build.
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'source_level' /}
+  {param example_value: '7' /}
+  {param description}
+    The default version of Java for source files.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'target_level' /}
+  {param example_value: '7' /}
+  {param description}
+    The default version of Java for generated code.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'skip_checking_missing_deps' /}
+  {param example_value: 'false' /}
+  {param description}
+    Buck will attempt to analyze build failures and suggest dependencies that might not be declared
+    in order to fix the failure.  On large projects, this can be slow.  This setting disables the
+    check.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'jar_spool_mode' /}
+  {param example_value: 'intermediate_to_disk' /}
+  {param description}
+    Specifies how the compiler output to the <code>.jar</code> file should be spooled.  The valid
+    modes are:
+    <ul>
+      <li>
+        <code>intermediate_to_disk</code> (default): writes the intermediate <code>.class</code>{sp}
+        files from the compiler output to disk.  They are then packed into a <code>.jar</code>.
+      </li>
+      <li>
+        <code>direct_to_jar</code>: compiler output will be directly written to a <code>.jar</code>
+        {sp}file with the intermediate <code>.class</code> files held in memory.  The compiler
+        output will still be written to disk if there are any postprocessing commands specified
+        during the build.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
 {call .section}{param title: 'httpserver' /}{/call}
 
