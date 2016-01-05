@@ -83,6 +83,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -579,7 +580,9 @@ public class AndroidBinary
 
     // Inform the user where the APK can be found.
     EchoStep success = new EchoStep(
-        String.format("built APK for %s at %s",
+        String.format(
+            Locale.US,
+            "built APK for %s at %s",
             getBuildTarget().getFullyQualifiedName(),
             apkPath));
     steps.add(success);
