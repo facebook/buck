@@ -4,5 +4,7 @@ Git revision: 1e70fddafd480311e717e58dbf9466cf40003137
 License: Apache 2.0
 Local modifications:
  - Only imported the pex source (no tests/docs).
+ - Disabled the part of the twitter PEX code that auto-detects the setuptools package from the
+   system, as this got more problematic to fake in our own `pkg_resources` module.
  - Fixed usage of os.link (does not exist on windows).
  - Fixed prebuilt package resolution when pexs have '#' in the name.

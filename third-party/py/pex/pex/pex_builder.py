@@ -356,26 +356,6 @@ class PEXBuilder(object):
     # Writes enough of setuptools into the .pex .bootstrap directory so that we can be fully
     # self-contained.
 
-    wrote_setuptools = False
-    setuptools = DistributionHelper.distribution_from_path(
-        self._interpreter.get_location('setuptools'),
-        name='setuptools')
-
-    if setuptools is None:
-      raise RuntimeError('Failed to find setuptools while building pex!')
-
-    for fn, content_stream in DistributionHelper.walk_data(setuptools):
-      if fn.startswith('pkg_resources') or fn.startswith('_markerlib'):
-        if not fn.endswith('.pyc'):  # We'll compile our own .pyc's later.
-          dst = os.path.join(self.BOOTSTRAP_DIR, fn)
-          self._chroot.write(content_stream.read(), dst, 'bootstrap')
-          wrote_setuptools = True
-
-    if not wrote_setuptools:
-      raise RuntimeError(
-          'Failed to extract pkg_resources from setuptools.  Perhaps pants was linked with an '
-          'incompatible setuptools.')
-
     libraries = {
       'pex': '_pex',
     }
