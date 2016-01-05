@@ -681,87 +681,212 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'cxx' /}{param status: 'UNFROZEN' /}{/call}
+{call buckconfig.section}
+  {param name: 'cxx' /}
+  {param description}
+    <p>
+      This section configures the paths to the C++ and C toolchains' binaries and the default flags
+      to pass to all invocations of them.
+    </p>
 
-This section configures the paths to the C++ toolchain's binaries.
+    <p>
+      Adding a section with header [cxx#<i>flavor</i>] to the .buckconfig will add
+      an alternate cxx section.  This cxx section will be used instead of <code>[cxx]</code>
+      if the compilation flavor is invoked by appending <i>#flavor</i> to a{sp}
+      {call buck.build_target /}.  On the command line, to build with <code>[cxx#example]</code>{sp}
+      rather than <code>[cxx]</code>:
+    </p>
 
-{literal}<pre class="prettyprint lang-ini">
-[cxx]
-  # Path to the C preprocessor
-  cpp = /usr/bin/gcc
+    {literal}<pre class="prettyprint">
+    $ buck build app#example
+    </pre>{/literal}
+  {/param}
+{/call}
 
-  # Path to the C compiler
-  cc = /usr/bin/gcc
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cpp' /}
+  {param example_value: '/usr/bin/gcc' /}
+  {param description}
+    The path to the C preprocessor.
+  {/param}
+{/call}
 
-  # Path to the C/C++ linker driver
-  ld = /usr/bin/g++
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cc' /}
+  {param example_value: '/usr/bin/gcc' /}
+  {param description}
+    The path to the C compiler.
+  {/param}
+{/call}
 
-  # Platform for the linker which is one of {MACOS, LINUX, WINDOWS, UNKNOWN}
-  # Note that the platform is normally auto-detected
-  linker_platform = MACOS
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'ld' /}
+  {param example_value: '/usr/bin/g++' /}
+  {param description}
+    The path to the C/C++ linker driver.
+  {/param}
+{/call}
 
-  # Path to the C++ preprocessor
-  cxxpp = /usr/bin/g++
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'linker_platform' /}
+  {param example_value: 'MACOS' /}
+  {param description}
+    The platform for the linker.  Normally this is autodetected based on the system, but it useful
+    to set when cross compiling.  Valid values are:
+    <ul>
+      <li><code>MACOS</code></li>
+      <li><code>LINUX</code></li>
+      <li><code>WINDOWS</code></li>
+      <li><code>UNKNOWN</code></li>
+    </ul>
+  {/param}
+{/call}
 
-  # Path to the C++ compiler
-  cxx = /usr/bin/g++
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cxxpp' /}
+  {param example_value: '/usr/bin/g++' /}
+  {param description}
+    The path to the C++ preprocessor.
+  {/param}
+{/call}
 
-  # Path to the assembly preprocessor
-  aspp = /usr/bin/gcc
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cxx' /}
+  {param example_value: '/usr/bin/g++' /}
+  {param description}
+    The path to the C++ compiler.
+  {/param}
+{/call}
 
-  # Path to the assembler
-  as = /usr/bin/as
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'aspp' /}
+  {param example_value: '/usr/bin/gcc' /}
+  {param description}
+    The path to the assembly preprocessor.
+  {/param}
+{/call}
 
-  # Path to the archiver
-  ar = /usr/bin/ar
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'as' /}
+  {param example_value: '/usr/bin/as' /}
+  {param description}
+    The path to the assembler.
+  {/param}
+{/call}
 
-  # Platform for the archiver which is one of {MACOS, LINUX, WINDOWS, UNKNOWN}
-  # Note that the platform is normally auto-detected
-  archiver_platform = MACOS
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'ar' /}
+  {param example_value: '/usr/bin/ar' /}
+  {param description}
+    The path to the archiver.
+  {/param}
+{/call}
 
-It also configures configures the default flags to pass to all invocations of said binaries.
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'archiver_platform' /}
+  {param example_value: 'MACOS' /}
+  {param description}
+    The platform for the archiver.  Normally this is autodetected based on the system, but it useful
+    to set when cross compiling.  Valid values are:
+    <ul>
+      <li><code>MACOS</code></li>
+      <li><code>LINUX</code></li>
+      <li><code>WINDOWS</code></li>
+      <li><code>UNKNOWN</code></li>
+    </ul>
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[cxx]
-  # Flags to pass to the C preprocessor
-  cppflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cppflags' /}
+  {param example_value: '-Wall' /}
+  {param description}
+    The flags to pass to the C preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the C compiler and preprocessor
-  cflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cflags' /}
+  {param example_value: '-Wall' /}
+  {param description}
+    The flags to pass to the C compiler and preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the C/C++ linker driver
-  ldflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'ldflags' /}
+  {param example_value: '--strip-all' /}
+  {param description}
+    The flags to pass to the C preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the C++ preprocessor
-  cxxppflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cppxxflags' /}
+  {param example_value: '-Wall' /}
+  {param description}
+    The flags to pass to the C++ preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the C++ compiler and preprocessor
-  cxxflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cxxflags' /}
+  {param example_value: '-Wall' /}
+  {param description}
+    The flags to pass to the C++ compiler and preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the assembly preprocessor
-  asppflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'asppflags' /}
+  {param example_value: '-W' /}
+  {param description}
+    The flags to pass to the assembly preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the assembler and assembly preprocessor
-  asflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'csflags' /}
+  {param example_value: '-W' /}
+  {param description}
+    The flags to pass to the assembler and assembly preprocessor.
+  {/param}
+{/call}
 
-  # Flags to pass to the archiver
-  arflags =
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'arflags' /}
+  {param example_value: '-X32_64' /}
+  {param description}
+    The flags to pass to the archiver.
+  {/param}
+{/call}
 
-  # Flags to pass to the archive indexer
-  ranlibflags =
-</pre>{/literal}
-
-Adding a section with header [cxx#<i>flavor</i>] to the .buckconfig will add
-an alternate cxx section. This cxx section will be used instead of [cxx]
-if the compilation flavor is invoked by appending <i>#flavor</i> to a build
-target. So to build with [cxx#example] rather than [cxx] use
-
-<p>
-
-{literal}<pre class="prettyprint">
-$ buck build app#example
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'ranlibflags' /}
+  {param example_value: '--plugin someplugin' /}
+  {param description}
+    The flags to pass to the archive indexer.
+  {/param}
+{/call}
 
 {call .section}{param title: 'go' /}{/call}
 
