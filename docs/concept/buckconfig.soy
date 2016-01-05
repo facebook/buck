@@ -888,51 +888,60 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'go' /}{/call}
+{call buckconfig.section}
+  {param name: 'go' /}
+  {param description}
+    This section defines the Go toolchain.  By default Buck will try to discovery the Go compiler
+    and linker from the <code>go</code> tool found in your <code>PATH</code>.
+  {/param}
+{/call}
 
-This section defines the go <code>compiler</code> and <code>linker</code> used by go.
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'root' /}
+  {param example_value: '/opt/golang/libexec' /}
+  {param description}
+    If you have a non-standard Go install, you will need to set the Go root.  The root should
+    contain <code>pkg</code> and <code>bin</code> directories.
+  {/param}
+{/call}
 
-<p>
-  By default Buck will try to discovery the Go compiler and linker from the
-  {sp}<code>go</code> tool found in your PATH.
-</p>
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'prefix' /}
+  {param example_value: 'github.com/facebook/buck' /}
+  {param description}
+    For interoperability with the go tool, you may specify a prefix for your default package names.
+  {/param}
+{/call}
 
-<p>
-  If you have a non-standard go install, you will need to set the go root. The root should
-  contain <code>pkg</code> and <code>bin</code> directories.
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[go]
-  root = /opt/golang/libexec
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'tool' /}
+  {param example_value: '/usr/local/bin/go' /}
+  {param description}
+    You can specify the path to find the <code>go</code> tool.  This in turn will allow Buck to
+    discover the compiler/linker by default.  This defaults to <code>${lb}go.root{rb}/bin/go</code>.
+  {/param}
+{/call}
 
-<p>
-  For interoperability with the go tool, you may specify a prefix for your default package
-  names.
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[go]
-  prefix = github.com/facebook/buck
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'compiler' /}
+  {param example_value: '/usr/local/libexec/go/pkg/tool/darwin_amd64/compile' /}
+  {param description}
+    The full path to the Go compiler.  This is normally automatically discovered.
+  {/param}
+{/call}
 
-<p>
-  You can specify the path to find the <code>go</code> tool.  This in turn will
-  allow Buck to discover the compiler/linker by default. This defaults to
-  {sp}<code>${lb}go.root{rb}/bin/go</code>.
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[go]
-  tool = /usr/local/bin/go
-</pre>{/literal}
-
-<p>
-  You can also optionally specify the full paths to the Go compiler and linker.
-</p>
-{literal}<pre class="prettyprint lang-ini">
-[go]
-  compiler = /usr/local/libexec/go/pkg/tool/darwin_amd64/compile
-  linker = /usr/local/libexec/go/pkg/tool/darwin_amd64/link
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'linker' /}
+  {param example_value: '/usr/local/libexec/go/pkg/tool/darwin_amd64/link' /}
+  {param description}
+    The full path to the Go linker.  This is normally automatically discovered.
+  {/param}
+{/call}
 
 {call .section}{param title: 'halide' /}{/call}
 
