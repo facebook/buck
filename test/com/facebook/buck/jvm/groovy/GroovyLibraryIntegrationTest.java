@@ -82,7 +82,7 @@ public class GroovyLibraryIntegrationTest {
 
   @Test
   public void javaOptionsArePassedThroughToTheJavacCompiler() throws Exception {
-    // code requires java 7, source set to java 6
+    // The code inside requires java 7, but the source level is set to java 6.
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/modern:xcompile");
 

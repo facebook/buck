@@ -33,6 +33,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -69,8 +70,7 @@ class GroovycStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
-    ImmutableList<String> command = createCommand();
-    ProcessBuilder processBuilder = new ProcessBuilder(command);
+    ProcessBuilder processBuilder = new ProcessBuilder(createCommand());
 
     Map<String, String> env = processBuilder.environment();
     env.clear();
@@ -102,7 +102,7 @@ class GroovycStep implements Step {
 
     command.addAll(groovyc.getCommandPrefix(resolver));
 
-    String classpath = Joiner.on(":").join(transform(declaredClasspathEntries, toStringFunction()));
+    String classpath = Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, toStringFunction()));
     command
         .add("-cp")
         .add(classpath.isEmpty() ? "''" : classpath)
@@ -121,8 +121,10 @@ class GroovycStep implements Step {
       javacOptions.appendOptionsTo(new OptionsConsumer() {
         @Override
         public void addOptionValue(String option, String value) {
-          // javac won't find things compiled with groovyc otherwise.
-          // alternatively, we could convert all the paths to be absolute.
+          // Explicitly disallow the setting of sourcepath in a cross compilation context.
+          // The implementation of `appendOptionsTo` provides a blank default, which
+          // confuses the cross compilations step's javac (it won't find any class files
+          // compiled by groovyc).
           if (!option.equals("sourcepath")) {
             command.add("-J" + String.format("%s=%s", option, value));
           }
