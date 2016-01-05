@@ -26,7 +26,7 @@ enum NativeLinkStrategy {
    * the fastest build-time link strategy, as it requires no top-level context and therefore can
    * shared build artifacts with all other binaries using this strategy.
    */
-  SPEARATE,
+  SEPARATE,
 
   /**
    * Statically link all transitive native deps, which don't have an explicit dep from python code,

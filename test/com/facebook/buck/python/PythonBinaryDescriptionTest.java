@@ -426,7 +426,7 @@ public class PythonBinaryDescriptionTest {
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
-            return NativeLinkStrategy.SPEARATE;
+            return NativeLinkStrategy.SEPARATE;
           }
         };
     PythonBinaryBuilder binaryBuilder =

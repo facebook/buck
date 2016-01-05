@@ -235,7 +235,7 @@ public class PythonBuckConfig {
 
   public NativeLinkStrategy getNativeLinkStrategy() {
     return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
-        .or(NativeLinkStrategy.SPEARATE);
+        .or(NativeLinkStrategy.SEPARATE);
   }
 
   public String getPexExtension() {
