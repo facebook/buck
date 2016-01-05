@@ -61,6 +61,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -290,14 +291,14 @@ public class AndroidBinaryDescription
     if (!args.packageType.isPresent()) {
       return PackageType.DEBUG;
     }
-    return PackageType.valueOf(args.packageType.get().toUpperCase());
+    return PackageType.valueOf(args.packageType.get().toUpperCase(Locale.US));
   }
 
   private ResourceCompressionMode getCompressionMode(Arg args) {
     if (!args.resourceCompression.isPresent()) {
       return ResourceCompressionMode.DISABLED;
     }
-    return ResourceCompressionMode.valueOf(args.resourceCompression.get().toUpperCase());
+    return ResourceCompressionMode.valueOf(args.resourceCompression.get().toUpperCase(Locale.US));
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

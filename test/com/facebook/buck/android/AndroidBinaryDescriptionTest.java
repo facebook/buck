@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,6 +37,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Locale;
 
 public class AndroidBinaryDescriptionTest {
 
@@ -71,4 +73,30 @@ public class AndroidBinaryDescriptionTest {
     assertThat(androidBinary.getDeps(), Matchers.hasItem(transitiveDep));
   }
 
+  @Test
+  public void turkishCaseRulesDoNotCrashConstructor() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    Keystore keystore =
+        ruleResolver.addToIndex(
+            new Keystore(
+                new FakeBuildRuleParamsBuilder("//:keystore").build(),
+                pathResolver,
+                new FakeSourcePath("store"),
+                new FakeSourcePath("properties")));
+    Locale originalLocale = Locale.getDefault();
+    try {
+      Locale.setDefault(new Locale("tr"));
+      // Make sure this doesn't crash in Enum.valueOf() when default Turkish locale rules
+      // upper-case "instrumented" to "\u0130NSTRUMENTED".
+      AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
+          .setManifest(new FakeSourcePath("manifest.xml"))
+          .setKeystore(keystore.getBuildTarget())
+          .setPackageType("instrumented")
+          .build(ruleResolver, new FakeProjectFilesystem(), TargetGraph.EMPTY);
+    } finally {
+      Locale.setDefault(originalLocale);
+    }
+  }
 }

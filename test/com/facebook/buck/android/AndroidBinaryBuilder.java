@@ -65,6 +65,11 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     return this;
   }
 
+  public AndroidBinaryBuilder setPackageType(String packageType) {
+    arg.packageType = Optional.of(packageType);
+    return this;
+  }
+
   public AndroidBinaryBuilder setShouldSplitDex(boolean shouldSplitDex) {
     arg.useSplitDex = Optional.of(shouldSplitDex);
     return this;
