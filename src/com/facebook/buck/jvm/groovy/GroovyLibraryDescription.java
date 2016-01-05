@@ -112,8 +112,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                         params,
                         resolver,
                         pathResolver,
-                        args
-                    )),
+                        args)),
                 Optional.<Path>absent(),
                 Optional.<String>absent(),
                 ImmutableSortedSet.<BuildTarget>of()));

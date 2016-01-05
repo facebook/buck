@@ -102,7 +102,8 @@ class GroovycStep implements Step {
 
     command.addAll(groovyc.getCommandPrefix(resolver));
 
-    String classpath = Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, toStringFunction()));
+    String classpath =
+        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, toStringFunction()));
     command
         .add("-cp")
         .add(classpath.isEmpty() ? "''" : classpath)
@@ -125,9 +126,10 @@ class GroovycStep implements Step {
           // The implementation of `appendOptionsTo` provides a blank default, which
           // confuses the cross compilations step's javac (it won't find any class files
           // compiled by groovyc).
-          if (!option.equals("sourcepath")) {
-            command.add("-J" + String.format("%s=%s", option, value));
+          if (option.equals("sourcepath")) {
+            return;
           }
+          command.add("-J" + String.format("%s=%s", option, value));
         }
 
         @Override
