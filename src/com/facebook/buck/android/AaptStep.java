@@ -141,7 +141,7 @@ public class AaptStep extends ShellStep {
 
   @Override
   public String getShortName() {
-    return String.format("aapt_package");
+    return "aapt_package";
   }
 
 }
