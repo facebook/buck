@@ -39,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -175,7 +176,7 @@ public class Parser {
       final boolean enableProfiling,
       final Executor executor,
       final Iterable<BuildTarget> toExplore)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     ParserConfig config = new ParserConfig(rootCell.getBuckConfig());
     // Parse in parallel only if we are building a partial target graph.
     if (config.getEnableParallelParsing() && FluentIterable.from(toExplore).size() > 0) {
@@ -193,12 +194,22 @@ public class Parser {
         toExplore);
   }
 
+  private RuntimeException propagateRuntimeCause(RuntimeException e)
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    Throwables.propagateIfInstanceOf(e, HumanReadableException.class);
+    Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
+    Throwables.propagateIfInstanceOf(e.getCause(), InterruptedException.class);
+    Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
+    Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
+    return e;
+  }
+
   private TargetGraph buildTargetGraphSerially(
     final BuckEventBus eventBus,
     final Cell rootCell,
     final boolean enableProfiling,
     final Iterable<BuildTarget> toExplore)
-    throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
@@ -291,6 +302,8 @@ public class Parser {
       return targetGraph;
     } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());
+    } catch (RuntimeException e) {
+      throw propagateRuntimeCause(e);
     } finally {
       eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(targetGraph)));
     }
@@ -302,7 +315,7 @@ public class Parser {
       final boolean enableProfiling,
       Executor executor,
       final Iterable<BuildTarget> toExplore)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
@@ -397,6 +410,8 @@ public class Parser {
       return targetGraph;
     } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());
+    } catch (RuntimeException e) {
+      throw propagateRuntimeCause(e);
     } finally {
       eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(targetGraph)));
     }

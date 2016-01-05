@@ -30,6 +30,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
@@ -221,7 +222,8 @@ class DaemonicParserState {
       final Cell cell,
       final ProjectBuildFileParser parser,
       final BuildTarget target,
-      final TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
+      final TargetNodeListener nodeListener
+  ) throws BuildFileParseException, BuildTargetException, InterruptedException {
     invalidateIfProjectBuildFileParserStateChanged(cell);
     try {
       return allTargetNodes.get(
@@ -256,6 +258,7 @@ class DaemonicParserState {
             }
           });
     } catch (UncheckedExecutionException | ExecutionException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
       throw propagate(e);
     }
   }
@@ -280,12 +283,8 @@ class DaemonicParserState {
         throw propagate(cause);
       }
 
-      if (cause instanceof BuildFileParseException) {
-        throw (BuildFileParseException) cause;
-      }
-
       if (cause != null) {
-        Throwables.propagate(cause);
+        return Throwables.propagate(cause);
       }
     }
 

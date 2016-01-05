@@ -683,7 +683,7 @@ public class TargetsCommand extends AbstractCommand {
       Executor executor,
       ImmutableSet<BuildTarget> matchingBuildTargets,
       TargetGraph targetGraph)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     LOG.debug("Getting target hash for %s", matchingBuildTargets);
 
     Iterable<BuildTarget> matchingBuildTargetsWithTests;

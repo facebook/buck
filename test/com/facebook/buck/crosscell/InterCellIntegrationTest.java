@@ -30,6 +30,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
@@ -198,7 +199,7 @@ public class InterCellIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
   public void xCellVisibilityShouldWorkAsExpected()
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     try {
       parseTargetForXCellVisibility("//:not-visible-target");
       fail("Did not expect parsing to succeed");
@@ -209,24 +210,24 @@ public class InterCellIntegrationTest {
 
   @Test
   public void xCellVisibilityPatternsBasedOnExplicitBuildTargetsWork()
-      throws InterruptedException, BuildFileParseException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
     parseTargetForXCellVisibility("//:visible-target");
   }
 
   @Test
   public void xCellSingleDirectoryVisibilityPatternsWork()
-      throws InterruptedException, BuildFileParseException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
     parseTargetForXCellVisibility("//sub2:directory");
   }
 
   @Test
   public void xCellSubDirectoryVisibilityPatternsWork()
-      throws InterruptedException, BuildFileParseException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
     parseTargetForXCellVisibility("//sub:wild-card");
   }
 
   private void parseTargetForXCellVisibility(String targetName)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
         "inter-cell/visibility/primary",
         "inter-cell/visibility/secondary");

@@ -217,8 +217,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
           enableProfiling,
           executor,
           targets);
-    } catch (BuildFileParseException | IOException e) {
-      throw new QueryException("Error in building depencency graph");
+    } catch (BuildFileParseException | BuildTargetException | IOException e) {
+      throw new QueryException("Error in building dependency graph");
     }
   }
 

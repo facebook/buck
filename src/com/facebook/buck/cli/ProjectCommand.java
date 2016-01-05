@@ -407,7 +407,7 @@ public class ProjectCommand extends BuildCommand {
             isWithDependenciesTests(),
             needsFullRecursiveParse,
             pool.getExecutor());
-      } catch (BuildFileParseException | HumanReadableException e) {
+      } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
@@ -1009,7 +1009,7 @@ public class ProjectCommand extends BuildCommand {
       boolean needsFullRecursiveParse,
       Executor executor
   )
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =

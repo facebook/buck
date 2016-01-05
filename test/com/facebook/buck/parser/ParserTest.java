@@ -244,13 +244,31 @@ public class ParserTest {
     BuildTarget razTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "raz").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
 
-    thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "No rule found when resolving target //java/com/facebook:raz in build file " +
             "//java/com/facebook/BUCK");
     thrown.expectMessage(
         "Defined in file: " +
             filesystem.resolve(razTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
+
+    parser.buildTargetGraph(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        buildTargets);
+  }
+
+  @Test
+  public void testMissingBuildFile()
+      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
+    BuildTarget target = BuildTarget.builder(cellRoot, "//path/to/nowhere", "nowhere").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(target);
+
+    thrown.expect(Cell.MissingBuildFileException.class);
+    thrown.expectMessage(
+        "No build file at path/to/nowhere/BUCK when resolving target " +
+            "//path/to/nowhere:nowhere");
 
     parser.buildTargetGraph(
         eventBus,
@@ -278,9 +296,8 @@ public class ParserTest {
   @Test
   public void shouldThrowAnExceptionIfADepIsInAFileThatCannotBeParsed()
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException {
-    thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Parse error for build file");
-    thrown.expectMessage("foo/BUCK");
+    thrown.expectMessage(Paths.get("foo/BUCK").toString());
 
     Path buckFile = cellRoot.resolve("BUCK");
     Files.write(
