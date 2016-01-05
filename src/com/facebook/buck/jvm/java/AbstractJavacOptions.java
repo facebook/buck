@@ -196,7 +196,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("debug", isDebug())
         .setReflectively("bootclasspath", getBootclasspath())
         .setReflectively("javac", getJavac())
-        .setReflectively("annotationProcessingParams", getAnnotationProcessingParams());
+        .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
+        .setReflectively("spoolMode", getSpoolMode());
 
     return builder;
   }
