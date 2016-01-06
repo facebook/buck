@@ -76,6 +76,10 @@ public class HalideLibrary
   @AddToRuleKey
   private final ImmutableSortedSet<SourceWithFlags> srcs;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final ImmutableMap<String, String> halideTargetMap;
+
   private final Tool halideCompiler;
   private final CxxPlatform cxxPlatform;
   private final HalideBuckConfig halideBuckConfig;
@@ -95,6 +99,7 @@ public class HalideLibrary
     this.halideCompiler = halideCompiler;
     this.cxxPlatform = cxxPlatform;
     this.halideBuckConfig = halideBuckConfig;
+    this.halideTargetMap = halideBuckConfig.getHalideTargetMap();
   }
 
   @Override
