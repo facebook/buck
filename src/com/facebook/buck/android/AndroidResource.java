@@ -221,9 +221,9 @@ public class AndroidResource extends AbstractBuildRule
         if (rDotJavaPackage != null) {
           return rDotJavaPackage;
         } else {
-          throw new RuntimeException(String.format(
-              "rDotJavaPackage for %s was requested before it was made available.",
-              AndroidResource.this.getBuildTarget()));
+          throw new RuntimeException(
+              "rDotJavaPackage for " + AndroidResource.this.getBuildTarget().toString() +
+              " was requested before it was made available.");
         }
       }
     };
