@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.FakeFilesystems;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -29,7 +30,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.FileSystem;
 import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Set;
 
 public class AndroidResourceDescriptionTest {
@@ -48,7 +52,7 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/.gitkeep");
     tmpFolder.newFile("res/.svn");
     tmpFolder.newFile("res/.git");
-    tmpFolder.newFile("res/.ds_store");
+    tmpFolder.newFile("res/.DS_Store");
     tmpFolder.newFile("res/.scc");
     tmpFolder.newFile("res/CVS");
     tmpFolder.newFile("res/thumbs.db");
@@ -65,8 +69,8 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/dirs/.svn/ignore");
     tmpFolder.newFolder("res", "dirs", ".git");
     tmpFolder.newFile("res/dirs/.git/ignore");
-    tmpFolder.newFolder("res", "dirs", ".ds_store");
-    tmpFolder.newFile("res/dirs/.ds_store/ignore");
+    tmpFolder.newFolder("res", "dirs", ".DS_Store");
+    tmpFolder.newFile("res/dirs/.DS_Store/ignore");
     tmpFolder.newFolder("res", "dirs", ".scc");
     tmpFolder.newFile("res/dirs/.scc/ignore");
     tmpFolder.newFolder("res", "dirs", "CVS");
@@ -91,6 +95,47 @@ public class AndroidResourceDescriptionTest {
         containsInAnyOrder(
             // This clever cast saves us mucking around with generics.
             (SourcePath) new FakeSourcePath(filesystem, "res/image.png"),
+            new FakeSourcePath(filesystem, "res/layout.xml"),
+            new FakeSourcePath(filesystem, "res/_file"),
+            new FakeSourcePath(filesystem, "res/dirs/values/strings.xml")));
+  }
+
+  @Test
+  public void testTurkishWindowsNonAssetFilesAndDirectoriesAreIgnored() throws IOException {
+    AndroidResourceDescription description = new AndroidResourceDescription();
+    FileSystem fakeFilesystem = FakeFilesystems.windowsTurkishFilesystem();
+    Path root = fakeFilesystem.getPath("c:\\src");
+    Path resDir = root.resolve("res");
+    // Note upper-case I with dot (U+0130) for .git (should be ignored)
+    Path gitDir = root.resolve(".G\u0130T");
+    Files.createDirectories(gitDir);
+    Files.createDirectories(resDir);
+    Files.createFile(gitDir.resolve("ignore"));
+    // Note upper-case I with dot (U+0130) for picasa.ini (should be ignored)
+    Files.createFile(resDir.resolve("P\u0130CASA.\u0130N\u0130"));
+    Files.createFile(resDir.resolve("image.png"));
+    Files.createFile(resDir.resolve("layout.xml"));
+    Files.createFile(resDir.resolve("_file"));
+    // Note upper-case I with dot (U+0130) for foo.orig (should be ignored)
+    Files.createFile(resDir.resolve("FOO.OR\u0130G"));
+    Path valuesDir = resDir.resolve("dirs").resolve("values");
+    Files.createDirectories(valuesDir);
+    Files.createFile(valuesDir.resolve("strings.xml"));
+
+    // Test with dotless upper-case I (should not match lower-case dotted i)
+    Files.createFile(resDir.resolve(".GITKEEP"));
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    Set<SourcePath> inputs = description.collectInputFiles(
+        filesystem,
+        Optional.of(Paths.get("res")));
+
+    assertThat(
+        inputs,
+        containsInAnyOrder(
+            // This clever cast saves us mucking around with generics.
+            (SourcePath) new FakeSourcePath(filesystem, "res/image.png"),
+            new FakeSourcePath(filesystem, "res/.GITKEEP"),
             new FakeSourcePath(filesystem, "res/layout.xml"),
             new FakeSourcePath(filesystem, "res/_file"),
             new FakeSourcePath(filesystem, "res/dirs/values/strings.xml")));
