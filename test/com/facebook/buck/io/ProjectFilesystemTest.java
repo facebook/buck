@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,6 +38,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -50,6 +53,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -642,4 +646,119 @@ public class ProjectFilesystemTest {
         new ProjectFilesystem(rootPath, config),
         equalTo(new ProjectFilesystem(rootPath, config)));
   }
+
+  @Test
+  public void isSameFileForCaseSensitiveFilesystem() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path root = vfs.getPath("/foo");
+    Files.createDirectories(root);
+    Files.createFile(root.resolve("bar"));
+    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    assertThat(
+        "Relative path match should be true on case-sensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("bar")),
+        is(true));
+    assertThat(
+        "Relative path case-insensitive match should be false on case-sensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("BAR")),
+        is(false));
+    assertThat(
+        "Relative path mismatch should be false on case-sensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("baz")),
+        is(false));
+    assertThat(
+        "Relative path for non-existent file should be false on case-sensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("baz"),
+            Paths.get("blech")),
+        is(false));
+  }
+
+  @Test
+  public void isSameFileForCaseInsensitiveFilesystem() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.osX());
+    Path root = vfs.getPath("/foo");
+    Files.createDirectories(root);
+    Files.createFile(root.resolve("bar"));
+    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    assertThat(
+        "Relative path exact match should be true on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("bar")),
+        is(true));
+    assertThat(
+        "Relative path case-insensitive match should be true on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("BAR")),
+        is(true));
+    assertThat(
+        "Relative path mismatch should be false on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("baz")),
+        is(false));
+    assertThat(
+        "Relative path for non-existent file should be false on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("baz"),
+            Paths.get("blech")),
+        is(false));
+  }
+
+  @Test
+  public void isSameFileForCaseInsensitiveWindowsTurkishFilesystem() throws IOException {
+    FileSystem vfs = FakeFilesystems.windowsTurkishFilesystem();
+    Path root = vfs.getPath("C:\\foo");
+    Files.createDirectories(root);
+    Files.createFile(root.resolve("bar"));
+    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    assertThat(
+        "Relative path exact match should be true on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("bar")),
+        is(true));
+    assertThat(
+        "Relative path case-insensitive match should be true on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("BAR")),
+        is(true));
+    assertThat(
+        "Relative path mismatch should be false on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("bar"),
+            Paths.get("baz")),
+        is(false));
+    assertThat(
+        "Relative path for non-existent file should be false on case-insensitive filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("baz"),
+            Paths.get("blech")),
+        is(false));
+
+    // Note upper-case I with dot (U+0130) for picasa.ini (should be ignored)
+    Files.createFile(root.resolve("P\u0130CASA.\u0130N\u0130"));
+    assertThat(
+        "Relative path case-insensitive dotted i match should be true on Turkish filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("P\u0130CASA.\u0130N\u0130"),
+            Paths.get("picasa.ini")),
+        is(true));
+    assertThat(
+        "Relative path case-insensitive dotless i match should be false on Turkish filesystem",
+        filesystem.isSameRelativePathIfFileExists(
+            Paths.get("picasa.ini"),
+            Paths.get("PICASA.INI")),
+        is(false));
+  }
+
 }
