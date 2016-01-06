@@ -192,12 +192,7 @@ public class CxxLibrary
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
     if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
-      BuildRule rule =
-          requireBuildRule(
-              cxxPlatform.getFlavor(),
-              type == Linker.LinkableDepType.STATIC ?
-                  CxxDescriptionEnhancer.STATIC_FLAVOR :
-                  CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+      BuildRule rule = getLibraryLinkRule(cxxPlatform, type);
       Arg library =
           new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
       if (linkWhole) {
@@ -220,6 +215,16 @@ public class CxxLibrary
         linkerArgs,
         Preconditions.checkNotNull(frameworks),
         Preconditions.checkNotNull(libraries));
+  }
+
+  private BuildRule getLibraryLinkRule(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    return requireBuildRule(
+        cxxPlatform.getFlavor(),
+        type == Linker.LinkableDepType.STATIC ?
+            CxxDescriptionEnhancer.STATIC_FLAVOR :
+            CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {
