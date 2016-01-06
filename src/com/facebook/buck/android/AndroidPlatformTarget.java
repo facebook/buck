@@ -400,7 +400,7 @@ public class AndroidPlatformTarget {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
-      String apiDirPrefix = String.format("addon-google_apis-google-%s", apiLevel);
+      String apiDirPrefix = "addon-google_apis-google-" + apiLevel;
       final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
 
       if (addonsParentDir.isDirectory()) {
@@ -441,9 +441,9 @@ public class AndroidPlatformTarget {
             }
 
             return createFromDefaultDirectoryStructure(
-                String.format("Google Inc.:Google APIs:%s", apiLevel),
+                "Google Inc.:Google APIs:" + apiLevel,
                 androidDirectoryResolver,
-                String.format("platforms/android-%s", apiLevel),
+                "platforms/android-" + apiLevel,
                 additionalJarPaths.build(),
                 aaptOverride);
           }
@@ -467,9 +467,9 @@ public class AndroidPlatformTarget {
         final String apiLevel,
         Optional<Path> aaptOverride) {
       return createFromDefaultDirectoryStructure(
-          String.format("android-%s", apiLevel),
+          "android-" + apiLevel,
           androidDirectoryResolver,
-          String.format("platforms/android-%s", apiLevel),
+          "platforms/android-" + apiLevel,
           /* additionalJarPaths */ ImmutableSet.<Path>of(),
           aaptOverride);
     }
