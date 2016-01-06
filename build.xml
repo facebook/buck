@@ -105,7 +105,7 @@
     <include name="jacoco/org.jacoco.core-0.7.5.201505241946.jar" />
     <include name="jacoco/org.jacoco.report-0.7.5.201505241946.jar" />
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
-    <include name="jimfs/jimfs-1.0.jar" />
+    <include name="jimfs/jimfs-1.1-SNAPSHOT.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="okhttp/okhttp-2.6.0.jar" />
     <include name="okio/okio-1.6.0.jar" />
