@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
@@ -131,7 +132,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       BuildableContext buildableContext) {
     Path binPath = getBinPath();
     buildableContext.recordArtifact(binPath);
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
+        new MkdirStep(getProjectFilesystem(), binPath.getParent()),
         new WriteFileStep(getProjectFilesystem(), script, binPath, /* executable */ true));
   }
 
