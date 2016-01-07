@@ -30,7 +30,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Predicates;
@@ -50,7 +49,7 @@ import java.util.concurrent.Executor;
  * <pre>expr ::= DEPS '(' expr ')'</pre>
  * <pre>       | DEPS '(' expr ',' WORD ')'</pre>
  */
-public class DepsFunction implements QueryFunction {
+public class DepsFunction extends QueryFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.INTEGER);

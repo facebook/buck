@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 
@@ -29,7 +28,7 @@ import java.util.regex.Pattern;
  * An abstract class that provides generic regex filter functionality.
  * The actual expressions to filter are defined in the subclasses.
  */
-abstract class RegexFilterFunction implements QueryFunction {
+abstract class RegexFilterFunction extends QueryFunction {
 
   protected abstract QueryExpression getExpressionToEval(ImmutableList<Argument> args);
 

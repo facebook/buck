@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
+import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 
@@ -40,8 +40,9 @@ public class QueryParserTest {
 
   @Test
   public void testDeps() throws Exception {
-    ImmutableList<Argument> args = ImmutableList.of(Argument.of(new TargetLiteral("//foo:bar")));
-    QueryExpression expected = new FunctionExpression(new DepsFunction(), args);
+    Argument arg = Argument.of(ArgumentType.EXPRESSION, TargetLiteral.of("//foo:bar"), null, 0);
+    ImmutableList<Argument> args = ImmutableList.of(arg);
+    QueryExpression expected = FunctionExpression.of(new DepsFunction(), args);
 
     String query = "deps('//foo:bar')";
     QueryExpression result = QueryParser.parse(query, queryEnvironment);
@@ -50,14 +51,15 @@ public class QueryParserTest {
 
   @Test
   public void testTestsOfDepsSet() throws Exception {
-    ImmutableList<TargetLiteral> args = ImmutableList.of(
-        new TargetLiteral("//foo:bar"),
-        new TargetLiteral("//other:lib"));
-    QueryExpression depsExpr = new FunctionExpression(
-        new DepsFunction(),
-        ImmutableList.of(Argument.of(new SetExpression(args))));
+    ImmutableList<TargetLiteral> literals = ImmutableList.of(
+        TargetLiteral.of("//foo:bar"),
+        TargetLiteral.of("//other:lib"));
+    Argument arg = Argument.of(ArgumentType.EXPRESSION, SetExpression.of(literals), null, 0);
+    QueryExpression depsExpr = FunctionExpression.of(new DepsFunction(), ImmutableList.of(arg));
+
+    Argument depsArg = Argument.of(ArgumentType.EXPRESSION, depsExpr, null, 0);
     QueryExpression testsofExpr =
-        new FunctionExpression(new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
+        FunctionExpression.of(new TestsOfFunction(), ImmutableList.of(depsArg));
 
     String query = "testsof(deps(set('//foo:bar' //other:lib)))";
     QueryExpression result = QueryParser.parse(query, queryEnvironment);

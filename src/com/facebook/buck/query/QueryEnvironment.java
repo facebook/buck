@@ -30,14 +30,16 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.immutables.value.Value;
+
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -60,100 +62,50 @@ public interface QueryEnvironment<T> {
   /**
    * Value of an argument of a user-defined query function.
    */
-  public static class Argument {
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract class AbstractArgument {
 
-    private final ArgumentType type;
+    @Value.Parameter
+    abstract ArgumentType getType();
 
     @Nullable
-    private final QueryExpression expression;
+    @Value.Parameter
+    abstract QueryExpression getExpression();
 
     @Nullable
-    private final String word;
+    @Value.Parameter
+    abstract String getWord();
 
-    private final int integer;
-
-    private Argument(
-        ArgumentType type,
-        @Nullable QueryExpression expression,
-        @Nullable String word,
-        int integer) {
-      this.type = type;
-      this.expression = expression;
-      this.word = word;
-      this.integer = integer;
-    }
-
-    public static Argument of(QueryExpression expression) {
-      return new Argument(ArgumentType.EXPRESSION, expression, null, 0);
-    }
-
-    public static Argument of(String word) {
-      return new Argument(ArgumentType.WORD, null, word, 0);
-    }
-
-    public static Argument of(int integer) {
-      return new Argument(ArgumentType.INTEGER, null, null, integer);
-    }
-
-    public ArgumentType getType() {
-      return type;
-    }
-
-    public QueryExpression getExpression() {
-      return Preconditions.checkNotNull(expression);
-    }
-
-    public String getWord() {
-      return Preconditions.checkNotNull(word);
-    }
-
-    public int getInteger() {
-      return integer;
-    }
+    @Value.Parameter
+    abstract int getInteger();
 
     @Override
     public String toString() {
-      switch (type) {
-        case WORD: return "'" + word + "'";
-        case EXPRESSION: return Preconditions.checkNotNull(expression).toString();
-        case INTEGER: return Integer.toString(integer);
-        default: throw new IllegalStateException();
-      }
-    }
+      switch (getType()) {
+        case WORD:
+          return "'" + Preconditions.checkNotNull(getWord()) + "'";
 
-    @Override
-    public boolean equals(Object other) {
-      return (other instanceof Argument) && equalTo((Argument) other);
-    }
+        case EXPRESSION:
+          return Preconditions.checkNotNull(getExpression()).toString();
 
-    public boolean equalTo(Argument other) {
-      return type.equals(other.type) && integer == other.integer &&
-          Objects.equals(expression, other.expression) && Objects.equals(word, other.word);
-    }
+        case INTEGER:
+          return Integer.toString(getInteger());
 
-    @Override
-    public int hashCode() {
-      int h = 31;
-      h = h * 17 + type.hashCode();
-      h = h * 17 + integer;
-      if (expression != null) {
-        h = h * 17 + expression.hashCode();
+        default:
+          throw new IllegalStateException();
       }
-      if (word != null) {
-        h = h * 17 + word.hashCode();
-      }
-      return h;
     }
   }
 
   /**
    * A user-defined query function.
    */
-  public interface QueryFunction {
+  public abstract class QueryFunction {
     /**
      * Name of the function as it appears in the query language.
      */
-    String getName();
+    public abstract String getName();
 
     /**
      * The number of arguments that are required. The rest is optional.
@@ -161,20 +113,37 @@ public interface QueryEnvironment<T> {
      * <p>This should be greater than or equal to zero and at smaller than or equal to the length
      * of the list returned by {@link #getArgumentTypes}.
      */
-    int getMandatoryArguments();
+    public abstract int getMandatoryArguments();
 
     /**
      * The types of the arguments of the function.
      */
-    ImmutableList<ArgumentType> getArgumentTypes();
+    public abstract ImmutableList<ArgumentType> getArgumentTypes();
 
     /**
      * Called when a user-defined function is to be evaluated.
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned
      *     by {@link #getArgumentTypes} and {@link #getMandatoryArguments}*/
-    <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
+    public abstract <T> Set<T> eval(
+        QueryEnvironment<T> env,
+        ImmutableList<Argument> args,
+        Executor executor)
         throws QueryException, InterruptedException;
+
+    @Override
+    public boolean equals(Object other) {
+      return this == other || (other instanceof QueryFunction && equalTo((QueryFunction) other));
+    }
+
+    private boolean equalTo(QueryFunction other) {
+      return getName().equals(other.getName());
+    }
+
+    @Override
+    public int hashCode() {
+      return getName().hashCode();
+    }
   }
 
   /**

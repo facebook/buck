@@ -33,7 +33,6 @@ package com.facebook.buck.query;
 import static com.facebook.buck.query.Lexer.BINARY_OPERATORS;
 import static com.facebook.buck.query.Lexer.TokenKind;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Preconditions;
@@ -226,15 +225,17 @@ final class QueryParser {
             tokenKind = TokenKind.COMMA;
             switch (type) {
               case EXPRESSION:
-                argsBuilder.add(Argument.of(parseExpression()));
+                argsBuilder.add(Argument.of(type, parseExpression(), /*word*/ null, /*integer*/ 0));
                 break;
 
               case WORD:
-                argsBuilder.add(Argument.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
+                String wordArg = Preconditions.checkNotNull(consume(TokenKind.WORD));
+                argsBuilder.add(Argument.of(type, /*expression*/ null, wordArg, /*integer*/ 0));
                 break;
 
               case INTEGER:
-                argsBuilder.add(Argument.of(consumeIntLiteral()));
+                int intLiteral = consumeIntLiteral();
+                argsBuilder.add(Argument.of(type, /*expression*/ null, /*word*/ null, intLiteral));
                 break;
 
               default:
@@ -245,9 +246,9 @@ final class QueryParser {
           }
 
           consume(TokenKind.RPAREN);
-          return new FunctionExpression(function, argsBuilder.build());
+          return FunctionExpression.of(function, argsBuilder.build());
         } else {
-          return new TargetLiteral(Preconditions.checkNotNull(word));
+          return TargetLiteral.of(Preconditions.checkNotNull(word));
         }
       }
       case LPAREN: {
@@ -261,10 +262,10 @@ final class QueryParser {
         consume(TokenKind.LPAREN);
         ImmutableList.Builder<TargetLiteral> wordsBuilder = ImmutableList.builder();
         while (token.kind == TokenKind.WORD) {
-          wordsBuilder.add(new TargetLiteral(Preconditions.checkNotNull(consume(TokenKind.WORD))));
+          wordsBuilder.add(TargetLiteral.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
         }
         consume(TokenKind.RPAREN);
-        return new SetExpression(wordsBuilder.build());
+        return SetExpression.of(wordsBuilder.build());
       }
       //$CASES-OMITTED$
       default:
