@@ -21,6 +21,7 @@ java_library(
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/event:event',
+    '//test/com/facebook/buck/python:python',
     '//test/com/facebook/buck/testrunner:testrunner',
     '//test/com/facebook/buck/test:test',
   ],

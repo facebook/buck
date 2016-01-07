@@ -18,6 +18,7 @@ package com.facebook.buck.testutil.integration;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -42,6 +43,8 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.test.TestResults;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
@@ -61,6 +64,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import com.martiansoftware.nailgun.NGContext;
 
+import org.hamcrest.Matchers;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedOutputStream;
@@ -441,6 +445,35 @@ public class ProjectWorkspace {
         stdout.getContentsAsString(Charsets.UTF_8),
         stderr.getContentsAsString(Charsets.UTF_8),
         capturedEventsListBuilder.build());
+  }
+
+  public ImmutableList<TestResults> runBuckTest(String... args) throws IOException {
+    final ImmutableList.Builder<TestResults> resultsBuilder = ImmutableList.builder();
+    BuckEventListener eventListener =
+        new BuckEventListener() {
+          @Subscribe
+          public void onEvent(TestRunEvent.Finished event) {
+            resultsBuilder.addAll(event.getResults());
+          }
+          @Override
+          public void outputTrace(BuildId buildId) throws InterruptedException {
+          }
+        };
+    String[] totalArgs = new String[args.length + 1];
+    totalArgs[0] = "test";
+    System.arraycopy(args, 0, totalArgs, 1, args.length);
+    ProcessResult result =
+        runBuckCommandWithEnvironmentAndContext(
+            destPath,
+            Optional.<NGContext>absent(),
+            Optional.of(eventListener),
+            Optional.<ImmutableMap<String, String>>absent(),
+            totalArgs);
+    assertThat(
+        result.getStdout() + result.getStderr(),
+        result.getExitCode(),
+        Matchers.in(new Integer[]{0, TestRunning.TEST_FAILURES_EXIT_CODE}));
+    return resultsBuilder.build();
   }
 
   public Path getDestPath() {

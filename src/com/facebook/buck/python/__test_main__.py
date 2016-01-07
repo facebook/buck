@@ -66,6 +66,15 @@ class CallbackStream(object):
         return False
 
 
+class BuckTestSuite(unittest.TestSuite):
+
+    # Save the current tests in the result, so that we can access it in the
+    # event of an error during setup.
+    def _tearDownPreviousClass(self, test, result):
+        super(BuckTestSuite, self)._tearDownPreviousClass(test, result)
+        result._current_setup_class_test = test
+
+
 class FbJsonTestResult(unittest._TextTestResult):
     """
     Our own TestResult class that outputs data in a format that can be easily
@@ -101,6 +110,11 @@ class FbJsonTestResult(unittest._TextTestResult):
         sys.stderr = self._saved_stderr
 
         super(FbJsonTestResult, self).stopTest(test)
+
+        # This test may actually be a placeholder if a failure occured during
+        # test setup.  If so, use the test saved during the setup.
+        if not hasattr(test, '_testMethodName'):
+            test = self._current_setup_class_test
 
         self._results.append({
             'testCaseName': test._testMethodName,
@@ -224,7 +238,8 @@ class Loader(object):
 
     def load_all(self):
         loader = RegexTestLoader(self.regex)
-        test_suite = unittest.TestSuite()
+        loader.suiteClass = BuckTestSuite
+        test_suite = BuckTestSuite()
         for module_name in self.modules:
             __import__(module_name, level=0)
             module = sys.modules[module_name]

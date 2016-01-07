@@ -36,3 +36,10 @@ python_test(
   ],
   test_rule_timeout_ms = 100,
 )
+
+python_test(
+  name='test-setup-class-failure',
+  srcs=[
+    'test_setup_class_failure.py',
+  ],
+)
