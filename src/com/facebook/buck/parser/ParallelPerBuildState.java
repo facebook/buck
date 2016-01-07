@@ -393,7 +393,7 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
   }
 
   private abstract class Worker implements Runnable {
-    static final int WAIT_FOR_WORK_TIMEOUT_SECONDS = 5;
+    static final int WAIT_FOR_WORK_TIMEOUT_MILLIS = 100;
 
     protected boolean shouldWaitForWork() {
       return pendingWorkQueueCount.get() > 0;
@@ -487,8 +487,8 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     private BuildTargetProcessingScope startProcessingBuildTarget()
         throws InterruptedException, TimeoutException {
       BuildTarget target = pendingBuildTargets.poll(
-          WAIT_FOR_WORK_TIMEOUT_SECONDS,
-          TimeUnit.SECONDS);
+          WAIT_FOR_WORK_TIMEOUT_MILLIS,
+          TimeUnit.MILLISECONDS);
       if (target == null) {
         throw new TimeoutException();
       }
@@ -544,8 +544,8 @@ class ParallelPerBuildState implements PerBuildState, AutoCloseable {
     private BuildFileProcessingScope startProcessingBuildFile()
         throws InterruptedException, TimeoutException {
       Path buildFile = pendingBuildFiles.poll(
-          WAIT_FOR_WORK_TIMEOUT_SECONDS,
-          TimeUnit.SECONDS);
+          WAIT_FOR_WORK_TIMEOUT_MILLIS,
+          TimeUnit.MILLISECONDS);
       if (buildFile == null) {
         throw new TimeoutException();
       }
