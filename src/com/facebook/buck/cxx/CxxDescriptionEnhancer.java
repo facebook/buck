@@ -703,7 +703,8 @@ public class CxxDescriptionEnhancer {
             linkOutput,
             argsBuilder.build(),
             linkStyle,
-            params.getDeps(),
+            FluentIterable.from(params.getDeps())
+                .filter(NativeLinkable.class),
             cxxRuntimeType,
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of(),

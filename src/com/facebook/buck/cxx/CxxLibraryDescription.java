@@ -457,7 +457,8 @@ public class CxxLibraryDescription implements
             .addAll(SourcePathArg.from(pathResolver, objects.values()))
             .build(),
         linkableDepType,
-        params.getDeps(),
+        FluentIterable.from(params.getDeps())
+            .filter(NativeLinkable.class),
         cxxRuntimeType,
         bundleLoader,
         blacklist,

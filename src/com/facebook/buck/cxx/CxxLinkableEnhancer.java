@@ -126,7 +126,7 @@ public class CxxLinkableEnhancer {
       Path output,
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
-      Iterable<? extends BuildRule> nativeLinkableDeps,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
@@ -142,11 +142,7 @@ public class CxxLinkableEnhancer {
     // Collect and topologically sort our deps that contribute to the link.
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
     for (NativeLinkable nativeLinkable : Maps.filterKeys(
-        NativeLinkables.getNativeLinkables(
-            cxxPlatform,
-            FluentIterable.from(nativeLinkableDeps)
-                .filter(NativeLinkable.class),
-            depType),
+        NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType),
         Predicates.not(Predicates.in(blacklist))).values()) {
       nativeLinkableInputs.add(
           NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));

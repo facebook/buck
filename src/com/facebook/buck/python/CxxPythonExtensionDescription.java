@@ -263,7 +263,8 @@ public class CxxPythonExtensionDescription implements
         extensionPath,
         getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args),
         Linker.LinkableDepType.SHARED,
-        params.getDeps(),
+        FluentIterable.from(params.getDeps())
+            .filter(NativeLinkable.class),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),

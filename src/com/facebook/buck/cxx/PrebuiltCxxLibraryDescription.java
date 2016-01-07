@@ -291,7 +291,8 @@ public class PrebuiltCxxLibraryDescription
                         new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath))))
             .build(),
         Linker.LinkableDepType.SHARED,
-        params.getDeps(),
+        FluentIterable.from(params.getDeps())
+            .filter(NativeLinkable.class),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),

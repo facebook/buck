@@ -37,6 +37,7 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -825,7 +826,7 @@ AppleSdkPaths appleSdkPaths =
                   pathResolver,
                   new FakeSourcePath("input.o")),
               Linker.LinkableDepType.SHARED,
-              ImmutableList.<BuildRule>of(),
+              ImmutableList.<NativeLinkable>of(),
               Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),

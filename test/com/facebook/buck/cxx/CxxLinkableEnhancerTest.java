@@ -78,7 +78,7 @@ public class CxxLinkableEnhancerTest {
           new FakeSourcePath("a.o"),
           new FakeSourcePath("b.o"),
           new FakeSourcePath("c.o"));
-  private static final ImmutableSortedSet<BuildRule> EMPTY_DEPS = ImmutableSortedSet.of();
+  private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -267,7 +267,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        ImmutableList.<NativeLinkable>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -300,7 +300,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(),
+        EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -319,7 +319,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(),
+        EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -338,7 +338,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(),
+        EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -382,7 +382,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        ImmutableList.<NativeLinkable>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -403,7 +403,7 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.SHARED,
-        ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        ImmutableList.<NativeLinkable>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -444,7 +444,7 @@ public class CxxLinkableEnhancerTest {
               DEFAULT_OUTPUT,
               DEFAULT_INPUTS,
               ent.getKey(),
-              ImmutableSortedSet.<BuildRule>of(),
+              EMPTY_DEPS,
               Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),

@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -132,7 +134,8 @@ abstract class DDescriptionUtils {
             .addAll(SourcePathArg.from(sourcePathResolver, sourcePaths))
             .build(),
         Linker.LinkableDepType.STATIC,
-        params.getDeps(),
+        FluentIterable.from(params.getDeps())
+            .filter(NativeLinkable.class),
         /* cxxRuntimeType */ Optional.<Linker.CxxRuntimeType>absent(),
         /* bundleLoader */ Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
