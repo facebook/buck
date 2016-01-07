@@ -235,7 +235,7 @@ class BuckTool(object):
             # Make sure the Unix domain socket doesn't exist before this call.
             try:
                 os.unlink(buck_socket_path)
-            except OSError, e:
+            except OSError as e:
                 if e.errno == errno.ENOENT:
                     # Socket didn't previously exist.
                     pass

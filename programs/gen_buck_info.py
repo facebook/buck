@@ -31,7 +31,7 @@ def main(argv):
             with open(os.path.join(path, '.buckrelease')) as f:
                 timestamp = int(os.fstat(f.fileno()).st_mtime)
                 version = f.read().strip()
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.ENOENT:
                 # No .buckrelease file. Do the best that we can.
                 version = '(unknown version)'

@@ -193,7 +193,7 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_b
                 build_env.sync_cookie_state,
                 build_env.watchman_client,
                 build_env.diagnostics)
-        except build_env.watchman_error, e:
+        except build_env.watchman_error as e:
             build_env.diagnostics.add(
                 DiagnosticMessageAndLevel(
                     message='Watchman error, falling back to slow glob: {0}'.format(e),
