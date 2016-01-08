@@ -1,0 +1,168 @@
+{namespace groovy_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'groovy_library()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to define a set of Groovy files that can be compiled together.
+
+      It can also be used to cross compile a set of Groovy and Java files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'FROZEN' /}
+{param overview}
+A <code>groovy_library()</code> rule is used to define a set of Groovy files that can be compiled
+together. It can also be used to cross compile a set of Groovy and Java files. The main output of a
+{sp}<code>groovy_library()</code> rule is a single JAR file containing all of the compiled class
+files and resources.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of files to compile for this rule.
+  Usually these will all end in <code>.groovy</code>, but if any of the files end in
+  <code>.java</code>, cross compilation using the jdk found in <code>JAVA_HOME</code> will occur.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Rules (usually other <code>groovy_library</code> or <code>java_library</code> rules) that are
+  used to generate the classpath required to compile this <code>groovy_library</code>.
+
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'exported_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Other <code>groovy_library</code> and <code>java_library</code> rules that depend
+  on this rule will also include its <code>exported_deps</code> in their classpaths.
+
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'provided_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'extra_groovyc_arguments' /}
+  {param default : '[]' /}
+  {param desc}
+  List of additional arguments to pass into the Groovy compiler.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'source' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Only used during cross compilation.
+
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'target' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Only used during cross compilation.
+
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'java_version' /}
+  {param default: '<global value>' /}
+  {param desc}
+  Only used during cross compilation.
+
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param} 
+{/call}
+
+{call buck.arg}
+  {param name: 'extra_arguments' /}
+  {param default : '[]' /}
+  {param desc}
+  Only used during cross compilation.
+
+  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# A rule that compiles a single .groovy file.
+groovy_library(
+  name = 'example',
+  srcs = ['MySourceFile.groovy'],
+)
+
+# A rule that compiles all of the .groovy files under the directory in
+# which the rule is defined using glob()
+groovy_library(
+  name = 'groovy-only',
+  srcs = glob(['**/*.groovy']),
+)
+
+# A rule that cross compiles all of the .groovy and .java files under
+# the directory in which the rule is defined, failing if compiling the
+# java files generates any compiler warnings
+groovy_library(
+  name = 'cross-compilation',
+  srcs = glob(['**/*.groovy', '**/*.java']),
+  java_version = 8,
+  extra_arguments = [
+    '-Werror',
+  ],
+)
+
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
