@@ -82,7 +82,7 @@ abstract class AbstractProjectPredicates {
             } else if (projectArg.testTarget.isPresent()) {
               projectTarget = projectArg.testTarget.get();
             }
-            return (projectTarget != null && targetGraph.get(projectTarget) != null);
+            return (projectTarget != null && targetGraph.getOptional(projectTarget).isPresent());
           }
         };
         break;

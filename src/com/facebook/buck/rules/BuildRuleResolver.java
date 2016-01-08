@@ -56,11 +56,6 @@ public class BuildRuleResolver {
               @Override
               public Optional<?> load(Pair<BuildTarget, Class<?>> key) throws Exception {
                 TargetNode<?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
-                Preconditions.checkNotNull(
-                    node,
-                    "Required target for rule '%s' was not found in the target graph.",
-                    key);
-
                 return load(node, key.getSecond());
               }
 
@@ -110,10 +105,6 @@ public class BuildRuleResolver {
       return rule;
     }
     TargetNode<?> node = targetGraph.get(target);
-    Preconditions.checkNotNull(
-        node,
-        "Required target for rule '%s' was not found in the target graph.",
-        target);
     rule = buildRuleGenerator.transform(targetGraph, this, node);
     BuildRule oldRule = buildRuleIndex.put(target, rule);
     Preconditions.checkState(

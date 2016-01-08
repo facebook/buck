@@ -407,7 +407,10 @@ public class ProjectCommand extends BuildCommand {
             isWithDependenciesTests(),
             needsFullRecursiveParse,
             pool.getExecutor());
-      } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
+      } catch (BuildFileParseException |
+          TargetGraph.NoSuchNodeException |
+          BuildTargetException |
+          HumanReadableException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
@@ -461,12 +464,12 @@ public class ProjectCommand extends BuildCommand {
     if (projectIde == null && !passedInTargetsSet.isEmpty() && projectGraph.isPresent()) {
       Ide guessedIde = null;
       for (BuildTarget buildTarget : passedInTargetsSet) {
-        TargetNode<?> node = projectGraph.get().get(buildTarget);
-        if (node == null) {
+        Optional<TargetNode<?>> node = projectGraph.get().getOptional(buildTarget);
+        if (!node.isPresent()) {
           throw new HumanReadableException("Project graph %s doesn't contain build target " +
               "%s", projectGraph.get(), buildTarget);
         }
-        BuildRuleType nodeType = node.getType();
+        BuildRuleType nodeType = node.get().getType();
         boolean canGenerateXcodeProject = canGenerateImplicitWorkspaceForType(nodeType);
         canGenerateXcodeProject |= nodeType.equals(XcodeWorkspaceConfigDescription.TYPE);
         if (guessedIde == null && canGenerateXcodeProject) {
@@ -794,8 +797,7 @@ public class ProjectCommand extends BuildCommand {
         : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (final BuildTarget inputTarget : targets) {
-      TargetNode<?> inputNode = Preconditions.checkNotNull(
-          targetGraphAndTargets.getTargetGraph().get(inputTarget));
+      TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescription.Arg workspaceArgs;
       BuildRuleType type = inputNode.getType();
       if (type == XcodeWorkspaceConfigDescription.TYPE) {

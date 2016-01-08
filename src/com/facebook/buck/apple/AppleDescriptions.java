@@ -314,7 +314,7 @@ public class AppleDescriptions {
       SourcePathResolver sourcePathResolver,
       ApplePlatform applePlatform,
       Tool actool) {
-    TargetNode<?> targetNode = Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget()));
+    TargetNode<?> targetNode = targetGraph.get(params.getBuildTarget());
 
     ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode));
@@ -455,7 +455,7 @@ public class AppleDescriptions {
     ImmutableSet.Builder<SourcePath> bundleVariantFilesBuilder = ImmutableSet.builder();
     AppleResources.collectResourceDirsAndFiles(
         targetGraph,
-        Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())),
+        targetGraph.get(params.getBuildTarget()),
         bundleDirsBuilder,
         dirsContainingResourceDirsBuilder,
         bundleFilesBuilder,
@@ -590,7 +590,7 @@ public class AppleDescriptions {
     }
     BuildTarget buildTarget = buildTargetBuilder.build();
 
-    final TargetNode<?> binaryTargetNode = Preconditions.checkNotNull(targetGraph.get(buildTarget));
+    final TargetNode<?> binaryTargetNode = targetGraph.get(buildTarget);
     // If the binary target of the AppleBundle is an AppleLibrary then the build flavor
     // must be specified.
     if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription &&

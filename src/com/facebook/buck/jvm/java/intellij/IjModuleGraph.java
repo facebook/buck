@@ -213,7 +213,7 @@ public class IjModuleGraph {
         ImmutableSet<IjProjectElement> depElements;
 
         if (depType.equals(DependencyType.COMPILED_SHADOW)) {
-          TargetNode<?> targetNode = Preconditions.checkNotNull(targetGraph.get(depBuildTarget));
+          TargetNode<?> targetNode = targetGraph.get(depBuildTarget);
           Optional<IjLibrary> library = libraryFactory.getLibrary(targetNode);
           if (library.isPresent()) {
             depElements = ImmutableSet.<IjProjectElement>of(library.get());
@@ -243,8 +243,7 @@ public class IjModuleGraph {
                       if (depModule != null) {
                         return depModule;
                       }
-                      TargetNode<?> targetNode =
-                          Preconditions.checkNotNull(targetGraph.get(depTarget));
+                      TargetNode<?> targetNode = targetGraph.get(depTarget);
                       IjLibrary library = libraryFactory.getLibrary(targetNode).orNull();
                       return library;
                     }

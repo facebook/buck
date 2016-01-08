@@ -55,7 +55,7 @@ public class ExportedDepsClosureResolver {
     }
 
     ImmutableSet<BuildTarget> exportedDeps = ImmutableSet.of();
-    TargetNode<?> targetNode = Preconditions.checkNotNull(targetGraph.get(buildTarget));
+    TargetNode<?> targetNode = targetGraph.get(buildTarget);
     if (targetNode.getType().equals(JavaLibraryDescription.TYPE)) {
       JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) targetNode.getConstructorArg();
       exportedDeps = arg.exportedDeps.get();

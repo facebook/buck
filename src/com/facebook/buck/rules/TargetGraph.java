@@ -20,9 +20,10 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -52,7 +53,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   }
 
   @Nullable
-  public TargetNode<?> get(BuildTarget target) {
+  public TargetNode<?> getInternal(BuildTarget target) {
     TargetNode<?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
@@ -64,11 +65,23 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
     return node;
   }
 
+  public Optional<TargetNode<?>> getOptional(BuildTarget target) {
+    return Optional.<TargetNode<?>>fromNullable(getInternal(target));
+  }
+
+  public TargetNode<?> get(BuildTarget target) {
+    TargetNode<?> node = getInternal(target);
+    if (node == null) {
+      throw new NoSuchNodeException(target);
+    }
+    return node;
+  }
+
   public Function<BuildTarget, TargetNode<?>> get() {
     return new Function<BuildTarget, TargetNode<?>>() {
       @Override
       public TargetNode<?> apply(BuildTarget input) {
-        return Preconditions.checkNotNull(get(input));
+        return get(input);
       }
     };
   }
@@ -79,7 +92,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
         new Function<BuildTarget, TargetNode<?>>() {
           @Override
           public TargetNode<?> apply(BuildTarget input) {
-            return Preconditions.checkNotNull(get(input));
+            return get(input);
           }
         });
   }
@@ -118,5 +131,20 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
     }.start();
 
     return new TargetGraph(subgraph, ImmutableMap.copyOf(index));
+  }
+
+  public static class NoSuchNodeException extends RuntimeException
+      implements ExceptionWithHumanReadableMessage {
+
+    public NoSuchNodeException(BuildTarget buildTarget) {
+      super(String.format(
+              "Required target for rule '%s' was not found in the target graph.",
+              buildTarget.getFullyQualifiedName()));
+    }
+
+    @Override
+    public String getHumanReadableErrorMessage() {
+      return getMessage();
+    }
   }
 }

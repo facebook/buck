@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -24,8 +25,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class TargetGraphTest {
 
@@ -39,6 +43,9 @@ public class TargetGraphTest {
   private TargetNode<?> nodeH;
   private TargetNode<?> nodeI;
   private TargetGraph targetGraph;
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -113,6 +120,36 @@ public class TargetGraphTest {
     ImmutableSet<TargetNode<?>> roots = ImmutableSet.<TargetNode<?>>of(nodeD);
     ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.of(nodeD, nodeF, nodeG, nodeI);
     checkSubgraph(roots, expectedNodes);
+  }
+
+  @Test
+  public void getOptionalForMissingNode() {
+    assertThat(
+        targetGraph.getOptional(BuildTargetFactory.newInstance("//foo:bar#baz")).isPresent(),
+        Matchers.is(false));
+  }
+
+  @Test
+  public void getReportsMissingNode() {
+    expectedException.expectMessage(
+        "Required target for rule '//foo:bar#baz' was not found in the target graph.");
+    targetGraph.get(BuildTargetFactory.newInstance("//foo:bar#baz"));
+  }
+
+  @Test
+  public void getFunctionReportsMissingNode() {
+    expectedException.expectMessage(
+        "Required target for rule '//foo:bar#baz' was not found in the target graph.");
+    targetGraph.get().apply(BuildTargetFactory.newInstance("//foo:bar#baz"));
+  }
+
+  @Test
+  public void getAllReportsMissingNode() {
+    expectedException.expectMessage(
+        "Required target for rule '//foo:bar#baz' was not found in the target graph.");
+    // Force the Iterable to evaluate and throw.
+    ImmutableSet.copyOf(
+        targetGraph.getAll(ImmutableSet.of(BuildTargetFactory.newInstance("//foo:bar#baz"))));
   }
 
   private void checkSubgraph(

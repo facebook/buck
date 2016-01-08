@@ -528,9 +528,8 @@ public class WorkspaceAndProjectGenerator {
           Iterables.transform(
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
-                  Preconditions.checkNotNull(
-                      projectGraph.get(
-                          schemeArguments.srcTarget.get().getBuildTarget()))),
+                  projectGraph.get(
+                      schemeArguments.srcTarget.get().getBuildTarget())),
               Optionals.<TargetNode<?>>toOptional()));
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
@@ -565,15 +564,15 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder) {
     for (Map.Entry<String, BuildTarget> extraSchemeEntry : extraSchemes.entrySet()) {
       BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
-      TargetNode<?> extraSchemeNode = projectGraph.get(extraSchemeTarget);
-      if (extraSchemeNode == null ||
-          extraSchemeNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
+      Optional<TargetNode<?>> extraSchemeNode = projectGraph.getOptional(extraSchemeTarget);
+      if (!extraSchemeNode.isPresent() ||
+          extraSchemeNode.get().getType() != XcodeWorkspaceConfigDescription.TYPE) {
         throw new HumanReadableException(
             "Extra scheme target '%s' should be of type 'xcode_workspace_config'",
             extraSchemeTarget);
       }
       XcodeWorkspaceConfigDescription.Arg extraSchemeArg =
-          (XcodeWorkspaceConfigDescription.Arg) extraSchemeNode.getConstructorArg();
+          (XcodeWorkspaceConfigDescription.Arg) extraSchemeNode.get().getConstructorArg();
       String schemeName = extraSchemeEntry.getKey();
       addWorkspaceScheme(
           projectGraph,
@@ -642,20 +641,21 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> testsBuilder =
         ImmutableSet.builder();
     if (includeProjectTests) {
-      TargetNode<?> mainTargetNode = null;
+      Optional<TargetNode<?>> mainTargetNode = Optional.absent();
       if (mainTarget.isPresent()) {
-        mainTargetNode = targetGraph.get(mainTarget.get());
+        mainTargetNode = targetGraph.getOptional(mainTarget.get());
       }
       for (TargetNode<?> node : orderedTargetNodes) {
-        if (includeDependenciesTests || (mainTargetNode != null && node.equals(mainTargetNode))) {
+        if (includeDependenciesTests ||
+            (mainTargetNode.isPresent() && node.equals(mainTargetNode.get()))) {
           if (!(node.getConstructorArg() instanceof HasTests)) {
             continue;
           }
           for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
-            TargetNode<?> explicitTestNode = targetGraph.get(explicitTestTarget);
-            if (explicitTestNode != null) {
+            Optional<TargetNode<?>> explicitTestNode = targetGraph.getOptional(explicitTestTarget);
+            if (explicitTestNode.isPresent()) {
               Optional<TargetNode<AppleTestDescription.Arg>> castedNode =
-                  explicitTestNode.castArg(AppleTestDescription.Arg.class);
+                  explicitTestNode.get().castArg(AppleTestDescription.Arg.class);
               if (castedNode.isPresent()) {
                 testsBuilder.add(castedNode.get());
               } else {

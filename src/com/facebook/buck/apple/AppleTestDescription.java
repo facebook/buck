@@ -185,7 +185,6 @@ public class AppleTestDescription implements
     ImmutableSet<BuildTarget> blacklist;
     if (args.testHostApp.isPresent()) {
       TargetNode<?> testHostAppNode = targetGraph.get(args.testHostApp.get());
-      Preconditions.checkNotNull(testHostAppNode);
 
       if (testHostAppNode.getType() != AppleBundleDescription.TYPE) {
         throw new HumanReadableException(

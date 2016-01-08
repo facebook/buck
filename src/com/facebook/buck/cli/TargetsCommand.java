@@ -465,14 +465,14 @@ public class TargetsCommand extends AbstractCommand {
           ImmutableSortedSet<BuildTarget> tests =
               ((HasTests) node.getConstructorArg()).getTests();
           for (BuildTarget testTarget : tests) {
-            TargetNode<?> testNode = graph.get(testTarget);
-            if (testNode == null) {
+            Optional<TargetNode<?>> testNode = graph.getOptional(testTarget);
+            if (!testNode.isPresent()) {
               throw new HumanReadableException(
                   "'%s' (test of '%s') is not in the target graph.",
                   testTarget,
                   node);
             }
-            extraEdgesBuilder.put(testNode, node);
+            extraEdgesBuilder.put(testNode.get(), node);
           }
         }
 
@@ -480,7 +480,7 @@ public class TargetsCommand extends AbstractCommand {
           ImmutableSortedSet<BuildTarget> sourceUnderTest =
               ((HasSourceUnderTest) node.getConstructorArg()).getSourceUnderTest();
           for (BuildTarget sourceTarget : sourceUnderTest) {
-            TargetNode<?> sourceNode = Preconditions.checkNotNull(graph.get(sourceTarget));
+            TargetNode<?> sourceNode = graph.get(sourceTarget);
             extraEdgesBuilder.put(node, sourceNode);
           }
         }
@@ -739,10 +739,7 @@ public class TargetsCommand extends AbstractCommand {
     // we can re-walk the graph for each target passed in to the command,
     // hashing the target, its deps, the tests, and their deps.
     for (BuildTarget target : matchingBuildTargets) {
-      TargetNode<?> targetNode = Preconditions.checkNotNull(
-          targetGraphWithTests.get(target),
-          "Could not find target %s in project graph",
-          target);
+      TargetNode<?> targetNode = targetGraphWithTests.get(target);
       ImmutableSet<TargetNode<?>> dependencyClosure =
           getDependencyClosure(targetGraphWithTests, targetNode);
 

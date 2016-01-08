@@ -423,8 +423,7 @@ public class ProjectGenerator {
       }
 
       if (targetToBuildWithBuck.isPresent()) {
-        generateBuildWithBuckTarget(
-            Preconditions.checkNotNull(targetGraph.get(targetToBuildWithBuck.get())));
+        generateBuildWithBuckTarget(targetGraph.get(targetToBuildWithBuck.get()));
       }
 
       int combinedTestIndex = 0;
@@ -681,8 +680,8 @@ public class ProjectGenerator {
           generateAppleBundleTarget(
               project,
               bundleTargetNode,
-              (TargetNode<AppleNativeTargetDescriptionArg>) Preconditions.checkNotNull(
-                  targetGraph.get(bundleTargetNode.getConstructorArg().binary)),
+              (TargetNode<AppleNativeTargetDescriptionArg>)
+                  targetGraph.get(bundleTargetNode.getConstructorArg().binary),
               Optional.<TargetNode<AppleBundleDescription.Arg>>absent()));
     } else if (targetNode.getType().equals(AppleTestDescription.TYPE)) {
       result = generateAppleTestTarget((TargetNode<AppleTestDescription.Arg>) targetNode);
@@ -786,7 +785,6 @@ public class ProjectGenerator {
       BuildTarget testHostBundleTarget =
           testTargetNode.getConstructorArg().testHostApp.get();
       TargetNode<?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
-      Preconditions.checkNotNull(testHostBundleNode);
       if (testHostBundleNode.getType() != AppleBundleDescription.TYPE) {
         throw new HumanReadableException(
             "The test host target '%s' has the wrong type (%s), must be apple_bundle",
@@ -1405,7 +1403,7 @@ public class ProjectGenerator {
                 new Function<BuildTarget, TargetNode<?>>() {
                   @Override
                   public TargetNode<?> apply(BuildTarget input) {
-                    return Preconditions.checkNotNull(targetGraph.get(input));
+                    return targetGraph.get(input);
                   }
                 })
             .filter(
@@ -2006,9 +2004,8 @@ public class ProjectGenerator {
       Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
       if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
         nativeNode = Optional.of(
-            Preconditions.checkNotNull(
                 (TargetNode<CxxLibraryDescription.Arg>) targetGraph.get(
-                    bundle.getConstructorArg().binary)));
+                    bundle.getConstructorArg().binary));
       }
     }
     return nativeNode;
@@ -2494,7 +2491,7 @@ public class ProjectGenerator {
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
     BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
     BuildTarget buildTarget = buildTargetSourcePath.getTarget();
-    TargetNode<?> node = Preconditions.checkNotNull(targetGraph.get(buildTarget));
+    TargetNode<?> node = targetGraph.get(buildTarget);
     Optional<TargetNode<ExportFileDescription.Arg>> exportFileNode = node.castArg(
         ExportFileDescription.Arg.class);
     if (!exportFileNode.isPresent()) {

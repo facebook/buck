@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -94,11 +93,7 @@ public class TargetGraphAndTargets {
       TargetGraph projectGraph) {
     ImmutableSet.Builder<TargetNode<?>> targetNodesBuilder = ImmutableSet.builder();
     for (BuildTarget target : buildTargets) {
-      TargetNode<?> targetNode = projectGraph.get(target);
-      if (targetNode == null) {
-        throw new HumanReadableException("Target '%s' does not exist.", target);
-      }
-      targetNodesBuilder.add(targetNode);
+      targetNodesBuilder.add(projectGraph.get(target));
     }
     return targetNodesBuilder.build();
   }
@@ -135,7 +130,7 @@ public class TargetGraphAndTargets {
           }
 
           for (BuildTarget buildTargetUnderTest : sourceUnderTest) {
-            if (targetGraph.get(buildTargetUnderTest) != null) {
+            if (targetGraph.getOptional(buildTargetUnderTest).isPresent()) {
               return isWithDependenciesTests ||
                   graphRootsWithoutWorkspaces.contains(buildTargetUnderTest);
             }
