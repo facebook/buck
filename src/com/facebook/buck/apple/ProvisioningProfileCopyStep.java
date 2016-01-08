@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
@@ -98,14 +97,14 @@ public class ProvisioningProfileCopyStep implements Step {
       throw new HumanReadableException("Unable to get bundle ID from info.plist: " + infoPlist);
     }
 
-    // What to look for in the provisioning profile.
-    final Optional<String> prefix;          // e.g. ABCDE12345
+    final Optional<ImmutableMap<String, NSObject>> entitlements;
+    final String prefix;
     if (entitlementsPlist.isPresent()) {
-      NSDictionary entitlementsPlistDict;
       try {
-        entitlementsPlistDict =
+        NSDictionary entitlementsPlistDict =
             (NSDictionary) PropertyListParser.parse(entitlementsPlist.get().toFile());
-
+        entitlements = Optional.of(ImmutableMap.copyOf(entitlementsPlistDict.getHashMap()));
+        prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get());
       } catch (IOException e) {
         throw new HumanReadableException("Unable to find entitlement .plist: " +
             entitlementsPlist.get());
@@ -113,28 +112,21 @@ public class ProvisioningProfileCopyStep implements Step {
         throw new HumanReadableException("Malformed entitlement .plist: " +
             entitlementsPlist.get());
       }
-
-      try {
-        String appID = ((NSArray) entitlementsPlistDict.get("keychain-access-groups"))
-            .objectAtIndex(0).toString();
-        prefix = Optional.of(ProvisioningProfileMetadata.splitAppID(appID).getFirst());
-      } catch (Exception e) {
-        throw new HumanReadableException(
-            "Malformed entitlement .plist (missing keychain-access-groups): " +
-                entitlementsPlist.get());
-      }
     } else {
-      prefix = Optional.<String>absent();
+      entitlements = ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT;
+      prefix = "*";
     }
 
     Optional<ProvisioningProfileMetadata> bestProfile =
-        provisioningProfileUUID.isPresent()
-            ? provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get())
-            : provisioningProfileStore.getBestProvisioningProfile(bundleID, prefix);
+        provisioningProfileUUID.isPresent() ?
+            provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get()) :
+            provisioningProfileStore.getBestProvisioningProfile(
+                bundleID,
+                entitlements);
 
     if (!bestProfile.isPresent()) {
       throw new HumanReadableException("No valid non-expired provisioning profiles match for " +
-        prefix.or("*") + "." + bundleID);
+        prefix + "." + bundleID);
     }
 
     selectedProvisioningProfileFuture.set(bestProfile.get());
@@ -163,13 +155,13 @@ public class ProvisioningProfileCopyStep implements Step {
     } else {
       // No entitlements.plist explicitly specified; write out the minimal entitlements needed.
       String appID = bestProfile.get().getAppID().getFirst() + "." + bundleID;
-      NSDictionary entitlements = new NSDictionary();
-      entitlements.putAll(bestProfile.get().getEntitlements());
-      entitlements.put(APPLICATION_IDENTIFIER, appID);
-      entitlements.put(KEYCHAIN_ACCESS_GROUPS, new String[]{appID});
+      NSDictionary entitlementsPlist = new NSDictionary();
+      entitlementsPlist.putAll(bestProfile.get().getEntitlements());
+      entitlementsPlist.put(APPLICATION_IDENTIFIER, appID);
+      entitlementsPlist.put(KEYCHAIN_ACCESS_GROUPS, new String[]{appID});
       return (new WriteFileStep(
           filesystem,
-          entitlements.toXMLPropertyList(),
+          entitlementsPlist.toXMLPropertyList(),
           signingEntitlementsTempPath,
           /* executable */ false)).execute(context);
     }

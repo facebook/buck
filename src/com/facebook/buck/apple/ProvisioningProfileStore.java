@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSObject;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -24,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -32,11 +34,15 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+import java.util.Map.Entry;
 
 /**
  * A collection of provisioning profiles.
  */
 public class ProvisioningProfileStore implements RuleKeyAppendable {
+  public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
+      Optional.<ImmutableMap<String, NSObject>>absent();
+
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
   private final Supplier<ImmutableList<ProvisioningProfileMetadata>>
       provisioningProfilesSupplier;
@@ -62,10 +68,16 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
 
   // If multiple valid ones, find the one which matches the most specifically.  I.e.,
   // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
-  // TODO(ryu2): Account for differences between development and distribution certificates.
   public Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
       String bundleID,
-      Optional<String> prefix) {
+      Optional<ImmutableMap<String, NSObject>> entitlements) {
+    final Optional<String> prefix;
+    if (entitlements.isPresent()) {
+      prefix = Optional.of(ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get()));
+    } else {
+      prefix = Optional.<String>absent();
+    }
+
     int bestMatchLength = -1;
     Optional<ProvisioningProfileMetadata> bestMatch = Optional.absent();
 
@@ -85,6 +97,24 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             match = bundleID.startsWith(profileBundleID);
           } else {
             match = (bundleID.equals(profileBundleID));
+          }
+
+          // Match against other keys of the entitlements.  Otherwise, we could potentially select
+          // a profile that doesn't have all the needed entitlements, causing a error when
+          // installing to device.
+          //
+          // For example: get-task-allow, aps-environment, etc.
+          if (entitlements.isPresent()) {
+            ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
+            ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
+            for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
+              if (!(entry.getKey().equals("keychain-access-groups") ||
+                  entry.getKey().equals("application-identifier") ||
+                  entry.getValue().equals(profileEntitlements.get(entry.getKey())))) {
+                match = false;
+                break;
+              }
+            }
           }
 
           if (match && profileBundleID.length() > bestMatchLength) {

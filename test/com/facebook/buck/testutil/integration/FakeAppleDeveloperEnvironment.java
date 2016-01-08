@@ -55,7 +55,7 @@ public class FakeAppleDeveloperEnvironment {
           }
           ProvisioningProfileStore store = ProvisioningProfileStore.fromSearchPath(searchPath);
           Optional<ProvisioningProfileMetadata> profile =
-              store.getBestProvisioningProfile("*", Optional.<String>absent());
+              store.getBestProvisioningProfile("*", ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT);
           return profile.isPresent();
         }
       }).get().booleanValue();

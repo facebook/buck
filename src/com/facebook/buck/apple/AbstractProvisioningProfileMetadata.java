@@ -35,6 +35,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -90,7 +91,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
    * Prefix is always a ten-character alphanumeric sequence.
    * Bundle ID may be a fully-qualified name or a wildcard ending in *.
    */
-  public static Pair<String, String> splitAppID(String appID) throws Exception {
+  public static Pair<String, String> splitAppID(String appID) throws RuntimeException {
     Matcher matcher = BUNDLE_ID_PATTERN.matcher(appID);
     if (matcher.find()) {
       String prefix = matcher.group(1);
@@ -100,6 +101,17 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
     } else {
       throw new IllegalArgumentException("Malformed app ID: " + appID);
     }
+  }
+
+  /**
+   * Takes an ImmutableMap representing an entitlements file, returns the application prefix.
+   */
+  public static String prefixFromEntitlements(ImmutableMap<String, NSObject> entitlements)
+      throws RuntimeException {
+    NSArray keychainAccessGroups = ((NSArray) entitlements.get("keychain-access-groups"));
+    Preconditions.checkNotNull(keychainAccessGroups);
+    String appID = keychainAccessGroups.objectAtIndex(0).toString();
+    return splitAppID(appID).getFirst();
   }
 
   public static ProvisioningProfileMetadata fromProvisioningProfilePath(Path profilePath)
