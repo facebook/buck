@@ -91,6 +91,7 @@ class BuckTool(object):
         env = os.environ.copy()
         env['CLASSPATH'] = self._get_bootstrap_classpath()
         env['BUCK_CLASSPATH'] = self._get_java_classpath()
+        env['BUCK_TTY'] = str(int(sys.stdin.isatty()))
         # Buck overwrites these variables for a few purposes.
         # Pass them through with their original values for
         # tests that need them.
