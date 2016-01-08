@@ -33,7 +33,7 @@ abstract class AbstractBuildEnvironmentDescription {
   public abstract String getHostname();
   public abstract String getOs();
   public abstract int getAvailableCores();
-  public abstract long getSystemMemoryMb();
+  public abstract long getSystemMemory();
   public abstract TriState getBuckDirty();
   public abstract String getBuckCommit();
   public abstract String getJavaVersion();
@@ -65,7 +65,7 @@ abstract class AbstractBuildEnvironmentDescription {
             executionEnvironment
                 .getPlatform().getPrintableName().toLowerCase().replace(' ', '_'))
         .setAvailableCores(executionEnvironment.getAvailableCores())
-        .setSystemMemoryMb(executionEnvironment.getTotalMemoryInMb())
+        .setSystemMemory(executionEnvironment.getTotalMemory())
         .setBuckDirty(buckDirty)
         .setBuckCommit(executionEnvironment.getProperty("buck.git_commit", "unknown"))
         .setJavaVersion(StandardSystemProperty.JAVA_VM_VERSION.value())

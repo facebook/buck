@@ -83,7 +83,7 @@ public class RemoteLogUploaderEventListenerTest {
           .setHostname("hostname")
           .setOs("os")
           .setAvailableCores(1)
-          .setSystemMemoryMb(1024)
+          .setSystemMemory(1024 * 1024)
           .setBuckDirty(TriState.UNSPECIFIED)
           .setBuckCommit("unknown")
           .setJavaVersion("1.7")

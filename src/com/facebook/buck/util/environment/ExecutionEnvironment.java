@@ -35,9 +35,9 @@ public interface ExecutionEnvironment {
   public int getAvailableCores();
 
   /**
-   * @return The amount of system memory on this machine.
+   * @return The amount of system memory on this machine in bytes.
    */
-  public long getTotalMemoryInMb();
+  public long getTotalMemory();
 
   /**
    * @return The current operating system.

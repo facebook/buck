@@ -25,8 +25,6 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
-  private static final long  MEGABYTE = 1024L * 1024L;
-
   // Buck's own integration tests will run with this system property
   // set to false.
   //
@@ -68,10 +66,10 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   }
 
   @Override
-  public long getTotalMemoryInMb() {
+  public long getTotalMemory() {
     OperatingSystemMXBean osBean =
         (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-    return osBean.getTotalPhysicalMemorySize() / MEGABYTE;
+    return osBean.getTotalPhysicalMemorySize();
   }
 
   @Override
