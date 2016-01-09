@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -184,8 +183,7 @@ public class CxxLibraryTest {
         params,
         ruleResolver,
         pathResolver,
-        FluentIterable.from(params.getDeclaredDeps().get())
-            .filter(NativeLinkable.class),
+        params.getDeclaredDeps().get(),
         /* headerOnly */ Predicates.<CxxPlatform>alwaysFalse(),
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         /* exportedLinkerFlags */ Functions.constant(ImmutableList.<Arg>of()),

@@ -1234,4 +1234,25 @@ public class CxxLibraryDescriptionTest {
         Matchers.hasItems("--flag", "--exported-flag"));
   }
 
+  @Test
+  public void exportedDepsArePropagatedToRuntimeDeps() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxBinaryBuilder cxxBinaryBuilder =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"));
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setExportedDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    cxxBinaryBuilder.build(resolver, filesystem);
+    CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
+    assertThat(
+        FluentIterable.from(cxxLibrary.getRuntimeDeps())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet(),
+        Matchers.hasItem(cxxBinaryBuilder.getTarget()));
+  }
+
 }

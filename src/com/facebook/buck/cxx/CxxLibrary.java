@@ -59,7 +59,7 @@ public class CxxLibrary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final Iterable<? extends NativeLinkable> exportedDeps;
+  private final Iterable<? extends BuildRule> exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
@@ -81,7 +81,7 @@ public class CxxLibrary
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
-      Iterable<? extends NativeLinkable> exportedDeps,
+      Iterable<? extends BuildRule> exportedDeps,
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
@@ -167,7 +167,8 @@ public class CxxLibrary
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
-    return exportedDeps;
+    return FluentIterable.from(exportedDeps)
+        .filter(NativeLinkable.class);
   }
 
   @Override
@@ -311,7 +312,10 @@ public class CxxLibrary
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return getDeclaredDeps();
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(getDeclaredDeps())
+        .addAll(exportedDeps)
+        .build();
   }
 
 }
