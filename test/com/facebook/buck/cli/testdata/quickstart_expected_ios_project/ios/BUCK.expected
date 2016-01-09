@@ -16,6 +16,7 @@ apple_binary(
   name = 'BuckDemoAppBinary',
   deps = [':BuckDemoAppResources'],
   preprocessor_flags = ['-fobjc-arc'],
+  compiler_flags = ['-Wno-objc-designated-initializers'],
   headers = glob([
     '*.h',
   ]),
