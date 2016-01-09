@@ -26,4 +26,8 @@ public class QueryException extends Exception {
   public QueryException(String humanReadableFormatString, Object... args) {
     this(String.format(humanReadableFormatString, args));
   }
+
+  public QueryException(Throwable cause, String humanReadableFormatString, Object... args) {
+    super(String.format(humanReadableFormatString, args), cause);
+  }
 }

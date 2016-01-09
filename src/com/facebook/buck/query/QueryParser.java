@@ -36,6 +36,7 @@ import static com.facebook.buck.query.Lexer.TokenKind;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -117,6 +118,30 @@ final class QueryParser {
     return new QueryException(message);
   }
 
+  private QueryException syntaxError(QueryException cause, QueryFunction function) {
+    ImmutableList<ArgumentType> mandatoryArguments = function.getArgumentTypes()
+        .subList(0, function.getMandatoryArguments());
+    ImmutableList<ArgumentType> optionalArguments = function.getArgumentTypes()
+        .subList(function.getMandatoryArguments(), function.getArgumentTypes().size());
+    StringBuilder argumentsString = new StringBuilder();
+    Joiner.on(", ").appendTo(argumentsString, mandatoryArguments);
+    if (optionalArguments.size() > 0) {
+      argumentsString.append(" [, ");
+      Joiner.on(" [, ").appendTo(argumentsString, optionalArguments);
+      for (int i = 0; i < optionalArguments.size(); i++) {
+        argumentsString.append(" ]");
+      }
+    }
+    return new QueryException(
+        cause,
+        "`%s` when parsing call to the function `%s(%s)`.  Please see " +
+            "https://buckbuild.com/command/query.html#%s for complete documentation.",
+        cause.getMessage(),
+        function.getName(),
+        argumentsString.toString(),
+        function.getName());
+  }
+
   /**
    * Consumes the current token.  If it is not of the specified (expected)
    * kind, throws QueryException.  Returns the value associated with the
@@ -141,7 +166,7 @@ final class QueryParser {
     try {
       return Integer.parseInt(intString);
     } catch (NumberFormatException e) {
-      throw new QueryException("expected an integer literal: '%s'", intString);
+      throw new QueryException("expected an integer literal but got '%s'", intString);
     }
   }
 
@@ -222,24 +247,29 @@ final class QueryParser {
               break;
             }
 
-            consume(tokenKind);
-            tokenKind = TokenKind.COMMA;
-            switch (type) {
-              case EXPRESSION:
-                argsBuilder.add(Argument.of(parseExpression()));
-                break;
+            try {
+              consume(tokenKind);
+              tokenKind = TokenKind.COMMA;
+              switch (type) {
+                case EXPRESSION:
+                  argsBuilder.add(Argument.of(parseExpression()));
+                  break;
 
-              case WORD:
-                argsBuilder.add(Argument.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
-                break;
+                case WORD:
+                  argsBuilder.add(Argument.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
+                  break;
 
-              case INTEGER:
-                argsBuilder.add(Argument.of(consumeIntLiteral()));
-                break;
+                case INTEGER:
+                  argsBuilder.add(Argument.of(consumeIntLiteral()));
+                  break;
 
-              default:
-                throw new IllegalStateException();
+                default:
+                  throw new IllegalStateException();
+              }
+            } catch (QueryException e) {
+              throw syntaxError(e, function);
             }
+
 
             argsSeen++;
           }
