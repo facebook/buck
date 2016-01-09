@@ -179,36 +179,32 @@ public class CxxLibrary
       return NativeLinkableInput.of();
     }
 
-    if (headerOnly.apply(cxxPlatform)) {
-      return NativeLinkableInput.of(
-          ImmutableList.<Arg>of(),
-          Preconditions.checkNotNull(frameworks),
-          ImmutableSet.<FrameworkPath>of());
-    }
-
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
-    if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
-      BuildRule rule = getLibraryLinkRule(cxxPlatform, type);
-      Arg library =
-          new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
-      if (linkWhole) {
-        Linker linker = cxxPlatform.getLd();
-        linkerArgsBuilder.addAll(linker.linkWhole(library));
+    if (!headerOnly.apply(cxxPlatform)) {
+      if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
+        BuildRule rule = getLibraryLinkRule(cxxPlatform, type);
+        Arg library =
+            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
+        if (linkWhole) {
+          Linker linker = cxxPlatform.getLd();
+          linkerArgsBuilder.addAll(linker.linkWhole(library));
+        } else {
+          linkerArgsBuilder.add(library);
+        }
       } else {
-        linkerArgsBuilder.add(library);
+        BuildRule rule =
+            requireBuildRule(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.SHARED_FLAVOR);
+        linkerArgsBuilder.add(
+            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
       }
-    } else {
-      BuildRule rule =
-          requireBuildRule(
-              cxxPlatform.getFlavor(),
-              CxxDescriptionEnhancer.SHARED_FLAVOR);
-      linkerArgsBuilder.add(
-          new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
     }
+
     final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
