@@ -37,8 +37,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.Future;
 
 public class ProvisioningProfileCopyStepTest {
@@ -56,6 +60,18 @@ public class ProvisioningProfileCopyStepTest {
   public void setUp() throws IOException {
     testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
     projectFilesystem = new FakeProjectFilesystem(testdataDir.toFile());
+    Files.walkFileTree(
+        testdataDir,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            projectFilesystem.writeBytesToPath(
+                Files.readAllBytes(file),
+                projectFilesystem.resolve(file));
+            return FileVisitResult.CONTINUE;
+          }
+        });
     DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
     tmp.create();
     tempOutputDir = tmp.getRootPath();
