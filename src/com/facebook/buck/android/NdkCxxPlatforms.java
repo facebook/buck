@@ -252,7 +252,11 @@ public class NdkCxxPlatforms {
                   .setCompiler(compiler)
                   .setToolchainTarget(ToolchainTarget.I686_LINUX_ANDROID)
                   .putAssemblerFlags(Compiler.Type.GCC, ImmutableList.<String>of())
-                  .putAssemblerFlags(Compiler.Type.CLANG, ImmutableList.<String>of())
+                  .putAssemblerFlags(
+                      Compiler.Type.CLANG,
+                      ImmutableList.<String>builder()
+                          .add("-target", "i686-none-linux-android")
+                          .build())
                   .putCompilerFlags(
                       Compiler.Type.GCC,
                       ImmutableList.of(
