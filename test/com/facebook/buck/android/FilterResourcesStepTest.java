@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.FilteredDirectoryCopier;
-import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Predicate;
@@ -60,7 +59,7 @@ public class FilterResourcesStepTest {
           Paths.get(second), Paths.get("/dest/2"),
           Paths.get(third), Paths.get("/dest/3"));
   private static Set<String> qualifiers = ImmutableSet.of("mdpi", "hdpi", "xhdpi");
-  private final Filters.Density targetDensity = Filters.Density.MDPI;
+  private final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
   private final File baseDestination = new File("/dest");
 
   private final Path scaleSource = getDrawableFile(first, "xhdpi", "other.png");
@@ -186,7 +185,7 @@ public class FilterResourcesStepTest {
     // Ensure the right filter is created.
     Set<Path> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet(), filesystem);
     Predicate<Path> expectedPred =
-        Filters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
+        ResourceFilters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
     Predicate<Path> capturedPred = predCapture.getValue();
     for (Path drawablePath : drawables) {
       assertEquals(expectedPred.apply(drawablePath), capturedPred.apply(drawablePath));

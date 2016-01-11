@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -31,10 +32,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public class Filters {
+public class ResourceFilters {
 
   /** Utility class: do not instantiate. */
-  private Filters() {}
+  private ResourceFilters() {}
 
   public enum Density {
     LDPI("ldpi", 120.0),
@@ -81,7 +82,7 @@ public class Filters {
 
   public static class Qualifiers {
     /** e.g. "xhdpi" */
-    public final Filters.Density density;
+    public final ResourceFilters.Density density;
     /** e.g. "de-v11" */
     public final String others;
 
@@ -90,14 +91,14 @@ public class Filters {
      * @param path path to a drawable
      */
     public Qualifiers(Path path) {
-      Filters.Density density = Density.NO_QUALIFIER;
+      ResourceFilters.Density density = Density.NO_QUALIFIER;
       StringBuilder othersBuilder = new StringBuilder();
       for (String qualifier : path.getParent().getFileName().toString().split("-")) {
         if (qualifier.equals("drawable")) { // We're assuming they're all drawables.
           continue;
         }
 
-        if (Filters.Density.isDensity(qualifier)) {
+        if (ResourceFilters.Density.isDensity(qualifier)) {
           density = Density.from(qualifier);
         } else {
           othersBuilder.append((MoreStrings.isEmpty(othersBuilder) ? "" : "-") + qualifier);
@@ -125,7 +126,7 @@ public class Filters {
   @VisibleForTesting
   static Set<Path> filterByDensity(
       Collection<Path> candidates,
-      Set<Filters.Density> targetDensities,
+      Set<ResourceFilters.Density> targetDensities,
       boolean canDownscale) {
     ImmutableSet.Builder<Path> removals = ImmutableSet.builder();
 
@@ -207,7 +208,7 @@ public class Filters {
    */
   public static Predicate<Path> createImageDensityFilter(
       Collection<Path> candidates,
-      Set<Filters.Density> targetDensities,
+      Set<ResourceFilters.Density> targetDensities,
       boolean canDownscale) {
     final Set<Path> pathsToRemove = filterByDensity(candidates, targetDensities, canDownscale);
     return new Predicate<Path>() {

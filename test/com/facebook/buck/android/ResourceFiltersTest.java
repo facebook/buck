@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.Filters.Density;
+import com.facebook.buck.android.ResourceFilters.Density;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +37,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class FiltersTest {
+public class ResourceFiltersTest {
 
   // These simulate drawables with no other qualifiers than their dpi.
   private static final String DRAWABLE = "res/drawable/";
@@ -136,7 +136,10 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testMdpiFilterRemovesUnneededResources() {
-    Set<Path> mdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
+    Set<Path> mdpi = ResourceFilters.filterByDensity(
+        candidates,
+        ImmutableSet.of(Density.MDPI),
+        false);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
@@ -164,8 +167,10 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterRemovesUnneededResources() {
-    Set<Path> lmdpi =
-        Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), false);
+    Set<Path> lmdpi = ResourceFilters.filterByDensity(
+        candidates,
+        ImmutableSet.of(Density.LDPI, Density.MDPI),
+        false);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
@@ -193,8 +198,10 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterWithDownscale() {
-    Set<Path> lmdpi =
-        Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), true);
+    Set<Path> lmdpi = ResourceFilters.filterByDensity(
+        candidates,
+        ImmutableSet.of(Density.LDPI, Density.MDPI),
+        true);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
@@ -222,7 +229,10 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testHdpiFilterRemovesUnneededResources() {
-    Set<Path> hdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.HDPI), false);
+    Set<Path> hdpi = ResourceFilters.filterByDensity(
+        candidates,
+        ImmutableSet.of(Density.HDPI),
+        false);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", HDPI),
         paths("dmh.png", HDPI),
@@ -250,7 +260,10 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testXhdpiFilterRemovesUnneededResources() {
-    Set<Path> xhdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.XHDPI), false);
+    Set<Path> xhdpi = ResourceFilters.filterByDensity(
+        candidates,
+        ImmutableSet.of(Density.XHDPI),
+        false);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", XHDPI),
         paths("dmh.png", HDPI),
@@ -278,7 +291,10 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testXxhdpiFilterRemovesUnneededResources() {
-    Set<Path> xxhdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.XXHDPI), false);
+    Set<Path> xxhdpi = ResourceFilters.filterByDensity(
+        candidates,
+        ImmutableSet.of(Density.XXHDPI),
+        false);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", XHDPI),
         paths("dmh.png", HDPI),
@@ -306,8 +322,8 @@ public class FiltersTest {
   @Test
   public void testImageDensityFilter() {
     Set<Path> filesToRemove =
-        Filters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
-    Predicate<Path> predicate = Filters.createImageDensityFilter(
+        ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
+    Predicate<Path> predicate = ResourceFilters.createImageDensityFilter(
          candidates, ImmutableSet.of(Density.MDPI), false);
     assertFalse(candidates.isEmpty());
     for (Path candidate : candidates) {

@@ -28,8 +28,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
-import com.facebook.buck.util.Filters;
-import com.facebook.buck.util.Filters.Density;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -81,7 +79,7 @@ public class FilterResourcesStep implements Step {
   private final ImmutableSet<String> locales;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   @Nullable
-  private final Set<Filters.Density> targetDensities;
+  private final Set<ResourceFilters.Density> targetDensities;
   @Nullable
   private final DrawableFinder drawableFinder;
   @Nullable
@@ -114,7 +112,7 @@ public class FilterResourcesStep implements Step {
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       FilteredDirectoryCopier filteredDirectoryCopier,
-      @Nullable Set<Filters.Density> targetDensities,
+      @Nullable Set<ResourceFilters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
@@ -159,7 +157,7 @@ public class FilterResourcesStep implements Step {
           inResDirToOutResDirMap.keySet(),
           filesystem);
       pathPredicates.add(
-          Filters.createImageDensityFilter(
+          ResourceFilters.createImageDensityFilter(
               drawables,
               Preconditions.checkNotNull(targetDensities),
               canDownscale));
@@ -235,7 +233,7 @@ public class FilterResourcesStep implements Step {
    */
   private void scaleUnmatchedDrawables(ExecutionContext context)
       throws IOException, InterruptedException {
-    Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
+    ResourceFilters.Density targetDensity = ResourceFilters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
     Preconditions.checkNotNull(drawableFinder);
@@ -248,8 +246,8 @@ public class FilterResourcesStep implements Step {
         continue;
       }
 
-      Filters.Qualifiers qualifiers = new Filters.Qualifiers(drawable);
-      Filters.Density density = qualifiers.density;
+      ResourceFilters.Qualifiers qualifiers = new ResourceFilters.Qualifiers(drawable);
+      ResourceFilters.Density density = qualifiers.density;
 
       // If the image has a qualifier but it's not the right one.
       Preconditions.checkNotNull(targetDensities);
@@ -257,7 +255,8 @@ public class FilterResourcesStep implements Step {
 
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
-        String fromDensity = (density == Density.NO_QUALIFIER ? "" : "-") + density.toString();
+        String fromDensity =
+            (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density.toString();
         Path destination = Paths.get(MorePaths.pathWithUnixSeparators(drawable).replaceFirst(
             "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
             "$1-" + targetDensity + "$2"));
@@ -371,7 +370,7 @@ public class FilterResourcesStep implements Step {
     static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.<String>of());
 
     private final Set<String> filter;
-    private final Set<Filters.Density> densities;
+    private final Set<ResourceFilters.Density> densities;
     private final boolean downscale;
 
     public ResourceFilter(List<String> resourceFilter) {
@@ -383,7 +382,7 @@ public class FilterResourcesStep implements Step {
         if ("downscale".equals(component)) {
           downscale = true;
         } else {
-          densities.add(Filters.Density.from(component));
+          densities.add(ResourceFilters.Density.from(component));
         }
       }
 
@@ -395,7 +394,7 @@ public class FilterResourcesStep implements Step {
     }
 
     @Nullable
-    public Set<Filters.Density> getDensities() {
+    public Set<ResourceFilters.Density> getDensities() {
       return densities;
     }
 
