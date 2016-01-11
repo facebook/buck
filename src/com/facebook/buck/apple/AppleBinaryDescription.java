@@ -283,7 +283,9 @@ public class AppleBinaryDescription
       FatBinaryInfo fatBinaryInfo) throws NoSuchBuildTargetException {
     ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
     for (BuildTarget thinTarget : fatBinaryInfo.getThinTargets()) {
-      if (resolver.getRuleOptional(thinTarget).isPresent()) {
+      Optional<BuildRule> existingThinRule = resolver.getRuleOptional(thinTarget);
+      if (existingThinRule.isPresent()) {
+        thinRules.add(existingThinRule.get());
         continue;
       }
       BuildRule thinRule = createThinBinary(
