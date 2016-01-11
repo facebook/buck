@@ -135,50 +135,76 @@ public class AppleBinaryDescription
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(APP_FLAVOR)) {
-      if (!args.infoPlist.isPresent()) {
-        throw new HumanReadableException(
-            "Cannot create application for apple_binary '%s':\n",
-            "No value specified for 'info_plist' attribute.",
-            params.getBuildTarget().getUnflavoredBuildTarget());
-      }
-      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
-        CxxPlatform cxxPlatform =
-            cxxPlatformFlavorDomain.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
-        ApplePlatform applePlatform =
-            Preconditions
-                .checkNotNull(platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor()))
-                .getAppleSdk()
-                .getApplePlatform();
-        if (applePlatform.getAppIncludesFrameworks()) {
-          return resolver.requireRule(
-              BuildTarget.builder(params.getBuildTarget())
-                  .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-                  .build());
-        }
+      return createBundleBuildRule(targetGraph, params, resolver, args);
+    } else {
+      return createBinaryBuildRule(targetGraph, params, resolver, args);
+    }
+  }
+
+  private <A extends Arg> BuildRule createBinaryBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) throws NoSuchBuildTargetException {
+    BuildTarget binaryBuildTarget = params.getBuildTarget().withoutFlavors(
+        AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+
+    BuildRule binaryBuildRule = createBinary(
+        targetGraph,
+        params.copyWithBuildTarget(binaryBuildTarget),
+        resolver,
+        args);
+    return binaryBuildRule;
+  }
+
+  private <A extends Arg> BuildRule createBundleBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) throws NoSuchBuildTargetException {
+    if (!args.infoPlist.isPresent()) {
+      throw new HumanReadableException(
+          "Cannot create application for apple_binary '%s':\n",
+          "No value specified for 'info_plist' attribute.",
+          params.getBuildTarget().getUnflavoredBuildTarget());
+    }
+
+    if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
+      CxxPlatform cxxPlatform =
+          cxxPlatformFlavorDomain.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+      ApplePlatform applePlatform =
+          Preconditions
+              .checkNotNull(platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor()))
+              .getAppleSdk()
+              .getApplePlatform();
+      if (applePlatform.getAppIncludesFrameworks()) {
         return resolver.requireRule(
             BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                 .build());
       }
-      BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();
-      return AppleDescriptions.createAppleBundle(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          platformFlavorsToAppleCxxPlatforms,
-          targetGraph,
-          params,
-          resolver,
-          codeSignIdentityStore,
-          provisioningProfileStore,
-          binaryTarget,
-          Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP),
-          Optional.<String>absent(),
-          args.infoPlist.get(),
-          args.infoPlistSubstitutions,
-          args.deps.get(),
-          args.getTests());
+      return resolver.requireRule(
+          BuildTarget.builder(params.getBuildTarget())
+              .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+              .build());
     }
-    return createBinary(targetGraph, params, resolver, args);
+    BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();
+    return AppleDescriptions.createAppleBundle(
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        platformFlavorsToAppleCxxPlatforms,
+        targetGraph,
+        params,
+        resolver,
+        codeSignIdentityStore,
+        provisioningProfileStore,
+        binaryTarget,
+        Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP),
+        Optional.<String>absent(),
+        args.infoPlist.get(),
+        args.infoPlistSubstitutions,
+        args.deps.get(),
+        args.getTests());
   }
 
   private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(
@@ -189,39 +215,49 @@ public class AppleBinaryDescription
     Optional<FatBinaryInfo> fatBinaryInfo = FatBinaryInfo.create(
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
-
     if (fatBinaryInfo.isPresent()) {
       return createFatBinaryBuildRule(targetGraph, params, resolver, args, fatBinaryInfo.get());
     } else {
-      Optional<Path> stubBinaryPath = Optional.absent();
-      Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
-      if (appleCxxPlatform.isPresent() && (!args.srcs.isPresent() || args.srcs.get().isEmpty())) {
-        stubBinaryPath = appleCxxPlatform.get().getStubBinary();
-      }
-
-      if (stubBinaryPath.isPresent()) {
-        try {
-          return new WriteFile(
-              params,
-              new SourcePathResolver(resolver),
-              Files.readAllBytes(stubBinaryPath.get()),
-              BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
-              true);
-        } catch (IOException e) {
-          throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
-        }
-      } else {
-        CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-        AppleDescriptions.populateCxxBinaryDescriptionArg(
-            new SourcePathResolver(resolver),
-
-            delegateArg,
-            args,
-            params.getBuildTarget());
-
-        return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
-      }
+      return createThinBinary(targetGraph, params, resolver, args);
     }
+  }
+
+  private <A extends Arg> BuildRule createThinBinary(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) throws NoSuchBuildTargetException {
+    Optional<Path> stubBinaryPath = getStubBinaryPath(params, args);
+    if (stubBinaryPath.isPresent()) {
+      try {
+        return new WriteFile(
+            params,
+            new SourcePathResolver(resolver),
+            Files.readAllBytes(stubBinaryPath.get()),
+            BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
+            true);
+      } catch (IOException e) {
+        throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
+      }
+    } else {
+      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      AppleDescriptions.populateCxxBinaryDescriptionArg(
+          new SourcePathResolver(resolver),
+          delegateArg,
+          args,
+          params.getBuildTarget());
+      return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+    }
+  }
+
+
+  private <A extends Arg> Optional<Path> getStubBinaryPath(BuildRuleParams params, A args) {
+    Optional<Path> stubBinaryPath = Optional.absent();
+    Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
+    if (appleCxxPlatform.isPresent() && (!args.srcs.isPresent() || args.srcs.get().isEmpty())) {
+      stubBinaryPath = appleCxxPlatform.get().getStubBinary();
+    }
+    return stubBinaryPath;
   }
 
   private Optional<AppleCxxPlatform> getAppleCxxPlatformFromParams(BuildRuleParams params) {
@@ -250,7 +286,7 @@ public class AppleBinaryDescription
       if (resolver.getRuleOptional(thinTarget).isPresent()) {
         continue;
       }
-      BuildRule thinRule = createBuildRule(
+      BuildRule thinRule = createThinBinary(
           targetGraph,
           params.copyWithBuildTarget(thinTarget),
           resolver,
