@@ -268,11 +268,7 @@ public class AppleBundleIntegrationTest {
         .resolve("DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp");
     Path binaryPath = bundlePath.resolve("DemoApp");
     assertTrue(Files.exists(dwarfPath));
-    String dwarfdumpMainStdout =
-        workspace.runCommand("dwarfdump", "-n", "main", dwarfPath.toString()).getStdout().or("");
-    assertTrue(dwarfdumpMainStdout.contains("AT_name"));
-    assertTrue(dwarfdumpMainStdout.contains("AT_decl_file"));
-    assertTrue(dwarfdumpMainStdout.contains("AT_decl_line"));
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, dwarfPath);
 
     ProcessExecutor.Result result = workspace.runCommand(
         "dsymutil",

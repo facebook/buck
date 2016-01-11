@@ -265,6 +265,7 @@ public class AppleBinaryIntegrationTest {
         .resolve("DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
             "Resources/DWARF/DemoApp");
     assertThat(Files.exists(output), Matchers.equalTo(true));
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, output);
   }
 
   @Test
@@ -304,12 +305,11 @@ public class AppleBinaryIntegrationTest {
         "apple.default_debug_info_format=dwarf_and_dsym",
         "//:DemoApp")
         .assertSuccess();
-    assertThat(
-        Files.exists(
-            getGenDir().resolve(
-                "DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
-                    "Resources/DWARF/DemoApp")),
-        Matchers.equalTo(true));
+    Path dwarfPath = getGenDir().resolve(
+        "DemoApp#dwarf-and-dsym,no-include-frameworks/DemoApp.app.dSYM/Contents/" +
+            "Resources/DWARF/DemoApp");
+    assertThat(Files.exists(dwarfPath), Matchers.equalTo(true));
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, dwarfPath);
   }
 
   @Test
