@@ -16,17 +16,23 @@ import zipfile
 # setuptools at runtime.  Also, locate the `pkg_resources` modules
 # via our local setuptools import.
 if not zipfile.is_zipfile(sys.argv[0]):
+    # Remove twitter.common.python from the import path - it may be eagerly
+    # loaded as part of site-packages.
+    sys.modules.pop('twitter', None)
+    sys.modules.pop('twitter.common', None)
+    sys.modules.pop('twitter.common.python', None)
+
     buck_root = os.sep.join(__file__.split(os.sep)[:-6])
     sys.path.insert(0, os.path.join(
         buck_root,
-        'third-party/py/pex'))
+        'third-party/py/twitter-commons/src/python'))
     sys.path.insert(0, os.path.join(
         buck_root, 'third-party/py/setuptools'))
 
 import pkg_resources
 
-from pex.pex_builder import PEXBuilder
-from pex.interpreter import PythonInterpreter
+from twitter.common.python.pex_builder import PEXBuilder
+from twitter.common.python.interpreter import PythonInterpreter
 
 
 def dereference_symlinks(src):
