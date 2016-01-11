@@ -35,12 +35,14 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -210,6 +212,63 @@ public class CxxLibraryTest {
                     new BuildTargetSourcePath(staticPicLibraryTarget))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
+    assertEquals(
+        expectedSharedNativeLinkableInput,
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.SHARED));
+  }
+
+  @Test
+  public void headerOnlyExports() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    CxxPlatform cxxPlatform =
+        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+
+    BuildTarget staticPicLibraryTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)
+            .build();
+    ruleResolver.addToIndex(
+        new FakeBuildRule(
+            new FakeBuildRuleParamsBuilder(staticPicLibraryTarget).build(),
+            pathResolver));
+
+
+    FrameworkPath frameworkPath = FrameworkPath.ofSourcePath(
+        new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:baz")));
+
+    // Construct a CxxLibrary object to test.
+    CxxLibrary cxxLibrary = new CxxLibrary(
+        params,
+        ruleResolver,
+        pathResolver,
+        FluentIterable.from(params.getDeclaredDeps().get()),
+        /* headerOnly */ Predicates.<CxxPlatform>alwaysTrue(),
+        Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
+        /* exportedLinkerFlags */ Functions.constant(StringArg.from("-ldl")),
+        /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
+        /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
+        ImmutableSet.<FrameworkPath>of(frameworkPath),
+        ImmutableSet.<FrameworkPath>of(),
+        NativeLinkable.Linkage.STATIC,
+        /* linkWhole */ false,
+        Optional.<String>absent(),
+        ImmutableSortedSet.<BuildTarget>of(),
+        /* isAsset */ false);
+
+    NativeLinkableInput expectedSharedNativeLinkableInput =
+        NativeLinkableInput.of(
+            StringArg.from("-ldl"),
+            ImmutableSet.<FrameworkPath>of(frameworkPath),
+            ImmutableSet.<FrameworkPath>of());
+
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
