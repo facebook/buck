@@ -216,13 +216,9 @@ public class ExternalJavac implements Javac {
 
     ProcessBuilder processBuilder = new ProcessBuilder(command.build());
 
-    // Set environment to client environment and add additional information.
     Map<String, String> env = processBuilder.environment();
     env.clear();
     env.putAll(context.getEnvironment());
-    env.put("BUCK_INVOKING_RULE", invokingRule.toString());
-    env.put("BUCK_TARGET", invokingRule.toString());
-    env.put("BUCK_DIRECTORY_ROOT", filesystem.getRootPath().toAbsolutePath().toString());
 
     processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     // Run the command
