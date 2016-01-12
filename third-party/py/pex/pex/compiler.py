@@ -3,6 +3,8 @@
 
 from __future__ import absolute_import
 
+import contextlib
+import os
 import subprocess
 import tempfile
 
@@ -58,6 +60,17 @@ main(root, relpaths)
 """
 
 
+@contextlib.contextmanager
+def named_temporary_file():
+    fp, path = tempfile.mkstemp()
+    os.close(fp)
+    try:
+        with open(path, 'w') as fp:
+            yield fp
+    finally:
+        os.remove(path)
+
+
 class Compiler(object):
   class Error(Exception):
     """Indicates an error compiling one or more python source files."""
@@ -78,7 +91,7 @@ class Compiler(object):
     :returns: A list of relative paths of the compiled bytecode files.
     :raises: A :class:`Compiler.Error` if there was a problem bytecode compiling any of the files.
     """
-    with tempfile.NamedTemporaryFile() as fp:
+    with named_temporary_file() as fp:
       fp.write(to_bytes(_COMPILER_MAIN % {'root': root, 'relpaths': relpaths}, encoding='utf-8'))
       fp.flush()
       process = subprocess.Popen([self._interpreter.binary, fp.name],
