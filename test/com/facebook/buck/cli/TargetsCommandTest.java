@@ -74,6 +74,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,6 +86,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TargetsCommandTest {
 
@@ -94,6 +97,7 @@ public class TargetsCommandTest {
   private CommandRunnerParams params;
   private ObjectMapper objectMapper;
   private ProjectFilesystem filesystem;
+  private ExecutorService executor;
 
   private SortedMap<String, TargetNode<?>> buildTargetNodes(
       ProjectFilesystem filesystem,
@@ -140,6 +144,12 @@ public class TargetsCommandTest {
         new FakeJavaPackageFinder(),
         objectMapper,
         Optional.<WebServer>absent());
+    executor = Executors.newSingleThreadExecutor();
+  }
+
+  @After
+  public void tearDown() {
+    executor.shutdown();
   }
 
   @Test
@@ -150,6 +160,7 @@ public class TargetsCommandTest {
 
     targetsCommand.printJsonForTargets(
         params,
+        executor,
         nodes);
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
@@ -205,6 +216,7 @@ public class TargetsCommandTest {
     SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
         params,
+        executor,
         buildRules);
 
     String output = console.getTextWrittenToStdOut();

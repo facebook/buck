@@ -52,6 +52,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
@@ -124,16 +126,24 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     }
   }
 
-  TargetNode<?> getNode(QueryTarget target) throws QueryException, InterruptedException {
+  TargetNode<?> getNode(QueryTarget target)
+      throws QueryException, InterruptedException {
     Preconditions.checkState(target instanceof QueryBuildTarget);
+    ExecutorService executor = null;
     try {
+      executor = Executors.newSingleThreadExecutor();
       return params.getParser().getTargetNode(
           params.getBuckEventBus(),
           params.getCell(),
           enableProfiling,
+          executor,
           ((QueryBuildTarget) target).getBuildTarget());
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error getting target node for %s\n%s", target, e.getMessage());
+    } finally {
+      if (executor != null) {
+        executor.shutdown();
+      }
     }
   }
 
@@ -282,7 +292,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
       throws InterruptedException, QueryException {
     try {
-      AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.buildOwnersReport(
+      AuditOwnerCommand.OwnersReport report = new AuditOwnerCommand().buildOwnersReport(
           params,
           buildFileTree,
           files,

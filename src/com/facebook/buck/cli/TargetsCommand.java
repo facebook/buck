@@ -356,7 +356,7 @@ public class TargetsCommand extends AbstractCommand {
       // Print out matching targets in alphabetical order.
       if (getPrintJson()) {
         try {
-          printJsonForTargets(params, matchingNodes);
+          printJsonForTargets(params, pool.getExecutor(), matchingNodes);
         } catch (BuildFileParseException e) {
           params.getBuckEventBus().post(ConsoleEvent.severe(
               MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -512,6 +512,7 @@ public class TargetsCommand extends AbstractCommand {
   @VisibleForTesting
   void printJsonForTargets(
       CommandRunnerParams params,
+      Executor executor,
       SortedMap<String, TargetNode<?>> buildIndex)
       throws BuildFileParseException, IOException, InterruptedException {
     // Print the JSON representation of the build node for the specified target(s).
@@ -528,6 +529,7 @@ public class TargetsCommand extends AbstractCommand {
           params.getBuckEventBus(),
           params.getCell(),
           getEnableProfiling(),
+          executor,
           targetNode);
       if (sortedTargetRule == null) {
         params.getConsole().printErrorText(
@@ -821,11 +823,15 @@ public class TargetsCommand extends AbstractCommand {
 
     // Get all valid targets in our target directory by reading the build file.
     ImmutableSet<TargetNode<?>> targetNodes;
-    try {
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Targets",
+        params.getBuckConfig().getWorkQueueExecutionOrder(),
+        getConcurrencyLimit(params.getBuckConfig()))) {
       targetNodes = parser.getAllTargetNodes(
           params.getBuckEventBus(),
           owningCell,
           getEnableProfiling(),
+          pool.getExecutor(),
           buildFile);
     } catch (BuildFileParseException e) {
       // TODO(jasta): this doesn't smell right!

@@ -116,6 +116,10 @@ public class ParserConfig {
   }
 
   public int getNumParsingThreads() {
+    if (!getEnableParallelParsing()) {
+      return 1;
+    }
+
     Optional<Long> value = delegate.getLong("project", "parsing_threads");
     if (value.isPresent()) {
       return Math.min(value.get().intValue(), delegate.getNumThreads());

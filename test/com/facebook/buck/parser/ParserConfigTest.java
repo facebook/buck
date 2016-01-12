@@ -16,10 +16,12 @@
 
 package com.facebook.buck.parser;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -69,5 +71,35 @@ public class ParserConfigTest {
               reader));
       assertThat(config.getGlobHandler(), Matchers.equalTo(handler));
     }
+  }
+
+  @Test
+  public void shouldReturnThreadCountIfParallelParsingIsEnabled() {
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[project]",
+            "parsing_threads = 5",
+            "parallel_parsing = true")
+        .build();
+
+    ParserConfig parserConfig = new ParserConfig(config);
+
+    assertTrue(parserConfig.getEnableParallelParsing());
+    assertEquals(5, parserConfig.getNumParsingThreads());
+  }
+
+  @Test
+  public void shouldReturnOneThreadCountIfParallelParsingIsNotEnabled() {
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[project]",
+            "parsing_threads = 5",
+            "parallel_parsing = false")
+        .build();
+
+    ParserConfig parserConfig = new ParserConfig(config);
+
+    assertFalse(parserConfig.getEnableParallelParsing());
+    assertEquals(1, parserConfig.getNumParsingThreads());
   }
 }

@@ -299,6 +299,7 @@ public class InstallCommand extends BuildCommand {
             params.getBuckEventBus(),
             params.getCell(),
             getEnableProfiling(),
+            executor,
             target);
 
         if (node != null &&

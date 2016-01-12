@@ -163,7 +163,7 @@ public class AuditOwnerCommand extends AbstractCommand {
     return 0;
   }
 
-  static OwnersReport buildOwnersReport(
+  OwnersReport buildOwnersReport(
       CommandRunnerParams params,
       BuildFileTree buildFileTree,
       Iterable<String> arguments,
@@ -193,13 +193,17 @@ public class AuditOwnerCommand extends AbstractCommand {
 
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
-        try {
+        try (CommandThreadManager pool = new CommandThreadManager(
+            "AuditOwner",
+            params.getBuckConfig().getWorkQueueExecutionOrder(),
+            getConcurrencyLimit(params.getBuckConfig()))){
           targetNodes.put(
               buckFile,
               params.getParser().getAllTargetNodes(
                   params.getBuckEventBus(),
                   params.getCell(),
                   /* enable profiling */ false,
+                  pool.getExecutor(),
                   buckFile));
         } catch (BuildFileParseException e) {
           Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));

@@ -175,7 +175,7 @@ public class QueryCommand extends AbstractCommand {
 
     LOG.debug("Printing out the following targets: " + queryResult);
     if (shouldOutputAttributes()) {
-      collectAndPrintAttributes(params, env, queryResult);
+      collectAndPrintAttributes(params, executor, env, queryResult);
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
@@ -206,6 +206,7 @@ public class QueryCommand extends AbstractCommand {
 
   private void collectAndPrintAttributes(
       CommandRunnerParams params,
+      Executor executor,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult)
       throws InterruptedException, IOException, QueryException {
@@ -220,6 +221,7 @@ public class QueryCommand extends AbstractCommand {
             params.getBuckEventBus(),
             params.getCell(),
             getEnableProfiling(),
+            executor,
             node);
         if (sortedTargetRule == null) {
           params.getConsole().printErrorText(
