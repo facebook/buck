@@ -62,6 +62,7 @@ The following sections are recognized by Buck:
     'cxx',
     'download',
     'go',
+    'groovy',
     'halide',
     'java',
     'httpserver',
@@ -940,6 +941,23 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '/usr/local/libexec/go/pkg/tool/darwin_amd64/link' /}
   {param description}
     The full path to the Go linker.  This is normally automatically discovered.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'groovy' /}
+  {param description}
+    This section configures the <a href="http://groovy-lang.org/">Groovy</a> toolchain.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'groovy' /}
+  {param name: 'groovy_home' /}
+  {param example_value: '/path/to/groovy_home'/}
+  {param description}
+    This defines the value of <code>GROOVY_HOME</code> that Buck should use. If it is not provided,
+    Buck will use the system's <code>GROOVY_HOME</code> by default.
   {/param}
 {/call}
 

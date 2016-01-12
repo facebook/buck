@@ -200,6 +200,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'go_library',
             'go_test',
         ],
+        'groovy': [
+            'groovy_library',
+        ],
         'halide': [
             'halide_library',
         ],
@@ -284,6 +287,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'Go' /}
         {param rules: $platformRulesMap['go'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Groovy' /}
+        {param rules: $platformRulesMap['groovy'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param platform: 'Halide' /}
@@ -610,6 +617,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .genrule}
 {call .ruleLink}{param name : 'genrule' /}{/call}
+{/template}
+
+/***/
+{template .groovy_library}
+{call .ruleLink}{param name : 'groovy_library' /}{/call}
 {/template}
 
 /***/
