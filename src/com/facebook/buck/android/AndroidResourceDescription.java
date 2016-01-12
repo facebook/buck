@@ -56,9 +56,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       ".gitkeep",
       ".svn",
       ".git",
-      ".DS_Store",
+      ".ds_store",
       ".scc",
-      "CVS",
+      "cvs",
       "thumbs.db",
       "picasa.ini");
 
@@ -164,8 +164,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       public FileVisitResult preVisitDirectory(
           Path dir,
           BasicFileAttributes attr) throws IOException {
+        String dirName = dir.getFileName().toString();
         // Special case: directory starting with '_' as per aapt.
-        if (dir.getFileName().toString().charAt(0) == '_' || !isResource(dir)) {
+        if (dirName.charAt(0) == '_' || !isResource(dirName)) {
           return FileVisitResult.SKIP_SUBTREE;
         }
         return FileVisitResult.CONTINUE;
@@ -173,32 +174,22 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
 
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
-        if (isResource(file)) {
+        String filename = file.getFileName().toString();
+        if (isResource(filename)) {
           paths.add(new PathSourcePath(filesystem, file));
         }
         return FileVisitResult.CONTINUE;
       }
 
-      private boolean isResource(Path fileOrDir) throws IOException {
-        for (String nonAssetFilename : NON_ASSET_FILENAMES) {
-          if (filesystem.isSameRelativePathIfFileExists(
-                  fileOrDir,
-                  fileOrDir.resolveSibling(nonAssetFilename))) {
-            return false;
-          }
+      private boolean isResource(String fileOrDirName) {
+        if (NON_ASSET_FILENAMES.contains(fileOrDirName.toLowerCase())) {
+          return false;
         }
-        String fileOrDirName = fileOrDir.getFileName().toString();
         if (fileOrDirName.charAt(fileOrDirName.length() - 1) == '~') {
           return false;
         }
-        String fileOrDirNameWithoutExtension = Files.getNameWithoutExtension(fileOrDirName);
-        for (String ignoredMiniAaptExtension : MiniAapt.IGNORED_FILE_EXTENSIONS) {
-          if (filesystem.isSameRelativePathIfFileExists(
-                  fileOrDir,
-                  fileOrDir.resolveSibling(
-                      fileOrDirNameWithoutExtension + "." + ignoredMiniAaptExtension))) {
-            return false;
-          }
+        if (MiniAapt.IGNORED_FILE_EXTENSIONS.contains(Files.getFileExtension(fileOrDirName))) {
+          return false;
         }
         return true;
       }
