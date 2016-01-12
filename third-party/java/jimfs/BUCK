@@ -1,7 +1,7 @@
 prebuilt_jar(
   name = 'jimfs',
-  binary_jar = 'jimfs-1.1-SNAPSHOT.jar',
-  source_jar = 'jimfs-1.1-SNAPSHOT-sources.jar',
+  binary_jar = 'jimfs-1.0.jar',
+  source_jar = 'jimfs-1.0-sources.jar',
   visibility = [
     '//test/...',
   ],
