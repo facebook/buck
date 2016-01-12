@@ -64,7 +64,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -1110,20 +1109,6 @@ public class ProjectFilesystem {
       setLastModifiedTime(fileToTouch, FileTime.fromMillis(System.currentTimeMillis()));
     } else {
       createNewFile(fileToTouch);
-    }
-  }
-
-  public boolean isSameRelativePathIfFileExists(Path path1, Path path2) throws IOException {
-    // We can't use String or Path equality, since we might be on a case-insensitive
-    // filesystem with locale-specific case rules (e.g. Turkish).
-    //
-    // Instead, we ask the filesystem to check if the two paths refer to
-    // the same underlying file, which will handle the case of ".git" vs. ".GIT"
-    // and ".git" vs. ".G\u0130T" for Turkish.
-    try {
-      return Files.isSameFile(getPathForRelativePath(path1), getPathForRelativePath(path2));
-    } catch (NoSuchFileException e) {
-      return false;
     }
   }
 
