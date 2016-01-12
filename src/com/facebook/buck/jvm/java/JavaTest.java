@@ -404,7 +404,10 @@ public class JavaTest
   /**
    * @return a test case result, named "main", signifying a failure of the entire test class.
    */
-  private TestCaseSummary getTestClassFailedSummary(String testClass, String message) {
+  private TestCaseSummary getTestClassFailedSummary(
+      String testClass,
+      String message,
+      long time) {
     return new TestCaseSummary(
         testClass,
         ImmutableList.of(
@@ -412,7 +415,7 @@ public class JavaTest
                 testClass,
                 "main",
                 ResultType.FAILURE,
-                0L,
+                time,
                 message,
                 "",
                 "",
@@ -462,7 +465,8 @@ public class JavaTest
             summaries.add(
                 getTestClassFailedSummary(
                     testClass,
-                    message));
+                    message,
+                    testRuleTimeoutMs.or(0L)));
           // Not having a test result file at all (which only happens when we are using test
           // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
           // ignore it.  This is another result of the fact that JUnit is the only thing that can

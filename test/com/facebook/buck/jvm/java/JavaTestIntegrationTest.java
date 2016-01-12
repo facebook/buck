@@ -149,6 +149,8 @@ public class JavaTestIntegrationTest {
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
+    assertThat(stderr, Matchers.containsString("FAIL"));
+    assertThat(stderr, Matchers.containsString("250ms"));
   }
 
   @Test
@@ -163,6 +165,8 @@ public class JavaTestIntegrationTest {
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
+    assertThat(stderr, Matchers.containsString("FAIL"));
+    assertThat(stderr, Matchers.containsString("100ms"));
   }
 
   @Test
