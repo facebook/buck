@@ -13,7 +13,7 @@
     {param content}
 
 {call buck.rule}
-{param status: 'FROZEN' /}
+{param status: 'UNFROZEN' /}
 {param overview}
 A <code>groovy_library()</code> rule is used to define a set of Groovy files that can be compiled
 together. It can also be used to cross compile a set of Groovy and Java files. The main output of a
@@ -55,7 +55,7 @@ files and resources.
   Rules (usually other <code>groovy_library</code> or <code>java_library</code> rules) that are
   used to generate the classpath required to compile this <code>groovy_library</code>.
 
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param}
 {/call}
 
@@ -66,7 +66,7 @@ files and resources.
   Other <code>groovy_library</code> and <code>java_library</code> rules that depend
   on this rule will also include its <code>exported_deps</code> in their classpaths.
 
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param}
 {/call}
 
@@ -74,7 +74,7 @@ files and resources.
   {param name: 'provided_deps' /}
   {param default : '[]' /}
   {param desc}
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param}
 {/call}
 
@@ -92,7 +92,7 @@ files and resources.
   {param desc}
   Only used during cross compilation.
 
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param}
 {/call}
 
@@ -102,7 +102,7 @@ files and resources.
   {param desc}
   Only used during cross compilation.
 
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param}
 {/call}
 
@@ -112,7 +112,7 @@ files and resources.
   {param desc}
   Only used during cross compilation.
 
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param} 
 {/call}
 
@@ -122,7 +122,7 @@ files and resources.
   {param desc}
   Only used during cross compilation.
 
-  This is the same as in <a href="{ROOT}rule/java_library.html"><code>java_library</code></a>.
+  This is the same as in {call buck.java_library /}.
   {/param}
 {/call}
 
@@ -138,14 +138,19 @@ groovy_library(
   name = 'example',
   srcs = ['MySourceFile.groovy'],
 )
+</pre>
 
+<pre class="prettyprint lang-py">
 # A rule that compiles all of the .groovy files under the directory in
 # which the rule is defined using glob()
 groovy_library(
   name = 'groovy-only',
   srcs = glob(['**/*.groovy']),
 )
+</pre>
 
+
+<pre class="prettyprint lang-py">
 # A rule that cross compiles all of the .groovy and .java files under
 # the directory in which the rule is defined, failing if compiling the
 # java files generates any compiler warnings
@@ -157,7 +162,6 @@ groovy_library(
     '-Werror',
   ],
 )
-
 </pre>{/literal}
 {/param}
 
