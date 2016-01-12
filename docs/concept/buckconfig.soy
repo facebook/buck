@@ -954,11 +954,11 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'groovy' /}
   {param name: 'groovy_home' /}
+  {param example_value: '/path/to/groovy_home'/}
   {param description}
     This defines the value of <code>GROOVY_HOME</code> that Buck should use. If it is not provided,
     Buck will use the system's <code>GROOVY_HOME</code> by default.
   {/param}
-  {param example_value: '/path/to/groovy_home'/}
 {/call}
 
 {call buckconfig.section}
