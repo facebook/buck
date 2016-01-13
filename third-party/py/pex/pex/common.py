@@ -269,17 +269,8 @@ class Chroot(object):
     self._ensure_parent(dst)
     abs_src = src
     abs_dst = os.path.join(self.chroot, dst)
-    try:
-      os.link(abs_src, abs_dst)
-    except OSError as e:
-      if e.errno == errno.EEXIST:
-        # File already exists, skip XXX -- ensure target and dest are same?
-        pass
-      elif e.errno == errno.EXDEV:
-        # Hard link across devices, fall back on copying
-        shutil.copyfile(abs_src, abs_dst)
-      else:
-        raise
+    safe_copy(abs_src, abs_dst, overwrite=False)
+    # If the file already exists, skip XXX -- ensure target and dest are same?
 
   def write(self, data, dst, label=None, mode='wb'):
     """Write data to ``chroot/dst`` with optional label.

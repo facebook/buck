@@ -104,6 +104,9 @@ class PEX(object):  # noqa: T000
       site_libs = set()
     site_libs.update([sysconfig.get_python_lib(plat_specific=False),
                       sysconfig.get_python_lib(plat_specific=True)])
+    # On windows getsitepackages() returns the python stdlib too.
+    if sys.prefix in site_libs:
+      site_libs.remove(sys.prefix)
     real_site_libs = set(os.path.realpath(path) for path in site_libs)
     return site_libs | real_site_libs
 
