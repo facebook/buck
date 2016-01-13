@@ -43,4 +43,11 @@ public class ProGuardConfig {
     return delegate.getValue("tools", "proguard-max-heap-size").or("1024M");
   }
 
+  /**
+   * @return The agentpath for profiling if specified.
+   */
+  public Optional<String> getProguardAgentPath() {
+    return delegate.getValue("tools", "proguard-agentpath");
+  }
+
 }

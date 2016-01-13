@@ -77,13 +77,17 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     Path cwd = Paths.get("root");
     replayAll();
 
-    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.DEFAULT, "sdk-default.pro");
+    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.DEFAULT,
+        Optional.<String>absent(), "sdk-default.pro");
     checkSdkConfig(
         context,
         cwd,
-        ProGuardObfuscateStep.SdkProguardType.OPTIMIZED, "sdk-optimized.pro");
-    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.NONE, null);
-
+        ProGuardObfuscateStep.SdkProguardType.OPTIMIZED,
+        Optional.<String>absent(), "sdk-optimized.pro");
+    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.NONE,
+        Optional.<String>absent(), null);
+    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.NONE,
+        Optional.of("/some/path"), null);
     verifyAll();
   }
 
@@ -103,6 +107,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.<Path>absent(),
         "1024M",
+        Optional.<String>absent(),
         Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.<Path>of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
@@ -127,12 +132,14 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
       ExecutionContext context,
       Path cwd,
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
+      Optional<String> proguardAgentPath,
       String expectedPath) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.<Path>absent(),
         "1024M",
+        proguardAgentPath,
         Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.<Path>of(),
         sdkProguardConfig,

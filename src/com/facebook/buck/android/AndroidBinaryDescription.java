@@ -238,6 +238,7 @@ public class AndroidBinaryDescription
         pathResolver,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
+        proGuardConfig.getProguardAgentPath(),
         (Keystore) keystore,
         packageType,
         dexSplitMode,

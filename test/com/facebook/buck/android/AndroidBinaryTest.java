@@ -137,6 +137,7 @@ public class AndroidBinaryTest {
         new FakeProjectFilesystem(),
         Optional.<Path>absent(),
         "1024M",
+        Optional.<String>absent(),
         GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/" +
                 "/.proguard/proguard.txt"),
         ImmutableSet.<Path>of(),

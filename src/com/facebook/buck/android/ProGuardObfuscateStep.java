@@ -55,6 +55,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   private final Path pathToProGuardCommandLineArgsFile;
   private final Optional<Path> proguardJarOverride;
   private final String proguardMaxHeapSize;
+  private final Optional<String> proguardAgentPath;
 
   /**
    * Create steps that write out ProGuard's command line arguments to a text file and then run
@@ -67,6 +68,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       ProjectFilesystem filesystem,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
+      Optional<String> proguardAgentPath,
       Path generatedProGuardConfig,
       Set<Path> customProguardConfigs,
       SdkProguardType sdkProguardConfig,
@@ -95,7 +97,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
         inputAndOutputEntries,
         pathToProGuardCommandLineArgsFile,
         proguardJarOverride,
-        proguardMaxHeapSize);
+        proguardMaxHeapSize,
+        proguardAgentPath);
 
     buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
     buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
@@ -119,7 +122,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Map<Path, Path> inputAndOutputEntries,
       Path pathToProGuardCommandLineArgsFile,
       Optional<Path> proguardJarOverride,
-      String proguardMaxHeapSize) {
+      String proguardMaxHeapSize,
+      Optional<String> proguardAgentPath) {
     super(filesystem.getRootPath());
 
     this.filesystem = filesystem;
@@ -127,6 +131,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
+    this.proguardAgentPath = proguardAgentPath;
   }
 
   @Override
@@ -146,8 +151,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("java")
-        .add("-Xmx" + proguardMaxHeapSize)
+    args.add("java");
+    if (proguardAgentPath.isPresent()) {
+       args.add("-agentpath:" + proguardAgentPath.get());
+    }
+    args.add("-Xmx" + proguardMaxHeapSize)
         .add("-jar").add(proguardJar.toString())
         .add("@" + pathToProGuardCommandLineArgsFile);
     return args.build();
