@@ -474,7 +474,10 @@ public class Project {
       if (module.isIntelliJPlugin()) {
         jdkDependency = SerializableDependentModule.newIntelliJPluginJdk();
       } else {
-        jdkDependency = SerializableDependentModule.newStandardJdk();
+        jdkDependency = SerializableDependentModule.newStandardJdk(
+            intellijConfig.getJdkName(),
+            intellijConfig.getJdkType()
+        );
       }
     }
 
