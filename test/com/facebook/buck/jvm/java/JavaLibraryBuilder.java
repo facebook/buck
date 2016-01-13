@@ -35,7 +35,10 @@ import java.nio.file.Path;
 public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
 
   protected JavaLibraryBuilder(BuildTarget target, HashCode hashCode) {
-    super(new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS), target, hashCode);
+    super(new JvmLibraryDescription<JavaLibraryDescription.Arg>(
+        new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS)),
+        target,
+        hashCode);
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {

@@ -23,6 +23,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JvmLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
@@ -412,7 +413,7 @@ public class IjModuleFactory {
         dependencyType);
   }
 
-  private static <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
+  private static <T extends JvmLibraryDescription.Arg> void addCompiledShadowIfNeeded(
       TargetNode<T> targetNode,
       ModuleBuildContext context) {
     T arg = targetNode.getConstructorArg();

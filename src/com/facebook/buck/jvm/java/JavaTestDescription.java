@@ -181,7 +181,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg implements HasSourceUnderTest {
+  public static class Arg extends JvmLibraryDescription.Arg implements HasSourceUnderTest {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;

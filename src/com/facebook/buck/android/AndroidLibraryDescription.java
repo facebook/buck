@@ -19,10 +19,10 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
-import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JvmLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -174,7 +174,7 @@ public class AndroidLibraryDescription
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg {
+  public static class Arg extends JvmLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
     public Optional<String> resourceUnionPackage;
   }
