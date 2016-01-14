@@ -101,7 +101,7 @@ python_binary(
   name = 'pex',
   main = 'make_pex.py',
   deps = [
-    '//third-party/py/twitter-commons/src/python:twitter-commons',
+    '//third-party/py/pex:pex',
   ],
   visibility = [
     'PUBLIC',
