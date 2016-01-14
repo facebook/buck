@@ -865,7 +865,7 @@ public final class Main {
 
         VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
 
-        if (vcBuckConfig.shouldGenerateStatistics()) {
+        if (!command.isReadOnly() && vcBuckConfig.shouldGenerateStatistics()) {
           vcStatsGenerator = new VersionControlStatsGenerator(
               diskIoExecutorService,
               new DefaultVersionControlCmdLineInterfaceFactory(
