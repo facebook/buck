@@ -84,10 +84,9 @@ public class IjProjectWriter {
 
     ST moduleContents = getST(StringTemplateFile.MODULE_TEMPLATE);
 
-    // TODO(marcinkosiba): support androidFacet.
-    moduleContents.add("androidFacet", false);
     moduleContents.add("contentRoot", projectDataPreparer.getContentRoot(module));
     moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
+    moduleContents.add("androidFacet", projectDataPreparer.getAndroidProperties(module));
 
     writeToFile(moduleContents, path);
   }

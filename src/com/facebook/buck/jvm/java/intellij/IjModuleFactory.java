@@ -381,24 +381,57 @@ public class IjModuleFactory {
     }
   }
 
+  private static void addDepsAndFolder(
+      IjFolder.IJFolderFactory folderFactory,
+      IjModuleGraph.DependencyType dependencyType,
+      TargetNode<?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context,
+      ImmutableSet<Path> inputPaths
+  ) {
+    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(inputPaths);
+    addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
+    addDeps(foldersToInputsIndex, targetNode, dependencyType, context);
+  }
+
+  private static void addDepsAndFolder(
+      IjFolder.IJFolderFactory folderFactory,
+      IjModuleGraph.DependencyType dependencyType,
+      TargetNode<?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context
+  ) {
+    addDepsAndFolder(
+        folderFactory,
+        dependencyType,
+        targetNode,
+        wantsPackagePrefix,
+        context,
+        targetNode.getInputs());
+  }
+
   private static void addDepsAndSources(
       TargetNode<?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
-    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(
-        targetNode.getInputs());
-    addSourceFolders(SourceFolder.FACTORY, foldersToInputsIndex, wantsPackagePrefix, context);
-    addDeps(foldersToInputsIndex, targetNode, IjModuleGraph.DependencyType.PROD, context);
+    addDepsAndFolder(
+        SourceFolder.FACTORY,
+        IjModuleGraph.DependencyType.PROD,
+        targetNode,
+        wantsPackagePrefix,
+        context);
   }
 
   private static void addDepsAndTestSources(
       TargetNode<?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
-    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(
-        targetNode.getInputs());
-    addSourceFolders(TestFolder.FACTORY, foldersToInputsIndex, wantsPackagePrefix, context);
-    addDeps(foldersToInputsIndex, targetNode, IjModuleGraph.DependencyType.TEST, context);
+    addDepsAndFolder(
+        TestFolder.FACTORY,
+        IjModuleGraph.DependencyType.TEST,
+        targetNode,
+        wantsPackagePrefix,
+        context);
   }
 
   private static void addDeps(
@@ -438,7 +471,8 @@ public class IjModuleFactory {
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
       androidFacetBuilder
           .setManifestPath(moduleFactoryResolver.getAndroidManifestPath(target))
-          .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target));
+          .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target))
+          .setAndroidLibrary(false);
     }
   }
 
@@ -462,7 +496,7 @@ public class IjModuleFactory {
       if (dummyRDotJavaClassPath.isPresent()) {
         context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
       }
-      context.ensureAndroidFacetBuilder();
+      context.getOrCreateAndroidFacetBuilder().setAndroidLibrary(true);
     }
   }
 
@@ -478,17 +512,40 @@ public class IjModuleFactory {
     public void apply(
         TargetNode<AndroidResourceDescription.Arg> target,
         ModuleBuildContext context) {
-      context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
+      androidFacetBuilder.setAndroidLibrary(true);
 
-      // TODO(marcinkosiba): Add support for arg.rDotJavaPackage and maybe arg.manifest
       Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
       if (assets.isPresent()) {
         androidFacetBuilder.addAssetPaths(assets.get());
       }
-      androidFacetBuilder.addAllResourcePaths(
-          moduleFactoryResolver.getAndroidResourcePath(target).asSet());
+
+      Optional<Path> resources = moduleFactoryResolver.getAndroidResourcePath(target);
+      ImmutableSet<Path> resourceFolders;
+      if (resources.isPresent()) {
+        resourceFolders = ImmutableSet.of(resources.get());
+
+        androidFacetBuilder.addAllResourcePaths(resourceFolders);
+
+        for (Path resourceFolder : resourceFolders) {
+          context.addSourceFolder(
+              new AndroidResourceFolder(resourceFolder)
+          );
+        }
+      } else {
+        resourceFolders = ImmutableSet.<Path>of();
+      }
+
+      androidFacetBuilder.setPackageName(target.getConstructorArg().rDotJavaPackage);
+
+      Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
+      if (dummyRDotJavaClassPath.isPresent()) {
+        context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      }
+      context.getOrCreateAndroidFacetBuilder().setAndroidLibrary(true);
+
+      context.addDeps(resourceFolders, target.getDeps(), IjModuleGraph.DependencyType.PROD);
     }
   }
 

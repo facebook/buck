@@ -50,4 +50,17 @@ abstract class AbstractIjModuleAndroidFacet {
    * @return paths to the proguard configuration.
    */
   public abstract Optional<Path> getProguardConfigPath();
+
+  /**
+   * @return whether or not this is an Android Library. IntelliJ identifies libraries using
+   * a is_android_library_project setting in the module iml to allow other modules which
+   * depend on it to inherit assets, resources, etc.
+   */
+  public abstract boolean isAndroidLibrary();
+
+  /**
+   * @return The package that the R file should be located in. This is used by android_resources
+   * targets to specify the package their resources should referenced via.
+   */
+  public abstract Optional<String> getPackageName();
 }
