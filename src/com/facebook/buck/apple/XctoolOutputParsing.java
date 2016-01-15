@@ -144,12 +144,12 @@ public class XctoolOutputParsing {
       XctoolEventCallback eventCallback) {
     Gson gson = new Gson();
     JsonStreamParser streamParser = new JsonStreamParser(reader);
-    while (streamParser.hasNext()) {
-      try {
+    try {
+      while (streamParser.hasNext()) {
         dispatchEventCallback(gson, streamParser.next(), eventCallback);
-      } catch (JsonParseException e) {
-        LOG.warn(e, "Couldn't parse xctool JSON stream");
       }
+    } catch (JsonParseException e) {
+      LOG.warn(e, "Couldn't parse xctool JSON stream");
     }
   }
 

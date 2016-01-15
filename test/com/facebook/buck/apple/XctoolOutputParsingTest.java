@@ -33,6 +33,7 @@ import com.google.common.base.Optional;
 
 import org.junit.Test;
 
+import java.io.StringReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -266,6 +267,15 @@ public class XctoolOutputParsingTest {
     assertThat(endOcunitEvent.timestamp, closeTo(1432065859.751992, EPSILON));
     assertThat(endOcunitEvent.message, nullValue(String.class));
     assertThat(endOcunitEvent.succeeded, is(false));
+  }
+
+  @Test
+  public void streamingEmptyReaderDoesNotCauseFailure() {
+    final List<Object> streamedObjects = new ArrayList<>();
+    XctoolOutputParsing.streamOutputFromReader(
+        new StringReader(""),
+        eventCallbackAddingEventsToList(streamedObjects));
+    assertThat(streamedObjects, is(empty()));
   }
 
   @Test
