@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -25,6 +27,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -89,6 +92,58 @@ public class XctoolRunTestsStepTest {
     assertThat(
         step.execute(executionContext),
         equalTo(0));
+  }
+
+  @Test
+  public void xctoolCommandWhichFailsPrintsStderrToConsole() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    XctoolRunTestsStep step = new XctoolRunTestsStep(
+        projectFilesystem,
+        Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
+        "iphonesimulator",
+        Optional.<String>absent(),
+        ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
+        ImmutableMap.<Path, Path>of(),
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+        TestSelectorList.EMPTY,
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        Optional.<String>absent(),
+        Optional.<String>absent());
+    ProcessExecutorParams xctoolParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    "/path/to/xctool",
+                    "-reporter",
+                    "json-stream",
+                    "-sdk",
+                    "iphonesimulator",
+                    "run-tests",
+                    "-logicTest",
+                    "/path/to/Foo.xctest"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
+            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+            .build();
+    FakeProcess fakeXctoolFailure = new FakeProcess(42, "", "Something went terribly wrong\n");
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
+        ImmutableMap.of(xctoolParams, fakeXctoolFailure));
+    TestConsole testConsole = new TestConsole();
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProcessExecutor(processExecutor)
+        .setEnvironment(ImmutableMap.<String, String>of())
+        .setConsole(testConsole)
+        .build();
+    assertThat(
+        step.execute(executionContext),
+        equalTo(42));
+    assertThat(
+        testConsole.getTextWrittenToStdErr(),
+        equalTo("xctool failed with exit code 42: Something went terribly wrong\n"));
   }
 
   @Test
@@ -234,9 +289,11 @@ public class XctoolRunTestsStepTest {
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
-    FakeProcess fakeXctoolSuccess = new FakeProcess(1, "", "");
+    // Test failure is indicated by xctool exiting with exit code 1, so it shouldn't
+    // fail the step.
+    FakeProcess fakeXctoolTestFailure = new FakeProcess(1, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
+        ImmutableMap.of(xctoolParams, fakeXctoolTestFailure));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
         .setEnvironment(ImmutableMap.<String, String>of())
@@ -282,9 +339,9 @@ public class XctoolRunTestsStepTest {
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
-    FakeProcess fakeXctoolSuccess = new FakeProcess(400, "", "");
+    FakeProcess fakeXctoolFailure = new FakeProcess(400, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
+        ImmutableMap.of(xctoolParams, fakeXctoolFailure));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
         .setEnvironment(ImmutableMap.<String, String>of())
@@ -381,6 +438,68 @@ public class XctoolRunTestsStepTest {
           step.execute(executionContext),
           equalTo(0));
     }
+  }
+
+  @Test
+  public void xctoolCommandWithTestSelectorFailsIfListTestsOnlyFails() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    XctoolRunTestsStep step = new XctoolRunTestsStep(
+        projectFilesystem,
+        Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
+        "iphonesimulator",
+        Optional.<String>absent(),
+        ImmutableSet.of(Paths.get("/path/to/FooTest.xctest"), Paths.get("/path/to/BarTest.xctest")),
+        ImmutableMap.<Path, Path>of(),
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+        TestSelectorList.builder()
+            .addRawSelectors("#.*Magic.*")
+            .build(),
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        Optional.<String>absent(),
+        Optional.<String>absent());
+
+    ProcessExecutorParams xctoolListOnlyParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    "/path/to/xctool",
+                    "-reporter",
+                    "json-stream",
+                    "-sdk",
+                    "iphonesimulator",
+                    "run-tests",
+                    "-logicTest",
+                    "/path/to/FooTest.xctest",
+                    "-logicTest",
+                    "/path/to/BarTest.xctest",
+                    "-listTestsOnly"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
+            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+            .build();
+    FakeProcess fakeXctoolListTestsFailureProcess =
+        new FakeProcess(42, "", "Chopper Dave, we have Uh-Oh");
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
+        ImmutableMap.of(
+            xctoolListOnlyParams, fakeXctoolListTestsFailureProcess));
+    TestConsole testConsole = new TestConsole();
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProcessExecutor(processExecutor)
+        .setEnvironment(ImmutableMap.<String, String>of())
+        .setConsole(testConsole)
+        .build();
+    assertThat(
+        step.execute(executionContext),
+        equalTo(42));
+    assertThat(
+        testConsole.getTextWrittenToStdErr(),
+        allOf(
+            containsString("xctool failed with exit code 42: Chopper Dave, we have Uh-Oh"),
+            containsString("Failed to query tests with xctool")));
   }
 
   @Test
