@@ -25,14 +25,15 @@ import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployResult;
@@ -92,30 +93,42 @@ public class PublishCommand extends BuildCommand {
       return exitCode;
     }
 
-    // Publish given targets
-    boolean success = true;
-    for (BuildTarget buildTarget : getBuildTargets()) {
-      success &= publishTarget(buildTarget, params);
-    }
-
-    return success ? 0 : 1;
+    // Publish starting with the given targets.
+    return publishTargets(getBuildTargets(), params) ? 0 : 1;
   }
 
-  /**
-   * @return whether successful
-   */
-  private boolean publishTarget(BuildTarget buildTarget, CommandRunnerParams params) {
-    BuildRule buildRule;
-    try {
-      buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e.getHumanReadableErrorMessage());
-    }
+  private boolean publishTargets(
+      ImmutableList<BuildTarget> buildTargets,
+      CommandRunnerParams params) {
+    ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
+    boolean success = true;
+    for (BuildTarget buildTarget : buildTargets) {
+      BuildRule buildRule = null;
+      try {
+        buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
+      } catch (NoSuchBuildTargetException e) {
+        // This doesn't seem physically possible!
+        Throwables.propagate(e);
+      }
+      Preconditions.checkNotNull(buildRule);
 
-    if (!(buildRule instanceof MavenPublishable)) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Cannot publish rule of type " + buildRule.getClass().getName()));
-      return false;
+      if (!(buildRule instanceof MavenPublishable)) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            "Cannot publish rule of type %s",
+            buildRule.getClass().getName()));
+        success &= false;
+        continue;
+      }
+
+      MavenPublishable publishable = (MavenPublishable) buildRule;
+      if (!publishable.getMavenCoords().isPresent()) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            "No maven coordinates specified for %s",
+            buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName()));
+        success &= false;
+        continue;
+      }
+      publishables.add(publishable);
     }
 
     Publisher publisher = new Publisher(
@@ -124,13 +137,15 @@ public class PublishCommand extends BuildCommand {
         dryRun);
 
     try {
-      DeployResult deployResult = publisher.publish((MavenPublishable) buildRule);
-      printArtifactsInformation(params, deployResult);
+      ImmutableSet<DeployResult> deployResults = publisher.publish(publishables.build());
+      for (DeployResult deployResult : deployResults) {
+        printArtifactsInformation(params, deployResult);
+      }
     } catch (DeploymentException e) {
       params.getConsole().printBuildFailureWithoutStacktraceDontUnwrap(e);
       return false;
     }
-    return true;
+    return success;
   }
 
   private static void printArtifactsInformation(

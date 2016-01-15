@@ -29,4 +29,11 @@ public interface MavenPublishable extends HasMavenCoordinates {
    * When published, these will be listed in pom.xml as dependencies
    */
   ImmutableSortedSet<HasMavenCoordinates> getMavenDeps();
+
+  /**
+   * When published, these will be included in the artifact.  This, {@link #getMavenDeps()}, and the
+   * transitive dependencies of those maven deps would form the complete set of transitive
+   * dependencies for the artifact.
+   */
+  ImmutableSortedSet<BuildRule> getPackagedDependencies();
 }

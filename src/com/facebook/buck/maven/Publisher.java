@@ -19,10 +19,18 @@ package com.facebook.buck.maven;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.StandardSystemProperty;
 import com.google.common.base.Throwables;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -44,6 +52,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class Publisher {
@@ -88,33 +97,92 @@ public class Publisher {
     this.dryRun = dryRun;
   }
 
-  public DeployResult publish(MavenPublishable publishable) throws DeploymentException {
-    DefaultArtifact coords = new DefaultArtifact(
-        Preconditions.checkNotNull(
-            publishable.getMavenCoords().get(),
-            "No maven coordinates specified for published rule ",
-            publishable));
-    Path relativePathToOutput = Preconditions.checkNotNull(
-        publishable.getPathToOutput(),
-        "No path to output present in ",
-        publishable);
-    File mainItem = publishable
-        .getProjectFilesystem()
-        .resolve(relativePathToOutput)
-        .toFile();
-
-    if (!coords.getClassifier().isEmpty()) {
-      return publish(coords, ImmutableList.of(mainItem));
+  public ImmutableSet<DeployResult> publish(
+      ImmutableSet<MavenPublishable> publishables) throws DeploymentException {
+    ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
+        checkForDuplicatePackagedDeps(publishables);
+    if (duplicateBuiltinBuileRules.size() > 0) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Duplicate transitive dependencies for publishable libraries found!  This means");
+      sb.append(StandardSystemProperty.LINE_SEPARATOR);
+      sb.append("that the following libraries would have multiple copies if these libraries were");
+      sb.append(StandardSystemProperty.LINE_SEPARATOR);
+      sb.append("used together.  The can be resolved by adding a maven URL to each target listed");
+      sb.append(StandardSystemProperty.LINE_SEPARATOR);
+      sb.append("below:");
+      for (UnflavoredBuildTarget unflavoredBuildTarget : duplicateBuiltinBuileRules.keySet()) {
+        sb.append(StandardSystemProperty.LINE_SEPARATOR);
+        sb.append(unflavoredBuildTarget.getFullyQualifiedName());
+        sb.append(" (referenced by these build targets: ");
+        Joiner.on(", ").appendTo(
+            sb,
+            duplicateBuiltinBuileRules.get(unflavoredBuildTarget));
+        sb.append(")");
+      }
+      throw new DeploymentException(sb.toString());
     }
 
-    try {
-      // If this is the "main" artifact (denoted by lack of classifier) generate and publish
-      // pom alongside
-      File pom = Pom.generatePomFile(publishable).toFile();
-      return publish(coords, ImmutableList.of(mainItem, pom));
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
+    ImmutableSet.Builder<DeployResult> deployResultBuilder = ImmutableSet.builder();
+    for (MavenPublishable publishable : publishables) {
+      DefaultArtifact coords = new DefaultArtifact(
+          Preconditions.checkNotNull(
+              publishable.getMavenCoords().get(),
+              "No maven coordinates specified for published rule ",
+              publishable));
+      Path relativePathToOutput = Preconditions.checkNotNull(
+          publishable.getPathToOutput(),
+          "No path to output present in ",
+          publishable);
+      File mainItem = publishable
+          .getProjectFilesystem()
+          .resolve(relativePathToOutput)
+          .toFile();
+
+      if (!coords.getClassifier().isEmpty()) {
+        deployResultBuilder.add(publish(coords, ImmutableList.of(mainItem)));
+      }
+
+      try {
+        // If this is the "main" artifact (denoted by lack of classifier) generate and publish
+        // pom alongside
+        File pom = Pom.generatePomFile(publishable).toFile();
+        deployResultBuilder.add(publish(coords, ImmutableList.of(mainItem, pom)));
+      } catch (IOException e) {
+        throw Throwables.propagate(e);
+      }
     }
+    return deployResultBuilder.build();
+  }
+
+  /**
+   * Checks for any packaged dependencies that exist between more than one of the targets that we
+   * are trying to publish.
+   * @return A multimap of dependency build targets and the publishable build targets that have them
+   * included in the final package that will be uploaded.
+   */
+  private ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget>
+  checkForDuplicatePackagedDeps(
+      ImmutableSet<MavenPublishable> publishables) {
+    // First build the multimap of the builtin dependencies and the publishable targets that use
+    // them.
+    Multimap<UnflavoredBuildTarget, UnflavoredBuildTarget> builtinDeps = HashMultimap.create();
+    for (MavenPublishable publishable : publishables) {
+      for (BuildRule buildRule : publishable.getPackagedDependencies()) {
+        builtinDeps.put(
+            buildRule.getBuildTarget().getUnflavoredBuildTarget(),
+            publishable.getBuildTarget().getUnflavoredBuildTarget());
+      }
+    }
+    // Now, check for any duplicate uses, and if found, return them.
+    ImmutableListMultimap.Builder<UnflavoredBuildTarget, UnflavoredBuildTarget> builder =
+        ImmutableListMultimap.builder();
+    for (UnflavoredBuildTarget buildTarget : builtinDeps.keySet()) {
+      Collection<UnflavoredBuildTarget> publishablesUsingBuildTarget = builtinDeps.get(buildTarget);
+      if (publishablesUsingBuildTarget.size() > 1) {
+        builder.putAll(buildTarget, publishablesUsingBuildTarget);
+      }
+    }
+    return builder.build();
   }
 
   /**

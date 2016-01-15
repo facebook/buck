@@ -72,6 +72,11 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     return this;
   }
 
+  public JavaLibraryBuilder setMavenCoords(String mavenCoords) {
+    arg.mavenCoords = Optional.of(mavenCoords);
+    return this;
+  }
+
   public JavaLibraryBuilder addSrc(SourcePath path) {
     arg.srcs = amend(arg.srcs, path);
     return this;
