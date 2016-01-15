@@ -93,7 +93,6 @@ class DelegateRunnerWithTimeout extends Runner {
 
   private void runWithBuckManagedTimeout(final DelegateRunNotifier wrapper) {
     final Semaphore completionSemaphore = new Semaphore(1);
-    final AtomicBoolean testsCompleted = new AtomicBoolean(false);
 
     // Acquire the one permit so later tryAcquire attempts lock
     // until they either time out or this permit is released by
@@ -101,8 +100,12 @@ class DelegateRunnerWithTimeout extends Runner {
     try {
       completionSemaphore.acquire();
     } catch (InterruptedException e) {
-      // If the aquire is interrupted
+      Thread.currentThread().interrupt();
+      shutdown();
+      return;
     }
+
+    final AtomicBoolean testsCompleted = new AtomicBoolean(false);
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
     executor.get().submit(
@@ -133,7 +136,7 @@ class DelegateRunnerWithTimeout extends Runner {
         // The test results that have been reported to the RunNotifier should still be output, but
         // there may be tests that did not have a chance to run. Unfortunately, we have no way to
         // tell the Runner to cancel only the runaway test.
-        executor.get().shutdownNow();
+        shutdown();
         return;
       }
 
@@ -144,12 +147,18 @@ class DelegateRunnerWithTimeout extends Runner {
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+        shutdown();
+        return;
       }
     }
   }
 
   private void runWithoutBuckManagedTimeout(final DelegateRunNotifier wrapper) {
     delegate.run(wrapper);
+  }
+
+  private void shutdown() {
+    executor.get().shutdownNow();
   }
 
 }
