@@ -302,6 +302,23 @@ public class BuckConfig {
   }
 
   /**
+   * @return the parsed BuildTarget in the given section and field, if set and a valid build target.
+   *
+   * This is useful if you use getTool to get the target, if any, but allow filesystem references.
+   */
+  public Optional<BuildTarget> getMaybeBuildTarget(String section, String field) {
+    Optional<String> value = getValue(section, field);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    try {
+      return Optional.of(getBuildTargetForFullyQualifiedTarget(value.get()));
+    } catch (BuildTargetParseException e) {
+      return Optional.absent();
+    }
+  }
+
+  /**
    * @return the parsed BuildTarget in the given section and field.
    */
   public BuildTarget getRequiredBuildTarget(String section, String field) {
@@ -357,21 +374,22 @@ public class BuckConfig {
     if (!value.isPresent()) {
       return Optional.absent();
     }
-    try {
-      BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
-      Optional<BuildRule> rule = resolver.getRuleOptional(target);
+    Optional<BuildTarget> target = getMaybeBuildTarget(section, field);
+    if (target.isPresent()) {
+      Optional<BuildRule> rule = resolver.getRuleOptional(target.get());
       if (!rule.isPresent()) {
-        throw new HumanReadableException("[%s] %s: no rule found for %s", section, field, target);
+        throw new HumanReadableException(
+            "[%s] %s: no rule found for %s", section, field, target.get());
       }
       if (!(rule.get() instanceof BinaryBuildRule)) {
         throw new HumanReadableException(
             "[%s] %s: %s must be an executable rule",
             section,
             field,
-            target);
+            target.get());
       }
       return Optional.of(((BinaryBuildRule) rule.get()).getExecutableCommand());
-    } catch (BuildTargetParseException e) {
+    } else {
       checkPathExists(
           value.get(),
           String.format("Overridden %s:%s path not found: ", section, field));

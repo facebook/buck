@@ -65,6 +65,9 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.jvm.scala.ScalaBuckConfig;
+import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
+import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.python.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
@@ -428,6 +431,8 @@ public class KnownBuildRuleTypes {
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
 
+    ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
+
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
@@ -599,6 +604,12 @@ public class KnownBuildRuleTypes {
             testTempDirOverride));
     builder.register(new RustBinaryDescription(rustBuckConfig));
     builder.register(new RustLibraryDescription(rustBuckConfig));
+    builder.register(new ScalaLibraryDescription(scalaConfig));
+    builder.register(new ScalaTestDescription(
+        scalaConfig,
+        defaultTestRuleTimeoutMs,
+        defaultCxxPlatform,
+        testTempDirOverride));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
