@@ -32,7 +32,7 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleFailur
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleSuspendedConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.CompilerErrorConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.google.common.collect.ImmutableList;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -58,7 +58,7 @@ public class BuckEventsConsumer implements
         BuildRuleSuspendedConsumer,
         CompilerErrorConsumer,
         RulesParsingStartConsumer,
-        RulesParsingEndConsumer,
+        BuckBuildProgressUpdateConsumer,
 
         BuckInternalBatchStartConsumer,
         BuckInternalBatchCommitConsumer {
@@ -74,12 +74,12 @@ public class BuckEventsConsumer implements
             Collections.synchronizedMap(new HashMap<String, BuildRuleItem>());
     private Map<String, List<String>> mErrors =
             Collections.synchronizedMap(new HashMap<String, List<String>>());
-    private int mNumRules = 0;
+    private float mProgressValue = 0;
     private BigInteger mMainBuildStartTimestamp = BigInteger.ZERO;
     private BigInteger mMainBuildEndTimestamp = BigInteger.ZERO;
 
     BuckTreeNodeBuild mCurrentBuildRootElement;
-    BuckTreeNodeDetail mTotalTasks;
+    BuckTreeNodeDetail mBuildProgress;
     BuckTreeNodeDetail mRunningTasks;
     BuckTreeNodeDetail mSuspendedTasks;
     BuckTreeNodeDetail mFinishedTasks;
@@ -104,10 +104,10 @@ public class BuckEventsConsumer implements
         mTarget = target;
         mCurrentBuildRootElement = new BuckTreeNodeBuild(mTarget);
 
-        mTotalTasks = new BuckTreeNodeDetail(
+        mBuildProgress = new BuckTreeNodeDetail(
                 mCurrentBuildRootElement,
                 BuckTreeNodeDetail.DetailType.INFO,
-                "Total tasks: " + mNumRules);
+                "Current build progress: " + Math.round(mProgressValue * 100) + "%");
         mRunningTasks = new BuckTreeNodeDetail(
                 mCurrentBuildRootElement,
                 BuckTreeNodeDetail.DetailType.INFO,
@@ -123,7 +123,7 @@ public class BuckEventsConsumer implements
                 BuckTreeNodeDetail.DetailType.INFO,
                 "Finished tasks: 0"
         );
-        mCurrentBuildRootElement.addChild(mTotalTasks);
+        mCurrentBuildRootElement.addChild(mBuildProgress);
         mCurrentBuildRootElement.addChild(mRunningTasks);
         mCurrentBuildRootElement.addChild(mSuspendedTasks);
         mCurrentBuildRootElement.addChild(mFinishedTasks);
@@ -142,7 +142,7 @@ public class BuckEventsConsumer implements
         mConnection.subscribe(BuildRuleSuspendedConsumer.BUCK_BUILD_RULE_SUSPENDED, this);
 
         mConnection.subscribe(RulesParsingStartConsumer.BUCK_PARSE_RULE_START, this);
-        mConnection.subscribe(RulesParsingEndConsumer.BUCK_PARSE_RULE_END, this);
+        mConnection.subscribe(BuckBuildProgressUpdateConsumer.BUCK_BUILD_PROGRESS_UPDATE, this);
 
         mConnection.subscribe(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER, this);
 
@@ -195,14 +195,17 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeParseRuleEnd(String build, BigInteger timestamp, int numRules) {
+    public void consumeBuckBuildProgressUpdate(String build,
+                                              BigInteger timestamp,
+                                              float progressValue) {
 
-        mNumRules = numRules;
-        final String message = "Total tasks: " + numRules;
+        mProgressValue = progressValue;
+        final String message = "Current build progress: " + Math.round(mProgressValue * 100) + "%";
+
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                BuckEventsConsumer.this.mTotalTasks.setDetail(message);
+                BuckEventsConsumer.this.mBuildProgress.setDetail(message);
                 BuckEventsConsumer.this.mTreeModel.reload();
             }
         });
@@ -332,7 +335,7 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeBuildEnd(String build, BigInteger timestamp) {
+    public void consumeBuildEnd(final String build, final BigInteger timestamp) {
         mMainBuildEndTimestamp = timestamp;
         float duration = mMainBuildEndTimestamp.
                 subtract(mMainBuildStartTimestamp).floatValue() / 1000;
@@ -378,11 +381,8 @@ public class BuckEventsConsumer implements
             @Override
             public void run() {
 
-                // Remove "progress" nodes
-                BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mTotalTasks);
-                BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mRunningTasks);
-                BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mSuspendedTasks);
-                BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mFinishedTasks);
+                //set progress to 100%
+                consumeBuckBuildProgressUpdate(build, timestamp, 1f);
 
                 BuckTreeNodeDetail finishNode = new BuckTreeNodeDetail(
                         BuckEventsConsumer.this.mCurrentBuildRootElement,

@@ -17,7 +17,6 @@
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
 
 public class BuckEventBuildParseEnd extends BuckEventBase {
@@ -28,8 +27,6 @@ public class BuckEventBuildParseEnd extends BuckEventBase {
 
     @Override
     public void handleEvent(BuckEventsConsumerFactory factory) {
-        RulesParsingEndConsumer consumer = factory.getRulesParsingEndConsumer();
-        consumer.consumeParseRuleEnd(buildId, timestamp, -1);
     }
 
     @Override

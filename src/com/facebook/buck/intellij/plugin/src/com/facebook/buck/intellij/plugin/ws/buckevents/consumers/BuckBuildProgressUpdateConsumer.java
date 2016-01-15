@@ -20,10 +20,10 @@ import com.intellij.util.messages.Topic;
 
 import java.math.BigInteger;
 
-public interface RulesParsingEndConsumer {
-    Topic<RulesParsingEndConsumer> BUCK_PARSE_RULE_END = Topic.create(
-            "buck.parse-rule.end",
-            RulesParsingEndConsumer.class
+public interface BuckBuildProgressUpdateConsumer {
+    Topic<BuckBuildProgressUpdateConsumer> BUCK_BUILD_PROGRESS_UPDATE = Topic.create(
+            "buck.build.progress.update",
+            BuckBuildProgressUpdateConsumer.class
     );
-    void consumeParseRuleEnd(String build, BigInteger timestamp, int numRules);
+    void consumeBuckBuildProgressUpdate(String build, BigInteger timestamp, float progressValue);
 }

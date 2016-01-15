@@ -17,19 +17,22 @@
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
 
-public class BuckEventBuildRules extends BuckEventBase {
-    public PartBuildRule[] buildRules;
-    public int numRules;
+public class BuckEventBuildProgressUpdated extends BuckEventBase {
+    public float progressValue;
 
-    public static final String EVENT_TYPE = "RuleCountCalculated";
+    public static final String EVENT_TYPE = "BuildProgressUpdated";
 
     @Override
     public void handleEvent(BuckEventsConsumerFactory factory) {
-        RulesParsingEndConsumer consumer = factory.getRulesParsingEndConsumer();
-        consumer.consumeParseRuleEnd(buildId, timestamp, numRules);
+        BuckBuildProgressUpdateConsumer consumer = factory.getBuckBuildProgressUpdateConsumer();
+        consumer.consumeBuckBuildProgressUpdate(buildId, timestamp, progressValue);
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY_HIGH;
     }
 
     @Override
