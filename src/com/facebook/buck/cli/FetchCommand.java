@@ -118,7 +118,8 @@ public class FetchCommand extends BuildCommand {
           params.getObjectMapper(),
           params.getClock(),
           Optional.<AdbOptions>absent(),
-          Optional.<TargetDeviceOptions>absent())) {
+          Optional.<TargetDeviceOptions>absent(),
+          params.getExecutors())) {
         exitCode = build.executeAndPrintFailuresToEventBus(
             buildTargets,
             isKeepGoing(),

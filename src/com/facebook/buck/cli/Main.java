@@ -61,6 +61,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
@@ -136,11 +137,13 @@ import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -178,6 +181,7 @@ public final class Main {
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
   private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 2;
+  private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -811,6 +815,11 @@ public final class Main {
       // when connecting. For now, we'll use the default from the server environment.
       Locale locale = Locale.getDefault();
 
+      // create a cached thread pool for cpu intensive tasks
+      Map<ExecutionContext.ExecutorPool, ExecutorService> executors =
+          new HashMap<ExecutionContext.ExecutorPool, ExecutorService>();
+      executors.put(ExecutionContext.ExecutorPool.CPU, Executors.newCachedThreadPool());
+
       // The order of resources in the try-with-resources block is important: the BuckEventBus must
       // be the last resource, so that it is closed first and can deliver its queued events to the
       // other resources before they are closed.
@@ -966,7 +975,8 @@ public final class Main {
                 processManager,
                 webServer,
                 buckConfig,
-                fileHashCache));
+                fileHashCache,
+                executors));
         // Wait for HTTP writes to complete.
         closeHttpExecutorService(
             cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
@@ -988,6 +998,10 @@ public final class Main {
           // complete; the cleaner will ensure subsequent cleans are
           // serialized with this one.)
           TRASH_CLEANER.startCleaningDirectory();
+        }
+        // shut down the cached thread pools
+        for (ExecutionContext.ExecutorPool p: executors.keySet()) {
+          closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
         }
       }
       if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {

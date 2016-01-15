@@ -71,6 +71,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -117,7 +118,8 @@ public class Build implements Closeable {
       Clock clock,
       ConcurrencyLimit concurrencyLimit,
       Optional<AdbOptions> adbOptions,
-      Optional<TargetDeviceOptions> targetDeviceOptions) {
+      Optional<TargetDeviceOptions> targetDeviceOptions,
+      Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
     this.actionGraph = actionGraph;
     this.ruleResolver = ruleResolver;
     this.executionContext = ExecutionContext.builder()
@@ -136,6 +138,7 @@ public class Build implements Closeable {
         .setConcurrencyLimit(concurrencyLimit)
         .setAdbOptions(adbOptions)
         .setTargetDeviceOptions(targetDeviceOptions)
+        .setExecutors(executors)
         .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;

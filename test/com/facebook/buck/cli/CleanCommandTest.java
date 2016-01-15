@@ -30,6 +30,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
@@ -50,6 +51,8 @@ import org.kohsuke.args4j.CmdLineException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Unit test for {@link CleanCommand}.
@@ -139,7 +142,8 @@ public class CleanCommandTest extends EasyMockSupport {
         Optional.<ProcessManager>absent(),
         Optional.<WebServer>absent(),
         FakeBuckConfig.builder().build(),
-        new NullFileHashCache());
+        new NullFileHashCache(),
+        new HashMap<ExecutionContext.ExecutorPool, ExecutorService>());
 
 
   }

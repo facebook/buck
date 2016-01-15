@@ -34,6 +34,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to run a {@link Command}.
  */
@@ -54,6 +57,7 @@ class CommandRunnerParams {
   private final Optional<WebServer> webServer;
   private final BuckConfig buckConfig;
   private final FileHashCache fileHashCache;
+  private final Map<ExecutionContext.ExecutorPool, ExecutorService> executors;
 
   public CommandRunnerParams(
       Console console,
@@ -70,7 +74,8 @@ class CommandRunnerParams {
       Optional<ProcessManager> processManager,
       Optional<WebServer> webServer,
       BuckConfig buckConfig,
-      FileHashCache fileHashCache) {
+      FileHashCache fileHashCache,
+      Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
     this.console = console;
     this.cell = cell;
     this.artifactCache = artifactCache;
@@ -86,6 +91,7 @@ class CommandRunnerParams {
     this.webServer = webServer;
     this.buckConfig = buckConfig;
     this.fileHashCache = fileHashCache;
+    this.executors = executors;
   }
 
   public Console getConsole() {
@@ -148,6 +154,10 @@ class CommandRunnerParams {
     return fileHashCache;
   }
 
+  public Map<ExecutionContext.ExecutorPool, ExecutorService> getExecutors() {
+    return executors;
+  }
+
   protected ExecutionContext createExecutionContext() {
     return ExecutionContext.builder()
         .setConsole(console)
@@ -157,6 +167,7 @@ class CommandRunnerParams {
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)
         .setObjectMapper(objectMapper)
+        .setExecutors(executors)
         .build();
   }
 

@@ -233,7 +233,8 @@ public class InstallCommand extends BuildCommand {
         ExecutionContext.Builder builder = ExecutionContext.builder()
             .setExecutionContext(build.getExecutionContext())
             .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
-            .setTargetDeviceOptions(Optional.of(targetDeviceOptions()));
+            .setTargetDeviceOptions(Optional.of(targetDeviceOptions()))
+            .setExecutors(params.getExecutors());
         exitCode = installApk(
             params,
             (InstallableApk) buildRule,

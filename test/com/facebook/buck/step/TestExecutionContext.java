@@ -24,6 +24,11 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class TestExecutionContext {
 
   private TestExecutionContext() {
@@ -35,6 +40,9 @@ public class TestExecutionContext {
   private static ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
+    Map<ExecutionContext.ExecutorPool, ExecutorService> executors =
+        new HashMap<ExecutionContext.ExecutorPool, ExecutorService>();
+    executors.put(ExecutionContext.ExecutorPool.CPU, Executors.newCachedThreadPool());
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
@@ -42,7 +50,8 @@ public class TestExecutionContext {
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setObjectMapper(new ObjectMapper())
-        .setClassLoaderCache(testClassLoaderCache);
+        .setClassLoaderCache(testClassLoaderCache)
+        .setExecutors(executors);
   }
 
   public static ExecutionContext newInstance() {

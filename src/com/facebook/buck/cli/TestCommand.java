@@ -485,7 +485,8 @@ public class TestCommand extends BuildCommand {
           params.getObjectMapper(),
           params.getClock(),
           Optional.of(getAdbOptions(params.getBuckConfig())),
-          Optional.of(getTargetDeviceOptions()))) {
+          Optional.of(getTargetDeviceOptions()),
+          params.getExecutors())) {
 
         // Build all of the test rules.
         int exitCode = build.executeAndPrintFailuresToEventBus(

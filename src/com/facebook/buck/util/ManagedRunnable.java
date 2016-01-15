@@ -19,37 +19,43 @@ package com.facebook.buck.util;
 import com.android.common.annotations.Nullable;
 
 import java.io.InterruptedIOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  * A wrapper around a {@link Thread} which implements the {@link AutoCloseable} interface to be
  * used in try-resource blocks and which also supports forwarding exceptions to the managing
  * thread.
  */
-public abstract class ManagedThread implements AutoCloseable {
+public abstract class ManagedRunnable implements AutoCloseable {
 
-  private final Thread thread;
+  private final Runnable runnable;
+  private final ExecutorService threadPool;
+  private Future<?> runnableFuture;
 
   @Nullable
   private Exception exception;
 
-  public ManagedThread() {
-    this.thread = new Thread(
+  public ManagedRunnable(ExecutorService threadPool) {
+    this.threadPool = threadPool;
+    this.runnable =
         new Runnable() {
           @Override
           @SuppressWarnings("PMD.EmptyCatchBlock")
           public void run() {
             try {
-              ManagedThread.this.run();
+              ManagedRunnable.this.run();
             } catch (InterruptedIOException | InterruptedException e) {
             } catch (Exception e) {
               exception = e;
             }
           }
-        });
+        };
   }
 
   public void start() {
-    this.thread.start();
+    this.runnableFuture = this.threadPool.submit(this.runnable);
   }
 
   protected abstract void run() throws Exception;
@@ -57,18 +63,18 @@ public abstract class ManagedThread implements AutoCloseable {
   /**
    * Wait for the backing thread to terminate.
    */
-  public void waitFor() throws InterruptedException {
+  public void waitFor() throws InterruptedException, ExecutionException {
 
     // Wait for the thread to finish.
-    this.thread.join();
+    this.runnableFuture.get();
   }
 
   @Override
   public void close() throws Exception {
 
     // Stop the thread and wait for it to finish.
-    this.thread.interrupt();
-    this.thread.join();
+    this.runnableFuture.cancel(true);
+    this.runnableFuture.get();
 
     // If the thread died with an exception, forward it to the creating thread.
     if (exception != null) {

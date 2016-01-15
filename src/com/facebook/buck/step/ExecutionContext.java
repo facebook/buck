@@ -42,6 +42,8 @@ import org.immutables.value.Value;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -49,6 +51,10 @@ import javax.annotation.Nullable;
 @DeprecatedBuckStyleImmutable
 @SuppressWarnings("deprecation")
 public abstract class ExecutionContext implements Closeable {
+
+  public enum ExecutorPool {
+    CPU,
+  }
 
   @Value.Parameter
   public abstract Console getConsole();
@@ -109,6 +115,14 @@ public abstract class ExecutionContext implements Closeable {
   @Value.Derived
   public Verbosity getVerbosity() {
     return getConsole().getVerbosity();
+  }
+
+  @Value.Parameter
+  public abstract Map<ExecutorPool, ExecutorService> getExecutors();
+
+  @Value.Derived
+  public ExecutorService getExecutorService(ExecutorPool p) {
+    return getExecutors().get(p);
   }
 
   /**
@@ -202,6 +216,7 @@ public abstract class ExecutionContext implements Closeable {
             /* loadLimit */ Double.POSITIVE_INFINITY);
     private Optional<AdbOptions> adbOptions = Optional.absent();
     private Optional<TargetDeviceOptions> targetDeviceOptions = Optional.absent();
+    private Map<ExecutorPool, ExecutorService> executors;
 
     private Builder() {}
 
@@ -223,7 +238,8 @@ public abstract class ExecutionContext implements Closeable {
           Preconditions.checkNotNull(classLoaderCache),
           Preconditions.checkNotNull(concurrencyLimit),
           adbOptions,
-          targetDeviceOptions);
+          targetDeviceOptions,
+          executors);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -337,5 +353,11 @@ public abstract class ExecutionContext implements Closeable {
       this.targetDeviceOptions = targetDeviceOptions;
       return this;
     }
+
+    public Builder setExecutors(Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
+      this.executors = executors;
+      return this;
+    }
+
   }
 }

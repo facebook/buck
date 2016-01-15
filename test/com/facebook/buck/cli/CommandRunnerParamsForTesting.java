@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
@@ -43,6 +44,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
 
 public class CommandRunnerParamsForTesting {
 
@@ -83,7 +86,8 @@ public class CommandRunnerParamsForTesting {
         Optional.<ProcessManager>absent(),
         webServer,
         config,
-        new NullFileHashCache());
+        new NullFileHashCache(),
+        new HashMap<ExecutionContext.ExecutorPool, ExecutorService>());
   }
 
   public static Builder builder() {

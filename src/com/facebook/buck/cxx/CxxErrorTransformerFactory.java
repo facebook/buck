@@ -16,8 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.LineProcessorThread;
+import com.facebook.buck.util.LineProcessorRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -66,10 +67,13 @@ class CxxErrorTransformerFactory {
   /**
    * Create a thread to process lines in the stream asynchronously.
    */
-  public LineProcessorThread createTransformerThread(
+  public LineProcessorRunnable createTransformerThread(
+      ExecutionContext context,
       InputStream inputStream,
       OutputStream outputStream) {
-    return new LineProcessorThread(inputStream, outputStream) {
+    return new LineProcessorRunnable(context.getExecutorService(ExecutionContext.ExecutorPool.CPU),
+        inputStream,
+        outputStream) {
       @Override
       public Iterable<String> process(String line) {
         return ImmutableList.of(transformLine(line));

@@ -38,6 +38,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
@@ -64,7 +65,9 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -211,7 +214,8 @@ public class BuildCommand extends AbstractCommand {
       ObjectMapper objectMapper,
       Clock clock,
       Optional<AdbOptions> adbOptions,
-      Optional<TargetDeviceOptions> targetDeviceOptions) {
+      Optional<TargetDeviceOptions> targetDeviceOptions,
+      Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
     }
@@ -235,7 +239,8 @@ public class BuildCommand extends AbstractCommand {
         clock,
         getConcurrencyLimit(buckConfig),
         adbOptions,
-        targetDeviceOptions);
+        targetDeviceOptions,
+        executors);
   }
 
   @Nullable private Build lastBuild;
@@ -403,7 +408,8 @@ public class BuildCommand extends AbstractCommand {
         params.getObjectMapper(),
         params.getClock(),
         Optional.<AdbOptions>absent(),
-        Optional.<TargetDeviceOptions>absent())) {
+        Optional.<TargetDeviceOptions>absent(),
+        params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           buildTargets,

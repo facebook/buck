@@ -23,13 +23,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.concurrent.ExecutorService;
 
-public abstract class LineProcessorThread extends ManagedThread {
+public abstract class LineProcessorRunnable extends ManagedRunnable {
 
   private final InputStream inputStream;
   private final OutputStream outputStream;
 
-  public LineProcessorThread(InputStream inputStream, OutputStream outputStream) {
+  public LineProcessorRunnable(
+      ExecutorService threadPool,
+      InputStream inputStream,
+      OutputStream outputStream) {
+    super(threadPool);
     this.inputStream = Preconditions.checkNotNull(inputStream);
     this.outputStream = Preconditions.checkNotNull(outputStream);
   }

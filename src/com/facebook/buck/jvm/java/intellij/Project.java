@@ -1089,6 +1089,7 @@ public class Project {
     try (ExecutionContext childContext = ExecutionContext.builder()
         .setExecutionContext(executionContext)
         .setConsole(childConsole)
+        .setExecutors(executionContext.getExecutors())
         .build()) {
       exitCode = command.execute(childContext);
     }
