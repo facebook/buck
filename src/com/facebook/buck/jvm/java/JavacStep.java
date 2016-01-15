@@ -30,7 +30,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -160,9 +159,7 @@ public class JavacStep implements Step {
 
         if (suggestBuildRules.isPresent()) {
           ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-          ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(
-              filesystem,
-              failedImports);
+          ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(failedImports);
 
           if (!suggestions.isEmpty()) {
             String invoker = invokingRule.toString();
@@ -283,14 +280,12 @@ public class JavacStep implements Step {
     }
 
     // Specify the output directory.
-    Function<Path, Path> pathRelativizer = filesystem.getAbsolutifier();
-    builder.add("-d").add(pathRelativizer.apply(outputDirectory).toString());
+    Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
+    builder.add("-d").add(pathAbsolutifier.apply(outputDirectory).toString());
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
-      String classpath = Joiner.on(File.pathSeparator).join(
-          FluentIterable.from(buildClasspathEntries)
-              .transform(pathRelativizer));
+      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
       builder.add("-classpath", classpath);
     } else {
       builder.add("-classpath", "''");

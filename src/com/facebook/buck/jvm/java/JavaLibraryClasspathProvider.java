@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +35,8 @@ public class JavaLibraryClasspathProvider {
 
   public static ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries(
       JavaLibrary javaLibraryRule,
-      Optional<Path> outputJar) {
+      SourcePathResolver resolver,
+      Optional<SourcePath> outputJar) {
     ImmutableSetMultimap.Builder<JavaLibrary, Path> outputClasspathBuilder =
         ImmutableSetMultimap.builder();
     Iterable<JavaLibrary> javaExportedLibraryDeps;
@@ -55,7 +58,7 @@ public class JavaLibraryClasspathProvider {
     }
 
     if (outputJar.isPresent()) {
-      outputClasspathBuilder.put(javaLibraryRule, outputJar.get());
+      outputClasspathBuilder.put(javaLibraryRule, resolver.getAbsolutePath(outputJar.get()));
     }
 
     return outputClasspathBuilder.build();
@@ -63,7 +66,8 @@ public class JavaLibraryClasspathProvider {
 
   public static ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries(
       JavaLibrary javaLibraryRule,
-      Optional<Path> outputJar) {
+      SourcePathResolver resolver,
+      Optional<SourcePath> outputJar) {
     final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
         ImmutableSetMultimap.builder();
     ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForDeps =
@@ -90,7 +94,7 @@ public class JavaLibraryClasspathProvider {
 
     // Only add ourselves to the classpath if there's a jar to be built.
     if (outputJar.isPresent()) {
-      classpathEntries.put(javaLibraryRule, outputJar.get());
+      classpathEntries.put(javaLibraryRule, resolver.getAbsolutePath(outputJar.get()));
     }
 
     return classpathEntries.build();
@@ -98,7 +102,7 @@ public class JavaLibraryClasspathProvider {
 
   public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(
       JavaLibrary javaLibrary,
-      Optional<Path> outputJar) {
+      Optional<SourcePath> outputJar) {
     ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
 
     classpathDeps.addAll(

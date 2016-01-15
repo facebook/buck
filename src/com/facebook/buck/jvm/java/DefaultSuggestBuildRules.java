@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
@@ -75,7 +74,6 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
 
   @Override
   public ImmutableSet<String> suggest(
-      ProjectFilesystem filesystem,
       ImmutableSet<String> failedImports) {
     ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
 
@@ -83,7 +81,6 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
 
     for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps.get()) {
       if (isMissingBuildRule(
-          filesystem,
           transitiveNotDeclaredDep,
           remainingImports,
           jarResolver)) {
@@ -113,7 +110,6 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
    *      rule would have satisfied one of the {@code failedImports}.
    */
   private boolean isMissingBuildRule(
-      ProjectFilesystem filesystem,
       BuildRule transitiveNotDeclaredRule,
       Set<String> failedImports,
       JarResolver jarResolver) {
@@ -129,7 +125,7 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
     // the exception of rules that export their dependencies, this will result in a single
     // classpath.
     for (Path classPath : classPaths) {
-      ImmutableSet<String> topLevelSymbols = jarResolver.resolve(filesystem, classPath);
+      ImmutableSet<String> topLevelSymbols = jarResolver.resolve(classPath);
 
       for (String symbolName : topLevelSymbols) {
         if (failedImports.contains(symbolName)) {

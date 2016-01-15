@@ -63,8 +63,8 @@ public class DefaultSuggestBuildRulesTest {
     BuildRule grandparent = javaLibrary("//:grandparent", "com/parent/OldManRiver.java", parent);
 
     ImmutableMap<Path, String> jarPathToSymbols = ImmutableMap.of(
-        parent.getPathToOutput(), "com.facebook.Foo",
-        libraryTwo.getPathToOutput(), "com.facebook.Foo");
+        projectFilesystem.resolve(parent.getPathToOutput()), "com.facebook.Foo",
+        projectFilesystem.resolve(libraryTwo.getPathToOutput()), "com.facebook.Foo");
     ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
         fromLibraries(libraryTwo, parent, grandparent);
 
@@ -80,9 +80,7 @@ public class DefaultSuggestBuildRulesTest {
             ImmutableList.of(libraryTwo, parent, grandparent));
 
     final ImmutableSet<String> suggestions =
-        suggestFn.suggest(
-            projectFilesystem,
-            ImmutableSet.of("com.facebook.Foo"));
+        suggestFn.suggest(ImmutableSet.of("com.facebook.Foo"));
 
     assertEquals(ImmutableSet.of("//:parent"), suggestions);
   }
@@ -95,8 +93,8 @@ public class DefaultSuggestBuildRulesTest {
     BuildRule grandparent = javaLibrary("//:grandparent", "com/parent/OldManRiver.java", parent);
 
     ImmutableMap<Path, String> jarPathToSymbols = ImmutableMap.of(
-        parent.getPathToOutput(), "com.facebook.Foo",
-        libraryTwo.getPathToOutput(), "com.facebook.Bar");
+        projectFilesystem.resolve(parent.getPathToOutput()), "com.facebook.Foo",
+        projectFilesystem.resolve(libraryTwo.getPathToOutput()), "com.facebook.Bar");
     ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
         fromLibraries(libraryTwo, parent, grandparent);
 
@@ -112,9 +110,7 @@ public class DefaultSuggestBuildRulesTest {
             ImmutableList.of(libraryTwo, parent, grandparent));
 
     final ImmutableSet<String> suggestions =
-        suggestFn.suggest(
-            projectFilesystem,
-            ImmutableSet.of("com.facebook.Bar"));
+        suggestFn.suggest(ImmutableSet.of("com.facebook.Bar"));
 
     assertEquals(ImmutableSet.of("//:libtwo"), suggestions);
   }
@@ -125,7 +121,7 @@ public class DefaultSuggestBuildRulesTest {
 
     for (BuildRule buildRule : buildRules) {
       //noinspection ConstantConditions
-      builder.put((JavaLibrary) buildRule, buildRule.getPathToOutput());
+      builder.put((JavaLibrary) buildRule, projectFilesystem.resolve(buildRule.getPathToOutput()));
     }
 
     return builder.build();
@@ -148,9 +144,9 @@ public class DefaultSuggestBuildRulesTest {
 
     return new SuggestBuildRules.JarResolver() {
       @Override
-      public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
-        if (resolveMap.containsKey(relativeClassPath)) {
-          return resolveMap.get(relativeClassPath);
+      public ImmutableSet<String> resolve(Path absoluteClassPath) {
+        if (resolveMap.containsKey(absoluteClassPath)) {
+          return resolveMap.get(absoluteClassPath);
         } else {
           return ImmutableSet.of();
         }
@@ -170,6 +166,6 @@ public class DefaultSuggestBuildRulesTest {
     for (BuildRule dep : deps) {
       builder = builder.addDep(dep.getBuildTarget());
     }
-    return builder.build(ruleResolver);
+    return builder.build(ruleResolver, projectFilesystem);
   }
 }
