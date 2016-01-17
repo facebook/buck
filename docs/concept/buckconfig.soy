@@ -991,8 +991,8 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'xcode_compile_script' /}
   {param example_value: '//path/to/script.sh' /}
   {param description}
-    The optional path to a shells cript which should be used for invoke the Halid AOT "compiler"
-    when building proejcts that include Haldie targets in Xcode.
+    The optional path to a shell script which should be used for invoking the Halide AOT "compiler"
+    when building projects that include Halide targets in Xcode.
   {/param}
 {/call}
 
@@ -1008,7 +1008,7 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'src_roots' /}
   {param example_value: 'src, /java/, /javatests/' /}
   {param description}
-    The paths to roots of Java coode (where a root contains a tree of Java folders where the folder
+    The paths to roots of Java code (where a root contains a tree of Java folders where the folder
     structure mirrors the package structure).  This list of paths is comma-delimited.  Paths that
     start with a slash are relative to the root of the project, and all other paths can match a
     folder anywhere in the tree.  In the example below, we match all folders named <code>src</code>,
@@ -1163,7 +1163,7 @@ change without warning between Buck versions.</p>
 
 </pre>{/literal}
 
-<p>Will casue only 10% of Buck invocations to stream logs to <code>remote_log_url</code>.</p>
+<p>Will cause only 10% of Buck invocations to stream logs to <code>remote_log_url</code>.</p>
 
 {call .section}{param title: 'maven_repositories' /}{/call}
 
@@ -1499,7 +1499,7 @@ The value given is in milliseconds.
   # ]
   #
   # The "type" strings will be one of:
-  # - "custom": This describes a test without any structuted output, and which
+  # - "custom": This describes a test without any structured output, and which
   #       only uses its return code to signal success or failure.
 
   external_runner = command args...
