@@ -4,6 +4,7 @@ java_library(
     'GroovyBuckConfig.java',
     'GroovyLibraryDescription.java',
     'GroovycToJarStepFactory.java',
+    'GroovyTestDescription.java',
     'GroovycStep.java',
   ],
   tests = [
