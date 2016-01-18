@@ -162,7 +162,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+            "Libraries/TestLibrary/TestLibrary#" +
+                "framework,include-frameworks,macosx-x86_64/" +
                 "TestLibrary.framework");
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
@@ -171,6 +172,30 @@ public class AppleLibraryIntegrationTest {
     assertThat(
         workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
         containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void testAppleFrameworkWithDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#dwarf-and-dsym,framework,macosx-x86_64",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    Path dsymPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve("Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
+            "TestLibrary.framework.dSYM");
+    assertThat(Files.exists(dsymPath), is(true));
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
   }
 
   @Test

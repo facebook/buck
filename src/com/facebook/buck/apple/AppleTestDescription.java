@@ -333,7 +333,8 @@ public class AppleTestDescription implements
         assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
         codeSignIdentityStore,
-        provisioningProfileStore);
+        provisioningProfileStore,
+        AppleDebugFormat.NONE);
 
 
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which

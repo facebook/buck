@@ -460,7 +460,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentityStore,
-            provisioningProfileStore);
+            provisioningProfileStore,
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription =
@@ -470,7 +471,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentityStore,
-            provisioningProfileStore);
+            provisioningProfileStore,
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleBinaryDescription);
 
     // Create an executor service exclusively for the smart dexing step.
