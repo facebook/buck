@@ -161,7 +161,7 @@ public class TargetsCommandTest {
     targetsCommand.printJsonForTargets(
         params,
         executor,
-        nodes);
+        nodes, ImmutableMap.<String, ShowOptions>of());
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(observedOutput));
@@ -217,7 +217,8 @@ public class TargetsCommandTest {
     targetsCommand.printJsonForTargets(
         params,
         executor,
-        buildRules);
+        buildRules,
+        ImmutableMap.<String, ShowOptions>of());
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);
