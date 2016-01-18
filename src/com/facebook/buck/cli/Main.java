@@ -180,7 +180,7 @@ public final class Main {
    */
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
-  private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 2;
+  private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 10;
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
 
   private final PrintStream stdOut;
@@ -1026,7 +1026,7 @@ public final class Main {
         executorName,
         timeoutSeconds);
     executorService.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
-    if (!executorService.isShutdown()) {
+    if (!executorService.isTerminated()) {
       LOG.warn(
           "%s executor service is still running after shutdown request and " +
               "%s second timeout. Shutting down forcefully..",
