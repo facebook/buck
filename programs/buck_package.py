@@ -1,5 +1,7 @@
+import contextlib
 import os
 import json
+import shutil
 import stat
 import tempfile
 
@@ -10,6 +12,20 @@ from buck_tool import BuckTool, Resource
 
 SERVER = Resource("buck_server")
 BOOTSTRAPPER = Resource("bootstrapper_jar")
+
+
+@contextlib.contextmanager
+def closable_named_temporary_file(*args, **kwargs):
+    """
+    Due to a bug in python (https://bugs.python.org/issue14243), we need to be able to close() the
+    temporary file without deleting it.
+    """
+    fp = tempfile.NamedTemporaryFile(*args, delete=False, **kwargs)
+    try:
+        with fp:
+            yield fp
+    finally:
+        os.remove(fp.name)
 
 
 class BuckPackage(BuckTool):
@@ -41,13 +57,13 @@ class BuckPackage(BuckTool):
         if not os.path.exists(resource_path):
             if not os.path.exists(os.path.dirname(resource_path)):
                 os.makedirs(os.path.dirname(resource_path))
-            with tempfile.NamedTemporaryFile(prefix=resource_path + os.extsep) as outf:
+            with closable_named_temporary_file(prefix=resource_path + os.extsep) as outf:
                 outf.write(pkg_resources.resource_string(__name__, resource.name))
-                if resource.executable:
+                if resource.executable and hasattr(os, 'fchmod'):
                     st = os.fstat(outf.fileno())
                     os.fchmod(outf.fileno(), st.st_mode | stat.S_IXUSR)
-                os.rename(outf.name, resource_path)
-                outf.delete = False
+                outf.close()
+                shutil.copy(outf.name, resource_path)
         return resource_path
 
     def _get_extra_java_args(self):
