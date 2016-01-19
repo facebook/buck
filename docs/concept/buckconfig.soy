@@ -1106,47 +1106,54 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'log' /}{/call}
+{call buckconfig.section}
+  {param name: 'log' /}
+  {param description}
+    This section controls how Buck will log information about builds for later inspection.
+  {/param}
+{/call}
 
-This section controls how Buck will log information about builds for later
-inspection.
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'max_traces' /}
+  {param example_value: '25' /}
+  {param description}
+    Sets the maximum number of <a href="{ROOT}about/performance_tuning.html">Chrome Traces</a> that
+    Buck will create.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[log]
-  max_traces = 25
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'compress_traces' /}
+  {param example_value: 'true' /}
+  {param description}
+    <code>true</code> if Buck should GZIP the traces, false otherwise.
+  {/param}
+{/call}
 
-<p>Will limit Buck to creating, at most, 25{sp}
-<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.</p>
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'remote_log_url' /}
+  {param example_value: 'http://all.your.logs:500/are/belong/to/us' /}
+  {param description}
+    Will stream the build logs to the indicated address.  Currently <code>http</code> and{sp}
+    <code>https</code> scheme URLs are supported.  The events are sent in batches using PUT
+    requests.  Each batch contains a JSON array composing of the long entries.  <em>The format of
+    the individual log entries is not yet finalized and may change without warning between Buck
+    versions.</em>
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[log]
-  compress_traces = true
-</pre>{/literal}
-
-<p>Will compress the traces with GZIP.</p>
-
-{literal}<pre class="prettyprint lang-ini">
-[log]
-  remote_log_url = http://all.your.logs:500/are/belong/to/us
-
-</pre>{/literal}
-
-<p>Will stream the build logs to the indicated address. Currently{sp}
-<code>http</code> and <code>https</code> scheme URLs are supported.
-The events are sent in batches using PUT requests. Each batch contains a
-JSON array composing of the long entries.</p>
-
-<p>The format of the individual log entries is not yet finalized and may
-change without warning between Buck versions.</p>
-
-{literal}<pre class="prettyprint lang-ini">
-[log]
-  remote_log_sample_rate = 0.1
-
-</pre>{/literal}
-
-<p>Will cause only 10% of Buck invocations to stream logs to <code>remote_log_url</code>.</p>
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'remote_log_sample_rate' /}
+  {param example_value: '0.1' /}
+  {param description}
+    The sample rate of Buck invocations to steam logs to {call buckconfig.log_remote_log_url /}.
+    Valid values are defined by the set of numbers, <code>n</code>, where <code>0 <= n <= 1</code>.
+  {/param}
+{/call}
 
 {call .section}{param title: 'maven_repositories' /}{/call}
 
