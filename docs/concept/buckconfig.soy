@@ -1170,60 +1170,97 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'ndk' /}{/call}
+{call buckconfig.section}
+  {param name: 'ndk' /}
+  {param description}
+    This section defines properties to configure building native code against the Android NDK.
+  {/param}
+{/call}
 
-This section defines properties to configure building native code against
-the Android NDK.
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'ndk_version' /}
+  {param example_value: 'r10c' /}
+  {param description}
+    The version of the NDK that Buck should use to build native code.  This is searched for in the
+    subfolders defined by the folder found in the <code>ANDROID_NDK_REPOSITORY</code> environment
+    variable.
+  {/param}
+{/call}
 
-This section may define both <code>min_version</code> and{sp}
-<code>max_version</code> properties to enable Buck to check before building an{sp}
-{call buck.ndk_library /} that the project supports the configured NDK. Both
-properties must be specified to enable this check. For example, to support
-only versions r7 through r8d:
-{literal}<pre class="prettyprint lang-ini">
-[ndk]
-  min_version = r7
-  max_version = r8d
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'app_platform' /}
+  {param example_value: 'android-21' /}
+  {param description}
+    The android platform libraries that the code is targetting.  This is equivalent to the{sp}
+    <code>APP_TARGET</code> in the NDK build system.  The default is <code>android-9</code>.
+  {/param}
+{/call}
 
-This section may also define an <code>app_platform</code> which is the android
-platform libraries should target.  This is equivalent to{sp}
-<code>APP_TARGET</code> in the NDK build system.  This setting defaults to{sp}
-<code>android-9</code>.
- {literal}<pre class="prettyprint lang-ini">
-[ndk]
-  app_platform = android-21
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'cpu_abis' /}
+  {param example_value: 'armv7, x86' /}
+  {param description}
+    A comma separated list of the CPU ABIs that this repo supports.  Buck will only build NDK code
+    for these ABIs.
+  {/param}
+{/call}
 
-If your apps only support a subset of the CPU ABIs that Android supports,
-you can control which ABIs you target with <code>cpu_abis</code>:
-{literal}<pre class="prettyprint lang-ini">
-[ndk]
-  # Only support ICS and above.
-  cpu_abis = armv7, x86
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'compiler' /}
+  {param example_value: 'gcc' /}
+  {param description}
+    When compiling {call buck.cxx_library /} rules, this specifies the compiler family to use from
+    the NDK.  The possible values are:
+    <ul>
+        <li><code>gcc</code> (default): Use the GCC family of compilation tools.</li>
+        <li><code>clang</code>: Use the Clang family of compilation tools.</li>
+    </ul>
+  {/param}
+{/call}
 
-This section also supports parameters to control how {call buck.cxx_library /} rules
-build C/C++ for NDK platforms:
-{literal}<pre class="prettyprint lang-ini">
-[ndk]
-  # The compiler family to use, either "gcc" or "clang".  The default is "gcc".
-  compiler = gcc
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'gcc_version' /}
+  {param example_value: '4.8' /}
+  {param description}
+    When compiling {call buck.cxx_library /} rules, this specifies the version of GCC to use.  This
+    will be used regardless of the value in {call buckconfig.ndk_compiler /}, as other compiler
+    families still use tools from the GCC toolchain (such as <code>ar</code>).  The default value is
+    {sp}<code>4.8</code>.
+  {/param}
+{/call}
 
-  # The version of GCC to use from the provided NDK.  This will be used whether
-  # "gcc" is selected above or not, as other compiler families still use tools
-  # from the "gcc" toolchain (e.g. `ar`).  The default is "4.8".
-  gcc_version = 4.8
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'clang_version' /}
+  {param example_value: '3.4' /}
+  {param description}
+    When compiling {call buck.cxx_library /} rules, this specifies the version of Clang to use.  The
+    default value is <code>3.4</code>.
+  {/param}
+{/call}
 
-  # The version of Clang to use from the provided NDK when "clang" is selected
-  # above.  The default is "3.4".
-  clang_version = 3.4
-
-  # The variant of the C/C++ runtime to use, either "gnustl", "libcxx", "stlport",
-  # "gabixx", or "system" (http://www.kandroid.org/ndk/docs/CPLUSPLUS-SUPPORT.html).
-  # The default is "gnustl".
-  cxx_runtime = gnustl
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'cxx_runtime' /}
+  {param example_value: 'gnustl' /}
+  {param description}
+    When compiling {call buck.cxx_library /} rules, this specifies the variant of the <a
+    href="http://www.kandroid.org/ndk/docs/CPLUSPLUS-SUPPORT.html">C/C++ runtime</a> to use.
+    Possible values are:
+    <ul>
+      <li><code>gabixx</code></li>
+      <li><code>gnustl</code> (default)</li>
+      <li><code>libcxx</code></li>
+      <li><code>stlport</code></li>
+      <li><code>system</code></li>
+    </ul>
+  {/param}
+{/call}
 
 {call .section}{param title: 'project' /}{/call}
 
