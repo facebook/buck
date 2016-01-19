@@ -1076,52 +1076,35 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'httpserver' /}{/call}
+{call buckconfig.section}
+  {param name: 'httpserver' /}
+  {param description}
+    Option to enable an experimental web server that presents a UI to explore build data.  Note that
+    Buck must be run as a daemon in order for the web server to be available.
+  {/param}
+{/call}
 
-Option to enable an experimental web server that presents a UI to explore build data.
-Note that Buck must be run as a daemon in order for the web server to be available.
-
-<p>
-Specifying the port is sufficient to enable the web server:
-
-{literal}<pre class="prettyprint lang-ini">
-[httpserver]
-  # The web server will be available at http://localhost:8080/.
-  port = 8080
-</pre>{/literal}
-
-<p>
-
-If you want Buck to find a free port and use that (i.e., an <em>ephemeral port</em>), then
-specify a value of <code>0</code>:
-
-{literal}<pre class="prettyprint lang-ini">
-[httpserver]
-  # The web server will be available at http://localhost:XXXX/.
-  # Buck will print out the value of XXXX that it chose when the build
-  # is complete. This value will be valid so long as the daemon is
-  # kept alive.
-  #
-  # It is common for `port = 0` to be used in a shared .buckconfig file
-  # for a project. Then individuals may override this value in
-  # .buckconfig.local for each checkout of the repository so that the
-  # port is predictable and guaranteed not to overlap with a port from
-  # another checkout of the same project.
-  port = 0
-</pre>{/literal}
-
-<p>
-
-If you want to disable the web server, specify a value of <code>-1</code> for the port:
-
-{literal}<pre class="prettyprint lang-ini">
-[httpserver]
-  # This will disable the web server. This often happens when
-  # a nonnegative port is specified in .buckconfig, but the user
-  # wants to override this behavior in .buckconfig.local.
-  port = -1
-</pre>{/literal}
-
+{call buckconfig.entry}
+  {param section: 'httpserver' /}
+  {param name: 'port' /}
+  {param example_value: '8080' /}
+  {param description}
+    This sets the port to use for the web server.  There are three possible values:
+    <ul>
+      <li>
+        <code>n > 0</code>: For any positive integer, Buck will attempt to make the server
+        available on that port.
+      </li>
+      <li>
+        <code>0</code>: Buck will find a free port for the server to use and print it out on the
+        command line.
+      </li>
+      <li>
+        <code>-1</code>: Explicitely disables the server.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
 {call .section}{param title: 'log' /}{/call}
 
