@@ -64,7 +64,9 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
     Path directory = pathRelativeToProjectRoot.getParent();
     Deque<String> parts = Lists.newLinkedList();
-    while (directory != null && !pathElements.contains(directory.getFileName().toString())) {
+    while (directory != null &&
+        directory.getFileName() != null &&
+        !pathElements.contains(directory.getFileName().toString())) {
       parts.addFirst(directory.getFileName().toString());
       directory = directory.getParent();
     }

@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ZipRuleIntegrationTest {
 
@@ -48,20 +49,21 @@ public class ZipRuleIntegrationTest {
     workspace.setUp();
 
     Path zip = workspace.buildAndReturnOutput("//example:ziptastic");
-
+    String resultDestinationPath = workspace.getDestPath().resolve(Paths.get("example")).toString()
+        .substring(1);
     // Make sure we have the right files and attributes.
     try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipArchiveEntry cake = zipFile.getEntry("cake.txt");
+      ZipArchiveEntry cake = zipFile.getEntry(resultDestinationPath + "/cake.txt");
       assertThat(cake, Matchers.notNullValue());
       assertFalse(cake.isUnixSymlink());
       assertFalse(cake.isDirectory());
 
-      ZipArchiveEntry beans = zipFile.getEntry("beans/");
+      ZipArchiveEntry beans = zipFile.getEntry(resultDestinationPath + "/beans/");
       assertThat(beans, Matchers.notNullValue());
       assertFalse(beans.isUnixSymlink());
       assertTrue(beans.isDirectory());
 
-      ZipArchiveEntry cheesy = zipFile.getEntry("beans/cheesy.txt");
+      ZipArchiveEntry cheesy = zipFile.getEntry(resultDestinationPath + "/beans/cheesy.txt");
       assertThat(cheesy, Matchers.notNullValue());
       assertFalse(cheesy.isUnixSymlink());
       assertFalse(cheesy.isDirectory());
@@ -77,8 +79,10 @@ public class ZipRuleIntegrationTest {
     workspace.setUp();
 
     Path zip = workspace.buildAndReturnOutput("//example:unrolled");
+    String resultDestinationPath = zip.subpath(0, zip.getNameCount() - 1).toString() +
+        "/source-1.0-sources.jar";
 
     ZipInspector inspector = new ZipInspector(zip);
-    inspector.assertFileExists("menu.txt");
+    inspector.assertFileExists(resultDestinationPath + "/menu.txt");
   }
 }

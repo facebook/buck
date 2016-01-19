@@ -64,8 +64,9 @@ public class Zip extends AbstractBuildRule {
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
 
-    SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(getBuildTarget());
-    bundler.copy(getProjectFilesystem(), getResolver(), steps, scratchDir, sources, false);
+    SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(
+        context.getJavaPackageFinder());
+    bundler.copy(getProjectFilesystem(), getResolver(), steps, scratchDir, sources);
 
     steps.add(
         new ZipStep(
