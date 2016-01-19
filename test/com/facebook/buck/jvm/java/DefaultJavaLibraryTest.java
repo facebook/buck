@@ -377,13 +377,6 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
-        return ImmutableSetMultimap.of(
-            (JavaLibrary) this,
-            Paths.get("java/src/com/libone/bar.jar"));
-      }
-
-      @Override
       public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
         return ImmutableSetMultimap.of(
             (JavaLibrary) this,
@@ -427,7 +420,7 @@ public class DefaultJavaLibraryTest {
             " should contain only bar.jar.",
         ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),
         ImmutableSet.copyOf(
-            ((JavaLibrary) libraryTwo).getDeclaredClasspathEntries().values()));
+            ((DefaultJavaLibrary) libraryTwo).getDeclaredClasspathEntries().values()));
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
         ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),

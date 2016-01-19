@@ -343,20 +343,22 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.setUp();
 
     // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:binary");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:binary", "//:binary_2");
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path file = workspace.getPath("buck-out/gen/binary.jar");
-    try (Zip zip = new Zip(file, /* for writing? */ false)) {
-      Set<String> allNames = zip.getFileNames();
-      // Representative file from provided_deps we don't expect to be there.
-      assertFalse(allNames.contains("org/junit/Test.class"));
+    for (String filename : new String[]{"buck-out/gen/binary.jar", "buck-out/gen/binary_2.jar"}) {
+      Path file = workspace.getPath(filename);
+      try (Zip zip = new Zip(file, /* for writing? */ false)) {
+        Set<String> allNames = zip.getFileNames();
+        // Representative file from provided_deps we don't expect to be there.
+        assertFalse(allNames.contains("org/junit/Test.class"));
 
-      // Representative file from the deps that we do expect to be there.
-      assertTrue(allNames.contains("com/google/common/collect/Sets.class"));
+        // Representative file from the deps that we do expect to be there.
+        assertTrue(allNames.contains("com/google/common/collect/Sets.class"));
 
-      // The file we built.
-      assertTrue(allNames.contains("com/facebook/buck/example/Example.class"));
+        // The file we built.
+        assertTrue(allNames.contains("com/facebook/buck/example/Example.class"));
+      }
     }
   }
 

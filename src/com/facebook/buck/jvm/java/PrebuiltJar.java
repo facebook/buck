@@ -72,13 +72,12 @@ public class PrebuiltJar extends AbstractBuildRule
   private final Optional<String> javadocUrl;
   @AddToRuleKey
   private final Optional<String> mavenCoords;
+  @AddToRuleKey
+  private final boolean provided;
   private final Path internalAbiJar;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
-
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
-      declaredClasspathEntriesSupplier;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
@@ -90,7 +89,8 @@ public class PrebuiltJar extends AbstractBuildRule
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      final boolean provided) {
     super(params, resolver);
     this.binaryJar = binaryJar;
     this.abiJar = abiJar;
@@ -98,6 +98,7 @@ public class PrebuiltJar extends AbstractBuildRule
     this.gwtJar = gwtJar;
     this.javadocUrl = javadocUrl;
     this.mavenCoords = mavenCoords;
+    this.provided = provided;
 
     this.internalAbiJar = BuildTargets.getGenPath(getBuildTarget(), "%s-abi.jar");
 
@@ -107,9 +108,11 @@ public class PrebuiltJar extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getResolver().getAbsolutePath(getBinaryJar()));
+            if (!provided) {
+              classpathEntries.put(PrebuiltJar.this, getResolver().getAbsolutePath(getBinaryJar()));
+            }
             classpathEntries.putAll(Classpaths.getClasspathEntries(
-                    PrebuiltJar.this.getDeclaredDeps()));
+                PrebuiltJar.this.getDeclaredDeps()));
             return classpathEntries.build();
           }
         });
@@ -119,23 +122,15 @@ public class PrebuiltJar extends AbstractBuildRule
             new Supplier<ImmutableSet<JavaLibrary>>() {
               @Override
               public ImmutableSet<JavaLibrary> get() {
+                if (provided) {
+                  return Classpaths.getClasspathDeps(PrebuiltJar.this.getDeclaredDeps());
+                }
                 return ImmutableSet.<JavaLibrary>builder()
                     .add(PrebuiltJar.this)
                     .addAll(Classpaths.getClasspathDeps(PrebuiltJar.this.getDeclaredDeps()))
                     .build();
               }
             });
-
-    declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
-          @Override
-          public ImmutableSetMultimap<JavaLibrary, Path> get() {
-            ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-                ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getResolver().getAbsolutePath(getBinaryJar()));
-            return classpathEntries.build();
-          }
-        });
 
     copiedBinaryJar = BuildTargets.getGenPath(getBuildTarget(), "%s.jar");
 
@@ -189,11 +184,6 @@ public class PrebuiltJar extends AbstractBuildRule
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return transitiveClasspathDepsSupplier.get();
-  }
-
-  @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
-    return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
@@ -257,8 +247,10 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addClasspathEntry(this, getBinaryJar());
-    collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar());
+    if (!provided) {
+      collector.addClasspathEntry(this, getBinaryJar());
+      collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar());
+    }
   }
 
   @Override

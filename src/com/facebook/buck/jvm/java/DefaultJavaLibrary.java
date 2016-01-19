@@ -46,6 +46,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -370,8 +371,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return transitiveClasspathDepsSupplier.get();
   }
 
-  @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
+  /**
+   * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
+   * compile the {@code srcs} associated with this rule.  This set only contains the classpath
+   * entries for those rules that are declared as direct dependencies of this rule.
+   */
+  @VisibleForTesting
+  ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
 

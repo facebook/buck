@@ -70,7 +70,8 @@ public class PrebuiltJarTest {
         Optional.<SourcePath>of(new FakeSourcePath("lib/junit-4.11-sources.jar")),
         /* gwtJar */ Optional.<SourcePath>absent(),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
-        /* mavenCoords */ Optional.<String>absent());
+        /* mavenCoords */ Optional.<String>absent(),
+        /* provided */ false);
   }
 
   @Test

@@ -187,7 +187,8 @@ public class AndroidPrebuiltAarDescription
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
         /* javadocUrl */ Optional.<String>absent(),
-        /* mavenCoords */ Optional.<String>absent());
+        /* mavenCoords */ Optional.<String>absent(),
+        /* provided */ false);
 
   }
 
