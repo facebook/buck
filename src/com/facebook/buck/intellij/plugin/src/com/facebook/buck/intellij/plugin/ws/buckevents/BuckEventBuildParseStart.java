@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
 
 public class BuckEventBuildParseStart extends BuckEventBase {
@@ -26,12 +27,18 @@ public class BuckEventBuildParseStart extends BuckEventBase {
     public static final String EVENT_TYPE = "ParseStarted";
 
     @Override
-    public void handleEvent(BuckEventsConsumerFactory notifier) {
-        //currentBuild.startParsing(timestamp);
+    public void handleEvent(BuckEventsConsumerFactory factory) {
+        RulesParsingStartConsumer consumer = factory.getRulesParsingStartConsumer();
+        consumer.consumeParseRuleStart(buildId, timestamp);
     }
 
     @Override
     public String getEventType() {
         return EVENT_TYPE;
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY_MED;
     }
 }

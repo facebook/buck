@@ -17,25 +17,26 @@
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingProgressUpdateConsumer;
 
-public class BuckEventBuildParseEnd extends BuckEventBase {
+public class BuckEventBuildParseProgress extends BuckEventBase {
+  public float progressValue;
 
-    public static final String EVENT_TYPE = "ParseFinished";
+  public static final String EVENT_TYPE = "ParsingProgressUpdated";
 
-    @Override
-    public void handleEvent(BuckEventsConsumerFactory factory) {
-        RulesParsingEndConsumer consumer = factory.getRulesParsingEndConsumer();
-        consumer.consumeParseRuleEnd(buildId, timestamp);
-    }
+  @Override
+  public void handleEvent(BuckEventsConsumerFactory factory) {
+    RulesParsingProgressUpdateConsumer consumer = factory.getRulesParsingProgressUpdateConsumer();
+    consumer.consumeParseRuleProgressUpdate(buildId, timestamp, progressValue);
+  }
 
-    @Override
-    public String getEventType() {
-        return EVENT_TYPE;
-    }
+  @Override
+  public String getEventType() {
+    return EVENT_TYPE;
+  }
 
-    @Override
-    public int getPriority() {
-        return PRIORITY_MED;
-    }
+  @Override
+  public int getPriority() {
+    return PRIORITY_MED;
+  }
 }

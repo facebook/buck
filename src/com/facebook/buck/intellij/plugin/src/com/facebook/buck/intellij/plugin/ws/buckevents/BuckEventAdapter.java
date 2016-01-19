@@ -30,15 +30,16 @@ public class BuckEventAdapter implements JsonDeserializer<BuckEventInterface> {
     static final ImmutableMap<String, Class<? extends BuckEventBase>> MAPPINGS =
             ImmutableMap.<String, Class<? extends BuckEventBase>>builder().
                     put(BuckEventBuildStart.EVENT_TYPE, BuckEventBuildStart.class).
-                    put(BuckEventBuildParseStart.EVENT_TYPE, BuckEventBuildParseStart.class).
-                    put(BuckEventBuildParseEnd.EVENT_TYPE, BuckEventBuildParseEnd.class).
+                    put(BuckEventBuildFinished.EVENT_TYPE, BuckEventBuildFinished.class).
                     put(BuckEventBuildProgressUpdated.EVENT_TYPE,
                         BuckEventBuildProgressUpdated.class).
+                    put(BuckEventBuildParseStart.EVENT_TYPE, BuckEventBuildParseStart.class).
+                    put(BuckEventBuildParseEnd.EVENT_TYPE, BuckEventBuildParseEnd.class).
+                    put(BuckEventBuildParseProgress.EVENT_TYPE, BuckEventBuildParseProgress.class).
                     put(BuckEventBuildRuleStarted.EVENT_TYPE, BuckEventBuildRuleStarted.class).
                     put(BuckEventBuildRuleSuspended.EVENT_TYPE, BuckEventBuildRuleSuspended.class).
                     put(BuckEventBuildRuleResumed.EVENT_TYPE, BuckEventBuildRuleResumed.class).
                     put(BuckEventBuildRuleFinished.EVENT_TYPE, BuckEventBuildRuleFinished.class).
-                    put(BuckEventBuildFinished.EVENT_TYPE, BuckEventBuildFinished.class).
                     put(BuckEventCompilerError.EVENT_TYPE, BuckEventCompilerError.class).
                     build();
 

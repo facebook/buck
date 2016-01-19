@@ -34,6 +34,8 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleSuspen
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.CompilerErrorConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingProgressUpdateConsumer;
 import com.google.common.collect.ImmutableList;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -52,13 +54,16 @@ import java.util.ArrayList;
 public class BuckEventsConsumer implements
         BuckBuildStartConsumer,
         BuckBuildEndConsumer,
+        BuckBuildProgressUpdateConsumer,
+        RulesParsingStartConsumer,
+        RulesParsingEndConsumer,
+        RulesParsingProgressUpdateConsumer,
+
         BuildRuleStartConsumer,
         BuildRuleEndConsumer,
         BuildRuleFailureConsumer,
         BuildRuleSuspendedConsumer,
         CompilerErrorConsumer,
-        RulesParsingStartConsumer,
-        BuckBuildProgressUpdateConsumer,
 
         BuckInternalBatchStartConsumer,
         BuckInternalBatchCommitConsumer {
@@ -74,12 +79,16 @@ public class BuckEventsConsumer implements
             Collections.synchronizedMap(new HashMap<String, BuildRuleItem>());
     private Map<String, List<String>> mErrors =
             Collections.synchronizedMap(new HashMap<String, List<String>>());
-    private float mProgressValue = 0;
+    private float mBuildProgressValue = 0;
+    private float mParseProgressValue = 0;
     private BigInteger mMainBuildStartTimestamp = BigInteger.ZERO;
     private BigInteger mMainBuildEndTimestamp = BigInteger.ZERO;
+    private BigInteger mParseFilesStartTimestamp = BigInteger.ZERO;
+    private BigInteger mParseFilesEndTimestamp = BigInteger.ZERO;
 
     BuckTreeNodeBuild mCurrentBuildRootElement;
     BuckTreeNodeDetail mBuildProgress;
+    BuckTreeNodeDetail mParseProgress;
     BuckTreeNodeDetail mRunningTasks;
     BuckTreeNodeDetail mSuspendedTasks;
     BuckTreeNodeDetail mFinishedTasks;
@@ -107,7 +116,11 @@ public class BuckEventsConsumer implements
         mBuildProgress = new BuckTreeNodeDetail(
                 mCurrentBuildRootElement,
                 BuckTreeNodeDetail.DetailType.INFO,
-                "Current build progress: " + Math.round(mProgressValue * 100) + "%");
+                "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%");
+        mParseProgress = new BuckTreeNodeDetail(
+                mCurrentBuildRootElement,
+                BuckTreeNodeDetail.DetailType.INFO,
+                "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%");
         mRunningTasks = new BuckTreeNodeDetail(
                 mCurrentBuildRootElement,
                 BuckTreeNodeDetail.DetailType.INFO,
@@ -123,6 +136,7 @@ public class BuckEventsConsumer implements
                 BuckTreeNodeDetail.DetailType.INFO,
                 "Finished tasks: 0"
         );
+        mCurrentBuildRootElement.addChild(mParseProgress);
         mCurrentBuildRootElement.addChild(mBuildProgress);
         mCurrentBuildRootElement.addChild(mRunningTasks);
         mCurrentBuildRootElement.addChild(mSuspendedTasks);
@@ -136,13 +150,15 @@ public class BuckEventsConsumer implements
 
         mConnection.subscribe(BuckBuildStartConsumer.BUCK_BUILD_START, this);
         mConnection.subscribe(BuckBuildEndConsumer.BUCK_BUILD_END, this);
+        mConnection.subscribe(BuckBuildProgressUpdateConsumer.BUCK_BUILD_PROGRESS_UPDATE, this);
 
         mConnection.subscribe(BuildRuleStartConsumer.BUCK_BUILD_RULE_START, this);
         mConnection.subscribe(BuildRuleEndConsumer.BUCK_BUILD_RULE_END, this);
         mConnection.subscribe(BuildRuleSuspendedConsumer.BUCK_BUILD_RULE_SUSPENDED, this);
 
         mConnection.subscribe(RulesParsingStartConsumer.BUCK_PARSE_RULE_START, this);
-        mConnection.subscribe(BuckBuildProgressUpdateConsumer.BUCK_BUILD_PROGRESS_UPDATE, this);
+        mConnection.subscribe(RulesParsingEndConsumer.BUCK_PARSE_RULE_END, this);
+        mConnection.subscribe(RulesParsingProgressUpdateConsumer.BUCK_PARSE_PROGRESS_UPDATE, this);
 
         mConnection.subscribe(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER, this);
 
@@ -199,8 +215,9 @@ public class BuckEventsConsumer implements
                                               BigInteger timestamp,
                                               float progressValue) {
 
-        mProgressValue = progressValue;
-        final String message = "Current build progress: " + Math.round(mProgressValue * 100) + "%";
+        mBuildProgressValue = progressValue;
+        final String message = "Current build progress: " +
+            Math.round(mBuildProgressValue * 100) + "%";
 
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
@@ -213,7 +230,43 @@ public class BuckEventsConsumer implements
 
     @Override
     public void consumeParseRuleStart(String build, BigInteger timestamp) {
-        //mParseFilesStartTimestamp = timestamp;
+        mParseFilesStartTimestamp = timestamp;
+    }
+
+    @Override
+    public void consumeParseRuleEnd(String build, BigInteger timestamp) {
+        consumeParseRuleProgressUpdate(build, timestamp, 1.0f);
+        mParseFilesEndTimestamp = timestamp;
+        float duration = mParseFilesEndTimestamp.
+            subtract(mParseFilesStartTimestamp).floatValue() / 1000;
+        final String message = "File parsing ended, took " + duration + " seconds!";
+
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                BuckEventsConsumer.this.mParseProgress.setDetail(message);
+                BuckEventsConsumer.this.mTreeModel.reload();
+            }
+        });
+    }
+
+    @Override
+    public void consumeParseRuleProgressUpdate(String build,
+                                               BigInteger timestamp,
+                                               float progressValue) {
+        if (mParseProgressValue != 1.0f) {
+            mParseProgressValue = progressValue;
+            final String message = "Current file parsing progress: " +
+                Math.round(mParseProgressValue * 100) + "%";
+
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    BuckEventsConsumer.this.mParseProgress.setDetail(message);
+                    BuckEventsConsumer.this.mTreeModel.reload();
+                }
+            });
+        }
     }
 
     @Override
@@ -384,14 +437,13 @@ public class BuckEventsConsumer implements
                 //set progress to 100%
                 consumeBuckBuildProgressUpdate(build, timestamp, 1f);
 
-                BuckTreeNodeDetail finishNode = new BuckTreeNodeDetail(
-                        BuckEventsConsumer.this.mCurrentBuildRootElement,
-                        BuckTreeNodeDetail.DetailType.INFO,
-                        message
-                );
-                BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(
-                        finishNode
-                );
+                ApplicationManager.getApplication().invokeLater(new Runnable() {
+                  @Override
+                  public void run() {
+                    BuckEventsConsumer.this.mBuildProgress.setDetail(message);
+                    BuckEventsConsumer.this.mTreeModel.reload();
+                  }
+                });
 
                 if (errorsMessageToUse.length() > 0) {
                     BuckTreeNodeDetail errorsMessageNode = new BuckTreeNodeDetail(
