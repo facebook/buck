@@ -1368,7 +1368,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Debug",
                     ImmutableMap.<String, String>of())))
-        .setLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .setLinkerFlags(Optional.of(ImmutableList.of("-Xlinker", "-lhello")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1433,7 +1433,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Debug",
                     ImmutableMap.<String, String>of())))
-        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-Xlinker", "-lhello")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1460,7 +1460,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Debug",
                     ImmutableMap.<String, String>of())))
-        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-Xlinker", "-lhello")))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();

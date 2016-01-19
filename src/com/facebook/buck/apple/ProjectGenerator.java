@@ -1259,12 +1259,10 @@ public class ProjectGenerator {
                 .on(' ')
                 .join(
                     Iterables.transform(
-                        MoreIterables.zipAndConcat(
-                            Iterables.cycle("-Xlinker"),
-                            Iterables.concat(
-                                targetNode.getConstructorArg().linkerFlags.get(),
-                                collectRecursiveExportedLinkerFlags(
-                                    ImmutableList.of(targetNode)))),
+                        Iterables.concat(
+                            targetNode.getConstructorArg().linkerFlags.get(),
+                            collectRecursiveExportedLinkerFlags(
+                                ImmutableList.of(targetNode))),
                         Escaper.BASH_ESCAPER)));
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
