@@ -1155,18 +1155,20 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'maven_repositories' /}{/call}
-
-This section defines the set of maven repositories that Buck can use
-when attempting to resolve maven artifacts. It takes the form of key
-value pairs of a short name for the repo and the URL. The URL may
-either be an HTTP(S) URL, or point to a directory on your local disk.
+{call buckconfig.section}
+  {param name: 'maven_repositories' /}
+  {param description}
+    This section defines the set of maven repositories that Buck can use when attempting to resolve
+    maven artifacts.  It takes the form of key value pairs of a short name for the repo and the URL.
+    The URL may either be an HTTP(S) URL, or point to a directory on your local disk.
 
 {literal}<pre class="prettyprint lang-ini">
 [maven_repositories]
   central = https://repo1.maven.org/maven2
   m2 = ~/.m2/repository
 </pre>{/literal}
+  {/param}
+{/call}
 
 {call .section}{param title: 'ndk' /}{/call}
 
