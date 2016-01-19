@@ -41,7 +41,6 @@ class BuckProject:
         self.buckd_tmp_dir = None
 
         self.buckd_dir = os.path.join(root, ".buckd")
-        self.autobuild_pid_file = os.path.join(self.buckd_dir, "autobuild.pid")
         self.buckd_run_count_file = (os.path.join(
             self.buckd_dir, "buckd.runcount"))
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
@@ -75,9 +74,6 @@ class BuckProject:
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
-
-    def get_autobuild_pid(self):
-        return get_file_contents_if_exists(self.autobuild_pid_file)
 
     def get_buck_out_log_dir(self):
         return self._buck_out_log

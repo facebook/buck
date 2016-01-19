@@ -103,7 +103,6 @@ class BuckTool(object):
 
     def launch_buck(self, build_id):
         with Tracing('BuckRepo.launch_buck'):
-            self.kill_autobuild()
             if 'clean' in sys.argv:
                 self.kill_buckd()
 
@@ -266,15 +265,6 @@ class BuckTool(object):
                 return 0
 
             return returncode
-
-    def kill_autobuild(self):
-        autobuild_pid = self._buck_project.get_autobuild_pid()
-        if autobuild_pid:
-            if autobuild_pid.isdigit():
-                try:
-                    os.kill(autobuild_pid, signal.SIGTERM)
-                except OSError:
-                    pass
 
     def kill_buckd(self):
         with Tracing('BuckRepo.kill_buckd'):
