@@ -28,6 +28,10 @@ public class RemoteFileBuilder extends AbstractNodeBuilder<RemoteFileDescription
     super(new RemoteFileDescription(downloader), target);
   }
 
+  public static RemoteFileBuilder createBuilder(Downloader downloader, BuildTarget target) {
+    return new RemoteFileBuilder(downloader, target);
+  }
+
   public RemoteFileBuilder setSha1(HashCode hashCode) {
     arg.sha1 = hashCode.toString();
     return this;
