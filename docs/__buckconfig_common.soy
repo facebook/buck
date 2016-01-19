@@ -89,6 +89,14 @@
 {/template}
 
 /***/
+{template .build_threads}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'threads' /}
+{/call}
+{/template}
+
+/***/
 {template .cache_mode}
 {call .entry_link}
   {param section: 'cache' /}
@@ -117,6 +125,14 @@
 {call .entry_link}
     {param section: 'ndk' /}
     {param entry: 'compiler' /}
+{/call}
+{/template}
+
+/***/
+{template .project_parallel_parsing}
+{call .entry_link}
+    {param section: 'project' /}
+    {param entry: 'parallel_parsing' /}
 {/call}
 {/template}
 

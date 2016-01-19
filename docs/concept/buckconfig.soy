@@ -377,6 +377,16 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'build' /}
+  {param name: 'threads' /}
+  {param example_value: '4' /}
+  {param description}
+    Sets the maximum number of threads to use for building.  By default, Buck uses the number of
+    available cores multipled by <code>1.25</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
   {param name: 'work_queue_execution_order' /}
   {param example_value: 'LIFO' /}
   {param description}
@@ -1262,137 +1272,145 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'project' /}{/call}
+{call buckconfig.section}
+  {param name: 'project' /}
+  {param description}
+    This section defines project-level settings.
+  {/param}
+{/call}
 
-<code>ide</code> setting defines the IDE for which the project files should be generated.
-Sometimes Buck determine the type of IDE (e.g. for {call buck.apple_library /} it will generate Xcode workspace),
-but for x-platform types of libraries (like {call buck.cxx_library /}) it is not possible. You may specify the default ide setting here.
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'ide' /}
+  {param example_value: 'xcode' /}
+  {param description}
+    Buck attempts to figure out the correct IDE to use based on the type of rule (e.g. for{sp}
+    {call buck.apple_library /} it will generate Xcode workspace), but for cross-platform libraries
+    (like {call buck.cxx_library /}) it is not possible.  This setting lets you specify the default
+    IDE that {call buck.cmd_project /} generates.  Possible values are:
+    <ul>
+      <li><code>intellij</code></li>
+      <li><code>xcode</code></li>
+    </ul>
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  ide = xcode   # or ide = intellij
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'default_android_manifest' /}
+  {param example_value: '//shared/AndroidManifest.xml' /}
+  {param description}
+    The default manifest file that should be used when the <code>src_target</code> of a{sp}
+    {call buck.project_config /} rule is an Android rule (like {call buck.android_library /}), but
+    there is no <code>AndroidManifest.xml</code> file in the same directory as the{sp}
+    {call buck.build_file /} the {call buck.project_config /} is defined in.  IDEs for Android
+    projects need a manifest file, and this setting provides a convenient fallback without having
+    boilerplate manifest files all over your project.
+  {/param}
+{/call}
 
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'glob_handler' /}
+  {param example_value: 'python' /}
+  {param description}
+    The {call buck.fn_glob /} handler that Buck will use.  The possible values are:
+    <ul>
+      <li>
+        <code>python</code> (deault): evaluates globs in the Python interpreter while parsing{sp}
+        {call buck.build_file /}s.
+      </li>
+      <li>
+        <code>watchman</code>: evaluates the globs with <a
+        href="https://facebook.github.io/watchman/">Watchman</a>, which is generally much faster.
+      </li>
+    </ul>
+  {/param}
+{/call}
 
-This section may define a <code>default_android_manifest</code> property
-to identify the <code>AndroidManifest.xml</code> that should be used when
-the <code>src_target</code> of a
-{sp}<a href="{ROOT}rule/project_config.html"><code>project_config()</code>
-</a> rule is an Android rule (e.g.,
-{sp}<a href="{ROOT}rule/android_library.html"><code>android_library()</code>
-</a>), but there is no <code>AndroidManifest.xml</code> file in the same
-directory as the build file. Because an IDE configuration for an Android
-project needs an <code>AndroidManifest.xml</code>, this provides a convenient
-fallback, preventing the need to litter your project with boilerplate
-{sp}<code>AndroidManifest.xml</code> files.
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'watchman_query_timeout_ms' /}
+  {param example_value: '1000' /}
+  {param description}
+    When communicating with <a href="https://facebook.github.io/watchman/">Watchman</a>, Buck will
+    wait this long for a response.  The defaut is <code>1000</code> ms.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  default_android_manifest = //shared/AndroidManifest.xml
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'initial_targets' /}
+  {param example_value: '//java/com/facebook/schema:generate_thrift_jar' /}
+  {param description}
+    A space-separated list of {call buck.build_target /}s to run when {call buck.cmd_project /} is
+    executed.  This is often a list of {call buck.genrule /}s whose outputs need to exist in order
+    for an IDE to be ale to build a project without the help of Buck.
+  {/param}
+{/call}
 
-You can define which glob handler Buck will use in this section by setting the
-{sp}<code>glob_handler</code> property, which is defined as the text value of the
-{sp}<code>ParserConfig.GlobHandler</code> enum.
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'ignore' /}
+  {param example_value: '.git' /}
+  {param description}
+    A comma-separated list of subtrees within the project root which are ignored in the following
+    contexts:
+    <ul>
+      <li>Buck daemon filesystem monitoring.</li>
+      <li>Filesystem traversal when searching for tests and BUCK files</li>
+      <li>IntelliJ project indexing</li>
+    </ul>
+    Buck automatically excludes its own output, e.g. <code>buck-out</code>, <code>.buckd</code>, and
+    {sp}<code>.idea</code>, as well as the cache directory (see {call buckconfig.cache_mode /}), but
+     it makes no assumptions about source control systems.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  glob_handler = python
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'temp_files' /}
+  {param example_value}{literal}^#.*#$, .*~$, .*\.swp${/literal}{/param}
+  {param description}
+    A comma-separated list of <code>java.util.regex.Pattern</code> regular expressions which match
+    temporary and backup files which should be ignored by Buck daemon filesystem monitoring.
+    Setting this property to match any temporary files created by your IDE or editor will avoid
+    unnecessary cache invalidation when using the Buck daemon.
+  {/param}
+{/call}
 
-When Buck talks to Watchman, by default each query times out after 1000 ms.
-You can change this by setting the
-{sp}<code>watchman_query_timeout_ms</code> property, which allows you to set
-a shorter or longer timeout for each Watchman query.
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'post_process' /}
+  {param example_value: '//scripts/post_process_buck_project.py' /}
+  {param description}
+    A script that should be executed after the project files are generated.  Because{sp}
+    {call buck.cmd_project /} is currently based on heuristics, the IntelliJ project that it
+    generates may not be exactly what you want if you are using a non-tradional project structure.
+    In these cases, this script can cleanup the generated project files to better work with your
+    project layout.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  watchman_query_timeout_ms = 3000
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'parallel_parsing' /}
+  {param example_value: 'false' /}
+  {param description}
+    When set to <code>true</code>, Buck will parse your {call buck.build_file /}s in parallel.
+  {/param}
+{/call}
 
-This section may also define an <code>initial_targets</code> property,
-which is a space-delimited list of build targets to run when
-{sp}<code>buck project</code> is executed. Frequently, this is a list of
-{sp}<code>genrule</code>s whose outputs need to exist in order for an IDE
-to be able to build a project natively (i.e., without the help of Buck).
-<p>
-For example, if you had a <code>genrule()</code> for generating a JAR from
-a <a href="http://thrift.apache.org/">Thrift definition file</a>, and you had
-a <code>java_library()</code> rule that depended on that JAR, then you would
-want to be sure that <code>genrule()</code> was built before importing the
-project into IntelliJ because IntelliJ does not know how to build
-your <code>genrule()</code> as part of its built-in build process:
-
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  initial_targets = //java/com/facebook/schema:generate_thrift_jar
-</pre>{/literal}
-
-This section may also define an <code>ignore</code> property that specifies a
-comma-separated list of subtrees within the project root which are ignored in
-the following contexts:
-<ul>
-  <li>Buck daemon filesystem monitoring
-  <li>Filesystem traversal when searching for tests and BUCK files
-  <li>IntelliJ project indexing
-</ul>
-Buck automatically excludes its own output, e.g. <code>buck-out</code>,
-{sp}<code>.buckd</code>, and <code>.idea</code>, as well as the cache directory
-(see the "dir" setting of the "cache" section), but it makes no assumptions
-about source control systems.
-
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  ignore = .git
-</pre>{/literal}
-
-This section may also define a <code>temp_files</code> property that
-specifies a comma-separated list of <code>java.util.regex.Pattern</code> regular
-expressions which match temporary and backup files which should be ignored by Buck
-daemon filesystem monitoring. Setting this property to match any temporary files
-created by your IDE or editor will avoid unnecessary cache invalidation when using
-the Buck daemon.
-
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  temp_files = ^#.*#$, .*~$, .*\.swp$
-</pre>{/literal}
-
-A <code>post_process</code> property can reference a script that should be
-executed after the project files are generated. Because <code>buck project</code> is
-currently based on heuristics, the IntelliJ project that it generates may not be
-exactly what you want if you are using a non-traditional project structure.
-In these cases, you may want to let <code>buck project</code> do the bulk of the
-heavy-lifting, and then let your <code>post_process</code> script do some cleanup
-on the generated files.
-
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  post_process = ./scripts/post_process_buck_project.sh
-</pre>{/literal}
-
-<p>
-  Buck can parse your {call buck.build_file /}s in parallel when setting
-  {sp}<code>parallel_parsing</code> to <code>true</code>.  By default, this is set to
-  {sp}<code>false</code>.
-</p>
-
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  parallel_parsing = false
-</pre>{/literal}
-
-<p>
-  When <code>parallel_parsing</code> is enabled, the number of threads Buck uses to parse is
-  controlled by the <code>parsing_threads</code> setting.  By default, this is equal to the number
-  of threads Buck uses to build, and will be the minimum of this setting and
-  {sp}<code>build.threads</code>.
-</p>
-
-{literal}<pre class="prettyprint lang-ini">
-[project]
-  parsing_threads = 2
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'parsing_threads' /}
+  {param example_value: '2' /}
+  {param description}
+    When {call buckconfig.project_parallel_parsing /} is enabled, this specifies the number of
+    threads Buck uses to parse.  By default, this is equal to the number of threads Buck uses to
+    build, and will be the minimum of this setting and {call buckconfig.build_threads /}.
+  {/param}
+{/call}
 
 {call .section}{param title: 'python' /}{/call}
 
