@@ -1432,17 +1432,6 @@ This section may define a settings relevant to <code>python_*</code> rules.
   # The extension to use for executable Python packages.
   pex_extension = .pex
 
-  # The packaging style to use for python binaries and tests:
-  #
-  #   standalone - Build self-contained executable packages that can be
-  #     run outside the repository.  This is the default.
-  #
-  #   inplace - Generate executables which are only suitable to run from
-  #     within the repostory.  This style of package builds significantly
-  #     faster than the "standalone" variant.
-  #
-  package_style = standalone
-
   # The strategy used for pulling in native dependencies.
   #
   #   separate - Transitive native deps are linked as full, separate shared libraries.
@@ -1476,6 +1465,16 @@ a python platform to build <code>python_*</code> rules against, by using the giv
   interpreter = /usr/bin/python3.4
   library = //third-party/python:py3.4
 </pre>{/literal}
+
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'package_style' /}
+  {param example_value: 'standalone' /}
+  {param description}
+    The packaging style to use for python binaries and tests (default is <code>standalone</code>):
+    {call python_common.package_styles_list /}
+  {/param}
+{/call}
 
 {call .section}{param title: 'rust' /}{/call}
 

@@ -97,4 +97,9 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
     return this;
   }
 
+  public PythonBinaryBuilder setPackageStyle(PythonBuckConfig.PackageStyle packageStyle) {
+    arg.packageStyle = Optional.of(packageStyle);
+    return this;
+  }
+
 }

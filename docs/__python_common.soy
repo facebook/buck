@@ -74,3 +74,35 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .package_styles_list}
+<ul>
+  <li>
+    <code>standalone</code>:
+    Build self-contained executable packages that can be
+    run outside the repository.
+  </li>
+  <li>
+    <code>inplace</code>:
+    Generate executables which are only suitable to run from
+    within the repostory.  This style of package builds significantly
+    faster than the "standalone" variant.
+  </li>
+</ul>
+{/template}
+
+/***/
+{template .package_style_arg}
+{call buck.arg}
+  {param name : 'package_style' /}
+  {param default : 'None' /}
+  {param desc}
+  Used to override the global packaging style set in the {call buckconfig.entry_link}
+    {param section: 'python' /}
+    {param entry: 'package_style' /}
+  {/call} <code>.buckconfig</code> entry:
+  {call .package_styles_list /}
+  {/param}
+{/call}
+{/template}

@@ -275,7 +275,8 @@ public class PythonTestDescription implements
             cxxPlatform,
             PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
             allComponents,
-            args.buildArgs.or(ImmutableList.<String>of()));
+            args.buildArgs.or(ImmutableList.<String>of()),
+            args.packageStyle.or(pythonBuckConfig.getPackageStyle()));
     resolver.addToIndex(binary);
 
     // Supplier which expands macros in the passed in test environment.
@@ -332,6 +333,7 @@ public class PythonTestDescription implements
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<String> platform;
+    public Optional<PythonBuckConfig.PackageStyle> packageStyle;
 
     public Optional<ImmutableList<String>> buildArgs;
 

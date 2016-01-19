@@ -201,9 +201,10 @@ public class PythonBinaryDescription implements
       CxxPlatform cxxPlatform,
       String mainModule,
       PythonPackageComponents components,
-      ImmutableList<String> buildArgs) {
+      ImmutableList<String> buildArgs,
+      PythonBuckConfig.PackageStyle packageStyle) {
 
-    switch (pythonBuckConfig.getPackageStyle()) {
+    switch (packageStyle) {
 
       case INPLACE:
         return createInPlaceBinaryRule(
@@ -312,7 +313,8 @@ public class PythonBinaryDescription implements
         cxxPlatform,
         mainModule,
         allPackageComponents,
-        args.buildArgs.or(ImmutableList.<String>of()));
+        args.buildArgs.or(ImmutableList.<String>of()),
+        args.packageStyle.or(pythonBuckConfig.getPackageStyle()));
   }
 
   @Override
@@ -338,6 +340,7 @@ public class PythonBinaryDescription implements
     public Optional<Boolean> zipSafe;
     public Optional<ImmutableList<String>> buildArgs;
     public Optional<String> platform;
+    public Optional<PythonBuckConfig.PackageStyle> packageStyle;
   }
 
 }

@@ -115,4 +115,9 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
     return this;
   }
 
+  public PythonTestBuilder setPackageStyle(PythonBuckConfig.PackageStyle packageStyle) {
+    arg.packageStyle = Optional.of(packageStyle);
+    return this;
+  }
+
 }

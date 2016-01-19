@@ -242,4 +242,26 @@ public class PythonTestDescriptionTest {
         Matchers.hasItem(cxxBinary));
   }
 
+  @Test
+  public void packageStyleParam() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    PythonTest pythonTest =
+        (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
+            .build(resolver);
+    assertThat(
+        pythonTest.getBinary(),
+        Matchers.instanceOf(PythonInPlaceBinary.class));
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    pythonTest =
+        (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
+            .build(resolver);
+    assertThat(
+        pythonTest.getBinary(),
+        Matchers.instanceOf(PythonPackagedBinary.class));
+  }
+
 }
