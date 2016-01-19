@@ -38,6 +38,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.net.URL;
+import java.nio.file.Paths;
 
 public class PublisherTest {
 
@@ -77,14 +78,17 @@ public class PublisherTest {
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
 
     JavaLibraryBuilder.createBuilder(targetC)
+        .addSrc(Paths.get("c.java"))
         .build(ruleResolver);
     MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
         .createBuilder(publishableTargetA)
+        .addSrc(Paths.get("a.java"))
         .setMavenCoords(MVN_COORDS_A)
         .addDep(targetC)
         .build(ruleResolver);
     MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
         .createBuilder(publishableTargetB)
+        .addSrc(Paths.get("b.java"))
         .setMavenCoords(MVN_COORDS_B)
         .addDep(targetC)
         .build(ruleResolver);
@@ -124,17 +128,21 @@ public class PublisherTest {
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
 
     JavaLibraryBuilder.createBuilder(targetD)
+        .addSrc(Paths.get("d.java"))
         .build(ruleResolver);
     JavaLibraryBuilder.createBuilder(targetC)
+        .addSrc(Paths.get("c.java"))
         .addDep(targetD)
         .build(ruleResolver);
     MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
         .createBuilder(publishableTargetA)
+        .addSrc(Paths.get("a.java"))
         .setMavenCoords(MVN_COORDS_A)
         .addDep(targetC)
         .build(ruleResolver);
     MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
         .createBuilder(publishableTargetB)
+        .addSrc(Paths.get("b.java"))
         .setMavenCoords(MVN_COORDS_B)
         .addDep(targetD)
         .build(ruleResolver);
@@ -174,20 +182,25 @@ public class PublisherTest {
     BuildTarget targetE = BuildTargetFactory.newInstance("//:e");
 
     JavaLibraryBuilder.createBuilder(targetE)
+        .addSrc(Paths.get("e.java"))
         .build(ruleResolver);
     JavaLibraryBuilder.createBuilder(targetC)
+        .addSrc(Paths.get("c.java"))
         .addDep(targetE)
         .build(ruleResolver);
     JavaLibraryBuilder.createBuilder(targetD)
+        .addSrc(Paths.get("d.java"))
         .addDep(targetE)
         .build(ruleResolver);
     MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
         .createBuilder(publishableTargetA)
+        .addSrc(Paths.get("a.java"))
         .setMavenCoords(MVN_COORDS_A)
         .addDep(targetC)
         .build(ruleResolver);
     MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
         .createBuilder(publishableTargetB)
+        .addSrc(Paths.get("b.java"))
         .setMavenCoords(MVN_COORDS_B)
         .addDep(targetD)
         .build(ruleResolver);

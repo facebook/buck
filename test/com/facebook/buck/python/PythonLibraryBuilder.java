@@ -29,6 +29,10 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
     super(new PythonLibraryDescription(), target);
   }
 
+  public static PythonLibraryBuilder createBuilder(BuildTarget target) {
+    return new PythonLibraryBuilder(target);
+  }
+
   public PythonLibraryBuilder setSrcs(SourceList srcs) {
     arg.srcs = Optional.of(srcs);
     return this;

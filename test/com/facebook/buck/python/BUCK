@@ -33,6 +33,9 @@ java_library(
     '//test/com/facebook/buck/rules:testutil',
     '//third-party/java/guava:guava',
   ],
+  visibility = [
+    '//test/...',
+  ],
 )
 
 java_test(
