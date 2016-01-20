@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +38,29 @@ public class ResourceFilters {
   /** Utility class: do not instantiate. */
   private ResourceFilters() {}
 
+  /**
+   * The set of supported directories in resource folders.  This is defined in
+   * http://developer.android.com/guide/topics/resources/providing-resources.html#table1
+   */
+  @VisibleForTesting
+  public static final ImmutableSet<String> SUPPORTED_RESOURCE_DIRECTORIES = ImmutableSet.of(
+      "animator",
+      "anim",
+      "color",
+      "drawable",
+      "mipmap",
+      "layout",
+      "menu",
+      "raw",
+      "values",
+      "xml");
+
+  /**
+   * Represents the names and values of valid densities for resources as defined in
+   * http://developer.android.com/guide/topics/resources/providing-resources.html#DensityQualifier
+   */
   public enum Density {
+    // Note: ordering here matters and must be increasing by number!
     LDPI("ldpi", 120.0),
     NO_QUALIFIER("", 160.0),
     MDPI("mdpi", 160.0),
@@ -87,26 +110,29 @@ public class ResourceFilters {
     public final String others;
 
     /**
-     * Splits off the density qualifier from a drawable.
-     * @param path path to a drawable
+     * Creates a Qualfiers given the Path to a resource folder, pulls out the density filters and
+     * leaves the rest.
      */
-    public Qualifiers(Path path) {
+    public static Qualifiers from(Path path) {
       ResourceFilters.Density density = Density.NO_QUALIFIER;
       StringBuilder othersBuilder = new StringBuilder();
-      for (String qualifier : path.getParent().getFileName().toString().split("-")) {
-        if (qualifier.equals("drawable")) { // We're assuming they're all drawables.
-          continue;
-        }
-
+      String parts[] = path.getFileName().toString().split("-");
+      Preconditions.checkState(parts.length > 0);
+      Preconditions.checkState(SUPPORTED_RESOURCE_DIRECTORIES.contains(parts[0]));
+      for (int i = 1; i < parts.length; i++) {
+        String qualifier = parts[i];
         if (ResourceFilters.Density.isDensity(qualifier)) {
           density = Density.from(qualifier);
         } else {
           othersBuilder.append((MoreStrings.isEmpty(othersBuilder) ? "" : "-") + qualifier);
         }
-
       }
+      return new Qualifiers(density, othersBuilder.toString());
+    }
+
+    private Qualifiers(Density density, String others) {
       this.density = density;
-      this.others = othersBuilder.toString();
+      this.others = others;
     }
   }
 
@@ -140,7 +166,7 @@ public class ResourceFilters {
     // key: res/some.png/    |  res/drawable-mdpi/some.png          res/drawable-hdpi/some.png
     // key: res/some.png/fr  |  res/drawable-fr-hdpi/some.png
     for (Path candidate : candidates) {
-      Qualifiers qualifiers = new Qualifiers(candidate);
+      Qualifiers qualifiers = Qualifiers.from(candidate.getParent());
 
       String filename = candidate.getFileName().toString();
       Density density = qualifiers.density;

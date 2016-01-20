@@ -246,7 +246,7 @@ public class FilterResourcesStep implements Step {
         continue;
       }
 
-      ResourceFilters.Qualifiers qualifiers = new ResourceFilters.Qualifiers(drawable);
+      ResourceFilters.Qualifiers qualifiers = ResourceFilters.Qualifiers.from(drawable.getParent());
       ResourceFilters.Density density = qualifiers.density;
 
       // If the image has a qualifier but it's not the right one.
