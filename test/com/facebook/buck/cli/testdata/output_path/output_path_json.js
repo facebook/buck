@@ -7,6 +7,7 @@
   "buck.type":"genrule",
   "cmd":null,
   "cmdExe":null,
+  "executable":null,
   "name":"test",
   "out":"test-output",
   "srcs":[],
