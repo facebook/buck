@@ -78,7 +78,6 @@ public class FilterResourcesStepTest {
         /* locales */ ImmutableSet.<String>of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(ResourceFilters.Density.MDPI),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
         new ImageScaler() {
           @Override
           public boolean isAvailable(
@@ -197,7 +196,6 @@ public class FilterResourcesStepTest {
         /* locales */ ImmutableSet.<String>of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
         /* imageScaler */ null);
     command.execute(null);
 
@@ -238,7 +236,6 @@ public class FilterResourcesStepTest {
         /* locales */ locales,
         DefaultFilteredDirectoryCopier.getInstance(),
         /* targetDensities */ null,
-        /* drawableFinder */ null,
         /* imageScaler */ null);
 
     return step.getFilteringPredicate(TestExecutionContext.newInstance());
