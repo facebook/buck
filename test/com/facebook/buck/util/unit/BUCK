@@ -4,6 +4,7 @@ java_test(
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/util/unit:unit',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/util/unit:unit'
   ],
 )

@@ -17,9 +17,12 @@ package com.facebook.buck.util.unit;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.Pair;
+
 import org.junit.Test;
 
 public class SizeUnitTest {
+  private static final double delta = 0.0001;
 
   @Test(expected = NumberFormatException.class)
   public void testInvalidParseBytes() {
@@ -95,5 +98,43 @@ public class SizeUnitTest {
     assertEquals(2L * 1024L * 1024L, SizeUnit.TERABYTES.toMegabytes(2L));
     assertEquals(2048L, SizeUnit.TERABYTES.toGigabytes(2L));
     assertEquals(42L, SizeUnit.TERABYTES.toTerabytes(42L));
+  }
+
+  @Test
+  public void testHumanReadableByteConversion() {
+    Pair<Double, SizeUnit> result = SizeUnit.getHumanReadableSize(1, SizeUnit.BYTES);
+    assertEquals(1.0, result.getFirst(), delta);
+    assertEquals(SizeUnit.BYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(0, SizeUnit.BYTES);
+    assertEquals(0.0, result.getFirst(), delta);
+    assertEquals(SizeUnit.BYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(1024, SizeUnit.BYTES);
+    assertEquals(1024.0, result.getFirst(), delta);
+    assertEquals(SizeUnit.BYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(1024 * 5, SizeUnit.BYTES);
+    assertEquals(5.0, result.getFirst(), delta);
+    assertEquals(SizeUnit.KILOBYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(1024 * 1025, SizeUnit.BYTES);
+    assertEquals(1.0009765625, result.getFirst(), delta);
+    assertEquals(SizeUnit.MEGABYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(1024 * 1024, SizeUnit.BYTES);
+    assertEquals(1024.0, result.getFirst(), delta);
+    assertEquals(SizeUnit.KILOBYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(1024 * 1024 * 1025, SizeUnit.GIGABYTES);
+    assertEquals(1024 * 1025.0, result.getFirst(), delta);
+    assertEquals(SizeUnit.TERABYTES, result.getSecond());
+
+    result = SizeUnit.getHumanReadableSize(0.01, SizeUnit.TERABYTES);
+    assertEquals(10.24, result.getFirst(), delta);
+    assertEquals(SizeUnit.GIGABYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(0.00000000001, SizeUnit.TERABYTES);
+    assertEquals(10.99511627776, result.getFirst(), delta);
+    assertEquals(SizeUnit.BYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(0.01, SizeUnit.MEGABYTES);
+    assertEquals(10.24, result.getFirst(), delta);
+    assertEquals(SizeUnit.KILOBYTES, result.getSecond());
+    result = SizeUnit.getHumanReadableSize(0.01, SizeUnit.BYTES);
+    assertEquals(0.01, result.getFirst(), delta);
+    assertEquals(SizeUnit.BYTES, result.getSecond());
   }
 }

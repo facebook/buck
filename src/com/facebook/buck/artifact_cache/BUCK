@@ -106,6 +106,7 @@ java_immutables_library(
     '//src/com/facebook/buck/util:exceptions',
     '//third-party/java/guava:guava',
     '//third-party/java/okhttp:okhttp',
+    '//third-party/java/okio:okio',
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',

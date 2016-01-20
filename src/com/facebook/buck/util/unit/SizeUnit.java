@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.unit;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableMap;
 
@@ -113,5 +114,31 @@ public enum SizeUnit {
 
   public long toTerabytes(double size) {
     return multiplyByByteOrderOfMagnitude(size, getOrdinal() - TERABYTES.getOrdinal());
+  }
+
+  public static Pair<Double, SizeUnit> getHumanReadableSize(double size, SizeUnit unit) {
+    if (size == 0) {
+      return new Pair<>(size, unit);
+    }
+    int ordinal = unit.getOrdinal();
+    double resultSize = size;
+    if (size > 1) {
+      while (size > 1 && ordinal < 4) {
+        size = size / 1024;
+        if (size > 1) {
+          ordinal++;
+          resultSize = size;
+        }
+      }
+    } else {
+      while (size < 1024 && ordinal > 0) {
+        size = size * 1024;
+        if (size < 1024) {
+          ordinal--;
+          resultSize = size;
+        }
+      }
+    }
+    return new Pair<>(resultSize, SizeUnit.values()[ordinal]);
   }
 }

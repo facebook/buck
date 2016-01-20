@@ -16,6 +16,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
@@ -31,15 +32,23 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.ForwardingSource;
+import okio.Okio;
+import okio.Source;
 
 /**
  * Creates instances of the {@link ArtifactCache}.
@@ -187,7 +196,7 @@ public class ArtifactCaches {
   private static ArtifactCache createHttpArtifactCache(
       HttpCacheEntry cacheDescription,
       final String hostToReportToRemote,
-      BuckEventBus buckEventBus,
+      final BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
       ArtifactCacheBuckConfig config) {
@@ -251,6 +260,16 @@ public class ArtifactCaches {
           });
     }
 
+    fetchClient.networkInterceptors().add((new Interceptor() {
+      @Override
+      public Response intercept(Chain chain) throws IOException {
+        Response originalResponse = chain.proceed(chain.request());
+        return originalResponse.newBuilder()
+            .body(new ProgressResponseBody(originalResponse.body(), buckEventBus))
+            .build();
+      }
+    }));
+
     HttpService fetchService = null;
     HttpService storeService = null;
     switch (config.getLoadBalancingType()) {
@@ -290,5 +309,49 @@ public class ArtifactCaches {
         projectFilesystem,
         buckEventBus,
         httpWriteExecutorService);
+  }
+
+  private static class ProgressResponseBody extends ResponseBody {
+
+    private final ResponseBody responseBody;
+    private BuckEventBus buckEventBus;
+    private BufferedSource bufferedSource;
+
+    public ProgressResponseBody(
+        ResponseBody responseBody,
+        BuckEventBus buckEventBus) throws IOException {
+      this.responseBody = responseBody;
+      this.buckEventBus = buckEventBus;
+      this.bufferedSource = Okio.buffer(source(responseBody.source()));
+    }
+
+    @Override
+    public MediaType contentType() {
+      return responseBody.contentType();
+    }
+
+    @Override
+    public long contentLength() throws IOException {
+      return responseBody.contentLength();
+    }
+
+    @Override
+    public BufferedSource source() throws IOException {
+      return bufferedSource;
+    }
+
+    private Source source(Source source) {
+      return new ForwardingSource(source) {
+        @Override
+        public long read(Buffer sink, long byteCount) throws IOException {
+          long bytesRead = super.read(sink, byteCount);
+          // read() returns the number of bytes read, or -1 if this source is exhausted.
+          if (byteCount != -1) {
+            buckEventBus.post(new BytesReceivedEvent(byteCount));
+          }
+          return bytesRead;
+        }
+      };
+    }
   }
 }

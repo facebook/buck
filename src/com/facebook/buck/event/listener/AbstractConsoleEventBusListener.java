@@ -124,6 +124,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
 
+  protected final NetworkStatsKeeper networkStatsKeeper;
+
   public AbstractConsoleEventBusListener(Console console, Clock clock, Locale locale) {
     this.console = console;
     this.clock = clock;
@@ -147,6 +149,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.installStarted = null;
     this.installFinished = null;
+
+    this.networkStatsKeeper = new NetworkStatsKeeper();
   }
 
   public void setProgressEstimator(ProgressEstimator estimator) {
@@ -402,6 +406,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       httpArtifactUploadsStartedCount.incrementAndGet();
+    } else {
+      networkStatsKeeper.artifactDownloadedStarted(event);
     }
   }
 
@@ -413,6 +419,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       } else {
         httpArtifactUploadFailedCount.incrementAndGet();
       }
+    } else {
+      networkStatsKeeper.artifactDownloadFinished(event);
     }
   }
 

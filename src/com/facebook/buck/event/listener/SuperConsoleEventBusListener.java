@@ -22,9 +22,12 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.TestRunEvent;
@@ -40,6 +43,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -66,6 +70,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 
 /**
  * Console that provides rich, updating ansi output about the current build.
@@ -269,6 +274,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
+      lines.add(getNetworkStatsLine(buildFinished));
       // Log build time, excluding time spent in parsing.
       String jobSummary = null;
       if (ruleCount.isPresent()) {
@@ -381,6 +387,55 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           lines);
     }
     return lines.build();
+  }
+
+  private String getNetworkStatsLine(
+      @Nullable BuildEvent.Finished finishedEvent) {
+    String parseLine = (finishedEvent != null ? "[-] " : "[+] ") + "DOWNLOADING" + "...";
+    List<String> columns = Lists.newArrayList();
+    if (finishedEvent != null) {
+      Pair<Double, SizeUnit> avgDownloadSpeed =
+          networkStatsKeeper.getAverageDownloadSpeed();
+      Pair<Double, SizeUnit> readableSpeed =
+          SizeUnit.getHumanReadableSize(
+              avgDownloadSpeed.getFirst(),
+              avgDownloadSpeed.getSecond());
+      columns.add(
+          String.format(
+              locale,
+              "%.2f %s/S " + "AVG",
+              readableSpeed.getFirst(),
+              readableSpeed.getSecond().getAbbreviation()));
+    } else {
+      Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
+      Pair<Double, SizeUnit> readableDownloadSpeed =
+          SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
+      columns.add(
+          String.format(
+              locale,
+              "%.2f %s/S",
+              readableDownloadSpeed.getFirst(),
+              readableDownloadSpeed.getSecond().getAbbreviation()
+          )
+      );
+    }
+    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
+    Pair<Double, SizeUnit> readableBytesDownloaded =
+        SizeUnit.getHumanReadableSize(
+            bytesDownloaded.getFirst(),
+            bytesDownloaded.getSecond());
+    columns.add(
+        String.format(
+            locale,
+            "TOTAL: %.2f %s",
+            readableBytesDownloaded.getFirst(),
+            readableBytesDownloaded.getSecond().getAbbreviation()));
+    columns.add(
+        String.format(
+            locale,
+            "%d Artifacts",
+            networkStatsKeeper.getDownloadedArtifactDownloaded()));
+    return parseLine + " " + "(" + Joiner.on(", ").join(columns) + ")";
   }
 
   /**
@@ -641,9 +696,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     logEvents.add(event);
   }
 
+  @Subscribe
+  public void bytesReceived(NetworkEvent.BytesReceivedEvent bytesReceivedEvent) {
+    networkStatsKeeper.bytesReceived(bytesReceivedEvent);
+  }
+
   @Override
   public synchronized void close() throws IOException {
     stopRenderScheduler();
+    networkStatsKeeper.stopScheduler();
     render(); // Ensure final frame is rendered.
   }
 }
