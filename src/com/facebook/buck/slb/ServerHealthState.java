@@ -28,8 +28,8 @@ public class ServerHealthState {
 
   private final int maxSamplesStored;
   private final URI server;
-  private final List<LatencySample> latencies;
-  private final List<Long> errors;
+  private final List<LatencySample> pingLatencies;
+  private final List<RequestSample> requests;
 
   public ServerHealthState(URI server) {
     this(server, MAX_STORED_SAMPLES);
@@ -42,8 +42,8 @@ public class ServerHealthState {
         maxSamplesStored);
     this.maxSamplesStored = maxSamplesStored;
     this.server = server;
-    this.latencies = Lists.newLinkedList();
-    this.errors = Lists.newLinkedList();
+    this.pingLatencies = Lists.newLinkedList();
+    this.requests = Lists.newLinkedList();
   }
 
   /**
@@ -51,10 +51,10 @@ public class ServerHealthState {
    * @param nowMillis
    * @param latencyMillis
    */
-  public void reportLatency(long nowMillis, long latencyMillis) {
-    synchronized (latencies) {
-      latencies.add(new LatencySample(nowMillis, latencyMillis));
-      keepWithinSizeLimit(latencies);
+  public void reportPingLatency(long nowMillis, long latencyMillis) {
+    synchronized (pingLatencies) {
+      pingLatencies.add(new LatencySample(nowMillis, latencyMillis));
+      keepWithinSizeLimit(pingLatencies);
     }
   }
 
@@ -62,22 +62,34 @@ public class ServerHealthState {
    * NOTE: Assumes nowMillis is roughly non-decreasing in consecutive calls.
    * @param nowMillis
    */
-  public void reportError(long nowMillis) {
-    synchronized (errors) {
-      errors.add(nowMillis);
-      keepWithinSizeLimit(errors);
+  public void reportRequestSuccess(long nowMillis) {
+    reportRequest(nowMillis, true);
+  }
+
+  /**
+   * NOTE: Assumes nowMillis is roughly non-decreasing in consecutive calls.
+   * @param nowMillis
+   */
+  public void reportRequestError(long nowMillis) {
+    reportRequest(nowMillis, false);
+  }
+
+  private void reportRequest(long nowMillis, boolean wasSuccessful) {
+    synchronized (requests) {
+      requests.add(new RequestSample(nowMillis, wasSuccessful));
+      keepWithinSizeLimit(requests);
     }
   }
 
-  public int getLatencySampleCount() {
-    synchronized (latencies) {
-      return latencies.size();
+  public int getPingLatencySampleCount() {
+    synchronized (pingLatencies) {
+      return pingLatencies.size();
     }
   }
 
-  public int getErrorSampleCount() {
-    synchronized (errors) {
-      return errors.size();
+  public int getRequestSampleCount() {
+    synchronized (requests) {
+      return requests.size();
     }
   }
 
@@ -88,32 +100,48 @@ public class ServerHealthState {
     }
   }
 
-  public float getErrorsPerSecond(long nowMillis, int timeRangeMillis) {
-    float count = 0;
+  /**
+   * @param nowMillis Current timestamp.
+   * @param timeRangeMillis Time range for 'nowMillis' to compute the errorPercentage for.
+   *
+   * @return Value in the interval [0.0, 1.0].
+   */
+  public float getErrorPercentage(long nowMillis, int timeRangeMillis) {
+    int errorCount = 0;
+    int requestCount = 0;
     long initialMillis = nowMillis - timeRangeMillis;
-    synchronized (errors) {
-      ListIterator<Long> iterator = errors.listIterator(errors.size());
+    synchronized (requests) {
+      ListIterator<RequestSample> iterator =  requests.listIterator(requests.size());
       while (iterator.hasPrevious()) {
-        long errorMillis = iterator.previous();
-        if (errorMillis >= initialMillis && errorMillis <= nowMillis) {
-          ++count;
+        RequestSample sample = iterator.previous();
+        long requestMillis = sample.getEpochMillis();
+        if (requestMillis >= initialMillis && requestMillis <= nowMillis) {
+          if (!sample.wasSuccessful()) {
+            ++errorCount;
+          }
+
+          ++requestCount;
         }
       }
     }
 
-    return count / timeRangeMillis;
+    if (requestCount == 0) {
+      return 0;
+    } else {
+      return errorCount / ((float) requestCount);
+    }
   }
 
   public URI getServer() {
     return server;
   }
 
-  public long getLatencyMillis(long nowMillis, int timeRangeMillis) {
+  public long getPingLatencyMillis(long nowMillis, int timeRangeMillis) {
     int count = 0;
     int sum = 0;
     long initialMillis = nowMillis - timeRangeMillis;
-    synchronized (latencies) {
-      ListIterator<LatencySample> iterator = latencies.listIterator(latencies.size());
+    synchronized (pingLatencies) {
+      ListIterator<LatencySample> iterator = pingLatencies.listIterator(pingLatencies.size());
       while (iterator.hasPrevious()) {
         LatencySample sample = iterator.previous();
         if (sample.getEpochMillis() >= initialMillis &&
@@ -134,9 +162,27 @@ public class ServerHealthState {
   public String toString(long nowMillis, int timeRangeMillis) {
     return "ServerHealthState{" +
         "server=" + server +
-        ", latencyMillis=" + getLatencyMillis(nowMillis, timeRangeMillis) +
-        ", errorCount=" + getErrorsPerSecond(nowMillis, timeRangeMillis) +
+        ", latencyMillis=" + getPingLatencyMillis(nowMillis, timeRangeMillis) +
+        ", errorCount=" + getErrorPercentage(nowMillis, timeRangeMillis) +
         '}';
+  }
+
+  private static final class RequestSample {
+    private final long epochMillis;
+    private final boolean wasSuccessful;
+
+    private RequestSample(long epochMillis, boolean wasSuccessful) {
+      this.epochMillis = epochMillis;
+      this.wasSuccessful = wasSuccessful;
+    }
+
+    public long getEpochMillis() {
+      return epochMillis;
+    }
+
+    public boolean wasSuccessful() {
+      return wasSuccessful;
+    }
   }
 
   private static final class LatencySample {

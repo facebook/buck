@@ -30,8 +30,8 @@ public class ServerHealthStateTest {
   @Test
   public void testLatencyAndErrorsWithoutSamples() {
     ServerHealthState state = new ServerHealthState(SERVER);
-    Assert.assertEquals(-1, state.getLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
-    Assert.assertEquals(0, state.getErrorsPerSecond(NOW_MILLIS, RANGE_MILLIS), DELTA);
+    Assert.assertEquals(-1, state.getPingLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
+    Assert.assertEquals(0, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
   }
 
   @Test
@@ -39,18 +39,19 @@ public class ServerHealthStateTest {
     ServerHealthState state = new ServerHealthState(SERVER);
     reportSamples(state, NOW_MILLIS + 1, 21);
     reportSamples(state, NOW_MILLIS - RANGE_MILLIS - 1, 21);
-    Assert.assertEquals(-1, state.getLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
-    Assert.assertEquals(0, state.getErrorsPerSecond(NOW_MILLIS, RANGE_MILLIS), DELTA);
+    Assert.assertEquals(-1, state.getPingLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
+    Assert.assertEquals(0, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
   }
 
   @Test
   public void testLatencyAndErrorsOneSample() {
     ServerHealthState state = new ServerHealthState(SERVER);
     reportSamples(state, NOW_MILLIS, 21);
-    Assert.assertEquals(21, state.getLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
+    Assert.assertEquals(21, state.getPingLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
     Assert.assertEquals(
-        1.0f / RANGE_MILLIS,
-        state.getErrorsPerSecond(NOW_MILLIS, RANGE_MILLIS), DELTA);
+        1f,
+        state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS),
+        DELTA);
   }
 
   @Test
@@ -61,12 +62,46 @@ public class ServerHealthStateTest {
       reportSamples(state, NOW_MILLIS, 1);
     }
 
-    Assert.assertEquals(maxSamples, state.getErrorSampleCount());
-    Assert.assertEquals(maxSamples, state.getLatencySampleCount());
+    Assert.assertEquals(maxSamples, state.getRequestSampleCount());
+    Assert.assertEquals(maxSamples, state.getPingLatencySampleCount());
+  }
+
+  @Test
+  public void testErrorPercentage() {
+    ServerHealthState state = new ServerHealthState(SERVER);
+    Assert.assertEquals(0, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
+
+    state.reportRequestSuccess(NOW_MILLIS);
+    Assert.assertEquals(0, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
+
+    state.reportRequestError(NOW_MILLIS);
+    Assert.assertEquals(0.5, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
+
+    state.reportRequestError(NOW_MILLIS);
+    state.reportRequestError(NOW_MILLIS);
+    Assert.assertEquals(0.75, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
+
+    Assert.assertEquals(0,
+        state.getErrorPercentage(NOW_MILLIS + RANGE_MILLIS + 1, RANGE_MILLIS), DELTA);
+  }
+
+  @Test
+  public void testErrorPercentageIfThereIsOnlyARecentError() {
+    final int rangeMillis = 1000;
+    ServerHealthState state = new ServerHealthState(SERVER);
+    reportSamples(state, NOW_MILLIS, 21);
+
+    // In the instant straight after the error was reported.
+    float errorsPerSecond = state.getErrorPercentage(NOW_MILLIS, rangeMillis);
+    Assert.assertEquals(1f, errorsPerSecond, DELTA);
+
+    // After one second.
+    errorsPerSecond = state.getErrorPercentage(NOW_MILLIS + rangeMillis, rangeMillis);
+    Assert.assertEquals(1f, errorsPerSecond, DELTA);
   }
 
   private void reportSamples(ServerHealthState state, long epochMillis, int latencyMillis) {
-    state.reportError(epochMillis);
-    state.reportLatency(epochMillis, latencyMillis);
+    state.reportRequestError(epochMillis);
+    state.reportPingLatency(epochMillis, latencyMillis);
   }
 }

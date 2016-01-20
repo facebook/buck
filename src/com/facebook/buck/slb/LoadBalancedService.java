@@ -53,10 +53,11 @@ public class LoadBalancedService implements HttpService {
       if (response.body() != null && response.body().contentLength() != -1) {
         data.setResponseSizeBytes(response.body().contentLength());
       }
+      slb.reportRequestSuccess(server);
       return response;
     } catch (IOException e) {
       data.setException(e);
-      slb.reportException(server);
+      slb.reportRequestException(server);
       throw new IOException(e);
     } finally {
       eventBus.post(new LoadBalancedServiceEvent(data.build()));

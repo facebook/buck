@@ -26,6 +26,7 @@ import org.immutables.value.Value;
 
 import java.net.URI;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -33,13 +34,16 @@ abstract class AbstractClientSideSlbConfig {
 
   // Defaults
   public static final String PING_ENDPOINT = "/status.php";
-  public static final int HEALTH_CHECK_INTERVAL_MILLIS = 60 * 1000;
-  public static final int CONNECTION_TIMEOUT_MILLIS = 2 * 1000;
-  public static final int ERROR_CHECK_TIME_RANGE_MILLIS = 10 * 60 * 60 * 1000;
-  public static final float MAX_ERRORS_PER_SECOND = 1;
+
+  public static final int HEALTH_CHECK_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(25);
+  public static final int CONNECTION_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
+
+  public static final int ERROR_CHECK_TIME_RANGE_MILLIS = (int) TimeUnit.MINUTES.toMillis(5);
+  public static final float MAX_ERROR_PERCENTAGE = 0.1f;
+
   public static final int LATENCY_CHECK_TIME_RANGE_MILLIS =
       ERROR_CHECK_TIME_RANGE_MILLIS;
-  public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 1000;
+  public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);;
 
   public abstract Clock getClock();
   public abstract ScheduledExecutorService getSchedulerService();
@@ -78,7 +82,7 @@ abstract class AbstractClientSideSlbConfig {
   }
 
   @Value.Default
-  public float getMaxErrorsPerSecond() {
-    return MAX_ERRORS_PER_SECOND;
+  public float getMaxErrorPercentage() {
+    return MAX_ERROR_PERCENTAGE;
   }
 }

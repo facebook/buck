@@ -52,7 +52,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
     this.healthManager = new ServerHealthManager(
         this.serverPool,
         config.getErrorCheckTimeRangeMillis(),
-        config.getMaxErrorsPerSecond(),
+        config.getMaxErrorPercentage(),
         config.getLatencyCheckTimeRangeMillis(),
         config.getMaxAcceptableLatencyMillis(),
         config.getEventBus());
@@ -80,8 +80,13 @@ public class ClientSideSlb implements HttpLoadBalancer {
   }
 
   @Override
-  public void reportException(URI server) {
-    healthManager.reportError(server, clock.currentTimeMillis());
+  public void reportRequestSuccess(URI server) {
+    healthManager.reportRequestSuccess(server, clock.currentTimeMillis());
+  }
+
+  @Override
+  public void reportRequestException(URI server) {
+    healthManager.reportRequestError(server, clock.currentTimeMillis());
   }
 
   @Override
@@ -107,9 +112,10 @@ public class ClientSideSlb implements HttpLoadBalancer {
         pingClient.newCall(request).execute();
         long requestLatencyMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
-        healthManager.reportLatency(serverUri, nowMillis, requestLatencyMillis);
+        healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
+        healthManager.reportRequestSuccess(serverUri, nowMillis);
       } catch (IOException e) {
-        healthManager.reportError(serverUri, nowMillis);
+        healthManager.reportRequestError(serverUri, nowMillis);
         perServerData.setException(e);
       } finally {
         data.addPerServerData(perServerData.build());

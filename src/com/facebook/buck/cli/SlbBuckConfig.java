@@ -36,7 +36,7 @@ public class SlbBuckConfig {
   private static final String HEALTH_CHECK_INTERVAL_MILLIS = "slb_health_check_internal_millis";
   private static final String TIMEOUT_MILLIS = "slb_timeout_millis";
   private static final String ERROR_CHECK_TIME_RANGE_MILLIS = "slb_error_check_time_range_millis";
-  private static final String MAX_ERRORS_PER_SECOND = "slb_max_errors_per_second";
+  private static final String MAX_ERROR_PERCENTAGE = "slb_max_error_percentage";
   private static final String LATENCY_CHECK_TIME_RANGE_MILLIS =
       "slb_latency_check_time_range_millis";
   private static final String MAX_ACCEPTABLE_LATENCY_MILLIS = "slb_max_acceptable_latency_millis";
@@ -103,9 +103,9 @@ public class SlbBuckConfig {
           buckConfig.getLong(parentSection, LATENCY_CHECK_TIME_RANGE_MILLIS).get().intValue());
     }
 
-    if (buckConfig.getValue(parentSection, MAX_ERRORS_PER_SECOND).isPresent()) {
-      configBuilder.setMaxErrorsPerSecond(
-          buckConfig.getFloat(parentSection, MAX_ERRORS_PER_SECOND).get());
+    if (buckConfig.getValue(parentSection, MAX_ERROR_PERCENTAGE).isPresent()) {
+      configBuilder.setMaxErrorPercentage(
+          buckConfig.getFloat(parentSection, MAX_ERROR_PERCENTAGE).get());
     }
 
     return new ClientSideSlb(configBuilder.build());

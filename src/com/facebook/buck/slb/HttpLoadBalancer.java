@@ -22,7 +22,8 @@ import java.net.URI;
 public interface HttpLoadBalancer extends AutoCloseable {
   URI getBestServer() throws IOException;
 
-  void reportException(URI server);
+  void reportRequestSuccess(URI server);
+  void reportRequestException(URI server);
 
   @Override
   void close();

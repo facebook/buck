@@ -49,19 +49,19 @@ public class ServerHealthManager {
   private final ConcurrentHashMap<URI, ServerHealthState> servers;
   private final int maxAcceptableLatencyMillis;
   private final int latencyCheckTimeRangeMillis;
-  private final float maxErrorsPerSecond;
+  private final float maxErrorPercentage;
   private final int errorCheckTimeRangeMillis;
   private final BuckEventBus eventBus;
 
   public ServerHealthManager(
       ImmutableList<URI> servers,
       int errorCheckTimeRangeMillis,
-      float maxErrorsPerSecond,
+      float maxErrorPercentage,
       int latencyCheckTimeRangeMillis,
       int maxAcceptableLatencyMillis,
       BuckEventBus eventBus) {
     this.errorCheckTimeRangeMillis = errorCheckTimeRangeMillis;
-    this.maxErrorsPerSecond = maxErrorsPerSecond;
+    this.maxErrorPercentage = maxErrorPercentage;
     this.latencyCheckTimeRangeMillis = latencyCheckTimeRangeMillis;
     this.maxAcceptableLatencyMillis = maxAcceptableLatencyMillis;
     this.servers = new ConcurrentHashMap<>();
@@ -71,14 +71,19 @@ public class ServerHealthManager {
     this.eventBus = eventBus;
   }
 
-  public void reportLatency(URI uri, long epochMillis, long latencyMillis) {
-    Preconditions.checkState(servers.containsKey(uri), "Unknown server [%s]", uri);
-    servers.get(uri).reportLatency(epochMillis, latencyMillis);
+  public void reportPingLatency(URI server, long epochMillis, long latencyMillis) {
+    Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
+    servers.get(server).reportPingLatency(epochMillis, latencyMillis);
   }
 
-  public void reportError(URI uri, long epochMillis) {
-    Preconditions.checkState(servers.containsKey(uri), "Unknown server [%s]", uri);
-    servers.get(uri).reportError(epochMillis);
+  public void reportRequestError(URI server, long epochMillis) {
+    Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
+    servers.get(server).reportRequestError(epochMillis);
+  }
+
+  public void reportRequestSuccess(URI server, long epochMillis) {
+    Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
+    servers.get(server).reportRequestSuccess(epochMillis);
   }
 
   public URI getBestServer(long epochMillis) throws IOException {
@@ -94,9 +99,9 @@ public class ServerHealthManager {
         PerServerData.Builder perServerData = PerServerData.builder().setServer(server);
         allPerServerData.put(server, perServerData);
 
-        float errorsPerSecond = state.getErrorsPerSecond(epochMillis, errorCheckTimeRangeMillis);
-        long latencyMillis = state.getLatencyMillis(epochMillis, latencyCheckTimeRangeMillis);
-        if (errorsPerSecond < maxErrorsPerSecond && latencyMillis <= maxAcceptableLatencyMillis) {
+        float errorPercentage = state.getErrorPercentage(epochMillis, errorCheckTimeRangeMillis);
+        long latencyMillis = state.getPingLatencyMillis(epochMillis, latencyCheckTimeRangeMillis);
+        if (errorPercentage <= maxErrorPercentage && latencyMillis <= maxAcceptableLatencyMillis) {
           serverLatencies.add(new Pair<>(state.getServer(), latencyMillis));
         } else {
           perServerData.setServerUnhealthy(true);
