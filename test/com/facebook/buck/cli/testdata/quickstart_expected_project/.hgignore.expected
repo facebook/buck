@@ -1,3 +1,4 @@
+syntax: glob
 *.iml
 /.idea/compiler.xml
 /.idea/libraries/*.xml
