@@ -32,14 +32,14 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Response;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Creates instances of the {@link ArtifactCache}.
@@ -256,9 +256,10 @@ public class ArtifactCaches {
     switch (config.getLoadBalancingType()) {
       case CLIENT_SLB:
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(
-            new DefaultClock());
-        fetchService = new LoadBalancedService(clientSideSlb, fetchClient);
-        storeService = new LoadBalancedService(clientSideSlb, storeClient);
+            new DefaultClock(),
+            buckEventBus);
+        fetchService = new LoadBalancedService(clientSideSlb, fetchClient, buckEventBus);
+        storeService = new LoadBalancedService(clientSideSlb, storeClient, buckEventBus);
         break;
 
       case SINGLE_SERVER:

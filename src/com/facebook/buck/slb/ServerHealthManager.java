@@ -16,6 +16,7 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -23,12 +24,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerHealthManager {
@@ -48,13 +51,15 @@ public class ServerHealthManager {
   private final int latencyCheckTimeRangeMillis;
   private final float maxErrorsPerSecond;
   private final int errorCheckTimeRangeMillis;
+  private final BuckEventBus eventBus;
 
   public ServerHealthManager(
       ImmutableList<URI> servers,
       int errorCheckTimeRangeMillis,
       float maxErrorsPerSecond,
       int latencyCheckTimeRangeMillis,
-      int maxAcceptableLatencyMillis) {
+      int maxAcceptableLatencyMillis,
+      BuckEventBus eventBus) {
     this.errorCheckTimeRangeMillis = errorCheckTimeRangeMillis;
     this.maxErrorsPerSecond = maxErrorsPerSecond;
     this.latencyCheckTimeRangeMillis = latencyCheckTimeRangeMillis;
@@ -63,6 +68,7 @@ public class ServerHealthManager {
     for (URI server : servers) {
       this.servers.put(server, new ServerHealthState(server));
     }
+    this.eventBus = eventBus;
   }
 
   public void reportLatency(URI uri, long epochMillis, long latencyMillis) {
@@ -76,28 +82,45 @@ public class ServerHealthManager {
   }
 
   public URI getBestServer(long epochMillis) throws IOException {
-    // TODO(ruibm): Computations in this method could be cached and only refreshed every 10 seconds
-    // to avoid call bursts causing unnecessary CPU consumption.
+    ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
+    Map<URI, PerServerData.Builder> allPerServerData = Maps.newHashMap();
+    try {
+      // TODO(ruibm): Computations in this method could be cached and only refreshed
+      // every 10 seconds to avoid call bursts causing unnecessary CPU consumption.
 
-    List<Pair<URI, Long>> serverLatencies = Lists.newArrayList();
-    for (ServerHealthState state : servers.values()) {
-      if (state.getErrorsPerSecond(epochMillis, errorCheckTimeRangeMillis) < maxErrorsPerSecond) {
+      List<Pair<URI, Long>> serverLatencies = Lists.newArrayList();
+      for (ServerHealthState state : servers.values()) {
+        URI server = state.getServer();
+        PerServerData.Builder perServerData = PerServerData.builder().setServer(server);
+        allPerServerData.put(server, perServerData);
+
+        float errorsPerSecond = state.getErrorsPerSecond(epochMillis, errorCheckTimeRangeMillis);
         long latencyMillis = state.getLatencyMillis(epochMillis, latencyCheckTimeRangeMillis);
-        if (latencyMillis <= maxAcceptableLatencyMillis) {
+        if (errorsPerSecond < maxErrorsPerSecond && latencyMillis <= maxAcceptableLatencyMillis) {
           serverLatencies.add(new Pair<>(state.getServer(), latencyMillis));
+        } else {
+          perServerData.setServerUnhealthy(true);
         }
       }
-    }
 
-    if (serverLatencies.size() == 0) {
-      throw new NoHealthyServersException(String.format(
-          "No servers available. Too many errors reported by all servers in the pool: [%s]",
-          Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
-              Functions.toStringFunction()))));
-    }
+      if (serverLatencies.size() == 0) {
+        data.setNoHealthyServersAvailable(true);
+        throw new NoHealthyServersException(String.format(
+            "No servers available. Too many errors reported by all servers in the pool: [%s]",
+            Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
+                Functions.toStringFunction()))));
+      }
 
-    Collections.sort(serverLatencies, LATENCY_COMPARATOR);
-    return serverLatencies.get(0).getFirst();
+      Collections.sort(serverLatencies, LATENCY_COMPARATOR);
+      URI bestServer = serverLatencies.get(0).getFirst();
+      Preconditions.checkNotNull(allPerServerData.get(bestServer)).setBestServer(true);
+      return bestServer;
+    } finally {
+      for (PerServerData.Builder builder : allPerServerData.values()) {
+        data.addPerServerData(builder.build());
+      }
+      eventBus.post(new ServerHealthManagerEvent(data.build()));
+    }
   }
 
   public String toString(long epochMillis) {

@@ -52,8 +52,10 @@ public class ServerHealthState {
    * @param latencyMillis
    */
   public void reportLatency(long nowMillis, long latencyMillis) {
-    latencies.add(new LatencySample(nowMillis, latencyMillis));
-    keepWithinSizeLimit(latencies);
+    synchronized (latencies) {
+      latencies.add(new LatencySample(nowMillis, latencyMillis));
+      keepWithinSizeLimit(latencies);
+    }
   }
 
   /**
@@ -61,16 +63,22 @@ public class ServerHealthState {
    * @param nowMillis
    */
   public void reportError(long nowMillis) {
-    errors.add(nowMillis);
-    keepWithinSizeLimit(errors);
+    synchronized (errors) {
+      errors.add(nowMillis);
+      keepWithinSizeLimit(errors);
+    }
   }
 
   public int getLatencySampleCount() {
-    return latencies.size();
+    synchronized (latencies) {
+      return latencies.size();
+    }
   }
 
   public int getErrorSampleCount() {
-    return errors.size();
+    synchronized (errors) {
+      return errors.size();
+    }
   }
 
   private <T> void keepWithinSizeLimit(List<T> list) {
@@ -83,11 +91,13 @@ public class ServerHealthState {
   public float getErrorsPerSecond(long nowMillis, int timeRangeMillis) {
     float count = 0;
     long initialMillis = nowMillis - timeRangeMillis;
-    ListIterator<Long> iterator =  errors.listIterator(errors.size());
-    while (iterator.hasPrevious()) {
-      long errorMillis = iterator.previous();
-      if (errorMillis >= initialMillis && errorMillis <= nowMillis) {
-        ++count;
+    synchronized (errors) {
+      ListIterator<Long> iterator = errors.listIterator(errors.size());
+      while (iterator.hasPrevious()) {
+        long errorMillis = iterator.previous();
+        if (errorMillis >= initialMillis && errorMillis <= nowMillis) {
+          ++count;
+        }
       }
     }
 
@@ -102,13 +112,15 @@ public class ServerHealthState {
     int count = 0;
     int sum = 0;
     long initialMillis = nowMillis - timeRangeMillis;
-    ListIterator<LatencySample> iterator =  latencies.listIterator(latencies.size());
-    while (iterator.hasPrevious()) {
-      LatencySample sample = iterator.previous();
-      if (sample.getEpochMillis() >= initialMillis &&
-          sample.getEpochMillis() <= nowMillis) {
-        sum += sample.getLatencyMillis();
-        ++count;
+    synchronized (latencies) {
+      ListIterator<LatencySample> iterator = latencies.listIterator(latencies.size());
+      while (iterator.hasPrevious()) {
+        LatencySample sample = iterator.previous();
+        if (sample.getEpochMillis() >= initialMillis &&
+            sample.getEpochMillis() <= nowMillis) {
+          sum += sample.getLatencyMillis();
+          ++count;
+        }
       }
     }
 

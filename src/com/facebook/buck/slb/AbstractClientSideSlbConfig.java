@@ -16,6 +16,7 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +45,7 @@ abstract class AbstractClientSideSlbConfig {
   public abstract ScheduledExecutorService getSchedulerService();
   public abstract ImmutableList<URI> getServerPool();
   public abstract OkHttpClient getPingHttpClient();
+  public abstract BuckEventBus getEventBus();
 
   @Value.Default
   public int getErrorCheckTimeRangeMillis() {

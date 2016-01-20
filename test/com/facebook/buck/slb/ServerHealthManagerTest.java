@@ -16,16 +16,18 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableList;
 
+import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URI;
 
 public class ServerHealthManagerTest {
-
   private static final ImmutableList<URI> SERVERS = ImmutableList.of(
       URI.create("http://localhost:4242"),
       URI.create("http://localhost:8484"),
@@ -36,6 +38,13 @@ public class ServerHealthManagerTest {
   private static final int RANGE_MILLIS = 42;
   private static final float MAX_ERRORS_PER_SECOND = 1;
   private static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 42;
+
+  private BuckEventBus eventBus;
+
+  @Before
+  public void setUp() {
+    eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+  }
 
   @Test
   public void testGetBestServerWithoutInformation() throws IOException {
@@ -78,13 +87,14 @@ public class ServerHealthManagerTest {
     }
   }
 
-  private static ServerHealthManager newServerHealthManager() {
+  private ServerHealthManager newServerHealthManager() {
     return new ServerHealthManager(
         SERVERS,
         RANGE_MILLIS,
         MAX_ERRORS_PER_SECOND,
         RANGE_MILLIS,
-        MAX_ACCEPTABLE_LATENCY_MILLIS);
+        MAX_ACCEPTABLE_LATENCY_MILLIS,
+        eventBus);
   }
 
   private static void reportErrorToAll(ServerHealthManager manager, int numberOfErrors) {

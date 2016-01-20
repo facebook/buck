@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.ClientSideSlbConfig;
 import com.facebook.buck.timing.Clock;
@@ -65,12 +66,13 @@ public class SlbBuckConfig {
     return builder.build();
   }
 
-  public ClientSideSlb createHttpClientSideSlb(Clock clock) {
+  public ClientSideSlb createHttpClientSideSlb(Clock clock, BuckEventBus eventBus) {
     ClientSideSlbConfig.Builder configBuilder = ClientSideSlbConfig.builder()
         .setSchedulerService(Executors.newScheduledThreadPool(1))
         .setClock(clock)
         .setPingHttpClient(new OkHttpClient())
-        .setServerPool(getServerPool());
+        .setServerPool(getServerPool())
+        .setEventBus(eventBus);
 
     if (buckConfig.getValue(parentSection, PING_ENDPOINT).isPresent()) {
       configBuilder.setPingEndpoint(buckConfig.getValue(parentSection, PING_ENDPOINT).get());

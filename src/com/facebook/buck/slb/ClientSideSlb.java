@@ -16,6 +16,7 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -38,12 +39,14 @@ public class ClientSideSlb implements HttpLoadBalancer {
   private final Clock clock;
   private final ScheduledExecutorService schedulerService;
   private final ScheduledFuture<?> backgroundHealthChecker;
+  private final BuckEventBus eventBus;
 
   // Use the Builder.
   public ClientSideSlb(ClientSideSlbConfig config) {
     this.clock = config.getClock();
     this.pingEndpoint = Preconditions.checkNotNull(config.getPingEndpoint());
     this.serverPool = Preconditions.checkNotNull(config.getServerPool());
+    this.eventBus = Preconditions.checkNotNull(config.getEventBus());
     Preconditions.checkArgument(serverPool.size() > 0, "No server URLs passed.");
 
     this.healthManager = new ServerHealthManager(
@@ -51,7 +54,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
         config.getErrorCheckTimeRangeMillis(),
         config.getMaxErrorsPerSecond(),
         config.getLatencyCheckTimeRangeMillis(),
-        config.getMaxAcceptableLatencyMillis());
+        config.getMaxAcceptableLatencyMillis(),
+        config.getEventBus());
     this.pingClient = config.getPingHttpClient();
     this.pingClient.setConnectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
     this.pingClient.setReadTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
@@ -89,20 +93,29 @@ public class ClientSideSlb implements HttpLoadBalancer {
   // TODO(ruibm): Log into timeseries information about each run.
   // TODO(ruibm): Add cache health information to the SuperConsole.
   private void backgroundThreadCallForHealthCheck() {
-    for (URI uri : serverPool) {
+    LoadBalancerPingEventData.Builder data = LoadBalancerPingEventData.builder();
+    for (URI serverUri : serverPool) {
+      PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
       Request request =
           new Request.Builder()
-              .url(uri.resolve(pingEndpoint).toString())
+              .url(serverUri.resolve(pingEndpoint).toString())
               .get()
               .build();
       long nowMillis = clock.currentTimeMillis();
       Stopwatch stopwatch = Stopwatch.createStarted();
       try {
         pingClient.newCall(request).execute();
-        healthManager.reportLatency(uri, nowMillis, stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        long requestLatencyMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
+        healthManager.reportLatency(serverUri, nowMillis, requestLatencyMillis);
       } catch (IOException e) {
-        healthManager.reportError(uri, nowMillis);
+        healthManager.reportError(serverUri, nowMillis);
+        perServerData.setException(e);
+      } finally {
+        data.addPerServerData(perServerData.build());
       }
     }
+
+    eventBus.post(new LoadBalancerPingEvent(data.build()));
   }
 }

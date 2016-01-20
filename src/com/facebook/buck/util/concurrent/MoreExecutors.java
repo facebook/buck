@@ -19,6 +19,7 @@ package com.facebook.buck.util.concurrent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +93,16 @@ public class MoreExecutors {
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
+  }
+
+  /**
+   * Creates a single threaded scheduled executor with meaningfully named threads.
+   * @param threadName a thread name prefix used to easily identify threads when debugging.
+   * @return The single-threaded scheduled executor.
+   */
+  public static ScheduledExecutorService newSingleThreadScheduledExecutor(
+      String threadName) {
+    return Executors.newScheduledThreadPool(1, new NamedThreadFactory(threadName));
   }
 
   /**

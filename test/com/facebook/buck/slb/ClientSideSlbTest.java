@@ -16,6 +16,7 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.Call;
@@ -42,6 +43,7 @@ public class ClientSideSlbTest {
       URI.create("http://localhost:2121")
   );
 
+  private BuckEventBus mockBus;
   private Clock mockClock;
   private OkHttpClient mockClient;
   private ScheduledExecutorService mockScheduler;
@@ -54,6 +56,7 @@ public class ClientSideSlbTest {
 
   @Before
   public void setUp() {
+    mockBus = EasyMock.createNiceMock(BuckEventBus.class);
     mockFuture = EasyMock.createMock(ScheduledFuture.class);
     mockClient = EasyMock.createNiceMock(OkHttpClient.class);
     mockScheduler = EasyMock.createMock(ScheduledExecutorService.class);
@@ -66,6 +69,7 @@ public class ClientSideSlbTest {
         .setSchedulerService(mockScheduler)
         .setPingHttpClient(mockClient)
         .setServerPool(SERVERS)
+        .setEventBus(mockBus)
         .build();
   }
 

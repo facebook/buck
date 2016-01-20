@@ -28,6 +28,8 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.counters.CounterRegistry;
+import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -35,6 +37,7 @@ import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
@@ -842,7 +845,13 @@ public final class Main {
            TempDirectoryCreator tempDirectoryCreator =
                new TempDirectoryCreator(testTempDirOverride);
            AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
-           BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+           BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+           // NOTE: This will only run during the lifetime of the process and will flush on close.
+           CounterRegistry counterRegistry = new CounterRegistryImpl(
+               MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
+               buildEventBus,
+               buckConfig.getCountersFirstFlushIntervalMillis(),
+               buckConfig.getCountersFlushIntervalMillis())) {
 
         buildEventBus.register(HANG_MONITOR.getHangMonitor());
 
@@ -870,7 +879,8 @@ public final class Main {
             console,
             consoleListener,
             rootCell.getKnownBuildRuleTypes(),
-            clientEnvironment);
+            clientEnvironment,
+            counterRegistry);
 
         VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
 
@@ -1246,7 +1256,8 @@ public final class Main {
       Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      ImmutableMap<String, String> environment) throws InterruptedException {
+      ImmutableMap<String, String> environment,
+      CounterRegistry counterRegistry) throws InterruptedException {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
@@ -1302,6 +1313,8 @@ public final class Main {
               javacOptions,
               environment));
     }
+
+    eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
 
     eventListenersBuilder.addAll(externalEventsListeners);
 

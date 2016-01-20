@@ -742,6 +742,14 @@ public class BuckConfig {
         .or(Float.POSITIVE_INFINITY);
   }
 
+  public long getCountersFirstFlushIntervalMillis() {
+    return config.getLong("counters", "first_flush_interval_millis").or(5000L);
+  }
+
+  public long getCountersFlushIntervalMillis() {
+    return config.getLong("counters", "flush_interval_millis").or(30000L);
+  }
+
   public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.isPresent() ?
@@ -786,5 +794,4 @@ public class BuckConfig {
     }
     return Optional.of(ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get())));
   }
-
 }
