@@ -143,13 +143,30 @@ public class FilterResourcesStep implements Step {
   }
 
   private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
-    List<Predicate<Path>> pathPredicates = Lists.newArrayList();
-
     boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
     LOG.info(
         "FilterResourcesStep: canDownscale: %s. imageScalar non-null: %s.",
         canDownscale,
         imageScaler != null);
+
+    // Create filtered copies of all resource directories. These will be passed to aapt instead.
+    filteredDirectoryCopier.copyDirs(
+        filesystem,
+        inResDirToOutResDirMap,
+        getFilteringPredicate(context));
+
+    // If an ImageScaler was specified, but only if it is available, try to apply it.
+    if (canDownscale && filterDrawables) {
+      scaleUnmatchedDrawables(context);
+    }
+
+    return 0;
+  }
+
+  @VisibleForTesting
+  Predicate<Path> getFilteringPredicate(
+      ExecutionContext context) throws IOException, InterruptedException {
+    List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 
     if (filterDrawables) {
       Preconditions.checkNotNull(drawableFinder);
@@ -160,7 +177,7 @@ public class FilterResourcesStep implements Step {
           ResourceFilters.createImageDensityFilter(
               drawables,
               Preconditions.checkNotNull(targetDensities),
-              canDownscale));
+              /* canDownscale */ imageScaler != null && imageScaler.isAvailable(context)));
     }
 
     final boolean localeFilterEnabled = !locales.isEmpty();
@@ -189,19 +206,7 @@ public class FilterResourcesStep implements Step {
             }
           });
     }
-
-    // Create filtered copies of all resource directories. These will be passed to aapt instead.
-    filteredDirectoryCopier.copyDirs(
-        filesystem,
-        inResDirToOutResDirMap,
-        Predicates.and(pathPredicates));
-
-    // If an ImageScaler was specified, but only if it is available, try to apply it.
-    if (canDownscale && filterDrawables) {
-      scaleUnmatchedDrawables(context);
-    }
-
-    return 0;
+    return Predicates.and(pathPredicates);
   }
 
   private boolean isPathWhitelisted(Path path) {

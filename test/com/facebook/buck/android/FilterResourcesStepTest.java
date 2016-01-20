@@ -16,54 +16,32 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.newCapture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.util.FilteredDirectoryCopier;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.easymock.Capture;
-import org.easymock.EasyMock;
-import org.easymock.IAnswer;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 
 public class FilterResourcesStepTest {
-
-  private static final String first = "/first-path/res";
-  private static final String second = "/second-path/res";
-  private static final String third = "/third-path/res";
-
-  private static final ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
-      ImmutableBiMap.of(
-          Paths.get(first), Paths.get("/dest/1"),
-          Paths.get(second), Paths.get("/dest/2"),
-          Paths.get(third), Paths.get("/dest/3"));
-  private static Set<String> qualifiers = ImmutableSet.of("mdpi", "hdpi", "xhdpi");
-  private final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-  private final File baseDestination = new File("/dest");
-
-  private final Path scaleSource = getDrawableFile(first, "xhdpi", "other.png");
-  private final Path scaleDest = getDrawableFile(first, "mdpi", "other.png");
 
   private Path getDrawableFile(String dir, String qualifier, String filename) {
     return Paths.get(dir, String.format("drawable-%s", qualifier), filename);
@@ -71,47 +49,25 @@ public class FilterResourcesStepTest {
 
   @Test
   public void testFilterDrawables() throws IOException, InterruptedException {
+    final String first = "/first-path/res";
+    final Path baseDestination = Paths.get("/dest");
+    final ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
+        ImmutableBiMap.of(
+            Paths.get(first), baseDestination.resolve("1"),
+            Paths.get("/second-path/res"), baseDestination.resolve("2"),
+            Paths.get("/third-path/res"), baseDestination.resolve("3"));
 
-    // Mock a ProjectFilesystem. This will be called into by the image downscaling step.
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getRootPath()).andStubReturn(Paths.get("."));
-    filesystem.createParentDirs(scaleDest);
-    filesystem.deleteFileAtPath(scaleSource);
-    Path scaleSourceDir = scaleSource.getParent();
-    EasyMock.expect(filesystem.listFiles(scaleSourceDir)).andReturn(new File[0]);
-    filesystem.deleteFileAtPath(scaleSourceDir);
-    EasyMock.replay(filesystem);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    // Mock an ExecutionContext.
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    ProcessExecutor processExecutor = EasyMock.createMock(ProcessExecutor.class);
-    EasyMock.expect(context.getProcessExecutor()).andReturn(processExecutor).anyTimes();
-    EasyMock.expect(context.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
-    EasyMock.replay(context);
+    Path scaleSource = getDrawableFile(first, "xhdpi", "other.png");
+    filesystem.createNewFile(scaleSource);
 
-    // Create a mock DrawableFinder, just creates one drawable/density/resource dir.
-    FilterResourcesStep.DrawableFinder finder = EasyMock.createMock(
-        FilterResourcesStep.DrawableFinder.class);
-
-    // Create mock FilteredDirectoryCopier to find what we're calling on it.
-    FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
-    // We'll want to see what the filtering command passes to the copier.
-    Capture<Map<Path, Path>> dirMapCapture = newCapture();
-    Capture<Predicate<Path>> predCapture = newCapture();
-    copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
-        EasyMock.capture(dirMapCapture),
-        EasyMock.capture(predCapture));
-    EasyMock.replay(copier);
-
-    ImageScaler scaler = EasyMock.createMock(ImageScaler.class);
-    scaler.scale(
-        0.5,
-        scaleSource,
-        scaleDest,
-        context);
-
-    EasyMock.expect(scaler.isAvailable(context)).andReturn(true);
-    EasyMock.replay(scaler);
+    // Create our drawables.
+    for (Path dir : inResDirToOutResDirMap.keySet()) {
+      for (String qualifier : ImmutableSet.of("mdpi", "hdpi", "xhdpi")) {
+        filesystem.createNewFile(getDrawableFile(dir.toString(), qualifier, "some.png"));
+      }
+    }
 
     FilterResourcesStep command = new FilterResourcesStep(
         filesystem,
@@ -120,49 +76,25 @@ public class FilterResourcesStepTest {
         /* enableStringWhitelisting */ false,
         /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
         /* locales */ ImmutableSet.<String>of(),
-        copier,
-        ImmutableSet.of(targetDensity),
-        finder,
-        scaler);
-
-    EasyMock
-      .expect(finder.findDrawables(inResDirToOutResDirMap.keySet(), filesystem))
-      .andAnswer(new IAnswer<Set<Path>>() {
-        @SuppressWarnings("unchecked")
-        @Override
-        public Set<Path> answer() throws Throwable {
-          ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-          for (Path dir : (Iterable<Path>) EasyMock.getCurrentArguments()[0]) {
-            for (String qualifier : qualifiers) {
-              builder.add(getDrawableFile(dir.toString(), qualifier, "some.png"));
-            }
+        DefaultFilteredDirectoryCopier.getInstance(),
+        ImmutableSet.of(ResourceFilters.Density.MDPI),
+        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+        new ImageScaler() {
+          @Override
+          public boolean isAvailable(
+              ExecutionContext context) throws IOException, InterruptedException {
+            return true;
           }
 
-          builder.add(scaleSource);
+          @Override
+          public void scale(
+              double factor,
+              Path source,
+              Path destination,
+              ExecutionContext context) throws IOException, InterruptedException {
 
-          return builder.build();
-        }
-      })
-      .times(2); // We're calling it in the test as well.
-
-    // Called by the downscaling step.
-    EasyMock
-      .expect(finder.findDrawables(inResDirToOutResDirMap.values(), filesystem))
-      .andAnswer(new IAnswer<Set<Path>>() {
-        @SuppressWarnings("unchecked")
-        @Override
-        public Set<Path> answer() throws Throwable {
-          ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-          for (Path dir : (Iterable<Path>) EasyMock.getCurrentArguments()[0]) {
-            builder.add(getDrawableFile(dir.toString(), targetDensity.toString(), "some.png"));
           }
-
-          builder.add(scaleSource);
-          return builder.build();
-        }
-      })
-      .once();
-    EasyMock.replay(finder);
+        });
 
     // We'll use this to verify the source->destination mappings created by the command.
     ImmutableMap.Builder<Path, Path> dirMapBuilder = ImmutableMap.builder();
@@ -173,31 +105,15 @@ public class FilterResourcesStepTest {
       dirMapBuilder.put(dir, nextDestination);
 
       // Verify that destination path requirements are observed.
-      assertEquals(baseDestination, nextDestination.getParent().toFile());
+      assertEquals(baseDestination.toFile(), nextDestination.getParent().toFile());
     }
 
     // Execute command.
-    command.execute(context);
-
-    // Ensure resources are copied to the right places.
-    assertEquals(dirMapBuilder.build(), dirMapCapture.getValue());
-
-    // Ensure the right filter is created.
-    Set<Path> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet(), filesystem);
-    Predicate<Path> expectedPred =
-        ResourceFilters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
-    Predicate<Path> capturedPred = predCapture.getValue();
-    for (Path drawablePath : drawables) {
-      assertEquals(expectedPred.apply(drawablePath), capturedPred.apply(drawablePath));
-    }
-
-    // We shouldn't need the execution context, should call copyDirs once on the copier,
-    // and we're calling finder.findDrawables twice.
-    EasyMock.verify(copier, context, finder, filesystem, scaler);
+    assertThat(command.execute(TestExecutionContext.newInstance()), Matchers.is(0));
   }
 
   @Test
-  public void testWhitelistFilter() throws IOException {
+  public void testWhitelistFilter() throws IOException, InterruptedException {
     Predicate<Path> filePredicate = getTestPathPredicate(
         true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.<String>of());
 
@@ -210,7 +126,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterLocales() throws IOException {
+  public void testFilterLocales() throws IOException, InterruptedException {
     Predicate<Path> filePredicate = getTestPathPredicate(
         false, ImmutableSet.<Path>of(), ImmutableSet.of("es", "es_US"));
 
@@ -226,7 +142,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testUsingWhitelistIgnoresLocaleFilter() throws IOException {
+  public void testUsingWhitelistIgnoresLocaleFilter() throws IOException, InterruptedException {
     Predicate<Path> filePredicate = getTestPathPredicate(
         true, ImmutableSet.of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
 
@@ -266,14 +182,7 @@ public class FilterResourcesStepTest {
   private static Predicate<Path> getTestPathPredicate(
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
-      ImmutableSet<String> locales) throws IOException {
-    FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
-    Capture<Predicate<Path>> capturedPredicate = newCapture();
-    copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
-        EasyMock.<Map<Path, Path>>anyObject(),
-        EasyMock.capture(capturedPredicate));
-    EasyMock.replay(copier);
-
+      ImmutableSet<String> locales) throws IOException, InterruptedException {
     FilterResourcesStep step = new FilterResourcesStep(
         null,
         /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
@@ -281,15 +190,11 @@ public class FilterResourcesStepTest {
         /* enableStringWhitelisting */ enableStringWhitelisting,
         /* whitelistedStringDirs */ whitelistedStringDirs,
         /* locales */ locales,
-        copier,
+        DefaultFilteredDirectoryCopier.getInstance(),
         /* targetDensities */ null,
         /* drawableFinder */ null,
         /* imageScaler */ null);
 
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
-
-    EasyMock.verify(copier);
-
-    return capturedPredicate.getValue();
+    return step.getFilteringPredicate(TestExecutionContext.newInstance());
   }
 }

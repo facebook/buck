@@ -642,6 +642,24 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
         .toString();
   }
 
+  @Override
+  public void copy(Path source, Path target, CopySourceMode sourceMode) throws IOException {
+    Path normalizedSourcePath = MorePaths.normalize(source);
+    Path normalizedTargetPath = MorePaths.normalize(target);
+    switch (sourceMode) {
+      case FILE:
+        ImmutableSet<FileAttribute<?>> attrs = fileAttributes.get(normalizedSourcePath);
+        writeBytesToPath(
+            fileContents.get(normalizedSourcePath),
+            normalizedTargetPath,
+            attrs.toArray(new FileAttribute[attrs.size()]));
+        break;
+      case DIRECTORY_CONTENTS_ONLY:
+      case DIRECTORY_AND_CONTENTS:
+        throw new UnsupportedOperationException();
+    }
+  }
+
   /**
    * TODO(natthu): (1) Also traverse the directories. (2) Do not ignore return value of
    * {@code fileVisitor}.
