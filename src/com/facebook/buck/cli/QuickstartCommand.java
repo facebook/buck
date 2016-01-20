@@ -32,7 +32,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
@@ -156,15 +155,6 @@ public class QuickstartCommand extends AbstractCommand {
             QuickstartCommand.class,
             Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type)));
     Path origin = resource.get();
-
-    //find the root of the project in the unpacked folder
-    ImmutableSet<Path> filePaths = params.getCell().getFilesystem().getFilesUnderPath(origin);
-    for (Path filePath : filePaths) {
-      if (filePath.getFileName().toString().equals(".buckconfig")) {
-        origin = filePath.getParent();
-        break;
-      }
-    }
 
     final Path destination = Paths.get(projectDir);
 
