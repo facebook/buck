@@ -19,9 +19,13 @@ package com.facebook.buck.android;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -30,6 +34,7 @@ import com.google.common.collect.Table;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -241,6 +246,96 @@ public class ResourceFilters {
       @Override
       public boolean apply(Path path) {
         return !pathsToRemove.contains(path);
+      }
+    };
+  }
+
+  private static String getResourceType(Path resourceFolder) {
+    String parts[] = resourceFolder.getFileName().toString().split("-");
+    Preconditions.checkState(parts.length > 0);
+    return parts[0];
+  }
+
+  private static Path getResourceFolder(Collection<Path> candidates, final Path resourceFile) {
+    Optional<Path> match = FluentIterable.from(candidates)
+        .firstMatch(new Predicate<Path>() {
+          @Override
+          public boolean apply(Path resourceFolder) {
+            return resourceFile.startsWith(resourceFolder);
+          }
+        });
+    Preconditions.checkState(match.isPresent());
+    return match.get();
+  }
+
+  /**
+   * Puts each candidates resource folder into the appropriate resource directory type.
+   */
+  private static ImmutableMap<String, ImmutableSet<Path>> filterFoldersIntoResourceTypes(
+      Collection<Path> candidates) {
+    Map<String, ImmutableSet.Builder<Path>> builders =
+        new HashMap<>(SUPPORTED_RESOURCE_DIRECTORIES.size());
+    for (String folderName : SUPPORTED_RESOURCE_DIRECTORIES) {
+      builders.put(folderName, ImmutableSet.<Path>builder());
+    }
+
+    for (Path resourceFolder : candidates) {
+      String resourceType = getResourceType(resourceFolder);
+      Preconditions.checkState(
+          builders.containsKey(resourceType),
+          "Unsupported resource type %s when processing resource folder %s",
+          resourceType,
+          resourceFolder);
+      builders.get(resourceType).add(resourceFolder);
+    }
+
+    ImmutableMap.Builder<String, ImmutableSet<Path>> bucketsBuilder = ImmutableMap.builder();
+    for (Map.Entry<String, ImmutableSet.Builder<Path>> builderEntry : builders.entrySet()) {
+      bucketsBuilder.put(builderEntry.getKey(), builderEntry.getValue().build());
+    }
+    return bucketsBuilder.build();
+  }
+
+  /**
+   * Given a set of target densities, returns a {@link Predicate} that fails for any non-drawable
+   * resource folder of a different density.
+   */
+  public static Predicate<Path> createDensityFilter(
+      final Collection<Path> resourceFolders,
+      final Set<Density> targetDensities) {
+    final Supplier<ImmutableMap<String, ImmutableSet<Path>>> buckets =
+        new Supplier<ImmutableMap<String, ImmutableSet<Path>>>() {
+          @Override
+          public ImmutableMap<String, ImmutableSet<Path>> get() {
+            return filterFoldersIntoResourceTypes(resourceFolders);
+          }
+        };
+    return new Predicate<Path>() {
+      @Override
+      public boolean apply(Path resourceFile) {
+        Path resourceFolder = getResourceFolder(resourceFolders, resourceFile);
+        String resourceType = getResourceType(resourceFolder);
+        if (resourceType.equals("drawable")) {
+          // Drawables are handled independently, so do not do anything with them.
+          return true;
+        }
+        Density density = Qualifiers.from(resourceFolder).density;
+
+        // We should include the folder in these situations:
+        // * it is one of the target densities
+        // * there is no folder at one of the target densities, and this is the fallback.
+        if (targetDensities.contains(density)) {
+          return true;
+        }
+        return density.equals(Density.NO_QUALIFIER) && FluentIterable
+            .from(buckets.get().get(resourceType))
+            .filter(new Predicate<Path>() {
+              @Override
+              public boolean apply(Path availableResourceFolder) {
+                return targetDensities.contains(Qualifiers.from(availableResourceFolder).density);
+              }
+            })
+            .size() < targetDensities.size();
       }
     };
   }

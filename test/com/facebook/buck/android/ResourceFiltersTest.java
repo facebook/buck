@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.android.ResourceFilters.Density;
@@ -28,6 +29,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -328,6 +330,49 @@ public class ResourceFiltersTest {
     assertFalse(candidates.isEmpty());
     for (Path candidate : candidates) {
       assertEquals(!filesToRemove.contains(candidate), predicate.apply(candidate));
+    }
+  }
+
+  @Test
+  public void testcreateDensityFilterSkipsDrawables() {
+    Path candidate = Paths.get("drawable-ldpi");
+    Predicate<Path> predicate = ResourceFilters.createDensityFilter(
+        ImmutableSet.of(candidate),
+        ImmutableSet.of(Density.MDPI));
+    assertThat(predicate.apply(candidate), Matchers.is(true));
+  }
+
+  @Test
+  public void testcreateDensityFilterIncludesTarget() {
+    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
+      if (folderName.equals("drawable")) {
+        // Drawables are special and we have a different method for them.
+        continue;
+      }
+      Path include = Paths.get(String.format("%s-mdpi", folderName));
+      Path exclude = Paths.get(String.format("%s-ldpi", folderName));
+      Predicate<Path> predicate = ResourceFilters.createDensityFilter(
+          ImmutableSet.of(include, exclude),
+          ImmutableSet.of(Density.MDPI));
+      assertThat(predicate.apply(exclude), Matchers.is(false));
+      assertThat(predicate.apply(include), Matchers.is(true));
+    }
+  }
+
+  @Test
+  public void testCreateDensityFilterIncludesFallbackWhenTargetNotPresent() {
+    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
+      if (folderName.equals("drawable")) {
+        // Drawables are special and we have a different method for them.
+        continue;
+      }
+      Path include = Paths.get(folderName);
+      Path exclude = Paths.get(String.format("%s-ldpi", folderName));
+      Predicate<Path> predicate = ResourceFilters.createDensityFilter(
+          ImmutableSet.of(include, exclude),
+          ImmutableSet.of(Density.MDPI));
+      assertThat(predicate.apply(exclude), Matchers.is(false));
+      assertThat(predicate.apply(include), Matchers.is(true));
     }
   }
 }
