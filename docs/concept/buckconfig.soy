@@ -1543,70 +1543,71 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'test' /}{/call}
+{call buckconfig.section}
+  {param name: 'test' /}
+  {param description}
+    The settings to control how Buck runs tests.
+  {/param}
+{/call}
 
-This section may define a <code>timeout</code> for each test that Buck runs.
-The value given is in milliseconds.
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'timeout' /}
+  {param example_value: '300000' /}
+  {param description}
+    The number of miliseconds per test to allow before stopping the test and reporting a failure.
+    The default is no timeout.  Not all <code>*_test</code> rules utilize this value.  A JUnit test
+    can overide this via the <code>@Test</code> annotation.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[test]
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'rule_timeout' /}
+  {param example_value: '1200000' /}
+  {param description}
+    The number of miliseconds per <code>*_test</code> rule to allow before stopping it and reporting
+    a failure.  The default is no timeout.
+  {/param}
+{/call}
 
-  # This specifies a maximum timeout of 5 minutes (300000
-  # milliseconds) per test.  A JUnit test can override this
-  # via its `@Test` annotation.
-  timeout = 300000
-
-  # This specifies a maximum timeout of 20 minutes (1200000
-  # milliseconds) per test rule.  This means that all tests
-  # within a single test target must complete under 20
-  # minutes.  Individual test rules may override this value.
-  rule_timeout = 1200000
-
-  # Specify an external test runner command to use instead of Buck's built-in
-  # test runner.  The external test runner is invoked by Buck after it has
-  # built all the test rules, passing the test runner the path to file which
-  # contains a JSON-encoded list of test file infos.  When Buck is invoked via:
-  #
-  #   $ buck test -- <extra-runner-args>...
-  #
-  # It will invoke the external runner with:
-  #
-  #   $ <external-runner> <extra-runner-args>... --buck-test-info <path>
-  #
-  # The JSON tests file has the following format:
-  #
-  # [
-  #   {
-  #
-  #     # The build target of the test rule.
-  #     "target": "//some:target",
-  #
-  #     # A string describing the type of the test.
-  #     "type": "gtest",
-  #
-  #     # The command the test runner should invoke
-  #     "command": ["buck-out/gen/some/rule/rule"],
-  #
-  #     # Environment variables which should be defined by the test runner.
-  #     "env":  {"VAR": "VALUE"},
-  #
-  #     # The labels passed into the test rule's definition.
-  #     "labels": ["flaky"],
-  #
-  #     # The contacts passed into the test rule's definition.
-  #     "contacts": ["bobloblaw"]
-  #
-  #   },
-  #   ...
-  # ]
-  #
-  # The "type" strings will be one of:
-  # - "custom": This describes a test without any structured output, and which
-  #       only uses its return code to signal success or failure.
-
-  external_runner = command args...
-
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'external_runner' /}
+  {param example_value: 'command args...' /}
+  {param description}
+    <p>
+      This specifies an external test runner comamnd to use instead of Buck's built-in test runner.
+      The external test runner is invoked by Buck after it has built all the test rules.  It passes
+      the test runner the path to a file which contains a JSON-encoded list of test file infos via
+      the <code>--buck-test-info [path]</code> command line option.
+    </p>
+    <p>
+      Additionally, if {call buck.cmd_test /} is invoked with <code>-- [extra-runner-args]</code>,
+      these will be passed to the external runner before <code>--buck-test-info</code>.
+    </p>
+    <p>
+      The JSON-encoded test file contains an array of infos.  Those infos have the following fields:
+      <ul>
+        <li><code>target</code>: The {call buck.build_target /} of the test rule.</li>
+        <li><code>type</code>: A string describing the type of the test.</li>
+        <li>
+          <code>command</code>: An array of command line arguemtns the test runner should invoke to
+          run the test.
+        </li>
+        <li>
+          <code>env</code>: A map of environments variables that should be defined by the test
+          runner when running the test.
+        </li>
+        <li><code>labels</code>: An array of labels that are defined on the test rule.</li>
+        <li>
+          <code>contacts</code>: An array of contacts that are defined on the test rule.  These are
+          typically user names or email addresses.
+        </li>
+      </ul>
+    </p>
+  {/param}
+{/call}
 
 {call .section}{param title: 'thrift' /}{/call}
 
