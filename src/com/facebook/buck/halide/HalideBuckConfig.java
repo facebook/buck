@@ -52,8 +52,8 @@ public class HalideBuckConfig {
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
       if (entry.getKey().startsWith(HALIDE_TARGET_KEY_PREFIX)) {
         targets.put(
-          entry.getKey().substring(HALIDE_TARGET_KEY_PREFIX.length()),
-          entry.getValue());
+            entry.getKey().substring(HALIDE_TARGET_KEY_PREFIX.length()),
+            entry.getValue());
       }
     }
     return targets.build();

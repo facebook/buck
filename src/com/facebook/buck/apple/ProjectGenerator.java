@@ -690,7 +690,7 @@ public class ProjectGenerator {
           (TargetNode<AppleResourceDescription.Arg>) targetNode);
     } else if (targetNode.getType().equals(HalideLibraryDescription.TYPE)) {
       TargetNode<HalideLibraryDescription.Arg> halideTargetNode =
-        (TargetNode<HalideLibraryDescription.Arg>) targetNode;
+          (TargetNode<HalideLibraryDescription.Arg>) targetNode;
       BuildTarget buildTarget = targetNode.getBuildTarget();
 
       // If this _isn't_ the #halide-compiler version of the rule, then generate
@@ -702,7 +702,7 @@ public class ProjectGenerator {
         // Make sure the compiler gets built at project time, since we'll need
         // it to generate the shader code during the Xcode build.
         requiredBuildTargetsBuilder.add(
-          HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget));
+            HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget));
 
         // Also, run the compiler once at project time to generate the header
         // file needed for compilation.
@@ -715,8 +715,8 @@ public class ProjectGenerator {
 
   private static Path getHalideOutputPath(BuildTarget target) {
     return Paths.get("buck-out/halide")
-      .resolve(target.getBasePath())
-      .resolve(target.getShortName());
+        .resolve(target.getBasePath())
+        .resolve(target.getShortName());
   }
 
   private Optional<PBXTarget> generateHalideLibraryTarget(
@@ -732,12 +732,12 @@ public class ProjectGenerator {
     scriptPhase.setShellScript(script.or(""));
 
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
-      pathRelativizer,
-      sourcePathResolver);
+        pathRelativizer,
+        sourcePathResolver);
     mutator
-      .setTargetName(getXcodeTargetName(buildTarget))
-      .setProduct(ProductType.STATIC_LIBRARY, productName, outputPath)
-      .setPreBuildRunScriptPhases(ImmutableList.of(scriptPhase));
+        .setTargetName(getXcodeTargetName(buildTarget))
+        .setProduct(ProductType.STATIC_LIBRARY, productName, outputPath)
+        .setPreBuildRunScriptPhases(ImmutableList.of(scriptPhase));
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
     try {
@@ -747,33 +747,33 @@ public class ProjectGenerator {
     }
 
     BuildTarget compilerTarget =
-      HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
+        HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
     Path compilerPath = BuildTargets.getGenPath(compilerTarget, "%s");
     ImmutableMap<String, String> appendedConfig = ImmutableMap.<String, String>of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.<String, String>of();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder =
-      ImmutableMap.builder();
+        ImmutableMap.builder();
     defaultSettingsBuilder.put(
-      "REPO_ROOT",
-      projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+        "REPO_ROOT",
+        projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
     defaultSettingsBuilder.put("HALIDE_COMPILER_PATH", compilerPath.toString());
     defaultSettingsBuilder.put("HALIDE_OUTPUT_PATH", outputPath.toString());
     defaultSettingsBuilder.put("HALIDE_FUNC_NAME", buildTarget.getShortName());
     defaultSettingsBuilder.put(PRODUCT_NAME, productName);
 
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-      getXcodeBuildConfigurationsForTargetNode(
-        targetNode,
-        appendedConfig);
+        getXcodeBuildConfigurationsForTargetNode(
+            targetNode,
+            appendedConfig);
     PBXNativeTarget target = targetBuilderResult.target;
     setTargetBuildConfigurations(
-      getConfigurationNameToXcconfigPath(buildTarget),
-      target,
-      project.getMainGroup(),
-      configs.get(),
-      extraSettings,
-      defaultSettingsBuilder.build(),
-      appendedConfig);
+        getConfigurationNameToXcconfigPath(buildTarget),
+        target,
+        project.getMainGroup(),
+        configs.get(),
+        extraSettings,
+        defaultSettingsBuilder.build(),
+        appendedConfig);
     return Optional.<PBXTarget>of(target);
   }
 
@@ -1152,7 +1152,7 @@ public class ProjectGenerator {
       // The operations on the CONTENTS_FOLDER_PATH are documented here:
       // http://codeworkshop.net/posts/xcode-build-setting-transformations
       String bundleLoaderOutputPathConditional =
-            "$(BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_$(CONTENTS_FOLDER_PATH:file:identifier))";
+          "$(BUNDLE_LOADER_BUNDLE_STYLE_CONDITIONAL_$(CONTENTS_FOLDER_PATH:file:identifier))";
 
       // If the $(CONTENTS_FOLDER_PATH:file:identifier) expands to this, we add the deep bundle
       // path into the bundle loader. See above for the case when it will expand to this value.
@@ -1370,9 +1370,9 @@ public class ProjectGenerator {
       ImmutableMap<String, String> appendedConfig) {
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.absent();
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
-      targetNode.castArg(AppleNativeTargetDescriptionArg.class);
+        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
     Optional<TargetNode<HalideLibraryDescription.Arg>> halideTargetNode =
-      targetNode.castArg(HalideLibraryDescription.Arg.class);
+        targetNode.castArg(HalideLibraryDescription.Arg.class);
     if (appleTargetNode.isPresent()) {
       configs = appleTargetNode.get().getConstructorArg().configs;
     } else if (halideTargetNode.isPresent()) {
@@ -1787,8 +1787,8 @@ public class ProjectGenerator {
         } catch (NoSuchFileException e) {
           if (versionGroup.getChildren().size() == 1) {
             versionGroup.setCurrentVersion(Optional.of(Iterables.get(
-                        versionGroup.getChildren(),
-                        0)));
+                versionGroup.getChildren(),
+                0)));
           }
         }
       } else {
@@ -1834,7 +1834,7 @@ public class ProjectGenerator {
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PLUGINS)
           );
-          //$CASES-OMITTED$
+        //$CASES-OMITTED$
         default:
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS)
@@ -1906,7 +1906,7 @@ public class ProjectGenerator {
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
   private Path writeProjectFile(PBXProject project) throws IOException {
-  XcodeprojSerializer serializer = new XcodeprojSerializer(
+    XcodeprojSerializer serializer = new XcodeprojSerializer(
         new GidGenerator(ImmutableSet.copyOf(gidsToTargetNames.keySet())),
         project);
     NSDictionary rootObject = serializer.toPlist();
@@ -2002,8 +2002,8 @@ public class ProjectGenerator {
       Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
       if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
         nativeNode = Optional.of(
-                (TargetNode<CxxLibraryDescription.Arg>) targetGraph.get(
-                    bundle.getConstructorArg().binary));
+            (TargetNode<CxxLibraryDescription.Arg>) targetGraph.get(
+                bundle.getConstructorArg().binary));
       }
     }
     return nativeNode;
@@ -2056,19 +2056,19 @@ public class ProjectGenerator {
       TargetNode<? extends CxxLibraryDescription.Arg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     for (TargetNode<?> input :
-      AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        targetGraph,
-        AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-        targetNode,
-        Optional.of(
-          ImmutableSet.<BuildRuleType>of(
-            HalideLibraryDescription.TYPE)))) {
+        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            targetGraph,
+            AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+            targetNode,
+            Optional.of(
+                ImmutableSet.<BuildRuleType>of(
+                    HalideLibraryDescription.TYPE)))) {
       BuildTarget buildTarget = input.getBuildTarget();
       if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
         builder.add(
-          pathRelativizer.outputDirToRootRelative(
-            BuildTargets.getGenPath(
-              BuildTarget.of(buildTarget.getUnflavoredBuildTarget()), "%s")));
+            pathRelativizer.outputDirToRootRelative(
+                BuildTargets.getGenPath(
+                    BuildTarget.of(buildTarget.getUnflavoredBuildTarget()), "%s")));
       }
     }
     return builder.build();
@@ -2268,13 +2268,13 @@ public class ProjectGenerator {
         .append(targetNodes)
         .transformAndConcat(
             new Function<TargetNode<?>, Iterable<? extends String>>() {
-                @Override
-                public Iterable<String> apply(TargetNode<?> input) {
-                    return input
-                        .castArg(AppleNativeTargetDescriptionArg.class)
-                        .transform(GET_EXPORTED_LINKER_FLAGS)
-                        .or(ImmutableSet.<String>of());
-                }
+              @Override
+              public Iterable<String> apply(TargetNode<?> input) {
+                return input
+                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .transform(GET_EXPORTED_LINKER_FLAGS)
+                    .or(ImmutableSet.<String>of());
+              }
             });
   }
 
@@ -2300,9 +2300,9 @@ public class ProjectGenerator {
   private Function<
       TargetNode<AppleNativeTargetDescriptionArg>,
       Iterable<String>> getTargetFrameworkSearchPaths(
-        final Function<
-            AppleNativeTargetDescriptionArg,
-            ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
+      final Function<
+          AppleNativeTargetDescriptionArg,
+          ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
 
     final Function<FrameworkPath, Path> toSearchPath = FrameworkPath
         .getUnexpandedSearchPathFunction(

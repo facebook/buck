@@ -66,7 +66,7 @@ public class HalideLibraryDescription implements
 
   // The flavor used for the Halide compiler version of the rule.
   public static final Flavor HALIDE_COMPILER_FLAVOR =
-    ImmutableFlavor.of("halide-compiler");
+      ImmutableFlavor.of("halide-compiler");
 
   public static final BuildRuleType TYPE = BuildRuleType.of("halide_library");
 
@@ -76,10 +76,10 @@ public class HalideLibraryDescription implements
   private final HalideBuckConfig halideBuckConfig;
 
   public HalideLibraryDescription(
-    CxxPlatform defaultCxxPlatform,
-    FlavorDomain<CxxPlatform> cxxPlatforms,
-    CxxPreprocessMode preprocessMode,
-    HalideBuckConfig halideBuckConfig) {
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxPreprocessMode preprocessMode,
+      HalideBuckConfig halideBuckConfig) {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
     this.preprocessMode = preprocessMode;
@@ -93,7 +93,7 @@ public class HalideLibraryDescription implements
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return cxxPlatforms.containsAnyOf(flavors) ||
-      flavors.contains(HALIDE_COMPILER_FLAVOR);
+        flavors.contains(HALIDE_COMPILER_FLAVOR);
   }
 
   @Override
@@ -109,7 +109,7 @@ public class HalideLibraryDescription implements
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     if (buildTarget.getFlavors().contains(HALIDE_COMPILER_FLAVOR)) {
       deps.addAll(constructorArg.compilerDeps.or(
-        ImmutableSortedSet.<BuildTarget>of()));
+          ImmutableSortedSet.<BuildTarget>of()));
     } else {
       deps.add(createHalideCompilerBuildTarget(buildTarget));
     }
@@ -123,9 +123,9 @@ public class HalideLibraryDescription implements
 
   public static BuildTarget createHalideCompilerBuildTarget(BuildTarget target) {
     return BuildTarget
-      .builder(target.getUnflavoredBuildTarget())
-      .addFlavors(ImmutableFlavor.of("halide-compiler"))
-      .build();
+        .builder(target.getUnflavoredBuildTarget())
+        .addFlavors(ImmutableFlavor.of("halide-compiler"))
+        .build();
   }
 
   private CxxBinary requireHalideCompiler(
@@ -150,19 +150,19 @@ public class HalideLibraryDescription implements
 
     // Otherwise create the rule and record it in the rule resolver.
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
-      params.getBuildTarget(),
-      pathResolver,
-      cxxPlatform,
-      halideSources,
-      PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
+        params.getBuildTarget(),
+        pathResolver,
+        cxxPlatform,
+        halideSources,
+        PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
 
     Optional<ImmutableList<String>> preprocessorFlags = Optional.absent();
     Optional<PatternMatchedCollection<ImmutableList<String>>>
-      platformPreprocessorFlags = Optional.absent();
+        platformPreprocessorFlags = Optional.absent();
     Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
-      langPreprocessorFlags = Optional.absent();
+        langPreprocessorFlags = Optional.absent();
     Optional<ImmutableSortedSet<FrameworkPath>>
-      frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
+        frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     Optional<SourcePath> prefixHeader = Optional.absent();
     Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.absent();
 
@@ -189,14 +189,14 @@ public class HalideLibraryDescription implements
     BuildRuleParams binParams = params.copyWithBuildTarget(target);
     binParams.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
     CxxBinary cxxBinary = new CxxBinary(
-      binParams,
-      ruleResolver,
-      pathResolver,
-      cxxLinkAndCompileRules.cxxLink.getOutput(),
-      cxxLinkAndCompileRules.cxxLink,
-      cxxLinkAndCompileRules.executable,
-      ImmutableSortedSet.<FrameworkPath>of(),
-      ImmutableSortedSet.<BuildTarget>of());
+        binParams,
+        ruleResolver,
+        pathResolver,
+        cxxLinkAndCompileRules.cxxLink.getOutput(),
+        cxxLinkAndCompileRules.cxxLink,
+        cxxLinkAndCompileRules.executable,
+        ImmutableSortedSet.<FrameworkPath>of(),
+        ImmutableSortedSet.<BuildTarget>of());
     ruleResolver.addToIndex(cxxBinary);
     return cxxBinary;
   }
@@ -215,19 +215,19 @@ public class HalideLibraryDescription implements
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
       ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();
       BuildTarget unflavoredTarget = BuildTarget
-        .builder(target.getUnflavoredBuildTarget())
-        .build();
+          .builder(target.getUnflavoredBuildTarget())
+          .build();
       String headerName = unflavoredTarget.getShortName() + ".h";
       Path outputPath = BuildTargets.getGenPath(unflavoredTarget, "%s");
       headersBuilder.put(
-        Paths.get(headerName),
-        new BuildTargetSourcePath(unflavoredTarget, outputPath.resolve(headerName)));
+          Paths.get(headerName),
+          new BuildTargetSourcePath(unflavoredTarget, outputPath.resolve(headerName)));
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
-        new SourcePathResolver(resolver),
-        cxxPlatform,
-        headersBuilder.build(),
-        HeaderVisibility.PUBLIC);
+          params,
+          new SourcePathResolver(resolver),
+          cxxPlatform,
+          headersBuilder.build(),
+          HeaderVisibility.PUBLIC);
     } else if (flavors.contains(HALIDE_COMPILER_FLAVOR)) {
       // We always want to build the halide "compiler" for the host platform, so
       // we use the "default" flavor here, regardless of the flavors on the build
@@ -235,19 +235,19 @@ public class HalideLibraryDescription implements
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(ImmutableFlavor.of("default"));
       Preconditions.checkState(args.srcs.isPresent());
       final ImmutableSortedSet<BuildTarget> compilerDeps =
-        args.compilerDeps.or(ImmutableSortedSet.<BuildTarget>of());
+          args.compilerDeps.or(ImmutableSortedSet.<BuildTarget>of());
       CxxBinary halideCompiler = requireHalideCompiler(
-        params.copyWithDeps(
+          params.copyWithDeps(
           /* declared deps */ Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
           /* extra deps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        resolver,
-        new SourcePathResolver(resolver),
-        hostCxxPlatform,
-        args.srcs.get(),
-        args.compilerFlags,
-        args.platformCompilerFlags,
-        args.linkerFlags,
-        args.platformLinkerFlags);
+          resolver,
+          new SourcePathResolver(resolver),
+          hostCxxPlatform,
+          args.srcs.get(),
+          args.compilerFlags,
+          args.platformCompilerFlags,
+          args.linkerFlags,
+          args.platformLinkerFlags);
       return halideCompiler;
     }
 
@@ -259,13 +259,13 @@ public class HalideLibraryDescription implements
     Preconditions.checkState(rule.isPresent());
     CxxBinary halideCompiler = (CxxBinary) rule.get();
     return new HalideLibrary(
-      params,
-      resolver,
-      new SourcePathResolver(resolver),
-      args.srcs.get(),
-      halideCompiler.getExecutableCommand(),
-      cxxPlatform, // Optional.<CxxPlatform>absent(),
-      halideBuckConfig);
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        args.srcs.get(),
+        halideCompiler.getExecutableCommand(),
+        cxxPlatform, // Optional.<CxxPlatform>absent(),
+        halideBuckConfig);
   }
 
   @SuppressFieldNotInitialized

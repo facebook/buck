@@ -62,15 +62,15 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class HalideLibrary
-  extends AbstractBuildRule
-  implements CxxPreprocessorDep, NativeLinkable {
+    extends AbstractBuildRule
+    implements CxxPreprocessorDep, NativeLinkable {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final Map<
-    Pair<Flavor, HeaderVisibility>,
-    ImmutableMap<BuildTarget, CxxPreprocessorInput>> cxxPreprocessorInputCache =
-    Maps.newHashMap();
+      Pair<Flavor, HeaderVisibility>,
+      ImmutableMap<BuildTarget, CxxPreprocessorInput>> cxxPreprocessorInputCache =
+      Maps.newHashMap();
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
@@ -116,35 +116,35 @@ public class HalideLibrary
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
     commands.add(
-      new HalideCompilerStep(
-        getProjectFilesystem().getRootPath(),
-        halideCompiler.getEnvironment(getResolver()),
-        halideCompiler.getCommandPrefix(getResolver()),
-        outputDir,
-        shortName,
-        halideBuckConfig.getHalideTargetForPlatform(cxxPlatform)));
+        new HalideCompilerStep(
+            getProjectFilesystem().getRootPath(),
+            halideCompiler.getEnvironment(getResolver()),
+            halideCompiler.getCommandPrefix(getResolver()),
+            outputDir,
+            shortName,
+            halideBuckConfig.getHalideTargetForPlatform(cxxPlatform)));
     commands.add(
-      new ArchiveStep(
-        getProjectFilesystem().getRootPath(),
-        archiver.getEnvironment(getResolver()),
-        archiver.getCommandPrefix(getResolver()),
-        output,
-        ImmutableList.of(outputDir.resolve(shortName + ".o"))));
+        new ArchiveStep(
+            getProjectFilesystem().getRootPath(),
+            archiver.getEnvironment(getResolver()),
+            archiver.getCommandPrefix(getResolver()),
+            output,
+            ImmutableList.of(outputDir.resolve(shortName + ".o"))));
     commands.add(
-      new ShellStep(getProjectFilesystem().getRootPath()) {
-        @Override
-        protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-          return ImmutableList.<String>builder()
-              .addAll(cxxPlatform.getRanlib().getCommandPrefix(getResolver()))
-              .add(output.toString())
-              .build();
-        }
+        new ShellStep(getProjectFilesystem().getRootPath()) {
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            return ImmutableList.<String>builder()
+                .addAll(cxxPlatform.getRanlib().getCommandPrefix(getResolver()))
+                .add(output.toString())
+                .build();
+          }
 
-        @Override
-        public String getShortName() {
-          return "ranlib";
-        }
-      });
+          @Override
+          public String getShortName() {
+            return "ranlib";
+          }
+        });
     return commands.build();
   }
 
@@ -160,16 +160,16 @@ public class HalideLibrary
     switch (headerVisibility) {
       case PUBLIC:
         return CxxPreprocessorInput.builder()
-          .from(
-            CxxPreprocessables.getCxxPreprocessorInput(
-              params,
-              ruleResolver,
-              cxxPlatform.getFlavor(),
-              headerVisibility,
-              CxxPreprocessables.IncludeType.SYSTEM,
-              ImmutableMultimap.<CxxSource.Type, String>of(), /* exportedPreprocessorFlags */
-              ImmutableList.<FrameworkPath>of())) /* frameworks */
-          .build();
+            .from(
+                CxxPreprocessables.getCxxPreprocessorInput(
+                    params,
+                    ruleResolver,
+                    cxxPlatform.getFlavor(),
+                    headerVisibility,
+                    CxxPreprocessables.IncludeType.SYSTEM,
+                    ImmutableMultimap.<CxxSource.Type, String>of(), /* exportedPreprocessorFlags */
+                    ImmutableList.<FrameworkPath>of())) /* frameworks */
+            .build();
       case PRIVATE:
         return CxxPreprocessorInput.EMPTY;
     }
@@ -182,16 +182,16 @@ public class HalideLibrary
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     Pair<Flavor, HeaderVisibility> key = new Pair<>(
-      cxxPlatform.getFlavor(),
-      headerVisibility);
+        cxxPlatform.getFlavor(),
+        headerVisibility);
     ImmutableMap<BuildTarget, CxxPreprocessorInput> result =
-      cxxPreprocessorInputCache.get(key);
+        cxxPreprocessorInputCache.get(key);
     if (result == null) {
       ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder =
-        ImmutableMap.builder();
+          ImmutableMap.builder();
       builder.put(
-        getBuildTarget(),
-        getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+          getBuildTarget(),
+          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
       result = builder.build();
       cxxPreprocessorInputCache.put(key, result);
     }
@@ -217,11 +217,11 @@ public class HalideLibrary
     HalideLibrary rule = (HalideLibrary) requireBuildRule(cxxPlatform);
     Path libPath = rule.getPathToOutput().resolve(rule.getLibraryName());
     return NativeLinkableInput.of(
-            SourcePathArg.from(
-                    getResolver(),
-                    new BuildTargetSourcePath(rule.getBuildTarget(), libPath)),
-            ImmutableSet.<FrameworkPath>of(),
-            ImmutableSet.<FrameworkPath>of());
+        SourcePathArg.from(
+            getResolver(),
+            new BuildTargetSourcePath(rule.getBuildTarget(), libPath)),
+        ImmutableSet.<FrameworkPath>of(),
+        ImmutableSet.<FrameworkPath>of());
   }
 
   @Override
@@ -247,21 +247,21 @@ public class HalideLibrary
    */
   private BuildRule requireBuildRule(CxxPlatform cxxPlatform) {
     BuildTarget target = BuildTarget.builder(params.getBuildTarget())
-      .addFlavors(cxxPlatform.getFlavor())
-      .build();
+        .addFlavors(cxxPlatform.getFlavor())
+        .build();
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
     if (!rule.isPresent()) {
       rule = Optional.of((BuildRule) new HalideLibrary(
-        params.copyWithChanges(
-          target,
-          params.getDeclaredDeps(),
-          params.getExtraDeps()),
-        ruleResolver,
-        getResolver(),
-        srcs,
-        halideCompiler,
-        cxxPlatform,
-        halideBuckConfig));
+          params.copyWithChanges(
+              target,
+              params.getDeclaredDeps(),
+              params.getExtraDeps()),
+          ruleResolver,
+          getResolver(),
+          srcs,
+          halideCompiler,
+          cxxPlatform,
+          halideBuckConfig));
       ruleResolver.addToIndex(rule.get());
     }
     return rule.get();
