@@ -1609,22 +1609,33 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'thrift' /}{/call}
+{call buckconfig.section}
+  {param name: 'thrift' /}
+  {param description}
+    This section provides settings to locate required thrift components.
+  {/param}
+{/call}
 
-This section provides settings to locate required thrift components.
+{call buckconfig.entry}
+  {param section: 'thrift' /}
+  {param name: 'compiler' /}
+  {param example_value: '/usr/local/bin/thrift' /}
+  {param description}
+    The path or {call buck.build_target /} that builds the <a
+    href="https://thrift.apache.org">thrift</a> compiler that Buck should use.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[thrift]
-  # The thrift compiler (https://thrift.apache.org).  Can be either a path
-  # or a build target that builds it.
-  compiler = /usr/local/bin/thrift
-
-  # The thrift2 compiler (https://github.com/facebook/fbthrift).  Can be
-  # either a path or a build target that builds it.
-  #
-  # If unset, defaults to the value in compiler, above.
-  compiler2 = //thrift2:compiler
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'thrift' /}
+  {param name: 'compiler2' /}
+  {param example_value: '/usr/local/bin/thrift2' /}
+  {param description}
+    The path or {call buck.build_target /} that builds the <a
+    href="https://github.com/facebook/fbthrift">thrift2</a> compiler that Buck should use.  If this
+    is unset, it defaults to the value of {call buckconfig.thrift_compiler /}.
+  {/param}
+{/call}
 
 {call .section}{param title: 'tools' /}{/call}
 This section tells Buck how to find certain tools e.g. how the Java compilation
