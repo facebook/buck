@@ -33,7 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +73,7 @@ public class FilterResourcesStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
-  private final boolean filterByDensity;
+  private final boolean filterDrawables;
   private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
   private final ImmutableSet<String> locales;
@@ -82,12 +81,14 @@ public class FilterResourcesStep implements Step {
   @Nullable
   private final Set<ResourceFilters.Density> targetDensities;
   @Nullable
+  private final DrawableFinder drawableFinder;
+  @Nullable
   private final ImageScaler imageScaler;
 
   /**
    * Creates a command that filters a specified set of directories.
    * @param inResDirToOutResDirMap set of {@code res} directories to filter
-   * @param filterByDensity whether to filter all resources by DPI
+   * @param filterDrawables whether to filter drawables (images)
    * @param enableStringWhitelisting whether to filter strings based on a whitelist
    * @param whitelistedStringDirs set of directories containing string resource files that must not
    *     be filtered out.
@@ -96,42 +97,46 @@ public class FilterResourcesStep implements Step {
    *     different set of locales that share a module. If empty, no filtering is performed.
    * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
    * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
-   *     etc.) Only applicable if filterByDensity is true
+   *     etc.) Only applicable if filterDrawables is true
+   * @param drawableFinder refer {@link DrawableFinder}. Only applicable if filterDrawables is true.
    * @param imageScaler if not null, use the {@link ImageScaler} to downscale higher-density
    *     drawables for which we weren't able to find an image file of the proper density (as opposed
-   *     to allowing Android to do it at runtime). Only applicable if filterByDensity. is true.
+   *     to allowing Android to do it at runtime). Only applicable if filterDrawables. is true.
    */
   @VisibleForTesting
   FilterResourcesStep(
       ProjectFilesystem filesystem,
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
-      boolean filterByDensity,
+      boolean filterDrawables,
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<ResourceFilters.Density> targetDensities,
+      @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
-    Preconditions.checkArgument(filterByDensity || enableStringWhitelisting || !locales.isEmpty());
-    Preconditions.checkArgument(!filterByDensity || targetDensities != null);
+    Preconditions.checkArgument(filterDrawables || enableStringWhitelisting || !locales.isEmpty());
+    Preconditions.checkArgument(!filterDrawables ||
+        (targetDensities != null && drawableFinder != null));
 
     this.filesystem = filesystem;
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
-    this.filterByDensity = filterByDensity;
+    this.filterDrawables = filterDrawables;
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
+    this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public int execute(ExecutionContext context) {
     try {
       return doExecute(context);
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
       context.logError(e, "There was an error filtering resources.");
       return 1;
     }
@@ -151,7 +156,7 @@ public class FilterResourcesStep implements Step {
         getFilteringPredicate(context));
 
     // If an ImageScaler was specified, but only if it is available, try to apply it.
-    if (canDownscale && filterByDensity) {
+    if (canDownscale && filterDrawables) {
       scaleUnmatchedDrawables(context);
     }
 
@@ -163,18 +168,15 @@ public class FilterResourcesStep implements Step {
       ExecutionContext context) throws IOException, InterruptedException {
     List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 
-    if (filterByDensity) {
-      Preconditions.checkNotNull(targetDensities);
-      Set<Path> rootResourceDirs = inResDirToOutResDirMap.keySet();
-
-      pathPredicates.add(ResourceFilters.createDensityFilter(
-          getResourceFolders(rootResourceDirs),
-          targetDensities));
-
+    if (filterDrawables) {
+      Preconditions.checkNotNull(drawableFinder);
+      Set<Path> drawables = drawableFinder.findDrawables(
+          inResDirToOutResDirMap.keySet(),
+          filesystem);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
-              getDrawableFolders(rootResourceDirs),
-              targetDensities,
+              drawables,
+              Preconditions.checkNotNull(targetDensities),
               /* canDownscale */ imageScaler != null && imageScaler.isAvailable(context)));
     }
 
@@ -239,7 +241,10 @@ public class FilterResourcesStep implements Step {
     ResourceFilters.Density targetDensity = ResourceFilters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
-    Collection<Path> drawables = getDrawableFolders(inResDirToOutResDirMap.values());
+    Preconditions.checkNotNull(drawableFinder);
+    Collection<Path> drawables = drawableFinder.findDrawables(
+        inResDirToOutResDirMap.values(),
+        filesystem);
     for (Path drawable : drawables) {
       if (drawable.toString().endsWith(".9.png")) {
         // Skip nine-patch for now.
@@ -285,45 +290,39 @@ public class FilterResourcesStep implements Step {
     }
   }
 
-  /**
-   *  Given a collection of root resource folders, find all the resource directories inside them.
-   */
-  private Collection<Path> getResourceFolders(
-      Collection<Path> rootResourceFolders) throws IOException {
-    final ImmutableSet.Builder<Path> folders = ImmutableSet.builder();
-    for (final Path folder : rootResourceFolders) {
-      folders.addAll(FluentIterable.from(filesystem.getDirectoryContents(folder))
-          .filter(new Predicate<Path>() {
-            @Override
-            public boolean apply(Path candidate) {
-              return candidate.getParent().equals(folder) && filesystem.isDirectory(candidate);
-            }
-          }));
-    }
-    return folders.build();
+  public interface DrawableFinder {
+    public Set<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+        throws IOException;
   }
 
-  /**
-   * Given a collection of root resource folders, find all the drawable directories inside them.
-   */
-  private Collection<Path> getDrawableFolders(
-      Collection<Path> rootResourceFolders) throws IOException {
-    final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
-    for (Path dir : rootResourceFolders) {
-      filesystem.walkRelativeFileTree(dir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-              String unixPath = MorePaths.pathWithUnixSeparators(path);
-              if (DRAWABLE_PATH_PATTERN.matcher(unixPath).matches() &&
-                  !DRAWABLE_EXCLUDE_PATTERN.matcher(unixPath).matches()) {
-                // The path is normalized so that the value can be matched against patterns.
-                drawableBuilder.add(path);
-              }
-              return FileVisitResult.CONTINUE;
-            }
-          });
+  public static class DefaultDrawableFinder implements DrawableFinder {
+
+    private static final DefaultDrawableFinder instance = new DefaultDrawableFinder();
+
+    public static DefaultDrawableFinder getInstance() {
+      return instance;
     }
-    return drawableBuilder.build();
+
+    @Override
+    public Set<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+        throws IOException {
+      final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
+      for (Path dir : dirs) {
+        filesystem.walkRelativeFileTree(dir, new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+            String unixPath = MorePaths.pathWithUnixSeparators(path);
+            if (DRAWABLE_PATH_PATTERN.matcher(unixPath).matches() &&
+                !DRAWABLE_EXCLUDE_PATTERN.matcher(unixPath).matches()) {
+              // The path is normalized so that the value can be matched against patterns.
+              drawableBuilder.add(path);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
+      }
+      return drawableBuilder.build();
+    }
   }
 
   public interface ImageScaler {
@@ -479,12 +478,13 @@ public class FilterResourcesStep implements Step {
       return new FilterResourcesStep(
           filesystem,
           inResDirToOutResDirMap,
-          /* filterByDensity */ resourceFilter.isEnabled(),
+          resourceFilter.isEnabled(),
           enableStringWhitelisting,
           whitelistedStringDirs,
           locales,
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
+          DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale() ?
               new ImageMagickScaler(filesystem.getRootPath()) :
               null);
