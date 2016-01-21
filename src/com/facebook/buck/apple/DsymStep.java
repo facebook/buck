@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -72,11 +71,6 @@ public class DsymStep extends ShellStep {
         filesystem.resolve(input).toString());
 
     return commandBuilder.build();
-  }
-
-  @Override
-  protected boolean shouldPrintStderr(Verbosity verbosity) {
-    return true;
   }
 
   @Override

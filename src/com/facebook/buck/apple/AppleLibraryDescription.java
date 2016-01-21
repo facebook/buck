@@ -65,6 +65,8 @@ public class AppleLibraryDescription implements
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR,
       AppleDescriptions.FRAMEWORK_FLAVOR,
+      AppleDebugFormat.DWARF_AND_DSYM_FLAVOR,
+      AppleDebugFormat.NO_DEBUG_FLAVOR,
       ImmutableFlavor.of("default"));
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -106,7 +108,6 @@ public class AppleLibraryDescription implements
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat defaultDebugFormat;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -114,15 +115,13 @@ public class AppleLibraryDescription implements
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat) {
+      ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.defaultDebugFormat = defaultDebugFormat;
   }
 
   @Override
@@ -150,61 +149,44 @@ public class AppleLibraryDescription implements
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
-      return createFrameworkBundleBuildRule(targetGraph, params, resolver, args);
-    } else {
-      return createBuildRule(
+      if (!args.infoPlist.isPresent()) {
+        throw new HumanReadableException(
+            "Cannot create framework for apple_library '%s':\n",
+            "No value specified for 'info_plist' attribute.",
+            params.getBuildTarget().getUnflavoredBuildTarget());
+      }
+      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
+        return resolver.requireRule(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                .build());
+      }
+
+      return AppleDescriptions.createAppleBundle(
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          platformFlavorsToAppleCxxPlatforms,
+          targetGraph,
           params,
           resolver,
-          args,
-          args.linkStyle,
-          Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildTarget>of());
-    }
-  }
-
-  private <A extends Arg> BuildRule createFrameworkBundleBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    if (!args.infoPlist.isPresent()) {
-      throw new HumanReadableException(
-          "Cannot create framework for apple_library '%s':\n",
-          "No value specified for 'info_plist' attribute.",
-          params.getBuildTarget().getUnflavoredBuildTarget());
-    }
-    if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
-      return resolver.requireRule(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-              .build());
-    }
-    AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget())
-        .or(defaultDebugFormat);
-    if (params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
-      return resolver.requireRule(
-          params.getBuildTarget().withoutFlavors(ImmutableSet.of(debugFormat.getFlavor())));
+          codeSignIdentityStore,
+          provisioningProfileStore,
+          params.getBuildTarget(),
+          Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK),
+          Optional.<String>absent(),
+          args.infoPlist.get(),
+          args.infoPlistSubstitutions,
+          args.deps.get(),
+          args.getTests());
     }
 
-    return AppleDescriptions.createAppleBundle(
-        cxxPlatformFlavorDomain,
-        defaultCxxPlatform,
-        platformFlavorsToAppleCxxPlatforms,
-        targetGraph,
+    return createBuildRule(
         params,
         resolver,
-        codeSignIdentityStore,
-        provisioningProfileStore,
-        params.getBuildTarget(),
+        args,
         args.linkStyle,
-        Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK),
-        Optional.<String>absent(),
-        args.infoPlist.get(),
-        args.infoPlistSubstitutions,
-        args.deps.get(),
-        args.getTests(),
-        debugFormat);
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildTarget>of());
   }
 
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
