@@ -39,8 +39,7 @@ Disables the build artifact cache.
 {call buck.param}
   {param name: 'config' /}
   {param desc}
-Overrides settings specified in{sp}
-{call buck.concept_buckconfig_section}{param section : 'buildfile' /}{/call}.
+Overrides settings specified in {call buck.concept_buckconfig /}.
 <p>
 <pre>buck build --config cache.mode=dir ...</pre>
 </p>

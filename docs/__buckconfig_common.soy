@@ -63,6 +63,13 @@
 <a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{$section}.{$entry}</a>
 {/template}
 
+/***/
+{template .apple_device_helper_path}
+{call .entry_link}
+  {param section : 'apple' /}
+  {param entry : 'device_helper_path' /}
+{/call}
+{/template}
 
 /***/
 {template .apple_xctool_path}
@@ -149,6 +156,14 @@
 {call .entry_link}
     {param section: 'python' /}
     {param entry: 'package_style' /}
+{/call}
+{/template}
+
+/***/
+{template .test_rule_timeout}
+{call .entry_link}
+    {param section: 'test' /}
+    {param entry: 'rule_timeout' /}
 {/call}
 {/template}
 
