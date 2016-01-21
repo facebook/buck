@@ -1526,16 +1526,22 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'rust' /}{/call}
+{call buckconfig.section}
+  {param name: 'rust' /}
+  {param description}
+    The settings to control how Buck builds <code>rust_*</code> rules.
+  {/param}
+{/call}
 
-This section may define a <code>compiler</code> that is used by <code>rust_</code> rules.
-
-{literal}<pre class="prettyprint lang-ini">
-[rust]
-  # The path to rustc that Buck should use to compile Rust files.
-  compiler = /usr/local/bin/rustc
-</pre>{/literal}
-
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'compiler' /}
+  {param example_value: '/usr/local/bin/rustc' /}
+  {param description}
+    The path that Buck should use to compile Rust files.  By default, it checks your{sp}
+    <code>PATH</code>.
+  {/param}
+{/call}
 
 {call .section}{param title: 'test' /}{/call}
 
