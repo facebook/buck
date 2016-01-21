@@ -45,4 +45,15 @@ public class BuildCommandIntegrationTest {
         Matchers.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:bar")));
   }
 
+  @Test
+  public void showOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult = workspace.runBuckBuild(
+        "--show-output",
+        "//:bar");
+    runBuckResult.assertSuccess();
+    assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
+  }
 }

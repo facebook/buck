@@ -729,14 +729,9 @@ public class TargetsCommand extends AbstractCommand {
           showOptionsBuilder.setRuleKey(ruleKeyBuilderFactory.get().build(rule).toString());
         }
         if (isShowOutput()) {
-          Path outputPath;
-          if (rule instanceof BuildRuleWithAppleBundle) {
-            outputPath = ((BuildRuleWithAppleBundle) rule).getAppleBundle().getPathToOutput();
-          } else {
-            outputPath = rule.getPathToOutput();
-          }
-          if (outputPath != null) {
-            showOptionsBuilder.setOutputPath(outputPath.toString());
+          Optional<Path> outputPath = getUserFacingOutputPath(rule);
+          if (outputPath.isPresent()) {
+            showOptionsBuilder.setOutputPath(outputPath.get().toString());
           }
         }
       }
@@ -747,6 +742,16 @@ public class TargetsCommand extends AbstractCommand {
       builder.put(entry.getKey(), entry.getValue().build());
     }
     return builder.build();
+  }
+
+  public static Optional<Path> getUserFacingOutputPath(BuildRule rule) {
+    Path outputPath;
+    if (rule instanceof BuildRuleWithAppleBundle) {
+      outputPath = ((BuildRuleWithAppleBundle) rule).getAppleBundle().getPathToOutput();
+    } else {
+      outputPath = rule.getPathToOutput();
+    }
+    return Optional.fromNullable(outputPath);
   }
 
   private void computeShowTargetHash(

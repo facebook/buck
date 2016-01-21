@@ -29,6 +29,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
@@ -43,10 +44,12 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -80,6 +83,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String POPULATE_CACHE_LONG_ARG = "--populate-cache";
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
+  private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -129,6 +133,11 @@ public class BuildCommand extends AbstractCommand {
       usage =
           "Reports errors using absolute paths to the source files instead of relative paths.")
   private boolean shouldReportAbsolutePaths = false;
+
+  @Option(
+      name = SHOW_OUTPUT_LONG_ARG,
+      usage = "Print the absolute path to the output for each of the built rules.")
+  private boolean showOutput;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -306,7 +315,30 @@ public class BuildCommand extends AbstractCommand {
 
     int exitCode = executeBuild(params, actionGraphAndResolver, executorService);
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
+
+    if (exitCode == 0 && showOutput) {
+      showOutputs(params, actionGraphAndResolver);
+    }
+
     return exitCode;
+  }
+
+  private void showOutputs(
+      CommandRunnerParams params,
+      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver) {
+    params.getConsole().getStdOut().println("The outputs are:");
+    for (BuildTarget buildTarget : buildTargets) {
+      try {
+        BuildRule rule = actionGraphAndResolver.getSecond().requireRule(buildTarget);
+        Optional<Path> outputPath = TargetsCommand.getUserFacingOutputPath(rule);
+        params.getConsole().getStdOut().printf(
+            "%s %s\n",
+            rule.getFullyQualifiedName(),
+            outputPath.transform(Functions.toStringFunction()).or(""));
+      } catch (NoSuchBuildTargetException e) {
+        throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+      }
+    }
   }
 
   @Nullable

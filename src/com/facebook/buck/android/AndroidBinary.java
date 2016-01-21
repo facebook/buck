@@ -45,7 +45,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.shell.AbstractGenruleStep;
-import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -83,7 +82,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -580,15 +578,6 @@ public class AndroidBinary
         apkToAlign,
         apkPath);
     steps.add(zipalign);
-
-    // Inform the user where the APK can be found.
-    EchoStep success = new EchoStep(
-        String.format(
-            Locale.US,
-            "built APK for %s at %s",
-            getBuildTarget().getFullyQualifiedName(),
-            apkPath));
-    steps.add(success);
 
     buildableContext.recordArtifact(getApkPath());
     return steps.build();

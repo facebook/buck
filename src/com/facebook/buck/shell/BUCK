@@ -50,7 +50,6 @@ java_library(
     'AbstractGenruleStep.java',
     'BashStep.java',
     'DefaultShellStep.java',
-    'EchoStep.java',
     'RunShTestAndRecordResultStep.java',
     'ShellStep.java',
     'SymlinkFilesIntoDirectoryStep.java',
