@@ -49,8 +49,6 @@ public class GroovyTestIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("test", "//com/example/spock:passing");
     buildResult.assertSuccess("Build should have succeeded.");
-
-    workspace.verify();
   }
 
   @Test
@@ -58,8 +56,6 @@ public class GroovyTestIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("test", "//com/example/spock:failing");
     buildResult.assertTestFailure();
-
-    workspace.verify();
   }
 
   @Test
@@ -67,7 +63,5 @@ public class GroovyTestIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("test", "//com/example/spock:will_not_compile");
     buildResult.assertFailure();
-
-    workspace.verify();
   }
 }

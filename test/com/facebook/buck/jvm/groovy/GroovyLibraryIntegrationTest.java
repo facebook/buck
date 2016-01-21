@@ -49,8 +49,6 @@ public class GroovyLibraryIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
-
-    workspace.verify();
   }
 
   @Test
@@ -58,8 +56,6 @@ public class GroovyLibraryIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");
-
-    workspace.verify();
   }
 
   @Test
@@ -67,8 +63,6 @@ public class GroovyLibraryIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();
-
-    workspace.verify();
   }
 
   @Test
@@ -76,8 +70,6 @@ public class GroovyLibraryIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/xcompile:xcompile");
     buildResult.assertSuccess();
-
-    workspace.verify();
   }
 
   @Test
@@ -87,8 +79,6 @@ public class GroovyLibraryIntegrationTest {
         workspace.runBuckCommand("build", "//com/example/modern:xcompile");
 
     buildResult.assertFailure();
-
-    workspace.verify();
   }
 
   @Test
@@ -97,7 +87,5 @@ public class GroovyLibraryIntegrationTest {
         workspace.runBuckCommand("build", "//com/example/javacextras:javacextras");
 
     buildResult.assertFailure();
-
-    workspace.verify();
   }
 }
