@@ -1422,67 +1422,107 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call .section}{param title: 'python' /}{/call}
+{call buckconfig.section}
+  {param name: 'python' /}
+  {param description}
+    <p>
+      This section may define settings relevant to <code>python_*</code> rules.
+    </p>
 
-This section may define a settings relevant to <code>python_*</code> rules.
+    <p>
+      Adding a section with the header [python#<i>flavor</i>] to the .buckconfig will add
+      an alternate python section.  This python section will be used instead of{sp}
+      <code>[python]</code> if the compilation flavor is invoked by appending <i>#version</i> to a
+      {sp}{call buck.build_target /}.  This can be useful if you have Python 2 and Python 3 code in
+      your project and need to differentiate accorindgly (namely by changing the value of{sp}
+      {call buckconfig.python_interpreter /}.  On the command line, to build with{sp}
+      <code>[python#py3]</code> rather than <code>[python]</code>:
+    </p>
 
-{literal}<pre class="prettyprint lang-ini">
-[python]
-  # Path to the Python interpreter.
-  interpreter = /usr/bin/python
+    {literal}<pre class="prettyprint">
+    $ buck build app#py3
+    </pre>{/literal}
+  {/param}
+{/call}
 
-  # The rule (typically a `prebuilt_cxx_library`) wrapping the libpython.so
-  # that `cpp_python_extension` rules should build against.
-  library = //third-party/python:python
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'interpreter' /}
+  {param example_value: '/usr/bin/python' /}
+  {param description}
+    The path to the python interpreter to use.  By default, Buck will search for this in your{sp}
+    <code>PATH</code>.
+  {/param}
+{/call}
 
-  # Path to the tool used to run executable Python packages.  For self-executing packages,
-  # this should just be the shell.
-  path_to_pex_executor = /bin/sh
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'library' /}
+  {param example_value: '//third-party/python:python' /}
+  {param description}
+    The {call buck.build_rule /}, typically a {call buck.prebuilt_cxx_library /}, wrapping the{sp}
+    <code>libpython.so</code> that <code>cpp_python_extension</code> rules should build against.
+  {/param}
+{/call}
 
-  # The extension to use for executable Python packages.
-  pex_extension = .pex
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'path_to_pex_executor' /}
+  {param example_value: '/bin/sh' /}
+  {param description}
+    The path to the tool used to run executable Python packages.  For self-executing packages, this
+    should just by the shell.
+  {/param}
+{/call}
 
-  # The strategy used for pulling in native dependencies.
-  #
-  #   separate - Transitive native deps are linked as full, separate shared libraries.
-  #     Preferred for build-time speed.
-  #
-  #   merged - Native deps which have explicit deps from python rules are linked as
-  #     full, separate shared libraries.  Transitive native deps which do *not* have
-  #     explicit deps from python rules are statically linked into a single monolithic
-  #     shared library.  Preferred to reduce native code size and shared library count.
-  #
-  native_link_strategy = separate
-</pre>{/literal}
-
-Adding a section with header [python#<i>flavor</i>] to the .buckconfig will define
-a python platform to build <code>python_*</code> rules against, by using the given
-<i>#flavor</i> when building a python binary or test rule.
-
-{literal}<pre class="prettyprint lang-ini">
-[python#py2]
-
-  # As in the `python` section, this is the path to the Python interpreter to
-  # use with this Python platform.
-  interpreter = /usr/bin/python2.7
-
-  # The rule (typically a `prebuilt_cxx_library`) wrapping the libpython.so
-  # that `cpp_python_extension` rules should build against when using this
-  # Python platform.
-  library = //third-party/python:py2.7
-
-[python#py3]
-  interpreter = /usr/bin/python3.4
-  library = //third-party/python:py3.4
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'pex_extension' /}
+  {param example_value: '.pex' /}
+  {param description}
+    The extension to use for executable Python packages.
+  {/param}
+{/call}
 
 {call buckconfig.entry}
   {param section: 'python' /}
   {param name: 'package_style' /}
   {param example_value: 'standalone' /}
   {param description}
-    The packaging style to use for python binaries and tests (default is <code>standalone</code>):
-    {call python_common.package_styles_list /}
+    The packaging style to use for {call buck.python_binary /} and {call buck.python_test /}.  Valid
+    values are:
+    <ul>
+        <li>
+          <code>inplace</code>: builds exectuables which are only able to run from within the
+          repository.  This style of packaging is significantly faster than <code>standalone</code>
+          {sp}packages.
+        </li>
+        <li>
+          <code>standalone</code> (default): builds self-contained executable packages that can be
+          run outside of the repository.
+        </li>
+    </ul>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'native_link_strategy' /}
+  {param example_value: 'separate' /}
+  {param description}
+    The strategy used for pulling in native dependencies:
+    <ul>
+        <li>
+          <code>merged</code>: Native dependencies which are first-order dependencies of{sp}
+          <code>python_*</code> rules are linked as full, separate, shared libraries.  Transitive
+          native dependencies are statically linked into a single monolithic shared library.  This
+          is preferred to reduce the native code size and shared library count.
+        </li>
+        <li>
+          <code>separate</code> (default): Transitive native dependencies are linked as full,
+          separate, shared libraries.  This is prefererred for faster build-time speed.
+        </li>
+    </ul>
   {/param}
 {/call}
 
