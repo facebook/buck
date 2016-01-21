@@ -309,7 +309,7 @@ public class Cell {
     }
     Cell that = (Cell) o;
     return Objects.equals(filesystem, that.filesystem) &&
-        Objects.equals(config, that.config) &&
+        config.equalsForDaemonRestart(that.config) &&
         Objects.equals(directoryResolver, that.directoryResolver);
   }
 

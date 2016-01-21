@@ -29,7 +29,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -294,6 +296,35 @@ public class Config {
     }
     Config that = (Config) obj;
     return Objects.equal(this.sectionToEntries, that.sectionToEntries);
+  }
+
+  public boolean equalsIgnoring(
+      Config other,
+      ImmutableMap<String, ImmutableSet<String>> ignoredFields) {
+    if (this == other) {
+      return true;
+    }
+    ImmutableMap<String, ImmutableMap<String, String>> left = this.sectionToEntries;
+    ImmutableMap<String, ImmutableMap<String, String>> right = other.sectionToEntries;
+    Sets.SetView<String> sections = Sets.union(left.keySet(), right.keySet());
+    for (String section : sections) {
+      ImmutableMap<String, String> leftFields = left.get(section);
+      ImmutableMap<String, String> rightFields = right.get(section);
+      if (leftFields == null || rightFields == null) {
+        return false;
+      }
+      Sets.SetView<String> fields = Sets.difference(
+          Sets.union(leftFields.keySet(), rightFields.keySet()),
+          Optional.fromNullable(ignoredFields.get(section)).or(ImmutableSet.<String>of()));
+      for (String field : fields) {
+        String leftValue = leftFields.get(field);
+        String rightValue = rightFields.get(field);
+        if (leftValue == null || rightValue == null || !leftValue.equals(rightValue)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   @Override

@@ -88,6 +88,10 @@ public class BuckConfig {
 
   private static final String DEFAULT_MAX_TRACES = "25";
 
+  private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART =
+      ImmutableMap.of("build", ImmutableSet.of("threads", "load_limit")
+  );
+
   private static final Function<String, URI> TO_URI = new Function<String, URI>() {
     @Override
     public URI apply(String input) {
@@ -626,6 +630,14 @@ public class BuckConfig {
           field));
     }
     return value.get();
+  }
+
+  // This is a hack. A cleaner approach would be to expose a narrow view of the config to any code
+  // that affects the state cached by the Daemon.
+  public boolean equalsForDaemonRestart(BuckConfig other) {
+    return this.config.equalsIgnoring(
+        other.config,
+        IGNORE_FIELDS_FOR_DAEMON_RESTART);
   }
 
   @Override
