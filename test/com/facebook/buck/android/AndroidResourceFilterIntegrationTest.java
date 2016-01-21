@@ -65,6 +65,7 @@ public class AndroidResourceFilterIntegrationTest {
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         filesystem,
         Optional.<String>absent(),
+        Optional.<String>absent(),
         new DefaultPropertyFinder(filesystem, ImmutableMap.copyOf(System.getenv())));
     pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,

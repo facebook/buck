@@ -109,6 +109,7 @@ public class NdkCxxPlatformIntegrationTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         projectFilesystem,
         Optional.<String>absent(),
+        Optional.<String>absent(),
         new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
     Optional<Path> ndkDir = resolver.findAndroidNdkDir();
     assertTrue(ndkDir.isPresent());

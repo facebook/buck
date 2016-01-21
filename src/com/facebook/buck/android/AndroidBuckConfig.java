@@ -41,6 +41,10 @@ public class AndroidBuckConfig {
     return delegate.getValue("android", "target");
   }
 
+  public Optional<String> getBuildToolsVersion() {
+    return delegate.getValue("android", "build_tools_version");
+  }
+
   public Optional<String> getNdkVersion() {
     return delegate.getValue("ndk", "ndk_version");
   }

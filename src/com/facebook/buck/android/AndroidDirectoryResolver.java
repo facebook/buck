@@ -38,6 +38,12 @@ public interface AndroidDirectoryResolver {
   Path findAndroidSdkDir();
 
   /**
+   * @return The location of the proper build-tools folder to use.  If the version specified in the
+   * config is not found, an exception will be thrown.
+   */
+  Path findAndroidBuildToolsDir();
+
+  /**
    * @return {@code Optional.absent()} of the Android NDK is not found, Otherwise an
    * {@code Optional<File>} pointing to the Android NDK.
    */

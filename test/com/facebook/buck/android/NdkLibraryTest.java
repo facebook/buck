@@ -62,6 +62,7 @@ public class NdkLibraryTest {
     projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(projectFilesystem,
         Optional.<String>absent(),
+        Optional.<String>absent(),
         new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget.getDefaultPlatformTarget(

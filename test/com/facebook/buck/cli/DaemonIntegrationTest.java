@@ -547,6 +547,7 @@ public class DaemonIntegrationTest {
                 new FakeAndroidDirectoryResolver(
                     Optional.<Path>absent(),
                     Optional.<Path>absent(),
+                    Optional.<Path>absent(),
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
@@ -558,6 +559,7 @@ public class DaemonIntegrationTest {
             new TestCellBuilder()
                 .setAndroidDirectoryResolver(
                     new FakeAndroidDirectoryResolver(
+                        Optional.<Path>absent(),
                         Optional.<Path>absent(),
                         Optional.<Path>absent(),
                         Optional.of("different")))

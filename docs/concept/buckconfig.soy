@@ -148,6 +148,16 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'android' /}
+  {param name: 'build_tools_version' /}
+  {param example_value: '23.0.1' /}
+  {param description}
+    This specifies the version of the Android SDK Build-tools that all Android code in the project
+    should be built against.  By default, Buck will select the newest version found on the system.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'android' /}
   {param name: 'target' /}
   {param example_value: 'Google Inc.:Google APIs:21' /}
   {param description}

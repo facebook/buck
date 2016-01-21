@@ -577,6 +577,7 @@ public class ProjectWorkspace {
     DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
         filesystem,
         Optional.<String>absent(),
+        Optional.<String>absent(),
         new DefaultPropertyFinder(filesystem, env));
     return Cell.createCell(
         filesystem,

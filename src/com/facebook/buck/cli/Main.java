@@ -701,6 +701,7 @@ public final class Main {
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             filesystem,
+            androidBuckConfig.getBuildToolsVersion(),
             androidBuckConfig.getNdkVersion(),
             propertyFinder);
 

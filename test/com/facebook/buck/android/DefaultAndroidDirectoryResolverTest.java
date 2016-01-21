@@ -17,6 +17,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MoreFiles;
@@ -29,16 +30,21 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.easymock.EasyMockSupport;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
+public class DefaultAndroidDirectoryResolverTest {
   @Rule
   public TemporaryPaths tmpDir = new TemporaryPaths();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void testFindAndroidNdkDirEmpty() {
@@ -50,6 +56,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -68,6 +75,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9d"),
             propertyFinder);
 
@@ -87,6 +95,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9d"),
             propertyFinder);
 
@@ -106,6 +115,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
+            Optional.<String>absent(),
             propertyFinder);
 
     assertEquals(Optional.of(ndkDir),
@@ -124,6 +134,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -148,6 +159,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9e"),
             propertyFinder);
 
@@ -175,6 +187,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9e"),
             propertyFinder);
 
@@ -204,6 +217,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
+            Optional.<String>absent(),
             propertyFinder);
 
     assertEquals(Optional.of(releaseDir),
@@ -225,11 +239,13 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver1 =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9a"),
             propertyFinder);
     DefaultAndroidDirectoryResolver androidDirectoryResolver2 =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9b"),
             propertyFinder);
 
@@ -252,6 +268,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9b"),
             propertyFinder);
 
@@ -275,6 +292,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9b"),
             propertyFinder);
 
@@ -294,6 +312,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of(""),
             propertyFinder);
 
@@ -312,10 +331,143 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
             Optional.of("r9e"),
             propertyFinder);
 
     androidDirectoryResolver.findAndroidNdkDir();
+  }
+
+  @Test
+  public void buildToolsFallsBacktoPlatformTools() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    createBuildToolsVersions(sdkDir, "platform-tools");
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "sdk.dir", Optional.of(sdkDir)));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            /* targetBuildToolsVersion */ Optional.<String>absent(),
+            /* targetNdkVersion */ Optional.<String>absent(),
+            propertyFinder);
+    assertThat(
+        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        Matchers.equalTo("platform-tools"));
+  }
+
+  @Test
+  public void buildToolsAPIVersionFound() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    createBuildToolsVersions(sdkDir, "build-tools/android-4.2.2");
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "sdk.dir", Optional.of(sdkDir)));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            /* targetBuildToolsVersion */ Optional.<String>absent(),
+            /* targetNdkVersion */ Optional.<String>absent(),
+            propertyFinder);
+    assertThat(
+        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        Matchers.equalTo("android-4.2.2"));
+  }
+
+  @Test
+  public void buildToolsRCVersionsFound() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    createBuildToolsVersions(
+        sdkDir,
+        "build-tools/23.0.0_rc1");
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "sdk.dir", Optional.of(sdkDir)));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            /* targetBuildToolsVersion */ Optional.<String>absent(),
+            /* targetNdkVersion */ Optional.<String>absent(),
+            propertyFinder);
+    assertThat(
+        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        Matchers.equalTo("23.0.0_rc1"));
+  }
+
+  @Test
+  public void preferBuildToolsVersionedFoldersOverAPIFolders() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    createBuildToolsVersions(
+        sdkDir,
+        "build-tools/android-4.2.2",
+        "build-tools/android-4.1",
+        "build-tools/android-4.0.0",
+        "build-tools/17.0.0",
+        "build-tools/16.0.0");
+
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "sdk.dir", Optional.of(sdkDir)));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            /* targetBuildToolsVersion */ Optional.<String>absent(),
+            /* targetNdkVersion */ Optional.<String>absent(),
+            propertyFinder);
+    assertThat(
+        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        Matchers.equalTo("17.0.0"));
+  }
+
+  @Test
+  public void targettedBuildToolsVersionIsSelected() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    createBuildToolsVersions(
+        sdkDir,
+        "build-tools/16.0.0",
+        "build-tools/17.0.0",
+        "build-tools/18.0.0");
+
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "sdk.dir", Optional.of(sdkDir)));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            /* targetBuildToolsVersion */ Optional.of("17.0.0"),
+            /* targetNdkVersion */ Optional.<String>absent(),
+            propertyFinder);
+    assertThat(
+        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        Matchers.equalTo("17.0.0"));
+  }
+
+  @Test
+  public void targettedBuildToolsVersionNotAvailableThrows() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    createBuildToolsVersions(
+        sdkDir,
+        "build-tools/18.0.0");
+
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "sdk.dir", Optional.of(sdkDir)));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            /* targetBuildToolsVersion */ Optional.of("2.0.0"),
+            /* targetNdkVersion */ Optional.<String>absent(),
+            propertyFinder);
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("2.0.0");
+    androidDirectoryResolver.findAndroidBuildToolsDir();
   }
 
   private Path[] createTmpNdkVersions(String... directoryNamesAndVersionStrings)
@@ -327,6 +479,18 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
       ret[i] = tmpDir.newFolder(folderName);
       Path releaseFile = tmpDir.newFile(folderName + "/RELEASE.TXT");
       MoreFiles.writeLinesToFile(ImmutableList.of(version), releaseFile);
+    }
+    return ret;
+  }
+
+  private Path[] createBuildToolsVersions(
+      Path sdkDir,
+      String... directoryNames) throws IOException {
+    Path[] ret = new Path[directoryNames.length];
+    for (int i = 0; i < directoryNames.length; i++) {
+      File folder = sdkDir.resolve(directoryNames[i]).toFile();
+      assertThat(folder.mkdirs(), Matchers.is(true));
+      ret[i] = folder.toPath();
     }
     return ret;
   }

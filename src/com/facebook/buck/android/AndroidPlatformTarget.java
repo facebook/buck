@@ -17,24 +17,19 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,7 +44,6 @@ import java.util.regex.Pattern;
 public class AndroidPlatformTarget {
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:21";
-  public static final String ANDROID_VERSION_PREFIX = "android-";
 
   /**
    * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws a
@@ -264,57 +258,27 @@ public class AndroidPlatformTarget {
     // Make sure android.jar is at the front of the bootclasspath.
     bootclasspathEntries.addFirst(androidJar);
 
-    Path buildToolsDir = androidSdkDir.resolve("build-tools");
+    // This is the directory under the Android SDK directory that contains the dx script, jack,
+    // jill, and binaries.
+    Path buildToolsDir = androidDirectoryResolver.findAndroidBuildToolsDir();
 
-    // This is the relative path under the Android SDK directory to the directory that contains the
-    // dx script, jack, jill, and binaries.
-    String buildToolsPath;
-
-    // This is the relative path under the Android SDK directory to the directory that contains the
-    // aapt, aidl, and zipalign binaries. Before Android SDK Build-tools 23.0.0_rc1, this was the
-    // same as buildToolsPath above.
-    String buildToolsBinPath;
-
-    if (buildToolsDir.toFile().isDirectory()) {
-      // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
-      // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
-      // the ADT that are downloaded directly from http://developer.android.com/ appear to have
-      // subfolders of the form android-4.2.2. We need to support both of these scenarios.
-      File[] directories = buildToolsDir.toFile().listFiles(new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-          return pathname.isDirectory();
-        }
-      });
-
-      if (directories.length == 0) {
-        throw new HumanReadableException(
-            Joiner.on(System.getProperty("line.separator")).join(
-                "%s was empty, but should have contained a subdirectory with build tools.",
-                "Install them using the Android SDK Manager (%s)."),
-            buildToolsDir,
-            androidSdkDir.resolve("tools").resolve("android"));
-      } else {
-        File newestBuildToolsDir = pickNewestBuildToolsDir(ImmutableSet.copyOf(directories));
-        buildToolsPath = "build-tools/" + newestBuildToolsDir.getName();
-        if (androidSdkDir.resolve(buildToolsPath).resolve("bin").toFile().exists()) {
-          // Android SDK Build-tools >= 23.0.0_rc1 have executables under a new bin directory.
-          buildToolsBinPath = buildToolsPath + "/bin";
-        } else {
-          // Android SDK Build-tools < 23.0.0_rc1 have executables under the build-tools directory.
-          buildToolsBinPath = buildToolsPath;
-        }
-      }
+    // This is the directory under the Android SDK directory that contains the aapt, aidl, and
+    // zipalign binaries. Before Android SDK Build-tools 23.0.0_rc1, this was the same as
+    // buildToolsDir above.
+    Path buildToolsBinDir;
+    if (buildToolsDir.resolve("bin").toFile().exists()) {
+      // Android SDK Build-tools >= 23.0.0_rc1 have executables under a new bin directory.
+      buildToolsBinDir = buildToolsDir.resolve("bin");
     } else {
-      buildToolsPath = "platform-tools";
-      buildToolsBinPath = buildToolsPath;
+      // Android SDK Build-tools < 23.0.0_rc1 have executables under the build-tools directory.
+      buildToolsBinDir = buildToolsDir;
     }
 
     Path zipAlignExecutable = androidSdkDir.resolve("tools/zipalign").toAbsolutePath();
     if (!zipAlignExecutable.toFile().exists()) {
       // Android SDK Build-tools >= 19.1.0 have zipalign under the build-tools directory.
       zipAlignExecutable =
-          androidSdkDir.resolve(buildToolsBinPath).resolve("zipalign").toAbsolutePath();
+          androidSdkDir.resolve(buildToolsBinDir).resolve("zipalign").toAbsolutePath();
     }
 
     Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
@@ -327,62 +291,17 @@ public class AndroidPlatformTarget {
         name,
         androidJar.toAbsolutePath(),
         bootclasspathEntries,
-        aaptOverride.or(androidSdkDir.resolve(buildToolsBinPath).resolve("aapt").toAbsolutePath()),
+        aaptOverride.or(androidSdkDir.resolve(buildToolsBinDir).resolve("aapt").toAbsolutePath()),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
-        androidSdkDir.resolve(buildToolsBinPath).resolve("aidl").toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsBinDir).resolve("aidl").toAbsolutePath(),
         zipAlignExecutable,
-        androidSdkDir.resolve(buildToolsPath).resolve(
+        buildToolsDir.resolve(
             Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx").toAbsolutePath(),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
         optimizedProguardConfig,
         androidDirectoryResolver);
-  }
-
-  private static File pickNewestBuildToolsDir(Set<File> directories) {
-    if (directories.size() == 1) {
-      return Iterables.getOnlyElement(directories);
-    }
-
-    List<File> apiVersionDirectories = Lists.newArrayList();
-    List<File> androidVersionDirectories = Lists.newArrayList();
-    for (File dir : directories) {
-      if (dir.getName().startsWith(ANDROID_VERSION_PREFIX)) {
-        androidVersionDirectories.add(dir);
-      } else {
-        apiVersionDirectories.add(dir);
-      }
-    }
-
-    final VersionStringComparator comparator = new VersionStringComparator();
-
-    // API version directories are downloaded by the package manager, whereas Android version
-    // directories are bundled with the SDK when it's unpacked. So API version directories will
-    // presumably be newer.
-    if (!apiVersionDirectories.isEmpty()) {
-      Collections.sort(apiVersionDirectories, new Comparator<File>() {
-            @Override
-            public int compare(File a, File b) {
-              String versionA = a.getName();
-              String versionB = b.getName();
-              return comparator.compare(versionA, versionB);
-        }
-      });
-      // Return the last element in the list.
-      return apiVersionDirectories.get(apiVersionDirectories.size() - 1);
-    } else {
-      Collections.sort(androidVersionDirectories, new Comparator<File>() {
-            @Override
-            public int compare(File a, File b) {
-              String versionA = a.getName().substring(ANDROID_VERSION_PREFIX.length());
-              String versionB = b.getName().substring(ANDROID_VERSION_PREFIX.length());
-              return comparator.compare(versionA, versionB);
-        }
-      });
-      // Return the last element in the list.
-      return androidVersionDirectories.get(androidVersionDirectories.size() - 1);
-    }
   }
 
   /**
