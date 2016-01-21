@@ -67,6 +67,7 @@ public class HalideLibrary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
+  private final HalideBuckConfig halideBuckConfig;
   private final Map<
       Pair<Flavor, HeaderVisibility>,
       ImmutableMap<BuildTarget, CxxPreprocessorInput>> cxxPreprocessorInputCache =
@@ -76,13 +77,17 @@ public class HalideLibrary
   @AddToRuleKey
   private final ImmutableSortedSet<SourceWithFlags> srcs;
 
-  @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableMap<String, String> halideTargetMap;
+  private final String target;
 
+  @AddToRuleKey
+  private final Tool archiver;
+
+  @AddToRuleKey
+  private final Tool ranlib;
+
+  @AddToRuleKey
   private final Tool halideCompiler;
-  private final CxxPlatform cxxPlatform;
-  private final HalideBuckConfig halideBuckConfig;
 
   protected HalideLibrary(
       BuildRuleParams params,
@@ -97,9 +102,10 @@ public class HalideLibrary
     this.ruleResolver = ruleResolver;
     this.srcs = srcs;
     this.halideCompiler = halideCompiler;
-    this.cxxPlatform = cxxPlatform;
+    this.archiver = cxxPlatform.getAr();
+    this.ranlib = cxxPlatform.getRanlib();
     this.halideBuckConfig = halideBuckConfig;
-    this.halideTargetMap = halideBuckConfig.getHalideTargetMap();
+    this.target = halideBuckConfig.getHalideTargetForPlatform(cxxPlatform);
   }
 
   @Override
@@ -112,7 +118,6 @@ public class HalideLibrary
     buildableContext.recordArtifact(outputDir.resolve(getLibraryName()));
     buildableContext.recordArtifact(outputDir.resolve(shortName + ".h"));
 
-    Tool archiver = cxxPlatform.getAr();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
     commands.add(
@@ -122,7 +127,7 @@ public class HalideLibrary
             halideCompiler.getCommandPrefix(getResolver()),
             outputDir,
             shortName,
-            halideBuckConfig.getHalideTargetForPlatform(cxxPlatform)));
+            target));
     commands.add(
         new ArchiveStep(
             getProjectFilesystem().getRootPath(),
@@ -135,7 +140,7 @@ public class HalideLibrary
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.<String>builder()
-                .addAll(cxxPlatform.getRanlib().getCommandPrefix(getResolver()))
+                .addAll(ranlib.getCommandPrefix(getResolver()))
                 .add(output.toString())
                 .build();
           }

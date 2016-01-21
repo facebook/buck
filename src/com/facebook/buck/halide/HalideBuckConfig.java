@@ -57,7 +57,7 @@ public class HalideBuckConfig {
     return targetMap.get(flavorName);
   }
 
-  public ImmutableMap<String, String> getHalideTargetMap() {
+  private ImmutableMap<String, String> getHalideTargetMap() {
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(HALIDE_SECTION_NAME);
     ImmutableMap.Builder<String, String> targets = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {

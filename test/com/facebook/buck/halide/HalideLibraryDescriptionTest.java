@@ -66,31 +66,31 @@ public class HalideLibraryDescriptionTest {
     // Set up a #halide-compiler rule, then set up a halide_library rule, and
     // check that the library rule depends on the compiler rule.
     BuildTarget compilerTarget = BuildTargetFactory
-      .newInstance("//:rule")
-      .withFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
+        .newInstance("//:rule")
+        .withFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:rule");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     HalideLibraryBuilder compilerBuilder =
-      new HalideLibraryBuilder(compilerTarget);
+        new HalideLibraryBuilder(compilerTarget);
     compilerBuilder.setSrcs(
-      ImmutableSortedSet.of(
-        SourceWithFlags.of(
-          new FakeSourcePath("main.cpp"))));
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(
+                new FakeSourcePath("main.cpp"))));
     HalideLibraryBuilder libBuilder = new HalideLibraryBuilder(libTarget);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
-      compilerBuilder.build(),
-      libBuilder.build());
+        compilerBuilder.build(),
+        libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
     CxxBinary compiler = (CxxBinary) compilerBuilder.build(
-      resolver,
-      filesystem,
-      targetGraph);
+        resolver,
+        filesystem,
+        targetGraph);
     HalideLibrary lib = (HalideLibrary) libBuilder.build(
-      resolver,
-      filesystem,
-      targetGraph);
+        resolver,
+        filesystem,
+        targetGraph);
     // Check that we picked up the implicit dependency on the #halide-compiler
     // version of the rule.
     assertEquals(lib.getDeps(), ImmutableSortedSet.<BuildRule>of(compiler));
@@ -100,31 +100,31 @@ public class HalideLibraryDescriptionTest {
     String headerName = "rule.h";
     Path headerPath = BuildTargets.getGenPath(libTarget, "%s/" + headerName);
     Path headerRoot =
-      CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-        libTarget,
-        cxxPlatform.getFlavor(),
-        HeaderVisibility.PUBLIC);
-    assertEquals(
-      CxxPreprocessorInput.builder()
-        .addRules(
-          CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             libTarget,
             cxxPlatform.getFlavor(),
-            HeaderVisibility.PUBLIC))
-        .setIncludes(
-          CxxHeaders.builder()
-            .putNameToPathMap(
-              Paths.get(headerName),
-              new BuildTargetSourcePath(libTarget, headerPath))
-            .putFullNameToPathMap(
-              headerRoot.resolve(headerName),
-              new BuildTargetSourcePath(libTarget, headerPath))
-            .build())
-        .addSystemIncludeRoots(headerRoot)
-        .build(),
-      lib.getCxxPreprocessorInput(
-        cxxPlatform,
-        HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC);
+    assertEquals(
+        CxxPreprocessorInput.builder()
+            .addRules(
+                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                    libTarget,
+                    cxxPlatform.getFlavor(),
+                    HeaderVisibility.PUBLIC))
+            .setIncludes(
+                CxxHeaders.builder()
+                    .putNameToPathMap(
+                        Paths.get(headerName),
+                        new BuildTargetSourcePath(libTarget, headerPath))
+                    .putFullNameToPathMap(
+                        headerRoot.resolve(headerName),
+                        new BuildTargetSourcePath(libTarget, headerPath))
+                    .build())
+            .addSystemIncludeRoots(headerRoot)
+            .build(),
+        lib.getCxxPreprocessorInput(
+            cxxPlatform,
+            HeaderVisibility.PUBLIC));
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input = lib.getNativeLinkableInput(
