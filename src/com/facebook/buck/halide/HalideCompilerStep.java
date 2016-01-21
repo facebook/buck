@@ -18,7 +18,6 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -38,9 +37,7 @@ public class HalideCompilerStep extends ShellStep {
   private final String funcName;
 
   // The Halide target string for the target architecture, e.g. "x86-64-osx".
-  // May be empty; if so, we assume that we should generate code for the host
-  // architecture.
-  private final Optional<String> halideTarget;
+  private final String halideTarget;
 
   public HalideCompilerStep(
       Path workingDirectory,
@@ -48,7 +45,7 @@ public class HalideCompilerStep extends ShellStep {
       ImmutableList<String> compilerPrefix,
       Path outputDir,
       String funcName,
-      Optional<String> halideTarget) {
+      String halideTarget) {
     super(workingDirectory);
     this.environment = environment;
     this.compilerPrefix = compilerPrefix;
@@ -63,10 +60,7 @@ public class HalideCompilerStep extends ShellStep {
     builder.addAll(compilerPrefix);
     builder.add("-h");
     builder.add("-o", outputDir.toString());
-
-    if (halideTarget.isPresent() && !halideTarget.get().isEmpty()) {
-      builder.add("-t", halideTarget.get());
-    }
+    builder.add("-t", halideTarget);
 
     builder.add(funcName);
     return builder.build();
