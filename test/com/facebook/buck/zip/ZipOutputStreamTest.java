@@ -96,8 +96,7 @@ public class ZipOutputStreamTest {
   @Test(expected = ZipException.class)
   public void mustThrowAnExceptionIfNoZipEntryIsOpenWhenWritingData() throws IOException {
     try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)
-    ) {
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
       // Note: we have not opened a zip entry.
       out.write("cheese".getBytes());
     }
@@ -121,8 +120,7 @@ public class ZipOutputStreamTest {
 
     try (
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
-    ) {
+        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
       ZipEntry entry = new ZipEntry("example.txt");
       entry.setTime(System.currentTimeMillis());
       out.putNextEntry(entry);
@@ -161,8 +159,7 @@ public class ZipOutputStreamTest {
 
     try (
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
-    ) {
+        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
       ZipEntry entry = new ZipEntry("example.txt");
       entry.setTime(System.currentTimeMillis());
       out.putNextEntry(entry);
@@ -186,8 +183,7 @@ public class ZipOutputStreamTest {
 
     try (
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
-    ) {
+        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
       byte[] bytes = "cheese".getBytes();
       ZipEntry entry = new ZipEntry("example.txt");
       entry.setTime(System.currentTimeMillis());
@@ -205,9 +201,7 @@ public class ZipOutputStreamTest {
 
   @Test(expected = ZipException.class)
   public void writingTheSameFileMoreThanOnceIsNormallyAnError() throws IOException {
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)
-    ) {
+    try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
       ZipEntry entry = new ZipEntry("example.txt");
       out.putNextEntry(entry);
       out.putNextEntry(entry);
@@ -220,8 +214,7 @@ public class ZipOutputStreamTest {
 
     try (
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
-    ) {
+        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
       byte[] bytes = "cheese".getBytes();
       ZipEntry entry = new ZipEntry("example.txt");
       entry.setMethod(ZipEntry.STORED);

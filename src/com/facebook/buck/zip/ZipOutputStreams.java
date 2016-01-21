@@ -39,12 +39,8 @@ public class ZipOutputStreams {
    *
    * @param zipFile The file to write to.
    */
-  public static CustomZipOutputStream newOutputStream(Path zipFile) {
-    try {
-      return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public static CustomZipOutputStream newOutputStream(Path zipFile) throws IOException {
+    return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)));
   }
 
   /**
@@ -84,7 +80,8 @@ public class ZipOutputStreams {
     switch (mode) {
       case APPEND_TO_ZIP:
       case THROW_EXCEPTION:
-        return new AppendingZipOutputStream(clock,
+        return new AppendingZipOutputStream(
+            clock,
             out,
             mode == HandleDuplicates.THROW_EXCEPTION);
 
@@ -97,7 +94,7 @@ public class ZipOutputStreams {
     }
   }
 
-  public static enum HandleDuplicates {
+  public enum HandleDuplicates {
     /** Duplicate entries are simply appended to the zip. */
     APPEND_TO_ZIP,
     /** An exception should be thrown if a duplicate entry is added to a zip. */

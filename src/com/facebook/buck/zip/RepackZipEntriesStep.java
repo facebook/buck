@@ -89,8 +89,7 @@ public class RepackZipEntriesStep implements Step {
     try (
         ZipInputStream in =
             new ZipInputStream(new BufferedInputStream(Files.newInputStream(inputFile)));
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile)
-    ) {
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile)) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         CustomZipEntry customEntry = new CustomZipEntry(entry);
         if (entries.contains(customEntry.getName())) {
