@@ -35,8 +35,9 @@ public class DetailNodeRenderer implements BuildElementRenderer {
             icon = AllIcons.Ide.Warning_notifications;
         }
 
-        String[] lines = node.getDetail().split("\n");
-        String message = lines[0];
+        String message = "<html><pre style='margin:0px'>" +
+            node.getDetail() +
+            "</pre></html>";
 
         JBLabel result = new JBLabel(
                 message,

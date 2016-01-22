@@ -220,11 +220,11 @@ public class BuckEventsConsumer implements
             Math.round(mBuildProgressValue * 100) + "%";
 
         ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                BuckEventsConsumer.this.mBuildProgress.setDetail(message);
-                BuckEventsConsumer.this.mTreeModel.reload();
-            }
+          @Override
+          public void run() {
+            BuckEventsConsumer.this.mBuildProgress.setDetail(message);
+            BuckEventsConsumer.this.mTreeModel.reload();
+          }
         });
     }
 
@@ -387,6 +387,14 @@ public class BuckEventsConsumer implements
         }
     }
 
+    public void clearDisplay() {
+        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mParseProgress);
+        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mBuildProgress);
+        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mFinishedTasks);
+        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mRunningTasks);
+        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mSuspendedTasks);
+    }
+
     @Override
     public void consumeBuildEnd(final String build, final BigInteger timestamp) {
         mMainBuildEndTimestamp = timestamp;
@@ -446,6 +454,7 @@ public class BuckEventsConsumer implements
                 });
 
                 if (errorsMessageToUse.length() > 0) {
+                    clearDisplay();
                     BuckTreeNodeDetail errorsMessageNode = new BuckTreeNodeDetail(
                             BuckEventsConsumer.this.mCurrentBuildRootElement,
                             BuckTreeNodeDetail.DetailType.ERROR,

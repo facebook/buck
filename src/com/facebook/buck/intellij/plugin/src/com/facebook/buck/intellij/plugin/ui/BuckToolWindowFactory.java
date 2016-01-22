@@ -210,6 +210,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     });
     result.setCellRenderer(new BuckTreeCellRenderer());
     result.setShowsRootHandles(false);
+    result.setRowHeight(0);
     JBScrollPane treeView = new JBScrollPane(result);
     return treeView;
   }
