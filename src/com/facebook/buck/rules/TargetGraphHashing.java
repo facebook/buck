@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -126,7 +127,11 @@ public class TargetGraphHashing {
       hasher.putBytes(targetRuleHashCode.asBytes());
 
       // Hash the contents of all input files and directories.
-      PathHashing.hashPaths(hasher, fileHashLoader, projectFilesystem, node.getInputs());
+      PathHashing.hashPaths(
+          hasher,
+          fileHashLoader,
+          projectFilesystem,
+          ImmutableSortedSet.copyOf(node.getInputs()));
 
       // We've already visited the dependencies (this is a depth-first traversal), so
       // hash each dependency's build target and that build target's own hash.

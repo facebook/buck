@@ -17,21 +17,47 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
+import java.nio.file.Path;
+
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractHashCodeAndFileType {
-  static enum Type {
-      FILE,
-      DIRECTORY
+abstract class AbstractHashCodeAndFileType {
+
+  public abstract Type getType();
+
+  public abstract HashCode getHashCode();
+
+  public abstract ImmutableSet<Path> getChildren();
+
+  @Value.Check
+  void check() {
+    Preconditions.checkState(getType() == Type.DIRECTORY || getChildren().isEmpty());
+  }
+
+  public static HashCodeAndFileType ofDirectory(HashCode hashCode, ImmutableSet<Path> children) {
+    return HashCodeAndFileType.builder()
+        .setType(Type.DIRECTORY)
+        .setGetHashCode(hashCode)
+        .setChildren(children)
+        .build();
+  }
+
+  public static HashCodeAndFileType ofFile(HashCode hashCode) {
+    return HashCodeAndFileType.builder()
+        .setType(Type.FILE)
+        .setGetHashCode(hashCode)
+        .build();
+  }
+
+  enum Type {
+    FILE,
+    DIRECTORY
   };
 
-  @Value.Parameter
-  HashCode getHashCode();
-
-  @Value.Parameter
-  Type getType();
 }

@@ -61,13 +61,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
-      return HashCodeAndFileType.of(
-          getDirHashCode(path),
-          HashCodeAndFileType.Type.DIRECTORY);
+      return getDirHashCode(path);
     } else {
-      return HashCodeAndFileType.of(
-          getFileHashCode(path),
-          HashCodeAndFileType.Type.FILE);
+      return HashCodeAndFileType.ofFile(getFileHashCode(path));
     }
   }
 
@@ -86,10 +82,11 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return source.hash(Hashing.sha1());
   }
 
-  private HashCode getDirHashCode(Path path) throws IOException {
+  private HashCodeAndFileType getDirHashCode(Path path) throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher, this, projectFilesystem, ImmutableSet.of(path));
-    return hasher.hash();
+    ImmutableSet<Path> children =
+        PathHashing.hashPath(hasher, this, projectFilesystem, path);
+    return HashCodeAndFileType.ofDirectory(hasher.hash(), children);
   }
 
   @Override
@@ -105,7 +102,13 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   @Override
   public void invalidate(Path path) {
-    loadingCache.invalidate(path);
+    HashCodeAndFileType cached = loadingCache.getIfPresent(path);
+    if (cached != null) {
+      for (Path child : cached.getChildren()) {
+        loadingCache.invalidate(path.resolve(child));
+      }
+      loadingCache.invalidate(path);
+    }
   }
 
   @Override

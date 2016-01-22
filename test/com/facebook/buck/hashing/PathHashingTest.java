@@ -27,7 +27,7 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -65,7 +65,7 @@ public class PathHashingTest {
         hasher,
         new NullFileHashCache(),
         emptyFilesystem,
-        ImmutableSet.<Path>of());
+        ImmutableSortedSet.<Path>of());
     HashCode emptyStringHashCode = Hashing.sha1().newHasher().hash();
     assertThat(
         hasher.hash(),
@@ -82,10 +82,18 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/bar.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, fileHashCache, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher1,
+        fileHashCache,
+        filesystem1,
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, fileHashCache, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher2,
+        fileHashCache,
+        filesystem2,
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
@@ -102,10 +110,18 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/baz.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, fileHashCache, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher1,
+        fileHashCache,
+        filesystem1,
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, fileHashCache, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher2,
+        fileHashCache,
+        filesystem2,
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
@@ -126,14 +142,14 @@ public class PathHashingTest {
         hasher1,
         fileHashCache,
         filesystem1,
-        ImmutableSet.of(Paths.get("foo")));
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
     PathHashing.hashPaths(
         hasher2,
         modifiedFileHashCache,
         filesystem2,
-        ImmutableSet.of(Paths.get("foo")));
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
@@ -154,10 +170,18 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/foo.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, fileHashCache, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher1,
+        fileHashCache,
+        filesystem1,
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, fileHashCache, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher2,
+        fileHashCache,
+        filesystem2,
+        ImmutableSortedSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
