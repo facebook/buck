@@ -40,8 +40,10 @@ import java.util.regex.Pattern;
  */
 public class CodeSignIdentityStore implements RuleKeyAppendable {
   private static final Logger LOG = Logger.get(CodeSignIdentityStore.class);
+
+  // Parse the fingerprint and name, but don't match invalid certificates (revoked, expired, etc).
   private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
-      Pattern.compile("([A-F0-9]{40}) \"(iPhone.*)\"");
+      Pattern.compile("([A-F0-9]{40}) \"(iPhone.*)\"(?!.*\\(CSSMERR_.*\\))");
 
   private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
 
