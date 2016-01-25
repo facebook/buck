@@ -24,8 +24,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.util.concurrent.Callable;
 
-public final class InputStreamConsumer implements Runnable {
+public final class InputStreamConsumer implements Callable<Void> {
 
   /**
    * Interface to handle a line of input from the stream.
@@ -53,17 +54,14 @@ public final class InputStreamConsumer implements Runnable {
   }
 
   @Override
-  public void run() {
+  public Void call() throws IOException {
     String line;
-    try {
-      while ((line = inputReader.readLine()) != null) {
-        for (Handler handler : handlers) {
-          handler.handleLine(line);
-        }
+    while ((line = inputReader.readLine()) != null) {
+      for (Handler handler : handlers) {
+        handler.handleLine(line);
       }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
+    return null;
   }
 
   public static Handler createAnsiHighlightingHandler(

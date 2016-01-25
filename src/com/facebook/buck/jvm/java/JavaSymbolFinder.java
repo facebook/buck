@@ -104,7 +104,7 @@ public class JavaSymbolFinder {
    *         {"com.example.a.A": set("//com/example/a:a", "//com/another/a:a")}
    */
   public ImmutableSetMultimap<String, BuildTarget> findTargetsForSymbols(Set<String> symbols)
-      throws InterruptedException {
+      throws InterruptedException, IOException {
     // TODO(oconnor663): Handle files that aren't included in any rule.
 
     // First find all the source roots in the current project.
@@ -146,7 +146,7 @@ public class JavaSymbolFinder {
    * the BUCK file parser is expensive. (It spawns a Python subprocess.)
    */
   private ImmutableMultimap<Path, BuildTarget> getTargetsForSourceFiles(
-      Collection<Path> sourceFilePaths) throws InterruptedException {
+      Collection<Path> sourceFilePaths) throws InterruptedException, IOException {
     Map<Path, List<Map<String, Object>>> parsedBuildFiles = Maps.newHashMap();
     ImmutableSetMultimap.Builder<Path, BuildTarget> sourceFileTargetsMultimap =
         ImmutableSetMultimap.builder();

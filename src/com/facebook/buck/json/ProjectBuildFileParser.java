@@ -60,6 +60,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nullable;
 
@@ -102,7 +104,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private boolean enableProfiling;
   @Nullable private NamedTemporaryFile profileOutputFile;
-  @Nullable private Thread stderrConsumer;
+  @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
+  @Nullable private Thread stderrConsumerThread;
   @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
 
   protected ProjectBuildFileParser(
@@ -173,18 +176,20 @@ public class ProjectBuildFileParser implements AutoCloseable {
       OutputStream stdin = buckPyProcess.getOutputStream();
       InputStream stderr = buckPyProcess.getErrorStream();
 
-      stderrConsumer = Threads.namedThread(
+      InputStreamConsumer stderrConsumer = new InputStreamConsumer(
+          stderr,
+          new InputStreamConsumer.Handler() {
+            @Override
+            public void handleLine(String line) {
+              buckEventBus.post(
+                  ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
+            }
+          });
+      stderrConsumerTerminationFuture = new FutureTask<>(stderrConsumer);
+      stderrConsumerThread = Threads.namedThread(
           ProjectBuildFileParser.class.getSimpleName(),
-          new InputStreamConsumer(
-              stderr,
-              new InputStreamConsumer.Handler() {
-                @Override
-                public void handleLine(String line) {
-                  buckEventBus.post(
-                      ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
-                }
-              }));
-      stderrConsumer.start();
+          stderrConsumerTerminationFuture);
+      stderrConsumerThread.start();
 
       buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
     }
@@ -388,7 +393,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   @Override
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void close() throws BuildFileParseException, InterruptedException {
+  public void close() throws BuildFileParseException, InterruptedException, IOException {
     if (isClosed) {
       return;
     }
@@ -408,9 +413,20 @@ public class ProjectBuildFileParser implements AutoCloseable {
           // to write.
         }
 
-        if (stderrConsumer != null) {
-          stderrConsumer.join();
-          stderrConsumer = null;
+        if (stderrConsumerThread != null) {
+          stderrConsumerThread.join();
+          stderrConsumerThread = null;
+          try {
+            Preconditions.checkNotNull(stderrConsumerTerminationFuture).get();
+          } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException) {
+              throw (IOException) cause;
+            } else {
+              throw new RuntimeException(e);
+            }
+          }
+          stderrConsumerTerminationFuture = null;
         }
 
         if (enableProfiling && profileOutputFile != null) {

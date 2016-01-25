@@ -33,6 +33,8 @@ import java.io.OutputStreamWriter;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 /**
  * Executes a {@link Process} and blocks until it is finished.
@@ -307,16 +309,22 @@ public class ProcessExecutor {
             ansi));
 
     // Consume the streams so they do not deadlock.
-    Thread stdOutConsumer = Threads.namedThread("ProcessExecutor (stdOut)", stdOut);
+    FutureTask<Void> stdOutTerminationFuture = new FutureTask<>(stdOut);
+    Thread stdOutConsumer = Threads.namedThread(
+        "ProcessExecutor (stdOut)",
+        stdOutTerminationFuture);
     stdOutConsumer.start();
-    Thread stdErrConsumer = Threads.namedThread("ProcessExecutor (stdErr)", stdErr);
+
+    FutureTask<Void> stdErrTerminationFuture = new FutureTask<>(stdErr);
+    Thread stdErrConsumer = Threads.namedThread(
+        "ProcessExecutor (stdErr)",
+        stdErrTerminationFuture);
     stdErrConsumer.start();
 
     boolean timedOut = false;
 
     // Block until the Process completes.
     try {
-
       // If a stdin string was specific, then write that first.  This shouldn't cause
       // deadlocks, as the stdout/stderr consumers are running in separate threads.
       if (stdin.isPresent()) {
@@ -338,10 +346,9 @@ public class ProcessExecutor {
         process.waitFor();
       }
 
-      stdOutConsumer.join();
-      stdErrConsumer.join();
-
-    } catch (IOException e) {
+      stdOutTerminationFuture.get();
+      stdErrTerminationFuture.get();
+    } catch (ExecutionException | IOException e) {
       // Buck was killed while waiting for the consumers to finish or while writing stdin
       // to the process. This means either the user killed the process or a step failed
       // causing us to kill all other running steps. Neither of these is an exceptional

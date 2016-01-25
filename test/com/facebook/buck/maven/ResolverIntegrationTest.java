@@ -128,7 +128,8 @@ public class ResolverIntegrationTest {
   }
 
   @AfterClass
-  public static void closeParser() throws BuildFileParseException, InterruptedException {
+  public static void closeParser()
+      throws BuildFileParseException, InterruptedException, IOException {
     buildFileParser.close();
   }
 
