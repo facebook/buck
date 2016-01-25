@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -51,6 +52,7 @@ public class IjProject {
   private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final IjModuleGraph.AggregationMode aggregationMode;
+  private final BuckConfig buckConfig;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -59,7 +61,8 @@ public class IjProject {
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem projectFilesystem,
-      IjModuleGraph.AggregationMode aggregationMode) {
+      IjModuleGraph.AggregationMode aggregationMode,
+      BuckConfig buckConfig) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
@@ -67,6 +70,7 @@ public class IjProject {
     this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
     this.aggregationMode = aggregationMode;
+    this.buckConfig = buckConfig;
   }
 
   /**
@@ -177,8 +181,7 @@ public class IjProject {
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
         projectFilesystem);
-    writer.write();
+    writer.write(buckConfig);
     return requiredBuildTargets.build();
   }
-
 }

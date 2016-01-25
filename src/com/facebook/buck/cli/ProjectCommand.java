@@ -544,7 +544,8 @@ public class ProjectCommand extends BuildCommand {
         ruleResolver,
         sourcePathResolver,
         params.getCell().getFilesystem(),
-        getIntellijAggregationMode(params.getBuckConfig()));
+        getIntellijAggregationMode(params.getBuckConfig()),
+        params.getBuckConfig());
 
     ImmutableSet<BuildTarget> requiredBuildTargets = project.write();
 

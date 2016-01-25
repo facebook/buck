@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
+
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -705,6 +707,13 @@ public class BuckConfig {
    */
   public long getBuildMaxDepFileCacheEntries() {
     return getLong("build", "max_depfile_cache_entries").or(256L);
+  }
+
+  /**
+   * @return the local cache directory
+   */
+  public String getLocalCacheDirectory() {
+    return getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
   }
 
   /**

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.artifact_cache;
 
-import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
-
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
@@ -191,7 +189,7 @@ public class ArtifactCacheBuckConfig {
   }
 
   private Path getCacheDir() {
-    String cacheDir = buckConfig.getValue(CACHE_SECTION_NAME, "dir").or(DEFAULT_CACHE_DIR);
+    String cacheDir = buckConfig.getLocalCacheDirectory();
     Path pathToCacheDir = buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(
         Paths.get(
             cacheDir));

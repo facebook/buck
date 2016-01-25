@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hashing;
@@ -68,17 +69,24 @@ public class IjProjectWriter {
     this.projectFilesystem = projectFilesystem;
   }
 
-  public void write() throws IOException {
+  public void write(BuckConfig buckConfig) throws IOException {
+    IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
+
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      writeModule(module);
+      Path generatedModuleFile = writeModule(module);
+      cleaner.doNotDelete(generatedModuleFile);
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
-      writeLibrary(library);
+      Path generatedLibraryFile = writeLibrary(library);
+      cleaner.doNotDelete(generatedLibraryFile);
     }
-    writeModulesIndex();
+    Path indexFile = writeModulesIndex();
+    cleaner.doNotDelete(indexFile);
+
+    cleaner.clean(buckConfig, LIBRARIES_PREFIX);
   }
 
-  private void writeModule(IjModule module) throws IOException {
+  private Path writeModule(IjModule module) throws IOException {
     projectFilesystem.mkdirs(MODULES_PREFIX);
     Path path = module.getModuleImlFilePath();
 
@@ -89,9 +97,10 @@ public class IjProjectWriter {
     moduleContents.add("androidFacet", projectDataPreparer.getAndroidProperties(module));
 
     writeToFile(moduleContents, path);
+    return path;
   }
 
-  private void writeLibrary(IjLibrary library) throws IOException {
+  private Path writeLibrary(IjLibrary library) throws IOException {
     projectFilesystem.mkdirs(LIBRARIES_PREFIX);
     Path path = LIBRARIES_PREFIX.resolve(library.getName() + ".xml");
 
@@ -104,9 +113,10 @@ public class IjProjectWriter {
     //TODO(marcinkosiba): support res and assets for aar.
 
     writeToFile(contents, path);
+    return path;
   }
 
-  private void writeModulesIndex() throws IOException {
+  private Path writeModulesIndex() throws IOException {
     projectFilesystem.mkdirs(IDEA_CONFIG_DIR_PREFIX);
     Path path = IDEA_CONFIG_DIR_PREFIX.resolve("modules.xml");
 
@@ -114,6 +124,7 @@ public class IjProjectWriter {
     moduleIndexContents.add("modules", projectDataPreparer.getModuleIndexEntries());
 
     writeToFile(moduleIndexContents, path);
+    return path;
   }
 
   private static ST getST(StringTemplateFile file) throws IOException {
