@@ -52,20 +52,23 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -237,6 +240,31 @@ public class CxxPythonExtensionDescription implements
     };
   }
 
+  private Iterable<NativeLinkable> getExtensionDeps(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      PythonPlatform pythonPlatform,
+      Arg args) {
+    List<BuildRule> rules = new ArrayList<>();
+
+    // Add declared deps.
+    rules.addAll(params.getDeclaredDeps().get());
+
+    // Add platform specific deps.
+    rules.addAll(
+        ruleResolver.getAllRules(
+            Iterables.concat(
+                args.platformDeps
+                    .or(PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>of())
+                    .getMatchingValues(pythonPlatform.getFlavor().toString()))));
+
+    // Add a dep on the python C/C++ library.
+    rules.add(ruleResolver.getRule(pythonPlatform.getCxxLibrary().get().getBuildTarget()));
+
+    return Iterables.filter(rules, NativeLinkable.class);
+  }
+
+
   private <A extends Arg> BuildRule createExtensionBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -263,8 +291,7 @@ public class CxxPythonExtensionDescription implements
         extensionPath,
         getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args),
         Linker.LinkableDepType.SHARED,
-        FluentIterable.from(params.getDeps())
-            .filter(NativeLinkable.class),
+        getExtensionDeps(params, ruleResolver, pythonPlatform, args),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
@@ -357,12 +384,7 @@ public class CxxPythonExtensionDescription implements
           @Override
           public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
               CxxPlatform cxxPlatform) {
-            return FluentIterable.from(params.getDeclaredDeps().get())
-                .filter(NativeLinkable.class)
-                .append(
-                    ruleResolver.getRuleOptionalWithType(
-                        pythonPlatform.getCxxLibrary().get().getBuildTarget(),
-                        NativeLinkable.class).get());
+            return getExtensionDeps(params, ruleResolver, pythonPlatform, args);
           }
 
           @Override
@@ -421,6 +443,7 @@ public class CxxPythonExtensionDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
+    public Optional<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>> platformDeps;
     public Optional<String> baseModule;
   }
 

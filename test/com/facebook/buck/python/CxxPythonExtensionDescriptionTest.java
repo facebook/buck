@@ -46,6 +46,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -61,6 +62,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class CxxPythonExtensionDescriptionTest {
 
@@ -475,6 +477,48 @@ public class CxxPythonExtensionDescriptionTest {
     assertThat(
         Arg.stringify(input.getArgs()),
         Matchers.hasItems("--flag"));
+  }
+
+  @Test
+  public void platformDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
+    new CxxLibraryBuilder(PYTHON3_DEP_TARGET).build(resolver);
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            new FlavorDomain<>(
+                "Python Platform",
+                ImmutableMap.of(
+                    PY2.getFlavor(), PY2,
+                    PY3.getFlavor(), PY3)),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms());
+    CxxPythonExtension rule =
+        (CxxPythonExtension) builder
+            .setPlatformDeps(
+                PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                    .add(
+                        Pattern.compile(PY2.getFlavor().toString()),
+                        ImmutableSortedSet.of(dep.getBuildTarget()))
+                    .build())
+            .build(resolver);
+    SharedNativeLinkTarget py2SharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    assertThat(
+        ImmutableList.copyOf(
+            py2SharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+                CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.<NativeLinkable>hasItem(dep));
+    SharedNativeLinkTarget py3SharedNativeLinkTarget = rule.getNativeLinkTarget(PY3);
+    assertThat(
+        ImmutableList.copyOf(
+            py3SharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+                CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.not(Matchers.<NativeLinkable>hasItem(dep)));
   }
 
 }
