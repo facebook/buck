@@ -22,8 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -77,28 +75,11 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
           @Override
           public void visit(TargetNode<?> node) {
-            BuildRule rule;
             try {
-              rule = buildRuleGenerator.transform(
-                  targetGraph,
-                  resolver,
-                  node);
+              resolver.requireRule(node.getBuildTarget());
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }
-
-            // Check whether a rule with this build target already exists. This is possible
-            // if we create a new build rule during graph enhancement, and the user asks to
-            // build the same build rule. The returned rule may have a different name from the
-            // target node.
-            Optional<BuildRule> existingRule =
-                resolver.getRuleOptional(rule.getBuildTarget());
-            Preconditions.checkState(
-                !existingRule.isPresent() || existingRule.get().equals(rule));
-            if (!existingRule.isPresent()) {
-              resolver.addToIndex(rule);
-            }
-
             eventBus.post(ActionGraphEvent.processed(
                     processedNodes.incrementAndGet(),
                     numberOfNodes));
