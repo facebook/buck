@@ -1,6 +1,24 @@
+MATCHERS_SRCS = [
+  'PathDoesNotExistOnProjectFilesystem.java',
+  'PathExistsOnProjectFilesystem.java',
+  'ProjectFilesystemMatchers.java',
+]
+
+java_library(
+  name = 'matchers',
+  srcs = MATCHERS_SRCS,
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//third-party/java/hamcrest:hamcrest',
+  ],
+  visibility = [
+    '//test/...',
+  ]
+)
+
 java_test(
   name = 'file',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = MATCHERS_SRCS),
   deps = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
