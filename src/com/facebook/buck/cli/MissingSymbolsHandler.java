@@ -198,7 +198,7 @@ public class MissingSymbolsHandler {
     try {
       neededDependencies = getNeededDependencies(missingSymbolEvents);
     } catch (IOException e) {
-      LOG.warn("Could not find missing deps", e);
+      LOG.warn(e, "Could not find missing deps");
       print("Could not find missing deps because of an IOException: " + e.getMessage());
       return;
     }
