@@ -20,7 +20,6 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.VersionStringComparator;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -28,7 +27,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -36,11 +34,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
@@ -48,7 +42,8 @@ import java.util.StringTokenizer;
  */
 public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver {
 
-  public static final String ANDROID_VERSION_PREFIX = "android-";
+  public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
+      ImmutableSet.of("android-", "build-tools-");
 
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> targetBuildToolsVersion;
@@ -153,33 +148,78 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return androidSdkDir;
   }
 
+  private static String stripBuildToolsPrefix(String name) {
+    for (String prefix: BUILD_TOOL_PREFIXES) {
+      if (name.startsWith(prefix)) {
+        return name.substring(prefix.length());
+      }
+    }
+    return name;
+  }
+
   private Path getBuildToolsPathFromSdkDir() {
-    Path androidSdkDir = findAndroidSdkDir();
-    Path buildToolsDir = androidSdkDir.resolve("build-tools");
+    final Path androidSdkDir = findAndroidSdkDir();
+    final Path buildToolsDir = androidSdkDir.resolve("build-tools");
 
     if (buildToolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
       // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
       // the ADT that are downloaded directly from http://developer.android.com/ appear to have
-      // subfolders of the form android-4.2.2. We need to support both of these scenarios.
+      // subfolders of the form android-4.2.2. There also appear to be cases where subfolders
+      // are named build-tools-18.0.0. We need to support all of these scenarios.
+
       File[] directories = buildToolsDir.toFile().listFiles(new FileFilter() {
         @Override
         public boolean accept(File pathname) {
-          return pathname.isDirectory();
+          if (!pathname.isDirectory()) {
+            return false;
+          }
+          String version = stripBuildToolsPrefix(pathname.getName());
+          if (!VersionStringComparator.isValidVersionString(version)) {
+            throw new HumanReadableException(
+                "%s in %s is not a valid build tools directory.%n" +
+                    "Build tools directories should be follow the naming scheme: " +
+                    "android-<VERSION>, build-tools-<VERSION>, or <VERSION>. Please remove " +
+                    "directory %s.",
+                pathname.getName(),
+                buildToolsDir,
+                pathname.getName());
+          }
+          if (targetBuildToolsVersion.isPresent()) {
+            return targetBuildToolsVersion.get().equals(pathname.getName());
+          }
+          return true;
         }
       });
 
-      if (directories.length == 0) {
-        throw new HumanReadableException(
-            Joiner.on(System.getProperty("line.separator")).join(
-                "%s was empty, but should have contained a subdirectory with build tools.",
-                "Install them using the Android SDK Manager (%s)."),
-            buildToolsDir,
-            androidSdkDir.resolve("tools").resolve("android"));
-      } else {
-        return pickCorrectBuildToolsDir(ImmutableSet.copyOf(directories));
+      if (targetBuildToolsVersion.isPresent()) {
+        if (directories.length == 0) {
+          throw unableToFindTargetBuildTools();
+        } else {
+          return directories[0].toPath();
+        }
       }
 
+      // We aren't looking for a specific version, so we pick the newest version
+      final VersionStringComparator comparator = new VersionStringComparator();
+      File newestBuildDir = null;
+      String newestBuildDirVersion = null;
+      for (File directory : directories) {
+        String currentDirVersion = stripBuildToolsPrefix(directory.getName());
+         if (newestBuildDir == null || newestBuildDirVersion == null ||
+            comparator.compare(newestBuildDirVersion, currentDirVersion) < 0) {
+          newestBuildDir = directory;
+          newestBuildDirVersion = currentDirVersion;
+        }
+      }
+      if (newestBuildDir == null) {
+        throw new HumanReadableException(
+                "%s was empty, but should have contained a subdirectory with build tools.%n" +
+                    "Install them using the Android SDK Manager (%s).",
+            buildToolsDir,
+            buildToolsDir.getParent().resolve("tools").resolve("android"));
+      }
+      return newestBuildDir.toPath();
     }
     if (targetBuildToolsVersion.isPresent()) {
       // We were looking for a specific version, but we aren't going to find it at this point since
@@ -272,59 +312,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       }
     }
     return path;
-  }
-
-  /**
-   * If {@link #targetBuildToolsVersion} is present, returns that directory or throws a
-   * {@link HumanReadableException}.  Otherwise, find the newest build-tools version.
-   */
-  private Path pickCorrectBuildToolsDir(Set<File> directories) {
-    List<File> apiVersionDirectories = Lists.newArrayList();
-    List<File> androidVersionDirectories = Lists.newArrayList();
-    for (File dir : directories) {
-      if (dir.getName().startsWith(ANDROID_VERSION_PREFIX)) {
-        androidVersionDirectories.add(dir);
-      } else {
-        apiVersionDirectories.add(dir);
-      }
-    }
-
-    final VersionStringComparator comparator = new VersionStringComparator();
-
-    // API version directories are downloaded by the package manager, whereas Android version
-    // directories are bundled with the SDK when it's unpacked. So API version directories will
-    // presumably be newer.
-    if (!apiVersionDirectories.isEmpty()) {
-      if (targetBuildToolsVersion.isPresent()) {
-        for (File dir : apiVersionDirectories) {
-          if (dir.getName().equals(targetBuildToolsVersion.get())) {
-            return dir.toPath();
-          }
-        }
-        throw unableToFindTargetBuildTools();
-      }
-      Collections.sort(apiVersionDirectories, new Comparator<File>() {
-            @Override
-            public int compare(File a, File b) {
-              String versionA = a.getName();
-              String versionB = b.getName();
-              return comparator.compare(versionA, versionB);
-        }
-      });
-      // Return the last element in the list.
-      return apiVersionDirectories.get(apiVersionDirectories.size() - 1).toPath();
-    } else {
-      Collections.sort(androidVersionDirectories, new Comparator<File>() {
-            @Override
-            public int compare(File a, File b) {
-              String versionA = a.getName().substring(ANDROID_VERSION_PREFIX.length());
-              String versionB = b.getName().substring(ANDROID_VERSION_PREFIX.length());
-              return comparator.compare(versionA, versionB);
-        }
-      });
-      // Return the last element in the list.
-      return androidVersionDirectories.get(androidVersionDirectories.size() - 1).toPath();
-    }
   }
 
   private HumanReadableException unableToFindTargetBuildTools() {
