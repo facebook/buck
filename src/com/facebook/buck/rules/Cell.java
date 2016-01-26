@@ -299,6 +299,7 @@ public class Cell {
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
+            .setRawConfig(getBuckConfig().getRawConfigForParser())
             .build());
   }
 

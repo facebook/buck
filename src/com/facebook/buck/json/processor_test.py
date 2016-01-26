@@ -16,6 +16,13 @@ def foo_rule(name, srcs=[], visibility=[], build_env=None):
     }, build_env)
 
 
+def get_config_from_results(results):
+    for result in results:
+        if result.keys() == ['__configs']:
+            return result['__configs']
+    raise ValueError(str(results))
+
+
 class ProjectFile(object):
 
     def __init__(self, path, contents):
@@ -337,3 +344,23 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             set([DiagnosticMessageAndLevel('Watchman warning: This is a warning', 'warning')]),
             diagnostics)
+
+    def test_read_config(self):
+        """
+        Verify that the builtin `read_config()` function works.
+        """
+
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'assert read_config("hello", "world") == "foo"',
+                'assert read_config("hello", "bar") is None',
+                'assert read_config("hello", "goo", "default") == "default"',
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(
+            configs={('hello', 'world'): 'foo'})
+        result = build_file_processor.process(build_file.path, set())
+        self.assertEquals(
+            get_config_from_results(result),
+            {'hello': {'world': 'foo', 'bar': None, 'goo': None}})

@@ -322,6 +322,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {foreach $function in [
         'glob',
         'include_defs',
+        'read_config',
         'subdir_glob',
         ]}
       <li><a href="{ROOT}function/{$function}.html">{$function}()</a>
@@ -692,6 +693,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .fn_include_defs}
 <a href="{ROOT}function/include_defs.html"><code>include_defs()</code></a>
+{/template}
+
+/***/
+{template .fn_read_config}
+<a href="{ROOT}function/read_config.html"><code>read_config()</code></a>
 {/template}
 
 /***/

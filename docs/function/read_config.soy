@@ -1,0 +1,72 @@
+{namespace buck.read_config}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'read_config()' /}
+    {param prettify: true /}
+    {param description}
+      The read_config() function is used to read <code>.buckconfig</code> settings.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+The <code>read_config()</code> function is used to read <code>.buckconfig</code>
+settings from within a build file.
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param name : 'section' /}
+  {param desc}
+  The first argument is the name of the <code>.buckconfig</code> section with the
+  desired value.
+  {/param}
+{/call}
+
+{call buck.functionArg}
+  {param name : 'field' /}
+  {param desc}
+  The second argument is the name of the <code>.buckconfig</code> field with the
+  desired value.
+  {/param}
+{/call}
+
+{call buck.functionArg}
+  {param name : 'default' /}
+  {param default : 'None' /}
+  {param desc}
+  The third argument is a value to return if the desired value is not set in
+  the <code>.buckconfig</code>.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+Use <code>read_config()</code> to define a custom config setting to
+enable address sanitizer:
+
+{literal}<pre class="prettyprint lang-py">
+cflags = []
+
+sanitizer = read_config('cxx', 'sanitizer')
+if sanitizer == 'address':
+    cflags.append('-fsanitize=address')
+
+cxx_binary(
+  name = 'example',
+  # ...
+  compiler_flags = cflags,
+)
+</pre>{/literal}
+
+{/param}
+
+{/call} // buck.rule
+    {/param} // content
+  {/call}
+{/template}

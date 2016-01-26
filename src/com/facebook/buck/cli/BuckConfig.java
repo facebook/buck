@@ -47,12 +47,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -806,6 +808,46 @@ public class BuckConfig {
 
   public ImmutableSet<String> getSections() {
     return config.getSectionToEntries().keySet();
+  }
+
+  public ImmutableMap<String, ImmutableMap<String, String>> getRawConfigForParser() {
+    ImmutableMap<String, ImmutableMap<String, String>> rawSections =
+        config.getSectionToEntries();
+
+    // If the raw config doesn't have sections which have ignored fields, then just return it as-is.
+    ImmutableSet<String> sectionsWithIgnoredFields = IGNORE_FIELDS_FOR_DAEMON_RESTART.keySet();
+    if (Sets.intersection(rawSections.keySet(), sectionsWithIgnoredFields).isEmpty()) {
+      return rawSections;
+    }
+
+    // Otherwise, iterate through the config to do finer-grain filtering.
+    ImmutableMap.Builder<String, ImmutableMap<String, String>> filtered = ImmutableMap.builder();
+    for (Map.Entry<String, ImmutableMap<String, String>> sectionEnt : rawSections.entrySet()) {
+      String sectionName = sectionEnt.getKey();
+
+      // If this section doesn't have a corresponding ignored section, then just add it as-is.
+      if (!sectionsWithIgnoredFields.contains(sectionName)) {
+        filtered.put(sectionEnt);
+        continue;
+      }
+
+      // If none of this section's entries are ignored, then add it as-is.
+      ImmutableMap<String, String> fields = sectionEnt.getValue();
+      ImmutableSet<String> ignoredFieldNames =
+          IGNORE_FIELDS_FOR_DAEMON_RESTART.get(sectionEnt.getKey());
+      if (Sets.intersection(fields.keySet(), ignoredFieldNames).isEmpty()) {
+        filtered.put(sectionEnt);
+        continue;
+      }
+
+      // Otherwise, filter out the ignored fields.
+      filtered.put(
+          sectionName,
+          ImmutableMap.copyOf(
+              Maps.filterKeys(fields, Predicates.not(Predicates.in(ignoredFieldNames)))));
+    }
+
+    return filtered.build();
   }
 
   public Optional<ImmutableList<String>> getExternalTestRunner() {

@@ -67,6 +67,7 @@ class BuildFileContext(object):
                  watchman_error):
         self.globals = {}
         self.includes = set()
+        self.used_configs = {}
         self.base_path = base_path
         self.dirname = dirname
         self.allow_empty_globs = allow_empty_globs
@@ -89,6 +90,7 @@ class IncludeContext(object):
     def __init__(self):
         self.globals = {}
         self.includes = set()
+        self.used_configs = {}
         self.diagnostics = set()
 
 
@@ -408,7 +410,7 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, watchman_client, watchman_error, implicit_includes=[],
-                 extra_funcs=[]):
+                 extra_funcs=[], configs={}):
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
@@ -421,6 +423,7 @@ class BuildFileProcessor(object):
         self._allow_empty_globs = allow_empty_globs
         self._watchman_client = watchman_client
         self._watchman_error = watchman_error
+        self._configs = configs
 
         lazy_functions = {}
         for func in BUILD_FUNCTIONS + extra_funcs:
@@ -474,6 +477,27 @@ class BuildFileProcessor(object):
         relative_path = name[2:]
         return os.path.join(self._project_root, relative_path)
 
+    def _read_config(self, section, field, default=None):
+        """
+        Lookup a setting from `.buckconfig`.
+
+        This method is meant to be installed into the globals of any files or
+        includes that we process.
+        """
+
+        # Grab the current build context from the top of the stack.
+        build_env = self._build_env_stack[-1]
+
+        # Lookup the value and record it in this build file's context.
+        value = self._configs.get((section, field))
+        build_env.used_configs[(section, field)] = value
+
+        # If no config setting was found, return the default.
+        if value is None:
+            return default
+
+        return value
+
     def _include_defs(self, name, implicit_includes=[]):
         """
         Pull the named include into the current caller's context.
@@ -506,6 +530,9 @@ class BuildFileProcessor(object):
 
         # Pull in any diagnostics issued by the include.
         build_env.diagnostics.update(inner_env.diagnostics)
+
+        # Pull in any config settings used by the include.
+        build_env.used_configs.update(inner_env.used_configs)
 
     def _push_build_env(self, build_env):
         """
@@ -544,6 +571,9 @@ class BuildFileProcessor(object):
         default_globals['include_defs'] = functools.partial(
             self._include_defs,
             implicit_includes=implicit_includes)
+
+        # Install the 'read_config' function into our global object.
+        default_globals['read_config'] = self._read_config
 
         # If any implicit includes were specified, process them first.
         for include in implicit_includes:
@@ -621,9 +651,22 @@ class BuildFileProcessor(object):
         build_env, mod = self._process_build_file(
             os.path.join(self._project_root, path),
             implicit_includes=self._implicit_includes)
+
+        # Initialize the output object to a map of the parsed rules.
         values = build_env.rules.values()
+
+        # Add in tracked included files as a special meta rule.
         values.append({"__includes": [path] + sorted(build_env.includes)})
+
+        # Add in tracked used config settings as a special meta rule.
+        configs = {}
+        for (section, field), value in build_env.used_configs.iteritems():
+            configs.setdefault(section, {})
+            configs[section][field] = value
+        values.append({"__configs": configs})
+
         diagnostics.update(build_env.diagnostics)
+
         return values
 
 
@@ -764,6 +807,9 @@ def main():
         action='append',
         dest='include')
     parser.add_option(
+        '--config',
+        help='BuckConfig settings available at parse time.')
+    parser.add_option(
         '--quiet',
         action='store_true',
         dest='quiet',
@@ -795,6 +841,13 @@ def main():
         watchman_client = pywatchman.client(**client_args)
         watchman_error = pywatchman.WatchmanError
 
+    configs = {}
+    if options.config is not None:
+        with open(options.config) as f:
+            for section, contents in bser.loads(f.read()).iteritems():
+                for field, value in contents.iteritems():
+                    configs[(section, field)] = value
+
     buildFileProcessor = BuildFileProcessor(
         project_root,
         options.watchman_watch_root,
@@ -803,7 +856,8 @@ def main():
         options.allow_empty_globs,
         watchman_client,
         watchman_error,
-        implicit_includes=options.include or [])
+        implicit_includes=options.include or [],
+        configs=configs)
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
 

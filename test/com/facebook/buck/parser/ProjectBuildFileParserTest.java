@@ -364,6 +364,7 @@ public class ProjectBuildFileParserTest {
                 .build(),
             new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
             ImmutableMap.<String, String>of(),
+            ImmutableMap.<String, ImmutableMap<String, String>>of(),
             buckEventBus,
             processExecutor);
       }
