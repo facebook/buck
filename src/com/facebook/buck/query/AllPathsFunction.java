@@ -36,10 +36,10 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.facebook.buck.util.MoreSets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A allpaths(from, to) expression, which computes all paths between the
@@ -75,7 +75,7 @@ public class AllPathsFunction implements QueryFunction {
   public <T> Set<T> eval(
       QueryEnvironment<T> env,
       ImmutableList<Argument> args,
-      Executor executor) throws QueryException, InterruptedException {
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 

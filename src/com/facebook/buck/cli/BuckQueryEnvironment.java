@@ -34,6 +34,7 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -42,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,9 +53,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
@@ -97,7 +96,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public Set<QueryTarget> evaluateQuery(QueryExpression expr, Executor executor)
+  public Set<QueryTarget> evaluateQuery(QueryExpression expr, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
@@ -111,14 +110,15 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return expr.eval(this, executor);
   }
 
-  public Set<QueryTarget> evaluateQuery(String query, Executor executor)
+  public Set<QueryTarget> evaluateQuery(String query, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     return evaluateQuery(QueryExpression.parse(query, this), executor);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern, Executor executor)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
+      String pattern,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     try {
       return targetPatternEvaluator.resolveTargetPattern(pattern, executor);
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
@@ -129,9 +129,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   TargetNode<?> getNode(QueryTarget target)
       throws QueryException, InterruptedException {
     Preconditions.checkState(target instanceof QueryBuildTarget);
-    ExecutorService executor = null;
+    ListeningExecutorService executor = null;
     try {
-      executor = Executors.newSingleThreadExecutor();
+      executor = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
+          MoreExecutors.newSingleThreadExecutor("buck query.getNode"));
       return params.getParser().getTargetNode(
           params.getBuckEventBus(),
           params.getCell(),
@@ -219,7 +220,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
 
   private void buildGraphForBuildTargets(
       Set<BuildTarget> targets,
-      Executor executor) throws QueryException, InterruptedException {
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     try {
       graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
@@ -233,8 +234,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth, Executor executor)
-      throws QueryException, InterruptedException {
+  public void buildTransitiveClosure(
+      Set<QueryTarget> targets,
+      int maxDepth,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     Set<BuildTarget> graphTargets = getTargetsFromNodes(graph.getNodes());
     Set<BuildTarget> newBuildTargets = new HashSet<>();

@@ -19,10 +19,10 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 /**
@@ -42,7 +42,10 @@ abstract class RegexFilterFunction implements QueryFunction {
       throws QueryException, InterruptedException;
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     Pattern compiledPattern;
     try {

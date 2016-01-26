@@ -69,7 +69,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
@@ -344,7 +343,7 @@ public class BuildCommand extends AbstractCommand {
   @Nullable
   public Pair<ActionGraph, BuildRuleResolver> createActionGraphAndResolver(
       CommandRunnerParams params,
-      Executor executor)
+      ListeningExecutorService executor)
       throws IOException, InterruptedException {
     if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");

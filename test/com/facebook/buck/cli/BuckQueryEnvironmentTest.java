@@ -42,6 +42,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +52,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BuckQueryEnvironmentTest {
@@ -60,7 +61,7 @@ public class BuckQueryEnvironmentTest {
 
   private BuckQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
-  private ExecutorService executor;
+  private ListeningExecutorService executor;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
     return QueryBuildTarget.of(BuildTarget.builder(cellRoot, baseName, shortName).build());
@@ -93,7 +94,7 @@ public class BuckQueryEnvironmentTest {
 
     buckQueryEnvironment = new BuckQueryEnvironment(params, /* enableProfiling */ false);
     cellRoot = workspace.getDestPath();
-    executor = Executors.newSingleThreadExecutor();
+    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
   @After

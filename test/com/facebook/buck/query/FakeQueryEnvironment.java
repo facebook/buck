@@ -19,10 +19,10 @@ package com.facebook.buck.query;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /** Utility class used to test the QueryParser */
 public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
@@ -36,7 +36,9 @@ public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public Set<QueryTarget> getTargetsMatchingPattern(String pattern, Executor executor)
+  public Set<QueryTarget> getTargetsMatchingPattern(
+      String pattern,
+      ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }
@@ -60,7 +62,10 @@ public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth, Executor executor)
+  public void buildTransitiveClosure(
+      Set<QueryTarget> targetNodes,
+      int maxDepth,
+      ListeningExecutorService executor)
       throws InterruptedException, QueryException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }

@@ -78,6 +78,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
@@ -94,7 +95,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
-import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -549,7 +549,7 @@ public class TargetsCommand extends AbstractCommand {
   @VisibleForTesting
   void printJsonForTargets(
       CommandRunnerParams params,
-      Executor executor,
+      ListeningExecutorService executor,
       SortedMap<String, TargetNode<?>> buildIndex,
       ImmutableMap<String, ShowOptions> showRulesResult)
       throws BuildFileParseException, IOException, InterruptedException {
@@ -668,7 +668,7 @@ public class TargetsCommand extends AbstractCommand {
    */
   private ImmutableMap<String, ShowOptions> computeShowRules(
       CommandRunnerParams params,
-      Executor executor)
+      ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     if (getArguments().isEmpty()) {
       throw new HumanReadableException("Must specify at least one build target.");
@@ -756,7 +756,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private void computeShowTargetHash(
       CommandRunnerParams params,
-      Executor executor,
+      ListeningExecutorService executor,
       ImmutableSet<BuildTarget> matchingBuildTargets,
       TargetGraph targetGraph,
       Map<String, ShowOptions.Builder> showRulesResult)

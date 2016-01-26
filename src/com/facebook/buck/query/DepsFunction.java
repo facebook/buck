@@ -36,11 +36,11 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A 'deps(x [, depth])' expression, which finds the dependencies of the given argument set 'x'.
@@ -79,8 +79,10 @@ public class DepsFunction implements QueryFunction {
    * transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
-      throws QueryException, InterruptedException {
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     Set<T> argumentSet = args.get(0).getExpression().eval(env, executor);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     env.buildTransitiveClosure(argumentSet, depthBound, executor);

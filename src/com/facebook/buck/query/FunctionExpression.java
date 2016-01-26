@@ -37,10 +37,10 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A query expression for user-defined query functions.
@@ -55,7 +55,7 @@ public class FunctionExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     return function.<T>eval(env, args, executor);
   }

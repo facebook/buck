@@ -19,10 +19,10 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A "testsof" query expression, which computes the tests of the given targets.
@@ -55,8 +55,10 @@ public class TestsOfFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
-      throws QueryException, InterruptedException {
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     Set<T> targets = args.get(0).getExpression().eval(env, executor);
     Set<T> tests = new LinkedHashSet<>();
     for (T target : targets) {

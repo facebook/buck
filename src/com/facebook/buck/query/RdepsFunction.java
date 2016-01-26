@@ -37,11 +37,11 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A 'rdeps(u, x, [, depth])' expression, which finds the reverse dependencies of the given
@@ -81,8 +81,10 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
-      throws QueryException, InterruptedException {
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     Set<T> universeSet = args.get(0).getExpression().eval(env, executor);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE, executor);
     final Predicate<T> inUniversePredicate = Predicates.in(env.getTransitiveClosure(universeSet));

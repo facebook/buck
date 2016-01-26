@@ -32,11 +32,11 @@ package com.facebook.buck.query;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A set(word, ..., word) expression, which computes the union of zero or more
@@ -66,7 +66,7 @@ class SetExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+  public <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     Set<T> result = new LinkedHashSet<>();
     for (TargetLiteral expr : words) {

@@ -36,10 +36,10 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A labels(label, argument) expression, which returns the targets in the
@@ -71,8 +71,10 @@ public class LabelsFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
-      throws QueryException, InterruptedException {
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
     Set<T> inputs = args.get(1).getExpression().eval(env, executor);
     Set<T> result = new LinkedHashSet<>();

@@ -20,9 +20,9 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A "buildfile" query expression, which computes the build files that define the given targets.
@@ -53,8 +53,10 @@ public class BuildFileFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
-      throws QueryException, InterruptedException {
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor) throws QueryException, InterruptedException {
     Set<T> argumentSet = args.get(0).getExpression().eval(env, executor);
     return Sets.newHashSet(env.getBuildFiles(argumentSet));
   }

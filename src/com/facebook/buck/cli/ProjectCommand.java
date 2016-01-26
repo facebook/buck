@@ -90,6 +90,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Option;
 
@@ -103,7 +104,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -974,7 +974,7 @@ public class ProjectCommand extends BuildCommand {
 
   private TargetGraph getProjectGraphForIde(
       CommandRunnerParams params,
-      Executor executor,
+      ListeningExecutorService executor,
       ImmutableSet<BuildTarget> passedInTargets,
       boolean needsFullRecursiveParse
   ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
@@ -1010,7 +1010,7 @@ public class ProjectCommand extends BuildCommand {
       boolean isWithTests,
       boolean isWithDependenciesTests,
       boolean needsFullRecursiveParse,
-      Executor executor
+      ListeningExecutorService executor
   )
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
 

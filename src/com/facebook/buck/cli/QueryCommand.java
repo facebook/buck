@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultimap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -45,7 +46,6 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 public class QueryCommand extends AbstractCommand {
@@ -137,7 +137,7 @@ public class QueryCommand extends AbstractCommand {
   static int runMultipleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      Executor executor,
+      ListeningExecutorService executor,
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets,
       boolean generateJsonOutput)
@@ -168,7 +168,7 @@ public class QueryCommand extends AbstractCommand {
   int runSingleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      Executor executor,
+      ListeningExecutorService executor,
       String query)
       throws IOException, InterruptedException, QueryException {
     Set<QueryTarget> queryResult = env.evaluateQuery(query, executor);
@@ -206,7 +206,7 @@ public class QueryCommand extends AbstractCommand {
 
   private void collectAndPrintAttributes(
       CommandRunnerParams params,
-      Executor executor,
+      ListeningExecutorService executor,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult)
       throws InterruptedException, IOException, QueryException {

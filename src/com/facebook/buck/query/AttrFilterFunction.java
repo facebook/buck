@@ -23,10 +23,10 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * A attrfilter(attribute, value, argument) filter expression, which computes the subset
@@ -58,7 +58,10 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ImmutableList<Argument> args, Executor executor)
+  public <T> Set<T> eval(
+      QueryEnvironment<T> env,
+      ImmutableList<Argument> args,
+      ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     QueryExpression argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());

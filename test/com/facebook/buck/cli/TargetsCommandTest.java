@@ -73,6 +73,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.After;
 import org.junit.Before;
@@ -86,7 +88,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TargetsCommandTest {
@@ -97,7 +98,7 @@ public class TargetsCommandTest {
   private CommandRunnerParams params;
   private ObjectMapper objectMapper;
   private ProjectFilesystem filesystem;
-  private ExecutorService executor;
+  private ListeningExecutorService executor;
 
   private SortedMap<String, TargetNode<?>> buildTargetNodes(
       ProjectFilesystem filesystem,
@@ -144,7 +145,7 @@ public class TargetsCommandTest {
         new FakeJavaPackageFinder(),
         objectMapper,
         Optional.<WebServer>absent());
-    executor = Executors.newSingleThreadExecutor();
+    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
   @After

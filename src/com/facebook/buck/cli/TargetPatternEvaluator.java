@@ -26,13 +26,13 @@ import com.facebook.buck.query.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 public class TargetPatternEvaluator {
   private final boolean enableProfiling;
@@ -54,14 +54,14 @@ public class TargetPatternEvaluator {
   /**
    * Attempts to parse and load the given collection of patterns.
    */
-  public void preloadTargetPatterns(Iterable<String> patterns, Executor executor)
+  public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     for (String pattern : patterns) {
       resolveTargetPattern(pattern, executor);
     }
   }
 
-  ImmutableSet<QueryTarget> resolveTargetPattern(String pattern, Executor executor)
+  ImmutableSet<QueryTarget> resolveTargetPattern(String pattern, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     // First check if this pattern was resolved before.
     ImmutableSet<QueryTarget> targets = resolvedTargets.get(pattern);
@@ -95,7 +95,9 @@ public class TargetPatternEvaluator {
     return builder.build();
   }
 
-  ImmutableSet<QueryTarget> resolveBuildTargetPattern(String pattern, Executor executor)
+  ImmutableSet<QueryTarget> resolveBuildTargetPattern(
+      String pattern,
+      ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Set<BuildTarget> buildTargets = params.getParser()
         .resolveTargetSpec(

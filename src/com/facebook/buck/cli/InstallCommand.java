@@ -62,6 +62,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Option;
 
@@ -70,7 +71,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -278,7 +278,7 @@ public class InstallCommand extends BuildCommand {
 
   private ImmutableSet<String> getInstallHelperTargets(
       CommandRunnerParams params,
-      Executor executor)
+      ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException{
 
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();

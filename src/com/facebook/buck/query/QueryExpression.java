@@ -30,9 +30,10 @@
 
 package com.facebook.buck.query;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * Base class for expressions in the Buck query language.
@@ -73,7 +74,7 @@ public abstract class QueryExpression {
    *
    * Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  public abstract <T> Set<T> eval(QueryEnvironment<T> env, Executor executor)
+  public abstract <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
       throws QueryException, InterruptedException;
 
   /**
