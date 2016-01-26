@@ -16,12 +16,13 @@
 
 package com.facebook.buck.halide;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.cxx.CxxBinary;
+import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -33,7 +34,6 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -53,13 +53,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class HalideLibraryDescriptionTest {
-  @Test
-  public void testIsHalideCompilerTarget() {
-    BuildTarget target = BuildTargetFactory.newInstance("//:foo");
-    assertFalse(HalideLibraryDescription.isHalideCompilerTarget(target));
-    target = BuildTargetFactory.newInstance("//:foo#halide-compiler");
-    assertTrue(HalideLibraryDescription.isHalideCompilerTarget(target));
-  }
 
   @Test
   public void testCreateBuildRule() throws Exception {
@@ -83,27 +76,23 @@ public class HalideLibraryDescriptionTest {
         libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
-    CxxBinary compiler = (CxxBinary) compilerBuilder.build(
-        resolver,
-        filesystem,
-        targetGraph);
     HalideLibrary lib = (HalideLibrary) libBuilder.build(
         resolver,
         filesystem,
         targetGraph);
-    // Check that we picked up the implicit dependency on the #halide-compiler
-    // version of the rule.
-    assertEquals(lib.getDeps(), ImmutableSortedSet.<BuildRule>of(compiler));
 
     // Check that the library rule has the correct preprocessor input.
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
     String headerName = "rule.h";
-    Path headerPath = BuildTargets.getGenPath(libTarget, "%s/" + headerName);
     Path headerRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             libTarget,
             cxxPlatform.getFlavor(),
             HeaderVisibility.PUBLIC);
+    BuildTarget flavoredLibTarget = libTarget.withFlavors(
+        HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+        cxxPlatform.getFlavor());
+    Path headerPath = HalideCompile.headerOutputPath(flavoredLibTarget);
     assertEquals(
         CxxPreprocessorInput.builder()
             .addRules(
@@ -115,10 +104,14 @@ public class HalideLibraryDescriptionTest {
                 CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(headerName),
-                        new BuildTargetSourcePath(libTarget, headerPath))
+                        new BuildTargetSourcePath(
+                            flavoredLibTarget,
+                            headerPath))
                     .putFullNameToPathMap(
                         headerRoot.resolve(headerName),
-                        new BuildTargetSourcePath(libTarget, headerPath))
+                        new BuildTargetSourcePath(
+                            flavoredLibTarget,
+                            headerPath))
                     .build())
             .addSystemIncludeRoots(headerRoot)
             .build(),
@@ -134,6 +127,6 @@ public class HalideLibraryDescriptionTest {
         FluentIterable.from(input.getArgs())
             .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
             .get(0);
-    assertTrue(buildRule instanceof HalideLibrary);
+    assertThat(buildRule, is(instanceOf(Archive.class)));
   }
 }

@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.halide.HalideBuckConfig;
+import com.facebook.buck.halide.HalideCompile;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
@@ -693,21 +694,21 @@ public class ProjectGenerator {
           (TargetNode<HalideLibraryDescription.Arg>) targetNode;
       BuildTarget buildTarget = targetNode.getBuildTarget();
 
-      // If this _isn't_ the #halide-compiler version of the rule, then generate
-      // a native target for it. The generated target just runs a shell script
-      // that invokes the "compiler" with the correct target architecture.
-      if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
-        result = generateHalideLibraryTarget(project, halideTargetNode);
+      // The generated target just runs a shell script that invokes the "compiler" with the
+      // correct target architecture.
+      result = generateHalideLibraryTarget(project, halideTargetNode);
 
-        // Make sure the compiler gets built at project time, since we'll need
-        // it to generate the shader code during the Xcode build.
-        requiredBuildTargetsBuilder.add(
-            HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget));
+      // Make sure the compiler gets built at project time, since we'll need
+      // it to generate the shader code during the Xcode build.
+      requiredBuildTargetsBuilder.add(
+          HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget));
 
-        // Also, run the compiler once at project time to generate the header
-        // file needed for compilation.
-        requiredBuildTargetsBuilder.add(buildTarget);
-      }
+      // Also, run the compiler once at project time to generate the header
+      // file needed for compilation.
+      requiredBuildTargetsBuilder.add(
+          buildTarget.withFlavors(
+              HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+              defaultCxxPlatform.getFlavor()));
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
     return result;
@@ -2064,12 +2065,14 @@ public class ProjectGenerator {
                 ImmutableSet.<BuildRuleType>of(
                     HalideLibraryDescription.TYPE)))) {
       BuildTarget buildTarget = input.getBuildTarget();
-      if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
-        builder.add(
-            pathRelativizer.outputDirToRootRelative(
-                BuildTargets.getGenPath(
-                    BuildTarget.of(buildTarget.getUnflavoredBuildTarget()), "%s")));
-      }
+      builder.add(
+          pathRelativizer.outputDirToRootRelative(
+              HalideCompile
+                  .headerOutputPath(
+                      buildTarget.withFlavors(
+                          HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+                          defaultCxxPlatform.getFlavor()))
+                  .getParent()));
     }
     return builder.build();
   }
@@ -2516,8 +2519,7 @@ public class ProjectGenerator {
     return new Predicate<TargetNode<?>>() {
       @Override
       public boolean apply(TargetNode<?> input) {
-        if (input.getType() == HalideLibraryDescription.TYPE &&
-            !HalideLibraryDescription.isHalideCompilerTarget(input.getBuildTarget())) {
+        if (input.getType() == HalideLibraryDescription.TYPE) {
           return true;
         }
 

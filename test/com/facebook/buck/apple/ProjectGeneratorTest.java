@@ -1048,7 +1048,12 @@ public class ProjectGeneratorTest {
     // use by the Xcode compilation step.
     ImmutableSet<BuildTarget> requiredBuildTargets = projectGenerator.getRequiredBuildTargets();
     assertTrue(requiredBuildTargets.contains(compilerTarget));
-    assertTrue(requiredBuildTargets.contains(libTarget));
+    assertThat(
+        requiredBuildTargets,
+        hasItem(
+            libTarget.withFlavors(
+                HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+                DEFAULT_PLATFORM.getFlavor())));
   }
 
   @Test

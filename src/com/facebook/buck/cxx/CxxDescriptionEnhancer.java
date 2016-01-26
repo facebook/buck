@@ -788,4 +788,17 @@ public class CxxDescriptionEnhancer {
     }
   }
 
+  public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {
+    switch (linkableDepType) {
+      case STATIC:
+        return STATIC_FLAVOR;
+      case STATIC_PIC:
+        return STATIC_PIC_FLAVOR;
+      case SHARED:
+        return SHARED_FLAVOR;
+    }
+    throw new RuntimeException(
+        String.format("Unsupported LinkableDepType: '%s'", linkableDepType));
+  }
+
 }
