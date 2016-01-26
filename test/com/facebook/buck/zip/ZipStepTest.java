@@ -80,7 +80,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -105,7 +105,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.of(Paths.get("zipdir/file2.txt")),
         false,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -129,7 +129,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -163,7 +163,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -196,7 +196,7 @@ public class ZipStepTest {
         Paths.get("zipstep"),
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(1, step.execute(TestExecutionContext.newInstance()));
   }
@@ -215,7 +215,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.<Path>of(),
         true,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -238,7 +238,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.<Path>of(),
         true,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -277,7 +277,7 @@ public class ZipStepTest {
         Paths.get("zipstep/output.zip"),
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.MIN_COMPRESSION_LEVEL,
+        ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -308,7 +308,7 @@ public class ZipStepTest {
         outputZip,
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -345,7 +345,7 @@ public class ZipStepTest {
         outputZip,
         ImmutableSet.<Path>of(),
         false,
-        ZipStep.MIN_COMPRESSION_LEVEL,
+        ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()));
 
@@ -371,7 +371,7 @@ public class ZipStepTest {
             output,
             ImmutableSet.<Path>of(),
             false,
-            ZipStep.MIN_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             zipdir);
     assertEquals(0, step.execute(context));
     ImmutableList<String> entries1 = getEntries(filesystem, output);
@@ -388,7 +388,7 @@ public class ZipStepTest {
             output,
             ImmutableSet.<Path>of(),
             false,
-            ZipStep.MIN_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             zipdir);
     assertEquals(0, step.execute(context));
     ImmutableList<String> entries2 = getEntries(filesystem, output);

@@ -96,7 +96,7 @@ public class RepackZipEntriesStepTest {
         zipFile,
         out,
         ImmutableSet.of("file"),
-        ZipStep.MIN_COMPRESSION_LEVEL);
+        ZipCompressionLevel.MIN_COMPRESSION_LEVEL);
     step.execute(TestExecutionContext.newInstance());
 
     byte[] expected = Files.readAllBytes(zipFile);

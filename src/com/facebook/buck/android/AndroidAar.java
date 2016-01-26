@@ -38,6 +38,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -158,7 +159,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             pathToOutputFile,
             ImmutableSet.<Path>of(),
             false,
-            ZipStep.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             temp));
 
     return commands.build();

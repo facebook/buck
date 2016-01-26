@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +69,7 @@ public class SrcZip extends AbstractBuildRule {
             sourceZip,
             /* paths */ ImmutableSet.<Path>of(),
             /* junkPaths */ false,
-            ZipStep.MIN_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             sourceDirectory));
   }
 

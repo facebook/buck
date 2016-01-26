@@ -29,7 +29,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.zip.RepackZipEntriesStep;
-import com.facebook.buck.zip.ZipStep;
+import com.facebook.buck.zip.ZipCompressionLevel;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
@@ -441,7 +441,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               repackedJar,
               ImmutableSet.of("classes.dex"),
-              ZipStep.MIN_COMPRESSION_LEVEL));
+              ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
       steps.add(new RmStep(filesystem, tempDexJarOutput, true));
       steps.add(
           new DexJarAnalysisStep(
@@ -467,7 +467,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               outputPath,
               ImmutableSet.of("classes.dex"),
-              ZipStep.MIN_COMPRESSION_LEVEL));
+              ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
       steps.add(new RmStep(filesystem, tempDexJarOutput, true));
 
       // Write a .meta file.

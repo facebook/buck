@@ -28,6 +28,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.UnzipStep;
+import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -136,7 +137,7 @@ public class IntraDexReorderStep implements Step {
               outputPath,
               /* paths */ ImmutableSet.<Path>of(),
               /* junkPaths */ false,
-              ZipStep.MAX_COMPRESSION_LEVEL,
+              ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
               temp
           )
       );

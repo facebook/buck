@@ -73,7 +73,7 @@ public class Zip extends AbstractBuildRule {
             output,
             ImmutableSortedSet.<Path>of(),
             /* junk paths */ false,
-            ZipStep.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             scratchDir));
 
     buildableContext.recordArtifact(output);

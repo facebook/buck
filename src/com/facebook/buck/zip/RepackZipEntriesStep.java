@@ -45,7 +45,7 @@ public class RepackZipEntriesStep implements Step {
   private final Path inputPath;
   private final Path outputPath;
   private final ImmutableSet<String> entries;
-  private final int compressionLevel;
+  private final ZipCompressionLevel compressionLevel;
 
   /**
    * Creates a {@link RepackZipEntriesStep}. A temporary directory will be created and used
@@ -59,7 +59,12 @@ public class RepackZipEntriesStep implements Step {
       Path inputPath,
       Path outputPath,
       ImmutableSet<String> entries) {
-    this(filesystem, inputPath, outputPath, entries, ZipStep.MAX_COMPRESSION_LEVEL);
+    this(
+        filesystem,
+        inputPath,
+        outputPath,
+        entries,
+        ZipCompressionLevel.MAX_COMPRESSION_LEVEL);
   }
 
   /**
@@ -67,14 +72,14 @@ public class RepackZipEntriesStep implements Step {
    * @param inputPath input archive
    * @param outputPath destination archive
    * @param entries files to repack (e.g. {@code ImmutableSet.of("resources.arsc")})
-   * @param compressionLevel 0 to 9
+   * @param compressionLevel the level of compression to use
    */
   public RepackZipEntriesStep(
       ProjectFilesystem filesystem,
       Path inputPath,
       Path outputPath,
       ImmutableSet<String> entries,
-      int compressionLevel) {
+      ZipCompressionLevel compressionLevel) {
     this.filesystem = filesystem;
     this.inputPath = inputPath;
     this.outputPath = outputPath;
@@ -93,8 +98,8 @@ public class RepackZipEntriesStep implements Step {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         CustomZipEntry customEntry = new CustomZipEntry(entry);
         if (entries.contains(customEntry.getName())) {
-          customEntry.setCompressionLevel(compressionLevel);
-          if (compressionLevel == ZipStep.MIN_COMPRESSION_LEVEL) {
+          customEntry.setCompressionLevel(compressionLevel.getValue());
+          if (compressionLevel == ZipCompressionLevel.MIN_COMPRESSION_LEVEL) {
             customEntry.setMethod(ZipEntry.STORED);
           }
         }

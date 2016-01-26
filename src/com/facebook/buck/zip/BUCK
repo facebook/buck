@@ -47,6 +47,7 @@ java_library(
     '//test/com/facebook/buck/zip:zip',
   ],
   deps = [
+    ':constants',
     ':stream',
     ':unzip',
     '//src/com/facebook/buck/event:event',
@@ -78,6 +79,7 @@ java_library(
     'ZipDescription.java',
   ],
   deps = [
+    ':constants',
     ':steps',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/jvm/java:support',
@@ -93,6 +95,14 @@ java_library(
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/zip:zip',
   ],
+)
+
+java_library(
+  name = 'constants',
+  srcs = [
+    'ZipCompressionLevel.java',
+  ],
+  visibility = ['PUBLIC'],
 )
 
 java_binary(

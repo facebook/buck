@@ -17,6 +17,7 @@ java_test(
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/zip:constants',
     '//src/com/facebook/buck/zip:rules',
     '//src/com/facebook/buck/zip:stream',
     '//src/com/facebook/buck/zip:steps',

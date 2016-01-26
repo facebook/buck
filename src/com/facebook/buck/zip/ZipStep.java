@@ -27,7 +27,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
@@ -56,10 +55,6 @@ public class ZipStep implements Step {
 
   private static final Logger LOG = Logger.get(ZipStep.class);
 
-  public static final int MIN_COMPRESSION_LEVEL = 0;
-  public static final int DEFAULT_COMPRESSION_LEVEL = 6;
-  public static final int MAX_COMPRESSION_LEVEL = 9;
-
   // Extended attribute bits for directories and symlinks; see:
   // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
   public static final long S_IFDIR = 0040000;
@@ -69,7 +64,7 @@ public class ZipStep implements Step {
   private final Path pathToZipFile;
   private final ImmutableSet<Path> paths;
   private final boolean junkPaths;
-  private final int compressionLevel;
+  private final ZipCompressionLevel compressionLevel;
   private final Path baseDir;
 
 
@@ -94,10 +89,8 @@ public class ZipStep implements Step {
       Path pathToZipFile,
       Set<Path> paths,
       boolean junkPaths,
-      int compressionLevel,
+      ZipCompressionLevel compressionLevel,
       Path baseDir) {
-    Preconditions.checkArgument(compressionLevel >= MIN_COMPRESSION_LEVEL &&
-        compressionLevel <= MAX_COMPRESSION_LEVEL, "compressionLevel out of bounds.");
     this.filesystem = filesystem;
     this.pathToZipFile = pathToZipFile;
     this.paths = ImmutableSet.copyOf(paths);
@@ -139,8 +132,11 @@ public class ZipStep implements Step {
 
         CustomZipEntry entry = new CustomZipEntry(entryName);
         entry.setTime(0);  // We want deterministic ZIP files, so avoid mtimes.
-        entry.setCompressionLevel(isDirectory ? MIN_COMPRESSION_LEVEL : compressionLevel);
-        if (entry.getCompressionLevel() == MIN_COMPRESSION_LEVEL) {
+        entry.setCompressionLevel(
+            isDirectory ?
+                ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue() :
+                compressionLevel.getValue());
+        if (entry.getCompressionLevel() == ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue()) {
           entry.setMethod(ZipEntry.STORED);
         }
         // If we're using STORED files, we must manually set the CRC, size, and compressed size.

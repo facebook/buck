@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -118,14 +119,14 @@ public class PackageStringAssets extends AbstractBuildRule
             pathToAllLocalesStringAssetsZip,
             ImmutableSet.<Path>of(),
             false,
-            ZipStep.MAX_COMPRESSION_LEVEL,
+        ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
     steps.add(new ZipStep(
             getProjectFilesystem(),
             pathToStringAssetsZip,
             FluentIterable.from(locales).transform(assetPathBuilder).toSet(),
             false,
-            ZipStep.MAX_COMPRESSION_LEVEL,
+        ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
     steps.add(
         new RecordFileSha1Step(
