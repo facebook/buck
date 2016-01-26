@@ -94,6 +94,9 @@ public class RepackZipEntriesStep implements Step {
         CustomZipEntry customEntry = new CustomZipEntry(entry);
         if (entries.contains(customEntry.getName())) {
           customEntry.setCompressionLevel(compressionLevel);
+          if (compressionLevel == ZipStep.MIN_COMPRESSION_LEVEL) {
+            customEntry.setMethod(ZipEntry.STORED);
+          }
         }
 
         InputStream toUse;
