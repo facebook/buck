@@ -46,7 +46,7 @@ public class DLibraryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/greet/greet").toString());
+        workspace.resolve("buck-out/gen/greet#binary/greet").toString());
     assertEquals(0, result.getExitCode());
     assertEquals("Hello, world!\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());

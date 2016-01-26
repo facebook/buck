@@ -19,6 +19,8 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,12 +34,15 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
+
+  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final DBuckConfig dBuckConfig;
   private final CxxPlatform cxxPlatform;
@@ -69,7 +74,8 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
     // Create a rule that actually builds the binary, and add that
     // rule to the index.
     CxxLink nativeLinkable = DDescriptionUtils.createNativeLinkable(
-        params,
+        params.copyWithBuildTarget(
+            BuildTarget.builder().from(params.getBuildTarget()).addFlavors(BINARY_FLAVOR).build()),
         args.srcs,
         /* compilerFlags */ ImmutableList.<String>of(),
         buildRuleResolver,
@@ -86,7 +92,8 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params,
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(nativeLinkable))),
         new SourcePathResolver(buildRuleResolver),
         executableBuilder.build());
   }

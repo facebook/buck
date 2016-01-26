@@ -45,7 +45,7 @@ public class DBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/test/test").toString());
+        workspace.resolve("buck-out/gen/test#binary/test").toString());
     assertEquals(0, result.getExitCode());
     assertEquals("1 + 1 = 2\n100 + 1 = 5\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
@@ -65,7 +65,7 @@ public class DBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy/xyzzy").toString());
+        workspace.resolve("buck-out/gen/xyzzy#binary/xyzzy").toString());
     assertEquals(0, result.getExitCode());
     assertEquals("Nothing happens.\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
