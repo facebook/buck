@@ -315,17 +315,18 @@ public class CopyNativeLibraries extends AbstractBuildRule {
    * not present or not supported, returns Optional.absent();
    */
   private static Optional<String> getAbiDirectoryComponent(TargetCpuType cpuType) {
-    String component = null;
-    if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.ARM)) {
-      component = SdkConstants.ABI_ARMEABI;
-    } else if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.ARMV7)) {
-      component = SdkConstants.ABI_ARMEABI_V7A;
-    } else if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.X86)) {
-      component = SdkConstants.ABI_INTEL_ATOM;
-    } else if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.MIPS)) {
-      component = SdkConstants.ABI_MIPS;
+    switch (cpuType) {
+      case ARM:
+        return Optional.of(SdkConstants.ABI_ARMEABI);
+      case ARMV7:
+        return Optional.of(SdkConstants.ABI_ARMEABI_V7A);
+      case X86:
+        return Optional.of(SdkConstants.ABI_INTEL_ATOM);
+      case MIPS:
+        return Optional.of(SdkConstants.ABI_MIPS);
+      default:
+        return Optional.absent();
     }
-    return Optional.fromNullable(component);
   }
 
   @Value.Immutable
