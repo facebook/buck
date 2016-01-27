@@ -35,14 +35,24 @@
 {call go_common.srcs_arg /}
 
 {call buck.arg}
+  {param name: 'library' /}
+  {param default: 'None' /}
+  {param desc}
+  Specify the library that this internal test is testing. This will copy the <code>srcs</code>,
+  {sp}<code>package_name</code> and <code>deps</code> from the target specified so you don't have
+  to duplicate them.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'package_name' /}
   {param default : 'go.prefix + path relative to the buck root + "_test"' /}
   {param desc}
   Sets the full name of the test package being compiled. This defaults to the path from the buck
   root with "_test" appended. (e.g. given a ./.buckconfig, a rule in ./a/b/BUCK defaults to package "a/b_test")
 
-  <p>Note: in order to test packages internally (i.e. same package name), you will need to re-declare
-  all the sources/dependencies on this test and set package_name appropriately.</p>
+  <p>Note: if you want to test packages internally (i.e. same package name), use the <code>library</code>
+  {sp}parameter instead of setting <code>package_name</code> to include the tested source files.</p>
   {/param}
 {/call}
 
@@ -96,6 +106,15 @@ go_test(
     ':join',
   ],
 )
+
+# Or
+
+go_test(
+  name='greeting-better-internal-test',
+  srcs=['greeting_test.go'],
+  library=':greeting',
+)
+
 </pre>{/literal}
 {/param}
 

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,6 +62,18 @@ public class GoTestIntegrationTest {
         "`buck test` should fail because TestAdd2() failed.",
         result2.getStderr(),
         containsString("TestAdd2"));
+  }
+
+  @Test
+  public void testGoInternalTest() throws IOException {
+    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
+        "test", "//:test-success-internal");
+    result1.assertSuccess();
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testGoInternalTestInTestList() throws IOException {
+    workspace.runBuckCommand("test", "//:test-success-bad");
   }
 
   @Test

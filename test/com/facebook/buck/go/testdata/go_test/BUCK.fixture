@@ -1,13 +1,39 @@
 go_library(
+  name = 'base',
+  srcs = ['base.go'],
+  package_name = 'buck_base',
+)
+
+go_library(
   name = 'lib',
   srcs = ['lib.go'],
+  deps = [':base'],
   package_name = 'lib',
+  tests = [
+    ':test-success',
+    ':test-success-internal',
+    # test-success-bad isn't here to test for the requirement that it should be here.
+    ':test-failure'
+  ]
 )
 
 go_test(
   name = 'test-success',
   srcs = ['lib.go', 'lib_test.go'],
+  deps = [':base'],
   package_name = 'lib',
+)
+
+go_test(
+  name='test-success-internal',
+  srcs = ['lib_test.go'],
+  library = ':lib'
+)
+
+go_test(
+  name='test-success-bad',
+  srcs = ['lib_test.go'],
+  library = ':lib'
 )
 
 go_test(
@@ -19,7 +45,6 @@ go_test(
 go_test(
   name = 'test-panic',
   srcs = ['panic_test.go'],
-  deps = [':lib'],
 )
 
 go_test(

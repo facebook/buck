@@ -17,9 +17,9 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,14 +31,18 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class GoTestDescription implements Description<GoTestDescription.Arg> {
@@ -104,45 +108,89 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    BuildTarget libraryTarget =
+      final BuildRuleResolver resolver,
+      A args) throws NoSuchBuildTargetException {
+
+    BuildTarget testLibraryTarget =
         BuildTarget.builder(params.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("test-library"))
             .build();
 
-    Path defaultPackageName = goBuckConfig.getDefaultPackageName(params.getBuildTarget());
-    defaultPackageName = defaultPackageName.resolveSibling(
-        defaultPackageName.getFileName() + "_test");
+    GoLibrary testLibrary;
+    if (args.library.isPresent()) {
+      BuildRule untypedLibrary = resolver.getRule(args.library.get());
+      if (!(untypedLibrary instanceof GoLibrary)) {
+        throw new HumanReadableException(
+            "Library specified in %s (%s) is not a go_library rule.",
+            params.getBuildTarget(), args.library.get());
+      }
 
-    GoLibrary lib = GoDescriptors.createGoLibraryRule(
-        params.copyWithBuildTarget(libraryTarget),
-        resolver,
-        goBuckConfig,
-        args.packageName.transform(MorePaths.TO_PATH).or(defaultPackageName),
-        args.srcs,
-        args.compilerFlags.or(ImmutableList.<String>of()),
-        ImmutableSortedSet.<BuildTarget>of()
+      if (args.packageName.isPresent()) {
+        throw new HumanReadableException(
+            "Test target %s specifies both library and package_name - only one should be specified",
+            params.getBuildTarget());
+      }
 
-    );
-    resolver.addToIndex(lib);
+      final GoLibrary library = (GoLibrary) untypedLibrary;
+      if (!library.getTests().contains(params.getBuildTarget())) {
+        throw new HumanReadableException(
+            "go internal test target %s is not listed in `tests` of library %s",
+            params.getBuildTarget(), args.library.get());
+      }
+
+      final Supplier<ImmutableSortedSet<BuildRule>> initialExtraDeps = params.getExtraDeps();
+      testLibrary = GoDescriptors.createMergedGoLibraryRule(
+          params.copyWithChanges(
+              testLibraryTarget,
+              params.getDeclaredDeps(),
+              new Supplier<ImmutableSortedSet<BuildRule>>() {
+                @Override
+                public ImmutableSortedSet<BuildRule> get() {
+                  return ImmutableSortedSet.copyOf(
+                      Sets.difference(initialExtraDeps.get(), ImmutableSortedSet.of(library)));
+                }
+              }),
+          resolver,
+          library,
+          args.srcs,
+          args.compilerFlags.get());
+    } else {
+      Path packageName;
+      if (args.packageName.isPresent()) {
+        packageName = Paths.get(args.packageName.get());
+      } else {
+        packageName = goBuckConfig.getDefaultPackageName(params.getBuildTarget());
+        packageName = packageName.resolveSibling(packageName.getFileName() + "_test");
+      }
+
+      testLibrary = GoDescriptors.createGoLibraryRule(
+          params.copyWithBuildTarget(testLibraryTarget),
+          resolver,
+          goBuckConfig,
+          packageName,
+          args.srcs,
+          args.compilerFlags.or(ImmutableList.<String>of()),
+          ImmutableSortedSet.<BuildTarget>of()
+      );
+    }
+    resolver.addToIndex(testLibrary);
 
     GoTestMain generatedTestMain = requireTestMainGenRule(
-        params, resolver, args.srcs, lib.getGoPackageName());
+        params, resolver, args.srcs, testLibrary.getGoPackageName());
     GoBinary testMain = GoDescriptors.createGoBinaryRule(
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget())
                 .addFlavors(ImmutableFlavor.of("test-main"))
                 .build(),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(lib)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(generatedTestMain))
         ),
         resolver,
         goBuckConfig,
         cxxPlatform,
         ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
-        args.compilerFlags.or(ImmutableList.<String>of()),
-        args.linkerFlags.or(ImmutableList.<String>of()));
+        args.compilerFlags.get(),
+        args.linkerFlags.get());
     resolver.addToIndex(testMain);
 
     return new GoTest(
@@ -161,6 +209,7 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
   @SuppressFieldNotInitialized
   public static class Arg {
     public ImmutableSet<SourcePath> srcs;
+    public Optional<BuildTarget> library;
     public Optional<String> packageName;
     public Optional<List<String>> compilerFlags;
     public Optional<List<String>> linkerFlags;
