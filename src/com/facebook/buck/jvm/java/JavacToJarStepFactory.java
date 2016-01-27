@@ -51,7 +51,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
@@ -87,7 +87,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -122,10 +123,14 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
 
+    Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+    steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+
     // Compile the .java files.
     final JavacStep javacStep =
         RDotJava.createJavacStepForDummyRDotJavaFiles(
             javaSourceFilePaths,
+            pathToSrcsList,
             rDotJavaClassesFolder,
             javacOptions,
             getBuildTarget(),

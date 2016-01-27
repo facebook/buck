@@ -158,6 +158,9 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         fatJarDir);
 
+    Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+    steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
+
     CompileToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY);
 
@@ -170,7 +173,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         /* classpathEntries */ ImmutableSortedSet.<Path>of(),
         fatJarDir,
         /* workingDir */ Optional.<Path>absent(),
-        /* pathToSrcsList */ Optional.<Path>absent(),
+        pathToSrcsList,
         /* suggestBuildRule */ Optional.<SuggestBuildRules>absent(),
         steps,
         buildableContext);

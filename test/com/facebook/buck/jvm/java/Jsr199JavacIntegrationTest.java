@@ -104,7 +104,7 @@ public class Jsr199JavacIntegrationTest {
                 "-d", pathToOutputDir,
                 "-classpath", "''"),
             SOURCE_PATHS,
-            Optional.of(pathToSrcsList)));
+            pathToSrcsList));
   }
 
   @Test
@@ -124,7 +124,7 @@ public class Jsr199JavacIntegrationTest {
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
         SOURCE_PATHS,
-        Optional.of(pathToSrcsList),
+        pathToSrcsList,
         Optional.<Path>absent(),
         Optional.<StandardJavaFileManagerFactory>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -158,7 +158,7 @@ public class Jsr199JavacIntegrationTest {
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
         SOURCE_PATHS,
-        Optional.of(pathToSrcsList),
+        pathToSrcsList,
         Optional.<Path>absent(),
         Optional.<StandardJavaFileManagerFactory>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -248,7 +248,7 @@ public class Jsr199JavacIntegrationTest {
           BuildTargetFactory.newInstance("//some:example"),
           ImmutableList.<String>of(),
           SOURCE_PATHS,
-          Optional.of(pathToSrcsList),
+          pathToSrcsList,
           Optional.<Path>absent(),
           Optional.<StandardJavaFileManagerFactory>absent());
       fail("Did not expect compilation to succeed");

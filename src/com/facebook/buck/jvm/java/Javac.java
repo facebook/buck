@@ -52,14 +52,14 @@ public interface Javac extends RuleKeyAppendable, Tool {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<Path> workingDirectory,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException;
 
   String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList);
+      Path pathToSrcsList);
 
   String getShortName();
 

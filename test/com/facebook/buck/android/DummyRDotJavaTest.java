@@ -104,12 +104,13 @@ public class DummyRDotJavaTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
         buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 6, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 7, steps.size());
 
     String rDotJavaSrcFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__").toString();
     String rDotJavaBinFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_bin__").toString();
     String rDotJavaAbiFolder = Paths.get(
         "buck-out/gen/java/base/__rule_dummyrdotjava_abi__").toString();
+    String genFolder = targetGenPath().toString();
 
     List<String> expectedStepDescriptions = Lists.newArrayList(
         makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)),
@@ -119,6 +120,7 @@ public class DummyRDotJavaTest {
                 (AndroidResource) resourceRule2)),
         makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)),
         makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)),
+        makeDirectoryDescription(filesystem.resolve(genFolder)),
         javacInMemoryDescription(rDotJavaBinFolder, pathResolver),
         String.format("calculate_abi %s", rDotJavaBinFolder));
 
@@ -153,6 +155,14 @@ public class DummyRDotJavaTest {
         dummyRDotJava.getRDotJavaBinFolder());
   }
 
+  private static String makeDirectoryDescription(Path dirname) {
+    return String.format("mkdir -p %s", dirname);
+  }
+
+  private static Path targetGenPath() {
+    return Paths.get("buck-out/gen/java/base/");
+  }
+
   private static String makeCleanDirDescription(Path dirname) {
     return String.format("rm -r -f %s && mkdir -p %s", dirname, dirname);
   }
@@ -164,6 +174,7 @@ public class DummyRDotJavaTest {
         Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
     return RDotJava.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
+        targetGenPath().resolve("__rule__srcs"),
         Paths.get(rDotJavaClassesFolder),
         ANDROID_JAVAC_OPTIONS,
         /* buildTarget */ null,

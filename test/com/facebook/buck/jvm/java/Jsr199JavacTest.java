@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -47,21 +46,21 @@ public class Jsr199JavacTest extends EasyMockSupport {
         firstOrder.getDescription(
             getArgs().add("foo.jar").build(),
             SOURCE_FILES,
-            Optional.of(PATH_TO_SRCS_LIST)));
+            PATH_TO_SRCS_LIST));
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
         warn.getDescription(
             getArgs().add("foo.jar").build(),
             SOURCE_FILES,
-            Optional.of(PATH_TO_SRCS_LIST)));
+            PATH_TO_SRCS_LIST));
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath bar.jar%sfoo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, File.pathSeparator, PATH_TO_SRCS_LIST),
         transitive.getDescription(
             getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
             SOURCE_FILES,
-            Optional.of(PATH_TO_SRCS_LIST)));
+            PATH_TO_SRCS_LIST));
   }
 
   private Jsr199Javac createTestStep() {

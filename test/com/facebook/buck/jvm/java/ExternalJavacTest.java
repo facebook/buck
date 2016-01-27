@@ -35,7 +35,6 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,18 +75,18 @@ public class ExternalJavacTest extends EasyMockSupport {
         firstOrder.getDescription(
             getArgs().add("foo.jar").build(),
             SOURCE_PATHS,
-            Optional.of(PATH_TO_SRCS_LIST)));
+            PATH_TO_SRCS_LIST));
     assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         warn.getDescription(
             getArgs().add("foo.jar").build(),
             SOURCE_PATHS,
-            Optional.of(PATH_TO_SRCS_LIST)));
+            PATH_TO_SRCS_LIST));
     assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath bar.jar" + File.pathSeparator +
         "foo.jar @" + PATH_TO_SRCS_LIST,
         transitive.getDescription(
             getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
             SOURCE_PATHS,
-            Optional.of(PATH_TO_SRCS_LIST)));
+            PATH_TO_SRCS_LIST));
   }
 
   @Test
