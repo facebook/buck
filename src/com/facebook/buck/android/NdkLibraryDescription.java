@@ -141,6 +141,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         return "armeabi-v7a";
       case X86:
         return "x86";
+      case X86_64:
+        return "x86_64";
       case MIPS:
         return "mips";
       default:

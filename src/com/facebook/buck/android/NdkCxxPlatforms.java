@@ -281,6 +281,48 @@ public class NdkCxxPlatforms {
       ndkCxxPlatformBuilder.put(TargetCpuType.X86, x86);
     }
 
+    // x86_64 Platform
+    if (cpuAbis.contains("x86_64")) {
+      // CHECKSTYLE.OFF: LocalVariableName
+      NdkCxxPlatform x86_64 =
+      // CHECKSTYLE.ON
+          build(
+              ImmutableFlavor.of("android-x86_64"),
+              platform,
+              ndkRoot,
+              ImmutableNdkCxxPlatforms.TargetConfiguration.builder()
+                  .setToolchain(Toolchain.X86_64)
+                  .setTargetArch(TargetArch.X86_64)
+                  .setTargetArchAbi(TargetArchAbi.X86_64)
+                  .setTargetAppPlatform(androidPlatform)
+                  .setCompiler(compiler)
+                  .setToolchainTarget(ToolchainTarget.X86_64_LINUX_ANDROID)
+                  .putAssemblerFlags(Compiler.Type.GCC, ImmutableList.<String>of())
+                  .putAssemblerFlags(Compiler.Type.CLANG, ImmutableList.<String>of())
+                  .putCompilerFlags(
+                      Compiler.Type.GCC,
+                      ImmutableList.of(
+                          "-funswitch-loops",
+                          "-finline-limit=300",
+                          "-O2"))
+                  .putCompilerFlags(
+                      Compiler.Type.CLANG,
+                      ImmutableList.of(
+                          "-target", "i686-none-linux-android",
+                          "-O2"))
+                  .putLinkerFlags(
+                      Compiler.Type.GCC,
+                      ImmutableList.<String>of())
+                  .putLinkerFlags(
+                      Compiler.Type.CLANG,
+                      ImmutableList.of(
+                          "-target", "i686-none-linux-android"))
+                  .build(),
+              cxxRuntime,
+              executableFinder);
+      ndkCxxPlatformBuilder.put(TargetCpuType.X86_64, x86_64);
+    }
+
     return ndkCxxPlatformBuilder.build();
   }
 
@@ -931,6 +973,7 @@ public class NdkCxxPlatforms {
     ARM,
     ARMV7,
     X86,
+    X86_64,
     MIPS,
   }
 
@@ -940,6 +983,7 @@ public class NdkCxxPlatforms {
   public enum Toolchain {
 
     X86("x86"),
+    X86_64("x86_64"),
     ARM_LINUX_ADNROIDEABI("arm-linux-androideabi"),
     ;
 
@@ -962,6 +1006,7 @@ public class NdkCxxPlatforms {
   public enum TargetArch {
 
     X86("x86"),
+    X86_64("x86_64"),
     ARM("arm"),
     ;
 
@@ -984,6 +1029,7 @@ public class NdkCxxPlatforms {
   public enum TargetArchAbi {
 
     X86("x86"),
+    X86_64("x86_64"),
     ARMEABI("armeabi"),
     ARMEABI_V7A("armeabi-v7a"),
     ;
@@ -1075,6 +1121,7 @@ public class NdkCxxPlatforms {
   public enum ToolchainTarget {
 
     I686_LINUX_ANDROID("i686-linux-android"),
+    X86_64_LINUX_ANDROID("x86_64-linux-android"),
     ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
     ;
 
