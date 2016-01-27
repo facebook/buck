@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,6 +53,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path xcentFile;
   private ProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
+  private CodeSignIdentityStore codeSignIdentityStore;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -78,6 +80,9 @@ public class ProvisioningProfileCopyStepTest {
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = Paths.get("test.xcent");
     executionContext = TestExecutionContext.newInstance();
+    codeSignIdentityStore =
+        CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
+
   }
 
   @Test
@@ -93,7 +98,8 @@ public class ProvisioningProfileCopyStepTest {
         Optional.<Path>of(testdataDir.resolve("Invalid.plist")),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
-        xcentFile
+        xcentFile,
+        codeSignIdentityStore
     );
 
     step.execute(executionContext);
@@ -112,7 +118,8 @@ public class ProvisioningProfileCopyStepTest {
         Optional.<Path>absent(),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
-        xcentFile
+        xcentFile,
+        codeSignIdentityStore
     );
 
     step.execute(executionContext);
@@ -135,7 +142,8 @@ public class ProvisioningProfileCopyStepTest {
         Optional.<Path>absent(),
         ProvisioningProfileStore.fromSearchPath(emptyDir),
         outputFile,
-        xcentFile
+        xcentFile,
+        codeSignIdentityStore
     );
 
     step.execute(executionContext);
@@ -151,7 +159,9 @@ public class ProvisioningProfileCopyStepTest {
         Optional.<Path>absent(),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
-        xcentFile);
+        xcentFile,
+        codeSignIdentityStore
+    );
 
     Future<ProvisioningProfileMetadata> profileFuture = step.getSelectedProvisioningProfileFuture();
     step.execute(executionContext);

@@ -26,6 +26,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -52,6 +53,7 @@ public class ProvisioningProfileCopyStep implements Step {
   private final Path provisioningProfileDestination;
   private final Path signingEntitlementsTempPath;
   private final ProvisioningProfileStore provisioningProfileStore;
+  private final CodeSignIdentityStore codeSignIdentityStore;
   private final Path infoPlist;
   private final SettableFuture<ProvisioningProfileMetadata> selectedProvisioningProfileFuture =
       SettableFuture.create();
@@ -75,13 +77,15 @@ public class ProvisioningProfileCopyStep implements Step {
       Optional<Path> entitlementsPlist,
       ProvisioningProfileStore provisioningProfileStore,
       Path provisioningProfileDestination,
-      Path signingEntitlementsTempPath) {
+      Path signingEntitlementsTempPath,
+      CodeSignIdentityStore codeSignIdentityStore) {
     this.filesystem = filesystem;
     this.provisioningProfileDestination = provisioningProfileDestination;
     this.infoPlist = infoPlist;
     this.provisioningProfileUUID = provisioningProfileUUID;
     this.entitlementsPlist = entitlementsPlist;
     this.provisioningProfileStore = provisioningProfileStore;
+    this.codeSignIdentityStore = codeSignIdentityStore;
     this.signingEntitlementsTempPath = signingEntitlementsTempPath;
   }
 
@@ -117,12 +121,20 @@ public class ProvisioningProfileCopyStep implements Step {
       prefix = "*";
     }
 
+    final Optional<ImmutableList<CodeSignIdentity>> identities;
+    if (!codeSignIdentityStore.getIdentities().isEmpty()) {
+      identities = Optional.of(codeSignIdentityStore.getIdentities());
+    } else {
+      identities = ProvisioningProfileStore.MATCH_ANY_IDENTITY;
+    }
+
     Optional<ProvisioningProfileMetadata> bestProfile =
         provisioningProfileUUID.isPresent() ?
             provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get()) :
             provisioningProfileStore.getBestProvisioningProfile(
                 bundleID,
-                entitlements);
+                entitlements,
+                identities);
 
     if (!bestProfile.isPresent()) {
       throw new HumanReadableException("No valid non-expired provisioning profiles match for " +

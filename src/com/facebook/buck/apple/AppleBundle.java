@@ -412,7 +412,8 @@ public class AppleBundle
               entitlementsPlist,
               provisioningProfileStore,
               resourcesDestinationPath.resolve("embedded.mobileprovision"),
-              signingEntitlementsTempPath);
+              signingEntitlementsTempPath,
+              codeSignIdentityStore);
       stepsBuilder.add(provisioningProfileCopyStep);
 
       Supplier<CodeSignIdentity> codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
