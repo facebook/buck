@@ -56,7 +56,7 @@ public class JavacStep implements Step {
 
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
 
-  private final Optional<Path> pathToSrcsList;
+  private final Path pathToSrcsList;
 
   private final JavacOptions javacOptions;
 
@@ -103,7 +103,7 @@ public class JavacStep implements Step {
       Optional<StandardJavaFileManagerFactory> fileManagerFactory,
       Optional<Path> workingDirectory,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Javac javac,
       JavacOptions javacOptions,

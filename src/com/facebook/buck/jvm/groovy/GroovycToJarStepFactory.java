@@ -58,7 +58,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       /* out params */
       ImmutableList.Builder<Step> steps,

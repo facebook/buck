@@ -131,17 +131,12 @@ public class ExternalJavac implements Javac {
   public String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList) {
+      Path pathToSrcsList) {
     StringBuilder builder = new StringBuilder(pathToJavac.toString());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
-
-    if (pathToSrcsList.isPresent()) {
-      builder.append("@").append(pathToSrcsList.get());
-    } else {
-      Joiner.on(" ").appendTo(builder, javaSourceFilePaths);
-    }
+    builder.append("@").append(pathToSrcsList);
 
     return builder.toString();
   }
@@ -173,7 +168,7 @@ public class ExternalJavac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<Path> workingDirectory,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();
@@ -193,25 +188,19 @@ public class ExternalJavac implements Javac {
           invokingRule,
           workingDirectory);
     }
-    if (pathToSrcsList.isPresent()) {
-      try {
-        filesystem.writeLinesToPath(
-            FluentIterable.from(expandedSources)
-                .transform(Functions.toStringFunction())
-                .transform(ARGFILES_ESCAPER),
-            pathToSrcsList.get());
-        command.add("@" + pathToSrcsList.get());
-      } catch (IOException e) {
-        context.logError(
-            e,
-            "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-            pathToSrcsList.get());
-        return 1;
-      }
-    } else {
-      for (Path source : expandedSources) {
-        command.add(source.toString());
-      }
+    try {
+      filesystem.writeLinesToPath(
+          FluentIterable.from(expandedSources)
+              .transform(Functions.toStringFunction())
+              .transform(ARGFILES_ESCAPER),
+          pathToSrcsList);
+      command.add("@" + pathToSrcsList);
+    } catch (IOException e) {
+      context.logError(
+          e,
+          "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+          pathToSrcsList);
+      return 1;
     }
 
     ProcessBuilder processBuilder = new ProcessBuilder(command.build());

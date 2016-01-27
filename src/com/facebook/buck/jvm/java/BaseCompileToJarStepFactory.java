@@ -48,7 +48,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,

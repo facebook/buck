@@ -90,16 +90,11 @@ public abstract class Jsr199Javac implements Javac {
   public String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList) {
+      Path pathToSrcsList) {
     StringBuilder builder = new StringBuilder("javac ");
     Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
-
-    if (pathToSrcsList.isPresent()) {
-      builder.append("@").append(pathToSrcsList.get());
-    } else {
-      Joiner.on(" ").appendTo(builder, javaSourceFilePaths);
-    }
+    builder.append("@").append(pathToSrcsList);
 
     return builder.toString();
   }
@@ -131,7 +126,7 @@ public abstract class Jsr199Javac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<Path> workingDirectory,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) {
     JavaCompiler compiler = createCompiler(context, resolver);
@@ -179,28 +174,27 @@ public abstract class Jsr199Javac implements Javac {
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       JavaCompiler compiler,
       StandardJavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits) {
-    if (pathToSrcsList.isPresent()) {
-      // write javaSourceFilePaths to classes file
-      // for buck user to have a list of all .java files to be compiled
-      // since we do not print them out to console in case of error
-      try {
-        filesystem.writeLinesToPath(
-            FluentIterable.from(javaSourceFilePaths)
-                .transform(Functions.toStringFunction())
-                .transform(ARGFILES_ESCAPER),
-            pathToSrcsList.get());
-      } catch (IOException e) {
-        context.logError(
-            e,
-            "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-            pathToSrcsList.get());
-        return 1;
-      }
+    // write javaSourceFilePaths to classes file
+    // for buck user to have a list of all .java files to be compiled
+    // since we do not print them out to console in case of error
+    try {
+      filesystem.writeLinesToPath(
+          FluentIterable.from(javaSourceFilePaths)
+              .transform(Functions.toStringFunction())
+              .transform(ARGFILES_ESCAPER),
+          pathToSrcsList);
+    } catch (IOException e) {
+      context.logError(
+          e,
+          "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+          pathToSrcsList);
+      return 1;
     }
+
 
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();

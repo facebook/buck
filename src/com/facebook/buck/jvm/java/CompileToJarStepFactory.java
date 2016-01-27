@@ -45,7 +45,7 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       /* output params */
       ImmutableList.Builder<Step> steps,
@@ -60,7 +60,7 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,

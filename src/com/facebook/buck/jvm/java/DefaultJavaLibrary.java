@@ -483,7 +483,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           declared,
           outputDirectory,
           workingDirectory,
-          Optional.of(pathToSrcsList),
+          pathToSrcsList,
           Optional.of(suggestBuildRule),
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),

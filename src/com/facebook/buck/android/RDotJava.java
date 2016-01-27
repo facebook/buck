@@ -45,6 +45,7 @@ public class RDotJava {
 
   static JavacStep createJavacStepForUberRDotJavaFiles(
       ImmutableSortedSet<Path> javaSourceFilePaths,
+      Path pathToSrcsList,
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
@@ -52,6 +53,7 @@ public class RDotJava {
       ProjectFilesystem filesystem) {
     return createJavacStepForDummyRDotJavaFiles(
         javaSourceFilePaths,
+        pathToSrcsList,
         outputDirectory,
         javacOptions,
         buildTarget,
@@ -61,6 +63,7 @@ public class RDotJava {
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(
       ImmutableSortedSet<Path> javaSourceFilePaths,
+      Path pathToSrcsList,
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
@@ -72,7 +75,7 @@ public class RDotJava {
         Optional.<StandardJavaFileManagerFactory>absent(),
         Optional.<Path>absent(),
         javaSourceFilePaths,
-        Optional.<Path>absent(),
+        pathToSrcsList,
         /* declared classpath */ ImmutableSortedSet.<Path>of(),
         javacOptions.getJavac(),
         JavacOptions.builder(javacOptions)

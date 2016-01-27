@@ -52,7 +52,7 @@ public class JavacDirectToJarStep implements Step {
   private final Path outputDirectory;
   private final JavacOptions buildTimeOptions;
   private final Optional<Path> workingDirectory;
-  private final Optional<Path> pathToSrcsList;
+  private final Path pathToSrcsList;
   private final Optional<SuggestBuildRules> suggestBuildRules;
   private final ImmutableSortedSet<Path> entriesToJar;
   private final Optional<String> mainClass;
@@ -71,7 +71,7 @@ public class JavacDirectToJarStep implements Step {
       JavacOptions buildTimeOptions,
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Optional<Path> pathToSrcsList,
+      Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
