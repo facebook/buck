@@ -43,7 +43,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -467,12 +466,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
       // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
-      steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
-
       Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
+      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
 
       compileStepFactory.createCompileToJarStep(
           context,
