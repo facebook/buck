@@ -18,7 +18,10 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.android.ResourceFilters.Density;
 import com.google.common.base.Predicate;
@@ -28,9 +31,11 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -328,6 +333,57 @@ public class ResourceFiltersTest {
     assertFalse(candidates.isEmpty());
     for (Path candidate : candidates) {
       assertEquals(!filesToRemove.contains(candidate), predicate.apply(candidate));
+    }
+  }
+
+  @Test
+  public void testcreateDensityFilterSkipsDrawables() {
+    Path candidate = Paths.get("drawable-ldpi/somefile");
+    Predicate<Path> predicate = ResourceFilters.createDensityFilter(
+        new FakeProjectFilesystem(),
+        ImmutableSet.of(Density.MDPI));
+    assertThat(predicate.apply(candidate), Matchers.is(true));
+  }
+
+  @Test
+  public void testcreateDensityFilterIncludesTarget() throws IOException {
+    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
+      if (folderName.equals("drawable")) {
+        // Drawables are special and we have a different method for them.
+        continue;
+      }
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      Path include = Paths.get(String.format("%s-mdpi/somefile", folderName));
+      filesystem.createNewFile(include);
+      Path exclude = Paths.get(String.format("%s-ldpi/somefile", folderName));
+      filesystem.createNewFile(exclude);
+
+      Predicate<Path> predicate = ResourceFilters.createDensityFilter(
+          filesystem,
+          ImmutableSet.of(Density.MDPI));
+      assertThat(predicate.apply(exclude), Matchers.is(false));
+      assertThat(predicate.apply(include), Matchers.is(true));
+    }
+  }
+
+  @Test
+  public void testCreateDensityFilterIncludesFallbackWhenTargetNotPresent() throws IOException {
+    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
+      if (folderName.equals("drawable")) {
+        // Drawables are special and we have a different method for them.
+        continue;
+      }
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      Path include = Paths.get(folderName).resolve("somefile");
+      filesystem.createNewFile(include);
+      Path exclude = Paths.get(String.format("%s-ldpi/somefile", folderName));
+      filesystem.createNewFile(exclude);
+
+      Predicate<Path> predicate = ResourceFilters.createDensityFilter(
+          filesystem,
+          ImmutableSet.of(Density.MDPI));
+      assertThat(predicate.apply(exclude), Matchers.is(false));
+      assertThat(predicate.apply(include), Matchers.is(true));
     }
   }
 }
