@@ -29,8 +29,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
-
-@WebSocket(maxTextMessageSize = 64 * 1024)
+// Set the maximum message text size to 24 MB
+@WebSocket(maxTextMessageSize = 24 * 1024 * 1024)
 public class BuckSocket {
     private final CountDownLatch closeLatch;
 
