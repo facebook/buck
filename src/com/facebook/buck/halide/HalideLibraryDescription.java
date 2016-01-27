@@ -24,10 +24,10 @@ import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
@@ -178,7 +178,10 @@ public class HalideLibraryDescription
         pathResolver,
         platform.getAr(),
         platform.getRanlib(),
-        BuildTargets.getGenPath(params.getBuildTarget(), "%s.a"),
+        CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getBuildTarget(),
+            platform.getFlavor(),
+            CxxSourceRuleFactory.PicType.PDC),
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(buildTarget, HalideCompile.objectOutputPath(buildTarget))));
   }
