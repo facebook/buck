@@ -45,7 +45,7 @@ public class CopyResourcesStepTest {
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     // Files:
-    // android/java/BUILD
+    // android/java/BUCK
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java:resources");
@@ -79,7 +79,7 @@ public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfJavaPackage() {
     // Files:
-    // android/java/src/BUILD
+    // android/java/src/BUCK
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java/src:resources");
@@ -114,7 +114,7 @@ public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileInJavaPackage() {
     // Files:
-    // android/java/src/com/facebook/BUILD
+    // android/java/src/com/facebook/BUCK
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget =

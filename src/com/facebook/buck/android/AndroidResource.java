@@ -61,7 +61,7 @@ import javax.annotation.Nullable;
 /**
  * An object that represents the resources of an android library.
  * <p>
- * Suppose this were a rule defined in <code>src/com/facebook/feed/BUILD</code>:
+ * Suppose this were a rule defined in <code>src/com/facebook/feed/BUCK</code>:
  * <pre>
  * android_resources(
  *   name = 'res',

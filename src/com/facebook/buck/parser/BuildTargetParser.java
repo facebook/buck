@@ -52,7 +52,7 @@ public class BuildTargetParser {
 
   /**
    * @param buildTargetName either a fully-qualified name or relative to the {@link BuildTargetPatternParser}.
-   *     For example, inside {@code first-party/orca/orcaapp/BUILD}, which can be obtained by
+   *     For example, inside {@code first-party/orca/orcaapp/BUCK}, which can be obtained by
    *     calling {@code ParseContext.forBaseName("first-party/orca/orcaapp")},
    *     {@code //first-party/orca/orcaapp:assets} and {@code :assets} refer to the same target.
    *     However, from the command line the context is obtained by calling

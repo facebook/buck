@@ -130,8 +130,8 @@ def add_rule(rule, build_env):
         "Cannot use `{}()` at the top-level of an included file."
         .format(rule['buck.type']))
 
-    # Include the base path of the BUILD file so the reader consuming this
-    # output will know which BUILD file the rule came from.
+    # Include the base path of the BUCK file so the reader consuming this
+    # output will know which BUCK file the rule came from.
     if 'name' not in rule:
         raise ValueError(
             'rules must contain the field \'name\'.  Found %s.' % rule)
@@ -733,16 +733,16 @@ def silent_excepthook(exctype, value, tb):
 # Inexplicably, this script appears to run faster when the arguments passed
 # into it are absolute paths. However, we want the "buck.base_path" property
 # of each rule to be printed out to be the base path of the build target that
-# identifies the rule. That means that when parsing a BUILD file, we must know
+# identifies the rule. That means that when parsing a BUCK file, we must know
 # its path relative to the root of the project to produce the base path.
 #
 # To that end, the first argument to this script must be an absolute path to
 # the project root.  It must be followed by one or more absolute paths to
-# BUILD files under the project root.  If no paths to BUILD files are
-# specified, then it will traverse the project root for BUILD files, excluding
+# BUCK files under the project root.  If no paths to BUCK files are
+# specified, then it will traverse the project root for BUCK files, excluding
 # directories of generated files produced by Buck.
 #
-# All of the build rules that are parsed from the BUILD files will be printed
+# All of the build rules that are parsed from the BUCK files will be printed
 # to stdout encoded in BSER. That means that printing out other information
 # for debugging purposes will break the BSER encoding, so be careful!
 
