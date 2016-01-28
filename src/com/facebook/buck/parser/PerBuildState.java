@@ -404,14 +404,15 @@ class PerBuildState implements AutoCloseable {
 
     /**
      * Called when all work on all threads should be stopped.  This clears all entries in
-     * {@link #pendingBuildTargets} and {@link #pendingBuildFiles}, and sets
-     * {@link #pendingWorkQueueCount} to {@code 1} so that {@link #completionNotifier} is properly
-     * signaled.
+     * {@link #pendingBuildTargets} and {@link #pendingBuildFiles}, sets
+     * {@link #pendingWorkQueueCount} to {@code 0} and sends a signal to
+     * {@link #completionNotifier}.
      */
     protected void abortDoingMoreWork() {
       pendingBuildTargets.clear();
       pendingBuildFiles.clear();
-      pendingWorkQueueCount.set(1);
+      pendingWorkQueueCount.set(0);
+      completionNotifier.countDown();
     }
 
     protected void notifyIfWorkCompleted() {

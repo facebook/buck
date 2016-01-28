@@ -1902,6 +1902,36 @@ public class ParserTest {
     assertEquals("Should not have invalidated.", 1, counter.calls);
   }
 
+  @Test(timeout = 20000)
+  public void resolveTargetSpecsDoesNotHangOnException() throws Exception {
+    Path buckFile = cellRoot.resolve("foo/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(buckFile, "# empty".getBytes(UTF_8));
+
+    buckFile = cellRoot.resolve("bar/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(
+        buckFile,
+        "I do not parse as python".getBytes(UTF_8));
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Parse error for build file");
+    thrown.expectMessage(Paths.get("bar/BUCK").toString());
+
+    parser.resolveTargetSpecs(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableList.of(
+            TargetNodePredicateSpec.of(
+                Predicates.alwaysTrue(),
+                BuildFileSpec.fromRecursivePath(Paths.get("bar"))),
+            TargetNodePredicateSpec.of(
+                Predicates.alwaysTrue(),
+                BuildFileSpec.fromRecursivePath(Paths.get("foo")))));
+  }
+
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
         new TargetGraphToActionGraph(
