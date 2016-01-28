@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 
 import java.nio.file.Path;
@@ -23,11 +24,11 @@ import java.nio.file.Path;
 public class AlwaysFoundExecutableFinder extends ExecutableFinder {
 
   @Override
-  protected Path findExecutable(
+  public Optional<Path> getOptionalExecutable(
       Path suggestedPath,
       ImmutableCollection<Path> searchPath,
       ImmutableCollection<String> fileSuffixes) {
-    return suggestedPath;
+    return Optional.of(suggestedPath);
   }
 
 }

@@ -37,8 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.annotation.Nullable;
-
 /**
  * Given the name of an executable, search a set of (possibly platform-specific) known locations for
  * that executable.
@@ -64,6 +62,13 @@ public class ExecutableFinder {
     @Override
     public Path apply(String path) {
       return Paths.get(path);
+    }
+  };
+
+  private static final Function<Path, Boolean> IS_EXECUTABLE = new Function<Path, Boolean>() {
+    @Override
+    public Boolean apply(Path path) {
+      return ExecutableFinder.isExecutable(path);
     }
   };
 
@@ -101,54 +106,35 @@ public class ExecutableFinder {
   public Optional<Path> getOptionalExecutable(
       Path suggestedExecutable,
       Path basePath) {
-    Optional<Path> executable = Optional.fromNullable(
-        findExecutable(
-            suggestedExecutable,
-            ImmutableSet.of(basePath),
-            getExecutableSuffixes(ImmutableMap.<String, String>of())));
-    LOG.debug("Executable '%s' mapped to '%s'", suggestedExecutable, executable);
-
-    return executable;
+    return getOptionalExecutable(
+        suggestedExecutable,
+        ImmutableSet.of(basePath),
+        getExecutableSuffixes(ImmutableMap.<String, String>of()));
   }
 
   public Optional<Path> getOptionalExecutable(
       Path suggestedExecutable,
       ImmutableCollection<Path> path,
       ImmutableCollection<String> fileSuffixes) {
-    Optional<Path> executable = Optional.fromNullable(
-        findExecutable(suggestedExecutable, path, fileSuffixes));
+
+    // Fast path out of here.
+    if (isExecutable(suggestedExecutable)) {
+      return Optional.of(suggestedExecutable);
+    }
+
+    Optional<Path> executable = FileFinder.getOptionalFile(
+        FileFinder.combine(
+            /* prefixes */ null,
+            suggestedExecutable.toString(),
+            ImmutableSet.copyOf(fileSuffixes)),
+        path,
+        IS_EXECUTABLE);
     LOG.debug("Executable '%s' mapped to '%s'", suggestedExecutable, executable);
 
     return executable;
   }
 
-  @Nullable
-  protected Path findExecutable(
-      Path suggestedPath,
-      ImmutableCollection<Path> searchPath,
-      ImmutableCollection<String> fileSuffixes) {
-    // Fast path out of here.
-    if (isExecutable(suggestedPath)) {
-      return suggestedPath;
-    }
-
-    // Always search at least the given path without suffixes.
-    if (fileSuffixes.isEmpty()) {
-      fileSuffixes = ImmutableSet.of("");
-    }
-
-    for (Path path : searchPath) {
-      for (String suffix : fileSuffixes) {
-        Path exe = path.resolve(path).resolve(suggestedPath + suffix);
-        if (isExecutable(exe)) {
-          return exe;
-        }
-      }
-    }
-    return null;
-  }
-
-  private boolean isExecutable(Path exe) {
+  private static boolean isExecutable(Path exe) {
     if (!Files.exists(exe)) {
       return false;
     }

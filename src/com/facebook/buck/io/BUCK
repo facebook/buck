@@ -30,6 +30,7 @@ java_library(
 
 FINDER_SRCS = [
   'ExecutableFinder.java',
+  'FileFinder.java',
 ]
 java_library(
   name = 'executable-finder',
