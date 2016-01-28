@@ -136,9 +136,6 @@ public class ZipStep implements Step {
             isDirectory ?
                 ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue() :
                 compressionLevel.getValue());
-        if (entry.getCompressionLevel() == ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue()) {
-          entry.setMethod(ZipEntry.STORED);
-        }
         // If we're using STORED files, we must manually set the CRC, size, and compressed size.
         if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
           entry.setSize(attr.size());

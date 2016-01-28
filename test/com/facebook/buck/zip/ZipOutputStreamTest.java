@@ -22,12 +22,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Calendar.SEPTEMBER;
 import static java.util.zip.Deflater.BEST_COMPRESSION;
 import static java.util.zip.Deflater.NO_COMPRESSION;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -363,12 +362,12 @@ public class ZipOutputStreamTest {
       assertEquals("default", entry.getName());
       ByteStreams.copy(in, ByteStreams.nullOutputStream());
       long defaultCompressedSize = entry.getCompressedSize();
-      assertThat(entry.getCompressedSize(), is(lessThan(entry.getSize())));
+      assertNotEquals(entry.getCompressedSize(), entry.getSize());
 
       entry = in.getNextEntry();
       ByteStreams.copy(in, ByteStreams.nullOutputStream());
       assertEquals("stored", entry.getName());
-      assertThat(entry.getCompressedSize(), is(greaterThanOrEqualTo(entry.getSize())));
+      assertEquals(entry.getCompressedSize(), entry.getSize());
 
       entry = in.getNextEntry();
       ByteStreams.copy(in, ByteStreams.nullOutputStream());
@@ -379,13 +378,13 @@ public class ZipOutputStreamTest {
   }
 
   @Test
-  public void shouldNotChangeMethodWhenCompressionLevelIsChanged() {
+  public void shouldChangeMethodWhenCompressionLevelIsChanged() {
     CustomZipEntry entry = new CustomZipEntry("cake");
     assertEquals(ZipEntry.DEFLATED, entry.getMethod());
     assertEquals(Deflater.DEFAULT_COMPRESSION, entry.getCompressionLevel());
 
     entry.setCompressionLevel(NO_COMPRESSION);
-    assertEquals(ZipEntry.DEFLATED, entry.getMethod());
+    assertEquals(ZipEntry.STORED, entry.getMethod());
 
     entry.setCompressionLevel(BEST_COMPRESSION);
     assertEquals(ZipEntry.DEFLATED, entry.getMethod());

@@ -50,6 +50,9 @@ public class CustomZipEntry extends ZipEntry {
         compressionLevel >= NO_COMPRESSION && compressionLevel <= BEST_COMPRESSION);
     this.compressionLevel = compressionLevel;
 
+    // We need to update the underlying method declared
+    setMethod(compressionLevel == NO_COMPRESSION ? STORED : DEFLATED);
+
     // Reset the various fields that need to be updated.
     setCrc(0);
     setSize(0);
