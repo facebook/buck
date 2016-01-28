@@ -172,11 +172,8 @@ public class CxxSourceRuleFactory {
                 }
               });
 
-  private final LoadingCache<CxxSource.Type, PreprocessorDelegate>
-      preprocessAndCompilePreprocessorDelegate;
-  private final LoadingCache<
-      PreprocessAndCompilePreprocessorDelegateKey,
-      PreprocessorDelegate> preprocessPreprocessorDelegate;
+  private final LoadingCache<PreprocessAndCompilePreprocessorDelegateKey, PreprocessorDelegate>
+      preprocessorDelegates;
 
   @VisibleForTesting
   public CxxSourceRuleFactory(
@@ -194,10 +191,8 @@ public class CxxSourceRuleFactory {
     this.cxxPreprocessorInput = cxxPreprocessorInput;
     this.compilerFlags = compilerFlags;
     this.prefixHeader = prefixHeader;
-    this.preprocessAndCompilePreprocessorDelegate = CacheBuilder.newBuilder()
-        .build(new PreprocessAndCompileCacheLoader());
-    this.preprocessPreprocessorDelegate = CacheBuilder.newBuilder()
-        .build(new PreprocessPreprocessorCacheLoader());
+    this.preprocessorDelegates = CacheBuilder.newBuilder()
+        .build(new PreprocessorDelegateCacheLoader());
   }
 
   private String getOutputName(String name) {
@@ -280,7 +275,7 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        preprocessPreprocessorDelegate.getUnchecked(
+        preprocessorDelegates.getUnchecked(
             PreprocessAndCompilePreprocessorDelegateKey.of(
                 source.getType(),
                 pic,
@@ -634,7 +629,11 @@ public class CxxSourceRuleFactory {
                 computeSourcePreprocessorAndToolDeps(Optional.of((Tool) compiler), source)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        preprocessAndCompilePreprocessorDelegate.getUnchecked(source.getType()),
+        preprocessorDelegates.getUnchecked(
+            PreprocessAndCompilePreprocessorDelegateKey.of(
+                source.getType(),
+                pic,
+                source.getFlags())),
         compiler,
         computePlatformCompilerFlags(pic, source),
         computeRuleCompilerFlags(source),
@@ -824,18 +823,19 @@ public class CxxSourceRuleFactory {
 
   }
 
-  private abstract class PreprocessorDelegateCacheLoader<T> extends
-      CacheLoader<T, PreprocessorDelegate> {
+  private class PreprocessorDelegateCacheLoader
+      extends CacheLoader<PreprocessAndCompilePreprocessorDelegateKey, PreprocessorDelegate> {
 
     @Override
-    public PreprocessorDelegate load(T key) throws Exception {
+    public PreprocessorDelegate load(PreprocessAndCompilePreprocessorDelegateKey key)
+        throws Exception {
       return new PreprocessorDelegate(
           pathResolver,
           cxxPlatform.getDebugPathSanitizer(),
           params.getProjectFilesystem().getRootPath(),
-          CxxSourceTypes.getPreprocessor(cxxPlatform, getSourceType(key)),
-          getPlatformPreprocessorFlags(key),
-          getRulePreprocessorFlags(key),
+          CxxSourceTypes.getPreprocessor(cxxPlatform, key.getSourceType()),
+          computePlatformPreprocessorFlags(key.getPicType(), key.getSourceType()),
+          computeRulePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
           includeRoots.get(),
           systemIncludeRoots.get(),
           headerMaps.get(),
@@ -843,56 +843,6 @@ public class CxxSourceRuleFactory {
           CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
           prefixHeader,
           includes.get());
-    }
-
-    abstract CxxSource.Type getSourceType(T key);
-
-    abstract ImmutableList<String> getPlatformPreprocessorFlags(T key);
-
-    abstract ImmutableList<String> getRulePreprocessorFlags(T key);
-
-  }
-
-  private class PreprocessAndCompileCacheLoader extends
-      PreprocessorDelegateCacheLoader<CxxSource.Type> {
-
-    @Override
-    AbstractCxxSource.Type getSourceType(CxxSource.Type key) {
-      return key;
-    }
-
-    @Override
-    ImmutableList<String> getPlatformPreprocessorFlags(CxxSource.Type key) {
-      return CxxSourceTypes.getPlatformPreprocessFlags(
-          cxxPlatform,
-          getSourceType(key));
-    }
-
-    @Override
-    ImmutableList<String> getRulePreprocessorFlags(CxxSource.Type key) {
-      return preprocessorFlags.getUnchecked(getSourceType(key));
-    }
-
-  }
-
-  private class PreprocessPreprocessorCacheLoader extends
-      PreprocessorDelegateCacheLoader<PreprocessAndCompilePreprocessorDelegateKey> {
-
-    @Override
-    AbstractCxxSource.Type getSourceType(PreprocessAndCompilePreprocessorDelegateKey key) {
-      return key.getSourceType();
-    }
-
-    @Override
-    ImmutableList<String> getPlatformPreprocessorFlags(
-        PreprocessAndCompilePreprocessorDelegateKey key) {
-      return computePlatformPreprocessorFlags(key.getPicType(), key.getSourceType());
-    }
-
-    @Override
-    ImmutableList<String> getRulePreprocessorFlags(
-        PreprocessAndCompilePreprocessorDelegateKey key) {
-      return computeRulePreprocessorFlags(key.getSourceType(), key.getSourceFlags());
     }
 
   }

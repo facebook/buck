@@ -203,37 +203,42 @@ public class CompilationDatabaseIntegrationTest {
       languageStandard = "-std=c++11";
       clang += "++";
     }
+    ImmutableList<String> commandArgs1 = ImmutableList.of(
+        "'" + languageStandard + "'",
+        "-Wno-deprecated",
+        "-Wno-conversion");
+
+    ImmutableList<String> commandArgs2 = ImmutableList.of(
+        "-isysroot",
+        sdkRoot,
+        "-arch",
+        "x86_64",
+        "'-mios-simulator-version-min=8.0'");
+
     List<String> commandArgs = Lists.newArrayList();
     commandArgs.add(clang);
-    commandArgs.add("'" + languageStandard + "'");
-    commandArgs.add("-Wno-deprecated");
-    commandArgs.add("-Wno-conversion");
+    if (isLibrary) {
+      commandArgs.add("-fPIC");
+    }
+
+    // TODO(Coneko): These should be here only once, fix this once we unify on a single
+    // preprocessing mode
+    for (int i = 0; i < 2; ++i) {
+      commandArgs.addAll(commandArgs1);
+      commandArgs.addAll(commandArgs2);
+    }
 
     if (isLibrary) {
       commandArgs.add("-fPIC");
     }
 
-    commandArgs.add("-isysroot");
-    commandArgs.add(sdkRoot);
-    commandArgs.add("-arch");
-    commandArgs.add("x86_64");
-    commandArgs.add("'-mios-simulator-version-min=8.0'");
-
     // TODO(Coneko, k21): It seems like a bug that this set of flags gets inserted twice.
     // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
     // (Err, it's probably adding both the preprocessor and regular rule command suffixes. Should
     // be harmless.)
-    commandArgs.add("'" + languageStandard + "'");
-    commandArgs.add("-Wno-deprecated");
-    commandArgs.add("-Wno-conversion");
-
-    commandArgs.add("-isysroot");
-    commandArgs.add(sdkRoot);
-
-    commandArgs.add("-arch");
-    commandArgs.add("x86_64");
-
-    commandArgs.add("'-mios-simulator-version-min=8.0'");
+    commandArgs.addAll(commandArgs2);
+    commandArgs.addAll(commandArgs1);
+    commandArgs.addAll(commandArgs2);
 
     for (String include : includes) {
       commandArgs.add("-I");
