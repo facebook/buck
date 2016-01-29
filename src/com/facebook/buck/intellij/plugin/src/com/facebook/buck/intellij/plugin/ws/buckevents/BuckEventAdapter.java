@@ -36,10 +36,6 @@ public class BuckEventAdapter implements JsonDeserializer<BuckEventInterface> {
                     put(BuckEventBuildParseStart.EVENT_TYPE, BuckEventBuildParseStart.class).
                     put(BuckEventBuildParseEnd.EVENT_TYPE, BuckEventBuildParseEnd.class).
                     put(BuckEventBuildParseProgress.EVENT_TYPE, BuckEventBuildParseProgress.class).
-                    put(BuckEventBuildRuleStarted.EVENT_TYPE, BuckEventBuildRuleStarted.class).
-                    put(BuckEventBuildRuleSuspended.EVENT_TYPE, BuckEventBuildRuleSuspended.class).
-                    put(BuckEventBuildRuleResumed.EVENT_TYPE, BuckEventBuildRuleResumed.class).
-                    put(BuckEventBuildRuleFinished.EVENT_TYPE, BuckEventBuildRuleFinished.class).
                     put(BuckEventCompilerError.EVENT_TYPE, BuckEventCompilerError.class).
                     build();
 

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.plugin.ui;
 
-import com.facebook.buck.intellij.plugin.config.BuildRuleItem;
 import com.facebook.buck.intellij.plugin.ui.tree.BuckTreeNodeBuild;
 import com.facebook.buck.intellij.plugin.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.plugin.ui.tree.BuckTreeNodeFileError;
@@ -25,12 +24,6 @@ import com.facebook.buck.intellij.plugin.ui.utils.CompilerErrorItem;
 import com.facebook.buck.intellij.plugin.ui.utils.ErrorExtractor;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildStartConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckInternalBatchCommitConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckInternalBatchStartConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleEndConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleFailureConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleStartConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuildRuleSuspendedConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.CompilerErrorConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
@@ -58,15 +51,7 @@ public class BuckEventsConsumer implements
         RulesParsingStartConsumer,
         RulesParsingEndConsumer,
         RulesParsingProgressUpdateConsumer,
-
-        BuildRuleStartConsumer,
-        BuildRuleEndConsumer,
-        BuildRuleFailureConsumer,
-        BuildRuleSuspendedConsumer,
-        CompilerErrorConsumer,
-
-        BuckInternalBatchStartConsumer,
-        BuckInternalBatchCommitConsumer {
+        CompilerErrorConsumer {
 
     private Project mProject;
     public BuckEventsConsumer(Project project) {
@@ -75,8 +60,6 @@ public class BuckEventsConsumer implements
     private String mTarget = null;
     private MessageBusConnection mConnection;
     private DefaultTreeModel mTreeModel;
-    private Map<String, BuildRuleItem> mRules =
-            Collections.synchronizedMap(new HashMap<String, BuildRuleItem>());
     private Map<String, List<String>> mErrors =
             Collections.synchronizedMap(new HashMap<String, List<String>>());
     private float mBuildProgressValue = 0;
@@ -89,10 +72,6 @@ public class BuckEventsConsumer implements
     BuckTreeNodeBuild mCurrentBuildRootElement;
     BuckTreeNodeDetail mBuildProgress;
     BuckTreeNodeDetail mParseProgress;
-    BuckTreeNodeDetail mRunningTasks;
-    BuckTreeNodeDetail mSuspendedTasks;
-    BuckTreeNodeDetail mFinishedTasks;
-
 
     public void detach() {
         mConnection.disconnect();
@@ -121,26 +100,9 @@ public class BuckEventsConsumer implements
                 mCurrentBuildRootElement,
                 BuckTreeNodeDetail.DetailType.INFO,
                 "Current file parsing progress: " + Math.round(mParseProgressValue * 100) + "%");
-        mRunningTasks = new BuckTreeNodeDetail(
-                mCurrentBuildRootElement,
-                BuckTreeNodeDetail.DetailType.INFO,
-                "Running tasks: 0"
-        );
-        mSuspendedTasks = new BuckTreeNodeDetail(
-                mCurrentBuildRootElement,
-                BuckTreeNodeDetail.DetailType.INFO,
-                "Suspended tasks: 0"
-        );
-        mFinishedTasks = new BuckTreeNodeDetail(
-                mCurrentBuildRootElement,
-                BuckTreeNodeDetail.DetailType.INFO,
-                "Finished tasks: 0"
-        );
+
         mCurrentBuildRootElement.addChild(mParseProgress);
         mCurrentBuildRootElement.addChild(mBuildProgress);
-        mCurrentBuildRootElement.addChild(mRunningTasks);
-        mCurrentBuildRootElement.addChild(mSuspendedTasks);
-        mCurrentBuildRootElement.addChild(mFinishedTasks);
 
         mTreeModel.setRoot(mCurrentBuildRootElement);
 
@@ -152,62 +114,11 @@ public class BuckEventsConsumer implements
         mConnection.subscribe(BuckBuildEndConsumer.BUCK_BUILD_END, this);
         mConnection.subscribe(BuckBuildProgressUpdateConsumer.BUCK_BUILD_PROGRESS_UPDATE, this);
 
-        mConnection.subscribe(BuildRuleStartConsumer.BUCK_BUILD_RULE_START, this);
-        mConnection.subscribe(BuildRuleEndConsumer.BUCK_BUILD_RULE_END, this);
-        mConnection.subscribe(BuildRuleSuspendedConsumer.BUCK_BUILD_RULE_SUSPENDED, this);
-
         mConnection.subscribe(RulesParsingStartConsumer.BUCK_PARSE_RULE_START, this);
         mConnection.subscribe(RulesParsingEndConsumer.BUCK_PARSE_RULE_END, this);
         mConnection.subscribe(RulesParsingProgressUpdateConsumer.BUCK_PARSE_PROGRESS_UPDATE, this);
 
         mConnection.subscribe(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER, this);
-
-        mConnection.subscribe(BuckInternalBatchStartConsumer.BUCK_INTERNAL_BATCH_START, this);
-        mConnection.subscribe(BuckInternalBatchCommitConsumer.BUCK_INTERNAL_BATCH_COMMIT, this);
-    }
-
-    @Override
-    public void consumeBuildRuleEnd(String build,
-                                    String ruleKeySafe,
-                                    String target,
-                                    BigInteger timestamp,
-                                    boolean mainRule, String status) {
-        if (mRules.containsKey(target)) {
-            BuildRuleItem bri = mRules.get(target);
-            bri.endTimestamp = timestamp;
-            if (bri.status == BuildRuleItem.Status.RUNNING) {
-                bri.status = BuildRuleItem.Status.FINISHED;
-                mRules.put(target, bri);
-            }
-            if (!mBatchMode) {
-                refreshTasksStatus();
-            }
-        }
-    }
-
-    @Override
-    public void consumeBuildRuleStart(String build,
-                                      String ruleKeySafe,
-                                      String target,
-                                      BigInteger timestamp,
-                                      boolean mainRule) {
-        BuildRuleItem bri = new BuildRuleItem();
-        bri.name = target;
-        bri.startTimestamp = timestamp;
-        bri.status = BuildRuleItem.Status.RUNNING;
-        mRules.put(target, bri);
-        if (!mBatchMode) {
-            refreshTasksStatus();
-        }
-    }
-
-    @Override
-    public void consumeBuildRuleFailure(String build,
-                                        String ruleKeySafe,
-                                        String target,
-                                        BigInteger timestamp,
-                                        String message) {
-        // TODO
     }
 
     @Override
@@ -270,22 +181,6 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeBuildRuleSuspended(String build,
-                                          String ruleKeySafe,
-                                          String target,
-                                          BigInteger timestamp,
-                                          String buildRuleType) {
-        if (mRules.containsKey(target)) {
-            BuildRuleItem bri = mRules.get(target);
-            bri.status = BuildRuleItem.Status.SUSPENDED;
-            mRules.put(target, bri);
-            if (!mBatchMode) {
-                refreshTasksStatus();
-            }
-        }
-    }
-
-    @Override
     public void consumeCompilerError(String build,
                                      String target,
                                      BigInteger timestamp,
@@ -299,37 +194,6 @@ public class BuckEventsConsumer implements
         }
         existingErrors.add(error);
         mErrors.put(target, existingErrors);
-    }
-
-    private void refreshTasksStatus() {
-        int running = 0;
-        int suspended = 0;
-        int finished = 0;
-
-        for (String cTarget: mRules.keySet()) {
-            BuildRuleItem bri = mRules.get(cTarget);
-            if (bri.status == BuildRuleItem.Status.RUNNING) {
-                running++;
-            } else if (bri.status == BuildRuleItem.Status.SUSPENDED) {
-                suspended++;
-            } else if (bri.status == BuildRuleItem.Status.FINISHED ||
-                    bri.status == BuildRuleItem.Status.ERROR) {
-                finished++;
-            }
-        }
-        final String finishedMessage = "Finished tasks: " + finished;
-        final String runningMessage = "Running tasks: " + running;
-        final String suspendedMessage = "Suspended tasks: " + suspended;
-
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                BuckEventsConsumer.this.mFinishedTasks.setDetail(finishedMessage);
-                BuckEventsConsumer.this.mRunningTasks.setDetail(runningMessage);
-                BuckEventsConsumer.this.mSuspendedTasks.setDetail(suspendedMessage);
-                BuckEventsConsumer.this.mTreeModel.reload();
-            }
-        });
     }
 
     private void log(String message) {
@@ -390,9 +254,6 @@ public class BuckEventsConsumer implements
     public void clearDisplay() {
         BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mParseProgress);
         BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mBuildProgress);
-        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mFinishedTasks);
-        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mRunningTasks);
-        BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mSuspendedTasks);
     }
 
     @Override
@@ -480,17 +341,5 @@ public class BuckEventsConsumer implements
     public void consumeBuildStart(String build, BigInteger timestamp) {
         log("Starting build\n");
         mMainBuildStartTimestamp = timestamp;
-    }
-
-    private boolean mBatchMode = false;
-    @Override
-    public void startBatch() {
-        mBatchMode = true;
-    }
-
-    @Override
-    public void commitBatch() {
-        mBatchMode = false;
-        refreshTasksStatus();
     }
 }

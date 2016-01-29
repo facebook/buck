@@ -17,20 +17,14 @@
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
-import com.google.common.collect.EvictingQueue;
 import com.intellij.openapi.application.ApplicationManager;
 
 public class BuckEventsQueue implements BuckEventsQueueInterface {
 
     private BuckEventsConsumerFactory mFactory;
-    private EvictingQueue<BuckEventInterface> mLowPri;
-
-    private static int maxLowPriSize = 50;
-    private static int lowPriBatchSize = 10;
 
     public BuckEventsQueue(BuckEventsConsumerFactory factory) {
         mFactory = factory;
-        mLowPri = EvictingQueue.create(maxLowPriSize);
     }
 
     @Override
@@ -44,11 +38,6 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
             handleHighPriEvent(event);
             return;
         }
-        // Add for later, batch processing
-        mLowPri.add(event);
-        if (mLowPri.size() > lowPriBatchSize) {
-            handleLowPriBatch();
-        }
     }
 
     private void handleHighPriEvent(final BuckEventInterface event) {
@@ -60,27 +49,5 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
                 }
             }
         });
-    }
-
-    private void handleLowPriBatch() {
-        ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-            @Override
-            public void run() {
-                BuckEventsQueue.this.handleLowPriBatchSameThread();
-            }
-        });
-    }
-
-    private void handleLowPriBatchSameThread() {
-        synchronized (mFactory) {
-            mFactory.getBatchStartConsumer().startBatch();
-
-            while (mLowPri.peek() != null) {
-                BuckEventInterface currentEvent = mLowPri.poll();
-                currentEvent.handleEvent(mFactory);
-            }
-
-            mFactory.getBatchCommitConsumer().commitBatch();
-        }
     }
 }

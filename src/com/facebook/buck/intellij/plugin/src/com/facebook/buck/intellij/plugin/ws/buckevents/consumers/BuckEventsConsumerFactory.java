@@ -26,13 +26,6 @@ public class BuckEventsConsumerFactory {
         mBus = project.getMessageBus();
     }
 
-    public BuildRuleStartConsumer getBuildRuleStartConsumer() {
-        return mBus.syncPublisher(BuildRuleStartConsumer.BUCK_BUILD_RULE_START);
-    }
-    public BuildRuleEndConsumer getBuildRuleEndConsumer() {
-        return mBus.syncPublisher(BuildRuleEndConsumer.BUCK_BUILD_RULE_END);
-    }
-
     public RulesParsingStartConsumer getRulesParsingStartConsumer() {
         return mBus.syncPublisher(RulesParsingStartConsumer.BUCK_PARSE_RULE_START);
     }
@@ -45,18 +38,6 @@ public class BuckEventsConsumerFactory {
         return mBus.syncPublisher(RulesParsingProgressUpdateConsumer.BUCK_PARSE_PROGRESS_UPDATE);
     }
 
-    public BuckBuildProgressUpdateConsumer getBuckBuildProgressUpdateConsumer() {
-        return mBus.syncPublisher(BuckBuildProgressUpdateConsumer.BUCK_BUILD_PROGRESS_UPDATE);
-    }
-
-    public BuildRuleSuspendedConsumer getBuildRuleSuspendedConsumer() {
-        return mBus.syncPublisher(BuildRuleSuspendedConsumer.BUCK_BUILD_RULE_SUSPENDED);
-    }
-
-    public CompilerErrorConsumer getCompilerErrorConsumer() {
-        return mBus.syncPublisher(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER);
-    }
-
     public BuckBuildStartConsumer getBuildStartConsumer() {
         return mBus.syncPublisher(BuckBuildStartConsumer.BUCK_BUILD_START);
     }
@@ -65,10 +46,11 @@ public class BuckEventsConsumerFactory {
         return mBus.syncPublisher(BuckBuildEndConsumer.BUCK_BUILD_END);
     }
 
-    public BuckInternalBatchStartConsumer getBatchStartConsumer() {
-        return mBus.syncPublisher(BuckInternalBatchStartConsumer.BUCK_INTERNAL_BATCH_START);
+    public BuckBuildProgressUpdateConsumer getBuckBuildProgressUpdateConsumer() {
+        return mBus.syncPublisher(BuckBuildProgressUpdateConsumer.BUCK_BUILD_PROGRESS_UPDATE);
     }
-    public BuckInternalBatchCommitConsumer getBatchCommitConsumer() {
-        return mBus.syncPublisher(BuckInternalBatchCommitConsumer.BUCK_INTERNAL_BATCH_COMMIT);
+
+    public CompilerErrorConsumer getCompilerErrorConsumer() {
+        return mBus.syncPublisher(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER);
     }
 }
