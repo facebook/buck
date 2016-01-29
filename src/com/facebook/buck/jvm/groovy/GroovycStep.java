@@ -21,6 +21,7 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.OptionsConsumer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -30,7 +31,9 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -46,6 +49,7 @@ class GroovycStep implements Step {
   private final SourcePathResolver resolver;
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
+  private final Path pathToSrcsList;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
   private final ProjectFilesystem filesystem;
 
@@ -56,6 +60,7 @@ class GroovycStep implements Step {
       SourcePathResolver resolver,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
+      Path pathToSrcsList,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       ProjectFilesystem filesystem) {
     this.groovyc = groovyc;
@@ -64,6 +69,7 @@ class GroovycStep implements Step {
     this.resolver = resolver;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
+    this.pathToSrcsList = pathToSrcsList;
     this.declaredClasspathEntries = declaredClasspathEntries;
     this.filesystem = filesystem;
   }
@@ -79,6 +85,7 @@ class GroovycStep implements Step {
     processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     int exitCode = -1;
     try {
+      writePathToSourcesList(getExpandedSourcePaths(sourceFilePaths));
       exitCode = context.getProcessExecutor().execute(processBuilder.start()).getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
@@ -111,9 +118,30 @@ class GroovycStep implements Step {
         .add(outputDirectory.toString());
     addCrossCompilationOptions(command);
 
-    command.addAll(extraArguments.or(ImmutableList.<String>of()))
-           .addAll(transform(sourceFilePaths, toStringFunction()));
+    command.addAll(extraArguments.or(ImmutableList.<String>of()));
+
+    command.add("@" + pathToSrcsList);
+
     return command.build();
+  }
+
+  private void writePathToSourcesList(ImmutableList<Path> expandedSources) throws IOException {
+    filesystem.writeLinesToPath(
+        FluentIterable.from(expandedSources)
+            .transform(toStringFunction())
+            .transform(Javac.ARGFILES_ESCAPER),
+        pathToSrcsList);
+  }
+
+  private ImmutableList<Path> getExpandedSourcePaths(ImmutableSet<Path> javaSourceFilePaths) {
+    ImmutableList.Builder<Path> sources = ImmutableList.builder();
+    for (Path path : javaSourceFilePaths) {
+      String pathString = path.toString();
+      if (pathString.endsWith(".java") || pathString.endsWith(".groovy")) {
+        sources.add(path);
+      }
+    }
+    return sources.build();
   }
 
   private void addCrossCompilationOptions(final ImmutableList.Builder<String> command) {
