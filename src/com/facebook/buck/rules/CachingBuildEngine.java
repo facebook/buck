@@ -306,7 +306,7 @@ public class CachingBuildEngine implements BuildEngine {
             ruleKeyFactory.defaultRuleKeyBuilderFactory));
 
     // 3. Build deps.
-    return Futures.transform(
+    return Futures.transformAsync(
         getDepResults(rule, context, asyncCallbacks),
         new AsyncFunction<List<BuildResult>, BuildResult>() {
           @Override
@@ -634,7 +634,7 @@ public class CachingBuildEngine implements BuildEngine {
             return Futures.immediateFuture(input);
           }
         };
-    buildResult = Futures.transform(buildResult, callback);
+    buildResult = Futures.transformAsync(buildResult, callback);
 
     // Handle either build success or failure.
     final SettableFuture<BuildResult> result = SettableFuture.create();
@@ -796,7 +796,7 @@ public class CachingBuildEngine implements BuildEngine {
     // to attach, return it.
     ListenableFuture<RuleKey> ruleKey = calculateRuleKey(rule, context);
     ListenableFuture<BuildResult> result =
-        Futures.transform(
+        Futures.transformAsync(
             ruleKey,
             new AsyncFunction<RuleKey, BuildResult>() {
               @Override
@@ -850,7 +850,7 @@ public class CachingBuildEngine implements BuildEngine {
   public ListenableFuture<?> walkRule(
       BuildRule rule,
       final Set<BuildRule> seen) {
-    return Futures.transform(
+    return Futures.transformAsync(
               getRuleDeps(rule),
               new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
                 @Override
@@ -912,7 +912,7 @@ public class CachingBuildEngine implements BuildEngine {
       // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
       // one, we need to wait for them to complete.
       ListenableFuture<List<RuleKey>> depKeys =
-          Futures.transform(
+          Futures.transformAsync(
               getRuleDeps(rule),
               new AsyncFunction<ImmutableSortedSet<BuildRule>, List<RuleKey>>() {
                 @Override
@@ -965,7 +965,7 @@ public class CachingBuildEngine implements BuildEngine {
         new ConcurrentLinkedQueue<>();
     final ListenableFuture<BuildResult> resultFuture =
         getBuildRuleResultWithRuntimeDeps(rule, context, asyncCallbacks);
-    return Futures.transform(
+    return Futures.transformAsync(
         resultFuture,
         new AsyncFunction<BuildResult, BuildResult>() {
           @Override

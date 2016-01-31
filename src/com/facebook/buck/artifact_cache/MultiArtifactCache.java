@@ -96,7 +96,7 @@ public class MultiArtifactCache implements ArtifactCache {
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(
+    return Futures.transformAsync(
         Futures.allAsList(storeFutures),
         new AsyncFunction<List<Void>, Void>() {
           @Override

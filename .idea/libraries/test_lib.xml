@@ -10,7 +10,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/easymock/easymock-3.3.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/objenesis/objenesis-1.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-19.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/caliper/caliper-1.0-all.jar!/" />
     </CLASSES>
     <JAVADOC />
@@ -18,7 +18,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.12-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-18.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-19.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

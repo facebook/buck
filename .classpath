@@ -30,7 +30,7 @@
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.jdt.core_3.10.2.v20150120-1634.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.osgi_3.10.2.v20150203-1939.jar"/>
 	<classpathentry kind="lib" path="third-party/java/gson/gson-2.2.4.jar" sourcepath="third-party/java/gson/gson-2.2.4-sources.jar"/>
-	<classpathentry kind="lib" path="third-party/java/guava/guava-18.0.jar" sourcepath="third-party/java/guava/guava-18.0-sources.jar"/>
+	<classpathentry kind="lib" path="third-party/java/guava/guava-19.0.jar" sourcepath="third-party/java/guava/guava-19.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-3.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-assistedinject-3.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-multibindings-3.0.jar"/>

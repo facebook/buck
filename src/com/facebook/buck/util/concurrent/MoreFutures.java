@@ -169,7 +169,7 @@ public class MoreFutures {
   public static <F, T> ListenableFuture<T> chainExceptions(
       ListenableFuture<F> from,
       final ListenableFuture<T> to) {
-    return Futures.transform(
+    return Futures.transformAsync(
         from,
         new AsyncFunction<F, T>() {
           @Override

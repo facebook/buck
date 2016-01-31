@@ -41,7 +41,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/eclipse/org.eclipse.jdt.core_3.10.2.v20150120-1634.jar",
     "third-party/java/eclipse/org.eclipse.osgi_3.10.2.v20150203-1939.jar",
     "third-party/java/gson/gson-2.2.4.jar",
-    "third-party/java/guava/guava-18.0.jar",
+    "third-party/java/guava/guava-19.0.jar",
     "third-party/java/guice/guice-3.0.jar",
     "third-party/java/guice/guice-assistedinject-3.0.jar",
     "third-party/java/guice/guice-multibindings-3.0.jar",

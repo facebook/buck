@@ -63,7 +63,7 @@
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="ddmlib/ddmlib-22.5.3.jar" />
-    <include name="guava/guava-18.0.jar" />
+    <include name="guava/guava-19.0.jar" />
     <include name="ini4j/ini4j-0.5.2.jar" />
     <include name="jackson/jackson-annotations-2.0.5.jar" />
     <include name="jackson/jackson-core-2.0.5.jar" />
@@ -443,7 +443,7 @@
   </target>
 
   <fileset dir="${third-party.dir}/java" id="dx.jars">
-    <include name="guava/guava-18.0.jar" />
+    <include name="guava/guava-19.0.jar" />
   </fileset>
 
   <path id="dx.classpath">
@@ -471,7 +471,7 @@
     </javac>
 
     <jar destfile="${build.dir}/dx.jar">
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-18.0.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-19.0.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.12.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
