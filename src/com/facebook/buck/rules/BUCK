@@ -181,6 +181,16 @@ java_immutables_library(
   ],
   exported_deps = [
     ':rule_key',
+
+    # `Description` is a commonly implemented interface that includes a method
+    # with a `throws NoSuchBuildTargetException` clause, so we export this
+    # rule so that `NoSuchBuildTargetException` will be on the classpath.
+    #
+    # It needs to be available because a class that implements `Description` can
+    # implement the method without declaring `throws NoSuchBuildTargetException`
+    # which creates the implicit dependency on `NoSuchBuildTargetException` that
+    # is repaired by exporting this rule.
+    '//src/com/facebook/buck/parser:rule_pattern',
   ],
   visibility = [
     'PUBLIC',
