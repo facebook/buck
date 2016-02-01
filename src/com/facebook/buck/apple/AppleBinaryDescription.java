@@ -111,7 +111,7 @@ public class AppleBinaryDescription
       return true;
     }
     Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        FatBinaryInfo.generateThinFlavors(
+        FatBinaryInfos.generateThinFlavors(
             platformFlavorsToAppleCxxPlatforms.keySet(),
             ImmutableSortedSet.copyOf(flavors));
     if (thinFlavorSets.size() > 1) {
@@ -212,7 +212,7 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    Optional<FatBinaryInfo> fatBinaryInfo = FatBinaryInfo.create(
+    Optional<FatBinaryInfo> fatBinaryInfo = FatBinaryInfos.create(
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
     if (fatBinaryInfo.isPresent()) {

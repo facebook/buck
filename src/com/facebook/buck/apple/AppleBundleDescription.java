@@ -187,13 +187,13 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     }
 
     Optional<FatBinaryInfo> fatBinaryInfo =
-        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, buildTarget);
+        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, buildTarget);
     CxxPlatform cxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
       cxxPlatform = appleCxxPlatform.getCxxPlatform();
     } else {
-      cxxPlatform = AppleDescriptions.getCxxPlatformForBuildTarget(
+      cxxPlatform = ApplePlatforms.getCxxPlatformForBuildTarget(
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
           buildTarget);

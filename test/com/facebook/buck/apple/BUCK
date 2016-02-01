@@ -9,6 +9,7 @@ java_test(
   resources = glob(['testdata/**']),
   deps = [
     ':testutil',
+    '//src/com/facebook/buck/apple:platform',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/apple/xcode:xcode',
@@ -78,6 +79,7 @@ java_test(
   deps = [
     ':apple',
     ':testutil',
+    '//src/com/facebook/buck/apple:platform',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/util:constants',
@@ -100,6 +102,7 @@ java_library(
   name = 'testutil',
   srcs = glob(['*.java'], excludes = ['*Test.java']),
   deps = [
+    '//src/com/facebook/buck/apple:platform',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/cli:config',

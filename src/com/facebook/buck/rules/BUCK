@@ -14,6 +14,7 @@ java_library(
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/android:utils',
+    '//src/com/facebook/buck/apple:platform',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',

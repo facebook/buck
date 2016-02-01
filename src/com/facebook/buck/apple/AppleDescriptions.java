@@ -350,42 +350,6 @@ public class AppleDescriptions {
             MERGED_ASSET_CATALOG_NAME));
   }
 
-  /** Only works with thin binaries. */
-  static CxxPlatform getCxxPlatformForBuildTarget(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
-      BuildTarget target) {
-    return cxxPlatformFlavorDomain.getValue(target).or(defaultCxxPlatform);
-  }
-
-  private static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
-      BuildTarget target) {
-    Optional<FatBinaryInfo> fatBinaryInfo =
-        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, target);
-    AppleCxxPlatform appleCxxPlatform;
-    if (fatBinaryInfo.isPresent()) {
-      appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
-    } else {
-      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          target);
-      appleCxxPlatform =
-          platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
-      if (appleCxxPlatform == null) {
-        throw new HumanReadableException(
-            "%s: Apple bundle requires an Apple platform, found '%s'",
-            target,
-            cxxPlatform.getFlavor().getName());
-      }
-    }
-
-    return appleCxxPlatform;
-  }
-
   static AppleDsym createAppleDsym(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
@@ -393,7 +357,7 @@ public class AppleDescriptions {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AppleBundle appleBundle) {
-    AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
+    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -442,7 +406,7 @@ public class AppleDescriptions {
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests)
       throws NoSuchBuildTargetException {
-    AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(
+    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
     AppleBundleDestinations destinations =

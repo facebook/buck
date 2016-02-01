@@ -1,8 +1,32 @@
+PLATFORM_SRCS = [
+  'AbstractAppleCxxPlatform.java',
+  'AbstractApplePlatform.java',
+  'AbstractAppleSdk.java',
+  'AbstractAppleSdkPaths.java',
+  'AbstractAppleToolchain.java',
+  'AbstractFatBinaryInfo.java',
+  'ApplePlatforms.java',
+  'FatBinaryInfos.java',
+]
+
+java_immutables_library(
+  name = 'platform',
+  srcs = PLATFORM_SRCS,
+  deps = [
+    '//src/com/facebook/buck/apple/xcode:xcode',
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 java_immutables_library(
   name = 'rules',
-  srcs = glob([
-    '*.java',
-  ]),
+  srcs = glob(['*.java',], excludes=PLATFORM_SRCS),
   tests = [
     '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/apple:apple_test_integration',
@@ -16,6 +40,7 @@ java_immutables_library(
     'fix_uuid.py',
   ],
   deps = [
+    ':platform',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/apple/xcode:xcode',
