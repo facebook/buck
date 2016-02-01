@@ -16,24 +16,31 @@
 
 package com.facebook.buck.bser;
 
-// CHECKSTYLE.OFF: AvoidStarImport
-import static com.facebook.buck.bser.BserConstants.*;
+import static com.facebook.buck.bser.BserConstants.BSER_ARRAY;
+import static com.facebook.buck.bser.BserConstants.BSER_FALSE;
+import static com.facebook.buck.bser.BserConstants.BSER_INT16;
+import static com.facebook.buck.bser.BserConstants.BSER_INT32;
+import static com.facebook.buck.bser.BserConstants.BSER_INT64;
+import static com.facebook.buck.bser.BserConstants.BSER_INT8;
+import static com.facebook.buck.bser.BserConstants.BSER_NULL;
+import static com.facebook.buck.bser.BserConstants.BSER_OBJECT;
+import static com.facebook.buck.bser.BserConstants.BSER_REAL;
+import static com.facebook.buck.bser.BserConstants.BSER_STRING;
+import static com.facebook.buck.bser.BserConstants.BSER_TRUE;
 
 import com.google.common.io.BaseEncoding;
 
-import java.io.OutputStream;
 import java.io.IOException;
-
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
-
 import java.util.List;
 import java.util.Map;
 
