@@ -148,7 +148,7 @@ public class GoBuckConfig {
       ProcessExecutor.Result goToolResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder().addCommand(
               goTool.toString(), "env", env).setEnvironment(goRootEnv).build(),
-          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
+          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
                     /* stdin */ Optional.<String>absent(),
                     /* timeOutMs */ Optional.<Long>absent(),
                     /* timeoutHandler */ Optional.<Function<Process, Void>>absent());
