@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;

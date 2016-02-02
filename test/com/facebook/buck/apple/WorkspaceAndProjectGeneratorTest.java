@@ -61,7 +61,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

@@ -74,7 +74,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;

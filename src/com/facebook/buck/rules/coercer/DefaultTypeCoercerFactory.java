@@ -23,6 +23,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

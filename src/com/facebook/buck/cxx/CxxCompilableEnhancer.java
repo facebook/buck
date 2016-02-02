@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;

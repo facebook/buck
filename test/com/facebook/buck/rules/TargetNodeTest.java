@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;

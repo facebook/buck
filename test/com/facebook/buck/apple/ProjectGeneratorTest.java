@@ -90,7 +90,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;

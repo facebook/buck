@@ -52,7 +52,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

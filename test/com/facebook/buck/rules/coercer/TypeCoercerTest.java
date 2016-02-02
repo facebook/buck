@@ -31,6 +31,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;

@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
