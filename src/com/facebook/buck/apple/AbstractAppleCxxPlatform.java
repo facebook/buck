@@ -23,6 +23,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 import org.immutables.value.Value;
 
@@ -58,4 +59,7 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Optional<Path> getStubBinary();
   public abstract Tool getLldb();
   public abstract Optional<Tool> getCodesignAllocate();
+  public abstract Optional<Tool> getSwift();
+  public abstract Optional<Tool> getSwiftStdlibTool();
+  public abstract Set<Path> getSwiftRuntimePaths();
 }

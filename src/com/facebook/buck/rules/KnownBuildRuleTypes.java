@@ -129,6 +129,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestDescription;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.thrift.ThriftBuckConfig;
 import com.facebook.buck.thrift.ThriftCxxEnhancer;
 import com.facebook.buck.thrift.ThriftJavaEnhancer;
@@ -473,6 +474,13 @@ public class KnownBuildRuleTypes {
             codeSignIdentityStore,
             provisioningProfileStore);
     builder.register(appleBinaryDescription);
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        new SwiftLibraryDescription(
+            cxxPlatforms,
+            platformFlavorsToAppleCxxPlatforms,
+            defaultCxxPlatform);
+    builder.register(swiftLibraryDescription);
 
     // Create an executor service exclusively for the smart dexing step.
     ListeningExecutorService dxExecutorService =

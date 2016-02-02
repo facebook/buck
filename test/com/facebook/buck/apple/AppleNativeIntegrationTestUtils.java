@@ -21,26 +21,58 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class AppleNativeIntegrationTestUtils {
 
   private AppleNativeIntegrationTestUtils() {}
 
-  public static boolean isApplePlatformAvailable(final ApplePlatform platform) {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+  private static ImmutableMap<AppleSdk, AppleSdkPaths> discoverSystemSdkPaths(
+      BuckConfig buckConfig) {
     AppleConfig appleConfig = new AppleConfig(buckConfig);
     Console console = new TestConsole();
     ProcessExecutor executor = new ProcessExecutor(console);
-    return Iterables.any(
-        appleConfig.getAppleSdkPaths(executor).keySet(),
+    return appleConfig.getAppleSdkPaths(executor);
+  }
+
+  private static Optional<AppleSdk> anySdkForPlatform(
+      final ApplePlatform platform,
+      final ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
+    return Iterables.tryFind(
+        sdkPaths.keySet(),
         new Predicate<AppleSdk>() {
           @Override
           public boolean apply(AppleSdk sdk) {
             return sdk.getApplePlatform().equals(platform);
           }
         });
+  }
+
+  public static boolean isApplePlatformAvailable(ApplePlatform platform) {
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    return anySdkForPlatform(platform, discoverSystemSdkPaths(buckConfig)).isPresent();
+  }
+
+  public static boolean isSwiftAvailable(ApplePlatform platform) {
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = discoverSystemSdkPaths(buckConfig);
+    Optional<AppleSdk> anySdkOptional = anySdkForPlatform(platform, sdkPaths);
+    if (!anySdkOptional.isPresent()) {
+      return false;
+    }
+    AppleSdk anySdk = anySdkOptional.get();
+    AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
+        anySdk,
+        "fakeversion",
+        "fakearch",
+        sdkPaths.get(anySdk),
+        buckConfig);
+    return
+        appleCxxPlatform.getSwift().isPresent() &&
+        appleCxxPlatform.getSwiftStdlibTool().isPresent();
   }
 
 }

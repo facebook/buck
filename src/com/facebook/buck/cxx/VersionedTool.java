@@ -95,10 +95,17 @@ public class VersionedTool implements Tool {
   }
 
   public static Function<Path, VersionedTool> fromPath(final String name, final String version) {
+    return fromPathWithParams(name, version, ImmutableList.<String>of());
+  }
+
+  public static Function<Path, VersionedTool> fromPathWithParams(
+      final String name,
+      final String version,
+      final ImmutableList<String> params) {
     return new Function<Path, VersionedTool>() {
       @Override
       public VersionedTool apply(Path input) {
-        return new VersionedTool(input, ImmutableList.<String>of(), name, version);
+        return new VersionedTool(input, params, name, version);
       }
     };
   }

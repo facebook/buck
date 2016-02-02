@@ -41,9 +41,8 @@ public class ApplePlatforms {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
-      BuildTarget target) {
-    Optional<FatBinaryInfo> fatBinaryInfo =
-        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, target);
+      BuildTarget target,
+      Optional<FatBinaryInfo> fatBinaryInfo) {
     AppleCxxPlatform appleCxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();

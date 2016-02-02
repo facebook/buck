@@ -269,7 +269,24 @@ public class AppleCxxPlatforms {
       Optional.of(debugPathSanitizer),
       macros);
 
-    return AppleCxxPlatform.builder()
+    ApplePlatform platform = targetSdk.getApplePlatform();
+
+    ImmutableList<String> swiftParams = ImmutableList.of(
+        "-frontend",
+        "-sdk",
+        sdkPaths.getSdkPath().toString(),
+        "-target",
+        targetArchitecture + "-apple-" +
+        platform.getSwiftName().or(platform.getName()) + targetSdk.getVersion());
+
+    ImmutableList<String> swiftStdlibToolParams = ImmutableList.of(
+        "--copy",
+        "--verbose",
+        "--strip-bitcode",
+        "--platform",
+        platform.getName());
+
+    AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
         .setAppleSdk(targetSdk)
         .setAppleSdkPaths(sdkPaths)
@@ -285,7 +302,29 @@ public class AppleCxxPlatforms {
         .setLldb(lldb)
         .setCodesignAllocate(
             getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version))
-        .build();
+        .setSwift(
+            getOptionalToolWithParams(
+                "swift",
+                toolSearchPaths,
+                executableFinder,
+                version,
+                swiftParams))
+        .setSwiftStdlibTool(
+            getOptionalToolWithParams(
+                "swift-stdlib-tool",
+                toolSearchPaths,
+                executableFinder,
+                version,
+                swiftStdlibToolParams));
+    for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
+      Path swiftRuntimePath = toolchainPath
+          .resolve("usr/lib/swift")
+          .resolve(platform.getName());
+      if (Files.isDirectory(swiftRuntimePath)) {
+        platformBuilder.addSwiftRuntimePaths(swiftRuntimePath);
+      }
+    }
+    return platformBuilder.build();
   }
 
   private static Optional<Tool> getOptionalTool(
@@ -293,8 +332,22 @@ public class AppleCxxPlatforms {
       ImmutableList<Path> toolSearchPaths,
       ExecutableFinder executableFinder,
       String version) {
+    return getOptionalToolWithParams(
+        tool,
+        toolSearchPaths,
+        executableFinder,
+        version,
+        ImmutableList.<String>of());
+  }
+
+  private static Optional<Tool> getOptionalToolWithParams(
+      String tool,
+      ImmutableList<Path> toolSearchPaths,
+      ExecutableFinder executableFinder,
+      String version,
+      ImmutableList<String> params) {
     return getOptionalToolPath(tool, toolSearchPaths, executableFinder)
-        .transform(VersionedTool.fromPath(tool, version))
+        .transform(VersionedTool.fromPathWithParams(tool, version, params))
         .transform(Functions.<Tool>identity());
   }
 

@@ -27,9 +27,15 @@ import java.util.Objects;
 public class StringArg extends Arg {
 
   private final String arg;
+  private final ImmutableList<BuildRule> deps;
 
   public StringArg(String arg) {
+    this(arg, ImmutableList.<BuildRule>of());
+  }
+
+  public StringArg(String arg, Iterable<BuildRule> deps) {
     this.arg = arg;
+    this.deps = ImmutableList.copyOf(deps);
   }
 
   @Override
@@ -39,7 +45,7 @@ public class StringArg extends Arg {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return ImmutableList.of();
+    return deps;
   }
 
   @Override
@@ -69,16 +75,21 @@ public class StringArg extends Arg {
     return Objects.hash(arg);
   }
 
-  public static ImmutableList<Arg> from(Iterable<String> args) {
+  public static ImmutableList<Arg> fromWithDeps(
+      Iterable<String> args,
+      Iterable<BuildRule> deps) {
     ImmutableList.Builder<Arg> converted = ImmutableList.builder();
     for (String arg : args) {
-      converted.add(new StringArg(arg));
+      converted.add(new StringArg(arg, deps));
     }
     return converted.build();
+  }
+
+  public static ImmutableList<Arg> from(Iterable<String> args) {
+    return fromWithDeps(args, ImmutableList.<BuildRule>of());
   }
 
   public static ImmutableList<Arg> from(String... args) {
     return from(ImmutableList.copyOf(args));
   }
-
 }

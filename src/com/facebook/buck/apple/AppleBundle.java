@@ -130,6 +130,9 @@ public class AppleBundle
   @AddToRuleKey
   private final Optional<Tool> codesignAllocatePath;
 
+  @AddToRuleKey
+  private final Optional<Tool> swiftStdlibTool;
+
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey
   private final ImmutableMap<SourcePath, String> extensionBundlePaths;
@@ -206,6 +209,7 @@ public class AppleBundle
           CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
+    this.swiftStdlibTool = appleCxxPlatform.getSwiftStdlibTool();
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -380,6 +384,28 @@ public class AppleBundle
               bundleDir,
               bundleRoot,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
+    // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
+    // are copied over).
+    if (swiftStdlibTool.isPresent()) {
+      ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
+      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
+      swiftStdlibCommand.add(
+          "--scan-executable",
+          bundleBinaryPath.toString(),
+          "--scan-folder",
+          bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
+          "--scan-folder",
+          bundleRoot.resolve(destinations.getPlugInsPath()).toString(),
+          "--destination",
+          bundleRoot.resolve(Paths.get("Frameworks")).toString());
+
+      stepsBuilder.add(
+          new SwiftStdlibStep(
+              getProjectFilesystem().getRootPath(),
+              swiftStdlibCommand.build())
+      );
     }
 
     if (needCodeSign()) {

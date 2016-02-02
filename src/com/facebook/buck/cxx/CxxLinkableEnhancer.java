@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -48,6 +49,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 
 public class CxxLinkableEnhancer {
+  private static final Logger LOG = Logger.get(CxxLinkableEnhancer.class);
 
   private static final EnumSet<Linker.LinkType> SONAME_REQUIRED_LINK_TYPES = EnumSet.of(
       Linker.LinkType.SHARED,
@@ -144,8 +146,10 @@ public class CxxLinkableEnhancer {
     for (NativeLinkable nativeLinkable : Maps.filterKeys(
         NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType),
         Predicates.not(Predicates.in(blacklist))).values()) {
-      nativeLinkableInputs.add(
-          NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
+      NativeLinkableInput input = NativeLinkables.getNativeLinkableInput(
+          cxxPlatform, depType, nativeLinkable);
+      LOG.debug("Native linkable %s returned input %s", nativeLinkable, input);
+      nativeLinkableInputs.add(input);
     }
     NativeLinkableInput linkableInput = NativeLinkableInput.concat(nativeLinkableInputs.build());
 

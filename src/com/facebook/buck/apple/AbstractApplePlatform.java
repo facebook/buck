@@ -32,12 +32,14 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   public static final ApplePlatform IPHONEOS =
       ApplePlatform.builder()
           .setName("iphoneos")
+          .setSwiftName("ios")
           .setArchitectures(ImmutableList.of("armv7", "arm64"))
           .setMinVersionFlagPrefix("-mios-version-min=")
           .build();
   public static final ApplePlatform IPHONESIMULATOR =
       ApplePlatform.builder()
           .setName("iphonesimulator")
+          .setSwiftName("ios")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mios-simulator-version-min=")
           .build();
@@ -66,6 +68,12 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
    * The full name of the platform. For example: {@code macosx}.
    */
   public abstract String getName();
+
+  /**
+   * The Swift name for the platform. For example: {@code ios}. If absent,
+   * use {@link #getName()} instead.
+   */
+  public abstract Optional<String> getSwiftName();
 
   @SuppressWarnings("immutables")
   @Value.Default

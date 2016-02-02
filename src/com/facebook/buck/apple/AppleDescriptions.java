@@ -358,8 +358,11 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       AppleBundle appleBundle) {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-        cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
-        params.getBuildTarget());
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        platformFlavorsToAppleCxxPlatforms,
+        params.getBuildTarget(),
+        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, params.getBuildTarget()));
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return new AppleDsym(
         params.copyWithChanges(
@@ -408,7 +411,9 @@ public class AppleDescriptions {
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
-        params.getBuildTarget());
+        params.getBuildTarget(),
+        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, params.getBuildTarget()));
+
     AppleBundleDestinations destinations =
         AppleBundleDestinations.platformDestinations(
             appleCxxPlatform.getAppleSdk().getApplePlatform());
