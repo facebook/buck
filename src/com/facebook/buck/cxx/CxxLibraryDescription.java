@@ -870,56 +870,57 @@ public class CxxLibraryDescription implements
               target,
               params.getDeclaredDeps(),
               params.getExtraDeps());
-      if (type.get().getValue().equals(Type.HEADERS)) {
-        return createHeaderSymlinkTreeBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args);
-      } else if (type.get().getValue().equals(Type.EXPORTED_HEADERS)) {
+      switch (type.get().getValue()) {
+        case HEADERS:
+          return createHeaderSymlinkTreeBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args);
+        case EXPORTED_HEADERS:
           return createExportedHeaderSymlinkTreeBuildRule(
               typeParams,
               resolver,
               platform.get().getValue(),
               args);
-      } else if (type.get().getValue().equals(Type.SHARED)) {
-        return createSharedLibraryBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args,
-            preprocessMode,
-            Linker.LinkType.SHARED,
-            linkableDepType.or(Linker.LinkableDepType.SHARED),
-            Optional.<SourcePath>absent(),
-            blacklist);
-      } else if (type.get().getValue().equals(Type.MACH_O_BUNDLE)) {
-        return createSharedLibraryBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args,
-            preprocessMode,
-            Linker.LinkType.MACH_O_BUNDLE,
-            linkableDepType.or(Linker.LinkableDepType.SHARED),
-            bundleLoader,
-            blacklist);
-      } else if (type.get().getValue().equals(Type.STATIC)) {
-        return createStaticLibraryBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args,
-            preprocessMode,
-            CxxSourceRuleFactory.PicType.PDC);
-      } else {
-        return createStaticLibraryBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args,
-            preprocessMode,
-            CxxSourceRuleFactory.PicType.PIC);
+        case SHARED:
+          return createSharedLibraryBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args,
+              preprocessMode,
+              Linker.LinkType.SHARED,
+              linkableDepType.or(Linker.LinkableDepType.SHARED),
+              Optional.<SourcePath>absent(),
+              blacklist);
+        case MACH_O_BUNDLE:
+          return createSharedLibraryBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args,
+              preprocessMode,
+              Linker.LinkType.MACH_O_BUNDLE,
+              linkableDepType.or(Linker.LinkableDepType.SHARED),
+              bundleLoader,
+              blacklist);
+        case STATIC:
+          return createStaticLibraryBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args,
+              preprocessMode,
+              CxxSourceRuleFactory.PicType.PDC);
+        case STATIC_PIC:
+          return createStaticLibraryBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args,
+              preprocessMode,
+              CxxSourceRuleFactory.PicType.PIC);
       }
     }
 
