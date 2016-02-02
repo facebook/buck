@@ -85,7 +85,6 @@ java_test(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
-    '//test/com/facebook/buck/file:matchers',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/step:testutil',

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
-import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -73,7 +72,7 @@ public class FilterResourcesStepTest {
     FilterResourcesStep command = new FilterResourcesStep(
         filesystem,
         inResDirToOutResDirMap,
-        /* filterByDensity */ true,
+        /* filterDrawables */ true,
         /* enableStringWhitelisting */ false,
         /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
         /* locales */ ImmutableSet.<String>of(),
@@ -169,203 +168,6 @@ public class FilterResourcesStepTest {
     assertMatchesRegex("root/res/values-es-rUS/strings.xml", "es", "US");
   }
 
-  @Test
-  public void nonDrawableResourcesFiltered() throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
-    final String file = "somefile";
-    final Path resDir = Paths.get("res");
-    final Path resOutDir = Paths.get("res-out");
-
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
-    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
-      if (folderName.equals("drawable")) {
-        continue;
-      }
-
-      filesystem.createNewFile(
-          resDir.resolve(String.format("%s-%s", folderName, targetDensity)).resolve(file));
-      filesystem.createNewFile(
-          resDir.resolve(String.format("%s-%s", folderName, excludedDensity)).resolve(file));
-    }
-
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
-    command.execute(null);
-
-    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
-      if (folderName.equals("drawable")) {
-        continue;
-      }
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensity))
-              .resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, excludedDensity))
-              .resolve(file)));
-    }
-  }
-
-  @Test
-  public void fallsBackToDefaultWhenAllTargetsNotPresent()
-      throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density providedDensity = ResourceFilters.Density.TVDPI;
-    final String file = "somefile";
-    final Path resDir = Paths.get("res/foo/bar");
-    final Path resOutDir = Paths.get("res-out");
-
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
-    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
-      if (folderName.equals("drawable") || folderName.equals("values")) {
-        continue;
-      }
-
-      filesystem.createNewFile(resDir.resolve(folderName).resolve(file));
-      filesystem.createNewFile(resDir
-          .resolve(String.format("%s-%s", folderName, providedDensity))
-          .resolve(file));
-    }
-
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
-    command.execute(null);
-
-    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
-      if (folderName.equals("drawable") || folderName.equals("values")) {
-        continue;
-      }
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir.resolve(folderName).resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensity))));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, providedDensity))
-              .resolve(file)));
-    }
-  }
-
-  @Test
-  public void fallsBackToDefaultWhenOneTargetNotPresent()
-      throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensityIncluded = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density targetDensityExcluded = ResourceFilters.Density.XHDPI;
-    final String file = "somefile";
-    final Path resDir = Paths.get("res/foo/bar");
-    final Path resOutDir = Paths.get("res-out");
-
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
-    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
-      if (folderName.equals("drawable") || folderName.equals("values")) {
-        continue;
-      }
-
-      filesystem.createNewFile(resDir.resolve(folderName).resolve(file));
-      filesystem.createNewFile(resDir
-          .resolve(String.format("%s-%s", folderName, targetDensityIncluded))
-          .resolve(file));
-    }
-
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
-    command.execute(null);
-
-    for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
-      if (folderName.equals("drawable") || folderName.equals("values")) {
-        continue;
-      }
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir.resolve(folderName).resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensityIncluded))
-              .resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensityExcluded))));
-    }
-  }
-
-  @Test
-  public void valuesAlwaysIncludesFallback()
-      throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-    final String file = "somefile.xml";
-    final Path resDir = Paths.get("res/foo/bar");
-    final Path resOutDir = Paths.get("res-out");
-
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
-    filesystem.createNewFile(resDir.resolve("values").resolve(file));
-    filesystem.createNewFile(resDir
-        .resolve(String.format("values-%s", targetDensity))
-        .resolve(file));
-
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
-    command.execute(null);
-
-    assertThat(
-        filesystem,
-        ProjectFilesystemMatchers.pathExists(resOutDir.resolve("values").resolve(file)));
-    assertThat(
-        filesystem,
-        ProjectFilesystemMatchers.pathExists(resOutDir
-            .resolve(String.format("values-%s", targetDensity))
-            .resolve(file)));
-  }
-
   private static void assertMatchesRegex(String path, String language, String country) {
     Matcher matcher = FilterResourcesStep.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path);
     assertTrue(matcher.matches());
@@ -384,7 +186,7 @@ public class FilterResourcesStepTest {
     FilterResourcesStep step = new FilterResourcesStep(
         null,
         /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
-        /* filterByDensity */ false,
+        /* filterDrawables */ false,
         /* enableStringWhitelisting */ enableStringWhitelisting,
         /* whitelistedStringDirs */ whitelistedStringDirs,
         /* locales */ locales,
