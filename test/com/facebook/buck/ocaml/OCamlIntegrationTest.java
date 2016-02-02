@@ -455,4 +455,32 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(exportedHeaderSymlinkTreeTarget.toString());
   }
+
+  @Test
+  public void testConfigWarningsFlags() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "config_warnings_flags",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(),
+        "//:unused_var");
+    BuildTarget binary = createOCamlLinkTarget(target);
+
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary);
+
+    workspace.runBuckCommand("build", target.toString()).assertFailure();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    buildLog.assertTargetCanceled(target.toString());
+    buildLog.assertTargetCanceled(binary.toString());
+
+    workspace.resetBuildLogFile();
+    workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
+  }
 }

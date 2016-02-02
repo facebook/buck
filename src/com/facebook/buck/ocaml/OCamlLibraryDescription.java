@@ -55,9 +55,11 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
     ImmutableList<OCamlSource> srcs = args.srcs.get();
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(args.compilerFlags.get());
-    if (args.warningsFlags.isPresent()) {
+    if (ocamlBuckConfig.getWarningsFlags().isPresent() ||
+        args.warningsFlags.isPresent()) {
       flags.add("-w");
-      flags.add(args.warningsFlags.get());
+      flags.add(ocamlBuckConfig.getWarningsFlags().or("") +
+          args.warningsFlags.or(""));
     }
     ImmutableList<String> linkerflags = args.linkerFlags.get();
     return OCamlRuleBuilder.createBuildRule(

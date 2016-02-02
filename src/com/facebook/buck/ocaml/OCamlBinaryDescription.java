@@ -56,9 +56,11 @@ public class OCamlBinaryDescription implements
     ImmutableList<OCamlSource> srcs = args.srcs.get();
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(args.compilerFlags.get());
-    if (args.warningsFlags.isPresent()) {
+    if (ocamlBuckConfig.getWarningsFlags().isPresent() ||
+        args.warningsFlags.isPresent()) {
       flags.add("-w");
-      flags.add(args.warningsFlags.get());
+      flags.add(ocamlBuckConfig.getWarningsFlags().or("") +
+          args.warningsFlags.or(""));
     }
     ImmutableList<String> linkerFlags = args.linkerFlags.get();
     return OCamlRuleBuilder.createBuildRule(

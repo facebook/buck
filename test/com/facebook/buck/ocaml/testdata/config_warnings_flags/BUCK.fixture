@@ -1,0 +1,11 @@
+ocaml_binary(
+    name = 'unused_var',
+    srcs = [
+        'unused_var.ml',
+    ],
+    deps = [
+    ],
+    compiler_flags=[
+        '-warn-error', '+a',
+    ],
+)

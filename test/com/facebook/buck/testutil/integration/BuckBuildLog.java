@@ -94,6 +94,11 @@ public class BuckBuildLog {
     assertEquals(BuildRuleStatus.FAIL, logEntry.status);
   }
 
+  public void assertTargetCanceled(String buildTargetRaw) {
+    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    assertEquals(BuildRuleStatus.CANCELED, logEntry.status);
+  }
+
   public Sha1HashCode getRuleKey(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
     return logEntry.ruleKey;

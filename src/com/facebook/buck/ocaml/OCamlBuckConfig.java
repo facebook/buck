@@ -75,6 +75,10 @@ public class OCamlBuckConfig {
     return delegate.getValue("ocaml", "interop.includes");
   }
 
+  public Optional<String> getWarningsFlags() {
+    return delegate.getValue("ocaml", "warnings_flags");
+  }
+
   public Optional<Tool> getOCamlBytecodeCompiler() {
     return getTool("ocaml", "ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER);
   }
