@@ -33,7 +33,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -85,7 +84,7 @@ class GroovycStep implements Step {
     processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     int exitCode = -1;
     try {
-      writePathToSourcesList(getExpandedSourcePaths(sourceFilePaths));
+      writePathToSourcesList(sourceFilePaths);
       exitCode = context.getProcessExecutor().execute(processBuilder.start()).getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
@@ -125,23 +124,12 @@ class GroovycStep implements Step {
     return command.build();
   }
 
-  private void writePathToSourcesList(ImmutableList<Path> expandedSources) throws IOException {
+  private void writePathToSourcesList(Iterable<Path> expandedSources) throws IOException {
     filesystem.writeLinesToPath(
         FluentIterable.from(expandedSources)
             .transform(toStringFunction())
             .transform(Javac.ARGFILES_ESCAPER),
         pathToSrcsList);
-  }
-
-  private ImmutableList<Path> getExpandedSourcePaths(ImmutableSet<Path> javaSourceFilePaths) {
-    ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
-      String pathString = path.toString();
-      if (pathString.endsWith(".java") || pathString.endsWith(".groovy")) {
-        sources.add(path);
-      }
-    }
-    return sources.build();
   }
 
   private void addCrossCompilationOptions(final ImmutableList.Builder<String> command) {
@@ -152,7 +140,7 @@ class GroovycStep implements Step {
         public void addOptionValue(String option, String value) {
           // Explicitly disallow the setting of sourcepath in a cross compilation context.
           // The implementation of `appendOptionsTo` provides a blank default, which
-          // confuses the cross compilations step's javac (it won't find any class files
+          // confuses the cross compilation step's javac (it won't find any class files
           // compiled by groovyc).
           if (option.equals("sourcepath")) {
             return;
