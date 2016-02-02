@@ -17,8 +17,9 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-import java.nio.ByteBuffer;
+
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 /**

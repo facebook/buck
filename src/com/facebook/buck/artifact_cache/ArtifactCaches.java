@@ -38,17 +38,17 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 import okio.Source;
+
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Creates instances of the {@link ArtifactCache}.
@@ -101,7 +101,6 @@ public class ArtifactCaches {
    * @param buckConfig describes how to configure te cache
    * @param projectFilesystem filesystem to store files on
    * @return a cache
-   * @throws InterruptedException
    */
   public static Optional<ArtifactCache> newServedCache(
       ArtifactCacheBuckConfig buckConfig,

@@ -64,7 +64,6 @@ public class AsyncCloseable implements AutoCloseable {
 
   /**
    * schedule the closing of all registered objects.
-   * @throws Exception
    */
   @Override
   public void close() {

@@ -134,7 +134,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   /**
    * Creates a scope within which the measured operation takes place.
    *
-   * {@code
+   * <pre>
    * try (perfEvent = SimplePerfEvent.scope(bus, PerfEventId.of("BurnCpu"))) {
    *   int bitsFlopped = 0;
    *   for (int i = 0; i < 1000; i++) {
@@ -146,7 +146,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
    *   }
    *   perfEvent.appendFinishedInfo("totalBitsFlopped", bitsFlopped);
    * }
-   * }
+   * </pre>
    *
    * @param bus the {@link BuckEventBus} to post update and finished events to.
    * @param perfEventId identifier of the operation (Upload, CacheFetch, Parse, etc..).
