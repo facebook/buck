@@ -248,6 +248,11 @@ public class BuckConfig {
     return config.getOptionalListWithoutComments(section, field);
   }
 
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String section, String field, char splitChar) {
+    return config.getOptionalListWithoutComments(section, field, splitChar);
+  }
+
   @Nullable
   public String getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
     Pair<BuildTarget, Integer> buildTargetPoundIdx = getBuildTargetForAlias(possiblyFlavoredAlias);
