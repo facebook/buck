@@ -71,6 +71,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
             resolver,
             outputDirectory,
             sourceFilePaths,
+            pathToSrcsList,
             declaredClasspathEntries,
             filesystem));
   }
