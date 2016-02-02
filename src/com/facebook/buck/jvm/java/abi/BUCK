@@ -10,6 +10,7 @@ java_library(
   ],
   deps = [
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/zip:stream',
     '//third-party/java/asm:asm',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

@@ -73,6 +73,7 @@ import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
@@ -2948,7 +2949,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(file)) {
       for (Map.Entry<String, String> mapEntry : entries.entrySet()) {
         CustomZipEntry entry = new CustomZipEntry(mapEntry.getKey());
-        entry.setTime(0);
+        // We want deterministic ZIPs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+        entry.setTime(ZipConstants.getFakeTime());
         zip.putNextEntry(entry);
         zip.write(mapEntry.getValue().getBytes());
         zip.closeEntry();

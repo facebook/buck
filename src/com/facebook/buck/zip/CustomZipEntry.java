@@ -31,18 +31,25 @@ public class CustomZipEntry extends ZipEntry {
 
   public CustomZipEntry(ZipEntry other) {
     super(other);
-    setDefaultMethodIfMethodUnset();
+    setDefaultMethodAndTimeIfUnset();
   }
 
   public CustomZipEntry(String name) {
     super(name);
-    setDefaultMethodIfMethodUnset();
+    setDefaultMethodAndTimeIfUnset();
   }
 
-  private void setDefaultMethodIfMethodUnset() {
+  private void setDefaultMethodAndTimeIfUnset() {
     if (getMethod() == -1) {
       setMethod(DEFLATED);
     }
+    if (getTime() == -1) {
+      setFakeTime();
+    }
+  }
+
+  public void setFakeTime() {
+    setTime(ZipConstants.getFakeTime());
   }
 
   public void setCompressionLevel(int compressionLevel) {

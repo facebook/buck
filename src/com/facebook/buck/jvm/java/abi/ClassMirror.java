@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Sets;
@@ -155,7 +156,8 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
 
   public void writeTo(JarOutputStream jar) throws IOException {
     JarEntry entry = new JarEntry(fileName);
-    entry.setTime(0);
+    // We want deterministic JARs, so avoid mtimes.
+    entry.setTime(ZipConstants.getFakeTime());
 
     jar.putNextEntry(entry);
     ClassWriter writer = new ClassWriter(0);

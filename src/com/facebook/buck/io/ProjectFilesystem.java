@@ -988,7 +988,7 @@ public class ProjectFilesystem {
         CustomZipEntry entry = new CustomZipEntry(entryName);
 
         // We want deterministic ZIPs, so avoid mtimes.
-        entry.setTime(0);
+        entry.setFakeTime();
 
         // Support executable files.  If we detect this file is executable, store this
         // information as 0100 in the field typically used in zip implementations for
@@ -1011,7 +1011,7 @@ public class ProjectFilesystem {
       for (Map.Entry<Path, String> fileContentsEntry : additionalFileContents.entrySet()) {
         CustomZipEntry entry = new CustomZipEntry(fileContentsEntry.getKey().toString());
         // We want deterministic ZIPs, so avoid mtimes.
-        entry.setTime(0);
+        entry.setFakeTime();
         zip.putNextEntry(entry);
         try (InputStream stream =
                  new ByteArrayInputStream(fileContentsEntry.getValue().getBytes(Charsets.UTF_8))) {

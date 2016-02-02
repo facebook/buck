@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -62,8 +63,9 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
    * @return the zip entry for the file specified
    */
   public static ZipEntry createEntry(String name) {
-    ZipEntry entry = new ZipEntry(name);
-    entry.setTime(0);
+    CustomZipEntry entry = new CustomZipEntry(name);
+    // We want deterministic JARs, so avoid mtimes.
+    entry.setFakeTime();
     return entry;
   }
 

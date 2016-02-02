@@ -111,7 +111,7 @@ class EntryAccounting {
     // The DOS epoch begins in 1980. If the year is before that, then default to the start of the
     // epoch (the 1st day of the 1st month)
     if (year < 1980) {
-      return ZipConstants.DOS_EPOCH_START;
+      return ZipConstants.DOS_FAKE_TIME;
     }
     return (year - 1980) << 25 |
         (instance.get(Calendar.MONTH) + 1) << 21 |

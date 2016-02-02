@@ -281,7 +281,7 @@ public class AndroidBinaryIntegrationTest {
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Path apk = workspace.getPath("buck-out/gen/apps/sample/app.apk");
-    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));

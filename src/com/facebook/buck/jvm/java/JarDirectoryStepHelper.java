@@ -25,6 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -136,7 +137,9 @@ public class JarDirectoryStepHelper {
     }
 
     JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
-    manifestEntry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
+
+    // We want deterministic JARs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+    manifestEntry.setTime(ZipConstants.getFakeTime());
     outputFile.putNextEntry(manifestEntry);
     manifest.write(outputFile);
 
@@ -297,7 +300,8 @@ public class JarDirectoryStepHelper {
       public void visit(Path file, String relativePath) {
         JarEntry entry = new JarEntry(relativePath.replace('\\', '/'));
         String entryName = entry.getName();
-        entry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
+        // We want deterministic JARs, so avoid mtimes.
+        entry.setTime(ZipConstants.getFakeTime());
 
         // We expect there to be many duplicate entries for things like directories. Creating
         // those repeatedly would be lame, so don't do that.
@@ -324,7 +328,8 @@ public class JarDirectoryStepHelper {
           return;
         }
         JarEntry entry = new JarEntry(entryName);
-        entry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
+        // We want deterministic JARs, so avoid mtimes.
+        entry.setTime(ZipConstants.getFakeTime());
         entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
       }
     }.traverse();

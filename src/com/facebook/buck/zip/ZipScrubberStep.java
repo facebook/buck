@@ -91,12 +91,12 @@ public class ZipScrubberStep implements Step {
         ByteBuffer entry = map.slice();
         entry.order(ByteOrder.LITTLE_ENDIAN);
         check(entry.getInt() == ZipEntry.CENSIG, "expected central directory header signature");
-        entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_EPOCH_START);
+        entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
 
         // Find the local file header and zero it's timestamp out.
         int locOff = entry.getInt(ZipEntry.CENOFF);
         check(map.getInt(locOff) == ZipEntry.LOCSIG, "expected local header signature");
-        map.putInt(locOff + ZipEntry.LOCTIM, ZipConstants.DOS_EPOCH_START);
+        map.putInt(locOff + ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
 
         // Advance to the next entry.
         map.position(map.position() + 46);

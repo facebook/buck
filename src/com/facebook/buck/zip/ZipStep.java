@@ -131,7 +131,8 @@ public class ZipStep implements Step {
         }
 
         CustomZipEntry entry = new CustomZipEntry(entryName);
-        entry.setTime(0);  // We want deterministic ZIP files, so avoid mtimes.
+        // We want deterministic ZIPs, so avoid mtimes.
+        entry.setFakeTime();
         entry.setCompressionLevel(
             isDirectory ?
                 ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue() :
