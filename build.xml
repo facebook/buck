@@ -867,6 +867,17 @@
 
   <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 
+  <!--
+    Apparently, Eclipse's annotation processor does not seem to work properly. If you use the
+    built-in processor, the .java files in .apt_generated do not match the ones in
+    build/immutables (some methods appear to be missing). To workaround this, we just generate the
+    files using Ant instead.
+  -->
+  <target name="eclipse-project"
+          description="Generates files for Eclipse project"
+          depends="clean, generate-immutables, generate-test-immutables"
+          />
+
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />
     <attribute name="classpathref" />
