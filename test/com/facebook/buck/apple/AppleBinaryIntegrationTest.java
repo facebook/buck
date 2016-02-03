@@ -66,6 +66,27 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryUsesPlatformLinkerFlags() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_builds_something", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestAppWithNonstandardMain").assertSuccess();
+
+    assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
+    assertThat(
+        workspace.runCommand(
+            "file",
+            getGenDir().resolve(
+                "Apps/TestApp/TestAppWithNonstandardMain").toString())
+              .getStdout()
+              .get(),
+        containsString("executable"));
+  }
+
+
+  @Test
   public void testAppleBinaryAppBuildsApp() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

@@ -227,7 +227,7 @@ public class AppleDescriptions {
     output.platformPreprocessorFlags = arg.platformPreprocessorFlags;
     output.langPreprocessorFlags = arg.langPreprocessorFlags;
     output.linkerFlags = arg.linkerFlags;
-    output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
+    output.platformLinkerFlags = arg.platformLinkerFlags;
     output.frameworks = arg.frameworks;
     output.libraries = arg.libraries;
     output.deps = arg.deps;

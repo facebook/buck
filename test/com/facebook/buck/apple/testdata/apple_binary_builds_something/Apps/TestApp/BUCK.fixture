@@ -3,3 +3,9 @@ apple_binary(
   info_plist = 'Info.plist',
   srcs = ['main.c', 'answer.s'],
 )
+
+apple_binary(
+  name = 'TestAppWithNonstandardMain',
+  srcs = ['nonstandard_main.c'],
+  platform_linker_flags = [('iphonesimulator', ['-e', '_nonstandard_main'])],
+)
