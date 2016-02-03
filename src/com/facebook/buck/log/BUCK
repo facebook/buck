@@ -20,6 +20,7 @@ java_library(
     # appendablelogrecord and third-party, and then only if strictly
     # necessary.
     '//third-party/java/jsr:jsr305',
+    '//third-party/java/guava:guava',
     ':appendablelogrecord',
   ],
   visibility = [ 'PUBLIC' ],

@@ -184,6 +184,7 @@ public final class Main {
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
   private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 10;
+  private static final int LOGGER_PUBLISHER_TIMEOUT_SECONDS = 10;
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
 
   private final PrintStream stdOut;
@@ -810,6 +811,9 @@ public final class Main {
       TestConfig testConfig = new TestConfig(buckConfig);
       ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
+      ExecutorService loggerExecutor = MoreExecutors.newSingleThreadExecutor("Logger Publisher");
+      Logger.setExecutorService(loggerExecutor);
+
       ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
       ListeningExecutorService httpWriteExecutorService =
           getHttpWriteExecutorService(cacheBuckConfig);
@@ -997,6 +1001,7 @@ public final class Main {
         closeHttpExecutorService(
             cacheBuckConfig, Optional.<BuckEventBus>absent(), httpWriteExecutorService);
         closeDiskIoExecutorService(diskIoExecutorService);
+        closeLoggerExecutorService(loggerExecutor);
         flushEventListeners(console, buildId, eventListeners);
         throw t;
       } finally {
@@ -1021,6 +1026,7 @@ public final class Main {
       }
 
       closeDiskIoExecutorService(diskIoExecutorService);
+      closeLoggerExecutorService(loggerExecutor);
       flushEventListeners(console, buildId, eventListeners);
       return exitCode;
     }
@@ -1050,6 +1056,11 @@ public final class Main {
   private static void closeDiskIoExecutorService(
       ExecutorService diskIoExecutorService) throws InterruptedException {
     closeExecutorService("Disk IO", diskIoExecutorService, DISK_IO_STATS_TIMEOUT_SECONDS);
+  }
+
+  private static void closeLoggerExecutorService(
+      ExecutorService service) throws InterruptedException {
+    closeExecutorService("Logger Publisher", service, LOGGER_PUBLISHER_TIMEOUT_SECONDS);
   }
 
   private static void closeHttpExecutorService(
