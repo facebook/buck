@@ -323,6 +323,12 @@ public class AppleCxxPlatforms {
       if (Files.isDirectory(swiftRuntimePath)) {
         platformBuilder.addSwiftRuntimePaths(swiftRuntimePath);
       }
+      Path swiftStaticRuntimePath = toolchainPath
+          .resolve("usr/lib/swift_static")
+          .resolve(platform.getName());
+      if (Files.isDirectory(swiftStaticRuntimePath)) {
+        platformBuilder.addSwiftStaticRuntimePaths(swiftStaticRuntimePath);
+      }
     }
     return platformBuilder.build();
   }

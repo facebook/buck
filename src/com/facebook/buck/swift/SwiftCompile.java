@@ -76,7 +76,6 @@ public class SwiftCompile
     compilerCommand.add(
         "-c",
         "-enable-objc-interop",
-        "-parse-as-library",
         "-module-name",
         moduleName,
         "-emit-module",

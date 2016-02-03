@@ -1,0 +1,12 @@
+swift_library(
+  name = 'hello',
+  srcs = ['hello.swift'],
+)
+
+apple_binary(
+  name = 'hello-bin',
+  deps = [':hello'],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)

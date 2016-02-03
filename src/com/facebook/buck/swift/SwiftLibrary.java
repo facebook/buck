@@ -115,6 +115,7 @@ public class SwiftLibrary
       case STATIC:
         // Fall through.
       case STATIC_PIC:
+        swiftRuntimePaths = appleCxxPlatform.getSwiftStaticRuntimePaths();
         break;
       case SHARED:
         sharedRequested = true;

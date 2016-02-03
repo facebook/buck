@@ -62,4 +62,5 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Optional<Tool> getSwift();
   public abstract Optional<Tool> getSwiftStdlibTool();
   public abstract Set<Path> getSwiftRuntimePaths();
+  public abstract Set<Path> getSwiftStaticRuntimePaths();
 }
