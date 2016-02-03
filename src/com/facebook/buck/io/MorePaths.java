@@ -254,8 +254,8 @@ public class MorePaths {
     if (!path.startsWith("~")) {
       return path;
     }
-    Path homePath = Paths.get(System.getProperty("user.home"));
-    if (path.equals(Paths.get("~"))) {
+    Path homePath = path.getFileSystem().getPath(System.getProperty("user.home"));
+    if (path.equals(path.getFileSystem().getPath("~"))) {
       return homePath;
     }
     return homePath.resolve(path.subpath(1, path.getNameCount()));
