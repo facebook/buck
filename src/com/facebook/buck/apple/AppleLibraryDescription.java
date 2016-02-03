@@ -151,7 +151,7 @@ public class AppleLibraryDescription implements
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       if (!args.infoPlist.isPresent()) {
         throw new HumanReadableException(
-            "Cannot create framework for apple_library '%s':\n",
+            "Cannot create framework for apple_library '%s':\n" +
             "No value specified for 'info_plist' attribute.",
             params.getBuildTarget().getUnflavoredBuildTarget());
       }
