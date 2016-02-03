@@ -721,6 +721,108 @@ public class CxxDescriptionEnhancer {
   }
 
   /**
+   * Create all build rules needed to generate the compilation database.
+   *
+   * @return the {@link CxxCompilationDatabase} rule representing the actual compilation database.
+   */
+  public static CxxCompilationDatabase createCompilationDatabase(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
+      Optional<SourcePath> prefixHeader,
+      ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
+      ImmutableList<String> compilerFlags,
+      ImmutableMap<String, CxxSource> sources,
+      ImmutableSet<FrameworkPath> frameworks,
+      CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
+    BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
+        .paramsWithoutCompilationDatabaseFlavor(params);
+    // Invoking requireObjects has the side-effect of invoking
+    // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
+    // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
+        paramsWithoutCompilationDatabaseFlavor,
+        ruleResolver,
+        pathResolver,
+        cxxPlatform,
+        preprocessorFlags,
+        exportedPreprocessorFlags,
+        prefixHeader,
+        headers,
+        exportedHeaders,
+        compilerFlags,
+        sources,
+        frameworks,
+        preprocessMode,
+        CxxSourceRuleFactory.PicType.PIC);
+
+    return CxxCompilationDatabase.createCompilationDatabase(
+        params,
+        pathResolver,
+        preprocessMode,
+        objects.keySet());
+  }
+
+  public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
+      Optional<SourcePath> prefixHeader,
+      ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
+      ImmutableList<String> compilerFlags,
+      ImmutableMap<String, CxxSource> sources,
+      ImmutableSet<FrameworkPath> frameworks,
+      CxxPreprocessMode preprocessMode,
+      CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
+
+    HeaderSymlinkTree headerSymlinkTree =
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            headers,
+            HeaderVisibility.PRIVATE);
+
+    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
+        CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+            params,
+            cxxPlatform,
+            preprocessorFlags,
+            ImmutableList.of(headerSymlinkTree),
+            ImmutableSet.<FrameworkPath>of(),
+            CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
+                params,
+                ruleResolver,
+                pathResolver,
+                cxxPlatform,
+                exportedPreprocessorFlags,
+                exportedHeaders,
+                frameworks));
+
+    // Create rule to build the object files.
+    return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
+        params,
+        ruleResolver,
+        pathResolver,
+        cxxPlatform,
+        cxxPreprocessorInputFromDependencies,
+        compilerFlags,
+        prefixHeader,
+        preprocessMode,
+        sources,
+        pic);
+  }
+
+  /**
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
    *    symlink tree of shared libraries.
    */
