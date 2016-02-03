@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.SharedNativeLinkTarget;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -519,6 +520,80 @@ public class CxxPythonExtensionDescriptionTest {
             py3SharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.not(Matchers.<NativeLinkable>hasItem(dep)));
+  }
+
+  @Test
+  public void platformDepsSeparateLinkage() throws Exception {
+    PythonBuckConfig pythonBuckConfig =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        new FlavorDomain<>(
+            "Python Platform",
+            ImmutableMap.of(
+                PY2.getFlavor(), PY2,
+                PY3.getFlavor(), PY3));
+
+    CxxLibraryBuilder py2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
+    CxxLibraryBuilder py3Builder = new CxxLibraryBuilder(PYTHON3_DEP_TARGET);
+
+    CxxLibraryBuilder depBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.c"))));
+    CxxPythonExtensionBuilder extensionBuilder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            pythonPlatforms,
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms())
+        .setPlatformDeps(
+            PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                .add(
+                    Pattern.compile(PY2.getFlavor().toString()),
+                    ImmutableSortedSet.of(depBuilder.getTarget()))
+                .build());
+    PythonBinaryBuilder binary2Builder =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin2"),
+            pythonBuckConfig,
+            pythonPlatforms,
+            CxxTestBuilder.createDefaultPlatform(),
+            CxxTestBuilder.createDefaultPlatforms())
+            .setMainModule("test")
+            .setPlatform(PY2.getFlavor().toString())
+            .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
+    PythonBinaryBuilder binary3Builder =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin3"),
+            pythonBuckConfig,
+            pythonPlatforms,
+            CxxTestBuilder.createDefaultPlatform(),
+            CxxTestBuilder.createDefaultPlatforms())
+            .setMainModule("test")
+            .setPlatform(PY3.getFlavor().toString())
+            .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                py2Builder.build(),
+                py3Builder.build(),
+                depBuilder.build(),
+                extensionBuilder.build(),
+                binary2Builder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    py2Builder.build(resolver);
+    py3Builder.build(resolver);
+    depBuilder.build(resolver);
+    extensionBuilder.build(resolver);
+    PythonBinary binary2 = (PythonBinary) binary2Builder.build(resolver);
+    PythonBinary binary3 = (PythonBinary) binary3Builder.build(resolver);
+
+    assertThat(
+        binary2.getComponents().getNativeLibraries().keySet(),
+        Matchers.contains(Paths.get("libdep.so")));
+    assertThat(
+        binary3.getComponents().getNativeLibraries().keySet(),
+        Matchers.not(Matchers.contains(Paths.get("libdep.so"))));
   }
 
 }

@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -147,7 +148,9 @@ public class PythonUtil {
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         Iterable<BuildRule> deps = empty;
         Optional<SharedNativeLinkTarget> linkTarget =
-            NativeLinkables.getSharedNativeLinkTarget(rule, cxxPlatform);
+            nativeLinkStrategy == NativeLinkStrategy.MERGED ?
+                NativeLinkables.getSharedNativeLinkTarget(rule, cxxPlatform) :
+                Optional.<SharedNativeLinkTarget>absent();
         if (rule instanceof CxxPythonExtension) {
           extensions.put(rule.getBuildTarget(), (CxxPythonExtension) rule);
         } else if (rule instanceof PythonPackagable) {
@@ -228,25 +231,35 @@ public class PythonUtil {
             params.getBuildTarget());
       }
     } else {
+      Map<BuildTarget, NativeLinkable> allNativeRoots = new LinkedHashMap<>();
+      allNativeRoots.putAll(nativeLinkableRoots);
 
       // For regular linking, add all extensions via the package components interface.
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
         allComponents.addComponent(
             entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform),
             entry.getKey());
+        allNativeRoots.putAll(
+            Maps.uniqueIndex(
+                entry.getValue().getNativeLinkTarget(pythonPlatform)
+                    .getSharedNativeLinkTargetDeps(cxxPlatform),
+                HasBuildTarget.TO_TARGET));
       }
 
       // Add all the native libraries.
-      ImmutableMap<String, SourcePath> libs =
-          NativeLinkables.getTransitiveSharedLibraries(
-              cxxPlatform,
-              params.getDeps(),
-              Predicates.instanceOf(PythonPackagable.class));
-      for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
-        allComponents.addNativeLibraries(
-            Paths.get(ent.getKey()),
-            ent.getValue(),
-            params.getBuildTarget());
+      ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+          NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, allNativeRoots.values());
+      for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
+        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
+        if (linkage != NativeLinkable.Linkage.STATIC) {
+          ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
+          for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
+            allComponents.addNativeLibraries(
+                Paths.get(ent.getKey()),
+                ent.getValue(),
+                params.getBuildTarget());
+          }
+        }
       }
     }
 
