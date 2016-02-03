@@ -29,8 +29,10 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -41,6 +43,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -84,13 +87,46 @@ public class CxxTestDescription implements
   }
 
   @Override
-  public <A extends Arg> CxxTest createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    if (params.getBuildTarget().getFlavors()
+          .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      return CxxDescriptionEnhancer.createCompilationDatabase(
+          params,
+          resolver,
+          pathResolver,
+          cxxPlatform,
+          CxxFlags.getLanguageFlags(
+              args.preprocessorFlags,
+              args.platformPreprocessorFlags,
+              args.langPreprocessorFlags,
+              cxxPlatform),
+          ImmutableMultimap.<AbstractCxxSource.Type, String>of(),
+          args.prefixHeader,
+          CxxDescriptionEnhancer.parseHeaders(
+              params.getBuildTarget(),
+              pathResolver,
+              Optional.of(cxxPlatform),
+              args),
+          ImmutableMap.<Path, SourcePath>of(),
+          CxxFlags.getFlags(
+              args.compilerFlags,
+              args.platformCompilerFlags,
+              cxxPlatform),
+          CxxDescriptionEnhancer.parseCxxSources(
+              params.getBuildTarget(),
+              pathResolver,
+              cxxPlatform,
+              args),
+          args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+          cxxBuckConfig.getPreprocessMode());
+    }
 
     // Generate the link rule that builds the test binary.
     final CxxLinkAndCompileRules cxxLinkAndCompileRules =
@@ -276,6 +312,10 @@ public class CxxTestDescription implements
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
 
     if (flavors.isEmpty()) {
+      return true;
+    }
+
+    if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return true;
     }
 

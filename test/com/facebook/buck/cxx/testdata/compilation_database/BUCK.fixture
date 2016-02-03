@@ -17,3 +17,14 @@ cxx_library(
     'bar.h',
   ],
 )
+
+cxx_test(
+  name = 'test',
+  srcs = [
+    'test.cpp',
+  ],
+)
+
+cxx_library(
+  name = 'fake-gtest',
+)

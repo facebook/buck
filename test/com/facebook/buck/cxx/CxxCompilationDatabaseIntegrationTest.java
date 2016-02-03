@@ -30,6 +30,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -55,15 +56,22 @@ public class CxxCompilationDatabaseIntegrationTest {
   private static final boolean PREPROCESSOR_SUPPORTS_HEADER_MAPS =
       Platform.detect() == Platform.MACOS;
 
+  private ProjectWorkspace workspace;
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  @Test
-  public void binaryWithDependenciesCompilationDatabase() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+  @Before
+  public void initializeWorkspace() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
+    // cxx_test requires gtest_dep to be set
+    workspace.writeContentsToPath("[cxx]\ngtest_dep = //:fake-gtest", ".buckconfig");
+  }
+
+  @Test
+  public void binaryWithDependenciesCompilationDatabase() throws IOException {
     Path compilationDatabase = workspace.buildAndReturnOutput(
         "//:binary_with_dep#compilation-database");
 
@@ -166,6 +174,59 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-o")
             .add("buck-out/gen/library_with_header#compile-pic-bar.cpp.o,default/bar.cpp.o")
             .add(rootPath.resolve(Paths.get("bar.cpp")).toRealPath().toString())
+            .build());
+  }
+
+  @Test
+  public void testCompilationDatabase() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compilation_database", tmp);
+    workspace.setUp();
+    Path compilationDatabase = workspace.buildAndReturnOutput(
+        "//:test#default,compilation-database");
+    Path rootPath = tmp.getRootPath();
+    assertEquals(
+        Paths.get(
+            "buck-out/gen/__test#compilation-database,default.json"),
+        rootPath.relativize(compilationDatabase));
+
+    String binaryHeaderSymlinkTreeFolder =
+        String.format(
+            "buck-out/gen/test#default,%s",
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+    String binaryExportedHeaderSymlinkTreeFolder =
+        String.format(
+            "buck-out/gen/test#default,%s",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+    String fakeGtestSymlinkFolder =
+        String.format(
+            "buck-out/gen/fake-gtest#default,%s",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+
+    Map<String, CxxCompilationDatabaseEntry> fileToEntry =
+        CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
+    assertEquals(1, fileToEntry.size());
+    assertHasEntry(
+        fileToEntry,
+        "test.cpp",
+        new ImmutableList.Builder<String>()
+            .add(COMPILER_PATH)
+            .add("-fPIC")
+            .add("-fPIC")
+            .add("-I")
+            .add(headerSymlinkTreeIncludePath(binaryHeaderSymlinkTreeFolder))
+            .add("-I")
+            .add(headerSymlinkTreeIncludePath(binaryExportedHeaderSymlinkTreeFolder))
+            .add("-I")
+            .add(headerSymlinkTreeIncludePath(fakeGtestSymlinkFolder))
+            .addAll(getExtraFlagsForHeaderMaps())
+            .addAll(COMPILER_SPECIFIC_FLAGS)
+            .add("-x")
+            .add("c++")
+            .add("-c")
+            .add("-o")
+            .add("buck-out/gen/test#compile-pic-test.cpp.o,default/test.cpp.o")
+            .add(rootPath.resolve(Paths.get("test.cpp")).toRealPath().toString())
             .build());
   }
 
