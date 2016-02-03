@@ -112,7 +112,7 @@ public class CodeSignStep implements Step {
   /**
    * Convert a {@link CodeSignIdentity} into a string argument for the codesign tool.
    */
-  private static String getIdentityArg(CodeSignIdentity identity) {
+  public static String getIdentityArg(CodeSignIdentity identity) {
     if (identity.getFingerprint().isPresent()) {
       return identity.getFingerprint().get().toString().toUpperCase();
     } else {

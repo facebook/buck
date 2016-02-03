@@ -386,28 +386,6 @@ public class AppleBundle
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
-    // are copied over).
-    if (swiftStdlibTool.isPresent()) {
-      ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
-      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
-      swiftStdlibCommand.add(
-          "--scan-executable",
-          bundleBinaryPath.toString(),
-          "--scan-folder",
-          bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
-          "--scan-folder",
-          bundleRoot.resolve(destinations.getPlugInsPath()).toString(),
-          "--destination",
-          bundleRoot.resolve(Paths.get("Frameworks")).toString());
-
-      stepsBuilder.add(
-          new SwiftStdlibStep(
-              getProjectFilesystem().getRootPath(),
-              swiftStdlibCommand.build())
-      );
-    }
-
     if (needCodeSign()) {
       // Copy the .mobileprovision file if the platform requires it, and sign the executable.
       Optional<Path> entitlementsPlist = Optional.absent();
@@ -472,6 +450,8 @@ public class AppleBundle
         }
       };
 
+      addSwiftStdlibStepIfNeeded(Optional.of(codeSignIdentitySupplier), stepsBuilder);
+
       stepsBuilder.add(
           new CodeSignStep(
               getProjectFilesystem().getRootPath(),
@@ -480,6 +460,8 @@ public class AppleBundle
               signingEntitlementsTempPath,
               codeSignIdentitySupplier,
               codesignAllocatePath));
+    } else {
+      addSwiftStdlibStepIfNeeded(Optional.<Supplier<CodeSignIdentity>>absent(), stepsBuilder);
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -545,6 +527,33 @@ public class AppleBundle
     }
 
     return keys.build();
+  }
+
+  private void addSwiftStdlibStepIfNeeded(
+      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
+    // are copied over).
+    if (swiftStdlibTool.isPresent()) {
+      ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
+      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
+      swiftStdlibCommand.add(
+          "--scan-executable",
+          bundleBinaryPath.toString(),
+          "--scan-folder",
+          bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
+          "--scan-folder",
+          bundleRoot.resolve(destinations.getPlugInsPath()).toString(),
+          "--destination",
+          bundleRoot.resolve(Paths.get("Frameworks")).toString());
+
+      stepsBuilder.add(
+          new SwiftStdlibStep(
+              getProjectFilesystem().getRootPath(),
+              swiftStdlibCommand.build(),
+              codeSignIdentitySupplier)
+      );
+    }
   }
 
   private void addStoryboardProcessingSteps(

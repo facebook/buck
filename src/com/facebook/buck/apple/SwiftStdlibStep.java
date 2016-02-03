@@ -23,6 +23,8 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,12 +39,15 @@ public class SwiftStdlibStep implements Step {
 
   private final Path workingDirectory;
   private final Iterable<String> command;
+  private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
 
   public SwiftStdlibStep(
       Path workingDirectory,
-      Iterable<String> command) {
+      Iterable<String> command,
+      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
     this.workingDirectory = workingDirectory;
     this.command = command;
+    this.codeSignIdentitySupplier = codeSignIdentitySupplier;
   }
 
   @Override
@@ -54,6 +59,11 @@ public class SwiftStdlibStep implements Step {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(workingDirectory.toAbsolutePath().toFile());
     builder.setCommand(command);
+    if (codeSignIdentitySupplier.isPresent()) {
+      builder.addCommand(
+          "--sign",
+          CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
+    }
     return builder.build();
   }
 
