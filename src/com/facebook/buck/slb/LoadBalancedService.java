@@ -42,7 +42,7 @@ public class LoadBalancedService implements HttpService {
     URI server = slb.getBestServer();
     LoadBalancedServiceEventData.Builder data = LoadBalancedServiceEventData.builder()
         .setServer(server);
-    requestBuilder.url(server.resolve(path).toURL());
+    requestBuilder.url(SingleUriService.getFullUrl(server, path));
     Request request = requestBuilder.build();
     if (request.body() != null && request.body().contentLength() != -1) {
       data.setRequestSizeBytes(request.body().contentLength());

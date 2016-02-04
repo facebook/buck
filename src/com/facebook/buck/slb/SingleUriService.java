@@ -16,15 +16,18 @@
 
 package com.facebook.buck.slb;
 
-import com.google.common.base.Preconditions;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 
 public class SingleUriService implements HttpService {
+  private static final String PATH_SEPARATOR = "/";
+
   private final URI server;
   private final OkHttpClient client;
 
@@ -35,16 +38,25 @@ public class SingleUriService implements HttpService {
 
   @Override
   public Response makeRequest(String path, Request.Builder requestBuilder) throws IOException {
-    Preconditions.checkArgument(
-        path.startsWith("/"),
-        "Request URI must only be a path started with / instead of [%s].",
-        path);
-    requestBuilder.url(server.resolve(path).toURL());
+    requestBuilder.url(getFullUrl(server, path));
     return client.newCall(requestBuilder.build()).execute();
   }
 
   @Override
   public void close() {
     // Nothing to close.
+  }
+
+  public static URL getFullUrl(URI base, String extraPath) throws MalformedURLException {
+    String baseUrl = base.toString();
+    if (baseUrl.endsWith(PATH_SEPARATOR)) {
+      baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+    }
+
+    if (extraPath.startsWith(PATH_SEPARATOR)) {
+      extraPath = extraPath.substring(1);
+    }
+
+    return new URL(baseUrl + PATH_SEPARATOR + extraPath);
   }
 }

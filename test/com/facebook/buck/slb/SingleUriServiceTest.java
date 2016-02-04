@@ -23,18 +23,60 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import org.easymock.EasyMock;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 
 public class SingleUriServiceTest {
-  private static final URI SERVER = URI.create("http://localhost:4242");
+  private static final URI SERVER = URI.create("http://localhost:4242/");
+
+  @Test
+  public void testGetFullUrlWithoutSlashes() throws MalformedURLException {
+    testGetFullUrl(
+        "http://localhost:4242/with/very/sneaky/path",
+        "topspin",
+        "http://localhost:4242/with/very/sneaky/path/topspin");
+  }
+
+  @Test
+  public void testGetFullUrlWithRightSlash() throws MalformedURLException {
+    testGetFullUrl(
+        "http://localhost:4242/with/very/sneaky/path",
+        "/topspin",
+        "http://localhost:4242/with/very/sneaky/path/topspin");
+  }
+
+  @Test
+  public void testGetFullUrlWithLeftSlash() throws MalformedURLException {
+    testGetFullUrl(
+        "http://localhost:4242/with/very/sneaky/path/",
+        "topspin",
+        "http://localhost:4242/with/very/sneaky/path/topspin");
+  }
+
+  @Test
+  public void testGetFullUrlWithDoubleSlash() throws MalformedURLException {
+    testGetFullUrl(
+        "http://localhost:4242/with/very/sneaky/path/",
+        "/topspin",
+        "http://localhost:4242/with/very/sneaky/path/topspin");
+  }
+
+  private void testGetFullUrl(String actualBaseUrl, String actualExtraPath, String expectedUrl)
+      throws MalformedURLException {
+    URI baseUri = URI.create(actualBaseUrl);
+    Assert.assertEquals(
+        SingleUriService.getFullUrl(baseUri, actualExtraPath).toString(),
+        expectedUrl);
+  }
 
   @Test
   public void testClientIsCalledWithFullUrl() throws IOException, InterruptedException {
     OkHttpClient mockClient = EasyMock.createMock(OkHttpClient.class);
-    String path = "/my/super/path";
+    String path = "my/super/path";
     Request.Builder request = new Request.Builder()
         .url(SERVER + path)
         .get();
