@@ -1,0 +1,139 @@
+{namespace buck.export_file}
+
+/***/
+{template .soyweb}
+{call buck.page}
+  {param title: 'export_file()' /}
+  {param prettify: true /}
+  {param description}
+    An export_file() rule takes a single file or folder and exposes it so other rules can use it.
+  {/param}
+  {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  An <code>export_file()</code> is takes a single file or folder and exposes it so other rules can
+  use it.  This is especially useful to work around package boundary violations where you want to
+  use a file that is owned by a different {call buck.build_file /}.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+    A descriptive name for the rule.  If this is the only parameter to the{sp}
+    <code>export_file()</code> code, this must be the path to the file.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'src' /}
+  {param default: 'None' /}
+  {param desc}
+    The path to the file that should be exported.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'out' /}
+  {param default: 'None' /}
+  {param desc}
+    The name which the file will be called if another rule depends on it instead of the name it
+    already has.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param}  // close args
+
+{param examples}
+
+<p>
+  The best way to see how the <code>export_file()</code> rule works is with some examples.  The
+  common case is:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+export_file(
+  name = 'example.html',
+)
+
+# This is equivalent to
+
+export_file(
+  name = 'example.html',
+  src = 'example.html',
+  out = 'example.html',
+)
+</pre>
+{/literal}
+
+<p>
+  It is sometimes useful to refer to the file not by its path, but by a more logical name:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+export_file(
+  name = 'example',
+  src = 'example.html',
+)
+
+# This is equivalent to
+
+export_file(
+  name = 'example',
+  src = 'example.html',
+  out = 'example.html',
+)
+</pre>
+{/literal}
+
+<p>
+  Finally, there are occasions where you want to export a file more than once but want to copy it to
+  a different name for each output:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+export_file(
+  name = 'runner',
+  src = 'RemoteRunner.html',
+)
+
+export_file(
+  name = 'runner_hta',
+  src = 'RemoteRunner.html',
+  out = 'RemoteRunner.hta',
+)
+</pre>
+{/literal}
+
+<p>
+  Using the <code>export_file()</code> rule is also simple:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+export_file(
+  name = 'example',
+  src = 'example.html',
+)
+
+genrule(
+  name = 'demo',
+  srcs = [],
+  deps = [':example'],
+  out = 'result.html'
+  cmd = 'cp ${:example} $OUT',
+)
+</pre>
+{/literal}
+
+{/param}
+
+{/call}  // End of buck.rule
+
+  {/param}
+{/call}
+{/template}
