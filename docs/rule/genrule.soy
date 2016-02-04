@@ -37,6 +37,16 @@
 
 {call genrule_common.out_arg /}
 
+{call buck.arg}
+  {param name: 'executable' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether the output of the genrule is itself executable. Marking an output as
+  executable makes <code>buck run</code> and <code>$(exe ...)</code> macro
+  expansion work with this target.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // args

@@ -5,6 +5,7 @@ java_library(
     'ExportFile.java',
     'ExportFileDescription.java',
     'Genrule.java',
+    'GenruleBinary.java',
     'GenruleDescription.java',
     'ShBinary.java',
     'ShBinaryDescription.java',

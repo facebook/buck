@@ -1,0 +1,6 @@
+genrule(
+  name = 'binary',
+  cmd = '(echo "#!/bin/sh"; echo "echo hi") > $OUT && chmod +x $OUT',
+  executable = True,
+  out = 'out.sh',
+)

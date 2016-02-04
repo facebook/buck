@@ -22,10 +22,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-public class GenruleDescription extends AbstractGenruleDescription<AbstractGenruleDescription.Arg> {
+public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("genrule");
 
@@ -40,7 +41,7 @@ public class GenruleDescription extends AbstractGenruleDescription<AbstractGenru
   }
 
   @Override
-  protected <A extends Arg> BuildRule createBuildRule(
+  protected <A extends GenruleDescription.Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
@@ -49,14 +50,31 @@ public class GenruleDescription extends AbstractGenruleDescription<AbstractGenru
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe,
       String out) {
-    return new Genrule(
-        params,
-        new SourcePathResolver(resolver),
-        srcs,
-        cmd,
-        bash,
-        cmdExe,
-        out);
+    if (!args.executable.or(false)) {
+      return new Genrule(
+          params,
+          new SourcePathResolver(resolver),
+          srcs,
+          cmd,
+          bash,
+          cmdExe,
+          out);
+    } else {
+      return new GenruleBinary(
+          params,
+          new SourcePathResolver(resolver),
+          srcs,
+          cmd,
+          bash,
+          cmdExe,
+          out
+      );
+    }
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AbstractGenruleDescription.Arg {
+    public Optional<Boolean> executable;
   }
 
 }

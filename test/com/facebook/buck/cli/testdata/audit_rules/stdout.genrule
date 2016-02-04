@@ -5,6 +5,7 @@ genrule(
   bash = "cat $SRCS > $OUT",
   cmd = None,
   cmdExe = None,
+  executable = None,
   out = "baz.txt",
   srcs = [
     "foo.txt",

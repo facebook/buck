@@ -239,4 +239,15 @@ public class GenruleIntegrationTest {
 
     assertEquals(originalOutput, originalOutput2);
   }
+
+  @Test
+  public void executableGenrule() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_executable", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("run", "//:binary");
+    buildResult.assertSuccess();
+  }
+
 }
