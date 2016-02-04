@@ -31,6 +31,11 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+/**
+ * Represents a single field that can be represented in buck build files.
+ *
+ * @param <T> the class that this ParamInfo operates on.
+ */
 public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
 
   private final TypeCoercer<?> typeCoercer;
@@ -82,6 +87,17 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
     return typeCoercer.getOutputClass();
   }
 
+  /**
+   * Traverse the value of the field on {@code dto} that is represented by this instance.
+   *
+   * If this field has a top level Optional type, traversal begins at the Optional value, or not at
+   * all if the field is empty.
+   *
+   * @param traversal traversal to apply on the values.
+   * @param dto the object whose field will be traversed.
+   *
+   * @see TypeCoercer#traverse(Object, TypeCoercer.Traversal)
+   */
   public void traverse(Traversal traversal, T dto) {
     traverseHelper(typeCoercer, traversal, dto);
   }
