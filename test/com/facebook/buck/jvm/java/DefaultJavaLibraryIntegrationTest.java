@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -76,6 +77,7 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "abi", tmp);
     workspace.setUp();
+    workspace.enableDirCache();
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:no_srcs");
@@ -93,7 +95,7 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.verify();
 
     // Verify the build cache.
-    Path buildCache = workspace.getPath("cache_dir");
+    Path buildCache = workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR);
     assertTrue(Files.isDirectory(buildCache));
     assertEquals("There should be two entries (a zip and metadata) in the build cache.",
         2,

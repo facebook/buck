@@ -131,7 +131,12 @@ public class ArtifactCacheBuckConfig {
   }
 
   public ImmutableList<String> getArtifactCacheModesRaw() {
-    return buckConfig.getListWithoutComments(CACHE_SECTION_NAME, "mode");
+    // If there is a user-set value, even if it is `mode =`, use it.
+    if (buckConfig.hasUserDefinedValue(CACHE_SECTION_NAME, "mode")) {
+      return buckConfig.getListWithoutComments(CACHE_SECTION_NAME, "mode");
+    }
+    // Otherwise, we default to using the directory cache.
+    return ImmutableList.of("dir");
   }
 
   public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {

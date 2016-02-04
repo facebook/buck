@@ -199,7 +199,7 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(
-        Paths.get(DEFAULT_CACHE_DIR, "someFile"));
+        cacheDir.resolve("someFile"));
     assertFalse(ancestor.isPresent());
   }
 

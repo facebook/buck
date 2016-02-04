@@ -9,6 +9,9 @@ import tempfile
 import zipfile
 
 
+CACHE_DIR = 'buck-cache'
+
+
 class CacheEntry(object):
     pass
 
@@ -26,8 +29,8 @@ def get_cache_entry(path):
 
 def get_cache_inventory():
     inventory = {}
-    for item in os.listdir('buck-cache'):
-        entry = get_cache_entry(os.path.join('buck-cache', item))
+    for item in os.listdir(CACHE_DIR):
+        entry = get_cache_entry(os.path.join(CACHE_DIR, item))
         inventory[entry.target] = entry
     return inventory
 
@@ -47,7 +50,7 @@ def get_missing_cache_entries(inventory):
 
 
 def clear_cache():
-    subprocess.check_call(['rm', '-rf', 'buck-cache'])
+    subprocess.check_call(['rm', '-rf', CACHE_DIR])
 
 
 def clear_output():
@@ -60,6 +63,10 @@ def run_buck(buck, *args):
     # Always create a temp file, in case we need to serialize the
     # arguments to it.
     with tempfile.NamedTemporaryFile() as f:
+
+        # Point cache to a known location.
+        args.append('--config')
+        args.append('cache.dir=' + CACHE_DIR)
 
         # If the command would be too long, put the args into a file and
         # execute that.

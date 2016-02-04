@@ -82,6 +82,7 @@ public class BuildKeepGoingIntegrationTest {
   public void testVariousSuccessTypesInReport() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "keep_going", tmp).setUp();
+    workspace.enableDirCache();
 
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =

@@ -55,7 +55,7 @@ public class BuckConstant {
   public static final Path LOG_PATH = BUCK_OUTPUT_PATH.resolve("log");
 
   public static final Path BUCK_TRACE_DIR = BUCK_OUTPUT_PATH.resolve("log/traces");
-  public static final String DEFAULT_CACHE_DIR = "buck-cache";
+  public static final String DEFAULT_CACHE_DIR = BUCK_OUTPUT_DIRECTORY + "/cache";
 
   // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
   public static final Path TRASH_PATH = BUCK_OUTPUT_PATH.resolve(".trash");

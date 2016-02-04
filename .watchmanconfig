@@ -1,7 +1,6 @@
 {
   "ignore_dirs": [
     "buck-out",
-    "buck-cache",
     ".idea",
     ".buckd",
     "build"

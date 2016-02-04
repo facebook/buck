@@ -475,7 +475,7 @@ $ buck targets --resolve-alias app#src_jar
     A comma-separated set of caching policies to use.  The valid values are:
     <ul>
       <li>
-        <code>dir</code>: Use a directory-based cached on the local filesystem.
+        <code>dir</code> (default): Use a directory-based cache on the local filesystem.
       </li>
       <li>
         <code>http</code>: Use an http-based cache.
@@ -491,7 +491,7 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     The directory path relative to the project root that is used for directory-based caching (
     {call buckconfig.cache_mode /} must contain <code>dir</code>).  This defaults to{sp}
-    <code>buck-cache</code>.
+    <code>buck-out/cache</code>.
   {/param}
 {/call}
 

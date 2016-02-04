@@ -76,6 +76,7 @@ public class DirectoryTraversalTest {
     final ImmutableSet<String> expectedVisitedPaths = ImmutableSet.of(
         "b/b_file",
         "b/d/b_d_file",
+        ".buckconfig.local",
         "file"
     );
     final ImmutableSet.Builder<String> visitedPaths = ImmutableSet.builder();

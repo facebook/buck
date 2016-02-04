@@ -119,6 +119,7 @@ public class GenruleIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "genrule_directory_output", temporaryFolder);
     workspace.setUp();
+    workspace.enableDirCache();
 
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
 
@@ -146,6 +147,7 @@ public class GenruleIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "genrule_directory_output_cleaned", temporaryFolder);
     workspace.setUp();
+    workspace.enableDirCache();
 
     workspace.copyFile("BUCK.1", "BUCK");
     workspace.runBuckCommand("build", "//:mkdir_another").assertSuccess();

@@ -9,6 +9,9 @@
     maven-importer = //src/com/facebook/buck/maven:resolver
 [buildfile]
     includes = //DEFS
+[cache]
+    ; Disable the default directory cache.
+    mode =
 [download]
     maven_repo = https://repo1.maven.org/maven2
 [project]

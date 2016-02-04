@@ -220,6 +220,14 @@ public class ProjectWorkspace {
       };
       Files.walkFileTree(destPath, copyDirVisitor);
     }
+
+    // Disable the directory cache by default.  Tests that want to enable it can call
+    // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
+    // exist, however (we assume the test knows what it is doing at that point).
+    if (!Files.exists(getPath(".buckconfig.local"))) {
+      writeContentsToPath("[cache]\n  mode =", ".buckconfig.local");
+    }
+
     isSetUp = true;
     return this;
   }

@@ -3,6 +3,6 @@ java_library(
   
   # Need at least one resource, or else no JAR file will be generated.
   resources = [
-    '.buckconfig',
+    'BUCK',
   ],
 )

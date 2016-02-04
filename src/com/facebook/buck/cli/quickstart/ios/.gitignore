@@ -1,6 +1,5 @@
 # Buck
 /buck-out
-/buck-cache
 /.buckconfig.local
 /.buckd
 

@@ -63,6 +63,7 @@ public class ApplePackageIntegrationTest {
         "simple_application_bundle_no_debug",
         tmp);
     workspace.setUp();
+    workspace.enableDirCache();
 
     workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
 

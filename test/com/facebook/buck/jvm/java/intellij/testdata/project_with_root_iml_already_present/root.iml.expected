@@ -4,8 +4,8 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
-      <excludeFolder url="file://$MODULE_DIR$/buck-cache" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/buck-out/cache" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/log" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/tmp" />
     </content>

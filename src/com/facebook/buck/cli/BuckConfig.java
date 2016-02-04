@@ -615,6 +615,10 @@ public class BuckConfig {
     return sampleRate;
  }
 
+  public boolean hasUserDefinedValue(String sectionName, String propertyName) {
+    return config.get(sectionName).containsKey(propertyName);
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
   }

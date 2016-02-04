@@ -459,4 +459,22 @@ public class BuckConfigTest {
     assertFalse(buckConfig.equalsForDaemonRestart(buckConfigDifferentCompiler));
     assertFalse(buckConfigMoreThreads.equalsForDaemonRestart(buckConfigDifferentCompiler));
   }
+
+  @Test
+  public void hasUserDefinedValueReturnsTrueForEmptySetting() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "cache", ImmutableMap.of("mode", "")))
+        .build();
+    assertTrue(buckConfig.hasUserDefinedValue("cache", "mode"));
+  }
+
+  @Test
+  public void hasUserDefinedValueReturnsFalseForNoSetting() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(ImmutableMap.<String, ImmutableMap<String, String>>of())
+        .build();
+    assertFalse(buckConfig.hasUserDefinedValue("cache", "mode"));
+  }
 }

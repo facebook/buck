@@ -4,6 +4,5 @@ syntax: glob
 /.idea/libraries/*.xml
 /.idea/modules.xml
 /.idea/runConfigurations/Debug_Buck_test.xml
-/buck-cache
 /buck-out
 /.buckd

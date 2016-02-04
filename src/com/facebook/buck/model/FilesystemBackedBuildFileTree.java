@@ -136,8 +136,8 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
   }
 
   /**
-   * Assume that any directory called "buck-out", "buck-cache" or ".buckd" can be ignored. Not the
-   * world's best heuristic, but it works in every existing code base we have access to.
+   * Assume that any directory called "buck-out", "buck-out/cache" or ".buckd" can be ignored. Not
+   * the world's best heuristic, but it works in every existing code base we have access to.
    */
   private boolean isBuckOutput(Path path) {
     Path sameFsBuckOut = path.getFileSystem().getPath(BUCK_OUTPUT_DIRECTORY);

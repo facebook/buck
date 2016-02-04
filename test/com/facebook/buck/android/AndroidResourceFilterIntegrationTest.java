@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
@@ -186,7 +187,8 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     Sha1HashCode androidBinaryRuleKey = buildLog.getRuleKey("//apps/sample:app_comp_str");
-    Path cachedFile = workspace.getPath("buck-cache/" + androidBinaryRuleKey.getHash());
+    Path cachedFile = workspace.getPath(
+        BuckConstant.DEFAULT_CACHE_DIR + "/" + androidBinaryRuleKey.getHash());
     Files.delete(cachedFile);
 
     workspace.runBuckCommand("clean").assertSuccess();
