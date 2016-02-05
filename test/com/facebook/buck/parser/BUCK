@@ -21,6 +21,7 @@ java_test(
     '//src/com/facebook/buck/rules/coercer:types',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:types',
+    '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:exceptions',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
