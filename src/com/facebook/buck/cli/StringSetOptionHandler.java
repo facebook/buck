@@ -72,7 +72,7 @@ public class StringSetOptionHandler extends OptionHandler<Supplier<ImmutableSet<
 
     while (counter < params.size()) {
       String param = params.getParameter(counter);
-      if (param.charAt(0) == '-') {
+      if (!param.isEmpty() && param.charAt(0) == '-') {
         break;
       }
       hasValues = true;

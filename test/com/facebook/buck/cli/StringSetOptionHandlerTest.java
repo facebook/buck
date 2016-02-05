@@ -90,4 +90,13 @@ public class StringSetOptionHandlerTest {
         "--option1",
         "--option2", "f");
   }
+
+  @Test
+  public void testOptionSpecifiedWithEmptyElements() throws CmdLineException {
+    TestBean bean = new TestBean();
+    CmdLineParser parser = new CmdLineParser(bean);
+    parser.parseArgument(
+        "--option1", "", "a");
+    assertEquals(ImmutableSet.of("", "a"), bean.getOption1());
+  }
 }
