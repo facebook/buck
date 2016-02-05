@@ -16,13 +16,13 @@
 
 package com.facebook.buck.log;
 
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.Formatter;
 import java.util.IllegalFormatException;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 @SuppressWarnings("serial")
 public class AppendableLogRecord extends LogRecord {
@@ -38,6 +38,7 @@ public class AppendableLogRecord extends LogRecord {
     // Appendable. If this proves to be a perf issue, we can do
     // runtime introspection to access the private Formatter.init()
     // API to replace the Appendable.
+
     try (Formatter f = new Formatter(sb, Locale.US)) {
       f.format(getMessage(), getParameters());
     } catch (IllegalFormatException e) {
@@ -47,6 +48,11 @@ public class AppendableLogRecord extends LogRecord {
       sb.append(getMessage());
       sb.append("' ");
       sb.append(Arrays.asList(getParameters()).toString());
+    } catch (ConcurrentModificationException originalException) {
+      // This way we may be at least able to figure out where offending log was created.
+      throw new ConcurrentModificationException(
+          "Concurrent modification when logging for message " + getMessage(),
+          originalException);
     }
   }
 }
