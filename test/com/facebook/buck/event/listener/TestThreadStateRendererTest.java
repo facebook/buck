@@ -104,10 +104,10 @@ public class TestThreadStateRendererTest {
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
-                " |=> //:target3...  2.6s (running Test A[2.6s])",
                 " |=> //:target1...  3.3s",
-                " |=> IDLE",
-                " |=> //:target4...  1.2s (running Test B[0.4s])"))));
+                " |=> //:target3...  2.6s (running Test A[2.6s])",
+                " |=> //:target4...  1.2s (running Test B[0.4s])",
+                " |=> IDLE"))));
   }
 
   @Test
@@ -147,10 +147,10 @@ public class TestThreadStateRendererTest {
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
-                " |=> //:target3...  2.6s (running Test A[2.6s])",
                 " |=> //:target1...  3.3s",
-                " |=> IDLE",
-                " |=> //:target4...  1.2s (running Installing Sim[0.4s])"))));
+                " |=> //:target3...  2.6s (running Test A[2.6s])",
+                " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
+                " |=> IDLE"))));
   }
 
   @Test
@@ -182,8 +182,8 @@ public class TestThreadStateRendererTest {
         is(equalTo(
             ImmutableList.of(
                 // missing test rule - no output
-                " |=> //:target3...  2.6s", // missing step information
                 " |=> //:target1...  3.3s", // missing test summary
+                " |=> //:target3...  2.6s", // missing step information
                 " |=> IDLE",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
   }

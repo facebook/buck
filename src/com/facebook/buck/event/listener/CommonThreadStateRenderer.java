@@ -22,9 +22,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
+
+import java.util.Comparator;
 
 public class CommonThreadStateRenderer {
   /**
@@ -46,12 +51,26 @@ public class CommonThreadStateRenderer {
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
-      Iterable<Long> threadIds) {
+      final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap) {
     this.ansi = ansi;
     this.formatTimeFunction = formatTimeFunction;
     this.currentTimeMs = currentTimeMs;
-    this.sortedThreadIds = FluentIterable.from(threadIds)
-        .toSortedList(Ordering.natural());
+    this.sortedThreadIds = FluentIterable.from(threadInformationMap.keySet())
+        .toSortedList(
+            new Comparator<Long>() {
+              private Comparator<Long> reverseOrdering = Ordering.natural().reverse();
+              @Override
+              public int compare(Long threadId1, Long threadId2) {
+                long elapsedTime1 = Preconditions.checkNotNull(
+                    threadInformationMap.get(threadId1)).getElapsedTimeMs();
+                long elapsedTime2 = Preconditions.checkNotNull(
+                    threadInformationMap.get(threadId2)).getElapsedTimeMs();
+                return ComparisonChain.start()
+                    .compare(elapsedTime1, elapsedTime2, reverseOrdering)
+                    .compare(threadId1, threadId2)
+                    .result();
+              }
+            });
   }
 
   public ImmutableList<Long> getSortedThreadIds() {

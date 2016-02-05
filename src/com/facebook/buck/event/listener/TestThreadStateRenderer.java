@@ -47,11 +47,6 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessagesByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
       Map<BuildTarget, AtomicLong> accumulatedTimesByRule) {
-    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
-        ansi,
-        formatTimeFunction,
-        currentTimeMs,
-        testEventsByThread.keySet());
     this.threadInformationMap = getThreadInformationMap(
         currentTimeMs,
         testEventsByThread,
@@ -59,6 +54,11 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
         testStatusMessagesByThread,
         runningStepsByThread,
         accumulatedTimesByRule);
+    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
+        ansi,
+        formatTimeFunction,
+        currentTimeMs,
+        threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(

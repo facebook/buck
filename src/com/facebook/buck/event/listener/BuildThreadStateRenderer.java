@@ -43,16 +43,16 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       Map<Long, Optional<? extends BuildRuleEvent>> buildEventsByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
       Map<BuildTarget, AtomicLong> accumulatedTimesByRule) {
-    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
-        ansi,
-        formatTimeFunction,
-        currentTimeMs,
-        buildEventsByThread.keySet());
     this.threadInformationMap = getThreadInformationMap(
         currentTimeMs,
         buildEventsByThread,
         runningStepsByThread,
         accumulatedTimesByRule);
+    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
+        ansi,
+        formatTimeFunction,
+        currentTimeMs,
+        threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(

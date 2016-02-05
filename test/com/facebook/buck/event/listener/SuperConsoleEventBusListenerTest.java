@@ -89,8 +89,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
@@ -303,8 +303,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.7s",
-        " |=> IDLE",
-        " |=> //chicken:dance...  0.1s (checking local cache)"));
+        " |=> //chicken:dance...  0.1s (checking local cache)",
+        " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
@@ -536,8 +536,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.7s [2%] (1/10 JOBS, 1 UPDATED, 10.0% CACHE MISS)",
-        " |=> IDLE",
-        " |=> //chicken:dance...  0.1s (checking local cache)"));
+        " |=> //chicken:dance...  0.1s (checking local cache)",
+        " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
