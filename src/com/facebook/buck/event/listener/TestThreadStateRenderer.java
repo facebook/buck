@@ -151,4 +151,14 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
   }
+
+  @Override
+  public String renderShortStatus(long threadId) {
+    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
+        threadInformationMap.get(threadId));
+    return commonThreadStateRenderer.renderShortStatus(
+        threadInformation.getBuildTarget().isPresent(),
+        /* renderSubtle = */ false,
+        threadInformation.getElapsedTimeMs());
+  }
 }

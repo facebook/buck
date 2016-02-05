@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,8 +18,25 @@ package com.facebook.buck.event.listener;
 
 import com.google.common.collect.ImmutableList;
 
-public interface ThreadStateRenderer {
-  ImmutableList<Long> getSortedThreadIds();
-  String renderStatusLine(long threadID, StringBuilder lineBuilder);
-  String renderShortStatus(long threadID);
+public class FakeThreadStateRenderer implements ThreadStateRenderer {
+  private final ImmutableList<Long> threadIds;
+
+  public FakeThreadStateRenderer(ImmutableList<Long> threadIds) {
+    this.threadIds = threadIds;
+  }
+
+  @Override
+  public ImmutableList<Long> getSortedThreadIds() {
+    return threadIds;
+  }
+
+  @Override
+  public String renderStatusLine(long threadID, StringBuilder lineBuilder) {
+    return " |=> Status of thread " + threadID;
+  }
+
+  @Override
+  public String renderShortStatus(long threadID) {
+    return "t" + threadID;
+  }
 }

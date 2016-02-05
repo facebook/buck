@@ -71,37 +71,42 @@ public class BuildThreadStateRendererTest {
 
   @Test
   public void emptyInput() {
+    BuildThreadStateRenderer renderer = createRenderer(
+        2100,
+        ImmutableMap.<Long, Optional<? extends BuildRuleEvent>>of(),
+        ImmutableMap.<Long, Optional<? extends LeafEvent>>of(),
+        ImmutableMap.<BuildTarget, AtomicLong>of());
     assertThat(
-        createRendererAndRenderLines(
-            2100,
-            ImmutableMap.<Long, Optional<? extends BuildRuleEvent>>of(),
-            ImmutableMap.<Long, Optional<? extends LeafEvent>>of(),
-            ImmutableMap.<BuildTarget, AtomicLong>of()),
+        renderLines(renderer),
+        is(equalTo(ImmutableList.<String>of())));
+    assertThat(
+        renderShortStatus(renderer),
         is(equalTo(ImmutableList.<String>of())));
   }
 
   @Test
   public void commonCase() {
+    BuildThreadStateRenderer renderer = createRenderer(
+        4200,
+        ImmutableMap.of(
+            1L, createRuleStartedEventOptional(1, 1200, RULE2),
+            3L, createRuleStartedEventOptional(3, 2300, RULE3),
+            4L, createRuleStartedEventOptional(4, 1100, RULE1),
+            5L, Optional.<BuildRuleEvent>absent(),
+            8L, createRuleStartedEventOptional(6, 3000, RULE4)),
+        ImmutableMap.of(
+            1L, createStepStartedEventOptional(1, 1500, "step A"),
+            3L, Optional.<LeafEvent>absent(),
+            4L, Optional.<LeafEvent>absent(),
+            5L, Optional.<LeafEvent>absent(),
+            8L, createStepStartedEventOptional(1, 3700, "step B")),
+        ImmutableMap.of(
+            TARGET1, new AtomicLong(200),
+            TARGET2, new AtomicLong(1400),
+            TARGET3, new AtomicLong(700),
+            TARGET4, new AtomicLong(0)));
     assertThat(
-        createRendererAndRenderLines(
-            4200,
-            ImmutableMap.of(
-                1L, createRuleStartedEventOptional(1, 1200, RULE2),
-                3L, createRuleStartedEventOptional(3, 2300, RULE3),
-                4L, createRuleStartedEventOptional(4, 1100, RULE1),
-                5L, Optional.<BuildRuleEvent>absent(),
-                8L, createRuleStartedEventOptional(6, 3000, RULE4)),
-            ImmutableMap.of(
-                1L, createStepStartedEventOptional(1, 1500, "step A"),
-                3L, Optional.<LeafEvent>absent(),
-                4L, Optional.<LeafEvent>absent(),
-                5L, Optional.<LeafEvent>absent(),
-                8L, createStepStartedEventOptional(1, 3700, "step B")),
-            ImmutableMap.of(
-                TARGET1, new AtomicLong(200),
-                TARGET2, new AtomicLong(1400),
-                TARGET3, new AtomicLong(700),
-                TARGET4, new AtomicLong(0))),
+        renderLines(renderer),
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
@@ -109,6 +114,9 @@ public class BuildThreadStateRendererTest {
                 " |=> //:target3...  2.6s (checking local cache)",
                 " |=> //:target4...  1.2s (running step B[0.5s])",
                 " |=> IDLE"))));
+    assertThat(
+        renderShortStatus(renderer),
+        is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
   }
 
   @Test
@@ -116,28 +124,33 @@ public class BuildThreadStateRendererTest {
     // SuperConsoleEventBusListener stores the data it passes to the renderer in a map that might
     // be concurrently modified from other threads. It is important that the renderer can handle
     // data containing inconsistencies.
+    BuildThreadStateRenderer renderer = createRenderer(
+        4200,
+        ImmutableMap.of(
+            3L, createRuleStartedEventOptional(3, 2300, RULE3),
+            5L, Optional.<BuildRuleEvent>absent(),
+            8L, createRuleStartedEventOptional(6, 3000, RULE4)),
+        ImmutableMap.of(
+            1L, createStepStartedEventOptional(1, 1500, "step A"),
+            4L, Optional.<LeafEvent>absent(),
+            5L, Optional.<LeafEvent>absent(),
+            8L, createStepStartedEventOptional(1, 3700, "step B")),
+        ImmutableMap.of(
+            TARGET1, new AtomicLong(200),
+            TARGET2, new AtomicLong(1400),
+            TARGET3, new AtomicLong(700)));
     assertThat(
-        createRendererAndRenderLines(
-            4200,
-            ImmutableMap.of(
-                3L, createRuleStartedEventOptional(3, 2300, RULE3),
-                5L, Optional.<BuildRuleEvent>absent(),
-                8L, createRuleStartedEventOptional(6, 3000, RULE4)),
-            ImmutableMap.of(
-                1L, createStepStartedEventOptional(1, 1500, "step A"),
-                4L, Optional.<LeafEvent>absent(),
-                5L, Optional.<LeafEvent>absent(),
-                8L, createStepStartedEventOptional(1, 3700, "step B")),
-            ImmutableMap.of(
-                TARGET1, new AtomicLong(200),
-                TARGET2, new AtomicLong(1400),
-                TARGET3, new AtomicLong(700))),
+        renderLines(renderer),
         is(equalTo(
             ImmutableList.of(
                 // two missing build rules - no output
                 " |=> //:target3...  2.6s (checking local cache)", // missing step information
                 " |=> IDLE",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
+    assertThat(
+        renderShortStatus(renderer),
+        is(equalTo(
+            ImmutableList.of("[:]", "[ ]", "[ ]"))));
   }
 
   private static BuildRule createFakeRule(BuildTarget target) {
@@ -168,18 +181,21 @@ public class BuildThreadStateRendererTest {
             threadId));
   }
 
-  private ImmutableList<String> createRendererAndRenderLines(
+  private BuildThreadStateRenderer createRenderer(
       long timeMs,
       Map<Long, Optional<? extends BuildRuleEvent>> buildEvents,
       Map<Long, Optional<? extends LeafEvent>> runningSteps,
       Map<BuildTarget, AtomicLong> accumulatedTimes) {
-    BuildThreadStateRenderer renderer = new BuildThreadStateRenderer(
+    return new BuildThreadStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
         buildEvents,
         runningSteps,
         accumulatedTimes);
+  }
+
+  private ImmutableList<String> renderLines(BuildThreadStateRenderer renderer) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     StringBuilder lineBuilder = new StringBuilder();
     for (long threadId : renderer.getSortedThreadIds()) {
@@ -188,4 +204,11 @@ public class BuildThreadStateRendererTest {
     return lines.build();
   }
 
+  private ImmutableList<String> renderShortStatus(BuildThreadStateRenderer renderer) {
+    ImmutableList.Builder<String> status = ImmutableList.builder();
+    for (long threadId : renderer.getSortedThreadIds()) {
+      status.add(renderer.renderShortStatus(threadId));
+    }
+    return status.build();
+  }
 }

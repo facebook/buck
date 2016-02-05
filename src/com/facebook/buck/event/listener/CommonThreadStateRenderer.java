@@ -120,6 +120,28 @@ public class CommonThreadStateRenderer {
     }
   }
 
+  public String renderShortStatus(
+      boolean isActive,
+      boolean renderSubtle,
+      long elapsedTimeMs) {
+    if (!isActive) {
+      return ansi.asSubtleText("[ ]");
+    } else {
+      String animationFrames = ":':.";
+      int offset = (int) ((currentTimeMs / 400) % animationFrames.length());
+      String status = "[" + animationFrames.charAt(offset) + "]";
+      if (renderSubtle) {
+        return ansi.asSubtleText(status);
+      } else if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
+        return ansi.asErrorText(status);
+      } else if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
+        return ansi.asWarningText(status);
+      } else {
+        return status;
+      }
+    }
+  }
+
   private String formatElapsedTime(long elapsedTimeMs) {
     return formatTimeFunction.apply(elapsedTimeMs);
   }

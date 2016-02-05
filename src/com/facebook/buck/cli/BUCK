@@ -77,6 +77,7 @@ java_library(
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/d:d',
+    '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/go:go',
     '//src/com/facebook/buck/halide:rules',
     '//src/com/facebook/buck/lua:lua',

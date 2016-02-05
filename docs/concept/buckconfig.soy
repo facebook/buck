@@ -75,6 +75,7 @@ The following sections are recognized by Buck:
     'test',
     'thrift',
     'tools',
+    'ui',
     ]}
   <a href="#{$name}"><code>[{$name}]</code></a><br>
 {/foreach}
@@ -1696,6 +1697,49 @@ you might have a setting similar to this.</p>
 
 On Linux machines you should set the path to the location of the profiling agent that
 you want to use.
+
+{call buckconfig.section}
+  {param name: 'ui' /}
+  {param description}
+    This section configures the appearance of Buck's command line interface.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'thread_line_limit' /}
+  {param example_value: '10' /}
+  {param description}
+    Specifies how many lines will be used to show the status of running threads
+    during building and testing by default. Only effective when the super
+    console is used. The value has to be a positive number.
+    The default value is 10.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'thread_line_limit_on_warning' /}
+  {param example_value: '10' /}
+  {param description}
+    Specifies how many lines will be used to show the status of running threads
+    during building and testing after a warning is reported. Only effective
+    when the super console is used. The value has to be a positive number.
+    Defaults to the value of {call buckconfig.ui_thread_line_limit /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'thread_line_limit_on_error' /}
+  {param example_value: '10' /}
+  {param description}
+    Specifies how many lines will be used to show the status of running threads
+    during building and testing after an error is reported. Only effective
+    when the super console is used. The value has to be a positive number.
+    Defaults to the value of {call buckconfig.ui_thread_line_limit /}.
+  {/param}
+{/call}
 
     {/param}
   {/call}

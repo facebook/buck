@@ -67,9 +67,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+
 import javax.annotation.Nullable;
 
 /**
@@ -124,9 +127,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
 
+  private final AtomicBoolean anyWarningsPrinted = new AtomicBoolean(false);
+  private final AtomicBoolean anyErrorsPrinted = new AtomicBoolean(false);
+
+  private final int defaultThreadLineLimit;
+  private final int threadLineLimitOnWarning;
+  private final int threadLineLimitOnError;
+
   private int lastNumLinesPrinted;
 
   public SuperConsoleEventBusListener(
+      SuperConsoleConfig config,
       Console console,
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
@@ -166,6 +177,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional.of(testLogPath));
     this.testRunStarted = new AtomicReference<>();
     this.testRunFinished = new AtomicReference<>();
+
+    this.defaultThreadLineLimit = config.getThreadLineLimit();
+    this.threadLineLimitOnWarning = config.getThreadLineLimitOnWarning();
+    this.threadLineLimitOnError = config.getThreadLineLimitOnError();
   }
 
   /**
@@ -334,6 +349,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           getApproximateBuildProgress(),
           lines);
 
+      int maxThreadLines = defaultThreadLineLimit;
+      if (anyWarningsPrinted.get() && threadLineLimitOnWarning < maxThreadLines) {
+        maxThreadLines = threadLineLimitOnWarning;
+      }
+      if (anyErrorsPrinted.get() && threadLineLimitOnError < maxThreadLines) {
+        maxThreadLines = threadLineLimitOnError;
+      }
       if (buildTime == UNFINISHED_EVENT_PAIR) {
         ThreadStateRenderer renderer = new BuildThreadStateRenderer(
             ansi,
@@ -342,7 +364,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             threadsToRunningBuildRuleEvent,
             threadsToRunningStep,
             accumulatedRuleTime);
-        renderLines(renderer, lines);
+        renderLines(renderer, lines, maxThreadLines);
       }
 
       long testRunTime = logEventPair(
@@ -365,7 +387,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             threadsToRunningTestStatusMessageEvent,
             threadsToRunningStep,
             accumulatedRuleTime);
-        renderLines(renderer, lines);
+        renderLines(renderer, lines, maxThreadLines);
       }
 
       logEventPair("INSTALLING",
@@ -447,14 +469,48 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ConsoleEvent logEvent;
     while ((logEvent = logEvents.poll()) != null) {
       formatConsoleEvent(logEvent, logEventLinesBuilder);
+      if (logEvent.getLevel().equals(Level.WARNING)) {
+        anyWarningsPrinted.set(true);
+      } else if (logEvent.getLevel().equals(Level.SEVERE)) {
+        anyErrorsPrinted.set(true);
+      }
     }
     return logEventLinesBuilder.build();
   }
 
-  public void renderLines(ThreadStateRenderer renderer, ImmutableList.Builder<String> lines) {
+  public void renderLines(
+      ThreadStateRenderer renderer,
+      ImmutableList.Builder<String> lines,
+      int maxLines) {
+    ImmutableList<Long> threadIds = renderer.getSortedThreadIds();
+    int fullLines = threadIds.size();
+    boolean useCompressedLine = false;
+    if (threadIds.size() > maxLines) {
+      // One line will be used for the remaining threads that don't get their own line.
+      fullLines = maxLines - 1;
+      useCompressedLine = true;
+    }
+    int threadsWithShortStatus = threadIds.size() - fullLines;
     StringBuilder lineBuilder = new StringBuilder(EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH);
-    for (long threadId : renderer.getSortedThreadIds()) {
+    for (int i = 0; i < fullLines; ++i) {
+      long threadId = threadIds.get(i);
       lines.add(renderer.renderStatusLine(threadId, lineBuilder));
+    }
+    if (useCompressedLine) {
+      lineBuilder.delete(0, lineBuilder.length());
+      lineBuilder.append(" |=> ");
+      lineBuilder.append(threadsWithShortStatus);
+      if (fullLines == 0) {
+        lineBuilder.append(" THREADS:");
+      } else {
+        lineBuilder.append(" MORE THREADS:");
+      }
+      for (int i = fullLines; i < threadIds.size(); ++i) {
+        long threadId = threadIds.get(i);
+        lineBuilder.append(" ");
+        lineBuilder.append(renderer.renderShortStatus(threadId));
+      }
+      lines.add(lineBuilder.toString());
     }
   }
 

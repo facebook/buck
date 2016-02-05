@@ -61,46 +61,51 @@ public class TestThreadStateRendererTest {
 
   @Test
   public void emptyInput() {
+    TestThreadStateRenderer renderer = createRenderer(
+        2100,
+        ImmutableMap.<Long, Optional<? extends TestRuleEvent>>of(),
+        ImmutableMap.<Long, Optional<? extends TestSummaryEvent>>of(),
+        ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
+        ImmutableMap.<Long, Optional<? extends LeafEvent>>of(),
+        ImmutableMap.<BuildTarget, AtomicLong>of());
     assertThat(
-        createRendererAndRenderLines(
-            2100,
-            ImmutableMap.<Long, Optional<? extends TestRuleEvent>>of(),
-            ImmutableMap.<Long, Optional<? extends TestSummaryEvent>>of(),
-            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
-            ImmutableMap.<Long, Optional<? extends LeafEvent>>of(),
-            ImmutableMap.<BuildTarget, AtomicLong>of()),
+        renderLines(renderer),
+        is(equalTo(ImmutableList.<String>of())));
+    assertThat(
+        renderShortStatus(renderer),
         is(equalTo(ImmutableList.<String>of())));
   }
 
   @Test
   public void commonCase() {
+    TestThreadStateRenderer renderer = createRenderer(
+        4200,
+        ImmutableMap.of(
+            1L, createTestStartedEventOptional(1, 1200, TARGET2),
+            3L, createTestStartedEventOptional(3, 2300, TARGET3),
+            4L, createTestStartedEventOptional(4, 1100, TARGET1),
+            5L, Optional.<TestRuleEvent>absent(),
+            8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+        ImmutableMap.of(
+            1L, Optional.<TestSummaryEvent>absent(),
+            3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
+            4L, Optional.<TestSummaryEvent>absent(),
+            5L, Optional.<TestSummaryEvent>absent(),
+            8L, createTestSummaryEventOptional(1, 3800, "Test Case B", "Test B")),
+        ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
+        ImmutableMap.of(
+            1L, createStepStartedEventOptional(1, 1500, "step A"),
+            3L, Optional.<LeafEvent>absent(),
+            4L, Optional.<LeafEvent>absent(),
+            5L, Optional.<LeafEvent>absent(),
+            8L, createStepStartedEventOptional(1, 3700, "step B")),
+        ImmutableMap.of(
+            TARGET1, new AtomicLong(200),
+            TARGET2, new AtomicLong(1400),
+            TARGET3, new AtomicLong(700),
+            TARGET4, new AtomicLong(0)));
     assertThat(
-        createRendererAndRenderLines(
-            4200,
-            ImmutableMap.of(
-                1L, createTestStartedEventOptional(1, 1200, TARGET2),
-                3L, createTestStartedEventOptional(3, 2300, TARGET3),
-                4L, createTestStartedEventOptional(4, 1100, TARGET1),
-                5L, Optional.<TestRuleEvent>absent(),
-                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
-            ImmutableMap.of(
-                1L, Optional.<TestSummaryEvent>absent(),
-                3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
-                4L, Optional.<TestSummaryEvent>absent(),
-                5L, Optional.<TestSummaryEvent>absent(),
-                8L, createTestSummaryEventOptional(1, 3800, "Test Case B", "Test B")),
-            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
-            ImmutableMap.of(
-                1L, createStepStartedEventOptional(1, 1500, "step A"),
-                3L, Optional.<LeafEvent>absent(),
-                4L, Optional.<LeafEvent>absent(),
-                5L, Optional.<LeafEvent>absent(),
-                8L, createStepStartedEventOptional(1, 3700, "step B")),
-            ImmutableMap.of(
-                TARGET1, new AtomicLong(200),
-                TARGET2, new AtomicLong(1400),
-                TARGET3, new AtomicLong(700),
-                TARGET4, new AtomicLong(0))),
+        renderLines(renderer),
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
@@ -108,42 +113,46 @@ public class TestThreadStateRendererTest {
                 " |=> //:target3...  2.6s (running Test A[2.6s])",
                 " |=> //:target4...  1.2s (running Test B[0.4s])",
                 " |=> IDLE"))));
+    assertThat(
+        renderShortStatus(renderer),
+        is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
   }
 
   @Test
   public void withTestStatusMessageEvents() {
+    TestThreadStateRenderer renderer = createRenderer(
+        4200,
+        ImmutableMap.of(
+            1L, createTestStartedEventOptional(1, 1200, TARGET2),
+            3L, createTestStartedEventOptional(3, 2300, TARGET3),
+            4L, createTestStartedEventOptional(4, 1100, TARGET1),
+            5L, Optional.<TestRuleEvent>absent(),
+            8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+        ImmutableMap.of(
+            1L, Optional.<TestSummaryEvent>absent(),
+            3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
+            4L, Optional.<TestSummaryEvent>absent(),
+            5L, Optional.<TestSummaryEvent>absent(),
+            8L, Optional.<TestSummaryEvent>absent()),
+        ImmutableMap.of(
+            1L, Optional.<TestStatusMessageEvent>absent(),
+            3L, Optional.<TestStatusMessageEvent>absent(),
+            4L, Optional.<TestStatusMessageEvent>absent(),
+            5L, Optional.<TestStatusMessageEvent>absent(),
+            8L, createTestStatusMessageEventOptional(1, 3800, "Installing Sim", Level.INFO)),
+        ImmutableMap.of(
+            1L, createStepStartedEventOptional(1, 1500, "step A"),
+            3L, Optional.<LeafEvent>absent(),
+            4L, Optional.<LeafEvent>absent(),
+            5L, Optional.<LeafEvent>absent(),
+            8L, createStepStartedEventOptional(1, 3700, "step B")),
+        ImmutableMap.of(
+            TARGET1, new AtomicLong(200),
+            TARGET2, new AtomicLong(1400),
+            TARGET3, new AtomicLong(700),
+            TARGET4, new AtomicLong(0)));
     assertThat(
-        createRendererAndRenderLines(
-            4200,
-            ImmutableMap.of(
-                1L, createTestStartedEventOptional(1, 1200, TARGET2),
-                3L, createTestStartedEventOptional(3, 2300, TARGET3),
-                4L, createTestStartedEventOptional(4, 1100, TARGET1),
-                5L, Optional.<TestRuleEvent>absent(),
-                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
-            ImmutableMap.of(
-                1L, Optional.<TestSummaryEvent>absent(),
-                3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
-                4L, Optional.<TestSummaryEvent>absent(),
-                5L, Optional.<TestSummaryEvent>absent(),
-                8L, Optional.<TestSummaryEvent>absent()),
-            ImmutableMap.of(
-                1L, Optional.<TestStatusMessageEvent>absent(),
-                3L, Optional.<TestStatusMessageEvent>absent(),
-                4L, Optional.<TestStatusMessageEvent>absent(),
-                5L, Optional.<TestStatusMessageEvent>absent(),
-                8L, createTestStatusMessageEventOptional(1, 3800, "Installing Sim", Level.INFO)),
-            ImmutableMap.of(
-                1L, createStepStartedEventOptional(1, 1500, "step A"),
-                3L, Optional.<LeafEvent>absent(),
-                4L, Optional.<LeafEvent>absent(),
-                5L, Optional.<LeafEvent>absent(),
-                8L, createStepStartedEventOptional(1, 3700, "step B")),
-            ImmutableMap.of(
-                TARGET1, new AtomicLong(200),
-                TARGET2, new AtomicLong(1400),
-                TARGET3, new AtomicLong(700),
-                TARGET4, new AtomicLong(0))),
+        renderLines(renderer),
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
@@ -151,6 +160,9 @@ public class TestThreadStateRendererTest {
                 " |=> //:target3...  2.6s (running Test A[2.6s])",
                 " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
                 " |=> IDLE"))));
+    assertThat(
+        renderShortStatus(renderer),
+        is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
   }
 
   @Test
@@ -158,27 +170,28 @@ public class TestThreadStateRendererTest {
     // SuperConsoleEventBusListener stores the data it passes to the renderer in a map that might
     // be concurrently modified from other threads. It is important that the renderer can handle
     // data containing inconsistencies.
+    TestThreadStateRenderer renderer = createRenderer(
+        4200,
+        ImmutableMap.of(
+            3L, createTestStartedEventOptional(3, 2300, TARGET3),
+            4L, createTestStartedEventOptional(4, 1100, TARGET1),
+            5L, Optional.<TestRuleEvent>absent(),
+            8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+        ImmutableMap.<Long, Optional<? extends TestSummaryEvent>>of(
+            1L, Optional.<TestSummaryEvent>absent(),
+            4L, Optional.<TestSummaryEvent>absent(),
+            5L, Optional.<TestSummaryEvent>absent()),
+        ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
+        ImmutableMap.of(
+            1L, createStepStartedEventOptional(1, 1500, "step A"),
+            3L, Optional.<LeafEvent>absent(),
+            5L, Optional.<LeafEvent>absent()),
+        ImmutableMap.of(
+            TARGET1, new AtomicLong(200),
+            TARGET2, new AtomicLong(1400),
+            TARGET3, new AtomicLong(700)));
     assertThat(
-        createRendererAndRenderLines(
-            4200,
-            ImmutableMap.of(
-                3L, createTestStartedEventOptional(3, 2300, TARGET3),
-                4L, createTestStartedEventOptional(4, 1100, TARGET1),
-                5L, Optional.<TestRuleEvent>absent(),
-                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
-            ImmutableMap.<Long, Optional<? extends TestSummaryEvent>>of(
-                1L, Optional.<TestSummaryEvent>absent(),
-                4L, Optional.<TestSummaryEvent>absent(),
-                5L, Optional.<TestSummaryEvent>absent()),
-            ImmutableMap.<Long, Optional<? extends TestStatusMessageEvent>>of(),
-            ImmutableMap.of(
-                1L, createStepStartedEventOptional(1, 1500, "step A"),
-                3L, Optional.<LeafEvent>absent(),
-                5L, Optional.<LeafEvent>absent()),
-            ImmutableMap.of(
-                TARGET1, new AtomicLong(200),
-                TARGET2, new AtomicLong(1400),
-                TARGET3, new AtomicLong(700))),
+        renderLines(renderer),
         is(equalTo(
             ImmutableList.of(
                 // missing test rule - no output
@@ -186,6 +199,9 @@ public class TestThreadStateRendererTest {
                 " |=> //:target3...  2.6s", // missing step information
                 " |=> IDLE",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
+    assertThat(
+        renderShortStatus(renderer),
+        is(equalTo(ImmutableList.of("[:]", "[:]", "[ ]", "[ ]"))));
   }
 
   private static Optional<? extends TestRuleEvent> createTestStartedEventOptional(
@@ -242,14 +258,14 @@ public class TestThreadStateRendererTest {
             threadId));
   }
 
-  private ImmutableList<String> createRendererAndRenderLines(
+  private TestThreadStateRenderer createRenderer(
       long timeMs,
       Map<Long, Optional<? extends TestRuleEvent>> testEvents,
       Map<Long, Optional<? extends TestSummaryEvent>> testSummaries,
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessages,
       Map<Long, Optional<? extends LeafEvent>> runningSteps,
       Map<BuildTarget, AtomicLong> accumulatedTimes) {
-    TestThreadStateRenderer renderer = new TestThreadStateRenderer(
+    return new TestThreadStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
@@ -258,6 +274,9 @@ public class TestThreadStateRendererTest {
         testStatusMessages,
         runningSteps,
         accumulatedTimes);
+  }
+
+  private ImmutableList<String> renderLines(TestThreadStateRenderer renderer) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     StringBuilder lineBuilder = new StringBuilder();
     for (long threadId : renderer.getSortedThreadIds()) {
@@ -266,4 +285,11 @@ public class TestThreadStateRendererTest {
     return lines.build();
   }
 
+  private ImmutableList<String> renderShortStatus(TestThreadStateRenderer renderer) {
+    ImmutableList.Builder<String> status = ImmutableList.builder();
+    for (long threadId : renderer.getSortedThreadIds()) {
+      status.add(renderer.renderShortStatus(threadId));
+    }
+    return status.build();
+  }
 }

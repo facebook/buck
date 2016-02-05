@@ -42,6 +42,7 @@ import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
+import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
@@ -841,6 +842,7 @@ public final class Main {
            AbstractConsoleEventBusListener consoleListener =
                createConsoleEventListener(
                    clock,
+                   new SuperConsoleConfig(buckConfig),
                    console,
                    testConfig.getResultSummaryVerbosity(),
                    executionEnvironment,
@@ -1341,6 +1343,7 @@ public final class Main {
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
       Clock clock,
+      SuperConsoleConfig config,
       Console console,
       TestResultSummaryVerbosity testResultSummaryVerbosity,
       ExecutionEnvironment executionEnvironment,
@@ -1354,6 +1357,7 @@ public final class Main {
         !verbosity.shouldPrintCommand() &&
         verbosity.shouldPrintStandardInformation()) {
       SuperConsoleEventBusListener superConsole = new SuperConsoleEventBusListener(
+          config,
           console,
           clock,
           testResultSummaryVerbosity,
