@@ -104,6 +104,10 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             match = (bundleID.equals(profileBundleID));
           }
 
+          if (!match) {
+            LOG.debug("Ignoring non-matching ID for profile " + profile.getUUID());
+          }
+
           // Match against other keys of the entitlements.  Otherwise, we could potentially select
           // a profile that doesn't have all the needed entitlements, causing a error when
           // installing to device.
@@ -117,6 +121,9 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
                   entry.getKey().equals("application-identifier") ||
                   entry.getValue().equals(profileEntitlements.get(entry.getKey())))) {
                 match = false;
+                LOG.debug("Ignoring profile " + profile.getUUID() +
+                    " with mismatched entitlement " + entry.getKey() + "; value is " +
+                    profileEntitlements.get(entry.getKey()) + " but expected " + entry.getValue());
                 break;
               }
             }
@@ -133,6 +140,11 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
                 break;
               }
             }
+
+            if (!match) {
+              LOG.debug("Ignoring profile " + profile.getUUID() +
+                  " because it can't be signed with any valid identity in the current keychain.");
+            }
           }
 
           if (match && profileBundleID.length() > bestMatchLength) {
@@ -140,6 +152,8 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             bestMatch = Optional.of(profile);
           }
         }
+      } else {
+        LOG.debug("Ignoring expired profile " + profile.getUUID());
       }
     }
 
@@ -154,6 +168,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
   }
 
   public static ProvisioningProfileStore fromSearchPath(final Path searchPath) {
+    LOG.debug("Provisioning profile search path: " + searchPath);
     return new ProvisioningProfileStore(Suppliers.memoize(
         new Supplier<ImmutableList<ProvisioningProfileMetadata>>() {
           @Override
