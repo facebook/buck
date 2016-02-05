@@ -16,6 +16,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +45,7 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, Path output)
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output)
       throws InterruptedException {
     ArtifactCacheEvent.Started started =
         eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));

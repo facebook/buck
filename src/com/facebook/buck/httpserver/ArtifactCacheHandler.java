@@ -19,6 +19,7 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -109,7 +110,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
           ".tmp");
       CacheResult fetchResult;
       try {
-        fetchResult = artifactCache.get().fetch(ruleKey, temp);
+        fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
       } catch (InterruptedException e) {
         LOG.error(e, "Interrupted when fetching from local cache.");
         e.printStackTrace(response.getWriter());

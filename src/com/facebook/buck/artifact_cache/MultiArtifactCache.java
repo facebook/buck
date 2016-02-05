@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +60,7 @@ public class MultiArtifactCache implements ArtifactCache {
    * artifact to one or more of the other encapsulated ArtifactCaches as a side effect.
    */
   @Override
-  public CacheResult fetch(RuleKey ruleKey, Path output)
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output)
       throws InterruptedException {
     CacheResult cacheResult = CacheResult.miss();
     for (ArtifactCache artifactCache : artifactCaches) {
@@ -71,7 +72,9 @@ public class MultiArtifactCache implements ArtifactCache {
           if (priorArtifactCache.equals(artifactCache)) {
             break;
           }
-          priorArtifactCache.store(ImmutableSet.of(ruleKey), cacheResult.getMetadata(), output);
+          // since cache fetch finished, it should be fine to get the path
+          Path outputPath = output.getUnchecked();
+          priorArtifactCache.store(ImmutableSet.of(ruleKey), cacheResult.getMetadata(), outputPath);
         }
         return cacheResult;
       }

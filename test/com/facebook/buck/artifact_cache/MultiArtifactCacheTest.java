@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +32,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class MultiArtifactCacheTest {
@@ -41,13 +41,13 @@ public class MultiArtifactCacheTest {
 
   private static final RuleKey dummyRuleKey =
       new RuleKey("76b1c1beae69428db2d1befb31cf743ac8ce90df");
-  private static final Path dummyFile = Paths.get("dummy");
+  private static final LazyPath dummyFile = LazyPath.ofInstance(Paths.get("dummy"));
 
   // An cache which always returns errors from fetching.
   class ErroringArtifactCache extends NoopArtifactCache {
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, Path output) {
+    public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
       return CacheResult.error("cache", "error");
     }
 
@@ -69,7 +69,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache1.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile);
+        dummyFile.get());
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
@@ -80,7 +80,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache2.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile);
+        dummyFile.get());
     assertEquals("Fetch should succeed after store",
         CacheResultType.HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
@@ -99,7 +99,7 @@ public class MultiArtifactCacheTest {
     multiArtifactCache.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile);
+        dummyFile.get());
 
     assertEquals(
         "MultiArtifactCache.store() should store to all contained ArtifactCaches",
@@ -130,7 +130,7 @@ public class MultiArtifactCacheTest {
             cache1,
             cache2));
 
-    Path output = tmp.newFile();
+    LazyPath output = LazyPath.ofInstance(tmp.newFile());
 
     ImmutableMap<String, String> metadata = ImmutableMap.of("hello", "world");
     cache2.store(ImmutableSet.of(dummyRuleKey), metadata, new byte[0]);

@@ -26,7 +26,9 @@ java_immutables_library(
   deps = [
     '//src/com/facebook/buck/rules:rule_key',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/io:io',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-annotations',
   ],

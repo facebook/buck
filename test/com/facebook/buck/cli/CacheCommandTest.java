@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +34,6 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class CacheCommandTest extends EasyMockSupport {
 
@@ -59,7 +59,7 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         cache.fetch(
             eq(new RuleKey(ruleKeyHash)),
-            isA(Path.class)))
+            isA(LazyPath.class)))
         .andReturn(CacheResult.hit("http"));
 
     TestConsole console = new TestConsole();
@@ -89,7 +89,7 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         cache.fetch(
             eq(new RuleKey(ruleKeyHash)),
-            isA(Path.class)))
+            isA(LazyPath.class)))
         .andReturn(CacheResult.miss());
 
     TestConsole console = new TestConsole();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -74,7 +75,7 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, Path output) {
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult result;
     try {
 
@@ -95,7 +96,7 @@ public class DirArtifactCache implements ArtifactCache {
       }
 
       // Now copy the artifact out.
-      filesystem.copyFile(cacheDir.resolve(ruleKey.toString()), output);
+      filesystem.copyFile(cacheDir.resolve(ruleKey.toString()), output.get());
 
       result = CacheResult.hit(name, metadata.build());
     } catch (NoSuchFileException e) {

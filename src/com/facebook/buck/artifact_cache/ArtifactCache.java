@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,11 +30,12 @@ public interface ArtifactCache extends AutoCloseable {
    * return true on success.
    *
    * @param ruleKey cache fetch key
-   * @param output path to store artifact to
+   * @param output Path to store artifact to. Path should not be accessed unless
+   *               store operation is guaranteed by the cache, to avoid potential extra disk I/O.
    * @return whether it was a {@link CacheResultType#MISS} (indicating a failure) or some
    *     type of hit.
    */
-  CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException;
+  CacheResult fetch(RuleKey ruleKey, LazyPath output) throws InterruptedException;
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched

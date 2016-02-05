@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -329,7 +330,7 @@ public class BuildInfoRecorder {
    */
   public CacheResult fetchArtifactForBuildable(
       RuleKey ruleKey,
-      Path outputFile,
+      LazyPath outputFile,
       ArtifactCache artifactCache)
       throws InterruptedException {
     return artifactCache.fetch(ruleKey, outputFile);

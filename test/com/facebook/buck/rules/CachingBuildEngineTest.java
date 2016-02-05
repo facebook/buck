@@ -32,6 +32,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
@@ -412,7 +413,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(
         artifactCache.fetch(
             eq(ruleKeyBuilderFactory.build(buildRule)),
-            isA(Path.class)))
+            isA(LazyPath.class)))
         .andDelegateTo(
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
@@ -500,7 +501,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(
         artifactCache.fetch(
             eq(ruleKeyBuilderFactory.build(buildRule)),
-            isA(Path.class)))
+            isA(LazyPath.class)))
         .andDelegateTo(
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
@@ -1014,7 +1015,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ArtifactCache cache =
         new NoopArtifactCache() {
           @Override
-          public CacheResult fetch(RuleKey ruleKey, Path output) {
+          public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
             return CacheResult.error("cache", "error");
           }
         };
@@ -1208,7 +1209,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         equalTo(Optional.of(ruleKeyBuilderFactory.build(rule))));
 
     // Verify that the artifact is *not* re-cached under the main rule key.
-    Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
+    LazyPath fetchedArtifact = LazyPath.ofInstance(
+        tmp.newFile("fetched_artifact.zip").toPath());
     assertThat(
         cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact).getType(),
         equalTo(CacheResultType.MISS));
@@ -1318,7 +1320,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Verify that the artifact is re-cached correctly under the main rule key.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     assertThat(
-        cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact).getType(),
+        cache.fetch(ruleKeyBuilderFactory.build(rule), LazyPath.ofInstance(fetchedArtifact))
+            .getType(),
         equalTo(CacheResultType.HIT));
     assertEquals(
         new ZipInspector(artifact).getZipFileEntries(),
@@ -1417,7 +1420,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Verify that the dep file rule key and dep file were written to the cached artifact.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     CacheResult cacheResult =
-        cache.fetch(factory.build(rule), fetchedArtifact);
+        cache.fetch(factory.build(rule), LazyPath.ofInstance(fetchedArtifact));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1820,7 +1823,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CacheResult cacheResult =
         cache.fetch(
             cachingBuildEngine.getManifestRuleKey(rule),
-            fetchedManifest);
+            LazyPath.ofInstance(fetchedManifest));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1837,7 +1840,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     cacheResult =
         cache.fetch(
             depFileRuleKey,
-            fetchedArtifact);
+            LazyPath.ofInstance(fetchedArtifact));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1944,7 +1947,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CacheResult cacheResult =
         cache.fetch(
             cachingBuildEngine.getManifestRuleKey(rule),
-            fetchedManifest);
+            LazyPath.ofInstance(fetchedManifest));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -1963,7 +1966,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     cacheResult =
         cache.fetch(
             depFileRuleKey,
-            fetchedArtifact);
+            LazyPath.ofInstance(fetchedArtifact));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -2071,7 +2074,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CacheResult cacheResult =
         cache.fetch(
             cachingBuildEngine.getManifestRuleKey(rule),
-            fetchedManifest);
+            LazyPath.ofInstance(fetchedManifest));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -2507,7 +2510,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Verify that the dep file rule key and dep file were written to the cached artifact.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     CacheResult cacheResult =
-        cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact);
+        cache.fetch(ruleKeyBuilderFactory.build(rule), LazyPath.ofInstance(fetchedArtifact));
     assertThat(
         cacheResult.getType(),
         equalTo(CacheResultType.HIT));
@@ -2809,9 +2812,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, Path file) throws InterruptedException {
+    public CacheResult fetch(RuleKey ruleKey, LazyPath file) throws InterruptedException {
       try {
-        writeEntriesToZip(file, ImmutableMap.copyOf(desiredEntries));
+        writeEntriesToZip(file.get(), ImmutableMap.copyOf(desiredEntries));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

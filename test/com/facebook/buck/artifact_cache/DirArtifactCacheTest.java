@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -110,7 +111,10 @@ public class DirArtifactCacheTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(
+        CacheResultType.MISS,
+        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX))
+            .getType());
   }
 
   @Test
@@ -141,12 +145,14 @@ public class DirArtifactCacheTest {
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
 
     // Test that artifact overwrite works.
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX))
+            .getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
 
     // Test that artifact creation works.
     Files.delete(fileX);
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX))
+            .getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
@@ -180,7 +186,8 @@ public class DirArtifactCacheTest {
     // Overwrite.
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
 
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX))
+            .getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
@@ -230,9 +237,15 @@ public class DirArtifactCacheTest {
     RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
     RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyY,
+            LazyPath.ofInstance(fileY)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyZ,
+            LazyPath.ofInstance(fileZ)).getType());
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
     dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(), fileY);
@@ -242,9 +255,15 @@ public class DirArtifactCacheTest {
     Files.delete(fileY);
     Files.delete(fileZ);
 
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKeyY,
+            LazyPath.ofInstance(fileY)).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKeyZ,
+            LazyPath.ofInstance(fileZ)).getType());
 
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
@@ -299,9 +318,15 @@ public class DirArtifactCacheTest {
     RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
     RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyY,
+            LazyPath.ofInstance(fileY)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyZ,
+            LazyPath.ofInstance(fileZ)).getType());
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
     dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(), fileY);
@@ -311,9 +336,15 @@ public class DirArtifactCacheTest {
     Files.delete(fileY);
     Files.delete(fileZ);
 
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyY,
+            LazyPath.ofInstance(fileY)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyZ,
+            LazyPath.ofInstance(fileZ)).getType());
 
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
@@ -460,7 +491,9 @@ public class DirArtifactCacheTest {
     RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
 
     Files.setAttribute(
         cacheDir.resolve(ruleKeyX.toString()),
@@ -472,8 +505,12 @@ public class DirArtifactCacheTest {
         FileTime.fromMillis(0));
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(), fileY);
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKeyY,
+            LazyPath.ofInstance(fileY)).getType());
 
     Files.setAttribute(
         cacheDir.resolve(ruleKeyY.toString()),
@@ -486,9 +523,15 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), ImmutableMap.<String, String>of(), fileZ);
 
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
-    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyX,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
+            ruleKeyY,
+            LazyPath.ofInstance(fileY)).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKeyZ,
+            LazyPath.ofInstance(fileZ)).getType());
   }
 
   @Test
@@ -516,8 +559,12 @@ public class DirArtifactCacheTest {
         fileX);
 
     // Test that artifact is available via both keys.
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKey1, fileX).getType());
-    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKey2, fileX).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKey1,
+            LazyPath.ofInstance(fileX)).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
+            ruleKey2,
+            LazyPath.ofInstance(fileX)).getType());
   }
 
   @Test
@@ -540,7 +587,7 @@ public class DirArtifactCacheTest {
 
     // Store the artifact with metadata then re-fetch.
     cache.store(ImmutableSet.of(ruleKey), metadata, data);
-    CacheResult result = cache.fetch(ruleKey, Paths.get("out-data"));
+    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(Paths.get("out-data")));
 
     // Verify that the metadata is correct.
     assertThat(

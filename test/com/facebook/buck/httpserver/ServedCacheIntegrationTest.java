@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.event.BuckEventBus;
@@ -143,7 +144,9 @@ public class ServedCacheIntegrationTest {
         DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
-    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    CacheResult cacheResult = serverBackedCache.fetch(
+        A_FILE_RULE_KEY,
+        LazyPath.ofInstance(fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
     assertThat(cacheResult.getMetadata(), Matchers.equalTo(A_FILE_METADATA));
     assertThat(
@@ -214,7 +217,7 @@ public class ServedCacheIntegrationTest {
         Optional.<String>absent(),
         DIRECT_EXECUTOR_SERVICE);
 
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.ERROR));
 
@@ -246,7 +249,7 @@ public class ServedCacheIntegrationTest {
         Optional.<String>absent(),
         DIRECT_EXECUTOR_SERVICE);
 
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.MISS));
   }
@@ -267,7 +270,7 @@ public class ServedCacheIntegrationTest {
         Optional.<String>absent(),
         DIRECT_EXECUTOR_SERVICE);
 
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.ERROR));
   }
@@ -288,7 +291,7 @@ public class ServedCacheIntegrationTest {
         Optional.<String>absent(),
         DIRECT_EXECUTOR_SERVICE);
 
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     assertThat(
         serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
         Matchers.equalTo(CacheResultType.ERROR));
@@ -306,7 +309,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testMultipleNamedCaches() throws Exception {
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     final RuleKey bFileRuleKey = new RuleKey("baadbeef");
 
     webServer = new WebServer(
@@ -318,10 +321,10 @@ public class ServedCacheIntegrationTest {
 
     ArtifactCache secondCache = new ArtifactCache() {
       @Override
-      public CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException {
+      public CacheResult fetch(RuleKey ruleKey, LazyPath output) throws InterruptedException {
         if (ruleKey.equals(bFileRuleKey)) {
           try {
-            projectFilesystem.writeContentsToPath("second", output);
+            projectFilesystem.writeContentsToPath("second", output.get());
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -420,7 +423,7 @@ public class ServedCacheIntegrationTest {
     String data = "you won't believe this!";
     projectFilesystem.writeContentsToPath(data, originalDataPath);
 
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
@@ -430,7 +433,7 @@ public class ServedCacheIntegrationTest {
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
     assertThat(cacheResult.getMetadata(), Matchers.equalTo(metadata));
     assertThat(
-        projectFilesystem.readFileIfItExists(fetchedContents).get(),
+        projectFilesystem.readFileIfItExists(fetchedContents.get()).get(),
         Matchers.equalTo(data));
   }
 
@@ -464,7 +467,7 @@ public class ServedCacheIntegrationTest {
     String data = "you won't believe this!";
     projectFilesystem.writeContentsToPath(data, originalDataPath);
 
-    Path fetchedContents = tmpDir.newFile();
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 

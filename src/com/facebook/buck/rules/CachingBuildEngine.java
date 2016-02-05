@@ -22,6 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -30,8 +31,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -41,8 +42,8 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -851,21 +852,21 @@ public class CachingBuildEngine implements BuildEngine {
       BuildRule rule,
       final Set<BuildRule> seen) {
     return Futures.transformAsync(
-              getRuleDeps(rule),
-              new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
-                @Override
-                public ListenableFuture<List<Object>> apply(
-                    @Nonnull ImmutableSortedSet<BuildRule> deps) {
-                  List<ListenableFuture<?>> results =
-                      Lists.newArrayListWithExpectedSize(deps.size());
-                  for (BuildRule dep : deps) {
-                    if (seen.add(dep)) {
-                      results.add(walkRule(dep, seen));
-                    }
-                  }
-                  return Futures.allAsList(results);
-                }
-              });
+        getRuleDeps(rule),
+        new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
+          @Override
+          public ListenableFuture<List<Object>> apply(
+              @Nonnull ImmutableSortedSet<BuildRule> deps) {
+            List<ListenableFuture<?>> results =
+                Lists.newArrayListWithExpectedSize(deps.size());
+            for (BuildRule dep : deps) {
+              if (seen.add(dep)) {
+                results.add(walkRule(dep, seen));
+              }
+            }
+            return Futures.allAsList(results);
+          }
+        });
   }
 
   @Override
@@ -979,7 +980,7 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-      BuildRule rule,
+      final BuildRule rule,
       RuleKey ruleKey,
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
@@ -988,34 +989,32 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
-    Path zipFile;
-    try {
-      zipFile = Files.createTempFile(
-          "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
-          ".zip");
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    LazyPath lazyZipPath = new LazyPath() {
+      @Override
+      protected Path create() throws IOException {
+        return Files.createTempFile(
+            "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
+            ".zip");
+      }
+    };
 
     // TODO(bolinfest): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
     CacheResult cacheResult =
-        buildInfoRecorder.fetchArtifactForBuildable(ruleKey, zipFile, artifactCache);
+        buildInfoRecorder.fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
-      try {
-        Files.delete(zipFile);
-      } catch (IOException e) {
-        LOG.warn(e, "failed to delete %s", zipFile);
-      }
       return cacheResult;
     }
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
 
+    // It should be fine to get the path straight away, since cache already did it's job.
+    Path zipPath = lazyZipPath.getUnchecked();
+
     // We unzip the file in the root of the project directory.
     // Ideally, the following would work:
     //
-    // Path pathToZip = Paths.get(zipFile.getAbsolutePath());
+    // Path pathToZip = Paths.get(zipPath.getAbsolutePath());
     // FileSystem fs = FileSystems.newFileSystem(pathToZip, /* loader */ null);
     // Path root = Iterables.getOnlyElement(fs.getRootDirectories());
     // MoreFiles.copyRecursively(root, projectRoot);
@@ -1028,13 +1027,13 @@ public class CachingBuildEngine implements BuildEngine {
     buildContext.getEventBus().post(started);
     try {
       Unzip.extractZipFile(
-          zipFile.toAbsolutePath(),
+          zipPath.toAbsolutePath(),
           filesystem,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
-      Files.delete(zipFile);
+      Files.delete(zipPath);
 
       if (cacheResult.getType() == CacheResultType.HIT) {
 
@@ -1056,7 +1055,7 @@ public class CachingBuildEngine implements BuildEngine {
                   "The rule will be built locally, " +
                   "but here is the stacktrace of the failed unzip call:\n" +
                   rule.getBuildTarget(),
-              zipFile.toAbsolutePath(),
+              zipPath.toAbsolutePath(),
               Throwables.getStackTraceAsString(e)));
       return CacheResult.miss();
     } finally {
@@ -1296,21 +1295,28 @@ public class CachingBuildEngine implements BuildEngine {
     // Clear out any existing manifest.
     rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
 
+    LazyPath tempFile = new LazyPath() {
+      @Override
+      protected Path create() throws IOException {
+        return Files.createTempFile("buck.", ".manifest");
+      }
+    };
+
     // Now, fetch an existing manifest from the cache.
     rule.getProjectFilesystem().createParentDirs(manifestPath);
-    try (NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest")) {
-      CacheResult manifestResult =
-          context.getArtifactCache().fetch(manifestKey.getFirst(), tempFile.get());
-      if (!manifestResult.getType().isSuccess()) {
-        return CacheResult.miss();
-      }
-      try (OutputStream outputStream =
-               rule.getProjectFilesystem().newFileOutputStream(manifestPath);
-           InputStream inputStream =
-               new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempFile.get())))) {
-        ByteStreams.copy(inputStream, outputStream);
-      }
+
+    CacheResult manifestResult =
+        context.getArtifactCache().fetch(manifestKey.getFirst(), tempFile);
+    if (!manifestResult.getType().isSuccess()) {
+      return CacheResult.miss();
     }
+    try (OutputStream outputStream =
+             rule.getProjectFilesystem().newFileOutputStream(manifestPath);
+         InputStream inputStream =
+             new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempFile.get())))) {
+      ByteStreams.copy(inputStream, outputStream);
+    }
+    Files.delete(tempFile.get());
 
     // Deserialize the manifest.
     Manifest manifest;

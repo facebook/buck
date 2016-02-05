@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
@@ -69,7 +70,7 @@ public class CacheCommand extends AbstractCommand {
       // Do the fetch.
       RuleKey ruleKey = new RuleKey(arg);
       Path artifact = tmpDir.resolve(arg);
-      CacheResult success = cache.fetch(ruleKey, artifact);
+      CacheResult success = cache.fetch(ruleKey, LazyPath.ofInstance(artifact));
 
       // Display the result.
       if (success.getType().isSuccess()) {

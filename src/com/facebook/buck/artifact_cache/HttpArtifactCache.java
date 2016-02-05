@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Started;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -91,7 +92,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
   public CacheResult fetchImpl(
       RuleKey ruleKey,
-      Path file,
+      LazyPath output,
       final Finished.Builder eventBuilder) throws IOException {
 
     Request.Builder requestBuilder =
@@ -119,6 +120,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
       // Setup a temporary file, which sits next to the destination, to write to and
       // make sure all parent dirs exist.
+      Path file = output.get();
       projectFilesystem.createParentDirs(file);
       Path temp = projectFilesystem.createTempFile(
           file.getParent(),
@@ -164,7 +166,7 @@ public class HttpArtifactCache implements ArtifactCache {
   @Override
   public CacheResult fetch(
       RuleKey ruleKey,
-      Path output) throws InterruptedException {
+      LazyPath output) throws InterruptedException {
     Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(ImmutableSet.<RuleKey>of());
     buckEventBus.post(startedEvent);
     Finished.Builder eventBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
