@@ -49,7 +49,7 @@ public class ObjectFileScrubbers {
       public void scrubFile(FileChannel file) throws IOException, ScrubException {
         try {
           ByteBuffer header = ByteBuffer.allocate(expectedGlobalHeader.length);
-          file.read(header, 0);
+          file.read(header);
           // Grab the global header chunk and verify it's accurate.
           header.position(0);
           byte[] globalHeader = getBytes(header, expectedGlobalHeader.length);
@@ -68,13 +68,14 @@ public class ObjectFileScrubbers {
               10 /* file size */ +
               2 /* file magic */;
 
-          int start = expectedGlobalHeader.length;
+          long start = expectedGlobalHeader.length;
           ByteBuffer buffer = ByteBuffer.allocate(entrySize);
           while (start < file.size()) {
             checkArchive(file.size() - start >= entrySize, "Invalid entry metadata format");
 
             buffer.clear();
-            int read = file.read(buffer, start);
+            file.position(start);
+            int read = file.read(buffer);
             checkArchive(read == entrySize, "Not all bytes have been read");
 
             buffer.position(0); // position points just past the last byte read, so need to reset
@@ -86,7 +87,7 @@ public class ObjectFileScrubbers {
             /* Group ID */ putIntAsDecimalString(buffer, 6, 0);
 
             /* File mode */ putIntAsOctalString(buffer, 8, 0100644);
-            int fileSize = getDecimalStringAsInt(buffer, 10);
+            long fileSize = getDecimalStringAsLong(buffer, 10);
 
             // Lastly, grab the file magic entry and verify it's accurate.
             byte[] fileMagic = getBytes(buffer, 2);
@@ -96,7 +97,8 @@ public class ObjectFileScrubbers {
 
             // write the changes
             buffer.position(0); // position points just past the last byte accessed, need to reset
-            int written = file.write(buffer, start);
+            file.position(start);
+            int written = file.write(buffer);
             checkArchive(written == entrySize, "Not all bytes have been written");
 
             // Skip the file data.
@@ -127,6 +129,12 @@ public class ObjectFileScrubbers {
     byte[] bytes = getBytes(buffer, len);
     String str = new String(bytes, Charsets.US_ASCII);
     return Integer.parseInt(str.trim());
+  }
+
+  public static long getDecimalStringAsLong(ByteBuffer buffer, int len) {
+    byte[] bytes = getBytes(buffer, len);
+    String str = new String(bytes, Charsets.US_ASCII);
+    return Long.parseLong(str.trim());
   }
 
   public static long getLittleEndianLong(ByteBuffer buffer) {
