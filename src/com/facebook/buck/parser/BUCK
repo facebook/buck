@@ -3,6 +3,9 @@ java_library(
   srcs = [
     'ParserConfig.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/parser:unit',
+  ],
   deps = [
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/io:io',
@@ -32,7 +35,9 @@ java_immutables_library(
     'TargetNodeSpec.java',
   ],
   tests = [
+    '//test/com/facebook/buck/parser:integration',
     '//test/com/facebook/buck/parser:parser',
+    '//test/com/facebook/buck/parser:unit',
   ],
   deps = [
     ':config',
@@ -74,7 +79,9 @@ java_library(
     'NoSuchBuildTargetException.java',
   ],
   tests = [
+    '//test/com/facebook/buck/parser:integration',
     '//test/com/facebook/buck/parser:parser',
+    '//test/com/facebook/buck/parser:unit',
   ],
   deps = [
     '//third-party/java/guava:guava',
