@@ -45,7 +45,7 @@ public class CommonThreadStateRenderer {
   private final Ansi ansi;
   private final Function<Long, String> formatTimeFunction;
   private final long currentTimeMs;
-  private final ImmutableList<Long> sortedThreadIds;
+  private final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap;
 
   public CommonThreadStateRenderer(
       Ansi ansi,
@@ -55,26 +55,34 @@ public class CommonThreadStateRenderer {
     this.ansi = ansi;
     this.formatTimeFunction = formatTimeFunction;
     this.currentTimeMs = currentTimeMs;
-    this.sortedThreadIds = FluentIterable.from(threadInformationMap.keySet())
-        .toSortedList(
-            new Comparator<Long>() {
-              private Comparator<Long> reverseOrdering = Ordering.natural().reverse();
-              @Override
-              public int compare(Long threadId1, Long threadId2) {
-                long elapsedTime1 = Preconditions.checkNotNull(
-                    threadInformationMap.get(threadId1)).getElapsedTimeMs();
-                long elapsedTime2 = Preconditions.checkNotNull(
-                    threadInformationMap.get(threadId2)).getElapsedTimeMs();
-                return ComparisonChain.start()
-                    .compare(elapsedTime1, elapsedTime2, reverseOrdering)
-                    .compare(threadId1, threadId2)
-                    .result();
-              }
-            });
+    this.threadInformationMap = threadInformationMap;
   }
 
-  public ImmutableList<Long> getSortedThreadIds() {
-    return sortedThreadIds;
+  public int getThreadCount() {
+    return threadInformationMap.size();
+  }
+
+  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+    Comparator<Long> comparator;
+    if (sortByTime) {
+      comparator = new Comparator<Long>() {
+        private Comparator<Long> reverseOrdering = Ordering.natural().reverse();
+        @Override
+        public int compare(Long threadId1, Long threadId2) {
+          long elapsedTime1 = Preconditions.checkNotNull(
+              threadInformationMap.get(threadId1)).getElapsedTimeMs();
+          long elapsedTime2 = Preconditions.checkNotNull(
+              threadInformationMap.get(threadId2)).getElapsedTimeMs();
+          return ComparisonChain.start()
+              .compare(elapsedTime1, elapsedTime2, reverseOrdering)
+              .compare(threadId1, threadId2)
+              .result();
+        }
+      };
+    } else {
+      comparator = Ordering.natural();
+    }
+    return FluentIterable.from(threadInformationMap.keySet()).toSortedList(comparator);
   }
 
   public String renderLine(

@@ -1707,6 +1707,21 @@ you want to use.
 
 {call buckconfig.entry}
   {param section: 'ui' /}
+  {param name: 'always_sort_threads_by_time' /}
+  {param example_value: 'true' /}
+  {param description}
+    Specifies whether the lines with information about building and testing
+    threads should always be sorted by the time spent running the rules they are
+    currently executing. When set to false, threads are only sorted if there are
+    more threads than available lines (see{sp}
+    {call buckconfig.ui_thread_line_limit /} for an option to configure this
+    limit). Only effective when the super console is used.
+    The default value is false.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
   {param name: 'thread_line_limit' /}
   {param example_value: '10' /}
   {param description}

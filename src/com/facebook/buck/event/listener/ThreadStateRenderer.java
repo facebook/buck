@@ -19,7 +19,8 @@ package com.facebook.buck.event.listener;
 import com.google.common.collect.ImmutableList;
 
 public interface ThreadStateRenderer {
-  ImmutableList<Long> getSortedThreadIds();
+  int getThreadCount();
+  ImmutableList<Long> getSortedThreadIds(boolean sortByTime);
   String renderStatusLine(long threadID, StringBuilder lineBuilder);
   String renderShortStatus(long threadID);
 }

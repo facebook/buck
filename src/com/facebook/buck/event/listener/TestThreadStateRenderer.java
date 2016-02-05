@@ -119,8 +119,13 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
   }
 
   @Override
-  public ImmutableList<Long> getSortedThreadIds() {
-    return commonThreadStateRenderer.getSortedThreadIds();
+  public int getThreadCount() {
+    return commonThreadStateRenderer.getThreadCount();
+  }
+
+  @Override
+  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+    return commonThreadStateRenderer.getSortedThreadIds(sortByTime);
   }
 
   @Override

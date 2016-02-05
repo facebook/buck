@@ -20,13 +20,20 @@ import com.google.common.collect.ImmutableList;
 
 public class FakeThreadStateRenderer implements ThreadStateRenderer {
   private final ImmutableList<Long> threadIds;
+  private boolean lastSortWasByTime = false;
 
   public FakeThreadStateRenderer(ImmutableList<Long> threadIds) {
     this.threadIds = threadIds;
   }
 
   @Override
-  public ImmutableList<Long> getSortedThreadIds() {
+  public int getThreadCount() {
+    return threadIds.size();
+  }
+
+  @Override
+  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+    lastSortWasByTime = sortByTime;
     return threadIds;
   }
 
@@ -38,5 +45,9 @@ public class FakeThreadStateRenderer implements ThreadStateRenderer {
   @Override
   public String renderShortStatus(long threadID) {
     return "t" + threadID;
+  }
+
+  public boolean lastSortWasByTime() {
+    return lastSortWasByTime;
   }
 }

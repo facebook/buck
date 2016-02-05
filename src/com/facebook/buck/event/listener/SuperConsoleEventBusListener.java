@@ -133,6 +133,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int defaultThreadLineLimit;
   private final int threadLineLimitOnWarning;
   private final int threadLineLimitOnError;
+  private final boolean shouldAlwaysSortThreadsByTime;
 
   private int lastNumLinesPrinted;
 
@@ -181,6 +182,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.defaultThreadLineLimit = config.getThreadLineLimit();
     this.threadLineLimitOnWarning = config.getThreadLineLimitOnWarning();
     this.threadLineLimitOnError = config.getThreadLineLimitOnError();
+    this.shouldAlwaysSortThreadsByTime = config.shouldAlwaysSortThreadsByTime();
   }
 
   /**
@@ -364,7 +366,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             threadsToRunningBuildRuleEvent,
             threadsToRunningStep,
             accumulatedRuleTime);
-        renderLines(renderer, lines, maxThreadLines);
+        renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
       }
 
       long testRunTime = logEventPair(
@@ -387,7 +389,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             threadsToRunningTestStatusMessageEvent,
             threadsToRunningStep,
             accumulatedRuleTime);
-        renderLines(renderer, lines, maxThreadLines);
+        renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
       }
 
       logEventPair("INSTALLING",
@@ -481,16 +483,19 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void renderLines(
       ThreadStateRenderer renderer,
       ImmutableList.Builder<String> lines,
-      int maxLines) {
-    ImmutableList<Long> threadIds = renderer.getSortedThreadIds();
-    int fullLines = threadIds.size();
+      int maxLines,
+      boolean alwaysSortByTime) {
+    int threadCount = renderer.getThreadCount();
+    int fullLines = threadCount;
     boolean useCompressedLine = false;
-    if (threadIds.size() > maxLines) {
+    if (threadCount > maxLines) {
       // One line will be used for the remaining threads that don't get their own line.
       fullLines = maxLines - 1;
       useCompressedLine = true;
     }
-    int threadsWithShortStatus = threadIds.size() - fullLines;
+    int threadsWithShortStatus = threadCount - fullLines;
+    boolean sortByTime = alwaysSortByTime || useCompressedLine;
+    ImmutableList<Long> threadIds = renderer.getSortedThreadIds(sortByTime);
     StringBuilder lineBuilder = new StringBuilder(EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH);
     for (int i = 0; i < fullLines; ++i) {
       long threadId = threadIds.get(i);

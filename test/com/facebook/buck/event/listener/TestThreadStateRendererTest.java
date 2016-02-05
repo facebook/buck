@@ -69,10 +69,16 @@ public class TestThreadStateRendererTest {
         ImmutableMap.<Long, Optional<? extends LeafEvent>>of(),
         ImmutableMap.<BuildTarget, AtomicLong>of());
     assertThat(
-        renderLines(renderer),
+        renderLines(renderer, true),
         is(equalTo(ImmutableList.<String>of())));
     assertThat(
-        renderShortStatus(renderer),
+        renderLines(renderer, false),
+        is(equalTo(ImmutableList.<String>of())));
+    assertThat(
+        renderShortStatus(renderer, true),
+        is(equalTo(ImmutableList.<String>of())));
+    assertThat(
+        renderShortStatus(renderer, false),
         is(equalTo(ImmutableList.<String>of())));
   }
 
@@ -105,7 +111,7 @@ public class TestThreadStateRendererTest {
             TARGET3, new AtomicLong(700),
             TARGET4, new AtomicLong(0)));
     assertThat(
-        renderLines(renderer),
+        renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
@@ -114,8 +120,20 @@ public class TestThreadStateRendererTest {
                 " |=> //:target4...  1.2s (running Test B[0.4s])",
                 " |=> IDLE"))));
     assertThat(
-        renderShortStatus(renderer),
+        renderLines(renderer, false),
+        is(equalTo(
+            ImmutableList.of(
+                " |=> //:target2...  4.4s (running step A[2.7s])",
+                " |=> //:target3...  2.6s (running Test A[2.6s])",
+                " |=> //:target1...  3.3s",
+                " |=> IDLE",
+                " |=> //:target4...  1.2s (running Test B[0.4s])"))));
+    assertThat(
+        renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
+    assertThat(
+        renderShortStatus(renderer, false),
+        is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[ ]", "[:]"))));
   }
 
   @Test
@@ -152,7 +170,7 @@ public class TestThreadStateRendererTest {
             TARGET3, new AtomicLong(700),
             TARGET4, new AtomicLong(0)));
     assertThat(
-        renderLines(renderer),
+        renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
                 " |=> //:target2...  4.4s (running step A[2.7s])",
@@ -161,7 +179,7 @@ public class TestThreadStateRendererTest {
                 " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
                 " |=> IDLE"))));
     assertThat(
-        renderShortStatus(renderer),
+        renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
   }
 
@@ -191,7 +209,7 @@ public class TestThreadStateRendererTest {
             TARGET2, new AtomicLong(1400),
             TARGET3, new AtomicLong(700)));
     assertThat(
-        renderLines(renderer),
+        renderLines(renderer, true),
         is(equalTo(
             ImmutableList.of(
                 // missing test rule - no output
@@ -200,7 +218,7 @@ public class TestThreadStateRendererTest {
                 " |=> IDLE",
                 " |=> IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
-        renderShortStatus(renderer),
+        renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[ ]", "[ ]"))));
   }
 
@@ -276,18 +294,20 @@ public class TestThreadStateRendererTest {
         accumulatedTimes);
   }
 
-  private ImmutableList<String> renderLines(TestThreadStateRenderer renderer) {
+  private ImmutableList<String> renderLines(TestThreadStateRenderer renderer, boolean sortByTime) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     StringBuilder lineBuilder = new StringBuilder();
-    for (long threadId : renderer.getSortedThreadIds()) {
+    for (long threadId : renderer.getSortedThreadIds(sortByTime)) {
       lines.add(renderer.renderStatusLine(threadId, lineBuilder));
     }
     return lines.build();
   }
 
-  private ImmutableList<String> renderShortStatus(TestThreadStateRenderer renderer) {
+  private ImmutableList<String> renderShortStatus(
+      TestThreadStateRenderer renderer,
+      boolean sortByTime) {
     ImmutableList.Builder<String> status = ImmutableList.builder();
-    for (long threadId : renderer.getSortedThreadIds()) {
+    for (long threadId : renderer.getSortedThreadIds(sortByTime)) {
       status.add(renderer.renderShortStatus(threadId));
     }
     return status.build();

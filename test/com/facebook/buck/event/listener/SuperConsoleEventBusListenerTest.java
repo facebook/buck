@@ -20,6 +20,7 @@ import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinishe
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -307,8 +308,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.7s",
-        " |=> //chicken:dance...  0.1s (checking local cache)",
-        " |=> IDLE"));
+        " |=> IDLE",
+        " |=> //chicken:dance...  0.1s (checking local cache)"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
@@ -541,8 +542,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.7s [2%] (1/10 JOBS, 1 UPDATED, 10.0% CACHE MISS)",
-        " |=> //chicken:dance...  0.1s (checking local cache)",
-        " |=> IDLE"));
+        " |=> IDLE",
+        " |=> //chicken:dance...  0.1s (checking local cache)"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
@@ -1822,7 +1823,7 @@ public class SuperConsoleEventBusListenerTest {
                  Locale.US,
                  logPath)) {
 
-      ThreadStateRenderer fakeRenderer =
+      FakeThreadStateRenderer fakeRenderer =
           new FakeThreadStateRenderer(ImmutableList.of(2L, 1L, 4L, 8L, 5L));
       ImmutableList.Builder<String> lines;
 
@@ -1834,25 +1835,35 @@ public class SuperConsoleEventBusListenerTest {
           " |=> Status of thread 5");
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 10000);
+      listener.renderLines(fakeRenderer, lines, 10000, false);
       assertThat(
           lines.build(),
           equalTo(fullOutput));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(false));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 6);
+      listener.renderLines(fakeRenderer, lines, 10000, true);
       assertThat(
           lines.build(),
           equalTo(fullOutput));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 5);
+      listener.renderLines(fakeRenderer, lines, 6, false);
       assertThat(
           lines.build(),
           equalTo(fullOutput));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(false));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 4);
+      listener.renderLines(fakeRenderer, lines, 5, false);
+      assertThat(
+          lines.build(),
+          equalTo(fullOutput));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(false));
+
+      lines = ImmutableList.builder();
+      listener.renderLines(fakeRenderer, lines, 4, false);
       assertThat(
           lines.build(),
           equalTo(
@@ -1861,23 +1872,26 @@ public class SuperConsoleEventBusListenerTest {
                   " |=> Status of thread 1",
                   " |=> Status of thread 4",
                   " |=> 2 MORE THREADS: t8 t5")));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 2);
+      listener.renderLines(fakeRenderer, lines, 2, false);
       assertThat(
           lines.build(),
           equalTo(
               ImmutableList.of(
                   " |=> Status of thread 2",
                   " |=> 4 MORE THREADS: t1 t4 t8 t5")));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 1);
+      listener.renderLines(fakeRenderer, lines, 1, false);
       assertThat(
           lines.build(),
           equalTo(
               ImmutableList.of(
                   " |=> 5 THREADS: t2 t1 t4 t8 t5")));
+      assertThat(fakeRenderer.lastSortWasByTime(), is(true));
     }
   }
 

@@ -45,6 +45,10 @@ public class SuperConsoleConfig {
         .or(getThreadLineLimit());
   }
 
+  public boolean shouldAlwaysSortThreadsByTime() {
+    return delegate.getBooleanValue(SECTION_NAME, "always_sort_threads_by_time", false);
+  }
+
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {
     Optional<Long> optional = delegate.getLong(sectionName, propertyName);
     if (!optional.isPresent()) {
