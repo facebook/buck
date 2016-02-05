@@ -1219,6 +1219,9 @@ public class CachingBuildEngine implements BuildEngine {
                rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
         manifest = new Manifest(inputStream);
       }
+    } else {
+      // Ensure the path to manifest exist
+      rule.getProjectFilesystem().createParentDirs(manifestPath);
     }
 
     // If the manifest is larger than the max size, just truncate it.  It might be nice to support
@@ -1290,10 +1293,6 @@ public class CachingBuildEngine implements BuildEngine {
     Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
             .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
-    Path manifestPath = getManifestPath(rule);
-
-    // Clear out any existing manifest.
-    rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
 
     LazyPath tempFile = new LazyPath() {
       @Override
@@ -1302,14 +1301,20 @@ public class CachingBuildEngine implements BuildEngine {
       }
     };
 
-    // Now, fetch an existing manifest from the cache.
-    rule.getProjectFilesystem().createParentDirs(manifestPath);
-
     CacheResult manifestResult =
         context.getArtifactCache().fetch(manifestKey.getFirst(), tempFile);
     if (!manifestResult.getType().isSuccess()) {
       return CacheResult.miss();
     }
+
+    Path manifestPath = getManifestPath(rule);
+
+    // Clear out any existing manifest.
+    rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
+
+    // Now, fetch an existing manifest from the cache.
+    rule.getProjectFilesystem().createParentDirs(manifestPath);
+
     try (OutputStream outputStream =
              rule.getProjectFilesystem().newFileOutputStream(manifestPath);
          InputStream inputStream =
