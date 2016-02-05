@@ -58,4 +58,22 @@ public class AuditRulesCommandIntegrationTest {
     result3.assertSuccess();
     assertThat(result3.getStdout(), is(equalTo(workspace.getFileContents("stdout.all"))));
   }
+
+  @Test
+  public void testBuckAuditRulesJsonOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_rules", tmp);
+    workspace.setUp();
+
+    // Print all of the rules in a file.
+    ProcessResult result1 = workspace.runBuckCommand("audit", "rules", "--json", "example/BUCK");
+    result1.assertSuccess();
+    assertThat(result1.getStdout(), is(equalTo(workspace.getFileContents("stdout.all.json"))));
+
+    // Print all of the rules filtered by type.
+    ProcessResult result2 = workspace.runBuckCommand(
+        "audit", "rules", "--type", "genrule", "--json", "example/BUCK");
+    result2.assertSuccess();
+    assertThat(result2.getStdout(), is(equalTo(workspace.getFileContents("stdout.genrule.json"))));
+  }
 }
