@@ -90,32 +90,7 @@ public class ConstructorArgMarshaller {
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
       Map<String, ?> instance) throws ConstructorArgMarshalException, NoSuchBuildTargetException {
-    populate(
-        cellRoots,
-        filesystem,
-        params,
-        dto,
-        declaredDeps,
-        instance,
-        /* populate all fields, optional and required */ false);
-    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance);
-  }
-
-  @VisibleForTesting
-  void populate(
-      Function<Optional<String>, Path> cellRoots,
-      ProjectFilesystem filesystem,
-      BuildRuleFactoryParams params,
-      Object dto,
-      final ImmutableSet.Builder<BuildTarget> declaredDeps,
-      Map<String, ?> instance,
-      boolean onlyOptional) throws ConstructorArgMarshalException {
-    Set<ParamInfo<?>> allInfo = getAllParamInfo(dto);
-
-    for (ParamInfo<?> info : allInfo) {
-      if (onlyOptional && !info.isOptional()) {
-        continue;
-      }
+    for (ParamInfo<?> info : getAllParamInfo(dto)) {
       try {
         info.setFromParams(cellRoots, filesystem, params, dto, instance);
       } catch (ParamInfoException e) {
@@ -123,6 +98,29 @@ public class ConstructorArgMarshaller {
       }
       if (info.getName().equals("deps")) {
         populateDeclaredDeps(info, declaredDeps, dto);
+      }
+    }
+    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance);
+  }
+
+  /**
+   * Populate only the fields that have default values.
+   *
+   * Used for testing.
+   */
+  @VisibleForTesting
+  void populateDefaults(
+      Function<Optional<String>, Path> cellRoots,
+      ProjectFilesystem filesystem,
+      BuildRuleFactoryParams params,
+      Object dto) throws ConstructorArgMarshalException {
+    for (ParamInfo<?> info : getAllParamInfo(dto)) {
+      if (info.isOptional()) {
+        try {
+          info.set(cellRoots, filesystem, params.target.getBasePath(), dto, null);
+        } catch (ParamInfoException e) {
+          throw new ConstructorArgMarshalException(e.getMessage(), e);
+        }
       }
     }
   }
