@@ -112,6 +112,7 @@ import com.facebook.buck.lua.LuaBuckConfig;
 import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.ocaml.OCamlBinaryDescription;
 import com.facebook.buck.ocaml.OCamlBuckConfig;
 import com.facebook.buck.ocaml.OCamlLibraryDescription;
@@ -273,6 +274,25 @@ public class KnownBuildRuleTypes {
   }
 
   @VisibleForTesting
+  static CxxPlatform getHostCxxPlatformFromConfig(
+      CxxBuckConfig cxxBuckConfig,
+      ImmutableMap<Flavor, CxxPlatform> cxxPlatforms,
+      CxxPlatform defaultCxxPlatform) {
+    Optional<String> hostCxxPlatform = cxxBuckConfig.getHostPlatform();
+    if (hostCxxPlatform.isPresent()) {
+      ImmutableFlavor hostFlavor = ImmutableFlavor.of(hostCxxPlatform.get());
+      if (cxxPlatforms.containsKey(hostFlavor)) {
+        return CxxPlatforms.copyPlatformWithFlavorAndConfig(
+            cxxPlatforms.get(hostFlavor),
+            cxxBuckConfig,
+            DefaultCxxPlatforms.FLAVOR);
+      }
+    }
+
+    return defaultCxxPlatform;
+  }
+
+  @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
       ProcessExecutor processExecutor,
@@ -349,8 +369,12 @@ public class KnownBuildRuleTypes {
       cxxPlatformsBuilder.put(entry.getKey(), entry.getValue().getCxxPlatform());
     }
 
-    // Add the default, config-defined C/C++ platform.
-    CxxPlatform systemDefaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+    // Add the host's own C/C++ platform.
+    CxxPlatform systemDefaultCxxPlatform = getHostCxxPlatformFromConfig(
+        cxxBuckConfig,
+        cxxPlatformsBuilder.build(),
+        DefaultCxxPlatforms.build(platform, cxxBuckConfig));
+
     cxxPlatformsBuilder.put(systemDefaultCxxPlatform.getFlavor(), systemDefaultCxxPlatform);
     ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap = cxxPlatformsBuilder.build();
 

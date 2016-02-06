@@ -113,6 +113,10 @@ public class CxxBuckConfig {
     return delegate.getValue(cxxSection, "default_platform");
   }
 
+  public Optional<String> getHostPlatform() {
+    return delegate.getValue(cxxSection, "host_platform");
+  }
+
   public Optional<ImmutableList<String>> getFlags(
       String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
