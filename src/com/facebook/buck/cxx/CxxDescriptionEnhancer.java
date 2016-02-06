@@ -735,15 +735,8 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Optional<SourcePath> prefixHeader,
-      ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableList<String> compilerFlags,
-      ImmutableMap<String, CxxSource> sources,
-      ImmutableSet<FrameworkPath> frameworks,
-      CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
+      CxxPreprocessMode preprocessMode,
+      CxxConstructorArg arg) throws NoSuchBuildTargetException {
     BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
         .paramsWithoutCompilationDatabaseFlavor(params);
     // Invoking requireObjects has the side-effect of invoking
@@ -754,16 +747,9 @@ public class CxxDescriptionEnhancer {
         ruleResolver,
         pathResolver,
         cxxPlatform,
-        preprocessorFlags,
-        exportedPreprocessorFlags,
-        prefixHeader,
-        headers,
-        exportedHeaders,
-        compilerFlags,
-        sources,
-        frameworks,
         preprocessMode,
-        CxxSourceRuleFactory.PicType.PIC);
+        CxxSourceRuleFactory.PicType.PIC,
+        arg);
 
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
@@ -775,55 +761,81 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathResolver sourcePathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Optional<SourcePath> prefixHeader,
-      ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableList<String> compilerFlags,
-      ImmutableMap<String, CxxSource> sources,
-      ImmutableSet<FrameworkPath> frameworks,
       CxxPreprocessMode preprocessMode,
-      CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
+      CxxSourceRuleFactory.PicType pic,
+      CxxConstructorArg args) throws NoSuchBuildTargetException {
+    ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
+    ImmutableMap<Path, SourcePath> exportedHeaders;
+    if (args instanceof CxxLibraryDescription.Arg) {
+      CxxLibraryDescription.Arg hasExportedArgs = (CxxLibraryDescription.Arg) args;
+      exportedPreprocessorFlags = CxxFlags.getLanguageFlags(
+          hasExportedArgs.exportedPreprocessorFlags,
+          hasExportedArgs.exportedPlatformLinkerFlags,
+          hasExportedArgs.exportedLangPreprocessorFlags,
+          cxxPlatform);
+      exportedHeaders = CxxDescriptionEnhancer.parseExportedHeaders(
+          params.getBuildTarget(),
+          sourcePathResolver,
+          Optional.of(cxxPlatform),
+          hasExportedArgs);
+    } else {
+      exportedPreprocessorFlags = ImmutableMultimap.of();
+      exportedHeaders = ImmutableMap.of();
+    }
 
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
-            pathResolver,
+            sourcePathResolver,
             cxxPlatform,
-            headers,
+            CxxDescriptionEnhancer.parseHeaders(
+                params.getBuildTarget(),
+                sourcePathResolver,
+                Optional.of(cxxPlatform),
+                args),
             HeaderVisibility.PRIVATE);
 
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
             cxxPlatform,
-            preprocessorFlags,
+            CxxFlags.getLanguageFlags(
+                args.preprocessorFlags,
+                args.platformPreprocessorFlags,
+                args.langPreprocessorFlags,
+                cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.<FrameworkPath>of(),
             CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
                 params,
                 ruleResolver,
-                pathResolver,
+                sourcePathResolver,
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
-                frameworks));
+                args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
 
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
         params,
         ruleResolver,
-        pathResolver,
+        sourcePathResolver,
         cxxPlatform,
         cxxPreprocessorInputFromDependencies,
-        compilerFlags,
-        prefixHeader,
+        CxxFlags.getFlags(
+            args.compilerFlags,
+            args.platformCompilerFlags,
+            cxxPlatform),
+        args.prefixHeader,
         preprocessMode,
-        sources,
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            sourcePathResolver,
+            cxxPlatform,
+            args),
         pic);
   }
 

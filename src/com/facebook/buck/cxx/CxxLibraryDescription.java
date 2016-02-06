@@ -31,13 +31,13 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -197,14 +197,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Optional<SourcePath> prefixHeader,
-      ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableList<String> compilerFlags,
-      ImmutableMap<String, CxxSource> sources,
-      ImmutableSet<FrameworkPath> frameworks,
+      CxxLibraryDescription.Arg args,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
 
@@ -215,16 +208,9 @@ public class CxxLibraryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
-            preprocessorFlags,
-            exportedPreprocessorFlags,
-            prefixHeader,
-            headers,
-            exportedHeaders,
-            compilerFlags,
-            sources,
-            frameworks,
             preprocessMode,
-            pic);
+            pic,
+            args);
 
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
@@ -264,13 +250,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Optional<SourcePath> prefixHeader,
-      ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableList<String> compilerFlags,
-      ImmutableMap<String, CxxSource> sources,
+      Arg arg,
       ImmutableList<String> linkerFlags,
       ImmutableList<String> exportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
@@ -285,16 +265,9 @@ public class CxxLibraryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
-            preprocessorFlags,
-            exportedPreprocessorFlags,
-            prefixHeader,
-            headers,
-            exportedHeaders,
-            compilerFlags,
-            sources,
-            frameworks,
             preprocessMode,
-            CxxSourceRuleFactory.PicType.PIC);
+            CxxSourceRuleFactory.PicType.PIC,
+            arg);
 
     return NativeLinkableInput.builder()
         .addAllArgs(
@@ -323,13 +296,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Optional<SourcePath> prefixHeader,
-      ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableList<String> compilerFlags,
-      ImmutableMap<String, CxxSource> sources,
+      CxxLibraryDescription.Arg args,
       ImmutableList<String> linkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -348,16 +315,9 @@ public class CxxLibraryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
-            preprocessorFlags,
-            exportedPreprocessorFlags,
-            prefixHeader,
-            headers,
-            exportedHeaders,
-            compilerFlags,
-            sources,
-            frameworks,
             preprocessMode,
-            CxxSourceRuleFactory.PicType.PIC);
+            CxxSourceRuleFactory.PicType.PIC,
+            args);
 
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
@@ -508,11 +468,11 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
    */
-  private static <A extends Arg> BuildRule createStaticLibraryBuildRule(
+  private static BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args,
+      Arg args,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -521,37 +481,7 @@ public class CxxLibraryDescription implements
         resolver,
         sourcePathResolver,
         cxxPlatform,
-        CxxFlags.getLanguageFlags(
-            args.preprocessorFlags,
-            args.platformPreprocessorFlags,
-            args.langPreprocessorFlags,
-            cxxPlatform),
-        CxxFlags.getLanguageFlags(
-            args.exportedPreprocessorFlags,
-            args.exportedPlatformPreprocessorFlags,
-            args.exportedLangPreprocessorFlags,
-            cxxPlatform),
-        args.prefixHeader,
-        CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            Optional.of(cxxPlatform),
-            args),
-        CxxDescriptionEnhancer.parseExportedHeaders(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            Optional.of(cxxPlatform),
-            args),
-        CxxFlags.getFlags(
-            args.compilerFlags,
-            args.platformCompilerFlags,
-            cxxPlatform),
-        CxxDescriptionEnhancer.parseCxxSources(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            cxxPlatform,
-            args),
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args,
         preprocessMode,
         pic);
   }
@@ -589,36 +519,7 @@ public class CxxLibraryDescription implements
         resolver,
         sourcePathResolver,
         cxxPlatform,
-        CxxFlags.getLanguageFlags(
-            args.preprocessorFlags,
-            args.platformPreprocessorFlags,
-            args.langPreprocessorFlags,
-            cxxPlatform),
-        CxxFlags.getLanguageFlags(
-            args.exportedPreprocessorFlags,
-            args.exportedPlatformPreprocessorFlags,
-            args.exportedLangPreprocessorFlags,
-            cxxPlatform),
-        args.prefixHeader,
-        CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            Optional.of(cxxPlatform),
-            args),
-        CxxDescriptionEnhancer.parseExportedHeaders(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            Optional.of(cxxPlatform),
-            args),
-        CxxFlags.getFlags(
-            args.compilerFlags,
-            args.platformCompilerFlags,
-            cxxPlatform),
-        CxxDescriptionEnhancer.parseCxxSources(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            cxxPlatform,
-            args),
+        args,
         linkerFlags.build(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
@@ -635,11 +536,11 @@ public class CxxLibraryDescription implements
    * @return a {@link CxxCompilationDatabase} rule which builds a compilation database for this
    * C/C++ library.
    */
-  private static <A extends Arg> CxxCompilationDatabase createCompilationDatabaseBuildRule(
+  private static CxxCompilationDatabase createCompilationDatabaseBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args,
+      CxxLibraryDescription.Arg args,
       CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return CxxDescriptionEnhancer.createCompilationDatabase(
@@ -647,38 +548,8 @@ public class CxxLibraryDescription implements
         resolver,
         sourcePathResolver,
         cxxPlatform,
-        CxxFlags.getLanguageFlags(
-            args.preprocessorFlags,
-            args.platformPreprocessorFlags,
-            args.langPreprocessorFlags,
-            cxxPlatform),
-        CxxFlags.getLanguageFlags(
-            args.exportedPreprocessorFlags,
-            args.exportedPlatformPreprocessorFlags,
-            args.exportedLangPreprocessorFlags,
-            cxxPlatform),
-        args.prefixHeader,
-        CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            Optional.of(cxxPlatform),
-            args),
-        CxxDescriptionEnhancer.parseExportedHeaders(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            Optional.of(cxxPlatform),
-            args),
-        CxxFlags.getFlags(
-            args.compilerFlags,
-            args.platformCompilerFlags,
-            cxxPlatform),
-        CxxDescriptionEnhancer.parseCxxSources(
-            params.getBuildTarget(),
-            sourcePathResolver,
-            cxxPlatform,
-            args),
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
-        preprocessMode);
+        preprocessMode,
+        args);
   }
 
   public static TypeAndPlatform getTypeAndPlatform(
@@ -889,36 +760,7 @@ public class CxxLibraryDescription implements
                   resolver,
                   pathResolver,
                   cxxPlatform,
-                  CxxFlags.getLanguageFlags(
-                      args.preprocessorFlags,
-                      args.platformPreprocessorFlags,
-                      args.langPreprocessorFlags,
-                      cxxPlatform),
-                  CxxFlags.getLanguageFlags(
-                      args.exportedPreprocessorFlags,
-                      args.exportedPlatformPreprocessorFlags,
-                      args.exportedLangPreprocessorFlags,
-                      cxxPlatform),
-                  args.prefixHeader,
-                  CxxDescriptionEnhancer.parseHeaders(
-                      params.getBuildTarget(),
-                      pathResolver,
-                      Optional.of(cxxPlatform),
-                      args),
-                  CxxDescriptionEnhancer.parseExportedHeaders(
-                      params.getBuildTarget(),
-                      pathResolver,
-                      Optional.of(cxxPlatform),
-                      args),
-                  CxxFlags.getFlags(
-                      args.compilerFlags,
-                      args.platformCompilerFlags,
-                      cxxPlatform),
-                  CxxDescriptionEnhancer.parseCxxSources(
-                      params.getBuildTarget(),
-                      pathResolver,
-                      cxxPlatform,
-                      args),
+                  args,
                   CxxFlags.getFlags(
                       args.linkerFlags,
                       args.platformLinkerFlags,
