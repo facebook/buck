@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -55,7 +56,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
@@ -822,15 +822,14 @@ AppleSdkPaths appleSdkPaths =
               Linker.LinkType.EXECUTABLE,
               Optional.<String>absent(),
               Paths.get("output"),
-              SourcePathArg.from(
-                  pathResolver,
-                  new FakeSourcePath("input.o")),
               Linker.LinkableDepType.SHARED,
               ImmutableList.<NativeLinkable>of(),
               Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),
-              ImmutableSet.<FrameworkPath>of());
+              NativeLinkableInput.builder()
+                  .setArgs(SourcePathArg.from(pathResolver, new FakeSourcePath("input.o")))
+                  .build());
       ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
     }
     return ruleKeys.build();

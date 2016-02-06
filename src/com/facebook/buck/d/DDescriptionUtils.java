@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -32,10 +33,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -129,17 +128,16 @@ abstract class DDescriptionUtils {
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         BuildTargets.getGenPath(buildTarget, "%s/" + buildTarget.getShortName()),
-        ImmutableList.<Arg>builder()
-            .addAll(StringArg.from(dBuckConfig.getLinkerFlagsForBinary()))
-            .addAll(SourcePathArg.from(sourcePathResolver, sourcePaths))
-            .build(),
         Linker.LinkableDepType.STATIC,
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class),
         /* cxxRuntimeType */ Optional.<Linker.CxxRuntimeType>absent(),
         /* bundleLoader */ Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<FrameworkPath>of());
+        NativeLinkableInput.builder()
+            .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlagsForBinary()))
+            .addAllArgs(SourcePathArg.from(sourcePathResolver, sourcePaths))
+            .build());
   }
 
   /**

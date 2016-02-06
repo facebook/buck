@@ -23,11 +23,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -49,6 +52,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -1255,4 +1259,59 @@ public class CxxLibraryDescriptionTest {
         Matchers.hasItem(cxxBinaryBuilder.getTarget()));
   }
 
+  @Test
+  public void sharedLibraryShouldLinkOwnRequiredLibraries() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(
+            BuildTargetFactory
+                .newInstance("//:foo")
+                .withFlavors(platform.getFlavor(), ImmutableFlavor.of("shared")));
+    libraryBuilder
+        .setLibraries(
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("/usr/lib/libz.dylib"),
+                        Optional.<String>absent())),
+                FrameworkPath.ofSourcePath(new FakeSourcePath("/another/path/liba.dylib"))))
+        .setSrcs(
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    CxxLink library = (CxxLink) libraryBuilder.build(resolver, filesystem, targetGraph);
+    assertThat(
+        library.getArgs(),
+        Matchers.hasItems("-L", "/another/path", "$SDKROOT/usr/lib", "-la", "-lz"));
+  }
+
+  @Test
+  public void sharedLibraryShouldLinkOwnRequiredLibrariesForCxxLibrary() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+
+    ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of(
+        FrameworkPath.ofSourcePath(new FakeSourcePath("/some/path/libs.dylib")),
+        FrameworkPath.ofSourcePath(new FakeSourcePath("/another/path/liba.dylib")));
+
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:foo#shared"));
+    libraryBuilder
+        .setLibraries(libraries)
+        .setSrcs(
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    CxxLibrary library = (CxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
+    assertThat(
+        library.getSharedNativeLinkTargetInput(platform).getLibraries(),
+        Matchers.<ImmutableSet<FrameworkPath>>equalTo(libraries));
+  }
 }

@@ -259,14 +259,17 @@ public class CxxPythonExtensionDescription implements
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
-        getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args),
         Linker.LinkableDepType.SHARED,
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));
+        NativeLinkableInput.builder()
+          .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
+          .setFrameworks(args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
+          .setLibraries(args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()))
+          .build());
   }
 
   @Override

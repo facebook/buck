@@ -85,6 +85,11 @@ public abstract class AbstractCxxSourceBuilder<
     return getThis();
   }
 
+  public U setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    arg.libraries = Optional.of(libraries);
+    return getThis();
+  }
+
   public U setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.of(deps);
     return getThis();

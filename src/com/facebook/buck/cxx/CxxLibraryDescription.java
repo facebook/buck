@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -273,6 +274,7 @@ public class CxxLibraryDescription implements
       ImmutableList<String> linkerFlags,
       ImmutableList<String> exportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
+      ImmutableSet<FrameworkPath> libraries,
       CxxPreprocessMode preprocessMode)
       throws NoSuchBuildTargetException {
 
@@ -306,7 +308,8 @@ public class CxxLibraryDescription implements
                         params.getCellRoots(),
                         ruleResolver)))
         .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
-        .addAllFrameworks(frameworks)
+        .setFrameworks(frameworks)
+        .setLibraries(libraries)
         .build();
   }
 
@@ -329,6 +332,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<String> linkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
+      ImmutableSet<FrameworkPath> libraries,
       Optional<String> soname,
       CxxPreprocessMode preprocessMode,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -392,8 +396,13 @@ public class CxxLibraryDescription implements
         linkType,
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
-        ImmutableList.<com.facebook.buck.rules.args.Arg>builder()
-            .addAll(
+        linkableDepType,
+        Iterables.filter(params.getDeps(), NativeLinkable.class),
+        cxxRuntimeType,
+        bundleLoader,
+        blacklist,
+        NativeLinkableInput.builder()
+            .addAllArgs(
                 FluentIterable.from(extraLdFlags)
                     .transform(
                         MacroArg.toMacroArgFunction(
@@ -401,15 +410,10 @@ public class CxxLibraryDescription implements
                             params.getBuildTarget(),
                             params.getCellRoots(),
                             ruleResolver)))
-            .addAll(SourcePathArg.from(pathResolver, objects.values()))
-            .build(),
-        linkableDepType,
-        FluentIterable.from(params.getDeps())
-            .filter(NativeLinkable.class),
-        cxxRuntimeType,
-        bundleLoader,
-        blacklist,
-        frameworks);
+            .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
+            .setFrameworks(frameworks)
+            .setLibraries(libraries)
+            .build());
   }
 
   @Override
@@ -617,6 +621,7 @@ public class CxxLibraryDescription implements
             args),
         linkerFlags.build(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.soname,
         preprocessMode,
         args.cxxRuntimeType,
@@ -923,6 +928,7 @@ public class CxxLibraryDescription implements
                       args.exportedPlatformLinkerFlags,
                       cxxPlatform),
                   args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+                  args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
                   preprocessMode);
             } catch (NoSuchBuildTargetException e) {
               throw Throwables.propagate(e);

@@ -701,14 +701,17 @@ public class CxxDescriptionEnhancer {
             Linker.LinkType.EXECUTABLE,
             Optional.<String>absent(),
             linkOutput,
-            argsBuilder.build(),
             linkStyle,
             FluentIterable.from(params.getDeps())
                 .filter(NativeLinkable.class),
             cxxRuntimeType,
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of(),
-            frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));
+            // TODO(yiding): thread in libraries as well?
+            NativeLinkableInput.builder()
+                .setArgs(argsBuilder.build())
+                .setFrameworks(frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
+                .build());
     resolver.addToIndex(cxxLink);
 
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.
