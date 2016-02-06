@@ -563,6 +563,7 @@ public class CxxDescriptionEnhancer {
         args.platformPreprocessorFlags,
         args.langPreprocessorFlags,
         args.frameworks,
+        args.libraries,
         args.compilerFlags,
         args.platformCompilerFlags,
         args.prefixHeader,
@@ -583,6 +584,7 @@ public class CxxDescriptionEnhancer {
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags,
       Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags,
       Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
+      Optional<ImmutableSortedSet<FrameworkPath>> libraries,
       Optional<ImmutableList<String>> compilerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
@@ -707,10 +709,10 @@ public class CxxDescriptionEnhancer {
             cxxRuntimeType,
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of(),
-            // TODO(yiding): thread in libraries as well?
             NativeLinkableInput.builder()
                 .setArgs(argsBuilder.build())
                 .setFrameworks(frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
+                .setLibraries(libraries.or(ImmutableSortedSet.<FrameworkPath>of()))
                 .build());
     resolver.addToIndex(cxxLink);
 

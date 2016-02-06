@@ -129,6 +129,8 @@ public class HalideLibraryDescription
         langPreprocessorFlags = Optional.absent();
     Optional<ImmutableSortedSet<FrameworkPath>>
         frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
+    Optional<ImmutableSortedSet<FrameworkPath>>
+        libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     Optional<SourcePath> prefixHeader = Optional.absent();
     Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.absent();
 
@@ -145,6 +147,7 @@ public class HalideLibraryDescription
             platformPreprocessorFlags,
             langPreprocessorFlags,
             frameworks,
+            libraries,
             compilerFlags,
             platformCompilerFlags,
             prefixHeader,
