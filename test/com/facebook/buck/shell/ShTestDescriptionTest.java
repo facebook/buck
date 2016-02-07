@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -56,6 +57,32 @@ public class ShTestDescriptionTest {
         Matchers.contains(
             pathResolver.getAbsolutePath(
                 new BuildTargetSourcePath(dep.getBuildTarget())).toString()));
+  }
+
+  @Test
+  public void envWithLocationMacro() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule dep =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    ShTest shTest =
+        (ShTest) new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setTest(new FakeSourcePath("test.sh"))
+            .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"))
+            .build(resolver);
+    assertThat(
+        shTest.getDeps(),
+        Matchers.contains(dep));
+    assertThat(
+        Arg.stringify(shTest.getEnv()),
+        Matchers.equalTo(
+            ImmutableMap.of(
+                "LOC",
+                pathResolver.getAbsolutePath(
+                    new BuildTargetSourcePath(dep.getBuildTarget())).toString())));
   }
 
 }

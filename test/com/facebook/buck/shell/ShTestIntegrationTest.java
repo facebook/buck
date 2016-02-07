@@ -57,4 +57,15 @@ public class ShTestIntegrationTest {
     result.assertSpecialExitCode("test should fail", 42);
     assertTrue(stderr, stderr.contains("Timed out running test: //:test-spin"));
   }
+
+  @Test
+  public void env() throws IOException {
+    Assume.assumeTrue(
+        ImmutableSet.of(Platform.MACOS, Platform.LINUX).contains(Platform.detect()));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "sh_test_env", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("test", "//foo:test").assertSuccess();
+  }
+
 }

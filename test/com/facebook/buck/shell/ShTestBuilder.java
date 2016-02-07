@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
@@ -41,6 +42,11 @@ public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
 
   public ShTestBuilder setArgs(ImmutableList<String> args) {
     arg.args = Optional.of(args);
+    return this;
+  }
+
+  public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
+    arg.env = Optional.of(env);
     return this;
   }
 

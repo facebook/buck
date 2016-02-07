@@ -20,8 +20,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.Map;
 
 /**
  * An abstraction for modeling the arguments that contribute to a command run by a
@@ -84,4 +88,15 @@ public abstract class Arg implements RuleKeyAppendable {
     }
     return builder.build();
   }
+
+  public static <K> ImmutableMap<K, String> stringify(ImmutableMap<K, Arg> argMap) {
+    ImmutableMap.Builder<K, String> stringMap = ImmutableMap.builder();
+    for (Map.Entry<K, Arg> ent : argMap.entrySet()) {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      ent.getValue().appendToCommandLine(builder);
+      stringMap.put(ent.getKey(), Joiner.on(" ").join(builder.build()));
+    }
+    return stringMap.build();
+  }
+
 }

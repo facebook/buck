@@ -31,12 +31,14 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 public class ShTestDescription implements Description<ShTestDescription.Arg> {
 
@@ -71,21 +73,28 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
       BuildRuleResolver resolver,
       A args) {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    Function<String, com.facebook.buck.rules.args.Arg> toArg =
+        MacroArg.toMacroArgFunction(
+            MACRO_HANDLER,
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
         FluentIterable.from(args.args.or(ImmutableList.<String>of()))
-            .transform(
-                MacroArg.toMacroArgFunction(
-                    MACRO_HANDLER,
-                    params.getBuildTarget(),
-                    params.getCellRoots(),
-                    resolver))
+            .transform(toArg)
             .toList();
+    final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
+        ImmutableMap.copyOf(
+            Maps.transformValues(
+                args.env.or(ImmutableMap.<String, String>of()),
+                toArg));
     return new ShTest(
         params.appendExtraDeps(
             new Supplier<Iterable<? extends BuildRule>>() {
               @Override
               public Iterable<? extends BuildRule> get() {
                 return FluentIterable.from(testArgs)
+                    .append(testEnv.values())
                     .transformAndConcat(
                         com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver));
               }
@@ -93,6 +102,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
         pathResolver,
         args.test,
         testArgs,
+        testEnv,
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.labels.get());
   }
@@ -104,5 +114,6 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableMap<String, String>> env;
   }
 }
