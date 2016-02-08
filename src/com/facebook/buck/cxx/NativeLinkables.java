@@ -154,9 +154,9 @@ public class NativeLinkables {
         break;
       case STATIC:
         linkStyle =
-            requestedLinkStyle == Linker.LinkableDepType.SHARED ?
-                Linker.LinkableDepType.STATIC_PIC :
-                Linker.LinkableDepType.STATIC;
+            requestedLinkStyle == Linker.LinkableDepType.STATIC ?
+                Linker.LinkableDepType.STATIC :
+                Linker.LinkableDepType.STATIC_PIC;
         break;
       case ANY:
         linkStyle = requestedLinkStyle;

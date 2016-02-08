@@ -357,6 +357,70 @@ public class OmnibusTest {
         Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
   }
 
+  @Test
+  public void unusedStaticDepsAreNotIncludedInBody() throws NoSuchBuildTargetException {
+    NativeLinkable a =
+        new Node(
+            "//:a",
+            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.STATIC);
+    NativeLinkable b = new Node("//:b");
+    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+
+    // Verify the spec.
+    Omnibus.OmnibusSpec spec =
+        Omnibus.buildSpec(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(root),
+            ImmutableList.<NativeLinkable>of());
+    assertThat(
+        spec.getGraph().getNodes(),
+        Matchers.containsInAnyOrder(b.getBuildTarget()));
+    assertThat(
+        spec.getBody().keySet(),
+        Matchers.containsInAnyOrder(b.getBuildTarget()));
+    assertThat(
+        spec.getRoots().keySet(),
+        Matchers.containsInAnyOrder(root.getBuildTarget()));
+    assertThat(
+        spec.getDeps().keySet(),
+        Matchers.<BuildTarget>empty());
+    assertThat(
+        spec.getExcluded().keySet(),
+        Matchers.<BuildTarget>empty());
+
+    // Verify the libs.
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ImmutableMap<String, SourcePath> libs =
+        Omnibus.getSharedLibraries(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+            resolver,
+            pathResolver,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(root),
+            ImmutableList.<NativeLinkable>of())
+            .toSonameMap();
+    assertThat(
+        libs.keySet(),
+        Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
+    assertCxxLinkContainsNativeLinkableInput(
+        getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
+        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        a.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC));
+    assertCxxLinkContainsNativeLinkableInput(
+        getCxxLinkRule(pathResolver, libs.get("libomnibus.so")),
+        b.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC));
+  }
+
   private CxxLink getCxxLinkRule(SourcePathResolver resolver, SourcePath path) {
     return ((CxxLink) resolver.getRule(path).get());
   }
@@ -376,14 +440,24 @@ public class OmnibusTest {
     private final BuildTarget target;
     private final Iterable<? extends NativeLinkable> deps;
     private final Iterable<? extends NativeLinkable> exportedDeps;
+    private final Linkage linkage;
+
+    public Node(
+        String target,
+        Iterable<? extends NativeLinkable> deps,
+        Iterable<? extends NativeLinkable> exportedDeps,
+        Linkage linkage) {
+      this.target = BuildTargetFactory.newInstance(target);
+      this.deps = deps;
+      this.exportedDeps = exportedDeps;
+      this.linkage = linkage;
+    }
 
     public Node(
         String target,
         Iterable<? extends NativeLinkable> deps,
         Iterable<? extends NativeLinkable> exportedDeps) {
-      this.target = BuildTargetFactory.newInstance(target);
-      this.deps = deps;
-      this.exportedDeps = exportedDeps;
+      this(target, deps, exportedDeps, Linkage.ANY);
     }
 
     public Node(
@@ -423,7 +497,7 @@ public class OmnibusTest {
 
     @Override
     public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-      return Linkage.ANY;
+      return linkage;
     }
 
     @Override

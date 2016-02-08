@@ -117,9 +117,22 @@ public class Omnibus {
     Map<BuildTarget, NativeLinkable> rootDeps = new LinkedHashMap<>();
     for (SharedNativeLinkTarget root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
-      for (NativeLinkable dep : root.getSharedNativeLinkTargetDeps(cxxPlatform)) {
-        rootDeps.put(dep.getBuildTarget(), dep);
-        nativeLinkables.put(dep.getBuildTarget(), dep);
+      for (NativeLinkable dep :
+           NativeLinkables.getNativeLinkables(
+               cxxPlatform,
+               root.getSharedNativeLinkTargetDeps(cxxPlatform),
+               Linker.LinkableDepType.SHARED).values()) {
+        Linker.LinkableDepType linkStyle =
+            NativeLinkables.getLinkStyle(
+                dep.getPreferredLinkage(cxxPlatform),
+                Linker.LinkableDepType.SHARED);
+        Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
+
+        // We only consider deps which aren't *only* statically linked.
+        if (linkStyle == Linker.LinkableDepType.SHARED) {
+          rootDeps.put(dep.getBuildTarget(), dep);
+          nativeLinkables.put(dep.getBuildTarget(), dep);
+        }
       }
     }
 
@@ -263,6 +276,18 @@ public class Omnibus {
     boolean alreadyAddedOmnibusToArgs = false;
     for (Map.Entry<BuildTarget, NativeLinkable> entry : deps.entrySet()) {
       BuildTarget target = entry.getKey();
+      NativeLinkable nativeLinkable = entry.getValue();
+      Linker.LinkableDepType linkStyle =
+          NativeLinkables.getLinkStyle(
+              nativeLinkable.getPreferredLinkage(cxxPlatform),
+              Linker.LinkableDepType.SHARED);
+
+      // If this dep needs to be linked statically, then we always link it directly.
+      if (linkStyle != Linker.LinkableDepType.SHARED) {
+        Preconditions.checkState(linkStyle == Linker.LinkableDepType.STATIC_PIC);
+        argsBuilder.addAll(nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle).getArgs());
+        continue;
+      }
 
       // If this dep is another root node, substitute in the custom linked library we built for it.
       if (spec.getRoots().containsKey(target)) {
@@ -276,8 +301,9 @@ public class Omnibus {
         continue;
       }
 
-      // If this dep is in the giant merge omnibus body, then add the omnibus library to the link.
-      if (spec.getBody().containsKey(target)) {
+      // If we're linking this dep from the body, then we need to link via the giant merged
+      // libomnibus instead.
+      if (spec.getBody().containsKey(target)) { // && linkStyle == Linker.LinkableDepType.SHARED) {
         if (!alreadyAddedOmnibusToArgs) {
           argsBuilder.add(new SourcePathArg(pathResolver, omnibus));
           alreadyAddedOmnibusToArgs = true;
@@ -285,15 +311,10 @@ public class Omnibus {
         continue;
       }
 
-      // Otherwise, this is an excluded node, so link it normally.
+      // Otherwise, this is either an explicitly statically linked or excluded node, so link it
+      // normally.
       Preconditions.checkState(spec.getExcluded().containsKey(target));
-      NativeLinkable nativeLinkable = entry.getValue();
-      NativeLinkableInput depInput =
-          NativeLinkables.getNativeLinkableInput(
-              cxxPlatform,
-              Linker.LinkableDepType.SHARED,
-              nativeLinkable);
-      argsBuilder.addAll(depInput.getArgs());
+      argsBuilder.addAll(nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle).getArgs());
     }
 
     // Create the root library rule using the arguments assembled above.
