@@ -537,8 +537,8 @@ public class AppleDescriptions {
                 ImmutableSet.of(
                     ReactNativeFlavors.DO_NOT_BUNDLE,
                     AppleDescriptions.FRAMEWORK_FLAVOR,
-                    AppleDebugFormat.DWARF_AND_DSYM_FLAVOR,
-                    AppleDebugFormat.NO_DEBUG_FLAVOR,
+                    AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+                    AppleDebugFormat.NONE.getFlavor(),
                     AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()

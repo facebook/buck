@@ -37,7 +37,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
-
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -208,9 +207,7 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenRegisteringDescriptionsLastOneWins()
       throws IOException, NoSuchBuildTargetException {
-    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
-        "C/C++ platform",
-        ImmutableMap.<Flavor, CxxPlatform>of());
+    FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
     CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
     KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();

@@ -72,9 +72,7 @@ public class ThriftCxxEnhancerTest {
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(BUCK_CONFIG));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
-      new FlavorDomain<>(
-          "C/C++ Platform",
-          ImmutableMap.of(CXX_PLATFORM.getFlavor(), CXX_PLATFORM));
+      FlavorDomain.of("C/C++ Platform", CXX_PLATFORM);
   private static final CxxLibraryDescription CXX_LIBRARY_DESCRIPTION =
       new CxxLibraryDescription(
           CXX_BUCK_CONFIG,

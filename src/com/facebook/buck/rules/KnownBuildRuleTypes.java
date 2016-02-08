@@ -65,10 +65,6 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.jvm.scala.ScalaBuckConfig;
-import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
-import com.facebook.buck.jvm.scala.ScalaTestDescription;
-import com.facebook.buck.python.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
@@ -105,6 +101,9 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.jvm.scala.ScalaBuckConfig;
+import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
+import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.lua.LuaBinaryDescription;
@@ -117,6 +116,7 @@ import com.facebook.buck.ocaml.OCamlBinaryDescription;
 import com.facebook.buck.ocaml.OCamlBuckConfig;
 import com.facebook.buck.ocaml.OCamlLibraryDescription;
 import com.facebook.buck.ocaml.PrebuiltOCamlLibraryDescription;
+import com.facebook.buck.python.CxxPythonExtensionDescription;
 import com.facebook.buck.python.PrebuiltPythonLibraryDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonBuckConfig;
@@ -422,13 +422,8 @@ public class KnownBuildRuleTypes {
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
     ImmutableList<PythonPlatform> pythonPlatformsList =
         pyConfig.getPythonPlatforms(processExecutor);
-    ImmutableMap.Builder<Flavor, PythonPlatform> pythonPlatformsMapBuilder = ImmutableMap.builder();
-    for (PythonPlatform pythonPlatform : pythonPlatformsList) {
-      pythonPlatformsMapBuilder.put(pythonPlatform.getFlavor(), pythonPlatform);
-    }
-    ImmutableMap<Flavor, PythonPlatform> pythonPlatformsMap = pythonPlatformsMapBuilder.build();
     FlavorDomain<PythonPlatform> pythonPlatforms =
-        new FlavorDomain<>("Python Platform", pythonPlatformsMap);
+        FlavorDomain.from("Python Platform", pythonPlatformsList);
     PythonBinaryDescription pythonBinaryDescription =
         new PythonBinaryDescription(
             pyConfig,

@@ -38,7 +38,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -199,11 +198,7 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    platform1.getFlavor(), platform1,
-                    platform2.getFlavor(), platform2)));
+            FlavorDomain.of("Python Platform", platform1, platform2));
     PythonTest test1 =
         (PythonTest) builder
             .setPlatform(platform1.getFlavor().toString())

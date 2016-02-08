@@ -41,10 +41,10 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -224,11 +224,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryBuilder builder =
         PythonBinaryBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    platform1.getFlavor(), platform1,
-                    platform2.getFlavor(), platform2)));
+            FlavorDomain.of("Python Platform", platform1, platform2));
     builder.setMainModule("main");
     PythonBinary binary1 =
         (PythonBinary) builder
@@ -460,10 +456,7 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void extensionDepUsingMergedNativeLinkStrategy() throws Exception {
-    FlavorDomain<PythonPlatform> pythonPlatforms =
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(PY2.getFlavor(), PY2));
+    FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2);
 
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)

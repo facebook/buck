@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Paths;
 
@@ -37,8 +36,6 @@ public class PythonTestUtils {
           Optional.<BuildTarget>absent());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =
-      new FlavorDomain<>(
-          "python",
-          ImmutableMap.of(PYTHON_PLATFORM.getFlavor(), PYTHON_PLATFORM));
+      FlavorDomain.of("python", PYTHON_PLATFORM);
 
 }

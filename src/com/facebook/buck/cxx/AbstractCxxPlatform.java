@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
@@ -31,8 +32,9 @@ import java.util.List;
  */
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractCxxPlatform {
+interface AbstractCxxPlatform extends FlavorConvertible {
 
+  @Override
   Flavor getFlavor();
 
   Tool getAs();

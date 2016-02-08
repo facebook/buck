@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
-import com.google.common.collect.ImmutableMap;
 
 public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
 
@@ -41,9 +40,7 @@ public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
 
   public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-    return new FlavorDomain<>(
-        "C/C++ Platform",
-        ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
+    return FlavorDomain.of("C/C++ Platform", cxxPlatform);
   }
 
 }

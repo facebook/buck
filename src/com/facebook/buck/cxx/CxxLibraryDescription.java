@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
@@ -76,30 +77,31 @@ public class CxxLibraryDescription implements
           ImmutableMap.<String, MacroExpander>of(
               "location", new LocationMacroExpander()));
 
-  public enum Type {
-    HEADERS,
-    EXPORTED_HEADERS,
-    SHARED,
-    STATIC_PIC,
-    STATIC,
-    MACH_O_BUNDLE,
+  public enum Type implements FlavorConvertible {
+    HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+    EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
+    STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
+    MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
+    ;
+
+    private final Flavor flavor;
+
+    Type(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
   }
 
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_library");
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
-      new FlavorDomain<>(
-          "C/C++ Library Type",
-          ImmutableMap.<Flavor, Type>builder()
-              .put(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS)
-              .put(
-                  CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-                  Type.EXPORTED_HEADERS)
-              .put(CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED)
-              .put(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Type.STATIC_PIC)
-              .put(CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC)
-              .put(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR, Type.MACH_O_BUNDLE)
-              .build());
+      FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;

@@ -25,7 +25,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -98,7 +97,7 @@ public class CxxTestDescriptionTest {
     CxxTestDescription desc = new CxxTestDescription(
         cxxBuckConfig,
         cxxPlatform,
-        new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of()),
+        FlavorDomain.<CxxPlatform>of("platform"),
         /* testRuleTimeoutMs */ Optional.<Long>absent());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");

@@ -76,12 +76,7 @@ public class ThriftLibraryDescription
     this.thriftBuckConfig = thriftBuckConfig;
 
     // Now build up a map indexing them by their flavor.
-    ImmutableMap.Builder<Flavor, ThriftLanguageSpecificEnhancer> enhancerMapBuilder =
-        ImmutableMap.builder();
-    for (ThriftLanguageSpecificEnhancer enhancer : enhancers) {
-      enhancerMapBuilder.put(enhancer.getFlavor(), enhancer);
-    }
-    this.enhancers = new FlavorDomain<>("language", enhancerMapBuilder.build());
+    this.enhancers = FlavorDomain.from("language", enhancers);
   }
 
   /**

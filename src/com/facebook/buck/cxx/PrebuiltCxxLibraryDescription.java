@@ -21,6 +21,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -61,17 +62,25 @@ public class PrebuiltCxxLibraryDescription
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
-  private enum Type {
-    EXPORTED_HEADERS,
-    SHARED,
+  private enum Type implements FlavorConvertible {
+    EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    ;
+
+    private final Flavor flavor;
+
+    Type(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
   }
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
-      new FlavorDomain<>(
-          "C/C++ Library Type",
-          ImmutableMap.of(
-              CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR, Type.EXPORTED_HEADERS,
-              CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED));
+      FlavorDomain.from("C/C++ Library Type", Type.class);
 
   public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_cxx_library");
 

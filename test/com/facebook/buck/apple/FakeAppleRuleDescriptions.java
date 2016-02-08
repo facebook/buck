@@ -132,17 +132,12 @@ public class FakeAppleRuleDescriptions {
       new CxxBuckConfig(DEFAULT_BUCK_CONFIG));
 
   private static final FlavorDomain<CxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
-      new FlavorDomain<>(
+      FlavorDomain.of(
           "Fake iPhone C/C++ Platform",
-          ImmutableMap.of(
-              DEFAULT_PLATFORM.getFlavor(),
-              DEFAULT_PLATFORM,
-              DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform().getFlavor(),
-              DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
-              DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform().getFlavor(),
-              DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform(),
-              DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform().getFlavor(),
-              DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform()));
+          DEFAULT_PLATFORM,
+          DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
+          DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform(),
+          DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform());
 
   private static final ImmutableMap<Flavor, AppleCxxPlatform>
     DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS =

@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -25,12 +26,13 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractPythonPlatform {
+interface AbstractPythonPlatform extends FlavorConvertible {
 
   /**
    * @return the {@link Flavor} associated with this python platform.
    */
   @Value.Parameter
+  @Override
   Flavor getFlavor();
 
   /**

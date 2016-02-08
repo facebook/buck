@@ -18,6 +18,7 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,7 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
  * Interface used to implement thrift support for a language.  {@link ThriftLibraryDescription}
  * objects will use these for the various languages it supports.
  */
-public interface ThriftLanguageSpecificEnhancer {
+public interface ThriftLanguageSpecificEnhancer extends FlavorConvertible {
 
   /**
    * @return the language name to pass to thrift's "--gen" option.
@@ -42,6 +43,7 @@ public interface ThriftLanguageSpecificEnhancer {
   /**
    * @return the flavor used to reference this language via the target graph.
    */
+  @Override
   Flavor getFlavor();
 
   /**

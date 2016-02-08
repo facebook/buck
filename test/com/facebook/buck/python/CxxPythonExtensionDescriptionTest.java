@@ -98,11 +98,7 @@ public class CxxPythonExtensionDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(
-                PY2.getFlavor(), PY2,
-                PY3.getFlavor(), PY3)),
+        FlavorDomain.of("Python Platform", PY2, PY3),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
 
@@ -135,11 +131,7 @@ public class CxxPythonExtensionDescriptionTest {
     String name = "blah";
     CxxPythonExtensionBuilder baseModuleBuilder = new CxxPythonExtensionBuilder(
         target2,
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(
-                PY2.getFlavor(), PY2,
-                PY3.getFlavor(), PY3)),
+        FlavorDomain.of("Python Platform", PY2, PY3),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms())
         .setBaseModule(name);
@@ -187,11 +179,7 @@ public class CxxPythonExtensionDescriptionTest {
                     ImmutableList.<String>of())));
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(
-                PY2.getFlavor(), PY2,
-                PY3.getFlavor(), PY3)),
+        FlavorDomain.of("Python Platform", PY2, PY3),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms())
         .setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
@@ -249,11 +237,7 @@ public class CxxPythonExtensionDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(
-                PY2.getFlavor(), PY2,
-                PY3.getFlavor(), PY3)),
+        FlavorDomain.of("Python Platform", PY2, PY3),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
 
@@ -312,11 +296,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionDescription desc =
         (CxxPythonExtensionDescription) new CxxPythonExtensionBuilder(
             target,
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    PY2.getFlavor(), PY2,
-                    PY3.getFlavor(), PY3)),
+            FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms())
             .build()
@@ -344,11 +324,7 @@ public class CxxPythonExtensionDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(
-                PY2.getFlavor(), PY2,
-                PY3.getFlavor(), PY3)),
+        FlavorDomain.of("Python Platform", PY2, PY3),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
 
@@ -395,11 +371,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    PY2.getFlavor(), PY2,
-                    PY3.getFlavor(), PY3)),
+            FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
@@ -423,11 +395,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    PY2.getFlavor(), PY2,
-                    PY3.getFlavor(), PY3)),
+            FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
@@ -454,11 +422,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    PY2.getFlavor(), PY2,
-                    PY3.getFlavor(), PY3)),
+            FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     builder.setLinkerFlags(ImmutableList.of("--flag"));
@@ -492,11 +456,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
-            new FlavorDomain<>(
-                "Python Platform",
-                ImmutableMap.of(
-                    PY2.getFlavor(), PY2,
-                    PY3.getFlavor(), PY3)),
+            FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
@@ -526,12 +486,7 @@ public class CxxPythonExtensionDescriptionTest {
   public void platformDepsSeparateLinkage() throws Exception {
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    FlavorDomain<PythonPlatform> pythonPlatforms =
-        new FlavorDomain<>(
-            "Python Platform",
-            ImmutableMap.of(
-                PY2.getFlavor(), PY2,
-                PY3.getFlavor(), PY3));
+    FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
 
     CxxLibraryBuilder py2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
     CxxLibraryBuilder py3Builder = new CxxLibraryBuilder(PYTHON3_DEP_TARGET);

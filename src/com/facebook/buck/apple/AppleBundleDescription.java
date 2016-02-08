@@ -107,8 +107,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
     for (Flavor flavor : flavors) {
       if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE) ||
-          flavor.equals(AppleDebugFormat.DWARF_AND_DSYM_FLAVOR) ||
-          flavor.equals(AppleDebugFormat.NO_DEBUG_FLAVOR)) {
+          flavor.equals(AppleDebugFormat.DWARF_AND_DSYM.getFlavor()) ||
+          flavor.equals(AppleDebugFormat.NONE.getFlavor())) {
         continue;
       }
       flavorBuilder.add(flavor);
@@ -155,7 +155,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.infoPlistSubstitutions,
         args.deps.get(),
         args.getTests());
-    if (flavoredDebugInfoFormat.getFlavor() == AppleDebugFormat.NO_DEBUG_FLAVOR ||
+    if (flavoredDebugInfoFormat.getFlavor() == AppleDebugFormat.NONE.getFlavor() ||
         !appleBundle.getBinary().isPresent()) {
       return appleBundle;
     }

@@ -52,16 +52,15 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -99,8 +98,7 @@ import java.util.concurrent.TimeUnit;
 
 public class WorkspaceAndProjectGeneratorTest {
 
-  private static final FlavorDomain<CxxPlatform> PLATFORMS =
-      new FlavorDomain<>("C/C++ platform", ImmutableMap.<Flavor, CxxPlatform>of());
+  private static final FlavorDomain<CxxPlatform> PLATFORMS = FlavorDomain.of("C/C++ platform");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
   private static final Path ROOT = Paths.get("/opt/src/buck");
 
