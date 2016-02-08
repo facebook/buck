@@ -38,10 +38,6 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.MoreExecutors;
-
-import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -52,11 +48,6 @@ import javax.annotation.Nullable;
 public class Logger
 {
     private final java.util.logging.Logger logger;
-    private static ExecutorService service = MoreExecutors.newDirectExecutorService();
-
-    public static void setExecutorService(ExecutorService theService) {
-        service = Preconditions.checkNotNull(theService);
-    }
 
     Logger(java.util.logging.Logger logger)
     {
@@ -382,17 +373,11 @@ public class Logger
         Object... args)
     {
       if (logger.isLoggable(level)) {
-          final AppendableLogRecord lr = new AppendableLogRecord(level, displayLevel, format);
+          AppendableLogRecord lr = new AppendableLogRecord(level, displayLevel, format);
           lr.setParameters(args);
           lr.setThrown(exception);
           lr.setLoggerName(logger.getName());
-          service.submit(
-              new Runnable() {
-                  @Override
-                  public void run() {
-                      logger.log(lr);
-                  }
-              });
+          logger.log(lr);
       }
     }
 
