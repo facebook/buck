@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'jackson-datatype-guava',
+  binary_jar = 'jackson-datatype-guava-2.0.6.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+

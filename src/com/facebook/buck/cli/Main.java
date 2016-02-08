@@ -106,6 +106,7 @@ import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfa
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -506,7 +507,7 @@ public final class Main {
     this.stdErr = stdErr;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
-    this.objectMapper = new ObjectMapper();
+    this.objectMapper = new ObjectMapper().registerModule(new GuavaModule());
     // Add support for serializing Path and other JDK 7 objects.
     this.objectMapper.registerModule(new Jdk7Module());
     this.externalEventsListeners = ImmutableList.copyOf(externalEventsListeners);
