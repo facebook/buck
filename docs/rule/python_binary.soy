@@ -56,6 +56,8 @@ from all transitive {call buck.python_library /} dependencies.
   {/param}
 {/call}
 
+{call python_common.preload_deps_arg /}
+
 {call buck.visibility_arg /}
 
 {call python_common.package_style_arg /}

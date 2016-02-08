@@ -276,7 +276,11 @@ public class PythonTestDescription implements
             PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
             allComponents,
             args.buildArgs.or(ImmutableList.<String>of()),
-            args.packageStyle.or(pythonBuckConfig.getPackageStyle()));
+            args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
+            PythonUtil.getPreloadNames(
+                resolver,
+                cxxPlatform,
+                args.preloadDeps.get()));
     resolver.addToIndex(binary);
 
     // Supplier which expands macros in the passed in test environment.
@@ -334,6 +338,7 @@ public class PythonTestDescription implements
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<String> platform;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
+    public Optional<ImmutableSet<BuildTarget>> preloadDeps;
 
     public Optional<ImmutableList<String>> buildArgs;
 

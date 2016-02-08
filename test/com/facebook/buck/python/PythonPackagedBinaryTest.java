@@ -89,6 +89,7 @@ public class PythonPackagedBinaryTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableSet.<SourcePath>of(),
             Optional.<Boolean>absent()),
+        ImmutableSortedSet.<String>of(),
         ImmutableSortedSet.<BuildRule>of());
 
     // Calculate and return the rule key.

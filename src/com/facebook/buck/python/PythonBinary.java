@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -36,6 +37,7 @@ public abstract class PythonBinary
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
   private final PythonPackageComponents components;
+  private final ImmutableSet<String> preloadLibraries;
   @AddToRuleKey
   private final String pexExtension;
 
@@ -45,11 +47,13 @@ public abstract class PythonBinary
       PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components,
+      ImmutableSet<String> preloadLibraries,
       String pexExtension) {
     super(buildRuleParams, resolver);
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
     this.components = components;
+    this.preloadLibraries = preloadLibraries;
     this.pexExtension = pexExtension;
   }
 
@@ -75,6 +79,11 @@ public abstract class PythonBinary
   @VisibleForTesting
   protected final PythonPackageComponents getComponents() {
     return components;
+  }
+
+  @VisibleForTesting
+  protected final ImmutableSet<String> getPreloadLibraries() {
+    return preloadLibraries;
   }
 
   @Override

@@ -119,6 +119,11 @@ public class GnuLinker implements Linker {
     return "LD_LIBRARY_PATH";
   }
 
+  @Override
+  public String preloadEnvVar() {
+    return "LD_PRELOAD";
+  }
+
   /**
    * Write all undefined symbols given in {@code symbolFiles} into a linker script wrapped in
    * `EXTERN` commands.

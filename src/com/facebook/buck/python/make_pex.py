@@ -86,6 +86,7 @@ def main():
     parser.add_option('--entry-point', default='__main__')
     parser.add_option('--no-zip-safe', action='store_false', dest='zip_safe', default=True)
     parser.add_option('--python', default=sys.executable)
+    parser.add_option('--preload', action='append', default=[])
     options, args = parser.parse_args()
     if len(args) == 1:
         output = args[0]

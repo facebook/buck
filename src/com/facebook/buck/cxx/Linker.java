@@ -68,6 +68,11 @@ public interface Linker extends Tool {
   String searchPathEnvVar();
 
   /**
+   * @return the name of the environment variable for the shared library preload search path.
+   */
+  String preloadEnvVar();
+
+  /**
    * @return arguments to pass to the linker to disable dropping runtime references to shared libs
    *     which do not resolve symbols as link-time.
    */

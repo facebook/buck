@@ -93,6 +93,11 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
+  public String preloadEnvVar() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,

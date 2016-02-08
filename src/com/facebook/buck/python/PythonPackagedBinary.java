@@ -54,6 +54,8 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final PythonPackageComponents components;
   @AddToRuleKey
   private final PythonEnvironment pythonEnvironment;
+  @AddToRuleKey
+  private final ImmutableSet<String> preloadLibraries;
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   protected PythonPackagedBinary(
@@ -67,14 +69,16 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       PythonEnvironment pythonEnvironment,
       String mainModule,
       PythonPackageComponents components,
+      ImmutableSet<String> preloadLibraries,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
-    super(params, resolver, pythonPlatform, mainModule, components, pexExtension);
+    super(params, resolver, pythonPlatform, mainModule, components, preloadLibraries, pexExtension);
     this.builder = builder;
     this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;
     this.pythonEnvironment = pythonEnvironment;
     this.mainModule = mainModule;
     this.components = components;
+    this.preloadLibraries = preloadLibraries;
     this.runtimeDeps = runtimeDeps;
   }
 
@@ -123,6 +127,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             getResolver().getMappedPaths(components.getNativeLibraries()),
             ImmutableSet.copyOf(
                 getResolver().deprecatedAllPaths(components.getPrebuiltLibraries())),
+            preloadLibraries,
             components.isZipSafe().or(true)));
 
     // Record the executable package for caching.

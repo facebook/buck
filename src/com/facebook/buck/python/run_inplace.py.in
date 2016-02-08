@@ -7,6 +7,8 @@ main_module = <MAIN_MODULE>
 modules_dir = <MODULES_DIR>
 native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
 native_libs_dir = <NATIVE_LIBS_DIR>
+native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
+native_libs_preload = <NATIVE_LIBS_PRELOAD>
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -15,6 +17,12 @@ dirpath = os.path.dirname(os.path.realpath(__file__))
 old_native_libs_dir = os.environ.get(native_libs_env_var)
 if native_libs_dir is not None:
     os.environ[native_libs_env_var] = os.path.join(dirpath, native_libs_dir)
+
+# Update the environment variable for the dynamic loader to find libraries
+# to preload.
+old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
+if native_libs_preload is not None:
+    os.environ[native_libs_preload_env_var] = native_libs_preload
 
 STARTUP = """\
 import os
@@ -38,12 +46,17 @@ def setenv(var, val):
 # Restore the native libs env var to its original value.
 setenv({native_libs_env_var!r}, {native_libs_dir!r})
 
+# Restore the native libs preload env var to its original value.
+setenv({native_libs_preload_env_var!r}, {native_libs_preload!r})
+
 runpy.run_module({main_module!r}, run_name='__main__')
 """.format(
     arg0=sys.argv[0],
     pythonpath=os.path.join(dirpath, modules_dir),
     native_libs_env_var=native_libs_env_var,
     native_libs_dir=old_native_libs_dir,
+    native_libs_preload_env_var=native_libs_preload_env_var,
+    native_libs_preload=old_native_libs_preload,
     main_module=main_module)
 
 os.execv(sys.executable, [sys.executable, '-E', '-c', STARTUP] + sys.argv[1:])

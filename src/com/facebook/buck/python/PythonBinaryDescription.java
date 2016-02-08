@@ -121,7 +121,8 @@ public class PythonBinaryDescription implements
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
-      PythonPackageComponents components) {
+      PythonPackageComponents components,
+      ImmutableSet<String> preloadLibraries) {
 
     // We don't currently support targeting Windows.
     if (cxxPlatform.getLd() instanceof WindowsLinker) {
@@ -190,7 +191,8 @@ public class PythonBinaryDescription implements
         mainModule,
         components,
         pythonPlatform.getEnvironment(),
-        pythonBuckConfig.getPexExtension());
+        pythonBuckConfig.getPexExtension(),
+        preloadLibraries);
   }
 
   protected PythonBinary createPackageRule(
@@ -202,7 +204,8 @@ public class PythonBinaryDescription implements
       String mainModule,
       PythonPackageComponents components,
       ImmutableList<String> buildArgs,
-      PythonBuckConfig.PackageStyle packageStyle) {
+      PythonBuckConfig.PackageStyle packageStyle,
+      ImmutableSet<String> preloadLibraries) {
 
     switch (packageStyle) {
 
@@ -214,7 +217,8 @@ public class PythonBinaryDescription implements
             pythonPlatform,
             cxxPlatform,
             mainModule,
-            components);
+            components,
+            preloadLibraries);
 
       case STANDALONE:
         ImmutableSortedSet<BuildRule> componentDeps =
@@ -237,6 +241,7 @@ public class PythonBinaryDescription implements
             pythonPlatform.getEnvironment(),
             mainModule,
             components,
+            preloadLibraries,
             // Attach any additional declared deps that don't qualify as build time deps,
             // as runtime deps, so that we make to include other things we depend on in
             // the build.
@@ -314,7 +319,11 @@ public class PythonBinaryDescription implements
         mainModule,
         allPackageComponents,
         args.buildArgs.or(ImmutableList.<String>of()),
-        args.packageStyle.or(pythonBuckConfig.getPackageStyle()));
+        args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
+        PythonUtil.getPreloadNames(
+            resolver,
+            cxxPlatform,
+            args.preloadDeps.or(ImmutableSortedSet.<BuildTarget>of())));
   }
 
   @Override
@@ -341,6 +350,7 @@ public class PythonBinaryDescription implements
     public Optional<ImmutableList<String>> buildArgs;
     public Optional<String> platform;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
+    public Optional<ImmutableSet<BuildTarget>> preloadDeps;
   }
 
 }

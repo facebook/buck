@@ -33,9 +33,11 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 
@@ -73,8 +75,9 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       String mainModule,
       PythonPackageComponents components,
       Tool python,
-      String pexExtension) {
-    super(params, resolver, pythonPlatform, mainModule, components, pexExtension);
+      String pexExtension,
+      ImmutableSet<String> preloadLibraries) {
+    super(params, resolver, pythonPlatform, mainModule, components, preloadLibraries, pexExtension);
     this.script =
         getScript(
             pythonPlatform,
@@ -84,7 +87,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
             getProjectFilesystem()
                 .resolve(getBinPath())
                 .getParent()
-                .relativize(linkTree.getRoot()));
+                .relativize(linkTree.getRoot()),
+            preloadLibraries);
     this.linkTree = linkTree;
     this.components = components;
     this.python = python;
@@ -103,7 +107,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       final CxxPlatform cxxPlatform,
       final String mainModule,
       final PythonPackageComponents components,
-      final Path relativeLinkTreeRoot) {
+      final Path relativeLinkTreeRoot,
+      final ImmutableSet<String> preloadLibraries) {
     final String relativeLinkTreeRootStr =
         Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
     return new Supplier<String>() {
@@ -121,6 +126,12 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
                 components.getNativeLibraries().isEmpty() ?
                     "None" :
                     relativeLinkTreeRootStr)
+            .add(
+                "NATIVE_LIBS_PRELOAD_ENV_VAR",
+                Escaper.escapeAsPythonString(cxxPlatform.getLd().preloadEnvVar()))
+            .add(
+                "NATIVE_LIBS_PRELOAD",
+                Escaper.escapeAsPythonString(Joiner.on(':').join(preloadLibraries)))
             .render();
       }
     };

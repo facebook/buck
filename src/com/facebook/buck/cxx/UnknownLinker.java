@@ -86,6 +86,11 @@ public class UnknownLinker implements Linker {
   }
 
   @Override
+  public String preloadEnvVar() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String origin() {
     throw new UnsupportedOperationException();
   }

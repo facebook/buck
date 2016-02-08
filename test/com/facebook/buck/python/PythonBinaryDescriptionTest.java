@@ -584,4 +584,47 @@ public class PythonBinaryDescriptionTest {
         Matchers.instanceOf(PythonPackagedBinary.class));
   }
 
+  @Test
+  public void preloadLibraries() throws Exception {
+    for (final NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
+      CxxLibraryBuilder cxxLibraryBuilder =
+          new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+              .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.c"))));
+      PythonBuckConfig config =
+          new PythonBuckConfig(
+              FakeBuckConfig.builder().build(),
+              new AlwaysFoundExecutableFinder()) {
+            @Override
+            public NativeLinkStrategy getNativeLinkStrategy() {
+              return strategy;
+            }
+          };
+      PythonBinaryBuilder binaryBuilder =
+          new PythonBinaryBuilder(
+              BuildTargetFactory.newInstance("//:bin"),
+              config,
+              PythonTestUtils.PYTHON_PLATFORMS,
+              CxxPlatformUtils.DEFAULT_PLATFORM,
+              CxxPlatformUtils.DEFAULT_PLATFORMS);
+      binaryBuilder.setMainModule("main");
+      binaryBuilder.setPreloadDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(
+              TargetGraphFactory.newInstance(
+                  cxxLibraryBuilder.build(),
+                  binaryBuilder.build()),
+              new BuildTargetNodeToBuildRuleTransformer());
+      cxxLibraryBuilder.build(resolver);
+      PythonBinary binary = (PythonBinary) binaryBuilder.build(resolver);
+      assertThat(
+          "Using " + strategy,
+          binary.getPreloadLibraries(),
+          Matchers.hasItems("libdep.so"));
+      assertThat(
+          "Using " + strategy,
+          binary.getComponents().getNativeLibraries().keySet(),
+          Matchers.hasItems(Paths.get("libdep.so")));
+    }
+  }
+
 }

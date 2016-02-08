@@ -109,6 +109,11 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
+  public String preloadEnvVar() {
+    return "DYLD_INSERT_LIBRARIES";
+  }
+
+  @Override
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,

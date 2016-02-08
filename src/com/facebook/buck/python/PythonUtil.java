@@ -37,8 +37,10 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
@@ -271,6 +273,21 @@ public class PythonUtil {
     return override.isPresent()
         ? Paths.get(override.get().replace('.', '/'))
         : target.getBasePath();
+  }
+
+  public static ImmutableSet<String> getPreloadNames(
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      Iterable<BuildTarget> preloadDeps)
+      throws NoSuchBuildTargetException {
+    ImmutableSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
+    for (NativeLinkable nativeLinkable :
+         FluentIterable.from(preloadDeps)
+             .transform(resolver.getRuleFunction())
+             .filter(NativeLinkable.class)) {
+      builder.addAll(nativeLinkable.getSharedLibraries(cxxPlatform).keySet());
+    }
+    return builder.build();
   }
 
 }

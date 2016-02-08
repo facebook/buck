@@ -85,3 +85,15 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .preload_deps_arg}
+{call buck.arg}
+  {param name : 'preload_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of C/C++ library dependencies that need to be loaded before any other libraries when the
+  python binary starts up.  This requires dynamic loader support found on most systems (e.g. `LD_PRELOAD`).
+  {/param}
+{/call}
+{/template}

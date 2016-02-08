@@ -62,6 +62,9 @@ public class PexStep extends ShellStep {
   // The list of prebuilt python libraries to add to the PEX.
   private final ImmutableSet<Path> prebuiltLibraries;
 
+  // The list of native libraries to preload into the interpreter.
+  private final ImmutableSet<String> preloadLibraries;
+
   private final boolean zipSafe;
 
   public PexStep(
@@ -76,6 +79,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> resources,
       ImmutableMap<Path, Path> nativeLibraries,
       ImmutableSet<Path> prebuiltLibraries,
+      ImmutableSet<String> preloadLibraries,
       boolean zipSafe) {
     super(filesystem.getRootPath());
 
@@ -90,6 +94,7 @@ public class PexStep extends ShellStep {
     this.resources = resources;
     this.nativeLibraries = nativeLibraries;
     this.prebuiltLibraries = prebuiltLibraries;
+    this.preloadLibraries = preloadLibraries;
     this.zipSafe = zipSafe;
   }
 
@@ -153,6 +158,10 @@ public class PexStep extends ShellStep {
 
     if (!zipSafe) {
       builder.add("--no-zip-safe");
+    }
+
+    for (String lib : preloadLibraries) {
+      builder.add("--preload", lib);
     }
 
     builder.add(destination.toString());
