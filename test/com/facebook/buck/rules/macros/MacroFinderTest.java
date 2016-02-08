@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.Pair;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -31,23 +30,33 @@ public class MacroFinderTest {
 
   private static final MacroFinder FINDER = new MacroFinder();
 
-  private <K, V> ImmutableMap<K, V> pairListToMap(ImmutableList<Pair<K, V>> pairs) {
-    ImmutableMap.Builder<K, V> map = ImmutableMap.builder();
-    for (Pair<K, V> pair : pairs) {
-      map.put(pair.getFirst(), pair.getSecond());
-    }
-    return map.build();
-  }
-
   @Test
   public void findAll() throws MacroException {
-    ImmutableMap<String, String> expectedResults =
-        ImmutableMap.of(
-            "macro1", "",
-            "macro2", "arg");
-    ImmutableList<Pair<String, String>> actualResults =
-        FINDER.findAll(expectedResults.keySet(), "hello world $(macro1) and $(macro2 arg)");
-    assertEquals(expectedResults, pairListToMap(actualResults));
+
+    ImmutableList<MacroMatchResult> expectedResults =
+        ImmutableList.of(
+            MacroMatchResult.builder()
+                .setMacroType("macro1")
+                .setMacroInput("")
+                .setStartIndex(12)
+                .setEndIndex(21)
+                .build(),
+            MacroMatchResult.builder()
+                .setMacroType("macro2")
+                .setMacroInput("arg")
+                .setStartIndex(26)
+                .setEndIndex(39)
+                .build(),
+            MacroMatchResult.builder()
+                .setMacroType("macro1")
+                .setMacroInput("arg arg2")
+                .setStartIndex(40)
+                .setEndIndex(58)
+                .build());
+    ImmutableList<MacroMatchResult> actualResults = FINDER.findAll(
+        ImmutableSet.of("macro1", "macro2"),
+        "hello world $(macro1) and $(macro2 arg) $(macro1 arg arg2)");
+    assertEquals(expectedResults, actualResults);
   }
 
   @Test(expected = MacroException.class)

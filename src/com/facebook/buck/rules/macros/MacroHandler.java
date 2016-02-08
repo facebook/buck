@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -118,13 +117,13 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+    for (MacroMatchResult matchResult : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
       deps.addAll(
-          getExpander(match.getFirst()).extractBuildTimeDeps(
+          getExpander(matchResult.getMacroType()).extractBuildTimeDeps(
               target,
               cellNames,
               resolver,
-              match.getSecond()));
+              matchResult.getMacroInput()));
     }
 
     return deps.build();
@@ -140,12 +139,12 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+    for (MacroMatchResult matchResult : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
       targets.addAll(
-          getExpander(match.getFirst()).extractParseTimeDeps(
+          getExpander(matchResult.getMacroType()).extractParseTimeDeps(
               target,
               cellNames,
-              match.getSecond()));
+              matchResult.getMacroInput()));
     }
 
     return targets.build();
@@ -162,13 +161,13 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+    for (MacroMatchResult matchResult : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
       targets.add(
-          getExpander(match.getFirst()).extractRuleKeyAppendables(
+          getExpander(matchResult.getMacroType()).extractRuleKeyAppendables(
               target,
               cellNames,
               resolver,
-              match.getSecond()));
+              matchResult.getMacroInput()));
     }
 
     return targets.build();

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,13 +102,12 @@ public class MacroFinder {
     return expanded.toString();
   }
 
-  public ImmutableList<Pair<String, String>> findAll(ImmutableSet<String> macros, String blob)
+  public ImmutableList<MacroMatchResult> findAll(ImmutableSet<String> macros, String blob)
       throws MacroException {
 
-    ImmutableList.Builder<Pair<String, String>> results = ImmutableList.builder();
+    ImmutableList.Builder<MacroMatchResult> results = ImmutableList.builder();
 
-    // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
-    // extract for their respective macros.
+    // Iterate over all macros found in the string, and return a list of MacroMatchResults.
     Matcher matcher = MACRO_PATTERN.matcher(blob);
     while (matcher.find()) {
       if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
@@ -119,7 +118,13 @@ public class MacroFinder {
         throw new MacroException(String.format("no such macro \"%s\"", name));
       }
       String input = Optional.fromNullable(matcher.group(2)).or("");
-      results.add(new Pair<>(name, input));
+      MatchResult matchResult = matcher.toMatchResult();
+      results.add(MacroMatchResult.builder()
+          .setMacroType(name)
+          .setMacroInput(input)
+          .setStartIndex(matchResult.start())
+          .setEndIndex(matchResult.end())
+          .build());
     }
 
     return results.build();
