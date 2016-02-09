@@ -189,64 +189,6 @@ public class CxxLibraryDescription implements
     return ImmutableList.copyOf(input.values());
   }
 
-  /**
-   * Create all build rules needed to generate the static library.
-   *
-   * @return the {@link Archive} rule representing the actual static library.
-   */
-  private static BuildRule createStaticLibrary(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      CxxLibraryDescription.Arg args,
-      CxxPreprocessMode preprocessMode,
-      CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
-
-    // Create rules for compiling the non-PIC object files.
-    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
-        CxxDescriptionEnhancer.requireObjects(
-            params,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            preprocessMode,
-            pic,
-            args);
-
-    // Write a build rule to create the archive for this C/C++ library.
-    BuildTarget staticTarget =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            pic);
-
-    if (objects.isEmpty()) {
-      return new NoopBuildRule(
-          new BuildRuleParams(
-              staticTarget,
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              params.getProjectFilesystem(),
-              params.getCellRoots()),
-          pathResolver);
-    }
-
-    Path staticLibraryPath =
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            pic);
-    return Archives.createArchiveRule(
-        pathResolver,
-        staticTarget,
-        params,
-        cxxPlatform.getAr(),
-        cxxPlatform.getRanlib(),
-        staticLibraryPath,
-        ImmutableList.copyOf(objects.values()));
-  }
-
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -468,7 +410,9 @@ public class CxxLibraryDescription implements
   }
 
   /**
-   * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
+   * Create all build rules needed to generate the static library.
+   *
+   * @return build rule that builds the static library version of this C/C++ library.
    */
   private static BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
@@ -478,14 +422,49 @@ public class CxxLibraryDescription implements
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    return createStaticLibrary(
-        params,
-        resolver,
+
+    // Create rules for compiling the object files.
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
+        CxxDescriptionEnhancer.requireObjects(
+            params,
+            resolver,
+            sourcePathResolver,
+            cxxPlatform,
+            preprocessMode,
+            pic,
+            args);
+
+    // Write a build rule to create the archive for this C/C++ library.
+    BuildTarget staticTarget =
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            pic);
+
+    if (objects.isEmpty()) {
+      return new NoopBuildRule(
+          new BuildRuleParams(
+              staticTarget,
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              params.getProjectFilesystem(),
+              params.getCellRoots()),
+          sourcePathResolver);
+    }
+
+    Path staticLibraryPath =
+        CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            pic);
+    return Archives.createArchiveRule(
         sourcePathResolver,
-        cxxPlatform,
-        args,
-        preprocessMode,
-        pic);
+        staticTarget,
+        params,
+        cxxPlatform.getAr(),
+        cxxPlatform.getRanlib(),
+        staticLibraryPath,
+        ImmutableList.copyOf(objects.values()));
   }
 
   /**
