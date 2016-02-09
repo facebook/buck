@@ -533,14 +533,6 @@ public class CxxLibraryDescription implements
         args);
   }
 
-  public TypeAndPlatform getTypeAndPlatform(BuildTarget buildTarget) {
-    // See if we're building a particular "type" and "platform" of this library, and if so, extract
-    // them from the flavors attached to the build target.
-    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
-    return TypeAndPlatform.of(type, platform);
-  }
-
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -563,8 +555,11 @@ public class CxxLibraryDescription implements
       Optional<Linker.LinkableDepType> linkableDepType,
       final Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
-    TypeAndPlatform typeAndPlatform = getTypeAndPlatform(params.getBuildTarget());
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
+    BuildTarget buildTarget = params.getBuildTarget();
+    // See if we're building a particular "type" and "platform" of this library, and if so, extract
+    // them from the flavors attached to the build target.
+    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+    Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
 
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
@@ -572,44 +567,31 @@ public class CxxLibraryDescription implements
       return createCompilationDatabaseBuildRule(
           params,
           resolver,
-          platform.isPresent()
-              ? platform.get().getValue()
-              : DefaultCxxPlatforms.build(cxxBuckConfig),
+          platform.isPresent() ? platform.get() : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
           preprocessMode);
-    }
-
-    if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
+    } else if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           new SourcePathResolver(resolver),
-          platform.isPresent()
-              ? platform.get().getValue()
-              : DefaultCxxPlatforms.build(cxxBuckConfig),
+          platform.isPresent() ? platform.get() : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
           new CxxInferTools(inferBuckConfig),
           new CxxInferSourceFilter(inferBuckConfig));
-    }
-
-    if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER_ANALYZE)) {
+    } else if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER_ANALYZE)) {
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           new SourcePathResolver(resolver),
-          platform.isPresent()
-              ? platform.get().getValue()
-              : DefaultCxxPlatforms.build(cxxBuckConfig),
+          platform.isPresent() ? platform.get() : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
           new CxxInferTools(inferBuckConfig),
           new CxxInferSourceFilter(inferBuckConfig));
-    }
+    } else if (type.isPresent() && platform.isPresent()) {
+      // If we *are* building a specific type of this lib, call into the type specific
+      // rule builder methods.
 
-    Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
-
-    // If we *are* building a specific type of this lib, call into the type specific
-    // rule builder methods.
-    if (type.isPresent() && platform.isPresent()) {
       Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
       flavors.remove(type.get().getKey());
       BuildTarget target = BuildTarget
@@ -626,19 +608,19 @@ public class CxxLibraryDescription implements
           return createHeaderSymlinkTreeBuildRule(
               typeParams,
               resolver,
-              platform.get().getValue(),
+              platform.get(),
               args);
         case EXPORTED_HEADERS:
           return createExportedHeaderSymlinkTreeBuildRule(
               typeParams,
               resolver,
-              platform.get().getValue(),
+              platform.get(),
               args);
         case SHARED:
           return createSharedLibraryBuildRule(
               typeParams,
               resolver,
-              platform.get().getValue(),
+              platform.get(),
               args,
               preprocessMode,
               Linker.LinkType.SHARED,
@@ -649,7 +631,7 @@ public class CxxLibraryDescription implements
           return createSharedLibraryBuildRule(
               typeParams,
               resolver,
-              platform.get().getValue(),
+              platform.get(),
               args,
               preprocessMode,
               Linker.LinkType.MACH_O_BUNDLE,
@@ -660,7 +642,7 @@ public class CxxLibraryDescription implements
           return createStaticLibraryBuildRule(
               typeParams,
               resolver,
-              platform.get().getValue(),
+              platform.get(),
               args,
               preprocessMode,
               CxxSourceRuleFactory.PicType.PDC);
@@ -668,11 +650,12 @@ public class CxxLibraryDescription implements
           return createStaticLibraryBuildRule(
               typeParams,
               resolver,
-              platform.get().getValue(),
+              platform.get(),
               args,
               preprocessMode,
               CxxSourceRuleFactory.PicType.PIC);
       }
+      throw new RuntimeException("unhandled library build type");
     }
 
     boolean hasObjectsForAnyPlatform = !args.srcs.get().isEmpty();
