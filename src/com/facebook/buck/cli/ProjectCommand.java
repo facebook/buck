@@ -27,6 +27,7 @@ import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.halide.HalideBuckConfig;
@@ -817,6 +818,8 @@ public class ProjectCommand extends BuildCommand {
       HalideBuckConfig halideBuckConfig = new HalideBuckConfig(params.getBuckConfig());
       CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(params.getBuckConfig());
 
+      CxxPlatform defaultCxxPlatform = params.getCell().getKnownBuildRuleTypes().
+          getDefaultCxxPlatforms();
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           params.getCell().getFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
@@ -831,7 +834,7 @@ public class ProjectCommand extends BuildCommand {
           new ExecutableFinder(),
           params.getEnvironment(),
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
-          params.getCell().getKnownBuildRuleTypes().getDefaultCxxPlatforms(),
+          defaultCxxPlatform,
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),
           new Function<TargetNode<?>, SourcePathResolver>() {
             @Override

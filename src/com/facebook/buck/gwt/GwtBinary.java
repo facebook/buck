@@ -16,6 +16,7 @@
 
 package com.facebook.buck.gwt;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -135,13 +136,14 @@ public class GwtBinary extends AbstractBuildRule {
 
     // Create a clean directory where the .zip file will be written.
     Path workingDirectory = getPathToOutput().getParent();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    steps.add(new MakeCleanDirectoryStep(projectFilesystem, workingDirectory));
 
     // Write the deploy files into a separate directory so that the generated .zip is smaller.
     final Path deployDirectory = workingDirectory.resolve("deploy");
-    steps.add(new MkdirStep(getProjectFilesystem(), deployDirectory));
+    steps.add(new MkdirStep(projectFilesystem, deployDirectory));
 
-    Step javaStep = new ShellStep(getProjectFilesystem().getRootPath()) {
+    Step javaStep = new ShellStep(projectFilesystem.getRootPath()) {
       @Override
       public String getShortName() {
         return "gwt-compile";

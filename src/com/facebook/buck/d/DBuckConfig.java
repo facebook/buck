@@ -23,6 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Architecture;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -113,7 +114,8 @@ public class DBuckConfig {
 
     Path usrLib = Paths.get("/usr", "lib");
     Path usrLocalLib = Paths.get("/usr", "local", "lib");
-    String platformName = delegate.getArchitecture().toString() + "-" +
+    Architecture architecture = delegate.getArchitecture();
+    String platformName = architecture.toString() + "-" +
         delegate.getPlatform().getAutoconfName();
     String platformNameGnu = platformName + "-gnu";
 

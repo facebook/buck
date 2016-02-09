@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -85,7 +86,8 @@ class GroovycStep implements Step {
     int exitCode = -1;
     try {
       writePathToSourcesList(sourceFilePaths);
-      exitCode = context.getProcessExecutor().execute(processBuilder.start()).getExitCode();
+      ProcessExecutor processExecutor = context.getProcessExecutor();
+      exitCode = processExecutor.execute(processBuilder.start()).getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
     }

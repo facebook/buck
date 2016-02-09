@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -87,8 +88,9 @@ public class SwiftCompile
       compilerCommand.add(getResolver().getRelativePath(sourcePath).toString());
     }
 
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
-        getProjectFilesystem().getRootPath(),
+        projectFilesystem.getRootPath(),
         ImmutableMap.<String, String>of(),
         compilerCommand.build());
   }

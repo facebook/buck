@@ -23,6 +23,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -108,8 +109,9 @@ public class JUnitStep extends ShellStep {
           @Override
           public Void apply(Process process) {
             Optional<Long> pid = Optional.absent();
+            Platform platform = context.getPlatform();
             try {
-              switch(context.getPlatform()) {
+              switch(platform) {
                 case LINUX:
                 case MACOS: {
                   Field field = process.getClass().getDeclaredField("pid");

@@ -35,6 +35,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -191,7 +192,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       try {
         OutputStream outputStream = getProjectFilesystem().newFileOutputStream(
             getPathToOutput());
-        outputStream.write(context.getObjectMapper().writeValueAsBytes(entries));
+        ObjectMapper mapper = context.getObjectMapper();
+        outputStream.write(mapper.writeValueAsBytes(entries));
         outputStream.close();
       } catch (IOException e) {
         logError(e, context);

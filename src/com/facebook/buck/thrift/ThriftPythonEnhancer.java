@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -156,11 +158,13 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Construct a python library and return it as our language specific build rule.  Dependents
     // will use this to pull the generated sources into packages/PEXs.
+    Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> resources =
+        Functions.constant(ImmutableMap.<Path, SourcePath>of());
     return new PythonLibrary(
         langParams,
         new SourcePathResolver(resolver),
         Functions.constant(modules),
-        Functions.constant(ImmutableMap.<Path, SourcePath>of()),
+        resources,
         Optional.of(true));
   }
 

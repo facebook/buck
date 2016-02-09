@@ -21,6 +21,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -71,7 +72,8 @@ public class ScalacStep extends ShellStep {
         .addAll(scalac.getCommandPrefix(resolver))
         .addAll(extraArguments);
 
-    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
+    Verbosity verbosity = context.getVerbosity();
+    if (verbosity.shouldUseVerbosityFlagIfAvailable()) {
       commandBuilder.add("-verbose");
     }
 

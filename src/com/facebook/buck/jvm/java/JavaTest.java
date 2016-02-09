@@ -16,9 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -46,6 +48,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
@@ -230,6 +233,9 @@ public class JavaTest
         this.vmArgs,
         executionContext.getTargetDeviceOptional());
 
+    BuckEventBus buckEventBus = executionContext.getBuckEventBus();
+    BuildId buildId = buckEventBus.getBuildId();
+    TestSelectorList testSelectorList = options.getTestSelectorList();
     JUnitJvmArgs args = JUnitJvmArgs.builder()
         .setTestType(testType)
         .setDirectoryForTestResults(outDir)
@@ -239,7 +245,7 @@ public class JavaTest
         .setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled())
         .setDebugEnabled(executionContext.isDebugEnabled())
         .setPathToJavaAgent(options.getPathToJavaAgent())
-        .setBuildId(executionContext.getBuckEventBus().getBuildId())
+        .setBuildId(buildId)
         .setBuckModuleBaseSourceCodePath(getBuildTarget().getBasePath())
         .setStdOutLogLevel(stdOutLogLevel)
         .setStdErrLogLevel(stdErrLogLevel)
@@ -247,7 +253,7 @@ public class JavaTest
         .setExtraJvmArgs(properVmArgs)
         .addAllTestClasses(reorderedTestClasses)
         .setDryRun(options.isDryRun())
-        .setTestSelectorList(options.getTestSelectorList())
+        .setTestSelectorList(testSelectorList)
         .build();
 
     return new JUnitStep(

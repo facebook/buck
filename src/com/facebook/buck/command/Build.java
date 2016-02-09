@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -178,6 +179,7 @@ public class Build implements Closeable {
       Iterable<? extends HasBuildTarget> targetish,
       boolean isKeepGoing)
       throws IOException, StepFailedException, ExecutionException, InterruptedException {
+    BuildId buildId = executionContext.getBuildId();
     buildContext = ImmutableBuildContext.builder()
         .setActionGraph(actionGraph)
         .setStepRunner(stepRunner)
@@ -188,7 +190,7 @@ public class Build implements Closeable {
         .setAndroidBootclasspathSupplier(
             BuildContext.createBootclasspathSupplier(
                 executionContext.getAndroidPlatformTargetSupplier()))
-        .setBuildId(executionContext.getBuildId())
+        .setBuildId(buildId)
         .putAllEnvironment(executionContext.getEnvironment())
         .setKeepGoing(isKeepGoing)
         .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
