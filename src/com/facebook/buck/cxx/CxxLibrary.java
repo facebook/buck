@@ -63,7 +63,7 @@ public class CxxLibrary
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
-  private final Function<? super CxxPlatform, ImmutableList<Arg>> exportedLinkerFlags;
+  private final Function<? super CxxPlatform, Iterable<Arg>> exportedLinkerFlags;
   private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -85,7 +85,7 @@ public class CxxLibrary
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
-      Function<? super CxxPlatform, ImmutableList<Arg>> exportedLinkerFlags,
+      Function<? super CxxPlatform, Iterable<Arg>> exportedLinkerFlags,
       Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,

@@ -714,22 +714,21 @@ public class CxxLibraryDescription implements
                 input);
           }
         },
-        new Function<CxxPlatform, ImmutableList<com.facebook.buck.rules.args.Arg>>() {
+        new Function<CxxPlatform, Iterable<com.facebook.buck.rules.args.Arg>>() {
           @Override
-          public ImmutableList<com.facebook.buck.rules.args.Arg> apply(
+          public Iterable<com.facebook.buck.rules.args.Arg> apply(
               CxxPlatform input) {
             ImmutableList<String> flags = CxxFlags.getFlags(
                 args.exportedLinkerFlags,
                 args.exportedPlatformLinkerFlags,
                 input);
-            return FluentIterable.from(flags)
-                .transform(
-                    MacroArg.toMacroArgFunction(
-                        MACRO_HANDLER,
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver))
-                .toList();
+            return Iterables.transform(
+                flags,
+                MacroArg.toMacroArgFunction(
+                    MACRO_HANDLER,
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    resolver));
           }
         },
         new Function<CxxPlatform, NativeLinkableInput>() {

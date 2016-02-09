@@ -58,4 +58,34 @@ public class SwiftOSXBinaryIntegrationTest {
         runResult.getStdout(),
         equalTo("Hello, \uD83C\uDF0E!\n"));
   }
+
+  @Test
+  public void changingSourceOfSwiftLibraryDepRelinksBinary() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "helloworld",
+        tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "run",
+        ":hello-bin#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(
+        runResult.getStdout(),
+        equalTo("Hello, \uD83C\uDF0E!\n"));
+
+    workspace.replaceFileContents("hello.swift", "Hello", "Goodbye");
+
+    ProjectWorkspace.ProcessResult secondRunResult = workspace.runBuckCommand(
+        "run",
+        ":hello-bin#macosx-x86_64");
+    secondRunResult.assertSuccess();
+    assertThat(
+        secondRunResult.getStdout(),
+        equalTo("Goodbye, \uD83C\uDF0E!\n"));
+  }
 }

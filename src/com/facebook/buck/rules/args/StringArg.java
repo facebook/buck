@@ -19,23 +19,26 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class StringArg extends Arg {
 
   private final String arg;
-  private final ImmutableList<BuildRule> deps;
+
+  private static final Function<String, Arg> CONVERT =
+      new Function<String, Arg>() {
+        @Override
+        public Arg apply(String input) { return new StringArg(input); }
+      };
 
   public StringArg(String arg) {
-    this(arg, ImmutableList.<BuildRule>of());
-  }
-
-  public StringArg(String arg, Iterable<BuildRule> deps) {
     this.arg = arg;
-    this.deps = ImmutableList.copyOf(deps);
   }
 
   @Override
@@ -45,7 +48,7 @@ public class StringArg extends Arg {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return deps;
+    return ImmutableList.<BuildRule>of();
   }
 
   @Override
@@ -75,21 +78,11 @@ public class StringArg extends Arg {
     return Objects.hash(arg);
   }
 
-  public static ImmutableList<Arg> fromWithDeps(
-      Iterable<String> args,
-      Iterable<BuildRule> deps) {
-    ImmutableList.Builder<Arg> converted = ImmutableList.builder();
-    for (String arg : args) {
-      converted.add(new StringArg(arg, deps));
-    }
-    return converted.build();
+  public static Iterable<Arg> from(Iterable<String> args) {
+    return Iterables.transform(args, CONVERT);
   }
 
-  public static ImmutableList<Arg> from(Iterable<String> args) {
-    return fromWithDeps(args, ImmutableList.<BuildRule>of());
-  }
-
-  public static ImmutableList<Arg> from(String... args) {
-    return from(ImmutableList.copyOf(args));
+  public static Iterable<Arg> from(String... args) {
+    return from(Arrays.asList(args));
   }
 }

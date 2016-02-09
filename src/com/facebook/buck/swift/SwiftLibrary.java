@@ -28,15 +28,16 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -143,14 +144,15 @@ public class SwiftLibrary
     for (Path swiftRuntimePath : swiftRuntimePaths) {
       inputBuilder.addAllArgs(StringArg.from("-L", swiftRuntimePath.toString()));
     }
-    inputBuilder.addAllArgs(
-        StringArg.fromWithDeps(
-            ImmutableList.of(
-                "-Xlinker",
-                "-add_ast_path",
-                rule.getModulePath().toString(),
-                rule.getObjectPath().toString()),
-            ImmutableList.<BuildRule>of(rule)));
+    inputBuilder
+        .addAllArgs(StringArg.from("-Xlinker", "-add_ast_path"))
+        .addArgs(
+            new SourcePathArg(
+                getResolver(),
+                new BuildTargetSourcePath(rule.getBuildTarget(), rule.getModulePath())),
+            new SourcePathArg(
+                getResolver(),
+                new BuildTargetSourcePath(rule.getBuildTarget(), rule.getObjectPath())));
     inputBuilder.addAllFrameworks(frameworks);
     inputBuilder.addAllLibraries(libraries);
     return inputBuilder.build();
