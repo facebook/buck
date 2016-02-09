@@ -162,11 +162,6 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void nativeLibraries() throws IOException {
-    assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.INPLACE));
-    assumeThat(
-        "TODO(8667197): Native libs currently don't work on El Capitan",
-        Platform.detect(),
-        not(equalTo(Platform.MACOS)));
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
     assertThat(
@@ -198,7 +193,7 @@ public class PythonBinaryIntegrationTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     assumeThat(
-        "TODO(8667197): Native libs currently don't work on El Capitan",
+        "TODO(8667197): El Capitan strips all DYLD_* variables",
         Platform.detect(),
         not(equalTo(Platform.MACOS)));
 
@@ -273,7 +268,9 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void externalPexToolAffectsRuleKey() throws IOException {
-    assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.STANDALONE));
+    if (packageStyle != PythonBuckConfig.PackageStyle.STANDALONE) {
+      return;
+    }
 
     ProjectWorkspace.ProcessResult firstResult =
         workspace.runBuckCommand(
@@ -300,7 +297,10 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void multiplePythonHomes() throws Exception {
-    assumeThat(Platform.detect(), not(Matchers.is(Platform.WINDOWS)));
+    if (Platform.detect() == Platform.WINDOWS) {
+      return;
+    }
+
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild(
             "-c", "python#a.library=//:platform_a",
@@ -312,13 +312,18 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void mainModuleNameIsSetProperly() throws Exception {
-    assumeThat(packageStyle, not(Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE)));
+    if (packageStyle == PythonBuckConfig.PackageStyle.STANDALONE) {
+      return;
+    }
     workspace.runBuckCommand("run", "//:main_module_bin").assertSuccess();
   }
 
   @Test
   public void disableCachingForPackagedBinaries() throws IOException {
-    assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
+    if (packageStyle != PythonBuckConfig.PackageStyle.STANDALONE) {
+      return;
+    }
+
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
     workspace.runBuckCommand("clean").assertSuccess();
@@ -334,7 +339,9 @@ public class PythonBinaryIntegrationTest {
    */
   @Test
   public void omnibusExcludedNativeLinkableRoot() throws IOException {
-    assumeThat(nativeLinkStrategy, Matchers.is(NativeLinkStrategy.MERGED));
+    if (nativeLinkStrategy != NativeLinkStrategy.MERGED) {
+      return;
+    }
     workspace.runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
         .assertSuccess();
   }
