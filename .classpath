@@ -80,5 +80,6 @@
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-interpolation-1.21.jar"/>
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-utils-3.0.20.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jimfs/jimfs-1.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.9.3.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

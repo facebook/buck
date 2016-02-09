@@ -5,6 +5,7 @@ prebuilt_jar(
   visibility = [
     '//src/com/facebook/buck/maven:maven',
     '//src/com/facebook/buck/maven:util',
+    '//src-gen:thrift',
     '//third-party/java/aether:aether-impl',
     '//third-party/java/sisu:sisu-guice',
   ],

@@ -49,6 +49,9 @@
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
   <property name="immutables.gensrc.test.dir" value="${build.dir}/immutables-tests" />
 
+  <property name="manual.gensrc.dir" value="${basedir}/src-gen" />
+  <property name="manual.gensrc.classes.dir" value="${build.dir}/src-gen/classes" />
+
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
   <condition
@@ -111,8 +114,9 @@
     <include name="okhttp/okhttp-2.6.0.jar" />
     <include name="okio/okio-1.6.0.jar" />
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
-    <include name="slf4j/slf4j-api-1.7.2.jar" />
+    <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
+    <include name="thrift/libthrift-0.9.3.jar" />
     <include name="xz-java-1.3/xz-1.3.jar" />
 
     <!-- maven interop -->
@@ -140,6 +144,7 @@
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
+    <pathelement location="${manual.gensrc.classes.dir}" />
   </path>
 
   <path id="classpath-no-src">
@@ -151,12 +156,17 @@
     <path refid="classpath-no-src" />
     <pathelement location="${src.dir}" />
     <pathelement location="${immutables.gensrc.dir}" />
+    <pathelement location="${manual.gensrc.dir}" />
   </path>
 
   <path id="classpath-generate-immutables">
     <fileset refid="buck.jars" />
     <fileset refid="third-party.jars" />
     <pathelement location="${aosp.classes.dir}" />
+  </path>
+
+  <path id="classpath-compile-manual-gen-src">
+    <fileset refid="third-party.jars" />
   </path>
 
   <path id="junit">
@@ -185,6 +195,17 @@
       <arg value="-c" />
       <arg value="import distutils.sysconfig; print(distutils.sysconfig.PREFIX)" />
     </exec>
+  </target>
+
+  <target name="compile-manual-gen-src" depends="checkversion">
+    <mkdir dir="${manual.gensrc.classes.dir}" />
+    <javac srcdir="${manual.gensrc.dir}"
+           destdir="${manual.gensrc.classes.dir}"
+           classpathref="classpath-compile-manual-gen-src"
+           debug="on"
+           includeAntRuntime="no"
+            >
+    </javac>
   </target>
 
   <target name="compile-testrunner" depends="checkversion">
@@ -409,7 +430,7 @@
   </target>
 
   <target name="compile"
-          depends="compile-testrunner, compile-aosp, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
+          depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 

@@ -13,6 +13,7 @@
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src-gen" isTestSource="false" generated="true" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
