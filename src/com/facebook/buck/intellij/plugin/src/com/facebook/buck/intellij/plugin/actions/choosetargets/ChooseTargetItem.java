@@ -43,7 +43,7 @@ public class ChooseTargetItem implements NavigationItem {
 
   @Override
   public String getName() {
-    return mAlias;
+    return mAlias == null ? mTarget : mAlias;
   }
 
   @Override

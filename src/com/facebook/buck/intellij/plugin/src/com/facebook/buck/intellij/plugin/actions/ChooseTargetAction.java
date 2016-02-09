@@ -27,8 +27,13 @@ import com.intellij.ide.util.gotoByName.DefaultChooseByNameItemProvider;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.Presentation;
+import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
+import com.sun.glass.events.KeyEvent;
+
+import javax.swing.KeyStroke;
+import java.awt.event.KeyAdapter;
 
 /**
  * Pop up a GUI for choose buck targets (alias).
@@ -66,6 +71,11 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
         }
 
         ChooseTargetItem item = (ChooseTargetItem) element;
+        // if the target selected isn't an alias, then it has to have :
+        if (item.getName().contains("//") && !item.getName().contains(":")) {
+          return;
+        }
+
         if (buckSettingsProvider.getState().lastAlias != null) {
           buckSettingsProvider.getState().lastAlias.put(
               project.getBasePath(), item.getBuildTarget());
@@ -77,5 +87,29 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
     DefaultChooseByNameItemProvider provider =
         new DefaultChooseByNameItemProvider(getPsiContext(e));
     showNavigationPopup(e, model, callback, "Choose Build Target", true, false, provider);
+
+    // Add navigation listener for auto complete
+    final ChooseByNamePopup chooseByNamePopup = project.getUserData(
+            ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
+    chooseByNamePopup.getTextField().addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyPressed(java.awt.event.KeyEvent e) {
+        if (KeyEvent.VK_RIGHT == e.getKeyCode()) {
+          ChooseTargetItem obj = (ChooseTargetItem) chooseByNamePopup.getChosenElement();
+          if (obj != null) {
+            chooseByNamePopup.getTextField().setText(obj.getName());
+            chooseByNamePopup.getTextField().repaint();
+          }
+        } else {
+          super.keyPressed(e);
+        }
+        String adText = chooseByNamePopup.getAdText();
+        if (adText != null) {
+          chooseByNamePopup.setAdText(adText + " and " +
+                  KeymapUtil.getKeystrokeText(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 2)) +
+                  " to use autocomplete");
+        }
+      }
+    });
   }
 }

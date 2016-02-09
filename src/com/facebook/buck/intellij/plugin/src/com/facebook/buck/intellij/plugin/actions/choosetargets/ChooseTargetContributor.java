@@ -16,25 +16,99 @@
 
 package com.facebook.buck.intellij.plugin.actions.choosetargets;
 
+import com.facebook.buck.intellij.plugin.actions.BuckQueryAction;
 import com.facebook.buck.intellij.plugin.build.BuckBuildTargetAliasParser;
 import com.google.common.base.Joiner;
+import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
 import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Set;
 
 public class ChooseTargetContributor implements ChooseByNameContributor {
 
   public static final String ALIAS_SEPARATOR = "::";
+  public static final String TARGET_NAME_SEPARATOR = ":";
+
+  private static Map<String, List<String>> otherTargets = new HashMap<String, List<String>>();
+
+  public static void addToOtherTargets(
+          final Project project,
+          List<String> targets,
+          String target) {
+    otherTargets.put(target, targets);
+    ApplicationManager.getApplication().invokeLater(
+            new Runnable() {
+              public void run() {
+                project.getUserData(
+                        ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY).rebuildList(true);
+              }
+            });
+  }
+
+  public void addPathSugestions(List<String> names, Project project) {
+    String currentText = project.getUserData(
+            ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY).getEnteredText();
+
+    // Remove the begining //
+    currentText = currentText.replaceFirst("^/*", "");
+
+    // check if we have as input a proper target
+    int currentTargetSeparatorIndex = currentText.lastIndexOf(TARGET_NAME_SEPARATOR);
+    if (currentTargetSeparatorIndex != -1) {
+      currentText = currentText.substring(0, currentText.lastIndexOf(TARGET_NAME_SEPARATOR));
+    }
+    // Try to get the relative path to the current input folder
+    VirtualFile baseDir = project.getBaseDir().findFileByRelativePath(currentText + "/");
+
+    if (baseDir == null) {
+      // Try to get the relative path to the previous input folder
+      if (currentText.lastIndexOf("/") != -1) {
+        currentText = currentText.substring(0, currentText.lastIndexOf("/"));
+      } else {
+        // Get the base path if there is no previous folder
+        currentText = "";
+      }
+      baseDir = project.getBaseDir().findFileByRelativePath(currentText);
+    }
+    // get the files under the base folder
+    VirtualFile[] files = baseDir.getChildren();
+
+    if (!currentText.isEmpty()) {
+      currentText += "/";
+    }
+
+    for (VirtualFile file : files) {
+      // if the file is a directory we add it to the targets
+      if (file.isDirectory()) {
+        names.add("//" + currentText + file.getName());
+      }
+      //if the file is a buck file  we parse it and add its target names to the list
+      if (file.getName().equals("BUCK")) {
+        String target = "//" + currentText.substring(0, currentText.length() - 1) + ":";
+
+        if (otherTargets.containsKey(target)) {
+          names.addAll(otherTargets.get(target));
+        } else {
+          BuckQueryAction.execute(project, target);
+        }
+      }
+    }
+  }
 
   @Override
   public String[] getNames(Project project, boolean includeNonProjectItems) {
     BuckBuildTargetAliasParser.parseAlias(project.getBasePath());
     List<String> names = new ArrayList<String>();
+
+    addPathSugestions(names, project);
 
     for (Map.Entry<String, Set<String>> entry :
         BuckBuildTargetAliasParser.sTargetAlias.entrySet()) {

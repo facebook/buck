@@ -273,11 +273,8 @@ public abstract class BuckCommandHandler {
 
   protected void onTextAvailable(final String text, final Key outputType) {
     Iterator<String> lines = LineHandlerHelper.splitText(text).iterator();
-    // Since most of the useful information from buck command are printed to STDERR,
-    // currently we only care about STDERR for buck outputs.
-    if (ProcessOutputTypes.STDERR == outputType) {
-      notifyLines(outputType, lines, stderrLine);
-    }
+
+    notifyLines(outputType, lines, stderrLine);
   }
 
   /**

@@ -29,7 +29,7 @@ public class BuckEventBuildParseStart extends BuckEventBase {
     @Override
     public void handleEvent(BuckEventsConsumerFactory factory) {
         RulesParsingStartConsumer consumer = factory.getRulesParsingStartConsumer();
-        consumer.consumeParseRuleStart(buildId, timestamp);
+        consumer.consumeParseRuleStart(buildId, timestamp, buildTargets);
     }
 
     @Override

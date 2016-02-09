@@ -25,6 +25,7 @@ public class BuckCommand {
   public static final BuckCommand INSTALL = new BuckCommand("install");
   public static final BuckCommand UNINSTALL = new BuckCommand("uninstall");
   public static final BuckCommand KILL = new BuckCommand("kill");
+  public static final BuckCommand QUERY = new BuckCommand("query");
 
   /**
    * Command name passed to buck.

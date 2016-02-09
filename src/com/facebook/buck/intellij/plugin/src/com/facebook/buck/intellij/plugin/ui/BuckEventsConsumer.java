@@ -29,6 +29,7 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgre
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingProgressUpdateConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
 import com.google.common.collect.ImmutableList;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -140,7 +141,9 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeParseRuleStart(String build, BigInteger timestamp) {
+    public void consumeParseRuleStart(String build,
+                                      BigInteger timestamp,
+                                      PartBuildRule[] buildTargets) {
         mParseFilesStartTimestamp = timestamp;
     }
 

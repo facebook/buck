@@ -21,9 +21,9 @@ import com.google.common.collect.Sets;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class BuckBuildTargetAliasParser {
 
@@ -32,7 +32,8 @@ public final class BuckBuildTargetAliasParser {
   private static final String COMMENT_PREFIX = "#";
   private static final char SEPARATOR = '=';
 
-  public static Map<String, Set<String>> sTargetAlias = new HashMap<String, Set<String>>();
+  public static Map<String, Set<String>> sTargetAlias =
+          new ConcurrentHashMap<String, Set<String>>();
 
   private BuckBuildTargetAliasParser() {
   }

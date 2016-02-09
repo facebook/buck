@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.ws.buckevents.consumers;
 
+import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
 import com.intellij.util.messages.Topic;
 
 import java.math.BigInteger;
@@ -25,5 +26,5 @@ public interface RulesParsingStartConsumer {
             "buck.parse-rule.start",
             RulesParsingStartConsumer.class
     );
-    void consumeParseRuleStart(String build, BigInteger timestamp);
+    void consumeParseRuleStart(String build, BigInteger timestamp, PartBuildRule[] buildTargets);
 }
