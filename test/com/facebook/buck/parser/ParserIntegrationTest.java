@@ -159,4 +159,45 @@ public class ParserIntegrationTest {
     result.assertSuccess("buck should parse build files with a different name");
     assertEquals("//:root\n", result.getStdout());
   }
+
+  @Test
+  public void testUsingAutodeps() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "autodeps",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//java/bar:bar");
+    result.assertSuccess(
+        "//java/bar:bar should pick up the dependency on //java/foo:foo via BUCK.autodeps");
+  }
+
+  /**
+   * We try to test something very subtle in this test. Specifically, if buckd is running and a
+   * {@code BUCK.autodeps} file is changed, the corresponding build rules should be invalidated and
+   * Buck should know to re-create them if an affected rule is rebuilt.
+   */
+  @Test
+  public void testModifyingAutodepsShouldInvalidateCorrespondingBuildRules() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "autodeps",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult firstRun = workspace.runBuckdCommand("run", "//java/bar:main");
+    firstRun.assertSuccess();
+    assertThat(firstRun.getStdout(), containsString("I am Foo"));
+
+    // Note that here, the only file being changed is BUCK.autodeps. In practice, this is unlikely
+    // to happen because a change in BUCK.autodeps is often in response to some code that has
+    // changed. Regardless, we change only BUCK.autodeps in this test case to isolate the behavior
+    // we want to verify.
+    workspace.copyFile("java/bar/BUCK.replacement.autodeps", "java/bar/BUCK.autodeps");
+
+    ProjectWorkspace.ProcessResult secondRun = workspace.runBuckdCommand("run", "//java/bar:main");
+    secondRun.assertSuccess();
+    assertThat(secondRun.getStdout(), containsString("I am other Foo"));
+  }
 }

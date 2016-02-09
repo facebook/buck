@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY b93d233448e9365a108acdaed1749f65fb2d1bdb #@#
+{
+  "bar": [
+    "//java/foo:foo"
+  ]
+}

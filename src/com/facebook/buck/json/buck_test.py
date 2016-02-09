@@ -105,7 +105,7 @@ class TestBuckPlatformBase(object):
                 search_base=search_base))
 
     def test_subdir_glob(self):
-        build_env = BuildFileContext(None, None, None, None, None, None, None, None)
+        build_env = BuildFileContext(None, None, None, None, None, None, None, None, None)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -126,7 +126,7 @@ class TestBuckPlatformBase(object):
                 search_base=search_base))
 
     def test_subdir_glob_with_prefix(self):
-        build_env = BuildFileContext(None, None, None, None, None, None, None, None)
+        build_env = BuildFileContext(None, None, None, None, None, None, None, None, None)
         search_base = self.fake_path(
             'foo',
             glob_results={
