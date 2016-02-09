@@ -533,13 +533,11 @@ public class CxxLibraryDescription implements
         args);
   }
 
-  public static TypeAndPlatform getTypeAndPlatform(
-      BuildTarget buildTarget,
-      FlavorDomain<CxxPlatform> platforms) {
+  public TypeAndPlatform getTypeAndPlatform(BuildTarget buildTarget) {
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = platforms.getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
     return TypeAndPlatform.of(type, platform);
   }
 
@@ -549,14 +547,10 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    TypeAndPlatform typeAndPlatform = getTypeAndPlatform(
-        params.getBuildTarget(),
-        cxxPlatforms);
     return createBuildRule(
         params,
         resolver,
         args,
-        typeAndPlatform,
         args.linkStyle,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of());
@@ -566,10 +560,10 @@ public class CxxLibraryDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final A args,
-      TypeAndPlatform typeAndPlatform,
       Optional<Linker.LinkableDepType> linkableDepType,
       final Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+    TypeAndPlatform typeAndPlatform = getTypeAndPlatform(params.getBuildTarget());
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
     if (params.getBuildTarget().getFlavors()
@@ -804,6 +798,10 @@ public class CxxLibraryDescription implements
     }
 
     return deps.build();
+  }
+
+  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
+    return cxxPlatforms;
   }
 
   @SuppressFieldNotInitialized

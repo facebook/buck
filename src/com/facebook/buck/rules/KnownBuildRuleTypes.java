@@ -477,7 +477,6 @@ public class KnownBuildRuleTypes {
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
             cxxLibraryDescription,
-            cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentityStore,
@@ -487,9 +486,7 @@ public class KnownBuildRuleTypes {
     AppleBinaryDescription appleBinaryDescription =
         new AppleBinaryDescription(
             cxxBinaryDescription,
-            cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore);
     builder.register(appleBinaryDescription);

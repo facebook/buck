@@ -159,7 +159,6 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_APPLE_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
@@ -176,9 +175,7 @@ public class FakeAppleRuleDescriptions {
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_APPLE_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
-        DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
             ImmutableList.<ProvisioningProfileMetadata>of()));

@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.TypeAndPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -103,7 +102,6 @@ public class AppleLibraryDescription implements
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final CxxLibraryDescription delegate;
-  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
@@ -111,13 +109,11 @@ public class AppleLibraryDescription implements
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
-    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
@@ -163,7 +159,7 @@ public class AppleLibraryDescription implements
       }
 
       return AppleDescriptions.createAppleBundle(
-          cxxPlatformFlavorDomain,
+          delegate.getCxxPlatforms(),
           defaultCxxPlatform,
           platformFlavorsToAppleCxxPlatforms,
           targetGraph,
@@ -199,10 +195,6 @@ public class AppleLibraryDescription implements
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    TypeAndPlatform typeAndPlatform =
-        CxxLibraryDescription.getTypeAndPlatform(
-            params.getBuildTarget(),
-            cxxPlatformFlavorDomain);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver,
         delegateArg,
@@ -213,7 +205,6 @@ public class AppleLibraryDescription implements
         params,
         resolver,
         delegateArg,
-        typeAndPlatform,
         linkableDepType,
         bundleLoader,
         blacklist);
@@ -231,7 +222,7 @@ public class AppleLibraryDescription implements
     if (!buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
       return Optional.absent();
     }
-    Optional<Flavor> cxxPlatformFlavor = cxxPlatformFlavorDomain.getFlavor(buildTarget);
+    Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
     Preconditions.checkState(
         cxxPlatformFlavor.isPresent(),
         "Could not find cxx platform in:\n%s",

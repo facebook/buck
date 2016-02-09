@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -74,23 +73,17 @@ public class AppleBinaryDescription
   };
 
   private final CxxBinaryDescription delegate;
-  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
-  private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
-      CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
-    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
   }
@@ -171,7 +164,8 @@ public class AppleBinaryDescription
 
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       CxxPlatform cxxPlatform =
-          cxxPlatformFlavorDomain.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+          delegate.getCxxPlatforms().getValue(params.getBuildTarget())
+              .or(delegate.getDefaultCxxPlatform());
       ApplePlatform applePlatform =
           Preconditions
               .checkNotNull(platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor()))
@@ -190,8 +184,8 @@ public class AppleBinaryDescription
     }
     BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();
     return AppleDescriptions.createAppleBundle(
-        cxxPlatformFlavorDomain,
-        defaultCxxPlatform,
+        delegate.getCxxPlatforms(),
+        delegate.getDefaultCxxPlatform(),
         platformFlavorsToAppleCxxPlatforms,
         targetGraph,
         params,

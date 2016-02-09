@@ -253,4 +253,8 @@ public class CxxBinaryDescription implements
   }
 
   public FlavorDomain<CxxPlatform> getCxxPlatforms() { return cxxPlatforms; }
+
+  public CxxPlatform getDefaultCxxPlatform() {
+    return defaultCxxPlatform;
+  }
 }
