@@ -23,10 +23,11 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TestExecutionContext {
@@ -40,9 +41,9 @@ public class TestExecutionContext {
   private static ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
-    Map<ExecutionContext.ExecutorPool, ExecutorService> executors =
-        new HashMap<ExecutionContext.ExecutorPool, ExecutorService>();
-    executors.put(ExecutionContext.ExecutorPool.CPU, Executors.newCachedThreadPool());
+    Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
+    executors.put(ExecutionContext.ExecutorPool.CPU, MoreExecutors.listeningDecorator(
+        Executors.newCachedThreadPool()));
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())

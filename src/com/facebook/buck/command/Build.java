@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.immutables.value.Value;
 
@@ -72,7 +73,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -120,7 +120,7 @@ public class Build implements Closeable {
       ConcurrencyLimit concurrencyLimit,
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions,
-      Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
+      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors) {
     this.actionGraph = actionGraph;
     this.ruleResolver = ruleResolver;
     this.executionContext = ExecutionContext.builder()

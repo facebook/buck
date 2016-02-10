@@ -822,9 +822,9 @@ public final class Main {
       Locale locale = Locale.getDefault();
 
       // create a cached thread pool for cpu intensive tasks
-      Map<ExecutionContext.ExecutorPool, ExecutorService> executors =
-          new HashMap<ExecutionContext.ExecutorPool, ExecutorService>();
-      executors.put(ExecutionContext.ExecutorPool.CPU, Executors.newCachedThreadPool());
+      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
+      executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
+          Executors.newCachedThreadPool()));
 
       // The order of resources in the try-with-resources block is important: the BuckEventBus must
       // be the last resource, so that it is closed first and can deliver its queued events to the

@@ -36,6 +36,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.immutables.value.Value;
 
@@ -43,7 +44,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -118,11 +118,13 @@ public abstract class ExecutionContext implements Closeable {
   }
 
   @Value.Parameter
-  public abstract Map<ExecutorPool, ExecutorService> getExecutors();
+  public abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
 
   @Value.Derived
-  public ExecutorService getExecutorService(ExecutorPool p) {
-    return getExecutors().get(p);
+  public ListeningExecutorService getExecutorService(ExecutorPool p) {
+    ListeningExecutorService executorService = getExecutors().get(p);
+    Preconditions.checkNotNull(executorService);
+    return executorService;
   }
 
   /**
@@ -216,7 +218,7 @@ public abstract class ExecutionContext implements Closeable {
             /* loadLimit */ Double.POSITIVE_INFINITY);
     private Optional<AdbOptions> adbOptions = Optional.absent();
     private Optional<TargetDeviceOptions> targetDeviceOptions = Optional.absent();
-    private Map<ExecutorPool, ExecutorService> executors;
+    private Map<ExecutorPool, ListeningExecutorService> executors;
 
     private Builder() {}
 
@@ -354,7 +356,8 @@ public abstract class ExecutionContext implements Closeable {
       return this;
     }
 
-    public Builder setExecutors(Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
+    public Builder setExecutors(
+        Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors) {
       this.executors = executors;
       return this;
     }

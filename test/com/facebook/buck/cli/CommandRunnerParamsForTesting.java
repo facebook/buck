@@ -42,10 +42,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
 
 public class CommandRunnerParamsForTesting {
 
@@ -87,7 +87,7 @@ public class CommandRunnerParamsForTesting {
         webServer,
         config,
         new NullFileHashCache(),
-        new HashMap<ExecutionContext.ExecutorPool, ExecutorService>());
+        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>());
   }
 
   public static Builder builder() {

@@ -33,9 +33,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to run a {@link Command}.
@@ -57,7 +57,7 @@ class CommandRunnerParams {
   private final Optional<WebServer> webServer;
   private final BuckConfig buckConfig;
   private final FileHashCache fileHashCache;
-  private final Map<ExecutionContext.ExecutorPool, ExecutorService> executors;
+  private final Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors;
 
   public CommandRunnerParams(
       Console console,
@@ -75,7 +75,7 @@ class CommandRunnerParams {
       Optional<WebServer> webServer,
       BuckConfig buckConfig,
       FileHashCache fileHashCache,
-      Map<ExecutionContext.ExecutorPool, ExecutorService> executors) {
+      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors) {
     this.console = console;
     this.cell = cell;
     this.artifactCache = artifactCache;
@@ -154,7 +154,7 @@ class CommandRunnerParams {
     return fileHashCache;
   }
 
-  public Map<ExecutionContext.ExecutorPool, ExecutorService> getExecutors() {
+  public Map<ExecutionContext.ExecutorPool, ListeningExecutorService> getExecutors() {
     return executors;
   }
 
