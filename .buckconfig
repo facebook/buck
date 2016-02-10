@@ -33,6 +33,9 @@
       .*\.swp$, \
       ^#.*#$, .*~$, \
       .*___jb_bak___$, .*___jb_old___$,
+    ; Forbid symlinks for source files so Buck doesn't have to dump its
+    ; cache every time it encounters one.
+    allow_symlinks = forbid
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 60000
