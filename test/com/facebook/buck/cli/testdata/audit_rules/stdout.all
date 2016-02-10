@@ -12,6 +12,8 @@ genrule(
     "bar.txt",
     "//fake:rule",
   ],
+  tests = [
+  ],
   visibility = [
     "PUBLIC",
   ],

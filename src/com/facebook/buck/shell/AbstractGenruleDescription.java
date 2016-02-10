@@ -17,10 +17,12 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -138,12 +140,19 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg implements HasTests {
     public String out;
     public Optional<String> bash;
     public Optional<String> cmd;
     public Optional<String> cmdExe;
     public Optional<ImmutableList<SourcePath>> srcs;
+
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests.get();
+    }
   }
 
 }

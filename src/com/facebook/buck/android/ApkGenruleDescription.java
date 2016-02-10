@@ -86,7 +86,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmd,
         bash,
         cmdExe,
-        new BuildTargetSourcePath(args.apk));
+        new BuildTargetSourcePath(args.apk),
+        args.tests.get());
   }
 
   @SuppressFieldNotInitialized

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -25,6 +26,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
 
@@ -39,8 +41,9 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      String out) {
-    super(params, resolver, srcs, cmd, bash, cmdExe, out);
+      String out,
+      ImmutableSortedSet<BuildTarget> tests) {
+    super(params, resolver, srcs, cmd, bash, cmdExe, out, tests);
   }
 
   @Override

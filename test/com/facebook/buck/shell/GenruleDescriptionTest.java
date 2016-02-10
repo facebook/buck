@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -45,6 +46,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
 import org.hamcrest.Matchers;
@@ -126,6 +128,27 @@ public class GenruleDescriptionTest {
             .setCmd("$(classpath //exciting:target)")
             .build(ruleResolver);
     assertThat(genrule.getDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
+  }
+
+  @Test
+  public void testTestDependencies() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+
+    BuildRule shTest =
+        new ShTestBuilder(BuildTargetFactory.newInstance("//:test"))
+            .setTest(new FakeSourcePath("test.sh"))
+            .setArgs(ImmutableList.of("$(location //:rule)"))
+            .build(ruleResolver);
+
+    Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setCmd("build.sh")
+            .setTests(ImmutableSortedSet.of(shTest.getBuildTarget()))
+            .build(ruleResolver);
+
+    assertThat(genrule.getTests(), Matchers.containsInAnyOrder(shTest.getBuildTarget()));
   }
 
 

@@ -18,6 +18,7 @@
     "name" : "example",
     "out" : "baz.txt",
     "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ],
+    "tests" : [ ],
     "visibility" : [ "PUBLIC" ]
   }
 }

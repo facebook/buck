@@ -58,7 +58,9 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmd,
           bash,
           cmdExe,
-          out);
+          out,
+          args.tests.get()
+      );
     } else {
       return new GenruleBinary(
           params,
@@ -67,7 +69,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmd,
           bash,
           cmdExe,
-          out
+          out,
+          args.tests.get()
       );
     }
   }

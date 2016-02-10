@@ -21,6 +21,7 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -49,6 +50,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -103,7 +105,8 @@ import java.util.Set;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractBuildRule implements HasOutputName, SupportsInputBasedRuleKey {
+public class Genrule extends AbstractBuildRule
+    implements HasOutputName, HasTests, SupportsInputBasedRuleKey {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -126,6 +129,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   private final Path absolutePathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final Path absolutePathToSrcDirectory;
+  private final ImmutableSortedSet<BuildTarget> tests;
 
   protected Genrule(
       BuildRuleParams params,
@@ -134,12 +138,14 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      String out) {
+      String out,
+      ImmutableSortedSet<BuildTarget> tests) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;
     this.cmdExe = cmdExe;
+    this.tests = tests;
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
@@ -368,4 +374,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     return out;
   }
 
+  @Override
+  public ImmutableSortedSet<BuildTarget> getTests() {
+    return tests;
+  }
 }

@@ -10,6 +10,7 @@
   "name" : "B",
   "out" : "B.txt",
   "srcs" : [":A"],
+  "tests" : [ ],
   "visibility" : [ ]
 }
 ]

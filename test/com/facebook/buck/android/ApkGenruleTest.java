@@ -138,6 +138,7 @@ public class ApkGenruleTest {
     arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
         new PathSourcePath(projectFilesystem, Paths.get("src/com/facebook/signer.py")),
         new PathSourcePath(projectFilesystem, Paths.get("src/com/facebook/key.properties"))));
+    arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem).build();
     ApkGenrule apkGenrule =

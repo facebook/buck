@@ -11,6 +11,7 @@
   "name":"test",
   "out":"test-output",
   "srcs":[],
+  "tests":[],
   "visibility":[]
 }
 ]
