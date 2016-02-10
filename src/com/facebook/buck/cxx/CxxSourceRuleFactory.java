@@ -30,7 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -786,13 +786,10 @@ public class CxxSourceRuleFactory {
 
   }
 
-  @Value.Immutable(builder = false)
-  @BuckStyleImmutable
+  @Value.Immutable
+  @BuckStyleTuple
   interface AbstractPreprocessAndCompilePreprocessorDelegateKey {
-    @Value.Parameter
     CxxSource.Type getSourceType();
-
-    @Value.Parameter
     ImmutableList<String> getSourceFlags();
   }
 
