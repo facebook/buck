@@ -57,13 +57,15 @@ public class ArtifactCacheBuckConfig {
   private static final String HTTP_TIMEOUT_SECONDS_FIELD_NAME = "http_timeout_seconds";
   private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
+  private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
   private static final ImmutableSet<String> HTTP_CACHE_DESCRIPTION_FIELDS = ImmutableSet.of(
       HTTP_URL_FIELD_NAME,
       HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME,
       HTTP_MODE_FIELD_NAME,
       HTTP_TIMEOUT_SECONDS_FIELD_NAME,
       HTTP_READ_HEADERS_FIELD_NAME,
-      HTTP_WRITE_HEADERS_FIELD_NAME);
+      HTTP_WRITE_HEADERS_FIELD_NAME,
+      HTTP_CACHE_ERROR_MESSAGE_NAME);
 
   // List of names of cache-* sections that contain the fields above. This is used to emulate
   // dicts, essentially.
@@ -74,6 +76,8 @@ public class ArtifactCacheBuckConfig {
   private static final long DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = 3L;
   private static final String DEFAULT_HTTP_MAX_CONCURRENT_WRITES = "1";
   private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
+  private static final String DEFAULT_HTTP_CACHE_ERROR_MESSAGE =
+      "{cache_name} cache encountered an error: {error_message}";
 
   private static final String SERVED_CACHE_ENABLED_FIELD_NAME = "serve_local_cache";
   private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.readonly.name();
@@ -256,6 +260,10 @@ public class ArtifactCacheBuckConfig {
     return ImmutableSet.copyOf(httpCacheNames);
   }
 
+  private String getCacheErrorFormatMessage(String section, String fieldName, String defaultValue) {
+    return buckConfig.getValue(section, fieldName).or(defaultValue);
+  }
+
   private HttpCacheEntry obtainEntryForName(Optional<String> cacheName) {
     final String section = Joiner.on('#').skipNulls().join(CACHE_SECTION_NAME, cacheName.orNull());
 
@@ -271,6 +279,11 @@ public class ArtifactCacheBuckConfig {
         buckConfig.getListWithoutComments(section, HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME));
     builder.setCacheReadMode(
         getCacheReadMode(section, HTTP_MODE_FIELD_NAME, DEFAULT_HTTP_CACHE_MODE));
+    builder.setErrorMessageFormat(
+        getCacheErrorFormatMessage(
+            section,
+            HTTP_CACHE_ERROR_MESSAGE_NAME,
+            DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
     return builder.build();
   }
 
@@ -337,6 +350,7 @@ public class ArtifactCacheBuckConfig {
     public abstract ImmutableMap<String, String> getWriteHeaders();
     public abstract CacheReadMode getCacheReadMode();
     protected abstract ImmutableSet<String> getBlacklistedWifiSsids();
+    public abstract String getErrorMessageFormat();
 
     public boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
       if (currentWifiSsid.isPresent() &&

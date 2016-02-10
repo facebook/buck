@@ -66,6 +66,7 @@ public class HttpArtifactCache implements ArtifactCache {
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
   private final ListeningExecutorService httpWriteExecutorService;
+  private final String errorTextTemplate;
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
@@ -76,7 +77,8 @@ public class HttpArtifactCache implements ArtifactCache {
       boolean doStore,
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
-      ListeningExecutorService httpWriteExecutorService) {
+      ListeningExecutorService httpWriteExecutorService,
+      String errorTextTemplate) {
     this.name = name;
     this.fetchClient = fetchClient;
     this.storeClient = storeClient;
@@ -84,6 +86,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
     this.httpWriteExecutorService = httpWriteExecutorService;
+    this.errorTextTemplate = errorTextTemplate;
   }
 
   protected Response fetchCall(String path, Request.Builder requestBuilder) throws IOException {
@@ -314,7 +317,10 @@ public class HttpArtifactCache implements ArtifactCache {
 
   private void reportFailureToEvenBus(String format, Object... args) {
     if (seenErrors.add(format)) {
-      buckEventBus.post(ConsoleEvent.warning(format, args));
+      buckEventBus.post(ConsoleEvent.warning(
+          errorTextTemplate
+              .replaceAll("\\{cache_name}", name)
+              .replaceAll("\\{error_message}", String.format(format, args))));
     }
   }
 

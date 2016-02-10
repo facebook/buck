@@ -596,6 +596,20 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_error_message_format' /}
+  {param example_value}
+    {literal}The cache named {cache_name} encountered an error: {error_message}{/literal}
+  {/param}
+  {param description}
+    This setting allows for the customization of how http cache errors appear to the user.  If the
+    text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache
+    when using {call buckconfig.cache_http_cache_names /}, or just <code>http</code>.  If the text
+    {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'serve_local_cache' /}
   {param example_value: 'false' /}
   {param description}
@@ -619,7 +633,7 @@ $ buck targets --resolve-alias app#src_jar
   {param section: 'cache' /}
   {param name: 'http_cache_names' /}
   {param description}
-    A comma-separated list of names used to configure multiple caches.  The caches will be used
+    A comma-separated list of names used to configure multiple caches.  The caches will be used{sp}
     <b>serially</b> in the order in which their names are specified here.  If an artifact is found
     further along in the list, an attempt to store it in the caches earlier in the list will be
     made.  In the following example, if the artifact is found in the <code>global</code> cache, it

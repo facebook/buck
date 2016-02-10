@@ -307,7 +307,8 @@ public class ArtifactCaches {
         doStore,
         projectFilesystem,
         buckEventBus,
-        httpWriteExecutorService);
+        httpWriteExecutorService,
+        cacheDescription.getErrorMessageFormat());
   }
 
   private static class ProgressResponseBody extends ResponseBody {

@@ -315,6 +315,17 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(bobCache.getTimeoutSeconds(), Matchers.is(3));
   }
 
+  @Test
+  public void errorMessageFormatter() throws IOException {
+    final String testText = "this is a test";
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "http_error_message_format = " + testText);
+
+    HttpCacheEntry cache = FluentIterable.from(config.getHttpCaches()).get(0);
+    assertThat(cache.getErrorMessageFormat(), Matchers.equalTo(testText));
+  }
+
   public static ArtifactCacheBuckConfig createFromText(String... lines) throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
