@@ -609,7 +609,9 @@ class BuildFileProcessor(object):
         module.__file__ = path
         module.__dict__.update(default_globals)
 
-        with open(path) as f:
+        # We don't open this file as binary, as we assume it's a textual source
+        # file.
+        with open(path, 'r') as f:
             contents = f.read()
 
         # Enable absolute imports.  This prevents the compiler from trying to
@@ -840,7 +842,7 @@ def main():
     # doesn't happen.  Actually dup2 the file handle so that writing
     # to file descriptor 1, os.system, and so on work as expected too.
 
-    to_parent = os.fdopen(os.dup(sys.stdout.fileno()), 'a')
+    to_parent = os.fdopen(os.dup(sys.stdout.fileno()), 'ab')
     os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
 
     parser = optparse.OptionParser()
@@ -929,7 +931,7 @@ def main():
 
     configs = {}
     if options.config is not None:
-        with open(options.config) as f:
+        with open(options.config, 'rb') as f:
             for section, contents in bser.loads(f.read()).iteritems():
                 for field, value in contents.iteritems():
                     configs[(section, field)] = value
