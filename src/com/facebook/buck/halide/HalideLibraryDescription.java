@@ -184,7 +184,7 @@ public class HalideLibraryDescription
         CxxDescriptionEnhancer.getStaticLibraryPath(
             params.getBuildTarget(),
             platform.getFlavor(),
-            CxxSourceRuleFactory.PicType.PDC),
+            CxxSourceRuleFactory.PicType.PIC),
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(buildTarget, HalideCompile.objectOutputPath(buildTarget))));
   }
@@ -249,7 +249,11 @@ public class HalideLibraryDescription
           args.platformCompilerFlags,
           args.linkerFlags,
           args.platformLinkerFlags);
-    } else if (flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
+    } else if (
+        flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR) ||
+        flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)) {
+      // Halide always output PIC, so it's output can be used for both cases.
+      // See: https://github.com/halide/Halide/blob/e3c301f3/src/LLVM_Output.cpp#L152
       return createHalideStaticLibrary(
           params.copyWithDeps(
               Suppliers.ofInstance(
@@ -259,12 +263,10 @@ public class HalideLibraryDescription
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform);
-    } else if (flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)) {
-      throw new HumanReadableException(
-          "halide_library does not support static PIC libraries as output");
     } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
       throw new HumanReadableException(
-          "halide_library does not support shared libraries as output");
+          "halide_library '%s' does not support shared libraries as output",
+          params.getBuildTarget());
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
           params.copyWithDeps(
