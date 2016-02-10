@@ -529,6 +529,8 @@ class DaemonicParserState {
 
     for (Cell cell : knownCells) {
       try {
+        // We only care about creation and deletion events because modified should result in a rule
+        // key change.  For parsing, these are the only events we need to care about.
         if (isPathCreateOrDeleteEvent(event)) {
           BuildFileTree buildFiles = buildFileTrees.get(cell);
 
@@ -541,9 +543,11 @@ class DaemonicParserState {
           // "containing" {@code path} unless its filename matches a temp file pattern.
           if (!isTempFile(cell, path)) {
             invalidateContainingBuildFile(cell, buildFiles, path);
+          } else {
+            LOG.debug(
+                "Not invalidating the owning build file of %s because it is a temporary file.",
+                cell.getFilesystem().resolve(path).toAbsolutePath().toString());
           }
-
-          LOG.verbose("Invalidating dependents for path %s, cache state %s", path, this);
         }
       } catch (ExecutionException | UncheckedExecutionException e) {
         try {
@@ -591,6 +595,13 @@ class DaemonicParserState {
             buildFiles.getBasePathOfAncestorTarget(packageBuildFile.get().getParent());
         packageBuildFiles.addAll(packageBuildFile.asSet());
       }
+    }
+
+    if (packageBuildFiles.isEmpty()) {
+      LOG.debug(
+          "%s is not owned by any build file.  Not invalidating anything.",
+          cell.getFilesystem().resolve(path).toAbsolutePath().toString());
+      return;
     }
 
     // Invalidate all the packages we found.
