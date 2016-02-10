@@ -36,6 +36,10 @@ public class InMemoryArtifactCache implements ArtifactCache {
 
   private final Map<RuleKey, Artifact> artifacts = Maps.newConcurrentMap();
 
+  public int getArtifactCount() {
+    return artifacts.size();
+  }
+
   public boolean hasArtifact(RuleKey ruleKey) {
     return artifacts.containsKey(ruleKey);
   }

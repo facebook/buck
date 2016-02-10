@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 public class DirArtifactCache implements ArtifactCache {
@@ -132,14 +133,20 @@ public class DirArtifactCache implements ArtifactCache {
 
       for (RuleKey ruleKey : ruleKeys) {
 
+        Path artifactPath = cacheDir.resolve(ruleKey.toString());
+        Path metadataPath = cacheDir.resolve(ruleKey.toString() + ".metadata");
+
+        if (filesystem.exists(artifactPath) && filesystem.exists(metadataPath)) {
+          continue;
+        }
+
         // Write to a temporary file and move the file to its final location atomically to protect
         // against partial artifacts (whether due to buck interruption or filesystem failure) posing
         // as valid artifacts during subsequent buck runs.
         Path tmp = filesystem.createTempFile(cacheDir, "artifact", ".tmp");
         try {
           filesystem.copyFile(output, tmp);
-          Path artifactPath = cacheDir.resolve(ruleKey.toString());
-          filesystem.move(tmp, artifactPath);
+          filesystem.move(tmp, artifactPath, StandardCopyOption.REPLACE_EXISTING);
           bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
         } finally {
           filesystem.deleteFileAtPathIfExists(tmp);
@@ -157,8 +164,7 @@ public class DirArtifactCache implements ArtifactCache {
               out.write(val);
             }
           }
-          Path metadataPath = cacheDir.resolve(ruleKey.toString() + ".metadata");
-          filesystem.move(tmp, metadataPath);
+          filesystem.move(tmp, metadataPath, StandardCopyOption.REPLACE_EXISTING);
           bytesSinceLastDeleteOldFiles += filesystem.getFileSize(metadataPath);
         } finally {
           filesystem.deleteFileAtPathIfExists(tmp);

@@ -662,6 +662,29 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'two_level_cache_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+    Have the Buck client perform 2-level stores and lookups on the artifacts.
+    Every cache operation consists of 2 steps: content hash-based and
+    RuleKey-based. This makes it easier to reuse locally cached artifacts
+    across different buck versions at the expense of higher latencies in the
+    case where artifacts are not present in the local cache.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'two_level_cache_threshold' /}
+  {param example_value: '1024' /}
+  {param description}
+    When performing a store artifacts smaller than this size will be stored
+    directly, without the content hash redirection.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'color' /}
   {param description}

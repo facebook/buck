@@ -38,17 +38,17 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 
-import okio.Buffer;
-import okio.BufferedSource;
-import okio.ForwardingSource;
-import okio.Okio;
-import okio.Source;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.ForwardingSource;
+import okio.Okio;
+import okio.Source;
 
 /**
  * Creates instances of the {@link ArtifactCache}.
@@ -155,13 +155,24 @@ public class ArtifactCaches {
       }
     }
     ImmutableList<ArtifactCache> artifactCaches = builder.build();
+    ArtifactCache result;
 
     if (artifactCaches.size() == 1) {
       // Don't bother wrapping a single artifact cache in MultiArtifactCache.
-      return artifactCaches.get(0);
+      result = artifactCaches.get(0);
     } else {
-      return new MultiArtifactCache(artifactCaches);
+      result = new MultiArtifactCache(artifactCaches);
     }
+
+    if (buckConfig.getTwoLevelCachingEnabled()) {
+      result = new TwoLevelArtifactCacheDecorator(
+          result,
+          projectFilesystem,
+          httpWriteExecutorService,
+          buckConfig.getTwoLevelCachingThreshold());
+    }
+
+    return result;
   }
 
   private static ArtifactCache createDirArtifactCache(

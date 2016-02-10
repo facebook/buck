@@ -86,6 +86,10 @@ public class ArtifactCacheBuckConfig {
   private static final LoadBalancingType DEFAULT_LOAD_BALANCING_TYPE =
       LoadBalancingType.SINGLE_SERVER;
 
+  private static final String TWO_LEVEL_CACHING_ENABLED_FIELD_NAME = "two_level_cache_enabled";
+  private static final String TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME = "two_level_cache_threshold";
+  private static final long TWO_LEVEL_CACHING_THRESHOLD_DEFAULT = 20 * 1024L;
+
   public enum LoadBalancingType {
     SINGLE_SERVER,
     CLIENT_SLB,
@@ -191,6 +195,25 @@ public class ArtifactCacheBuckConfig {
       result.add(obtainEntryForName(Optional.of(cacheName)));
     }
     return result.build();
+  }
+
+  public boolean getTwoLevelCachingEnabled() {
+    return buckConfig.getBooleanValue(
+        CACHE_SECTION_NAME,
+        TWO_LEVEL_CACHING_ENABLED_FIELD_NAME,
+        false);
+  }
+
+  public long getTwoLevelCachingThreshold() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME)
+        .transform(
+            new Function<String, Long>() {
+              @Override
+              public Long apply(String input) {
+                return SizeUnit.parseBytes(input);
+              }
+            })
+        .or(TWO_LEVEL_CACHING_THRESHOLD_DEFAULT);
   }
 
   private CacheReadMode getDirCacheReadMode() {
