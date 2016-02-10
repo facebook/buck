@@ -74,6 +74,7 @@ public class CxxSourceRuleFactory {
   private final ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput;
   private final ImmutableList<String> compilerFlags;
   private final Optional<SourcePath> prefixHeader;
+  private final PicType picType;
 
   private final Supplier<ImmutableList<BuildRule>> preprocessDeps = Suppliers.memoize(
       new Supplier<ImmutableList<BuildRule>>() {
@@ -183,7 +184,8 @@ public class CxxSourceRuleFactory {
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
       ImmutableList<String> compilerFlags,
-      Optional<SourcePath> prefixHeader) {
+      Optional<SourcePath> prefixHeader,
+      PicType picType) {
     this.params = params;
     this.resolver = resolver;
     this.pathResolver = pathResolver;
@@ -191,6 +193,7 @@ public class CxxSourceRuleFactory {
     this.cxxPreprocessorInput = cxxPreprocessorInput;
     this.compilerFlags = compilerFlags;
     this.prefixHeader = prefixHeader;
+    this.picType = picType;
     this.preprocessorDelegates = CacheBuilder.newBuilder()
         .build(new PreprocessorDelegateCacheLoader());
   }
@@ -217,10 +220,7 @@ public class CxxSourceRuleFactory {
    *     name and type.
    */
   @VisibleForTesting
-  public BuildTarget createPreprocessBuildTarget(
-      String name,
-      CxxSource.Type type,
-      PicType pic) {
+  public BuildTarget createPreprocessBuildTarget(String name, CxxSource.Type type) {
     String outputName = Flavor.replaceInvalidCharacters(getPreprocessOutputName(type, name));
     return BuildTarget
         .builder(params.getBuildTarget())
@@ -229,7 +229,7 @@ public class CxxSourceRuleFactory {
             ImmutableFlavor.of(
                 String.format(
                     PREPROCESS_FLAVOR_PREFIX + "%s%s",
-                    pic == PicType.PIC ? "pic-" : "",
+                    picType == PicType.PIC ? "pic-" : "",
                     outputName)))
         .build();
   }
@@ -256,12 +256,11 @@ public class CxxSourceRuleFactory {
   public CxxPreprocessAndCompile createPreprocessBuildRule(
       BuildRuleResolver resolver,
       String name,
-      CxxSource source,
-      PicType pic) {
+      CxxSource source) {
 
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
-    BuildTarget target = createPreprocessBuildTarget(name, source.getType(), pic);
+    BuildTarget target = createPreprocessBuildTarget(name, source.getType());
     Preprocessor tool = CxxSourceTypes.getPreprocessor(cxxPlatform, source.getType());
 
     // Build up the list of dependencies for this rule.
@@ -276,10 +275,7 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         preprocessorDelegates.getUnchecked(
-            PreprocessAndCompilePreprocessorDelegateKey.of(
-                source.getType(),
-                pic,
-                source.getFlags())),
+            PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags())),
         getPreprocessOutputPath(target, source.getType(), name),
         source.getPath(),
         source.getType(),
@@ -292,17 +288,16 @@ public class CxxSourceRuleFactory {
   CxxPreprocessAndCompile requirePreprocessBuildRule(
       BuildRuleResolver resolver,
       String name,
-      CxxSource source,
-      PicType pic) {
+      CxxSource source) {
 
-    BuildTarget target = createPreprocessBuildTarget(name, source.getType(), pic);
+    BuildTarget target = createPreprocessBuildTarget(name, source.getType());
     Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
 
-    return createPreprocessBuildRule(resolver, name, source, pic);
+    return createPreprocessBuildRule(resolver, name, source);
   }
 
   /**
@@ -325,9 +320,7 @@ public class CxxSourceRuleFactory {
    *    given name.
    */
   @VisibleForTesting
-  public BuildTarget createCompileBuildTarget(
-      String name,
-      PicType pic) {
+  public BuildTarget createCompileBuildTarget(String name) {
     String outputName = Flavor.replaceInvalidCharacters(getCompileOutputName(name));
     return BuildTarget
         .builder(params.getBuildTarget())
@@ -336,7 +329,7 @@ public class CxxSourceRuleFactory {
             ImmutableFlavor.of(
                 String.format(
                     COMPILE_FLAVOR_PREFIX + "%s%s",
-                    pic == PicType.PIC ? "pic-" : "",
+                    picType == PicType.PIC ? "pic-" : "",
                     outputName)))
         .build();
   }
@@ -413,12 +406,11 @@ public class CxxSourceRuleFactory {
   public CxxPreprocessAndCompile createCompileBuildRule(
       BuildRuleResolver resolver,
       String name,
-      CxxSource source,
-      PicType pic) {
+      CxxSource source) {
 
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
-    BuildTarget target = createCompileBuildTarget(name, pic);
+    BuildTarget target = createCompileBuildTarget(name);
     Compiler compiler = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
@@ -433,7 +425,7 @@ public class CxxSourceRuleFactory {
     ImmutableList<String> platformFlags =
         ImmutableList.<String>builder()
             // If we're using pic, add in the appropriate flag.
-            .addAll(pic.getFlags())
+            .addAll(picType.getFlags())
             // Add in the platform specific compiler flags.
             .addAll(getPlatformCompileFlags(source.getType()))
             .build();
@@ -468,17 +460,16 @@ public class CxxSourceRuleFactory {
   CxxPreprocessAndCompile requireCompileBuildRule(
       BuildRuleResolver resolver,
       String name,
-      CxxSource source,
-      PicType pic) {
+      CxxSource source) {
 
-    BuildTarget target = createCompileBuildTarget(name, pic);
+    BuildTarget target = createCompileBuildTarget(name);
     Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
 
-    return createCompileBuildRule(resolver, name, source, pic);
+    return createCompileBuildRule(resolver, name, source);
   }
 
   private ImmutableSortedSet<BuildRule> computeSourcePreprocessorAndToolDeps(
@@ -500,12 +491,10 @@ public class CxxSourceRuleFactory {
             .build();
   }
 
-  private ImmutableList<String> computePlatformPreprocessorFlags(
-      PicType pic,
-      CxxSource.Type type) {
+  private ImmutableList<String> computePlatformPreprocessorFlags(CxxSource.Type type) {
     return ImmutableList.<String>builder()
         // If we're using pic, add in the appropriate flag.
-        .addAll(pic.getFlags())
+        .addAll(picType.getFlags())
             // Add in platform specific preprocessor flags.
         .addAll(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, type))
             // Add in the platform specific compiler flags.
@@ -516,13 +505,11 @@ public class CxxSourceRuleFactory {
   }
 
 
-  private ImmutableList<String> computePlatformCompilerFlags(
-      PicType pic,
-      CxxSource source) {
+  private ImmutableList<String> computePlatformCompilerFlags(CxxSource source) {
     // Build up the list of compiler flags.
     return ImmutableList.<String>builder()
         // If we're using pic, add in the appropriate flag.
-        .addAll(pic.getFlags())
+        .addAll(picType.getFlags())
             // Add in the platform specific compiler flags.
         .addAll(getPlatformCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
         .build();
@@ -553,7 +540,6 @@ public class CxxSourceRuleFactory {
   public CxxInferCapture requireInferCaptureBuildRule(
       String name,
       CxxSource source,
-      PicType pic,
       CxxInferTools inferTools) {
     BuildTarget target = createInferCaptureBuildTarget(name);
 
@@ -563,14 +549,13 @@ public class CxxSourceRuleFactory {
       return existingRule.get();
     }
 
-    return createInferCaptureBuildRule(target, name, source, pic, inferTools);
+    return createInferCaptureBuildRule(target, name, source, inferTools);
   }
 
   public CxxInferCapture createInferCaptureBuildRule(
       BuildTarget target,
       String name,
       CxxSource source,
-      PicType pic,
       CxxInferTools inferTools) {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
@@ -585,7 +570,7 @@ public class CxxSourceRuleFactory {
         pathResolver,
         Optional.of(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType())),
         Optional.of(preprocessorFlags.getUnchecked(source.getType())),
-        Optional.of(computePlatformCompilerFlags(pic, source)),
+        Optional.of(computePlatformCompilerFlags(source)),
         Optional.of(computeRuleCompilerFlags(source)),
         source.getPath(),
         source.getType(),
@@ -611,12 +596,11 @@ public class CxxSourceRuleFactory {
       BuildRuleResolver resolver,
       String name,
       CxxSource source,
-      PicType pic,
       CxxPreprocessMode strategy) {
 
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
-    BuildTarget target = createCompileBuildTarget(name, pic);
+    BuildTarget target = createCompileBuildTarget(name);
     Compiler compiler = getCompiler(source.getType());
 
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
@@ -630,12 +614,9 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         preprocessorDelegates.getUnchecked(
-            PreprocessAndCompilePreprocessorDelegateKey.of(
-                source.getType(),
-                pic,
-                source.getFlags())),
+            PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags())),
         compiler,
-        computePlatformCompilerFlags(pic, source),
+        computePlatformCompilerFlags(source),
         computeRuleCompilerFlags(source),
         getCompileOutputPath(target, name),
         source.getPath(),
@@ -651,23 +632,21 @@ public class CxxSourceRuleFactory {
       BuildRuleResolver resolver,
       String name,
       CxxSource source,
-      PicType pic,
       CxxPreprocessMode strategy) {
 
-    BuildTarget target = createCompileBuildTarget(name, pic);
+    BuildTarget target = createCompileBuildTarget(name);
     Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
 
-    return createPreprocessAndCompileBuildRule(resolver, name, source, pic, strategy);
+    return createPreprocessAndCompileBuildRule(resolver, name, source, strategy);
   }
 
 
   public ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
-      PicType pic,
       CxxInferTools inferTools,
       CxxInferSourceFilter sourceFilter) {
 
@@ -688,7 +667,6 @@ public class CxxSourceRuleFactory {
       CxxInferCapture rule = requireInferCaptureBuildRule(
           name,
           source,
-          pic,
           inferTools);
       objects.add(rule);
     }
@@ -699,8 +677,7 @@ public class CxxSourceRuleFactory {
   private ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       BuildRuleResolver resolver,
       CxxPreprocessMode strategy,
-      ImmutableMap<String, CxxSource> sources,
-      PicType pic) {
+      ImmutableMap<String, CxxSource> sources) {
 
     ImmutableList.Builder<CxxPreprocessAndCompile> objects = ImmutableList.builder();
 
@@ -721,9 +698,9 @@ public class CxxSourceRuleFactory {
           // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
           // Otherwise, use a regular compile rule.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            rule = requirePreprocessAndCompileBuildRule(resolver, name, source, pic, strategy);
+            rule = requirePreprocessAndCompileBuildRule(resolver, name, source, strategy);
           } else {
-            rule = requireCompileBuildRule(resolver, name, source, pic);
+            rule = requireCompileBuildRule(resolver, name, source);
           }
 
           objects.add(rule);
@@ -735,7 +712,7 @@ public class CxxSourceRuleFactory {
           // If this is a preprocessable source, first create the preprocess build rule and
           // update the source and name to represent its compilable output.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            CxxPreprocessAndCompile rule = requirePreprocessBuildRule(resolver, name, source, pic);
+            CxxPreprocessAndCompile rule = requirePreprocessBuildRule(resolver, name, source);
             source = CxxSource.copyOf(source)
                 .withType(CxxSourceTypes.getPreprocessorOutputType(source.getType()))
                 .withPath(
@@ -743,7 +720,7 @@ public class CxxSourceRuleFactory {
           }
 
           // Now build the compile build rule.
-          CxxPreprocessAndCompile rule = requireCompileBuildRule(resolver, name, source, pic);
+          CxxPreprocessAndCompile rule = requireCompileBuildRule(resolver, name, source);
           objects.add(rule);
 
           break;
@@ -784,8 +761,9 @@ public class CxxSourceRuleFactory {
             cxxPlatform,
             cxxPreprocessorInput,
             compilerFlags,
-            prefixHeader);
-    return factory.requirePreprocessAndCompileRules(resolver, strategy, sources, pic);
+            prefixHeader,
+            pic);
+    return factory.requirePreprocessAndCompileRules(resolver, strategy, sources);
   }
 
   public enum PicType {
@@ -808,19 +786,14 @@ public class CxxSourceRuleFactory {
 
   }
 
-  @Value.Immutable
+  @Value.Immutable(builder = false)
   @BuckStyleImmutable
   interface AbstractPreprocessAndCompilePreprocessorDelegateKey {
-
     @Value.Parameter
     CxxSource.Type getSourceType();
 
     @Value.Parameter
-    PicType getPicType();
-
-    @Value.Parameter
     ImmutableList<String> getSourceFlags();
-
   }
 
   private class PreprocessorDelegateCacheLoader
@@ -834,7 +807,7 @@ public class CxxSourceRuleFactory {
           cxxPlatform.getDebugPathSanitizer(),
           params.getProjectFilesystem().getRootPath(),
           CxxSourceTypes.getPreprocessor(cxxPlatform, key.getSourceType()),
-          computePlatformPreprocessorFlags(key.getPicType(), key.getSourceType()),
+          computePlatformPreprocessorFlags(key.getSourceType()),
           computeRulePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
           includeRoots.get(),
           systemIncludeRoots.get(),

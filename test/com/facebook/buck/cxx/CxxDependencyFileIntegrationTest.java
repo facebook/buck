@@ -87,15 +87,9 @@ public class CxxDependencyFileIntegrationTest {
     String source = "test.cpp";
     if (mode == CxxPreprocessMode.SEPARATE) {
       preprocessTarget =
-          cxxSourceRuleFactory.createPreprocessBuildTarget(
-              source,
-              CxxSource.Type.CXX,
-              CxxSourceRuleFactory.PicType.PDC);
+          cxxSourceRuleFactory.createPreprocessBuildTarget(source, CxxSource.Type.CXX);
     } else {
-      preprocessTarget =
-          cxxSourceRuleFactory.createCompileBuildTarget(
-              source,
-              CxxSourceRuleFactory.PicType.PDC);
+      preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
     }
     workspace.getBuildLog().assertTargetBuiltLocally(preprocessTarget.toString());
   }

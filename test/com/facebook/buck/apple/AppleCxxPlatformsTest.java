@@ -751,7 +751,8 @@ AppleSdkPaths appleSdkPaths =
               entry.getValue().getCxxPlatform(),
               ImmutableList.<CxxPreprocessorInput>of(),
               ImmutableList.<String>of(),
-              Optional.<SourcePath>absent());
+              Optional.<SourcePath>absent(),
+              CxxSourceRuleFactory.PicType.PIC);
       CxxPreprocessAndCompile rule;
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
@@ -763,7 +764,6 @@ AppleSdkPaths appleSdkPaths =
                       CxxSource.Type.CXX,
                       new FakeSourcePath(source),
                       ImmutableList.<String>of()),
-                  CxxSourceRuleFactory.PicType.PIC,
                   CxxPreprocessMode.COMBINED);
           break;
         case PREPROCESS:
@@ -774,8 +774,7 @@ AppleSdkPaths appleSdkPaths =
                   CxxSource.of(
                       CxxSource.Type.CXX,
                       new FakeSourcePath(source),
-                      ImmutableList.<String>of()),
-                  CxxSourceRuleFactory.PicType.PIC);
+                      ImmutableList.<String>of()));
           break;
         case COMPILE:
           rule =
@@ -785,8 +784,7 @@ AppleSdkPaths appleSdkPaths =
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
                       new FakeSourcePath(source),
-                      ImmutableList.<String>of()),
-                  CxxSourceRuleFactory.PicType.PIC);
+                      ImmutableList.<String>of()));
           break;
         default:
           throw new IllegalStateException();

@@ -569,14 +569,8 @@ public class CxxBinaryIntegrationTest {
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
     BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(
-            sourceName,
-            CxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
-    BuildTarget compileTarget =
-        cxxSourceRuleFactory.createCompileBuildTarget(
-            sourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
+    BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
@@ -708,14 +702,9 @@ public class CxxBinaryIntegrationTest {
     String headerName = "simple_with_header.h";
     String headerFull = "foo/" + headerName;
     BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(
-            sourceName,
-            CxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
     BuildTarget compileTarget =
-        cxxSourceRuleFactory.createCompileBuildTarget(
-            sourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
@@ -793,14 +782,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "foo.cpp";
     BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(
-            sourceName,
-            CxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
-    BuildTarget compileTarget =
-        cxxSourceRuleFactory.createCompileBuildTarget(
-            sourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
+    BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
@@ -817,14 +800,9 @@ public class CxxBinaryIntegrationTest {
     String depHeaderName = "bar.h";
     String depHeaderFull = "foo/" + depHeaderName;
     BuildTarget depPreprocessTarget =
-        depCxxSourceRuleFactory.createPreprocessBuildTarget(
-            depSourceName,
-            CxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
+        depCxxSourceRuleFactory.createPreprocessBuildTarget(depSourceName, CxxSource.Type.CXX);
     BuildTarget depCompileTarget =
-        depCxxSourceRuleFactory.createCompileBuildTarget(
-            depSourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+        depCxxSourceRuleFactory.createCompileBuildTarget(depSourceName);
     BuildTarget depHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTarget,
@@ -1032,10 +1010,7 @@ public class CxxBinaryIntegrationTest {
     // Verify that the preprocessed source contains no references to the symlink tree used to
     // setup the headers.
     BuildTarget ppTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(
-            "bin.cpp",
-            CxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createPreprocessBuildTarget("bin.cpp", CxxSource.Type.CXX);
     Path output =
         cxxSourceRuleFactory.getPreprocessOutputPath(
             ppTarget,

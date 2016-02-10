@@ -159,14 +159,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
         target,
         cxxPlatform);
     BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(
-            sourceName,
-            AbstractCxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
-    BuildTarget compileTarget =
-        cxxSourceRuleFactory.createCompileBuildTarget(
-            sourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, AbstractCxxSource.Type.CXX);
+    BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
 
     // Run the build and verify that the C++ source was (preprocessed and) compiled.
     workspace.runBuckBuild(target.toString()).assertSuccess();
@@ -217,14 +211,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
         target,
         cxxPlatform);
     BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(
-            sourceName,
-            AbstractCxxSource.Type.CXX,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, AbstractCxxSource.Type.CXX);
     BuildTarget compileTarget =
-        cxxSourceRuleFactory.createCompileBuildTarget(
-            sourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+        cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
 
     // Run the build and verify that the C++ source was (preprocessed and) compiled.
     workspace.runBuckBuild(target.toString()).assertSuccess();
@@ -280,10 +269,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         cxxPlatform);
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";
-    BuildTarget compileTarget =
-        cxxSourceRuleFactory.createCompileBuildTarget(
-            sourceName,
-            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
 
     // Run the build and verify that the C++ source was compiled.
     workspace.runBuckBuild(target.toString());
@@ -604,14 +590,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
             target,
             cxxPlatform);
     if (mode == CxxPreprocessMode.SEPARATE) {
-      return cxxSourceRuleFactory.createPreprocessBuildTarget(
-          source,
-          type,
-          CxxSourceRuleFactory.PicType.PDC);
+      return cxxSourceRuleFactory.createPreprocessBuildTarget(source, type);
     } else {
-      return cxxSourceRuleFactory.createCompileBuildTarget(
-          source,
-          CxxSourceRuleFactory.PicType.PDC);
+      return cxxSourceRuleFactory.createCompileBuildTarget(source);
     }
   }
 

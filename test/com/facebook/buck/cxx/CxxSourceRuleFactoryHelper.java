@@ -48,7 +48,28 @@ public class CxxSourceRuleFactoryHelper {
         cxxPlatform,
         ImmutableList.<CxxPreprocessorInput>of(),
         ImmutableList.<String>of(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        CxxSourceRuleFactory.PicType.PDC);
+  }
+
+  public static CxxSourceRuleFactory of(
+      Path cellRoot,
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      CxxSourceRuleFactory.PicType picType) {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    return new CxxSourceRuleFactory(
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))
+            .build(),
+        resolver,
+        new SourcePathResolver(resolver),
+        cxxPlatform,
+        ImmutableList.<CxxPreprocessorInput>of(),
+        ImmutableList.<String>of(),
+        Optional.<SourcePath>absent(),
+        picType);
   }
 
 }

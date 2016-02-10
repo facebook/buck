@@ -293,10 +293,10 @@ public final class CxxInferEnhancer {
             cxxPlatform,
             cxxPreprocessorInputs,
             compilerFlags,
-            prefixHeader);
+            prefixHeader,
+            picType);
     return factory.createInferCaptureBuildRules(
         sources,
-        picType,
         inferTools,
         sourceFilter);
   }
