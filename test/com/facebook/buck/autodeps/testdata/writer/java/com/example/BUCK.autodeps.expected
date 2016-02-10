@@ -1,0 +1,10 @@
+#@# GENERATED FILE: DO NOT MODIFY 0295b98992bb9c49116ce2e0da5312fd0e6d11de #@#
+{
+  "bar" : [
+    "//java/com/example/baz:baz"
+  ],
+  "foo" : [
+    "//java/com/example:bar",
+    "//java/com/example/baz:baz"
+  ]
+}
