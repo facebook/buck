@@ -50,7 +50,7 @@ public class LoadBalancerPingEvent extends AbstractBuckEvent {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public interface AbstractPerServerPingData {
+  interface AbstractPerServerPingData {
     URI getServer();
     Optional<Exception> getException();
     Optional<Long> getPingRequestLatencyMillis();
@@ -58,7 +58,7 @@ public class LoadBalancerPingEvent extends AbstractBuckEvent {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public interface AbstractLoadBalancerPingEventData {
+  interface AbstractLoadBalancerPingEventData {
     ImmutableList<PerServerPingData> getPerServerData();
   }
 }

@@ -29,8 +29,8 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
-import com.facebook.buck.android.ImmutableNdkCxxPlatforms;
 import com.facebook.buck.android.NdkCxxPlatform;
+import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
@@ -328,14 +328,14 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
         ImmutableMap.builder();
     if (ndkRoot.isPresent()) {
-      NdkCxxPlatforms.Compiler.Type compilerType =
+      NdkCxxPlatformCompiler.Type compilerType =
           androidConfig.getNdkCompiler().or(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
       String gccVersion = androidConfig.getNdkGccVersion().or(NdkCxxPlatforms.DEFAULT_GCC_VERSION);
-      NdkCxxPlatforms.Compiler compiler =
-          ImmutableNdkCxxPlatforms.Compiler.builder()
+      NdkCxxPlatformCompiler compiler =
+          NdkCxxPlatformCompiler.builder()
               .setType(compilerType)
               .setVersion(
-                  compilerType == NdkCxxPlatforms.Compiler.Type.GCC ?
+                  compilerType == NdkCxxPlatformCompiler.Type.GCC ?
                       gccVersion :
                       androidConfig.getNdkClangVersion().or(NdkCxxPlatforms.DEFAULT_CLANG_VERSION))
               .setGccVersion(gccVersion)

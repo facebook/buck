@@ -71,10 +71,9 @@ The build will automatically generate a public subclass or implementation of you
         <value>
           <![CDATA[
             //ClassOrInterfaceDeclaration[@PackagePrivate='false']
-              [parent::TypeDeclaration[Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']]
-              [ancestor::TypeDeclaration
-                [Annotation/MarkerAnnotation/Name
-                  [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]]
+              [preceding-sibling::Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']
+              [ancestor::*/Annotation/MarkerAnnotation/Name
+                [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]
           ]]>
         </value>
       </property>
@@ -118,10 +117,9 @@ The build will automatically generate a subclass or implementation of your value
         <value>
           <![CDATA[
             //ClassOrInterfaceDeclaration[not(starts-with(@Image,'Abstract'))]
-              [parent::TypeDeclaration[Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']]
-              [ancestor::TypeDeclaration
-                [Annotation/MarkerAnnotation/Name
-                  [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]]
+              [preceding-sibling::Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']
+              [ancestor::*/Annotation/MarkerAnnotation/Name
+                [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]
           ]]>
         </value>
       </property>

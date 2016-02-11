@@ -64,8 +64,8 @@ public class AndroidBuckConfig {
             });
   }
 
-  public Optional<NdkCxxPlatforms.Compiler.Type> getNdkCompiler() {
-    return delegate.getEnum("ndk", "compiler", NdkCxxPlatforms.Compiler.Type.class);
+  public Optional<NdkCxxPlatformCompiler.Type> getNdkCompiler() {
+    return delegate.getEnum("ndk", "compiler", NdkCxxPlatformCompiler.Type.class);
   }
 
   public Optional<String> getNdkGccVersion() {

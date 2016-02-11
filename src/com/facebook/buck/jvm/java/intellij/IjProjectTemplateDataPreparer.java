@@ -184,7 +184,7 @@ public class IjProjectTemplateDataPreparer {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
+  abstract static class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
     public abstract String getType();
     public abstract String getUrl();
     public abstract boolean getIsTestSource();
@@ -203,7 +203,7 @@ public class IjProjectTemplateDataPreparer {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractContentRoot implements Comparable<ContentRoot> {
+  abstract static class AbstractContentRoot implements Comparable<ContentRoot> {
     public abstract String getUrl();
     public abstract ImmutableSortedSet<IjSourceFolder> getFolders();
 

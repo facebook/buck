@@ -57,7 +57,7 @@ public class NdkCxxPlatformIntegrationTest {
       for (CxxPreprocessMode mode : CxxPreprocessMode.values()) {
         data.add(
             new Object[]{
-                NdkCxxPlatforms.Compiler.Type.GCC,
+                NdkCxxPlatformCompiler.Type.GCC,
                 NdkCxxPlatforms.CxxRuntime.GNUSTL,
                 arch,
                 mode});
@@ -65,13 +65,13 @@ public class NdkCxxPlatformIntegrationTest {
         if (!arch.equals("x86_64")) {
           data.add(
               new Object[]{
-                  NdkCxxPlatforms.Compiler.Type.CLANG,
+                  NdkCxxPlatformCompiler.Type.CLANG,
                   NdkCxxPlatforms.CxxRuntime.GNUSTL,
                   arch,
                   mode});
           data.add(
               new Object[]{
-                  NdkCxxPlatforms.Compiler.Type.CLANG,
+                  NdkCxxPlatformCompiler.Type.CLANG,
                   NdkCxxPlatforms.CxxRuntime.LIBCXX,
                   arch,
                   mode});
@@ -82,7 +82,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Parameterized.Parameter
-  public NdkCxxPlatforms.Compiler.Type compiler;
+  public NdkCxxPlatformCompiler.Type compiler;
 
   @Parameterized.Parameter(value = 1)
   public NdkCxxPlatforms.CxxRuntime cxxRuntime;

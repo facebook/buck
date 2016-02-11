@@ -49,7 +49,7 @@ public class LoadBalancedServiceEvent extends AbstractBuckEvent {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public interface AbstractLoadBalancedServiceEventData {
+  interface AbstractLoadBalancedServiceEventData {
     URI getServer();
     Optional<Exception> getException();
     Optional<Long> getRequestSizeBytes();

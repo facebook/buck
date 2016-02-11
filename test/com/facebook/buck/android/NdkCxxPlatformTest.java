@@ -191,12 +191,12 @@ public class NdkCxxPlatformTest {
   public void checkRootAndPlatformDoNotAffectRuleKeys() throws Exception {
 
     // Test all major compiler and runtime combinations.
-    ImmutableList<Pair<NdkCxxPlatforms.Compiler.Type, NdkCxxPlatforms.CxxRuntime>> configs =
+    ImmutableList<Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime>> configs =
         ImmutableList.of(
-            new Pair<>(NdkCxxPlatforms.Compiler.Type.GCC, NdkCxxPlatforms.CxxRuntime.GNUSTL),
-            new Pair<>(NdkCxxPlatforms.Compiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.GNUSTL),
-            new Pair<>(NdkCxxPlatforms.Compiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.LIBCXX));
-    for (Pair<NdkCxxPlatforms.Compiler.Type, NdkCxxPlatforms.CxxRuntime> config : configs) {
+            new Pair<>(NdkCxxPlatformCompiler.Type.GCC, NdkCxxPlatforms.CxxRuntime.GNUSTL),
+            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.GNUSTL),
+            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.LIBCXX));
+    for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime> config : configs) {
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           preprocessAndCompileRukeKeys = Maps.newHashMap();
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
@@ -218,7 +218,7 @@ public class NdkCxxPlatformTest {
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   filesystem,
-                  ImmutableNdkCxxPlatforms.Compiler.builder()
+                  NdkCxxPlatformCompiler.builder()
                       .setType(config.getFirst())
                       .setVersion("gcc-version")
                       .setGccVersion("clang-version")

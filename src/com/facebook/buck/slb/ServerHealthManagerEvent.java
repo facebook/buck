@@ -49,7 +49,7 @@ public class ServerHealthManagerEvent extends AbstractBuckEvent {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractPerServerData {
+  abstract static class AbstractPerServerData {
     public abstract URI getServer();
 
     @Value.Default
@@ -65,7 +65,7 @@ public class ServerHealthManagerEvent extends AbstractBuckEvent {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractServerHealthManagerEventData {
+  abstract static class AbstractServerHealthManagerEventData {
 
     @Value.Default
     public boolean noHealthyServersAvailable() {

@@ -85,7 +85,7 @@ public class IjDependencyListBuilder {
    */
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractDependencyEntry
+  abstract static class AbstractDependencyEntry
       implements Comparable<AbstractDependencyEntry> {
     protected abstract Optional<DependencyEntryData> getData();
     protected abstract Type getType();
@@ -144,7 +144,7 @@ public class IjDependencyListBuilder {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractDependencyEntryData {
+  abstract static class AbstractDependencyEntryData {
     public abstract String getName();
     public abstract Scope getScope();
     public abstract boolean getExported();

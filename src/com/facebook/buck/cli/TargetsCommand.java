@@ -981,7 +981,7 @@ public class TargetsCommand extends AbstractCommand {
 
   @Value.Immutable
   @BuckStyleImmutable
-  public abstract static class AbstractShowOptions {
+  abstract static class AbstractShowOptions {
     public abstract Optional<String> getOutputPath();
 
     public abstract Optional<String> getRuleKey();
