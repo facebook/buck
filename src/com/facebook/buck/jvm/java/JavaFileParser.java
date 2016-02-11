@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -506,19 +507,28 @@ public class JavaFileParser {
           return true;
         }
 
-        providedSymbols.add(getFullyQualifiedTypeName(node));
+        String fullyQualifiedName = getFullyQualifiedTypeName(node);
+        if (fullyQualifiedName != null) {
+          providedSymbols.add(fullyQualifiedName);
+        }
         return true;
       }
 
       @Override
       public boolean visit(EnumDeclaration node) {
-        providedSymbols.add(getFullyQualifiedTypeName(node));
+        String fullyQualifiedName = getFullyQualifiedTypeName(node);
+        if (fullyQualifiedName != null) {
+          providedSymbols.add(fullyQualifiedName);
+        }
         return true;
       }
 
       @Override
       public boolean visit(AnnotationTypeDeclaration node) {
-        providedSymbols.add(getFullyQualifiedTypeName(node));
+        String fullyQualifiedName = getFullyQualifiedTypeName(node);
+        if (fullyQualifiedName != null) {
+          providedSymbols.add(fullyQualifiedName);
+        }
         return true;
       }
 
@@ -794,13 +804,22 @@ public class JavaFileParser {
     return (CompilationUnit) parser.createAST(/* monitor */ null);
   }
 
+  @Nullable
   private String getFullyQualifiedTypeName(AbstractTypeDeclaration node) {
     LinkedList<String> nameParts = Lists.newLinkedList();
     nameParts.add(node.getName().toString());
     ASTNode parent = node.getParent();
     while (!(parent instanceof CompilationUnit)) {
-      nameParts.addFirst(((AbstractTypeDeclaration) parent).getName().toString());
-      parent = parent.getParent();
+      if (parent instanceof AbstractTypeDeclaration) {
+        nameParts.addFirst(((AbstractTypeDeclaration) parent).getName().toString());
+        parent = parent.getParent();
+      } else if (parent instanceof AnonymousClassDeclaration) {
+        // If this is defined in an anonymous class, then there is no meaningful fully qualified
+        // name.
+        return null;
+      } else {
+        throw new RuntimeException("Unexpected parent " + parent + " for " + node);
+      }
     }
 
     // A Java file might not have a package. Hopefully all of ours do though...

@@ -47,7 +47,7 @@ public class JavaFileParserTest {
       "  }",
       "",
       "  interface InnerInterface {",
-      "  }" +
+      "  }",
       "}",
       "",
       "class AnotherOuterClass {",
@@ -68,6 +68,35 @@ public class JavaFileParserTest {
             "com.example.Example.InnerEnum",
             "com.example.Example.InnerEnum.InnerClass",
             "com.example.Example.InnerInterface"),
+        symbols);
+  }
+
+  private static final String JAVA_CODE_WITH_LOCAL_CLASS_IN_ANONYMOUS_CLASS = Joiner.on('\n').join(
+      "package com.example;",
+      "public class NonlocalClass {",
+      "  @Override",
+      "  Iterator<Entry<K, V>> entryIterator() {",
+      "    return new Itr<Entry<K, V>>() {",
+      "      @Override",
+      "      Entry<K, V> output(BiEntry<K, V> entry) {",
+      "        return new MapEntry(entry);",
+      "      }",
+      "",
+      "      class MapEntry  {}",
+      "    };",
+      "  }",
+      "}");
+
+  @Test
+  public void testJavaFileParsingWithLocalClassInAnonymousClass() throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+
+    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
+        JAVA_CODE_WITH_LOCAL_CLASS_IN_ANONYMOUS_CLASS);
+
+    assertEquals(
+        "getExportedSymbolsFromString should not consider non-local classes to be provided",
+        ImmutableSortedSet.of("com.example.NonlocalClass"),
         symbols);
   }
 
@@ -459,8 +488,8 @@ public class JavaFileParserTest {
           "package com.example;",
           "",
           "public class AnExample {",
-          "  public void createWidget() {" +
-          "    Widget widget = WidgetFactory.newInstance();" +
+          "  public void createWidget() {",
+          "    Widget widget = WidgetFactory.newInstance();",
           "  }",
           "}"
       );
