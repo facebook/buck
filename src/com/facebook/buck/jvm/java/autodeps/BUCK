@@ -1,0 +1,33 @@
+java_library(
+  name = 'autodeps',
+  srcs = glob(['*.java']),
+  # JavaDepsFinder is verified via AutodepsCommandIntegrationTest.
+  #
+  # Because the bulk of the logic to test in JavaDepsFinder requires a TargetGraph,
+  # and it is considerably easier to define a TargetGraph by creating sample projects
+  # under testdata/ than it is to  construct one programmatically, it makes
+  # sense to use Buck's integration test framework to verify JavaDepsFinder rather
+  # than a conventional unit test. Since the integration test framework is generally
+  # driven by running a Buck subcommand, it makes sense for AutodepsCommandIntegrationTest
+  # to be responsible for verifying JavaDepsFinder.
+  tests = [
+    '//test/com/facebook/buck/cli:cli',
+  ],
+  deps = [
+    '//src/com/facebook/buck/autodeps:model',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/io:io', # Not detected by autodeps!
+    '//src/com/facebook/buck/jvm/java:autodeps',
+    '//src/com/facebook/buck/jvm/java:config',
+    '//src/com/facebook/buck/jvm/java:rules',
+    '//src/com/facebook/buck/jvm/java:support',
+    '//src/com/facebook/buck/model:model', # Not detected by autodeps!
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:io',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [ 'PUBLIC' ],
+)

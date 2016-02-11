@@ -106,6 +106,7 @@ public class MainIntegrationTest {
         "  buck command [command-options]",
         "available commands:",
         "  audit       lists the inputs for the specified target",
+        "  autodeps    auto-generates dependencies for build rules, where possible",
         "  build       builds the specified target",
         "  cache       makes calls to the artifact cache",
         "  clean       deletes any generated files",

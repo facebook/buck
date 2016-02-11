@@ -1,0 +1,12 @@
+java_library(
+  name = 'foo',
+  srcs = [
+    'Foo.java',
+  ],
+  autodeps = True,
+)
+
+prebuilt_jar(
+  name = 'bar',
+  binary_jar = 'fake.jar',
+)

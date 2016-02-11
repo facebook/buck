@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY 245f4ceff824e396e204f9ab851f686946413242 #@#
+{
+  "foo" : [
+    "//alternate_bar:bar"
+  ]
+}

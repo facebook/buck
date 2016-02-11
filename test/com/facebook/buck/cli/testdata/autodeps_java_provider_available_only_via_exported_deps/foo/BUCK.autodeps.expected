@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY d37a6d5a27cd3db551cb0c1d75be6b7abc36c77c #@#
+{
+  "foo" : [
+    "//bar:public_bar"
+  ]
+}

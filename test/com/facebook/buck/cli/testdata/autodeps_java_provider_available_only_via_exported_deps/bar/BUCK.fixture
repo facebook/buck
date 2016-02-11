@@ -1,0 +1,15 @@
+java_library(
+  name = 'public_bar',
+  exported_deps = [
+    ':bar',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+java_library(
+  name = 'bar',
+  srcs = [
+    'Bar.java',
+  ],
+  autodeps = True,
+)
