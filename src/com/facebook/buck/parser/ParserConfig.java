@@ -47,6 +47,12 @@ public class ParserConfig {
     ;
   }
 
+  public enum BuildFileSearchMethod {
+    FILESYSTEM_CRAWL,
+    WATCHMAN,
+    ;
+  }
+
   private final BuckConfig delegate;
 
   public ParserConfig(BuckConfig delegate) {
@@ -101,6 +107,10 @@ public class ParserConfig {
   public AllowSymlinks getAllowSymlinks() {
     return delegate.getEnum("project", "allow_symlinks", AllowSymlinks.class)
         .or(AllowSymlinks.ALLOW);
+  }
+
+  public Optional<BuildFileSearchMethod> getBuildFileSearchMethod() {
+    return delegate.getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
   }
 
   public GlobHandler getGlobHandler() {

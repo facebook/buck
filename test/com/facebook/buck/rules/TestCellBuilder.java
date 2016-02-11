@@ -23,6 +23,7 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -48,6 +49,7 @@ public class TestCellBuilder {
   private AndroidDirectoryResolver androidDirectoryResolver;
   @Nullable
   private ProjectBuildFileParserFactory parserFactory;
+  private Watchman watchman = NULL_WATCHMAN;
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
@@ -74,6 +76,11 @@ public class TestCellBuilder {
     return this;
   }
 
+  public TestCellBuilder setWatchman(Watchman watchman) {
+    this.watchman = watchman;
+    return this;
+  }
+
   public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
 
@@ -90,7 +97,7 @@ public class TestCellBuilder {
       return Cell.createCell(
           filesystem,
           new TestConsole(),
-          NULL_WATCHMAN,
+          watchman,
           config,
           typesFactory,
           androidDirectoryResolver,

@@ -379,6 +379,18 @@ public class Parser {
                 eventBus,
                 rootCell,
                 enableProfiling)) {
+
+      ParserConfig.BuildFileSearchMethod buildFileSearchMethod;
+      if (parserConfig.getBuildFileSearchMethod().isPresent()) {
+        buildFileSearchMethod = parserConfig.getBuildFileSearchMethod().get();
+      } else if (parserConfig.getAllowSymlinks() == ParserConfig.AllowSymlinks.FORBID) {
+        // If unspecified, only use Watchman in repositories which enforce a "no symlinks" rule
+        // (Watchman doesn't follow symlinks).
+        buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.WATCHMAN;
+      } else {
+        buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL;
+      }
+
       Multimap<TargetNodeSpec, Path> specBuildFilePaths = LinkedHashMultimap.create();
 
       for (TargetNodeSpec spec : specs) {
@@ -388,8 +400,9 @@ public class Parser {
                  "targetNodeSpec",
                  spec)) {
           // Iterate over the build files the given target node spec returns.
-          for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(rootCell)) {
-
+          for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(
+                   rootCell,
+                   buildFileSearchMethod)) {
             // Format a proper error message for non-existent build files.
             if (!rootCell.getFilesystem().isFile(buildFile)) {
               throw new MissingBuildFileException(

@@ -318,7 +318,10 @@ public class Watchman implements AutoCloseable {
     };
   }
 
-  private Watchman(
+  // TODO(bhamiltoncx): Split the metadata out into an immutable value type and pass
+  // the WatchmanClient separately.
+  @VisibleForTesting
+  public Watchman(
       Optional<String> version,
       Optional<String> projectName,
       Optional<String> watchRoot,

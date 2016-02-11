@@ -268,6 +268,10 @@ public class Cell {
     return buildFile;
   }
 
+  public Watchman getWatchman() {
+    return watchman;
+  }
+
   /**
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
