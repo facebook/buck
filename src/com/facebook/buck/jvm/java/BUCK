@@ -280,6 +280,7 @@ java_library(
     '//src/com/facebook/buck/util:io',
     '//third-party/java/eclipse:eclipse_jdt',
     '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
