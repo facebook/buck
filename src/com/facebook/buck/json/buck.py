@@ -146,17 +146,28 @@ def add_rule(rule, build_env):
                          (rule, build_env.rules[rule_name]))
     rule['buck.base_path'] = build_env.base_path
 
+    # It is possible that the user changed the rule from autodeps=True to autodeps=False
+    # without re-running `buck autodeps` (this is common when resolving merge conflicts).
+    # When this happens, the deps in BUCK.autodeps should be ignored because autodeps is
+    # set to False.
     if rule_name in build_env.autodeps:
-        # Combine all of the deps into a set to eliminate duplicates. Although we would prefer it
-        # if each dep were exclusively in BUCK or BUCK.autodeps, that is not always possible. For
-        # example, if a user-defined macro creates a library that hardcodes a dep and the tooling
-        # to produce BUCK.autodeps also infers the need for that dep and adds it to
-        # BUCK.autodeps, then it will appear in both places.
-        explicit_deps = rule.get('deps', [])
-        autodeps = build_env.autodeps[rule_name]
-        deps = set(explicit_deps)
-        deps.update(autodeps)
-        rule['deps'] = list(deps)
+        if rule.get('autodeps', False):
+            # Combine all of the deps into a set to eliminate duplicates. Although we would prefer
+            # it if each dep were exclusively in BUCK or BUCK.autodeps, that is not always
+            # possible. For example, if a user-defined macro creates a library that hardcodes a dep
+            # and the tooling to produce BUCK.autodeps also infers the need for that dep and adds
+            # it to BUCK.autodeps, then it will appear in both places.
+            explicit_deps = rule.get('deps', [])
+            autodeps = build_env.autodeps[rule_name]
+            deps = set(explicit_deps)
+            deps.update(autodeps)
+            rule['deps'] = list(deps)
+        else:
+            # If there is an entry in the .autodeps file for the rule, but the rule has autodeps
+            # set to False, then the .autodeps file is likely out of date. Ideally, we would warn
+            # the user to re-run `buck autodeps` in this scenario. Unfortunately, we do not have
+            # a mechanism to relay warnings from buck.py at the time of this writing.
+            pass
     build_env.rules[rule_name] = rule
 
 

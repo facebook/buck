@@ -1,6 +1,7 @@
 java_library(
   name = 'bar',
-  srcs = ['Bar.java']
+  srcs = ['Bar.java'],
+  autodeps = True,
 )
 
 java_binary(
