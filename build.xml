@@ -42,8 +42,9 @@
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
+  <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
 
-  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}" />
+  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
@@ -738,7 +739,7 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, pathlib-py-test, zip-munger-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
@@ -766,6 +767,13 @@
     <exec executable="python" failonerror="true">
       <env key="PYTHONPATH" path="${basedir}" />
       <arg value="py/buck/zip/test_munger.py" />
+    </exec>
+  </target>
+
+  <target name="buck-tool-py-test" description="tests buck_tool.py">
+    <exec executable="python" failonerror="true">
+      <env key="PYTHONPATH" path="${buck.pythonpath}" />
+      <arg value="programs/test_buck_tool.py" />
     </exec>
   </target>
 

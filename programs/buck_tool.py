@@ -57,6 +57,29 @@ EXPORTED_RESOURCES = [
 ]
 
 
+class CommandLineArgs:
+    def __init__(self, cmdline):
+        self.args = cmdline[1:]
+
+        self.buck_options = []
+        self.command = None
+        self.command_options = []
+
+        for arg in self.args:
+            if (self.command is not None):
+                self.command_options.append(arg)
+            elif (arg[:1]) == "-":
+                self.buck_options.append(arg)
+            else:
+                self.command = arg
+
+    # Whether this is a help command that doesn't run a build
+    # n.b. 'buck --help clean' is *not* currently a help command
+    # n.b. 'buck --version' *is* a help command
+    def is_help(self):
+        return self.command is None or "--help" in self.command_options
+
+
 class RestartBuck(Exception):
     pass
 
@@ -68,6 +91,7 @@ class BuckToolException(Exception):
 class BuckTool(object):
 
     def __init__(self, buck_project):
+        self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
         self._tmp_dir = self._platform_path(buck_project.tmp_dir)
 
@@ -85,7 +109,7 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _use_buckd(self):
-        return not os.environ.get('NO_BUCKD')
+        return not os.environ.get('NO_BUCKD') and not self._command_line.is_help()
 
     def _environ_for_buck(self):
         env = os.environ.copy()
@@ -103,33 +127,34 @@ class BuckTool(object):
 
     def launch_buck(self, build_id):
         with Tracing('BuckRepo.launch_buck'):
-            if 'clean' in sys.argv:
+            if self._command_line.command == "clean" and not self._command_line.is_help():
                 self.kill_buckd()
 
             buck_version_uid = self._get_buck_version_uid()
 
             use_buckd = self._use_buckd()
-            has_watchman = bool(which('watchman'))
-            if use_buckd and has_watchman:
-                buckd_run_count = self._buck_project.get_buckd_run_count()
-                running_version = self._buck_project.get_running_buckd_version()
-                new_buckd_run_count = buckd_run_count + 1
+            if not self._command_line.is_help():
+                has_watchman = bool(which('watchman'))
+                if use_buckd and has_watchman:
+                    buckd_run_count = self._buck_project.get_buckd_run_count()
+                    running_version = self._buck_project.get_running_buckd_version()
+                    new_buckd_run_count = buckd_run_count + 1
 
-                if (buckd_run_count == MAX_BUCKD_RUN_COUNT or
-                        running_version != buck_version_uid):
-                    self.kill_buckd()
-                    new_buckd_run_count = 0
+                    if (buckd_run_count == MAX_BUCKD_RUN_COUNT or
+                            running_version != buck_version_uid):
+                        self.kill_buckd()
+                        new_buckd_run_count = 0
 
-                if new_buckd_run_count == 0 or not self._is_buckd_running():
-                    self.launch_buckd(buck_version_uid=buck_version_uid)
-                else:
-                    self._buck_project.update_buckd_run_count(new_buckd_run_count)
-            elif use_buckd and not has_watchman:
-                print("Not using buckd because watchman isn't installed.",
-                      file=sys.stderr)
-            elif not use_buckd:
-                print("Not using buckd because NO_BUCKD is set.",
-                      file=sys.stderr)
+                    if new_buckd_run_count == 0 or not self._is_buckd_running():
+                        self.launch_buckd(buck_version_uid=buck_version_uid)
+                    else:
+                        self._buck_project.update_buckd_run_count(new_buckd_run_count)
+                elif use_buckd and not has_watchman:
+                    print("Not using buckd because watchman isn't installed.",
+                          file=sys.stderr)
+                elif not use_buckd:
+                    print("Not using buckd because NO_BUCKD is set.",
+                          file=sys.stderr)
 
             env = self._environ_for_buck()
             env['BUCK_BUILD_ID'] = build_id

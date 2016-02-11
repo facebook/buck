@@ -97,3 +97,12 @@ python_binary(
     ':subprocutils',
   ],
 )
+
+python_test(
+  name = 'test',
+  srcs = glob(['test_*.py']),
+  deps = [
+    ':bucklib',
+    ':subprocutils',
+  ],
+)
