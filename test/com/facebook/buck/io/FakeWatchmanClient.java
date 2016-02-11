@@ -17,10 +17,10 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +52,10 @@ public class FakeWatchmanClient implements WatchmanClient {
   public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
       long timeoutNanos,
       Object... query) throws InterruptedException, IOException {
+    Map<String, ? extends Object> result = queryResults.get(Arrays.asList(query));
+    if (result == null) {
+      throw new RuntimeException(String.format("Could not find results for query %s", query));
+    }
     if (queryElapsedTimeNanos > timeoutNanos) {
       return Optional.absent();
     }
@@ -64,7 +68,7 @@ public class FakeWatchmanClient implements WatchmanClient {
         throw new RuntimeException("Invalid exception");
       }
     }
-    return Optional.fromNullable(queryResults.get(ImmutableList.copyOf(query)));
+    return Optional.of(result);
   }
 
   @Override
