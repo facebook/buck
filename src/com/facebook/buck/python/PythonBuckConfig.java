@@ -224,7 +224,11 @@ public class PythonBuckConfig {
         BuckVersion.getVersion());
   }
 
-  public Optional<Tool> getPathToPexExecuter(BuildRuleResolver resolver) {
+  public Optional<BuildTarget> getPexExecutorTarget() {
+    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex_executer");
+  }
+
+  public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
     return delegate.getTool(SECTION, "path_to_pex_executer", resolver);
   }
 

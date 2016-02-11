@@ -237,7 +237,7 @@ public class PythonTest
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(binary)
+        .addAll(binary.getExecutableCommand().getDeps(getResolver()))
         .addAll(additionalDeps)
         .build();
   }

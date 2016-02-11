@@ -255,7 +255,7 @@ public class PythonBuckConfigTest {
                 .build(),
             new ExecutableFinder());
     assertThat(
-        config.getPathToPexExecuter(resolver).get().getCommandPrefix(pathResolver),
+        config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
         Matchers.contains(pexExecuter.toString()));
   }
 

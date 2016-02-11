@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
 
-  private PythonTestBuilder(
+  protected PythonTestBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,

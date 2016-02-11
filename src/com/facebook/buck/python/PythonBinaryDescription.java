@@ -236,7 +236,7 @@ public class PythonBinaryDescription implements
             pythonPlatform,
             pexTool,
             buildArgs,
-            pythonBuckConfig.getPathToPexExecuter(resolver).or(pythonPlatform.getEnvironment()),
+            pythonBuckConfig.getPexExecutor(resolver).or(pythonPlatform.getEnvironment()),
             pythonBuckConfig.getPexExtension(),
             pythonPlatform.getEnvironment(),
             mainModule,
@@ -335,6 +335,7 @@ public class PythonBinaryDescription implements
 
     if (pythonBuckConfig.getPackageStyle() == PythonBuckConfig.PackageStyle.STANDALONE) {
       targets.addAll(pythonBuckConfig.getPexTarget().asSet());
+      targets.addAll(pythonBuckConfig.getPexExecutorTarget().asSet());
     }
 
     return targets.build();
