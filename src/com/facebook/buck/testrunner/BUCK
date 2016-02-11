@@ -25,6 +25,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/testrunner:junit',
   ],
+  autodeps = False, # See comment in deps. Should be manually maintained.
   deps = [
     ':base',
     # IMPORTANT! This library limits itself to types that are available in both the JDK and Android
@@ -49,8 +50,6 @@ java_library(
   deps = [
     ':base',
     '//third-party/java/testng:testng',
-  ],
-  visibility = [
   ],
 )
 

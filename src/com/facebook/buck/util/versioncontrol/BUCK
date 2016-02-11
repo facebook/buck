@@ -15,20 +15,12 @@ java_immutables_library (
     '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
     '//test/com/facebook/buck/util/versioncontrol:hg_cmd_line_interface_integration',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util:io',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
 )
+
 java_immutables_library (
   name = 'impl',
   srcs = glob(['*.java'], excludes = PUBLIC_SRCS),
@@ -36,17 +28,7 @@ java_immutables_library (
     '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
     '//test/com/facebook/buck/util/versioncontrol:hg_cmd_line_interface_integration',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
-  ],
+  autodeps = True,
   visibility = [
    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
    '//src/com/facebook/buck/cli:cli',

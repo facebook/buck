@@ -8,13 +8,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/apple/xcode:xcode',
   ],
-  deps = [
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:util',
-    '//third-party/java/dd-plist:dd-plist',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

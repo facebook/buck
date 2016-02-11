@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY 9ac103e19e2cfdaaaba51f9b3f337446ea747dc0 #@#
+{
+  "immutables" : [
+    "//third-party/java/immutables:processor"
+  ]
+}

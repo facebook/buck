@@ -1,0 +1,15 @@
+#@# GENERATED FILE: DO NOT MODIFY 08510bb8ce43f12838565888da773724c5707491 #@#
+{
+  "rust" : [
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/shell:steps",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/step/fs:fs",
+    "//src/com/facebook/buck/util:exceptions",
+    "//third-party/java/guava:guava",
+    "//third-party/java/infer-annotations:infer-annotations"
+  ]
+}

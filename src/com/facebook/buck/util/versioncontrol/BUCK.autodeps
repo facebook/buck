@@ -1,0 +1,17 @@
+#@# GENERATED FILE: DO NOT MODIFY d2601903dd370ccd22453d1bfbc04c04cef1940c #@#
+{
+  "impl" : [
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+    "//third-party/java/guava:guava"
+  ],
+  "versioncontrol" : [
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/log:api",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor"
+  ]
+}

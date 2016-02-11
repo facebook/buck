@@ -13,6 +13,7 @@ java_binary (
 java_library(
   name = 'api',
   srcs = glob(['*.java']),
+  autodeps = False, # See below.
   deps = [
     # Don't add deps; this is a super-light library that can be used outside of Buck
   ],
@@ -20,4 +21,3 @@ java_library(
     'PUBLIC',
   ],
 )
-

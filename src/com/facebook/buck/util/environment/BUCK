@@ -6,10 +6,7 @@ PLATFORM_SRCS = [
 java_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
-  deps = [
-    '//src/com/facebook/buck/log:api',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -22,10 +19,7 @@ FILTER_SRCS = [
 java_library(
   name = 'env-filter',
   srcs = FILTER_SRCS,
-  deps = [
-    ':platform',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -37,18 +31,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/util/environment:environment',
   ],
-  deps = [
-    ':env-filter',
-    ':platform',
-    '//third-party/java/ObjCBridge:ObjCBridge',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jna:jna',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:tristate',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util/network:network',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

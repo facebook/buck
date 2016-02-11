@@ -1,0 +1,8 @@
+#@# GENERATED FILE: DO NOT MODIFY d13879f59b0ecd01b3dc128e4f2af0a954d015ed #@#
+{
+  "firstorder" : [
+    "//third-party/java/asm:asm",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

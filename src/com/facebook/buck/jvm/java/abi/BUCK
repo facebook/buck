@@ -8,13 +8,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/jvm/java/abi:abi',
   ],
-  deps = [
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/zip:stream',
-    '//third-party/java/asm:asm',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/jvm/java:steps',
     '//test/com/facebook/buck/jvm/java/abi:abi'
@@ -40,8 +34,5 @@ java_binary(
 java_library(
   name = 'lib-api-stubber',
   srcs = [ 'ApiStubber.java' ],
-  deps = [
-    ':abi',
-     '//src/com/facebook/buck/io:io',
-  ],
+  autodeps = True,
 )

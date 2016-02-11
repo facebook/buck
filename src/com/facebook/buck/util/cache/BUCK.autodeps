@@ -1,0 +1,13 @@
+#@# GENERATED FILE: DO NOT MODIFY f4ba167938abb854ea03cad4d55e0ce7c771c46a #@#
+{
+  "cache" : [
+    "//src/com/facebook/buck/hashing:hashing",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

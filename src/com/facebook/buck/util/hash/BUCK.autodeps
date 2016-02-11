@@ -1,0 +1,7 @@
+#@# GENERATED FILE: DO NOT MODIFY 129f9049324ecc1dc713462c45564562bf5f7996 #@#
+{
+  "hash" : [
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

@@ -1,0 +1,7 @@
+#@# GENERATED FILE: DO NOT MODIFY c1cf2a4dfee66a5c8c5eb9fca589e4e1caf68b9f #@#
+{
+  "hashing" : [
+    "//src/com/facebook/buck/io:io",
+    "//third-party/java/guava:guava"
+  ]
+}

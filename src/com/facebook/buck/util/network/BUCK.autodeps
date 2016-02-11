@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 45902c3a36c1a843278fd52ca708e85a938a9028 #@#
+{
+  "network" : [
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util:exceptions",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jackson:jackson-core",
+    "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jna:jna",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

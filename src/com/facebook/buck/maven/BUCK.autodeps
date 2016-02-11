@@ -1,0 +1,30 @@
+#@# GENERATED FILE: DO NOT MODIFY 9f68c131a50b8330d75499f0c0be29d7117455f3 #@#
+{
+  "maven" : [
+    "//src/com/facebook/buck/graph:graph",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/jvm/java:support",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/maven:util",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//third-party/java/aether:aether-api",
+    "//third-party/java/aether:aether-spi",
+    "//third-party/java/aether:aether-util",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305",
+    "//third-party/java/maven:maven-aether-provider",
+    "//third-party/java/maven:maven-model",
+    "//third-party/java/maven:maven-model-builder",
+    "//third-party/java/stringtemplate:stringtemplate"
+  ],
+  "util" : [
+    "//third-party/java/aether:aether-api",
+    "//third-party/java/aether:aether-connector-basic",
+    "//third-party/java/aether:aether-impl",
+    "//third-party/java/aether:aether-spi",
+    "//third-party/java/aether:aether-transport-http",
+    "//third-party/java/maven:maven-aether-provider",
+    "//third-party/java/slf4j:slf4j-api"
+  ]
+}

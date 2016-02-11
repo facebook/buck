@@ -1,22 +1,13 @@
 java_library(
   name = 'autodeps',
   srcs = ['AutodepsWriter.java'],
-  deps = [
-    ':model',
-    '//src/com/facebook/buck/model:model',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson',
-  ],
+  autodeps = True,
   visibility = [ 'PUBLIC' ],
 )
 
 java_library(
   name = 'model',
   srcs = ['DepsForBuildFiles.java'],
-  deps = [
-    '//src/com/facebook/buck/model:model',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [ 'PUBLIC' ],
 )

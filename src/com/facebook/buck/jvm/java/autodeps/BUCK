@@ -13,21 +13,6 @@ java_library(
   tests = [
     '//test/com/facebook/buck/cli:cli',
   ],
-  deps = [
-    '//src/com/facebook/buck/autodeps:model',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/io:io', # Not detected by autodeps!
-    '//src/com/facebook/buck/jvm/java:autodeps',
-    '//src/com/facebook/buck/jvm/java:config',
-    '//src/com/facebook/buck/jvm/java:rules',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//src/com/facebook/buck/model:model', # Not detected by autodeps!
-    '//src/com/facebook/buck/parser:rule_pattern',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:io',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [ 'PUBLIC' ],
 )

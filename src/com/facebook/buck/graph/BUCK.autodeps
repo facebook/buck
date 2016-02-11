@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY 5cafe165840ca786f5bd4ad8c883223baf2081f6 #@#
+{
+  "graph" : [
+    "//third-party/java/guava:guava"
+  ]
+}

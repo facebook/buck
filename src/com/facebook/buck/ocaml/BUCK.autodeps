@@ -1,0 +1,28 @@
+#@# GENERATED FILE: DO NOT MODIFY 8369958f0989197c6771c0a2afb6bab15dd61d4e #@#
+{
+  "rules" : [
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/cxx:platform",
+    "//src/com/facebook/buck/cxx:rules",
+    "//src/com/facebook/buck/graph:graph",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/parser:rule_pattern",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/rules:rules",
+    "//src/com/facebook/buck/rules/args:args",
+    "//src/com/facebook/buck/rules/coercer:coercer",
+    "//src/com/facebook/buck/shell:steps",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/step/fs:fs",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/environment:platform",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/infer-annotations:infer-annotations",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

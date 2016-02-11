@@ -15,6 +15,7 @@ java_test(
     '//src/com/facebook/buck/jvm/java:support',
     '//src/com/facebook/buck/jvm/java/tracing:tracing',
     '//src/com/facebook/buck/json:json',
+    '//src/com/facebook/buck/model:build_id',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/rules:build_rule',

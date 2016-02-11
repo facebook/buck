@@ -4,7 +4,6 @@ APPENDABLE_LOG_RECORD_FILES = ['AppendableLogRecord.java']
 java_library(
   name = 'appendablelogrecord',
   srcs = APPENDABLE_LOG_RECORD_FILES,
-  deps = [],
   visibility = [
     # The test runner needs access to this so it can format Buck's special
     # AppendableLogRecords in its JulLogFormatter.
@@ -31,15 +30,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/log:log',
   ],
-  deps = [
-    ':appendablelogrecord',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/util/concurrent:concurrent',
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:io',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/android:helpers',
     '//src/com/facebook/buck/android:rules',
@@ -50,6 +41,5 @@ java_library(
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/log/...',
     '//test/com/facebook/buck/rules/...',
-  ]
-,
+  ],
 )

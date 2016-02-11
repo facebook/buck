@@ -1,0 +1,7 @@
+#@# GENERATED FILE: DO NOT MODIFY 907748cbe6ae1360de4d5717184a99a5f1433d6f #@#
+{
+  "bser" : [
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

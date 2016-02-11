@@ -8,6 +8,7 @@ java_test(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/jvm/java:rules',
+    '//src/com/facebook/buck/model:build_id',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/rules:build_rule',
@@ -41,6 +42,7 @@ java_library(
   deps = [
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/model:build_id',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/timing:timing',
   ],

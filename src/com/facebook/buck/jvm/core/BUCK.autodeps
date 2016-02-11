@@ -1,0 +1,13 @@
+#@# GENERATED FILE: DO NOT MODIFY 6b8d0d1d455c27f407c865bdf219d4a7edf4f965 #@#
+{
+  "classhash" : [
+    "//src/com/facebook/buck/model:model",
+    "//third-party/java/guava:guava"
+  ],
+  "packagefinder" : [
+    "//src/com/facebook/buck/model:model"
+  ],
+  "suggestbuildrules" : [
+    "//third-party/java/guava:guava"
+  ]
+}

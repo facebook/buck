@@ -1,9 +1,7 @@
 java_library(
   name = 'elf',
   srcs = glob(['*.java']),
-  deps = [
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

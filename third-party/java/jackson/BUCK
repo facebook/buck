@@ -7,18 +7,6 @@ java_library(
       ':jackson-databind',
     ],
     visibility = [
-      '//src/com/facebook/buck/apple:rules',
-      '//src/com/facebook/buck/autodeps:autodeps',
-      '//src/com/facebook/buck/cxx:rules',
-      '//src/com/facebook/buck/d:d',
-      '//src/com/facebook/buck/event:event',
-      '//src/com/facebook/buck/go:go',
-      '//src/com/facebook/buck/io:watchman',
-      '//src/com/facebook/buck/jvm/java:rules',
-      '//src/com/facebook/buck/python:rules',
-      '//src/com/facebook/buck/rules/...',
-      '//src/com/facebook/buck/simulate/...',
-      '//src/com/facebook/buck/step:step',
       '//test/...',
     ],
 )
@@ -26,25 +14,13 @@ java_library(
 prebuilt_jar(
   name = 'jackson-annotations',
   binary_jar = 'jackson-annotations-2.0.5.jar',
-  visibility = [
-    '//src/com/facebook/buck/artifact_cache:artifact_cache',
-    '//src/com/facebook/buck/event/listener:listener',
-    '//src/com/facebook/buck/command:command',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:parser',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/test:test',
-    '//test/...',
-  ],
+  visibility = [ 'PUBLIC' ],
 )
 
 prebuilt_jar(
   name = 'jackson-core',
   binary_jar = 'jackson-core-2.0.5.jar',
-  visibility = [
-    'PUBLIC',
-  ],
+  visibility = [ 'PUBLIC' ],
 )
 
 prebuilt_jar(
@@ -56,24 +32,18 @@ prebuilt_jar(
   ],
 )
 
-prebuilt_jar(
+java_library(
   name = 'jackson-databind',
-  binary_jar = 'jackson-databind-2.0.5.jar',
-  visibility = [
-    '//src/com/facebook/buck/android:rules',
-    '//src/com/facebook/buck/android:steps',
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/command:command',
-    '//src/com/facebook/buck/event/listener:listener',
-    '//src/com/facebook/buck/httpserver:httpserver',
-    '//src/com/facebook/buck/jvm/java/intellij:intellij',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:parser',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/util/network:network',
-    '//src/com/facebook/buck/util:watchman',
-    '//src/com/facebook/buck/shell:rules',
-    '//src/com/facebook/buck/shell:steps',
-    '//test/...',
+  exported_deps = [
+    # If ObjectMapper.writeValue() is used, then
+    # com.fasterxml.jackson.core.ObjectCodec needs to be accessible.
+    ':jackson-core',
+    ':jackson-databind-jar',
   ],
+  visibility = [ 'PUBLIC' ],
+)
+
+prebuilt_jar(
+  name = 'jackson-databind-jar',
+  binary_jar = 'jackson-databind-2.0.5.jar',
 )

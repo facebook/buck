@@ -1,0 +1,22 @@
+#@# GENERATED FILE: DO NOT MODIFY fbafa5eb2edfd04a68b8e0c25fd765e9ec748f39 #@#
+{
+  "step" : [
+    "//src/com/facebook/buck/android:exceptions",
+    "//src/com/facebook/buck/android:utils",
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/jvm/core:packagefinder",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/model:build_id",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/concurrent:concurrent",
+    "//src/com/facebook/buck/util/environment:platform",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jackson:jackson-annotations",
+    "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

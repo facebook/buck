@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 3a43f1a20116ac6e817e06a9b7b409a2ac208c51 #@#
+{
+  "xcode" : [
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/dd-plist:dd-plist",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

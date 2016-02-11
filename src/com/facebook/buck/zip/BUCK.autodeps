@@ -1,0 +1,37 @@
+#@# GENERATED FILE: DO NOT MODIFY 707b8c14e3fbfc4e6bcb40d293735ddcc940ca59 #@#
+{
+  "rules" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/jvm/java:support",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/step/fs:fs",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/zip:constants",
+    "//src/com/facebook/buck/zip:steps",
+    "//third-party/java/guava:guava"
+  ],
+  "steps" : [
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/zip:constants",
+    "//src/com/facebook/buck/zip:stream",
+    "//src/com/facebook/buck/zip:unzip",
+    "//third-party/java/guava:guava"
+  ],
+  "stream" : [
+    "//src/com/facebook/buck/timing:timing",
+    "//src/com/facebook/buck/util:exceptions",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ],
+  "unzip" : [
+    "//src/com/facebook/buck/io:io",
+    "//third-party/java/commons-compress:commons-compress",
+    "//third-party/java/guava:guava"
+  ]
+}

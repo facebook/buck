@@ -1,0 +1,8 @@
+#@# GENERATED FILE: DO NOT MODIFY c0e8591ad81b1e4ae93c313a34f9faca635cf48b #@#
+{
+  "unit" : [
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/util:util",
+    "//third-party/java/guava:guava"
+  ]
+}

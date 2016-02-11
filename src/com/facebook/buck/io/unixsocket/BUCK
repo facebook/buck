@@ -1,8 +1,6 @@
 java_library(
-  name='unixsocket',
-  srcs=glob(['*.java']),
-  deps = [
-    '//third-party/java/jna:jna',
-  ],
+  name = 'unixsocket',
+  srcs = glob(['*.java']),
+  autodeps = True,
   visibility = ['PUBLIC'],
 )

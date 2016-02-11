@@ -4,10 +4,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/hashing:hashing',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//src/com/facebook/buck/io:io',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

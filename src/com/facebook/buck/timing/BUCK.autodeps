@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY cbd9d06173971a286b022e241c9c4aa1e545d8dc #@#
+{
+  "timing" : [
+    "//src/com/facebook/buck/util:tristate",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor"
+  ]
+}

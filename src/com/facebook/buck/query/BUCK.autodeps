@@ -1,0 +1,11 @@
+#@# GENERATED FILE: DO NOT MODIFY 35506ce401cb16e148f0c9cb08728f00aa0ba4ce #@#
+{
+  "query" : [
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

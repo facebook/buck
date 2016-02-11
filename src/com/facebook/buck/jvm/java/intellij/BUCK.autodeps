@@ -1,0 +1,33 @@
+#@# GENERATED FILE: DO NOT MODIFY 9e4847bd4627a3b2b9b46f879369900c3d142734 #@#
+{
+  "intellij" : [
+    "//src/com/facebook/buck/android:packageable",
+    "//src/com/facebook/buck/android:rules",
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/cxx:rules",
+    "//src/com/facebook/buck/graph:graph",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/jvm/core:packagefinder",
+    "//src/com/facebook/buck/jvm/java:autodeps",
+    "//src/com/facebook/buck/jvm/java:packagefinder",
+    "//src/com/facebook/buck/jvm/java:rules",
+    "//src/com/facebook/buck/jvm/java:support",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/rules:rules",
+    "//src/com/facebook/buck/shell:steps",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/util:constants",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jackson:jackson-annotations",
+    "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jsr:jsr305",
+    "//third-party/java/stringtemplate:stringtemplate"
+  ]
+}

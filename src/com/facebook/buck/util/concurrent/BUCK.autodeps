@@ -1,0 +1,7 @@
+#@# GENERATED FILE: DO NOT MODIFY d5ef0cdfa06c055dd7a7e86dbf0b7e5fcc1bdd2a #@#
+{
+  "concurrent" : [
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

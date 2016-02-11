@@ -7,10 +7,7 @@ java_library(
   exported_deps = [
     '//third-party/java/concurrent-locks:concurrent-locks',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = ['PUBLIC'],
 )
 

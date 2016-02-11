@@ -37,7 +37,14 @@ def java_immutables_library(
     annotation_processor_deps = kwargs.get('annotation_processor_deps', [])
     if not '//third-party/java/immutables:processor' in annotation_processor_deps:
       annotation_processor_deps.append('//third-party/java/immutables:processor')
-    keys_to_remove = ['deps', 'annotation_processors', 'annotation_processor_deps']
+    exported_deps = kwargs.get('exported_deps', [])
+    exported_deps.append('//third-party/java/immutables:processor')
+    keys_to_remove = [
+      'annotation_processors',
+      'annotation_processor_deps',
+      'deps',
+      'exported_deps',
+    ]
     args = {}
     for k in kwargs:
       if not k in keys_to_remove:
@@ -49,6 +56,7 @@ def java_immutables_library(
       deps=deps,
       annotation_processors=annotation_processors,
       annotation_processor_deps=annotation_processor_deps,
+      exported_deps=exported_deps,
       **args)
 
 original_java_test = java_test
@@ -65,8 +73,8 @@ def java_test(
     source=source,
     target=target,
     deps=deps + [
-      # When actually running Buck, the launcher script loads the bootstrapper, 
-      # and the bootstrapper loads the rest of Buck. For unit tests, which don't 
+      # When actually running Buck, the launcher script loads the bootstrapper,
+      # and the bootstrapper loads the rest of Buck. For unit tests, which don't
       # run Buck, we have to add a direct dependency on the bootstrapper in case
       # they exercise code that uses it.
       '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',

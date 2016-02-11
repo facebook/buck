@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY e4add6bf6ec46a634743e71adf8e91f24637b319 #@#
+{
+  "classes" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/util:util",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

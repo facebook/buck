@@ -13,6 +13,7 @@ java_binary(
 java_library(
   name = 'bootstrapper_lib',
   srcs = glob(['*.java']),
+  autodeps = False, # See below.
   deps = [
     # Be very careful what is added here, and leave comments justifying
     # each addition. The bootstrapper is intended to keep the

@@ -4,10 +4,6 @@ java_library(
   tests = [
     '//test/com/facebook/buck/apple/xcode/xcspec:xcspec',
   ],
-  deps = [
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/guava:guava',
-    '//third-party/java/dd-plist:dd-plist',
-  ],
+  autodeps = True,
   visibility = ['PUBLIC'],
 )

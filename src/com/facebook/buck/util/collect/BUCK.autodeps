@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY 2f2776fa6c4f6f9e0077f623b882fe90aba47cd8 #@#
+{
+  "collect" : [
+    "//third-party/java/guava:guava"
+  ]
+}

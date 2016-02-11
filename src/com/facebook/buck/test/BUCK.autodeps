@@ -1,0 +1,23 @@
+#@# GENERATED FILE: DO NOT MODIFY fecab5c20bcc5f60810292f1341cf7002ef422c3 #@#
+{
+  "config" : [
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor"
+  ],
+  "test" : [
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/test:report-format",
+    "//src/com/facebook/buck/test/result/type:type",
+    "//src/com/facebook/buck/test/selectors:selectors",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jackson:jackson-annotations",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

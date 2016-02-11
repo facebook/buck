@@ -1,0 +1,19 @@
+#@# GENERATED FILE: DO NOT MODIFY 5060026ebdb8e03fe09d1cd5c81bbf6118e44342 #@#
+{
+  "json" : [
+    "//src/com/facebook/buck/bser:bser",
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/io:watchman",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/util:escaper",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

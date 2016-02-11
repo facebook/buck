@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY a6377e8cf28bab6ce5125eb5403930b972866070 #@#
+{
+  "coverage" : [
+    "//third-party/java/jacoco:jacoco"
+  ]
+}

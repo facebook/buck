@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY f5b2bbbb9498ae30ee3ba28a9d21b409bb25c51f #@#
+{
+  "resources" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/util:exceptions",
+    "//third-party/java/guava:guava"
+  ]
+}

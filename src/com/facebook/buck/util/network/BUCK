@@ -5,16 +5,7 @@ java_library(
     '//test/com/facebook/buck/util/network:network',
     '//test/com/facebook/buck/util:util',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson-core',
-    '//third-party/java/jackson:jackson-databind',
-    '//third-party/java/jna:jna',
-    '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:util',
-  ],
+  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',

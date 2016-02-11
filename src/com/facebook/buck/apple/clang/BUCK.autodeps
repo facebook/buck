@@ -1,0 +1,10 @@
+#@# GENERATED FILE: DO NOT MODIFY 81155b0357abc15e554db9b3f4e324d48767763c #@#
+{
+  "headermap" : [
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ],
+  "printheadermap" : [
+    "//src/com/facebook/buck/apple/clang:headermap"
+  ]
+}

@@ -1,9 +1,7 @@
 java_library(
   name = 'runner',
   srcs = glob(['*.java']),
-  deps = [
-    # DO NOT ADD ANY DEPS.
-  ],
+  autodeps = False, # DO NOT ADD ANY DEPS.
   visibility = [
     '//src/com/facebook/buck/jvm/java:steps',
     '//src/com/facebook/buck/testrunner:junit',

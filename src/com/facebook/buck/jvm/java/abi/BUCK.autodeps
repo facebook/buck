@@ -1,0 +1,14 @@
+#@# GENERATED FILE: DO NOT MODIFY bde91c1558581798bdb57e5d4e0e232874725bfc #@#
+{
+  "abi" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/zip:stream",
+    "//third-party/java/asm:asm",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ],
+  "lib-api-stubber" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/jvm/java/abi:abi"
+  ]
+}

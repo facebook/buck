@@ -5,9 +5,10 @@ android_library(
   # trying to use something like try-with-resources is a compile-time error.
   source = '6',
   target = '6',
+  autodeps = False, # See below.
   deps = [
-    '//src/com/facebook/buck/android/agent/util:util',
     # Do not add other deps here.  The agent should remain very small.
+    '//src/com/facebook/buck/android/agent/util:util',
   ],
 )
 

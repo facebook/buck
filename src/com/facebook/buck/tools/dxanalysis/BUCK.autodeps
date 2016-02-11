@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY 177b25d34cdef01eeef9b3ece328cbf6336cb0ca #@#
+{
+  "lib" : [
+    "//third-party/java/aosp:aosp",
+    "//third-party/java/asm:asm",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

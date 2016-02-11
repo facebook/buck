@@ -1,9 +1,9 @@
 java_library(
   name = 'coverage',
-  srcs = ['ReportGenerator.java',],
-  deps = [
-    '//third-party/java/jacoco:jacoco',
+  srcs = [
+    'ReportGenerator.java',
   ],
+  autodeps = True,
 )
 
 java_binary(

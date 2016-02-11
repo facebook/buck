@@ -1,14 +1,9 @@
 java_immutables_library(
-    name = 'simulator',
-    srcs = glob(['*.java']),
-    tests = [
-        '//test/com/facebook/buck/apple/simulator:simulator',
-    ],
-    deps = [
-        '//src/com/facebook/buck/log:api',
-        '//src/com/facebook/buck/util:io',
-        '//third-party/java/dd-plist:dd-plist',
-        '//third-party/java/guava:guava',
-    ],
-    visibility = ['PUBLIC'],
+  name = 'simulator',
+  srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/apple/simulator:simulator',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
 )

@@ -1,24 +1,11 @@
 java_immutables_library(
-  name='macros',
-  srcs=glob(['*.java']),
-  tests=[
+  name = 'macros',
+  srcs = glob(['*.java']),
+  tests = [
     '//test/com/facebook/buck/rules/macros:macros',
   ],
-  deps=[
-    '//src/com/facebook/buck/util/environment:platform',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/jvm/core:classhash',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:rule_pattern',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/util:escaper',
-    '//src/com/facebook/buck/util:exceptions',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
-  visibility=[
+  autodeps = True,
+  visibility = [
     'PUBLIC',
   ],
 )

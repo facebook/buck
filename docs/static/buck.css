@@ -111,6 +111,10 @@ a {
   padding: 0 20px !important;
 }
 
+.warning {
+  color: #A00;
+}
+
 header:after, section.content:after, footer:after {
   clear: both;
   content: ".";

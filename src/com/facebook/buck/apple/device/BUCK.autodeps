@@ -1,0 +1,8 @@
+#@# GENERATED FILE: DO NOT MODIFY 61e6cffb83027280797fad576c8922324389cdea #@#
+{
+  "device" : [
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util:io",
+    "//third-party/java/guava:guava"
+  ]
+}

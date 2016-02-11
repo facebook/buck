@@ -11,13 +11,7 @@ java_library(
     'RemoteMavenDownloader.java',
     'StackedDownloader.java',
   ],
-  deps = [
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:exceptions',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = [ 'PUBLIC' ],
 )
 
@@ -28,21 +22,7 @@ java_library(
     'RemoteFile.java',
     'RemoteFileDescription.java',
   ],
-  deps = [
-    ':downloader',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:rule_pattern',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/step/fs:fs',
-    '//src/com/facebook/buck/step:step',
-    '//src/com/facebook/buck/util:exceptions',
-    '//third-party/java/guava:guava',
-    '//third-party/java/infer-annotations:infer-annotations',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/rules:types',
@@ -56,14 +36,6 @@ java_library(
   srcs = [
     'WriteFile.java',
   ],
-  deps = [
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/step:step',
-    '//src/com/facebook/buck/step/fs:fs',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = [ 'PUBLIC' ],
 )

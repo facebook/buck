@@ -4,11 +4,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/util/unit:unit',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/util:util'
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

@@ -7,6 +7,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/android/agent/util:util',
   ],
+  autodeps = False, # See below.
   deps = [
     # Do not add other deps here.  The agent should remain very small.
   ],

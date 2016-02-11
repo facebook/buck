@@ -1,0 +1,22 @@
+#@# GENERATED FILE: DO NOT MODIFY 3ee768a0aa40e41c0cc46227604da221731e4552 #@#
+{
+  "env-filter" : [
+    "//src/com/facebook/buck/util/environment:platform",
+    "//third-party/java/guava:guava"
+  ],
+  "environment" : [
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util:tristate",
+    "//src/com/facebook/buck/util/environment:platform",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//src/com/facebook/buck/util/network:network",
+    "//third-party/java/ObjCBridge:ObjCBridge",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jna:jna"
+  ],
+  "platform" : [
+    "//src/com/facebook/buck/log:api",
+    "//third-party/java/guava:guava"
+  ]
+}

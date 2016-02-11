@@ -51,3 +51,136 @@
       TEMP, \
       TMPDIR, \
       TMP
+[autodeps]
+    ; For now, so we don't have to crack open third-party JARs to see which classes they contain, we
+    ; hardcode certain import prefixes so they can be included as autodeps. Third-party dependencies
+    ; that are not in this list will have to be hardcoded in the deps of a rule in the BUCK files as
+    ; has traditionally been the case.
+    ;
+    ; We also have a number of entries for files that are generated via annotation processors.
+    ; Because these sources are not present in a clean repo, it means that `buck autodeps`
+    ; cannot statically determine these dependency relationships.
+    ;
+    ; TODO(mbolin): We need a better way of supporting java_library() rules that generate .java
+    ; sources as a function of running an annotation processor. If we allowed java_library() to
+    ; declare additional top-level symbols it was responsible for providing, we could likely
+    ; redefine the java_immutables_library() macro to take advantage of this feature and make
+    ; the declaration of a provided symbol more of a lightweight operation. Ideally, the provided
+    ; symbols would then be declared in-place rather than taking up all of this space in the .buckconfig.
+    java-package-mappings = \
+        com.facebook.buck.android.AndroidPackageableCollection => //src/com/facebook/buck/android:packageable, \
+        \
+        com.facebook.buck.android.AndroidGraphEnhancementResult => //src/com/facebook/buck/android:rules, \
+        \
+        com.facebook.buck.android.NdkCxxPlatform => //src/com/facebook/buck/android:steps, \
+        \
+        com.facebook.buck.apple.AppleCxxPlatform => //src/com/facebook/buck/apple:platform, \
+        com.facebook.buck.apple.ApplePlatform => //src/com/facebook/buck/apple:platform, \
+        com.facebook.buck.apple.AppleSdk => //src/com/facebook/buck/apple:platform, \
+        com.facebook.buck.apple.AppleSdkPaths => //src/com/facebook/buck/apple:platform, \
+        com.facebook.buck.apple.AppleToolchain => //src/com/facebook/buck/apple:platform, \
+        com.facebook.buck.apple.FatBinaryInfo => //src/com/facebook/buck/apple:platform, \
+        \
+        com.facebook.buck.artifact_cache.CacheResult => //src/com/facebook/buck/artifact_cache:artifact_cache, \
+        \
+        com.facebook.buck.cli.InstallResult => //src/com/facebook/buck/cli:cli, \
+        com.facebook.buck.cli.ProjectPredicates => //src/com/facebook/buck/cli:cli, \
+        com.facebook.buck.cli.TestRun => //src/com/facebook/buck/cli:cli, \
+        \
+        com.facebook.buck.cxx.CxxPlatform => //src/com/facebook/buck/cxx:platform, \
+        com.facebook.buck.cxx.NativeLinkableInput => //src/com/facebook/buck/cxx:platform, \
+        \
+        com.facebook.buck.json.ProjectBuildFileParserOptions => //src/com/facebook/buck/json:json, \
+        \
+        com.facebook.buck.jvm.java.JavacOptions => //src/com/facebook/buck/jvm/java:support, \
+        com.facebook.buck.jvm.java.JavacVersion => //src/com/facebook/buck/jvm/java:support, \
+        \
+        com.facebook.buck.jvm.java.JUnitJvmArgs => //src/com/facebook/buck/jvm/java:steps, \
+        \
+        com.facebook.buck.lua.LuaPackageComponents => //src/com/facebook/buck/lua:lua, \
+        \
+        com.facebook.buck.model.BuildTarget => //src/com/facebook/buck/model:model, \
+        com.facebook.buck.model.UnflavoredBuildTarget => //src/com/facebook/buck/model:model, \
+        \
+        com.facebook.buck.ocaml.OCamlBuildContext => //src/com/facebook/buck/ocaml:rules, \
+        com.facebook.buck.ocaml.OCamlGeneratedBuildRules => //src/com/facebook/buck/ocaml:rules, \
+        \
+        com.facebook.buck.parser.BuildFileSpec => //src/com/facebook/buck/parser:parser, \
+        com.facebook.buck.parser.BuildTargetSpec => //src/com/facebook/buck/parser:parser, \
+        com.facebook.buck.parser.TargetNodePredicateSpec => //src/com/facebook/buck/parser:parser, \
+        \
+        com.facebook.buck.python.PythonPlatform => //src/com/facebook/buck/python:support, \
+        com.facebook.buck.python.PythonVersion => //src/com/facebook/buck/python:support, \
+        \
+        com.facebook.buck.python.PythonPackageComponents => //src/com/facebook/buck/python:rules, \
+        \
+        com.facebook.buck.rules.BuildRuleType => //src/com/facebook/buck/rules:build_rule, \
+        com.facebook.buck.rules.ExopackageInfo => //src/com/facebook/buck/rules:build_rule, \
+        com.facebook.buck.rules.ExternalTestRunnerTestSpec => //src/com/facebook/buck/rules:build_rule, \
+        com.facebook.buck.rules.Label => //src/com/facebook/buck/rules:build_rule, \
+        com.facebook.buck.rules.Sha1HashCode => //src/com/facebook/buck/rules:build_rule, \
+        com.facebook.buck.rules.SourceWithFlags => //src/com/facebook/buck/rules:build_rule, \
+        \
+        com.facebook.buck.rules.coercer.BuildConfigFields => //src/com/facebook/buck/rules/coercer:coercer, \
+        com.facebook.buck.rules.coercer.FrameworkPath => //src/com/facebook/buck/rules/coercer:coercer, \
+        com.facebook.buck.rules.coercer.OCamlSource => //src/com/facebook/buck/rules/coercer:coercer, \
+        com.facebook.buck.rules.coercer.SourceList => //src/com/facebook/buck/rules/coercer:coercer, \
+        com.facebook.buck.rules.coercer.SourceWithFlagsList => //src/com/facebook/buck/rules/coercer:coercer, \
+        \
+        com.facebook.buck.simulate.SimulateReport => //src/com/facebook/buck/simulate:simulate, \
+        com.facebook.buck.simulate.SingleRunReport => //src/com/facebook/buck/simulate:simulate, \
+        \
+        com.facebook.buck.slb.ClientSideSlbConfig => //src/com/facebook/buck/slb:slb, \
+        \
+        com.facebook.buck.test.TestResultSummaryVerbosity => //src/com/facebook/buck/test:config, \
+        \
+        com.facebook.buck.test.TestResults => //src/com/facebook/buck/test:test, \
+        com.facebook.buck.test.TestRunningOptions => //src/com/facebook/buck/test:test, \
+        com.facebook.buck.test.TestStatusMessage => //src/com/facebook/buck/test:test, \
+        \
+        com.facebook.buck.timing.AbsolutePerfTime => //src/com/facebook/buck/timing:timing, \
+        com.facebook.buck.timing.RelativePerfTime => //src/com/facebook/buck/timing:timing, \
+        \
+        ca.weblite.objc => //third-party/java/ObjCBridge:ObjCBridge, \
+        com.android.ide.common => //third-party/java/android:tools-sdk-common, \
+        com.android.utils.ILogger => //third-party/java/android:tools-sdk-common, \
+        com.android.ddmlib => //third-party/java/ddmlib:ddmlib, \
+        com.android.sdklib => //third-party/java/android:sdklib, \
+        com.dd.plist => //third-party/java/dd-plist:dd-plist, \
+        com.facebook.infer.annotation => //third-party/java/infer-annotations:infer-annotations, \
+        com.fasterxml.jackson.annotation => //third-party/java/jackson:jackson-annotations, \
+        com.fasterxml.jackson.core => //third-party/java/jackson:jackson-core, \
+        com.fasterxml.jackson.databind => //third-party/java/jackson:jackson-databind, \
+        com.fasterxml.jackson.datatype => //third-party/java/jackson:jackson-datatype-jdk7, \
+        com.fasterxml.jackson.datatype.guava => //third-party/java/jackson-datatype-guava:jackson-datatype-guava, \
+        com.google.common => //third-party/java/guava:guava, \
+        com.google.gson => //third-party/java/gson:gson, \
+        com.google.template.soy => //third-party/java/closure-templates:closure-templates, \
+        com.martiansoftware.nailgun => //third-party/java/nailgun:nailgun, \
+        com.squareup.okhttp => //third-party/java/okhttp:okhttp, \
+        com.sun.jna => //third-party/java/jna:jna, \
+        com.zaxxer.nuprocess => //third-party/java/nuprocess:nuprocess, \
+        javax.annotation => //third-party/java/jsr:jsr305, \
+        okio => //third-party/java/okio:okio, \
+        org.apache.commons.compress => //third-party/java/commons-compress:commons-compress, \
+        org.apache.maven.model => //third-party/java/maven:maven-model, \
+        org.apache.maven.model.building => //third-party/java/maven:maven-model-builder, \
+        org.apache.maven.repository.internal => //third-party/java/maven:maven-aether-provider, \
+        org.eclipse.aether => //third-party/java/aether:aether-api, \
+        org.eclipse.aether.connector.basic => //third-party/java/aether:aether-connector-basic, \
+        org.eclipse.aether.impl => //third-party/java/aether:aether-impl, \
+        org.eclipse.aether.spi => //third-party/java/aether:aether-spi, \
+        org.eclipse.aether.transport.http => //third-party/java/aether:aether-transport-http, \
+        org.eclipse.aether.util => //third-party/java/aether:aether-util, \
+        org.eclipse.jdt.core => //third-party/java/eclipse:eclipse_jdt, \
+        org.eclipse.jetty => //third-party/java/jetty:jetty, \
+        org.immutables.value => //third-party/java/immutables:processor, \
+        org.ini4j => //third-party/java/ini4j:ini4j, \
+        org.jacoco => //third-party/java/jacoco:jacoco, \
+        org.junit => //third-party/java/junit:junit, \
+        org.kohsuke.args4j.spi => //third-party/java/args4j:args4j, \
+        org.objectweb.asm => //third-party/java/asm:asm, \
+        org.kohsuke.args4j => //third-party/java/args4j:args4j, \
+        org.slf4j => //third-party/java/slf4j:slf4j-api, \
+        org.stringtemplate.v4 => //third-party/java/stringtemplate:stringtemplate, \
+        org.tukaani.xz => //third-party/java/xz-java-1.3:xz

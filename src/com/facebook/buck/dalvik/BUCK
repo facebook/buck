@@ -6,11 +6,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/dalvik:dalvik',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/asm:asm',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -43,17 +39,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/dalvik:dalvik',
   ],
-  deps = [
-    ':dalvik_stats_tool',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/jvm/java/classes:classes',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/zip:stream',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -67,14 +53,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/dalvik:dalvik',
   ],
-  deps = [
-    ':dalvik_stats_tool',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/jvm/java/classes:classes',
-    '//src/com/facebook/buck/step:step',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],

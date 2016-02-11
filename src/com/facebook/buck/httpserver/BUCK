@@ -11,18 +11,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ],
-  deps = [
-    ':util',
-    '//src/com/facebook/buck/artifact_cache:artifact_cache',
-    '//src/com/facebook/buck/artifact_cache:binary_protocol',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/rules:rule_key',
-    '//src/com/facebook/buck/util:constants',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jetty:jetty',
-    '//third-party/java/jsr:jsr305',
-  ]
+  autodeps = True,
 )
 
 java_library(
@@ -32,31 +21,7 @@ java_library(
     '//test/com/facebook/buck/httpserver:httpserver',
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ],
-  deps = [
-    ':cache_handler',
-    ':util',
-    '//src/com/facebook/buck/artifact_cache:artifact_cache',
-    '//src/com/facebook/buck/cli:events',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/parser:parser',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/step:step',
-    '//src/com/facebook/buck/test:test',
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:exceptions',
-    '//third-party/java/closure-templates:closure-templates',
-    '//third-party/java/gson:gson',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson-core',
-    '//third-party/java/jackson:jackson-databind',
-    '//third-party/java/jetty:jetty',
-    '//third-party/java/jsr:jsr305',
-  ],
+  autodeps = True,
   resources = glob(['*.soy']),
   visibility = [
     '//src/com/facebook/buck/cli:cli',
@@ -73,10 +38,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/httpserver:httpserver',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jetty:jetty',
-  ],
+  autodeps = True,
   visibility = [
     '//test/...',
   ],

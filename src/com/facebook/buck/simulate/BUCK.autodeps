@@ -1,0 +1,14 @@
+#@# GENERATED FILE: DO NOT MODIFY 08bbe07a585bb2d00c4a8b0e0f0f8c01036e5ed2 #@#
+{
+  "simulate" : [
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/parser:rule_pattern",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jackson:jackson-annotations",
+    "//third-party/java/jackson:jackson-databind"
+  ]
+}

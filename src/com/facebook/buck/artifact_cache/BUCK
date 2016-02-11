@@ -23,15 +23,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
-  deps = [
-    '//src/com/facebook/buck/rules:rule_key',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/io:io',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson-annotations',
-  ],
+  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -43,12 +35,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
-  deps = [
-    ':artifact_cache',
-    '//src/com/facebook/buck/rules:rule_key',
-    '//src/com/facebook/buck/util/hash:hash',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/httpserver:cache_handler',
   ],
@@ -60,23 +47,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
-  deps = [
-    ':artifact_cache',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/rules:rule_key',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/slb:slb',
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util/collect:collect',
-    '//src/com/facebook/buck/util/hash:hash',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/okhttp:okhttp',
-    '//third-party/java/okio:okio',
-  ],
+  autodeps = True,
   exported_deps = [
     ':binary_protocol',
     ':artifact_cache',
@@ -96,22 +67,7 @@ java_immutables_library(
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ],
-  deps = [
-    ':artifact_cache',
-    ':impl',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/slb:slb',
-    '//src/com/facebook/buck/timing:timing',
-    '//src/com/facebook/buck/util/unit:unit',
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:exceptions',
-    '//third-party/java/guava:guava',
-    '//third-party/java/okhttp:okhttp',
-    '//third-party/java/okio:okio',
-  ],
+  autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/httpserver:cache_handler',
@@ -120,4 +76,3 @@ java_immutables_library(
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ]
 )
-

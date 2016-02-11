@@ -3,10 +3,7 @@ java_library(
   srcs = [
     'HasJavaClassHashes.java',
   ],
-  deps = [
-    '//src/com/facebook/buck/model:model',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -15,10 +12,7 @@ java_library(
   srcs = [
     'JavaPackageFinder.java',
   ],
-  deps = [
-    '//src/com/facebook/buck/model:model',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = ['PUBLIC'],
 )
 
@@ -27,9 +21,6 @@ java_library(
   srcs = [
     'SuggestBuildRules.java',
   ],
-  deps = [
-    '//src/com/facebook/buck/io:io',
-    '//third-party/java/guava:guava',
-  ],
+  autodeps = True,
   visibility = ['PUBLIC'],
 )

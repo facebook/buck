@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY b9218f8b0b115bb4e31a50948135291b11195c18 #@#
+{
+  "unixsocket" : [
+    "//third-party/java/jna:jna"
+  ]
+}

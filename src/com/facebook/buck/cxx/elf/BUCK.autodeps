@@ -1,0 +1,6 @@
+#@# GENERATED FILE: DO NOT MODIFY 7303146a40e97cd8e3b1054631de93edf53777d4 #@#
+{
+  "elf" : [
+    "//third-party/java/guava:guava"
+  ]
+}
