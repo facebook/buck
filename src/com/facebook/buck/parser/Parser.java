@@ -45,6 +45,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 
@@ -377,35 +379,52 @@ public class Parser {
                 eventBus,
                 rootCell,
                 enableProfiling)) {
-      ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
+      Multimap<TargetNodeSpec, Path> specBuildFilePaths = LinkedHashMultimap.create();
 
       for (TargetNodeSpec spec : specs) {
-        // Iterate over the build files the given target node spec returns.
-        for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(rootCell)) {
+        try (SimplePerfEvent.Scope perfEventScope = SimplePerfEvent.scope(
+                 eventBus,
+                 PerfEventId.of("FindBuildFiles"),
+                 "targetNodeSpec",
+                 spec)) {
+          // Iterate over the build files the given target node spec returns.
+          for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(rootCell)) {
 
-          // Format a proper error message for non-existent build files.
-          if (!rootCell.getFilesystem().isFile(buildFile)) {
-            throw new MissingBuildFileException(
-                spec,
-                rootCell.getFilesystem().getRootPath().relativize(buildFile));
+            // Format a proper error message for non-existent build files.
+            if (!rootCell.getFilesystem().isFile(buildFile)) {
+              throw new MissingBuildFileException(
+                  spec,
+                  rootCell.getFilesystem().getRootPath().relativize(buildFile));
+            }
+
+            specBuildFilePaths.put(spec, buildFile);
           }
-
-          buildFiles.add(buildFile);
         }
       }
 
       // If the specs are empty, there are no build files at all. Bail.
-      ImmutableSet<Path> allBuildSpecs = buildFiles.build();
-      if (allBuildSpecs.isEmpty()) {
+      if (specBuildFilePaths.isEmpty()) {
         return ImmutableSet.of();
       }
 
-      state.startParsing(rootCell, allBuildSpecs, parserConfig, executor);
+      state.startParsing(
+          rootCell,
+          ImmutableSet.copyOf(specBuildFilePaths.values()),
+          parserConfig,
+          executor);
 
       ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-      for (TargetNodeSpec spec : specs) {
-        // Iterate over the build files the given target node spec returns.
-        for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(rootCell)) {
+      for (Map.Entry<TargetNodeSpec, Path> specBuildFilePath : specBuildFilePaths.entries()) {
+        TargetNodeSpec spec = specBuildFilePath.getKey();
+        Path buildFile = specBuildFilePath.getValue();
+
+        try (SimplePerfEvent.Scope perfEventScope = SimplePerfEvent.scope(
+                 eventBus,
+                 PerfEventId.of("GetAllTargetNodes"),
+                 "targetNodeSpec",
+                 spec,
+                 "buildFile",
+                 buildFile)) {
           // Build up a list of all target nodes from the build file.
           ImmutableSet<TargetNode<?>> nodes = state.getAllTargetNodes(rootCell, buildFile);
           // Call back into the target node spec to filter the relevant build targets.
