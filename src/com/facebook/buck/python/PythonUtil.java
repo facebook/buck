@@ -33,7 +33,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -52,6 +56,11 @@ import java.util.Map;
 import java.util.Set;
 
 public class PythonUtil {
+
+  protected static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>of(
+              "location", new LocationMacroExpander()));
 
   private PythonUtil() {}
 
@@ -127,6 +136,7 @@ public class PythonUtil {
       final PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
       final CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdflags,
       final NativeLinkStrategy nativeLinkStrategy)
       throws NoSuchBuildTargetException {
 
@@ -206,6 +216,7 @@ public class PythonUtil {
               ruleResolver,
               pathResolver,
               cxxPlatform,
+              extraLdflags,
               includedNativeLinkTargetRoots.values(),
               Maps.filterKeys(
                   nativeLinkableRoots,

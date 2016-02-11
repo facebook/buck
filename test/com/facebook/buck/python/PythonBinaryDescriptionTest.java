@@ -23,6 +23,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
@@ -655,6 +656,54 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         builder.build().getExtraDeps(),
         Matchers.hasItem(pexExecutorBuilder.getTarget()));
+  }
+
+  @Test
+  public void linkerFlagsUsingMergedNativeLinkStrategy() throws Exception {
+    CxxLibraryBuilder cxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))));
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
+
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public NativeLinkStrategy getNativeLinkStrategy() {
+            return NativeLinkStrategy.MERGED;
+          }
+        };
+    PythonBinaryBuilder binaryBuilder =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    binaryBuilder.setLinkerFlags(ImmutableList.of("-flag"));
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                cxxDepBuilder.build(),
+                cxxBuilder.build(),
+                binaryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    cxxDepBuilder.build(resolver);
+    cxxBuilder.build(resolver);
+    PythonBinary binary = (PythonBinary) binaryBuilder.build(resolver);
+    for (SourcePath path : binary.getComponents().getNativeLibraries().values()) {
+      CxxLink link =
+          resolver.getRuleOptionalWithType(
+              ((BuildTargetSourcePath) path).getTarget(), CxxLink.class).get();
+      assertThat(
+          link.getArgs(),
+          Matchers.hasItem("-flag"));
+    }
   }
 
 }

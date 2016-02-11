@@ -38,11 +38,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -309,6 +311,14 @@ public class PythonBinaryDescription implements
             binaryPackageComponents,
             pythonPlatform,
             cxxPlatform,
+            FluentIterable.from(args.linkerFlags.get())
+                .transform(
+                    MacroArg.toMacroArgFunction(
+                        PythonUtil.MACRO_HANDLER,
+                        params.getBuildTarget(),
+                        params.getCellRoots(),
+                        resolver))
+                .toList(),
             pythonBuckConfig.getNativeLinkStrategy());
     return createPackageRule(
         params,
@@ -352,6 +362,7 @@ public class PythonBinaryDescription implements
     public Optional<String> platform;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
     public Optional<ImmutableSet<BuildTarget>> preloadDeps;
+    public Optional<ImmutableList<String>> linkerFlags;
   }
 
 }

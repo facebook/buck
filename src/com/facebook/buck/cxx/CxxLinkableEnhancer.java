@@ -312,7 +312,7 @@ public class CxxLinkableEnhancer {
       BuildTarget target,
       Path output,
       String soname,
-      ImmutableList<Arg> args) {
+      ImmutableList<? extends Arg> args) {
     return createCxxLinkableBuildRule(
         cxxPlatform,
         params,

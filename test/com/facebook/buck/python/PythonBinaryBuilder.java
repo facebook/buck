@@ -108,4 +108,9 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
     return this;
   }
 
+  public PythonBinaryBuilder setLinkerFlags(ImmutableList<String> linkerFlags) {
+    arg.linkerFlags = Optional.of(linkerFlags);
+    return this;
+  }
+
 }

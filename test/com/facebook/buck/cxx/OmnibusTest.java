@@ -80,6 +80,7 @@ public class OmnibusTest {
             resolver,
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.<Arg>of(),
             ImmutableList.of(root),
             ImmutableList.<NativeLinkable>of())
             .toSonameMap();
@@ -139,6 +140,7 @@ public class OmnibusTest {
             resolver,
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.<Arg>of(),
             ImmutableList.of(root),
             ImmutableList.<NativeLinkable>of())
             .toSonameMap();
@@ -203,6 +205,7 @@ public class OmnibusTest {
             resolver,
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.<Arg>of(),
             ImmutableList.of(root),
             ImmutableList.<NativeLinkable>of())
             .toSonameMap();
@@ -271,6 +274,7 @@ public class OmnibusTest {
             resolver,
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.<Arg>of(),
             ImmutableList.of(root),
             ImmutableList.of(excludedRoot))
             .toSonameMap();
@@ -337,6 +341,7 @@ public class OmnibusTest {
             resolver,
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.<Arg>of(),
             ImmutableList.of(root),
             ImmutableList.of(excludedRoot))
             .toSonameMap();
@@ -402,6 +407,7 @@ public class OmnibusTest {
             resolver,
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.<Arg>of(),
             ImmutableList.of(root),
             ImmutableList.<NativeLinkable>of())
             .toSonameMap();

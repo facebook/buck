@@ -76,6 +76,20 @@
 {/template}
 
 /***/
+{template .linker_flags_arg}
+{call buck.arg}
+  {param name : 'linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Additional linker flags that should be applied to any links which are specific to this rule.
+  Note that whether these flags are used are dependent on the native link strategy selected in
+  `.buckconfig` and currently only applies to the `MERGED` link strategy, as the `SEPARATE` link
+  strategy pulls in shared libraries linked in the context of their owning rule (e.g. `cxx_library`).
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .package_style_arg}
 {call buck.arg}
   {param name : 'package_style' /}

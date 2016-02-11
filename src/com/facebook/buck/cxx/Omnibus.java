@@ -222,7 +222,8 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdflags) {
     BuildTarget dummyOmnibusTarget =
         BuildTarget.builder(params.getBuildTarget())
             .addFlavors(DUMMY_OMNIBUS_FLAVOR)
@@ -236,7 +237,7 @@ public class Omnibus {
             dummyOmnibusTarget,
             BuildTargets.getGenPath(dummyOmnibusTarget, "%s").resolve(omnibusSoname),
             omnibusSoname,
-            ImmutableList.<Arg>of()));
+            extraLdflags));
     return new BuildTargetSourcePath(dummyOmnibusTarget);
   }
 
@@ -247,12 +248,16 @@ public class Omnibus {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
       SharedNativeLinkTarget root)
       throws NoSuchBuildTargetException {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // Add any extra flags to the link.
+    argsBuilder.addAll(extraLdflags);
 
     // Since the dummy omnibus library doesn't actually contain any symbols, make sure the linker
     // won't drop its runtime reference to it.
@@ -366,10 +371,14 @@ public class Omnibus {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec)
       throws NoSuchBuildTargetException {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // Add extra ldflags to the beginning of the link.
+    argsBuilder.addAll(extraLdflags);
 
     // For roots that aren't dependencies of nodes in the body, we extract their undefined symbols
     // to add to the link so that required symbols get pulled into the merged library.
@@ -473,6 +482,7 @@ public class Omnibus {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       final CxxPlatform cxxPlatform,
+      final ImmutableList<? extends Arg> extraLdflags,
       Iterable<? extends SharedNativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots)
       throws NoSuchBuildTargetException {
@@ -484,18 +494,28 @@ public class Omnibus {
     // Create an empty dummy omnibus library, to give the roots something to link against before
     // we have the actual omnibus library available.  Note that this requires that the linker
     // supports linking shared libraries with undefined references.
-    SourcePath dummyOmnibus = createDummyOmnibus(params, ruleResolver, pathResolver, cxxPlatform);
+    SourcePath dummyOmnibus =
+        createDummyOmnibus(params, ruleResolver, pathResolver, cxxPlatform, extraLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
     for (SharedNativeLinkTarget root : spec.getRoots().values()) {
       SharedLibrary lib =
-          createRoot(params, ruleResolver, pathResolver, cxxPlatform, spec, dummyOmnibus, root);
+          createRoot(
+              params,
+              ruleResolver,
+              pathResolver,
+              cxxPlatform,
+              extraLdflags,
+              spec,
+              dummyOmnibus,
+              root);
       libs.putRoots(root.getBuildTarget(), lib);
     }
 
     // If there are any body nodes, generate the giant merged omnibus library.
     if (!spec.getBody().isEmpty()) {
-      SharedLibrary omnibus = createOmnibus(params, ruleResolver, pathResolver, cxxPlatform, spec);
+      SharedLibrary omnibus =
+          createOmnibus(params, ruleResolver, pathResolver, cxxPlatform, extraLdflags, spec);
       libs.addLibraries(omnibus);
     }
 
