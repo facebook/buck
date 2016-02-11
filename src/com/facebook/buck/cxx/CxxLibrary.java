@@ -60,6 +60,7 @@ public class CxxLibrary
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final Iterable<? extends BuildRule> exportedDeps;
+  private final Predicate<CxxPlatform> hasExportedHeaders;
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
@@ -82,6 +83,7 @@ public class CxxLibrary
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       Iterable<? extends BuildRule> exportedDeps,
+      Predicate<CxxPlatform> hasExportedHeaders,
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
@@ -99,6 +101,7 @@ public class CxxLibrary
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
+    this.hasExportedHeaders = hasExportedHeaders;
     this.headerOnly = headerOnly;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
@@ -124,9 +127,12 @@ public class CxxLibrary
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    boolean hasHeaderSymlinkTree =
+        headerVisibility != HeaderVisibility.PUBLIC || hasExportedHeaders.apply(cxxPlatform);
     return CxxPreprocessables.getCxxPreprocessorInput(
         params,
         ruleResolver,
+        hasHeaderSymlinkTree,
         cxxPlatform.getFlavor(),
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,

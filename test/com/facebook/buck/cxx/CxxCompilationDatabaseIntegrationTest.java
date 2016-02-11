@@ -198,10 +198,6 @@ public class CxxCompilationDatabaseIntegrationTest {
         String.format(
             "buck-out/gen/test#default,%s",
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
-    String fakeGtestSymlinkFolder =
-        String.format(
-            "buck-out/gen/fake-gtest#default,%s",
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -217,8 +213,6 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreeIncludePath(binaryHeaderSymlinkTreeFolder))
             .add("-I")
             .add(headerSymlinkTreeIncludePath(binaryExportedHeaderSymlinkTreeFolder))
-            .add("-I")
-            .add(headerSymlinkTreeIncludePath(fakeGtestSymlinkFolder))
             .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")

@@ -76,6 +76,7 @@ public class HalideLibrary
         return CxxPreprocessables.getCxxPreprocessorInput(
             params,
             ruleResolver,
+            /* hasHeaderSymlinkTree */ true,
             cxxPlatform.getFlavor(),
             headerVisibility,
             CxxPreprocessables.IncludeType.SYSTEM,

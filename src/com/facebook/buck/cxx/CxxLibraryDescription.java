@@ -671,6 +671,20 @@ public class CxxLibraryDescription implements
       };
     }
 
+    Predicate<CxxPlatform> hasExportedHeaders;
+    if (!args.exportedHeaders.get().isEmpty()) {
+      hasExportedHeaders = Predicates.alwaysTrue();
+    } else {
+      hasExportedHeaders =
+          new Predicate<CxxPlatform>() {
+            @Override
+            public boolean apply(CxxPlatform input) {
+              return !args.exportedPlatformHeaders.get()
+                  .getMatchingValues(input.getFlavor().toString()).isEmpty();
+            }
+          };
+    }
+
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -680,6 +694,7 @@ public class CxxLibraryDescription implements
         pathResolver,
         FluentIterable.from(args.exportedDeps.get())
             .transform(resolver.getRuleFunction()),
+        hasExportedHeaders,
         Predicates.not(hasObjects),
         new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
           @Override

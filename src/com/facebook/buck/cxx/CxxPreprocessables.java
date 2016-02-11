@@ -209,19 +209,22 @@ public class CxxPreprocessables {
   public static CxxPreprocessorInput getCxxPreprocessorInput(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      boolean hasHeaderSymlinkTree,
       Flavor flavor,
       HeaderVisibility headerVisibility,
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Iterable<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
-    CxxPreprocessorInput.Builder builder =
-        addHeaderSymlinkTree(
-            CxxPreprocessorInput.builder(),
-            params.getBuildTarget(),
-            ruleResolver,
-            flavor,
-            headerVisibility,
-            includeType);
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+    if (hasHeaderSymlinkTree) {
+      addHeaderSymlinkTree(
+          builder,
+          params.getBuildTarget(),
+          ruleResolver,
+          flavor,
+          headerVisibility,
+          includeType);
+    }
     return builder
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
         .addAllFrameworks(frameworks)

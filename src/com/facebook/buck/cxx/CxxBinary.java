@@ -99,6 +99,7 @@ public class CxxBinary
     return CxxPreprocessables.getCxxPreprocessorInput(
         params,
         ruleResolver,
+        /* hasHeaderSymlinkTree */ true,
         cxxPlatform.getFlavor(),
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
