@@ -276,6 +276,12 @@ public class PythonBinaryIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void mainModuleNameIsSetProperly() throws Exception {
+    assumeThat(packageStyle, not(Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE)));
+    workspace.runBuckCommand("run", "//:main_module_bin").assertSuccess();
+  }
+
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig =
         Config.createDefaultConfig(

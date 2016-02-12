@@ -135,3 +135,18 @@ python_binary(
     ':extension',
   ],
 )
+
+python_library(
+  name = 'main_module',
+  srcs = [
+    'main_module.py',
+  ],
+)
+
+python_binary(
+  name = 'main_module_bin',
+  main_module = 'main_module',
+  deps = [
+    ':main_module',
+  ],
+)

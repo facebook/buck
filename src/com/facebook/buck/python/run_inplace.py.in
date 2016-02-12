@@ -25,31 +25,36 @@ if native_libs_preload is not None:
     os.environ[native_libs_preload_env_var] = native_libs_preload
 
 STARTUP = """\
-import os
-import runpy
-import sys
+# Wrap everything in a private function to prevent globals being captured by
+# the `runpy._run_module_as_main` below.
+def __run():
+    import os
+    import runpy
+    import sys
 
-# Set `argv[0]` to the executing script.
-assert sys.argv[0] == '-c'
-sys.argv[0] = {arg0!r}
+    # Set `argv[0]` to the executing script.
+    assert sys.argv[0] == '-c'
+    sys.argv[0] = {arg0!r}
 
-# Replace the working directory with location of the modules directory.
-assert sys.path[0] == ''
-sys.path[0] = {pythonpath!r}
+    # Replace the working directory with location of the modules directory.
+    assert sys.path[0] == ''
+    sys.path[0] = {pythonpath!r}
 
-def setenv(var, val):
-    if val is None:
-        os.environ.pop(var, None)
-    else:
-        os.environ[var] = val
+    def setenv(var, val):
+        if val is None:
+            os.environ.pop(var, None)
+        else:
+            os.environ[var] = val
 
-# Restore the native libs env var to its original value.
-setenv({native_libs_env_var!r}, {native_libs_dir!r})
+    # Restore the native libs env var to its original value.
+    setenv({native_libs_env_var!r}, {native_libs_dir!r})
 
-# Restore the native libs preload env var to its original value.
-setenv({native_libs_preload_env_var!r}, {native_libs_preload!r})
+    # Restore the native libs preload env var to its original value.
+    setenv({native_libs_preload_env_var!r}, {native_libs_preload!r})
 
-runpy.run_module({main_module!r}, run_name='__main__')
+    runpy._run_module_as_main({main_module!r}, False)
+
+__run()
 """.format(
     arg0=sys.argv[0],
     pythonpath=os.path.join(dirpath, modules_dir),
