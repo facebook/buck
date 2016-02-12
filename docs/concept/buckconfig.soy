@@ -23,9 +23,54 @@ The root of your project may contain a configuration file
 named <code>.buckconfig</code>. If present, Buck will read this file
 before executing its business logic so that any customizations specified
 in <code>.buckconfig</code> will take effect. This file uses the
-{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>.
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>
+with a few extensions discussed below.
 
 <p>
+
+Although the INI format only recognizes strings as values, Buck allows
+fields to be parsed as a list of strings, separated by a separator character.
+For example, a field containing command line flags to be passed to a compiler
+may parse its value as a list of strings, separated by space, so
+that <code>-foo -bar</code> is parsed as a list of two strings, instead of
+a single string.
+
+<p>
+
+To ensure that any character can be encoded in a .buckconfig value, Buck
+allows values or part of values to be quoted by surrounding them by double
+quotes. Inside double quotes, escape sequences can be used to encode
+characters that would otherwise be problematic to use in values. The
+following escape sequences are supported:
+
+<table summary="Escape sequences in .buckconfig"><tr>
+<td>\\</td><td>backslash</td>
+</tr><tr>
+<td>\"</td><td>double quote</td>
+</tr><tr>
+<td>\n</td><td>newline</td>
+</tr><tr>
+<td>\r</td><td>carriage return</td>
+</tr><tr>
+<td>\t</td><td>tab</td>
+</tr><tr>
+<td>\x##</td><td>unicode character with code point ## (in hex)</td>
+</tr><tr>
+<td>\u####</td><td>unicode character with code point #### (in hex)</td>
+</tr><tr>
+<td>\U########</td><td>unicode character with code point ######## (in hex)</td>
+</tr></table>
+
+<p>
+
+In addition, when a field is parsed as a list instead of a string,
+the separator character is only interpreted as a separator when it occurs
+outside double quotes. For example, if <em>flags</em> is a field being
+interpreted as a list of strings separated by
+spaces, <code>flags=-foo "-bar \u0429"</code> will result in two
+strings: <q>foo</q> and <q>-bar &#1065;</q>.
+
+<h2>.buckconfig.local</h2>
 
 The root of your project may also contain a second configuration file
 named <code>.buckconfig.local</code>. Its format is exactly the same as
@@ -44,7 +89,7 @@ any settings overridden by project-specific configurations. If you have build is
 that there is nothing in your <code>.buckconfig</code> or <code>.buckconfig.d</code> that could
 be conflicting with the project you're trying to build.
 
-<p>
+<h2>Sections</h2>
 
 The following sections are recognized by Buck:
 
