@@ -53,9 +53,11 @@ public class AutodepsWriter {
       new ThreadLocal<PrettyPrinter>() {
     @Override
     protected PrettyPrinter initialValue() {
+      DefaultPrettyPrinter.Indenter indenter =
+          new com.fasterxml.jackson.core.util.DefaultIndenter("  ", "\n");
       DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter();
-      prettyPrinter.indentArraysWith(
-          new com.fasterxml.jackson.core.util.DefaultIndenter("  ", "\n"));
+      prettyPrinter.indentArraysWith(indenter);
+      prettyPrinter.indentObjectsWith(indenter);
       return prettyPrinter;
     }
   };
