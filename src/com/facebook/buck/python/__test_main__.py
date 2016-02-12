@@ -222,8 +222,8 @@ class RegexTestLoader(unittest.TestLoader):
         matched = []
         for attrname in testFnNames:
             fullname = '{0}.{1}#{2}'.format(
-                testCaseClass.__class__.__module__,
-                testCaseClass.__class__.__name__,
+                testCaseClass.__module__,
+                testCaseClass.__name__,
                 attrname)
             if self.regex is None or re.search(self.regex, fullname):
                 matched.append(attrname)
@@ -329,8 +329,12 @@ class MainProgram(object):
         for test in test_suite:
             if isinstance(test, unittest.TestSuite):
                 names.extend(self.get_test_names(test))
-            else:
-                names.append(str(test))
+            elif getattr(test, '_testMethodName', None) is not None:
+                name = '{0}.{1}#{2}'.format(
+                    test.__class__.__module__,
+                    test.__class__.__name__,
+                    test._testMethodName)
+                names.append(name)
 
         return names
 
