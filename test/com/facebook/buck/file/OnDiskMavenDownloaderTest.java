@@ -19,11 +19,13 @@ package com.facebook.buck.file;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -80,13 +82,11 @@ public class OnDiskMavenDownloaderTest {
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 
-    assertEquals("cake", result);
+    assertThat("cake", Matchers.equalTo(result));
   }
 
   @Test
   public void shouldDownloadFileFromLocalMavenRepoOnWindows() throws URISyntaxException, IOException {
-    // Same test as `shouldDownloadFileFromLocalMavenRepo` but using a windows
-    // mock filesystem.
     FileSystem filesystem = Jimfs.newFileSystem(Configuration.windows());
     Path root = filesystem.getPath("C:\\Users\\bob\\.m2");
     Files.createDirectories(root);
@@ -103,7 +103,7 @@ public class OnDiskMavenDownloaderTest {
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 
-    assertEquals("cake", result);
+    assertThat("cake", Matchers.equalTo(result));
   }
 
   @Test
