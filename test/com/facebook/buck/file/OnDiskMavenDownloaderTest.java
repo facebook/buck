@@ -17,13 +17,14 @@
 package com.facebook.buck.file;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -80,7 +81,28 @@ public class OnDiskMavenDownloaderTest {
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 
-    assertEquals("cake", result);
+    assertThat("cake", Matchers.equalTo(result));
+  }
+
+  @Test
+  public void shouldDownloadFileFromLocalMavenRepoWindows() throws URISyntaxException, IOException {
+    FileSystem filesystem = Jimfs.newFileSystem(Configuration.windows());
+    Path root = filesystem.getPath("C:\\Users\\bob\\.m2");
+    Files.createDirectories(root);
+
+    URI uri = new URI("mvn:group:project:jar:0.1");
+    Path output = filesystem.getPath("output.txt");
+
+    Path source = root.resolve("group/project/0.1/project-0.1.jar");
+    Files.createDirectories(source.getParent());
+    Files.write(source, "cake".getBytes(UTF_8));
+
+    Downloader downloader = new OnDiskMavenDownloader(root);
+    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+
+    String result = new String(Files.readAllBytes(output), UTF_8);
+
+    assertThat("cake", Matchers.equalTo(result));
   }
 
   @Test

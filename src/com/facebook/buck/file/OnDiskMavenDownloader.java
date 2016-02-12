@@ -35,7 +35,7 @@ public class OnDiskMavenDownloader implements Downloader {
   private static final Optional<String> SPOOF_MAVEN_REPO = Optional.of("http://example.com");
   private final Path root;
 
-  public OnDiskMavenDownloader(Path root) throws FileNotFoundException{
+  public OnDiskMavenDownloader(Path root) throws FileNotFoundException {
 
     if (!Files.exists(root)) {
       throw new FileNotFoundException(String.format("Maven root %s doesn't exist",
@@ -54,9 +54,6 @@ public class OnDiskMavenDownloader implements Downloader {
     // Get the URL that the maven item is located at.
     uri = MavenUrlDecoder.toHttpUrl(SPOOF_MAVEN_REPO, uri);
 
-    // Now grab the path from the URI and resolve it against the root
-    uri = root.resolve(uri.getPath()).toUri();
-
     // The path is absolute, which we don't want. Make it relative by just ignoring the leading
     // slash.
     Path target = root.resolve(uri.getPath().substring(1));
@@ -65,7 +62,7 @@ public class OnDiskMavenDownloader implements Downloader {
       throw new IOException(String.format("Unable to download %s (derived from %s)", target, uri));
     }
 
-    DownloadEvent.Started started = DownloadEvent.started(uri);
+    DownloadEvent.Started started = DownloadEvent.started(target.toUri());
     eventBus.post(started);
 
     try (InputStream is = new BufferedInputStream(Files.newInputStream(target))) {
