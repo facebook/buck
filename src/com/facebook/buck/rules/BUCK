@@ -123,6 +123,10 @@ java_immutables_library(
     # which creates the implicit dependency on `NoSuchBuildTargetException` that
     # is repaired by exporting this rule.
     '//src/com/facebook/buck/parser:rule_pattern',
+
+    # ExternalTestRunnerTestSpec implements
+    # com.fasterxml.jackson.databind.JsonSerializable.
+    '//third-party/java/jackson:jackson-databind',
   ],
   visibility = [
     'PUBLIC',
@@ -167,6 +171,9 @@ java_immutables_library(
   autodeps = True,
   exported_deps = [
     ':build_event',
+
+    # SymlinkTree implements com.facebook.buck.rules.keys.SupportsInputBasedRuleKey.
+    '//src/com/facebook/buck/rules/keys:keys',
   ],
   visibility = ['PUBLIC'],
 )

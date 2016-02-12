@@ -80,6 +80,10 @@ java_library(
     'DefaultJavaPackageFinder.java',
     'ResourcesRootPackageFinder.java',
   ],
+  exported_deps = [
+    # DefaultJavaPackageFinder implements com.facebook.buck.jvm.core.JavaPackageFinder.
+    '//src/com/facebook/buck/jvm/core:packagefinder',
+  ],
   autodeps = True,
   visibility = ['PUBLIC'],
 )
@@ -109,6 +113,15 @@ java_library(
     'MavenUberJar.java',
     'PrebuiltJar.java',
     'PrebuiltJarDescription.java',
+  ],
+  exported_deps = [
+    # DefaultJavaLibrary implements a number of interfaces that need to be exported:
+    # For JavaLibrary and HasClasspathEntries.
+    ':support',
+    # For com.facebook.buck.android.AndroidPackageable.
+    '//src/com/facebook/buck/android:packageable',
+    # For com.facebook.buck.rules.InitializableFromDisk.
+    '//src/com/facebook/buck/rules:rules',
   ],
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',
