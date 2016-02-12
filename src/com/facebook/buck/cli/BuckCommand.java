@@ -64,6 +64,7 @@ public class BuckCommand extends AbstractContainerCommand {
 
   @Option(
       name = "--help",
+      aliases = {"-h"},
       usage = "Shows this screen and exits.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private boolean helpScreen;

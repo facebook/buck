@@ -124,7 +124,7 @@ public class MainIntegrationTest {
         "  test        builds and runs the tests for the specified target",
         "  uninstall   uninstalls an APK",
         "options:",
-        " --help         : Shows this screen and exits.",
+        " --help (-h)    : Shows this screen and exits.",
         " --version (-V) : Show version number.",
         "");
   }
