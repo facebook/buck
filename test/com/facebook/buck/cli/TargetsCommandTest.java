@@ -165,12 +165,12 @@ public class TargetsCommandTest {
         nodes, ImmutableMap.<String, ShowOptions>of());
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
-        objectMapper.getJsonFactory().createJsonParser(observedOutput));
+        objectMapper.getFactory().createParser(observedOutput));
 
     // parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson1.js");
     JsonNode expected = objectMapper.readTree(
-      objectMapper.getJsonFactory().createJsonParser(expectedJson)
+      objectMapper.getFactory().createParser(expectedJson)
         .enable(Feature.ALLOW_COMMENTS)
     );
 
@@ -189,14 +189,14 @@ public class TargetsCommandTest {
 
     // Parse the observed JSON.
     JsonNode observed = objectMapper.readTree(
-      objectMapper.getJsonFactory().createJsonParser(result.getStdout())
+      objectMapper.getFactory().createParser(result.getStdout())
         .enable(Feature.ALLOW_COMMENTS)
     );
 
     // Parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson2.js");
     JsonNode expected = objectMapper.readTree(
-      objectMapper.getJsonFactory().createJsonParser(expectedJson)
+      objectMapper.getFactory().createParser(expectedJson)
         .enable(Feature.ALLOW_COMMENTS)
     );
 

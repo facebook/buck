@@ -45,7 +45,7 @@ public class HttpPutLogger extends BatchingLogger {
   protected ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data) {
     StringWriter stringWriter = new StringWriter();
     try {
-      JsonGenerator jsonGenerator = objectMapper.getJsonFactory().createJsonGenerator(stringWriter);
+      JsonGenerator jsonGenerator = objectMapper.getFactory().createGenerator(stringWriter);
       jsonGenerator.writeStartArray();
       for (BatchEntry entry : data) {
         jsonGenerator.writeRawValue(entry.getLine());

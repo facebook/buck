@@ -138,7 +138,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     TracePathAndStream tracePathAndStream = createPathAndStream(buildId);
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
-    this.jsonGenerator = objectMapper.getJsonFactory().createJsonGenerator(this.traceStream);
+    this.jsonGenerator = objectMapper.getFactory().createGenerator(this.traceStream);
 
     this.jsonGenerator.writeStartArray();
     addProcessMetadataEvent();

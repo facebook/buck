@@ -386,14 +386,14 @@ public class TargetsCommandIntegrationTest {
 
     // Parse the observed JSON.
     JsonNode observed = objectMapper.readTree(
-        objectMapper.getJsonFactory().createJsonParser(result.getStdout())
+        objectMapper.getFactory().createParser(result.getStdout())
     );
 
     System.out.println(observed.toString());
 
     String expectedJson = workspace.getFileContents("output_path_json.js");
     JsonNode expected = objectMapper.readTree(
-        objectMapper.getJsonFactory().createJsonParser(normalizeNewlines(expectedJson))
+        objectMapper.getFactory().createParser(normalizeNewlines(expectedJson))
     );
 
     MatcherAssert.assertThat(

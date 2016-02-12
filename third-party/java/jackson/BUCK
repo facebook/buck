@@ -13,13 +13,13 @@ java_library(
 
 prebuilt_jar(
   name = 'jackson-annotations',
-  binary_jar = 'jackson-annotations-2.0.5.jar',
+  binary_jar = 'jackson-annotations-2.5.5.jar',
   visibility = [ 'PUBLIC' ],
 )
 
 prebuilt_jar(
   name = 'jackson-core',
-  binary_jar = 'jackson-core-2.0.5.jar',
+  binary_jar = 'jackson-core-2.5.5.jar',
   visibility = [ 'PUBLIC' ],
 )
 
@@ -45,5 +45,5 @@ java_library(
 
 prebuilt_jar(
   name = 'jackson-databind-jar',
-  binary_jar = 'jackson-databind-2.0.5.jar',
+  binary_jar = 'jackson-databind-2.5.5.jar',
 )

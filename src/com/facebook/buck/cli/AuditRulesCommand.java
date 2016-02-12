@@ -194,8 +194,8 @@ public class AuditRulesCommand extends AbstractCommand {
 
       // We create a new JsonGenerator that does not close the stream.
       ObjectMapper mapper = params.getObjectMapper();
-      JsonFactory factory = mapper.getJsonFactory();
-      try (JsonGenerator generator = factory.createJsonGenerator(stdOut)
+      JsonFactory factory = mapper.getFactory();
+      try (JsonGenerator generator = factory.createGenerator(stdOut)
           .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
           .useDefaultPrettyPrinter()) {
         mapper.writeValue(generator, rulesKeyedByName);

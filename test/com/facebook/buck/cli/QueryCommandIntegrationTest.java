@@ -41,7 +41,7 @@ public class QueryCommandIntegrationTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private static JsonNode parseJSON(String content) throws IOException {
-    return objectMapper.readTree(objectMapper.getJsonFactory().createJsonParser(content));
+    return objectMapper.readTree(objectMapper.getFactory().createParser(content));
   }
 
   @Test

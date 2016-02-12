@@ -60,7 +60,7 @@ public class HttpArtifactCacheListener implements BuckEventListener {
     final String buildIdString = event.getBuildId().toString();
     ObjectNode jsonNode = jsonConverter.valueToTree(event);
     if (!environmentInfo.isEmpty()) {
-      jsonNode.put("environment",  jsonConverter.valueToTree(environmentInfo));
+      jsonNode.set("environment",  jsonConverter.valueToTree(environmentInfo));
     }
 
     String hiveRow = HiveRowFormatter.newFormatter()

@@ -7,9 +7,9 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/ddmlib/ddmlib-22.5.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-19.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ini4j/ini4j-0.5.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.0.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.0.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-databind-2.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.5.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.5.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-databind-2.5.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk7-2.5.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson-datatype-guava/jackson-datatype-guava-2.0.6.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />

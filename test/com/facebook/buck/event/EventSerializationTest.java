@@ -288,11 +288,11 @@ public class EventSerializationTest {
 
   private void assertJsonEquals(String expected, String actual) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
-    JsonFactory factory = mapper.getJsonFactory();
-    JsonParser jsonParser = factory.createJsonParser(
+    JsonFactory factory = mapper.getFactory();
+    JsonParser jsonParser = factory.createParser(
         String.format(expected, timestamp, nanoTime, threadId, buildId));
     JsonNode expectedObject = mapper.readTree(jsonParser);
-    jsonParser = factory.createJsonParser(actual);
+    jsonParser = factory.createParser(actual);
     JsonNode actualObject = mapper.readTree(jsonParser);
     matchJsonObjects("/", expectedObject, actualObject);
     assertEquals(expectedObject, actualObject);

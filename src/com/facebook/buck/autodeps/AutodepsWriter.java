@@ -17,6 +17,7 @@
 package com.facebook.buck.autodeps;
 
 import com.facebook.buck.model.BuildTarget;
+import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -52,7 +53,10 @@ public class AutodepsWriter {
       new ThreadLocal<PrettyPrinter>() {
     @Override
     protected PrettyPrinter initialValue() {
-      return new PrettyPrinter();
+      DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter();
+      prettyPrinter.indentArraysWith(
+          new com.fasterxml.jackson.core.util.DefaultIndenter("  ", "\n"));
+      return prettyPrinter;
     }
   };
 
@@ -217,18 +221,6 @@ public class AutodepsWriter {
         writer.write(contentsToWrite);
       }
       return true;
-    }
-  }
-
-  /**
-   * Custom pretty-printer to use with Jackson as suggested by
-   * http://stackoverflow.com/a/21986448/396304. The issue is that
-   * {@link ObjectMapper#writerWithDefaultPrettyPrinter()} does not write one element per line for
-   * arrays, which makes it very difficult to read a list of deps in a {@code BUCK.autodeps} file.
-   */
-  private static class PrettyPrinter extends DefaultPrettyPrinter {
-    public PrettyPrinter() {
-      _arrayIndenter = new Lf2SpacesIndenter();
     }
   }
 }
