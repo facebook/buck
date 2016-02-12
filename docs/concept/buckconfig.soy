@@ -610,6 +610,15 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_max_store_size' /}
+  {param example_value: '5000000' /}
+  {param description}
+    The max size in bytes that an artifact can be to get pushed to an http cache.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'serve_local_cache' /}
   {param example_value: 'false' /}
   {param description}

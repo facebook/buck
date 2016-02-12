@@ -25,6 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -67,6 +68,7 @@ public class HttpArtifactCache implements ArtifactCache {
   private final BuckEventBus buckEventBus;
   private final ListeningExecutorService httpWriteExecutorService;
   private final String errorTextTemplate;
+  private final Optional<Long> maxStoreSize;
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
@@ -78,7 +80,8 @@ public class HttpArtifactCache implements ArtifactCache {
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       ListeningExecutorService httpWriteExecutorService,
-      String errorTextTemplate) {
+      String errorTextTemplate,
+      Optional<Long> maxStoreSize) {
     this.name = name;
     this.fetchClient = fetchClient;
     this.storeClient = storeClient;
@@ -87,6 +90,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.buckEventBus = buckEventBus;
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.errorTextTemplate = errorTextTemplate;
+    this.maxStoreSize = maxStoreSize;
   }
 
   protected Response fetchCall(String path, Request.Builder requestBuilder) throws IOException {
@@ -204,6 +208,12 @@ public class HttpArtifactCache implements ArtifactCache {
       final Path file,
       final Finished.Builder eventBuilder)
       throws IOException {
+
+    if (maxStoreSize.isPresent() &&
+        projectFilesystem.getFileSize(file) > maxStoreSize.get()) {
+      return;
+    }
+
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
     final HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =

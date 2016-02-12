@@ -319,7 +319,8 @@ public class ArtifactCaches {
         projectFilesystem,
         buckEventBus,
         httpWriteExecutorService,
-        cacheDescription.getErrorMessageFormat());
+        cacheDescription.getErrorMessageFormat(),
+        Optional.<Long>absent());
   }
 
   private static class ProgressResponseBody extends ResponseBody {

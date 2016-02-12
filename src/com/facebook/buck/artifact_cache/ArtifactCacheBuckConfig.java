@@ -58,6 +58,7 @@ public class ArtifactCacheBuckConfig {
   private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
+  private static final String HTTP_MAX_STORE_SIZE = "http_max_store_size";
   private static final ImmutableSet<String> HTTP_CACHE_DESCRIPTION_FIELDS = ImmutableSet.of(
       HTTP_URL_FIELD_NAME,
       HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME,
@@ -65,7 +66,8 @@ public class ArtifactCacheBuckConfig {
       HTTP_TIMEOUT_SECONDS_FIELD_NAME,
       HTTP_READ_HEADERS_FIELD_NAME,
       HTTP_WRITE_HEADERS_FIELD_NAME,
-      HTTP_CACHE_ERROR_MESSAGE_NAME);
+      HTTP_CACHE_ERROR_MESSAGE_NAME,
+      HTTP_MAX_STORE_SIZE);
 
   // List of names of cache-* sections that contain the fields above. This is used to emulate
   // dicts, essentially.
@@ -307,10 +309,11 @@ public class ArtifactCacheBuckConfig {
             section,
             HTTP_CACHE_ERROR_MESSAGE_NAME,
             DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
+    builder.setMaxStoreSize(buckConfig.getLong(section, HTTP_MAX_STORE_SIZE));
     return builder.build();
   }
 
-  private final Optional<URI> getUri(String section, String field) {
+  private Optional<URI> getUri(String section, String field) {
     try {
       // URL has stricter parsing rules than URI, so we want to use that constructor to surface
       // the error message early. Passing around a URL is problematic as it hits DNS from the
@@ -374,6 +377,7 @@ public class ArtifactCacheBuckConfig {
     public abstract CacheReadMode getCacheReadMode();
     protected abstract ImmutableSet<String> getBlacklistedWifiSsids();
     public abstract String getErrorMessageFormat();
+    public abstract Optional<Long> getMaxStoreSize();
 
     public boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
       if (currentWifiSsid.isPresent() &&

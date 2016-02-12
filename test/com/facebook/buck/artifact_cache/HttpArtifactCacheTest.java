@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -126,7 +127,8 @@ public class HttpArtifactCacheTest {
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -170,7 +172,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -215,7 +218,8 @@ public class HttpArtifactCacheTest {
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -252,7 +256,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -297,7 +302,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -340,7 +346,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -373,7 +380,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response storeCall(Request.Builder requestBuilder)
               throws IOException {
@@ -432,7 +440,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response storeCall(Request.Builder requestBuilder) throws IOException {
             throw new IOException();
@@ -464,7 +473,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response storeCall(Request.Builder requestBuilder) throws IOException {
             Request request = requestBuilder.url(SERVER).build();
@@ -510,7 +520,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -551,7 +562,8 @@ public class HttpArtifactCacheTest {
             filesystem,
             BUCK_EVENT_BUS,
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -606,7 +618,8 @@ public class HttpArtifactCacheTest {
               }
             },
             DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE) {
+            ERROR_TEXT_TEMPLATE,
+            Optional.<Long>absent()) {
           @Override
           protected Response fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -631,4 +644,39 @@ public class HttpArtifactCacheTest {
     assertTrue(consoleEventReceived.get());
     cache.close();
   }
+
+  @Test
+  public void testStoreBiggerThanMaxStoreSize() throws Exception {
+    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    final String data = "data";
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path output = Paths.get("output/file");
+    filesystem.writeContentsToPath(data, output);
+    System.out.println(filesystem.getFileSize(output));
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            "http",
+            fetchService,
+            storeService,
+            /* doStore */ true,
+            filesystem,
+            BUCK_EVENT_BUS,
+            DIRECT_EXECUTOR_SERVICE,
+            ERROR_TEXT_TEMPLATE,
+            Optional.of(2L)) {
+          @Override
+          protected Response storeCall(Request.Builder requestBuilder)
+              throws IOException {
+            fail("should not have called store");
+            throw new IllegalStateException();
+          }
+        };
+    cache.storeImpl(
+        ImmutableSet.of(ruleKey),
+        ImmutableMap.<String, String>of(),
+        output,
+        createFinishedEventBuilder());
+    cache.close();
+  }
+
 }
