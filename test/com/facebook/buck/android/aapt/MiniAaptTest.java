@@ -532,4 +532,80 @@ public class MiniAaptTest {
         ImmutableSet.<RDotTxtEntry>of(
             new FakeRDotTxtEntry(IdType.INT, RType.STRING, "com_buckbuild_taskname")));
   }
+
+  @Test
+  public void testUnionResources() throws
+      IOException, XPathExpressionException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<resources>",
+        "<string name=\"buck_string_1\">buck text 1 original</string>",
+        "<id name=\"buck_id_1\"/>",
+        "<style name=\"Buck.Style.1\">",
+        "  <item name=\"ignoreMe\" />",
+        "</style>",
+        "<declare-styleable name=\"Buck_Styleable_1\">",
+        "   <attr name=\"attr1_1\" />",
+        "   <attr name=\"attr1_2\" format=\"string\" />",
+        "   <attr name=\"attr1_3\" />",
+        "</declare-styleable>",
+        "</resources>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    ImmutableList<String> rDotTxt = ImmutableList.of(
+        "int string buck_string_1 0x07010001",
+        "int string buck_string_2 0x07010002",
+        "int id buck_id_2 0x07020002",
+        "int style Buck_Style_2 0x07030002",
+        "int[] styleable Buck_Styleable_2 { 0x07040001,0x07040002,0x07040003 }",
+        "int styleable Buck_Styleable_2_attr2_1 0",
+        "int styleable Buck_Styleable_2_attr2_2 1",
+        "int styleable Buck_Styleable_2_attr2_3 2",
+        "int attr attr2_1 0x07050001",
+        "int attr attr2_2 0x07050002",
+        "int attr attr2_3 0x07050003"
+        );
+
+    Path depRTxt = Paths.get("dep/R.txt");
+    filesystem.writeLinesToPath(rDotTxt, depRTxt);
+
+    MiniAapt aapt = new MiniAapt(
+        resolver,
+        filesystem,
+        new FakeSourcePath(filesystem, "res"),
+        Paths.get("R.txt"),
+        ImmutableSet.of(depRTxt),
+        true);
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    aapt.resourceUnion();
+
+    Set<RDotTxtEntry> resources = aapt.getResourceCollector().getResources();
+
+    assertEquals(
+        ImmutableSet.<RDotTxtEntry>of(
+            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "buck_string_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ID, "buck_id_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLE, "Buck_Style_1"),
+            new FakeRDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "Buck_Styleable_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "Buck_Styleable_1_attr1_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "Buck_Styleable_1_attr1_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "Buck_Styleable_1_attr1_3"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "attr1_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "attr1_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "attr1_3"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "buck_string_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ID, "buck_id_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLE, "Buck_Style_2"),
+            new FakeRDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "Buck_Styleable_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "Buck_Styleable_2_attr2_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "Buck_Styleable_2_attr2_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "Buck_Styleable_2_attr2_3"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "attr2_1"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "attr2_2"),
+            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "attr2_3")
+           ), resources);
+  }
+
 }

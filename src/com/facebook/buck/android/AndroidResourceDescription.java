@@ -124,7 +124,8 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         assetsInputsAndKey.getFirst(),
         assetsInputsAndKey.getSecond(),
         args.manifest.orNull(),
-        args.hasWhitelistedStrings.or(false));
+        args.hasWhitelistedStrings.or(false),
+        args.resourceUnion.or(false));
   }
 
   private Pair<ImmutableSortedSet<SourcePath>, Optional<SourcePath>> collectInputFilesAndKey(
@@ -214,5 +215,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     public Optional<SourcePath> manifest;
 
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<Boolean> resourceUnion;
   }
 }

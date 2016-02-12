@@ -101,6 +101,7 @@ public class MiniAapt implements Step {
   private final Path pathToTextSymbolsFile;
   private final ImmutableSet<Path> pathsToSymblolsOfDeps;
   private final AaptResourceCollector resourceCollector;
+  private final boolean resourceUnion;
 
   public MiniAapt(
       SourcePathResolver resolver,
@@ -108,12 +109,29 @@ public class MiniAapt implements Step {
       SourcePath resDirectory,
       Path pathToTextSymbolsFile,
       ImmutableSet<Path> pathsToSymblolsOfDeps) {
+    this(
+        resolver,
+        filesystem,
+        resDirectory,
+        pathToTextSymbolsFile,
+        pathsToSymblolsOfDeps,
+        false);
+  }
+
+  public MiniAapt(
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      SourcePath resDirectory,
+      Path pathToTextSymbolsFile,
+      ImmutableSet<Path> pathsToSymblolsOfDeps,
+      boolean resourceUnion) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToTextSymbolsFile = pathToTextSymbolsFile;
     this.pathsToSymblolsOfDeps = pathsToSymblolsOfDeps;
     this.resourceCollector = new AaptResourceCollector();
+    this.resourceUnion = resourceUnion;
   }
 
   private static XPathExpression createExpression(String expressionStr) {
@@ -167,6 +185,15 @@ public class MiniAapt implements Step {
       return 1;
     }
 
+    if (resourceUnion) {
+      try {
+        resourceUnion();
+      } catch (IOException e) {
+        context.logError(e, "Error performing resource union for %s.", resDirectory);
+        return 1;
+      }
+    }
+
     try (PrintWriter writer =
              new PrintWriter(filesystem.newFileOutputStream(pathToTextSymbolsFile))) {
       Set<RDotTxtEntry> sortedResources =
@@ -180,6 +207,23 @@ public class MiniAapt implements Step {
     }
 
     return 0;
+  }
+
+  /**
+   * Collect resource information from R.txt for each dep and perform a resource union.
+   * @throws IOException
+   */
+  public void resourceUnion() throws IOException {
+    for (Path depRTxt : pathsToSymblolsOfDeps) {
+      Iterable<String> lines = FluentIterable.from(filesystem.readLines(depRTxt))
+          .filter(MoreStrings.NON_EMPTY)
+          .toList();
+      for (String line : lines) {
+        Optional<RDotTxtEntry> entry = RDotTxtEntry.parse(line);
+        Preconditions.checkState(entry.isPresent());
+        resourceCollector.addResourceIfNotPresent(entry.get());
+      }
+    }
   }
 
   /**
