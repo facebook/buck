@@ -84,6 +84,29 @@ public class OnDiskMavenDownloaderTest {
   }
 
   @Test
+  public void shouldDownloadFileFromLocalMavenRepoOnWindows() throws URISyntaxException, IOException {
+    // Same test as `shouldDownloadFileFromLocalMavenRepo` but using a windows
+    // mock filesystem.
+    FileSystem filesystem = Jimfs.newFileSystem(Configuration.windows());
+    Path root = filesystem.getPath("C:\\Users\\bob\\.m2");
+    Files.createDirectories(root);
+
+    URI uri = new URI("mvn:group:project:jar:0.1");
+    Path output = filesystem.getPath("output.txt");
+
+    Path source = root.resolve("group/project/0.1/project-0.1.jar");
+    Files.createDirectories(source.getParent());
+    Files.write(source, "cake".getBytes(UTF_8));
+
+    Downloader downloader = new OnDiskMavenDownloader(root);
+    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+
+    String result = new String(Files.readAllBytes(output), UTF_8);
+
+    assertEquals("cake", result);
+  }
+
+  @Test
   public void shouldThrowFileNotFoundExceptionWhenPathDoesntExist() throws FileNotFoundException {
     Path rootNotExist = filesystem.getPath("not/a/valid/path");
 
