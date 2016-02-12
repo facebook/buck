@@ -27,6 +27,15 @@ java_library(
   ],
 )
 
+BUILD_RULE_IMMUTABLES = [
+  'AbstractBuildRuleType.java',
+  'AbstractExopackageInfo.java',
+  'AbstractExternalTestRunnerTestSpec.java',
+  'AbstractLabel.java',
+  'AbstractSha1HashCode.java',
+  'AbstractSourceWithFlags.java',
+]
+
 # Ideally, BuildRule.java would require only a handful of other source files
 # in order to compile it. Because BuildContext is referenced in the BuildRule
 # interface, its dependencies are much broader than desired.
@@ -34,13 +43,7 @@ java_immutables_library(
   name = 'build_rule',
   srcs = [
     'AbstractBuildRule.java',
-    'AbstractBuildRuleType.java',
-    'AbstractExopackageInfo.java',
-    'AbstractExternalTestRunnerTestSpec.java',
-    'AbstractLabel.java',
-    'AbstractSha1HashCode.java',
     'AbstractSourcePath.java',
-    'AbstractSourceWithFlags.java',
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',
@@ -100,6 +103,7 @@ java_immutables_library(
     'TargetNodes.java',
     'Tool.java',
   ],
+  immutable_srcs = BUILD_RULE_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/rules/coercer:coercer',
     '//test/com/facebook/buck/rules:rules',

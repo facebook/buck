@@ -194,6 +194,15 @@ public class JavaDepsFinder {
           ruleToRulesThatExportIt.put(exportedDep, buildTarget);
         }
 
+        // The build target should be recorded as a provider for every symbol in its
+        // generated_symbols set (if it exists). It is common to use this for symbols that are
+        // generated via annotation processors.
+        if (arg.generatedSymbols.isPresent()) {
+          for (String symbol : arg.generatedSymbols.get()) {
+            symbolToProviders.put(symbol, buildTarget);
+          }
+        }
+
         // As a performance improvement, we should graph enhance a rule for the java_library() rule
         // that depends on the following inputs:
         //

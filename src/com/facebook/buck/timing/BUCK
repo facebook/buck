@@ -1,7 +1,11 @@
-
+TIMING_IMMUTABLES = [
+  'AbstractAbsolutePerfTime.java',
+  'AbstractRelativePerfTime.java',
+]
 java_immutables_library(
   name = 'timing',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = TIMING_IMMUTABLES),
+  immutable_srcs = TIMING_IMMUTABLES,
   autodeps = True,
   visibility = [
     'PUBLIC',

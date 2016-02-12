@@ -15,14 +15,17 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-PACKAGEABLE_SOURCES = [
+PACKAGEABLE_IMMUTABLES = [
   'AbstractAndroidPackageableCollection.java',
+]
+PACKAGEABLE_SRCS = [
   'AndroidPackageable.java',
   'AndroidPackageableCollector.java',
 ]
 java_immutables_library(
   name = 'packageable',
-  srcs = PACKAGEABLE_SOURCES,
+  srcs = PACKAGEABLE_SRCS,
+  immutable_srcs = PACKAGEABLE_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
@@ -35,9 +38,11 @@ java_immutables_library(
   visibility = ['PUBLIC'],
 )
 
+RULES_IMMUTABLES = [
+  'AbstractAndroidGraphEnhancementResult.java',
+]
 RULES_SRCS = [
   'AaptPackageResources.java',
-  'AbstractAndroidGraphEnhancementResult.java',
   'AndroidAar.java',
   'AndroidAarDescription.java',
   'AndroidBinaryGraphEnhancer.java',
@@ -103,6 +108,7 @@ RULES_SRCS = [
 java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
+  immutable_srcs = RULES_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
@@ -176,11 +182,17 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
+STEPS_IMMUTABLES = [
+  'AbstractNdkCxxPlatform.java',
+]
 java_immutables_library(
   name = 'steps',
   srcs = glob(['*.java'],
-              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS +
-                  UTILS_SRCS + HELPERS_SRCS),
+              excludes = STEPS_IMMUTABLES + EXCEPTION_SRCS +
+                  PACKAGEABLE_SRCS + PACKAGEABLE_IMMUTABLES +
+                  RULES_SRCS + RULES_IMMUTABLES +
+                  SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS),
+  immutable_srcs = STEPS_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/android:steps',
     '//test/com/facebook/buck/android:integration',

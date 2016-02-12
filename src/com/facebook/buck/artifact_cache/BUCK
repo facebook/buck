@@ -1,5 +1,7 @@
-PUBLIC_API_SOURCES = [
+PUBLIC_API_IMMUTABLES = [
   'AbstractCacheResult.java',
+]
+PUBLIC_API_SOURCES = [
   'ArtifactCache.java',
   'ArtifactCacheEvent.java',
   'ArtifactCacheEventFactory.java',
@@ -20,6 +22,7 @@ CONFIG_SOURCES = [
 java_immutables_library(
   name = 'artifact_cache',
   srcs = PUBLIC_API_SOURCES,
+  immutable_srcs = PUBLIC_API_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
@@ -43,7 +46,9 @@ java_immutables_library(
 
 java_immutables_library(
   name = 'impl',
-  srcs = glob(['*.java'], excludes=PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES),
+  srcs = glob(['*.java'],
+              excludes=PUBLIC_API_SOURCES + PUBLIC_API_IMMUTABLES + \
+                       CONFIG_SOURCES + PROTOCOL_SOURCES),
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],

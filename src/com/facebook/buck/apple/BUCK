@@ -1,17 +1,19 @@
-PLATFORM_SRCS = [
+PLATFORM_IMMUTABLES = [
   'AbstractAppleCxxPlatform.java',
   'AbstractApplePlatform.java',
   'AbstractAppleSdk.java',
   'AbstractAppleSdkPaths.java',
   'AbstractAppleToolchain.java',
   'AbstractFatBinaryInfo.java',
+]
+PLATFORM_SRCS = [
   'ApplePlatforms.java',
   'FatBinaryInfos.java',
 ]
-
 java_immutables_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
+  immutable_srcs = PLATFORM_IMMUTABLES,
   autodeps = True,
   visibility = ['PUBLIC'],
 )

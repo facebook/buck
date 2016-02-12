@@ -9,12 +9,14 @@ java_library(
   ],
 )
 
+PARSER_IMMUTABLES = [
+  'AbstractBuildFileSpec.java',
+  'AbstractBuildTargetSpec.java',
+  'AbstractTargetNodePredicateSpec.java',
+]
 java_immutables_library(
   name = 'parser',
   srcs = [
-    'AbstractBuildFileSpec.java',
-    'AbstractBuildTargetSpec.java',
-    'AbstractTargetNodePredicateSpec.java',
     'BuildTargetPatternTargetNodeParser.java',
     'DaemonicParserState.java',
     'MissingBuildFileException.java',
@@ -25,6 +27,7 @@ java_immutables_library(
     'TargetNodeListener.java',
     'TargetNodeSpec.java',
   ],
+  immutable_srcs = PARSER_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/parser:integration',
     '//test/com/facebook/buck/parser:parser',

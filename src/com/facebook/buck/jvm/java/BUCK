@@ -31,11 +31,13 @@ java_library(
   autodeps = True,
 )
 
+SUPPORT_IMMUTABLES = [
+  'AbstractJavacOptions.java',
+  'AbstractJavacVersion.java',
+]
 java_immutables_library(
   name = 'support',
   srcs = [
-    'AbstractJavacVersion.java',
-    'AbstractJavacOptions.java',
     'AnnotationProcessingEvent.java',
     'AnnotationProcessingParams.java',
     'BuildsAnnotationProcessor.java',
@@ -58,6 +60,7 @@ java_immutables_library(
     'StandardJavaFileManagerFactory.java',
     'TracingProcessorWrapper.java',
   ],
+  immutable_srcs = SUPPORT_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',
     '//test/com/facebook/buck/jvm/java:java',
@@ -140,7 +143,6 @@ java_library(
 java_immutables_library(
   name = 'steps',
   srcs = [
-    'AbstractJUnitJVMArgs.java',
     'AccumulateClassNamesStep.java',
     'BaseCompileToJarStepFactory.java',
     'CalculateAbiStep.java',
@@ -156,6 +158,9 @@ java_immutables_library(
     'JavacStep.java',
     'JUnitStep.java',
     'TestType.java',
+  ],
+  immutable_srcs = [
+    'AbstractJUnitJVMArgs.java',
   ],
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',

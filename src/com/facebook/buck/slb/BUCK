@@ -1,6 +1,10 @@
+SLB_IMMUTABLES = [
+  'AbstractClientSideSlbConfig.java',
+]
 java_immutables_library(
   name = 'slb',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = SLB_IMMUTABLES),
+  immutable_srcs = SLB_IMMUTABLES,
   autodeps = True,
   visibility = [
     'PUBLIC',

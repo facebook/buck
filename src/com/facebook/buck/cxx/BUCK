@@ -1,7 +1,9 @@
-PLATFORM_SRCS = [
+PLATFORM_IMMUTABLES = [
   'AbstractNativeLinkableInput.java',
-  'Archiver.java',
   'AbstractCxxPlatform.java',
+]
+PLATFORM_SRCS = [
+  'Archiver.java',
   'BsdArchiver.java',
   'ByteBufferReplacer.java',
   'CanProvideSharedNativeLinkTarget.java',
@@ -31,6 +33,7 @@ PLATFORM_SRCS = [
 java_immutables_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
+  immutable_srcs = PLATFORM_IMMUTABLES,
   autodeps = True,
   visibility = [
     'PUBLIC'
@@ -54,7 +57,8 @@ java_library(
 
 java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java'], excludes=PLATFORM_SRCS + ['FrameworkPathArg.java']),
+  srcs = glob(['*.java'],
+              excludes=PLATFORM_SRCS + PLATFORM_IMMUTABLES + ['FrameworkPathArg.java']),
   tests = [
     '//test/com/facebook/buck/cxx:cxx',
   ],

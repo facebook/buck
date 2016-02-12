@@ -1,6 +1,10 @@
+JSON_IMMUTABLES = [
+  'AbstractProjectBuildFileParserOptions.java',
+]
 java_immutables_library(
   name = 'json',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = JSON_IMMUTABLES),
+  immutable_srcs = JSON_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/json:json',
   ],

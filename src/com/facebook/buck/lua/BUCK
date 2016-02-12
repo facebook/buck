@@ -1,6 +1,10 @@
+LUA_IMMUTABLES = [
+  'AbstractLuaPackageComponents.java',
+]
 java_immutables_library(
   name = 'lua',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = LUA_IMMUTABLES),
+  immutable_srcs = LUA_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/lua:lua',
   ],

@@ -10,9 +10,14 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
+MODEL_IMMUTABLES = [
+  'AbstractBuildTarget.java',
+  'AbstractUnflavoredBuildTarget.java',
+]
 java_immutables_library(
   name = 'model',
-  srcs = glob(['*.java'], excludes = BUILD_ID_SRCS),
+  srcs = glob(['*.java'], excludes = BUILD_ID_SRCS + MODEL_IMMUTABLES),
+  immutable_srcs = MODEL_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/model:model',
   ],

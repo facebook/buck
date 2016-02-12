@@ -12,22 +12,29 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-SUPPORT_SRCS = [
+SUPPORT_IMMUTABLES = [
   'AbstractPythonPlatform.java',
   'AbstractPythonVersion.java',
+]
+SUPPORT_SRCS = [
   'PythonEnvironment.java',
 ]
 java_immutables_library(
   name = 'support',
   srcs = SUPPORT_SRCS,
+  immutable_srcs = SUPPORT_IMMUTABLES,
   autodeps = True,
   visibility = ['PUBLIC'],
 )
 
-
+RULES_IMMUTABLES = [
+  'AbstractPythonPackageComponents.java',
+]
 java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java'], excludes=CONFIG_SRCS + SUPPORT_SRCS),
+  srcs = glob(['*.java'],
+              excludes=CONFIG_SRCS + SUPPORT_SRCS + SUPPORT_IMMUTABLES + RULES_IMMUTABLES),
+  immutable_srcs = RULES_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/python:python',
   ],
