@@ -17,7 +17,6 @@
 package com.facebook.buck.file;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
@@ -86,7 +85,7 @@ public class OnDiskMavenDownloaderTest {
   }
 
   @Test
-  public void shouldDownloadFileFromLocalMavenRepoOnWindows() throws URISyntaxException, IOException {
+  public void shouldDownloadFileFromLocalMavenRepoWindows() throws URISyntaxException, IOException {
     FileSystem filesystem = Jimfs.newFileSystem(Configuration.windows());
     Path root = filesystem.getPath("C:\\Users\\bob\\.m2");
     Files.createDirectories(root);
