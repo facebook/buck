@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 
-import org.ini4j.Config;
 import org.ini4j.Ini;
 import org.ini4j.Profile;
 
@@ -33,9 +32,6 @@ class Inis {
   public static ImmutableMap<String, ImmutableMap<String, String>> read(Reader reader)
       throws IOException {
     Ini ini = new Ini();
-    Config config = ini.getConfig();
-    config.setEscape(false);
-    config.setEscapeNewline(true);
     ini.load(reader);
     validateIni(ini);
 
