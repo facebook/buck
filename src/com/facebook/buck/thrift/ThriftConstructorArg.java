@@ -43,6 +43,8 @@ public class ThriftConstructorArg {
   public Optional<SourceWithFlagsList> cppSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> cppDeps;
   public Optional<ImmutableSortedSet<BuildTarget>> cpp2Deps;
+  public Optional<ImmutableList<String>> cppCompilerFlags;
+  public Optional<ImmutableList<String>> cpp2CompilerFlags;
   public Optional<ImmutableSet<String>> cppOptions;
   public Optional<ImmutableSet<String>> cpp2Options;
 

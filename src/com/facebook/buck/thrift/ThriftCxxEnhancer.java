@@ -283,6 +283,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.srcs = Optional.of(ImmutableSortedSet.copyOf(srcs.values()));
     langArgs.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
     langArgs.canBeAsset = Optional.absent();
+    langArgs.compilerFlags = cpp2 ? args.cpp2CompilerFlags : args.cppCompilerFlags;
 
     // Since thrift generated C/C++ code uses lots of templates, just use exported deps throughout.
     langArgs.exportedDeps =

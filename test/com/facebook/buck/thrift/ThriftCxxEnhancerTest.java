@@ -646,4 +646,60 @@ public class ThriftCxxEnhancerTest {
         ImmutableSortedSet.<BuildRule>of());
   }
 
+  @Test
+  public void cppCompileFlagsArePropagated() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRuleParams flavoredParams = new FakeBuildRuleParamsBuilder(TARGET).build();
+
+    final ImmutableList<String> compilerFlags = ImmutableList.of("-flag");
+
+    ThriftConstructorArg arg = new ThriftConstructorArg();
+    arg.cppOptions = Optional.absent();
+    arg.cppDeps = Optional.absent();
+    arg.cpp2Deps = Optional.absent();
+    arg.cpp2CompilerFlags = Optional.of(compilerFlags);
+    arg.cppCompilerFlags = Optional.of(compilerFlags);
+    arg.cppHeaderNamespace = Optional.absent();
+    arg.cppExportedHeaders = Optional.absent();
+    arg.cppSrcs = Optional.absent();
+
+    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
+    resolver.addToIndex(thrift);
+
+    // Run the enhancer with a modified C++ description which checks that appropriate args are
+    // propagated.
+    CxxLibraryDescription cxxLibraryDescription =
+        new CxxLibraryDescription(
+            CXX_BUCK_CONFIG,
+            new InferBuckConfig(BUCK_CONFIG),
+            CXX_PLATFORMS,
+            CxxPreprocessMode.SEPARATE) {
+          @Override
+          public <A extends Arg> BuildRule createBuildRule(
+              TargetGraph targetGraph,
+              BuildRuleParams params,
+              BuildRuleResolver resolver,
+              A args) throws NoSuchBuildTargetException {
+            assertThat(args.compilerFlags.get(), Matchers.hasItem("-flag"));
+            return super.createBuildRule(targetGraph, params, resolver, args);
+          }
+        };
+    for (boolean cpp2 : ImmutableList.of(true, false)) {
+      ThriftCxxEnhancer enhancer =
+          new ThriftCxxEnhancer(
+              THRIFT_BUCK_CONFIG,
+              cxxLibraryDescription,
+              cpp2);
+      enhancer.createBuildRule(
+          TargetGraph.EMPTY,
+          flavoredParams,
+          resolver,
+          arg,
+          ImmutableMap.<String, ThriftSource>of(),
+          ImmutableSortedSet.<BuildRule>of());
+    }
+  }
+
 }
