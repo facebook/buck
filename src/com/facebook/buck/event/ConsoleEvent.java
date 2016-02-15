@@ -24,11 +24,13 @@ import java.util.logging.Level;
 public class ConsoleEvent extends AbstractBuckEvent {
 
   private final Level level;
+  private final boolean containsAnsiEscapeCodes;
   private final String message;
 
-  protected ConsoleEvent(Level level, String message) {
+  protected ConsoleEvent(Level level, boolean containsAnsiEscapeCodes, String message) {
     super(EventKey.unique());
     this.level = level;
+    this.containsAnsiEscapeCodes = containsAnsiEscapeCodes;
     this.message = message;
   }
 
@@ -36,16 +38,24 @@ public class ConsoleEvent extends AbstractBuckEvent {
     return level;
   }
 
+  public boolean containsAnsiEscapeCodes() {
+    return containsAnsiEscapeCodes;
+  }
+
   public String getMessage() {
     return message;
   }
 
   public static ConsoleEvent create(Level level, String message) {
-    return new ConsoleEvent(level, message);
+    return new ConsoleEvent(level, /* containsAnsiEscapeCodes */ false, message);
   }
 
   public static ConsoleEvent create(Level level, String message, Object... args) {
     return ConsoleEvent.create(level, String.format(message, args));
+  }
+
+  public static ConsoleEvent createForMessageWithAnsiEscapeCodes(Level level, String message) {
+    return new ConsoleEvent(level, /* containsAnsiEscapeCodes */ true, message);
   }
 
   public static ConsoleEvent finer(String message) {

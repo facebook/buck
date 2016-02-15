@@ -21,6 +21,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
@@ -259,6 +260,14 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     }
 
     return inputs.build();
+  }
+
+  public Optional<SupportsColorsInOutput> getColorSupport() {
+    if (preprocessor instanceof SupportsColorsInOutput) {
+      return Optional.of((SupportsColorsInOutput) preprocessor);
+    } else {
+      return Optional.absent();
+    }
   }
 
 }

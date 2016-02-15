@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -210,30 +211,35 @@ public class CxxPreprocessAndCompile
       throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
 
-    Optional<ImmutableList<String>> preprocessorCommand;
-    Optional<ImmutableMap<String, String>> preprocessorEnvironment;
+    Optional<CxxPreprocessAndCompileStep.ToolCommand> preprocessorCommand;
 
     if (preprocessDelegate.isPresent()) {
-      preprocessorCommand = Optional.of(preprocessDelegate.get().getPreprocessorCommand());
-      preprocessorEnvironment = Optional.of(preprocessDelegate.get().getPreprocessorEnvironment());
+      preprocessorCommand = Optional.of(
+          new CxxPreprocessAndCompileStep.ToolCommand(
+              preprocessDelegate.get().getPreprocessorCommand(),
+              preprocessDelegate.get().getPreprocessorEnvironment(),
+              preprocessDelegate.get().getColorSupport()));
     } else {
       preprocessorCommand = Optional.absent();
-      preprocessorEnvironment = Optional.absent();
     }
 
-    Optional<ImmutableList<String>> compilerCommand;
-    Optional<ImmutableMap<String, String>> compilerEnvironment;
+    Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
     if (compiler.isPresent()) {
+      Optional<SupportsColorsInOutput> colorSupport = Optional.absent();
+      if (compiler.get() instanceof SupportsColorsInOutput) {
+        colorSupport = Optional.of((SupportsColorsInOutput) compiler.get());
+      }
       compilerCommand = Optional.of(
-          ImmutableList.<String>builder()
-              .addAll(compiler.get().getCommandPrefix(getResolver()))
-              .addAll(getCompilerPlatformPrefix())
-              .addAll(getCompilerSuffix())
-              .build());
-      compilerEnvironment = Optional.of(compiler.get().getEnvironment(getResolver()));
+          new CxxPreprocessAndCompileStep.ToolCommand(
+              ImmutableList.<String>builder()
+                  .addAll(compiler.get().getCommandPrefix(getResolver()))
+                  .addAll(getCompilerPlatformPrefix())
+                  .addAll(getCompilerSuffix())
+                  .build(),
+              compiler.get().getEnvironment(getResolver()),
+              colorSupport));
     } else {
       compilerCommand = Optional.absent();
-      compilerEnvironment = Optional.absent();
     }
 
     return new CxxPreprocessAndCompileStep(
@@ -243,9 +249,7 @@ public class CxxPreprocessAndCompile
         getDepFilePath(),
         getResolver().deprecatedGetPath(input),
         inputType,
-        preprocessorEnvironment,
         preprocessorCommand,
-        compilerEnvironment,
         compilerCommand,
         replacementPaths,
         sanitizer,

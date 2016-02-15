@@ -32,7 +32,10 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
   }
 
   protected ThrowableConsoleEvent(Throwable throwable, Level level, String message) {
-    super(level, combineThrowableAndMessage(throwable, message));
+    super(
+        level,
+        /* containsAnsiEscapeCodes */ false,
+        combineThrowableAndMessage(throwable, message));
     this.throwable = throwable;
   }
 

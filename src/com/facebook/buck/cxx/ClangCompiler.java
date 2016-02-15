@@ -20,13 +20,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class ClangCompiler implements Compiler {
+public class ClangCompiler implements Compiler, SupportsColorsInOutput {
 
   private final Tool tool;
 
@@ -65,6 +66,11 @@ public class ClangCompiler implements Compiler {
     return builder
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());
+  }
+
+  @Override
+  public ImmutableList<String> getArgsForColorsInOutput() {
+    return ImmutableList.of("-fcolor-diagnostics");
   }
 
 }

@@ -89,6 +89,7 @@ java_immutables_library(
     'SourcePathResolver.java',
     'SourcePaths.java',
     'SourceRoot.java',
+    'SupportsColorsInOutput.java',
     'TargetGraph.java',
     'TargetGraphHashing.java',
     'TargetGraphToActionGraph.java',

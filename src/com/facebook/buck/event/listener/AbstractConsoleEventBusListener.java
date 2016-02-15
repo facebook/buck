@@ -242,7 +242,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    */
   protected void formatConsoleEvent(ConsoleEvent logEvent, ImmutableList.Builder<String> lines) {
     String formattedLine = "";
-    if (logEvent.getLevel().equals(Level.INFO)) {
+    if (logEvent.containsAnsiEscapeCodes() || logEvent.getLevel().equals(Level.INFO)) {
       formattedLine = logEvent.getMessage();
     } else if (logEvent.getLevel().equals(Level.WARNING)) {
       formattedLine = ansi.asWarningText(logEvent.getMessage());
