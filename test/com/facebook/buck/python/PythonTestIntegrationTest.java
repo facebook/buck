@@ -73,23 +73,6 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testPythonTestSelectors() throws IOException {
-    ProcessResult result = workspace.runBuckCommand(
-        "test", "--test-selectors", "Test#test_that_passes", "//:test-failure");
-    result.assertSuccess();
-
-    result = workspace.runBuckCommand(
-        "test", "--test-selectors", "!Test#test_that_fails", "//:test-failure");
-    result.assertSuccess();
-    workspace.resetBuildLogFile();
-
-    result = workspace.runBuckCommand(
-        "test", "--test-selectors", "!test_failure.Test#", "//:test-failure");
-    result.assertSuccess();
-    assertThat(result.getStderr(), Matchers.containsString("1 Passed"));
-  }
-
-  @Test
   public void testPythonTestEnv() throws IOException {
     // Test if setting environment during test execution works
     ProcessResult result = workspace.runBuckCommand("test", "//:test-env");
