@@ -215,7 +215,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @VisibleForTesting
   public CxxPreprocessAndCompile createPreprocessBuildRule(
-      BuildRuleResolver resolver,
       String name,
       CxxSource source) {
 
@@ -241,24 +240,23 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         getCxxPlatform().getDebugPathSanitizer());
-    resolver.addToIndex(result);
+    getResolver().addToIndex(result);
     return result;
   }
 
   @VisibleForTesting
   CxxPreprocessAndCompile requirePreprocessBuildRule(
-      BuildRuleResolver resolver,
       String name,
       CxxSource source) {
 
     BuildTarget target = createPreprocessBuildTarget(name, source.getType());
-    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+    Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
 
-    return createPreprocessBuildRule(resolver, name, source);
+    return createPreprocessBuildRule(name, source);
   }
 
   /**
@@ -365,7 +363,6 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   public CxxPreprocessAndCompile createCompileBuildRule(
-      BuildRuleResolver resolver,
       String name,
       CxxSource source) {
 
@@ -416,24 +413,21 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         getCxxPlatform().getDebugPathSanitizer());
-    resolver.addToIndex(result);
+    getResolver().addToIndex(result);
     return result;
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompile requireCompileBuildRule(
-      BuildRuleResolver resolver,
-      String name,
-      CxxSource source) {
+  CxxPreprocessAndCompile requireCompileBuildRule(String name, CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(name);
-    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+    Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
 
-    return createCompileBuildRule(resolver, name, source);
+    return createCompileBuildRule(name, source);
   }
 
   private ImmutableSortedSet<BuildRule> computeSourcePreprocessorAndToolDeps(
@@ -557,7 +551,6 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   public CxxPreprocessAndCompile createPreprocessAndCompileBuildRule(
-      BuildRuleResolver resolver,
       String name,
       CxxSource source,
       CxxPreprocessMode strategy) {
@@ -590,25 +583,24 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getType(),
         getCxxPlatform().getDebugPathSanitizer(),
         strategy);
-    resolver.addToIndex(result);
+    getResolver().addToIndex(result);
     return result;
   }
 
   @VisibleForTesting
   CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(
-      BuildRuleResolver resolver,
       String name,
       CxxSource source,
       CxxPreprocessMode strategy) {
 
     BuildTarget target = createCompileBuildTarget(name);
-    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+    Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
 
-    return createPreprocessAndCompileBuildRule(resolver, name, source, strategy);
+    return createPreprocessAndCompileBuildRule(name, source, strategy);
   }
 
 
@@ -642,7 +634,6 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   protected ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
-      BuildRuleResolver resolver,
       CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources) {
 
@@ -665,9 +656,9 @@ abstract class AbstractCxxSourceRuleFactory {
           // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
           // Otherwise, use a regular compile rule.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            rule = requirePreprocessAndCompileBuildRule(resolver, name, source, strategy);
+            rule = requirePreprocessAndCompileBuildRule(name, source, strategy);
           } else {
-            rule = requireCompileBuildRule(resolver, name, source);
+            rule = requireCompileBuildRule(name, source);
           }
 
           objects.add(rule);
@@ -679,7 +670,7 @@ abstract class AbstractCxxSourceRuleFactory {
           // If this is a preprocessable source, first create the preprocess build rule and
           // update the source and name to represent its compilable output.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            CxxPreprocessAndCompile rule = requirePreprocessBuildRule(resolver, name, source);
+            CxxPreprocessAndCompile rule = requirePreprocessBuildRule(name, source);
             source = CxxSource.copyOf(source)
                 .withType(CxxSourceTypes.getPreprocessorOutputType(source.getType()))
                 .withPath(
@@ -687,7 +678,7 @@ abstract class AbstractCxxSourceRuleFactory {
           }
 
           // Now build the compile build rule.
-          CxxPreprocessAndCompile rule = requireCompileBuildRule(resolver, name, source);
+          CxxPreprocessAndCompile rule = requireCompileBuildRule(name, source);
           objects.add(rule);
 
           break;
@@ -729,7 +720,7 @@ abstract class AbstractCxxSourceRuleFactory {
         compilerFlags,
         prefixHeader,
         pic);
-    return factory.requirePreprocessAndCompileRules(resolver, strategy, sources);
+    return factory.requirePreprocessAndCompileRules(strategy, sources);
   }
 
   public enum PicType {

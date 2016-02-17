@@ -754,7 +754,6 @@ AppleSdkPaths appleSdkPaths =
         case PREPROCESS_AND_COMPILE:
           rule =
               cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
-                  resolver,
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
@@ -765,7 +764,6 @@ AppleSdkPaths appleSdkPaths =
         case PREPROCESS:
           rule =
               cxxSourceRuleFactory.createPreprocessBuildRule(
-                  resolver,
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
@@ -775,7 +773,6 @@ AppleSdkPaths appleSdkPaths =
         case COMPILE:
           rule =
               cxxSourceRuleFactory.createCompileBuildRule(
-                  resolver,
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
