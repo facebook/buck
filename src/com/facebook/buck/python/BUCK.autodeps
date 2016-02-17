@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0f7dabe1219f12c531d093c345b90e2969160dfd #@#
+#@# GENERATED FILE: DO NOT MODIFY a1586b98ecd3ee81a7ca1f33ae4851e5d6981291 #@#
 {
   "config" : [
     "//src/com/facebook/buck/cli:config",
@@ -33,6 +33,7 @@
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/step/fs:fs",
     "//src/com/facebook/buck/test:test",
+    "//src/com/facebook/buck/test/selectors:selectors",
     "//src/com/facebook/buck/util:escaper",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util/immutables:immutables",

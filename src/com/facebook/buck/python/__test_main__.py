@@ -13,15 +13,15 @@ any of its code to help implement your main module.
 
 from __future__ import print_function
 
+import contextlib
 import json
 import optparse
 import os
+import re
 import sys
 import time
-import re
-import unittest
 import traceback
-import contextlib
+import unittest
 
 
 class TestStatus(object):
@@ -206,6 +206,16 @@ class FbJsonTestRunner(unittest.TextTestRunner):
             self.verbosity)
 
 
+def _format_test_name(test_class, attrname):
+    """
+    Format the name of the test buck-style.
+    """
+    return '{0}.{1}#{2}'.format(
+        test_class.__module__,
+        test_class.__name__,
+        attrname)
+
+
 class RegexTestLoader(unittest.TestLoader):
 
     def __init__(self, regex=None):
@@ -221,10 +231,7 @@ class RegexTestLoader(unittest.TestLoader):
             testCaseClass)
         matched = []
         for attrname in testFnNames:
-            fullname = '{0}.{1}#{2}'.format(
-                testCaseClass.__class__.__module__,
-                testCaseClass.__class__.__name__,
-                attrname)
+            fullname = _format_test_name(testCaseClass, attrname)
             if self.regex is None or re.search(self.regex, fullname):
                 matched.append(attrname)
         return matched
@@ -295,6 +302,10 @@ class MainProgram(object):
             '-l', '--list-tests', action='store_true', dest='list',
             default=False, help='List tests and exit')
         op.add_option(
+            '-L', '--list-format', dest='list_format',
+            choices=['buck', 'python'], default='python',
+            help='List tests format')
+        op.add_option(
             '-q', '--quiet', action='count', default=0,
             help='Decrease the verbosity (may be specified multiple times)')
         op.add_option(
@@ -323,23 +334,32 @@ class MainProgram(object):
         else:
             return loader.load_all()
 
-    def get_test_names(self, test_suite):
-        names = []
+    def get_tests(self, test_suite):
+        tests = []
 
         for test in test_suite:
             if isinstance(test, unittest.TestSuite):
-                names.extend(self.get_test_names(test))
+                tests.extend(self.get_tests(test))
             else:
-                names.append(str(test))
+                tests.append(test)
 
-        return names
+        return tests
 
     def run(self):
         test_suite = self.load_tests()
 
         if self.options.list:
-            for test in self.get_test_names(test_suite):
-                print(test)
+            for test in self.get_tests(test_suite):
+                if self.options.list_format == 'python':
+                    name = str(test)
+                elif self.options.list_format == 'buck':
+                    method_name = getattr(test, '_testMethodName', '')
+                    name = _format_test_name(test.__class__, method_name)
+                else:
+                    raise Exception('Bad test list format: %s' % (
+                        self.options.list_format,))
+
+                print(name)
             return 0
         else:
             result = self.run_tests(test_suite)
