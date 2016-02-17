@@ -48,6 +48,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 
 abstract class GoDescriptors {
 
@@ -145,7 +146,36 @@ abstract class GoDescriptors {
             .build(),
         goBuckConfig.getGoCompiler().get(),
         tests);
+  }
 
+  static GoLibrary createMergedGoLibraryRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      final GoLibrary otherLibrary,
+      Set<SourcePath> extraSrcs,
+      List<String> extraCompilerFlags) {
+    final BuildRuleParams originalParams = params;
+    params = params.copyWithDeps(
+        new Supplier<ImmutableSortedSet<BuildRule>>() {
+          @Override
+          public ImmutableSortedSet<BuildRule> get() {
+            return ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(otherLibrary.getDeclaredDeps())
+                .addAll(originalParams.getDeclaredDeps().get())
+                .build();
+          }
+        },
+        params.getExtraDeps());
+
+    GoSymlinkTree symlinkTree = createDirectSymlinkTreeRule(params, resolver);
+    resolver.addToIndex(symlinkTree);
+    return new GoLibrary(
+        params.appendExtraDeps(ImmutableList.of(symlinkTree)),
+        new SourcePathResolver(resolver),
+        otherLibrary,
+        symlinkTree,
+        ImmutableSet.copyOf(extraSrcs),
+        ImmutableList.copyOf(extraCompilerFlags));
   }
 
   static GoBinary createGoBinaryRule(

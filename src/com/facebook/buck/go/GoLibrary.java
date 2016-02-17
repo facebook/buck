@@ -47,7 +47,6 @@ public class GoLibrary extends GoLinkable implements HasTests {
 
   private final ImmutableSortedSet<BuildTarget> tests;
 
-
   private final GoSymlinkTree symlinkTree;
   private final Path output;
 
@@ -67,6 +66,30 @@ public class GoLibrary extends GoLinkable implements HasTests {
     this.flags = compilerFlags;
     this.compiler = compiler;
     this.tests = tests;
+    this.output = BuildTargets.getGenPath(
+        getBuildTarget(), "%s/" + getBuildTarget().getShortName() + ".a");
+  }
+
+  public GoLibrary(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      GoLibrary baseLibrary,
+      GoSymlinkTree symlinkTree,
+      ImmutableSet<SourcePath> extraSrcs,
+      ImmutableList<String> extraCompilerFlags) {
+    super(params, resolver);
+    this.srcs = ImmutableSet.<SourcePath>builder()
+        .addAll(baseLibrary.srcs)
+        .addAll(extraSrcs)
+        .build();
+    this.symlinkTree = symlinkTree;
+    this.packageName = baseLibrary.packageName;
+    this.flags = ImmutableList.<String>builder()
+        .addAll(baseLibrary.flags)
+        .addAll(extraCompilerFlags)
+        .build();
+    this.compiler = baseLibrary.compiler;
+    this.tests = ImmutableSortedSet.of();
     this.output = BuildTargets.getGenPath(
         getBuildTarget(), "%s/" + getBuildTarget().getShortName() + ".a");
   }
