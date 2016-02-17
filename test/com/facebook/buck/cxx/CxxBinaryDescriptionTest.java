@@ -34,16 +34,15 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -128,16 +127,13 @@ public class CxxBinaryDescriptionTest {
         (CxxBinary) cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
 
     CxxLink rule = binRule.getRule();
-    CxxSourceRuleFactory cxxSourceRuleFactory =
-        new CxxSourceRuleFactory(
-            cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem),
-            resolver,
-            pathResolver,
-            cxxPlatform,
-            ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of(),
-            Optional.<SourcePath>absent(),
-            CxxSourceRuleFactory.PicType.PDC);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+        .setParams(cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem))
+        .setResolver(resolver)
+        .setPathResolver(pathResolver)
+        .setCxxPlatform(cxxPlatform)
+        .setPicType(CxxSourceRuleFactory.PicType.PDC)
+        .build();
 
     // Check that link rule has the expected deps: the object files for our sources and the
     // archive from the dependency.

@@ -43,7 +43,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -103,16 +102,14 @@ public class CxxSourceRuleFactoryTest {
               .addRules(dep.getBuildTarget())
               .build();
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              resolver,
-              pathResolver,
-              CXX_PLATFORM,
-              ImmutableList.of(cxxPreprocessorInput),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(resolver)
+          .setPathResolver(pathResolver)
+          .setCxxPlatform(CXX_PLATFORM)
+          .addCxxPreprocessorInput(cxxPreprocessorInput)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       String name = "foo/bar.cpp";
       SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
@@ -154,16 +151,14 @@ public class CxxSourceRuleFactoryTest {
 
       CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              resolver,
-              pathResolver,
-              platform,
-              ImmutableList.of(cxxPreprocessorInput),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(resolver)
+          .setPathResolver(pathResolver)
+          .setCxxPlatform(platform)
+          .addCxxPreprocessorInput(cxxPreprocessorInput)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       String name = "source.cpp";
       CxxSource cxxSource = CxxSource.of(
@@ -205,16 +200,13 @@ public class CxxSourceRuleFactoryTest {
       FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
       resolver.addToIndex(dep);
       SourcePath input = new BuildTargetSourcePath(dep.getBuildTarget());
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              resolver,
-              new SourcePathResolver(resolver),
-              CXX_PLATFORM,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(resolver)
+          .setPathResolver(new SourcePathResolver(resolver))
+          .setCxxPlatform(CXX_PLATFORM)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       String nameCompile = "foo/bar.ii";
       CxxSource cxxSourceCompile = CxxSource.of(
@@ -250,26 +242,17 @@ public class CxxSourceRuleFactoryTest {
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
-      CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
-          new CxxSourceRuleFactory(
-              params,
-              resolver,
-              new SourcePathResolver(resolver),
-              CXX_PLATFORM,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
-      CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
-          new CxxSourceRuleFactory(
-              params,
-              resolver,
-              new SourcePathResolver(resolver),
-              CXX_PLATFORM,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PIC);
+      CxxSourceRuleFactory.Builder cxxSourceRuleFactoryBuilder = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(resolver)
+          .setPathResolver(new SourcePathResolver(resolver))
+          .setCxxPlatform(CXX_PLATFORM);
+      CxxSourceRuleFactory cxxSourceRuleFactoryPDC = cxxSourceRuleFactoryBuilder
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
+      CxxSourceRuleFactory cxxSourceRuleFactoryPIC = cxxSourceRuleFactoryBuilder
+          .setPicType(CxxSourceRuleFactory.PicType.PIC)
+          .build();
 
       String name = "foo/bar.ii";
       CxxSource cxxSource = CxxSource.of(
@@ -343,16 +326,13 @@ public class CxxSourceRuleFactoryTest {
                       "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))
                   .build()));
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              resolver,
-              new SourcePathResolver(resolver),
-              platform,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(resolver)
+          .setPathResolver(new SourcePathResolver(resolver))
+          .setCxxPlatform(platform)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       String name = "source.ii";
       CxxSource cxxSource = CxxSource.of(
@@ -402,16 +382,14 @@ public class CxxSourceRuleFactoryTest {
       String prefixHeaderName = "test.pch";
       SourcePath prefixHeaderSourcePath = new FakeSourcePath(filesystem, prefixHeaderName);
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              buildRuleResolver,
-              new SourcePathResolver(buildRuleResolver),
-              platform,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>of(prefixHeaderSourcePath),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(buildRuleResolver)
+          .setPathResolver(new SourcePathResolver(buildRuleResolver))
+          .setCxxPlatform(platform)
+          .setPrefixHeader(prefixHeaderSourcePath)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       String objcSourceName = "test.m";
       CxxSource objcSource = CxxSource.of(
@@ -443,16 +421,13 @@ public class CxxSourceRuleFactoryTest {
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
       CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              buildRuleResolver,
-              new SourcePathResolver(buildRuleResolver),
-              platform,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(buildRuleResolver)
+          .setPathResolver(new SourcePathResolver(buildRuleResolver))
+          .setCxxPlatform(platform)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       String objcSourceName = "test.m";
       CxxSource objcSource = CxxSource.of(
@@ -574,19 +549,16 @@ public class CxxSourceRuleFactoryTest {
                       .build()))
           .setFilesystem(PROJECT_FILESYSTEM)
           .build();
-      CxxPlatform platform = DefaultCxxPlatforms.build(
-          new CxxBuckConfig(buckConfig));
+      CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              buildRuleResolver,
-              sourcePathResolver,
-              platform,
-              ImmutableList.of(cxxPreprocessorInput),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(buildRuleResolver)
+          .setPathResolver(sourcePathResolver)
+          .setCxxPlatform(platform)
+          .addCxxPreprocessorInput(cxxPreprocessorInput)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       List<String> perFileFlags = ImmutableList.of("-per-file-flag", "-and-another-per-file-flag");
       CxxSource cSource = CxxSource.of(sourceType, new FakeSourcePath(sourceName), perFileFlags);
@@ -623,16 +595,14 @@ public class CxxSourceRuleFactoryTest {
       CxxPlatform platform = DefaultCxxPlatforms.build(
           new CxxBuckConfig(buckConfig));
 
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              buildRuleResolver,
-              sourcePathResolver,
-              platform,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              explicitCompilerFlags,
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(buildRuleResolver)
+          .setPathResolver(sourcePathResolver)
+          .setCxxPlatform(platform)
+          .setCompilerFlags(explicitCompilerFlags)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       List<String> perFileFlags = ImmutableList.of("-per-file-flag");
       CxxSource source = CxxSource.of(sourceType, new FakeSourcePath(sourceName), perFileFlags);
@@ -680,16 +650,13 @@ public class CxxSourceRuleFactoryTest {
       SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-      CxxSourceRuleFactory cxxSourceRuleFactory =
-          new CxxSourceRuleFactory(
-              params,
-              buildRuleResolver,
-              sourcePathResolver,
-              CXX_PLATFORM,
-              ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of(),
-              Optional.<SourcePath>absent(),
-              CxxSourceRuleFactory.PicType.PDC);
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(buildRuleResolver)
+          .setPathResolver(sourcePathResolver)
+          .setCxxPlatform(CXX_PLATFORM)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
 
       SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
       CxxSource cxxSource = CxxSource.of(

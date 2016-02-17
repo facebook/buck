@@ -285,16 +285,15 @@ public final class CxxInferEnhancer {
       Optional<SourcePath> prefixHeader,
       CxxInferSourceFilter sourceFilter) {
 
-    CxxSourceRuleFactory factory =
-        new CxxSourceRuleFactory(
-            params,
-            resolver,
-            new SourcePathResolver(resolver),
-            cxxPlatform,
-            cxxPreprocessorInputs,
-            compilerFlags,
-            prefixHeader,
-            picType);
+    CxxSourceRuleFactory factory = CxxSourceRuleFactory.of(
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        cxxPlatform,
+        cxxPreprocessorInputs,
+        compilerFlags,
+        prefixHeader,
+        picType);
     return factory.createInferCaptureBuildRules(
         sources,
         inferTools,
