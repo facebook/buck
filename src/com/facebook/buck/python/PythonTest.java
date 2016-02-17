@@ -17,17 +17,20 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -55,8 +58,8 @@ import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class PythonTest
-    extends NoopBuildRule
-    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
+    extends AbstractBuildRule
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   @AddToRuleKey
   private final Supplier<ImmutableMap<String, String>> env;
@@ -96,6 +99,18 @@ public class PythonTest
     this.labels = labels;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.contacts = contacts;
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public Path getPathToOutput() {
+    return binary.getPathToOutput();
   }
 
   private Step getRunTestStep() {
@@ -250,6 +265,11 @@ public class PythonTest
   @VisibleForTesting
   protected PythonBinary getBinary() {
     return binary;
+  }
+
+  @Override
+  public Tool getExecutableCommand() {
+    return binary.getExecutableCommand();
   }
 
   @Override

@@ -105,6 +105,15 @@ public class PythonTestIntegrationTest {
     assertThat(result.getMessage(), Matchers.containsString("setup failure!"));
   }
 
+  @Test
+  public void testRunPythonTest() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("run", "//:test-success");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString("test_that_passes (test_success.Test) ... ok"));
+  }
+
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
     PythonVersion pythonVersion =
