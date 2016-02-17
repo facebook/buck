@@ -316,17 +316,10 @@ public class CxxPreprocessAndCompileStep implements Step {
   private int executeOther(ExecutionContext context) throws Exception {
     ProcessBuilder builder = makeSubprocessBuilder();
 
+    builder.command(getCommand(context.getAnsi().isAnsiTerminal()));
     // If we're preprocessing, file output goes through stdout, so we can postprocess it.
     if (operation == Operation.PREPROCESS) {
-      builder.command(makePreprocessCommand(context.getAnsi().isAnsiTerminal()));
       builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-    } else {
-      builder.command(
-          makeCompileCommand(
-              input.toString(),
-              inputType.getLanguage(),
-              inputType.isPreprocessable(),
-              context.getAnsi().isAnsiTerminal()));
     }
 
     LOG.debug(
@@ -500,6 +493,10 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   public ImmutableList<String> getCommand() {
+    return getCommand(false);
+  }
+
+  public ImmutableList<String> getCommand(boolean allowColorsInDiagnostics) {
     // We set allowColorsInDiagnostics to false here because this function is only used by the
     // compilation database (its contents should not depend on how Buck was invoked) and in the
     // step's description. It is not used to determine what command this step runs, which needs
@@ -511,9 +508,9 @@ public class CxxPreprocessAndCompileStep implements Step {
             input.toString(),
             inputType.getLanguage(),
             inputType.isPreprocessable(),
-            /* allowColorsInDiagnostics */ false);
+            allowColorsInDiagnostics);
       case PREPROCESS:
-        return makePreprocessCommand(/* allowColorsInDiagnostics */ false);
+        return makePreprocessCommand(allowColorsInDiagnostics);
       // $CASES-OMITTED$
       default:
         throw new RuntimeException("invalid operation type");
@@ -540,7 +537,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       // $CASES-OMITTED$
       default: {
         return Joiner.on(' ').join(
-            FluentIterable.from(getCommand())
+            FluentIterable.from(getCommand(false))
             .transform(Escaper.SHELL_ESCAPER));
       }
     }
