@@ -180,7 +180,7 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
+              cxxPreprocess.getPreprocessorDelegate().get().getCommand(),
               platformFlags));
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -191,7 +191,7 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getPreprocessorCommand(),
+              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(),
               platformFlags));
     }
 
@@ -281,7 +281,7 @@ public class CxxSourceRuleFactoryTest {
       // expected compile target.
       CxxPreprocessAndCompile noPicCompile =
           cxxSourceRuleFactoryPDC.requireCompileBuildRule(resolver, name, cxxSource);
-      assertFalse(noPicCompile.getPlatformCompilerFlags().get().contains("-fPIC"));
+      assertFalse(noPicCompile.makeMainStep().getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
           noPicCompile.getBuildTarget());
@@ -290,7 +290,7 @@ public class CxxSourceRuleFactoryTest {
       // expected compile target.
       CxxPreprocessAndCompile picCompile =
           cxxSourceRuleFactoryPIC.requireCompileBuildRule(resolver, name, cxxSource);
-      assertTrue(picCompile.getPlatformCompilerFlags().get().contains("-fPIC"));
+      assertTrue(picCompile.makeMainStep().getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picCompile.getBuildTarget());
@@ -309,7 +309,7 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource,
               CxxPreprocessMode.SEPARATE);
-      assertFalse(noPicPreprocessAndCompile.getPlatformCompilerFlags().get().contains("-fPIC"));
+      assertFalse(noPicPreprocessAndCompile.makeMainStep().getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
           noPicPreprocessAndCompile.getBuildTarget());
@@ -322,7 +322,7 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource,
               CxxPreprocessMode.SEPARATE);
-      assertTrue(picPreprocessAndCompile.getPlatformCompilerFlags().get().contains("-fPIC"));
+      assertTrue(picPreprocessAndCompile.makeMainStep().getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picPreprocessAndCompile.getBuildTarget());
@@ -365,7 +365,7 @@ public class CxxSourceRuleFactoryTest {
           cxxSourceRuleFactory.requireCompileBuildRule(resolver, name, cxxSource);
       assertNotEquals(
           -1,
-          Collections.indexOfSubList(cxxCompile.getPlatformCompilerFlags().get(), platformFlags));
+          Collections.indexOfSubList(cxxCompile.makeMainStep().getCommand(), platformFlags));
 
       name = "source.cpp";
       cxxSource = CxxSource.of(
@@ -383,7 +383,7 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getPreprocessorCommand(),
+              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(),
               platformFlags));
     }
 
@@ -596,7 +596,7 @@ public class CxxSourceRuleFactoryTest {
               sourceName,
               cSource);
       ImmutableList<String> cPreprocessCommand =
-          cPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand();
+          cPreprocess.getPreprocessorDelegate().get().getCommand();
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);
       assertContains(cPreprocessCommand, perFileFlags);
@@ -646,10 +646,11 @@ public class CxxSourceRuleFactoryTest {
       } else {
         rule = cxxSourceRuleFactory.requireCompileBuildRule(buildRuleResolver, sourceName, source);
       }
-      assertContains(rule.getRuleCompilerFlags().get(), expectedCompilerFlags);
-      assertContains(rule.getPlatformCompilerFlags().get(), expectedTypeSpecificFlags);
-      assertContains(rule.getPlatformCompilerFlags().get(), asflags);
-      assertContains(rule.getRuleCompilerFlags().get(), perFileFlags);
+      ImmutableList<String> command = rule.makeMainStep().getCommand();
+      assertContains(command, expectedCompilerFlags);
+      assertContains(command, expectedTypeSpecificFlags);
+      assertContains(command, asflags);
+      assertContains(command, perFileFlags);
     }
 
   }

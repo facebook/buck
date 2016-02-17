@@ -25,7 +25,6 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -37,7 +36,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -54,9 +52,7 @@ public class CxxPreprocessAndCompile
   @AddToRuleKey
   private final Optional<PreprocessorDelegate> preprocessDelegate;
   @AddToRuleKey
-  private final Optional<Compiler> compiler;
-  private final Optional<ImmutableList<String>> platformCompilerFlags;
-  private final Optional<ImmutableList<String>> ruleCompilerFlags;
+  private final Optional<CompilerDelegate> compilerDelegate;
   @AddToRuleKey(stringify = true)
   private final Path output;
   @AddToRuleKey
@@ -70,23 +66,17 @@ public class CxxPreprocessAndCompile
       SourcePathResolver resolver,
       CxxPreprocessAndCompileStep.Operation operation,
       Optional<PreprocessorDelegate> preprocessDelegate,
-      Optional<Compiler> compiler,
-      Optional<ImmutableList<String>> platformCompilerFlags,
-      Optional<ImmutableList<String>> ruleCompilerFlags,
+      Optional<CompilerDelegate> compilerDelegate,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
-    Preconditions.checkState(operation.isCompile() == compiler.isPresent());
-    Preconditions.checkState(operation.isCompile() == platformCompilerFlags.isPresent());
-    Preconditions.checkState(operation.isCompile() == ruleCompilerFlags.isPresent());
+    Preconditions.checkState(operation.isCompile() == compilerDelegate.isPresent());
     this.operation = operation;
     this.preprocessDelegate = preprocessDelegate;
-    this.compiler = compiler;
-    this.platformCompilerFlags = platformCompilerFlags;
-    this.ruleCompilerFlags = ruleCompilerFlags;
+    this.compilerDelegate = compilerDelegate;
     this.output = output;
     this.input = input;
     this.inputType = inputType;
@@ -99,9 +89,7 @@ public class CxxPreprocessAndCompile
   public static CxxPreprocessAndCompile compile(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Compiler compiler,
-      ImmutableList<String> platformFlags,
-      ImmutableList<String> ruleFlags,
+      CompilerDelegate compilerDelegate,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
@@ -111,9 +99,7 @@ public class CxxPreprocessAndCompile
         resolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
         Optional.<PreprocessorDelegate>absent(),
-        Optional.of(compiler),
-        Optional.of(platformFlags),
-        Optional.of(ruleFlags),
+        Optional.of(compilerDelegate),
         output,
         input,
         inputType,
@@ -136,9 +122,7 @@ public class CxxPreprocessAndCompile
         resolver,
         CxxPreprocessAndCompileStep.Operation.PREPROCESS,
         Optional.of(preprocessorDelegate),
-        Optional.<Compiler>absent(),
-        Optional.<ImmutableList<String>>absent(),
-        Optional.<ImmutableList<String>>absent(),
+        Optional.<CompilerDelegate>absent(),
         output,
         input,
         inputType,
@@ -152,9 +136,7 @@ public class CxxPreprocessAndCompile
       BuildRuleParams params,
       SourcePathResolver resolver,
       PreprocessorDelegate preprocessorDelegate,
-      Compiler compiler,
-      ImmutableList<String> platformCompilerFlags,
-      ImmutableList<String> ruleCompilerFlags,
+      CompilerDelegate compilerDelegate,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
@@ -167,9 +149,7 @@ public class CxxPreprocessAndCompile
             ? CxxPreprocessAndCompileStep.Operation.PIPED_PREPROCESS_AND_COMPILE
             : CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO),
         Optional.of(preprocessorDelegate),
-        Optional.of(compiler),
-        Optional.of(platformCompilerFlags),
-        Optional.of(ruleCompilerFlags),
+        Optional.of(compilerDelegate),
         output,
         input,
         inputType,
@@ -178,13 +158,6 @@ public class CxxPreprocessAndCompile
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively(
-        "platformCompilerFlags",
-        sanitizer.sanitizeFlags(platformCompilerFlags));
-    builder.setReflectively(
-        "ruleCompilerFlags",
-        sanitizer.sanitizeFlags(ruleCompilerFlags));
-
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
@@ -216,28 +189,23 @@ public class CxxPreprocessAndCompile
     if (preprocessDelegate.isPresent()) {
       preprocessorCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
-              preprocessDelegate.get().getPreprocessorCommand(),
-              preprocessDelegate.get().getPreprocessorEnvironment(),
+              preprocessDelegate.get().getCommand(),
+              preprocessDelegate.get().getEnvironment(),
               preprocessDelegate.get().getColorSupport()));
     } else {
       preprocessorCommand = Optional.absent();
     }
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
-    if (compiler.isPresent()) {
-      Optional<SupportsColorsInOutput> colorSupport = Optional.absent();
-      if (compiler.get() instanceof SupportsColorsInOutput) {
-        colorSupport = Optional.of((SupportsColorsInOutput) compiler.get());
-      }
+    if (compilerDelegate.isPresent()) {
       compilerCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
-              ImmutableList.<String>builder()
-                  .addAll(compiler.get().getCommandPrefix(getResolver()))
-                  .addAll(getCompilerPlatformPrefix())
-                  .addAll(getCompilerSuffix())
-                  .build(),
-              compiler.get().getEnvironment(getResolver()),
-              colorSupport));
+              compilerDelegate.get().getCommand(
+                  operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO
+                      ? preprocessDelegate
+                      : Optional.<PreprocessorDelegate>absent()),
+              compilerDelegate.get().getEnvironment(),
+              compilerDelegate.get().getColorSupport()));
     } else {
       compilerCommand = Optional.absent();
     }
@@ -273,30 +241,6 @@ public class CxxPreprocessAndCompile
     return preprocessDelegate;
   }
 
-  private ImmutableList<String> getCompilerPlatformPrefix() {
-    Preconditions.checkState(operation.isCompile());
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
-    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      flags.addAll(preprocessDelegate.get().getPreprocessorPlatformPrefix());
-    }
-    flags.addAll(platformCompilerFlags.get());
-    return flags.build();
-  }
-
-  private ImmutableList<String> getCompilerSuffix() {
-    Preconditions.checkState(operation.isCompile());
-    ImmutableList.Builder<String> suffix = ImmutableList.builder();
-    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      suffix.addAll(preprocessDelegate.get().getPreprocessorSuffix());
-    }
-    suffix.addAll(ruleCompilerFlags.get());
-    suffix.addAll(
-        compiler.get()
-            .debugCompilationDirFlags(sanitizer.getCompilationDirectory())
-            .or(ImmutableList.<String>of()));
-    return suffix.build();
-  }
-
   // Used for compdb
   public ImmutableList<String> getCommand(
       Optional<CxxPreprocessAndCompile> externalPreprocessRule) {
@@ -313,11 +257,7 @@ public class CxxPreprocessAndCompile
     }
     PreprocessorDelegate effectivePreprocessorDelegate = preprocessRule.preprocessDelegate.get();
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(compiler.get().getCommandPrefix(getResolver()));
-    cmd.addAll(effectivePreprocessorDelegate.getPreprocessorPlatformPrefix());
-    cmd.addAll(getCompilerPlatformPrefix());
-    cmd.addAll(effectivePreprocessorDelegate.getPreprocessorSuffix());
-    cmd.addAll(getCompilerSuffix());
+    cmd.addAll(compilerDelegate.get().getCommand(Optional.of(effectivePreprocessorDelegate)));
     // use the input of the preprocessor, since the fact that this is going through preprocessor is
     // hidden to compdb.
     cmd.add("-x", preprocessRule.inputType.getLanguage());
@@ -330,16 +270,6 @@ public class CxxPreprocessAndCompile
   @Override
   public Path getPathToOutput() {
     return output;
-  }
-
-  @VisibleForTesting
-  Optional<ImmutableList<String>> getRuleCompilerFlags() {
-    return ruleCompilerFlags;
-  }
-
-  @VisibleForTesting
-  Optional<ImmutableList<String>> getPlatformCompilerFlags() {
-    return platformCompilerFlags;
   }
 
   public Path getOutput() {
@@ -365,9 +295,8 @@ public class CxxPreprocessAndCompile
     }
 
     // If present, include all inputs coming from the compiler tool.
-    if (compiler.isPresent()) {
-      inputs.addAll(
-          Ordering.natural().immutableSortedCopy(compiler.get().getInputs()));
+    if (compilerDelegate.isPresent()) {
+      inputs.addAll(compilerDelegate.get().getInputsAfterBuildingLocally());
     }
 
     // Add the input.

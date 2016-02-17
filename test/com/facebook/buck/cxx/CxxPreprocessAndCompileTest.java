@@ -170,9 +170,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            DEFAULT_COMPILER,
-            DEFAULT_PLATFORM_FLAGS,
-            DEFAULT_RULE_FLAGS,
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                DEFAULT_COMPILER,
+                DEFAULT_PLATFORM_FLAGS,
+                DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -184,9 +187,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            new DefaultCompiler(new HashedFileTool(Paths.get("different"))),
-            DEFAULT_PLATFORM_FLAGS,
-            DEFAULT_RULE_FLAGS,
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                new DefaultCompiler(new HashedFileTool(Paths.get("different"))),
+                DEFAULT_PLATFORM_FLAGS,
+                DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -225,9 +231,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            DEFAULT_COMPILER,
-            ImmutableList.of("-different"),
-            DEFAULT_RULE_FLAGS,
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                DEFAULT_COMPILER,
+                ImmutableList.of("-different"),
+                DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -240,9 +249,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            DEFAULT_COMPILER,
-            DEFAULT_PLATFORM_FLAGS,
-            ImmutableList.of("-other", "flags"),
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                DEFAULT_COMPILER,
+                DEFAULT_PLATFORM_FLAGS,
+                ImmutableList.of("-other", "flags")),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -255,9 +267,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            DEFAULT_COMPILER,
-            DEFAULT_PLATFORM_FLAGS,
-            DEFAULT_RULE_FLAGS,
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                DEFAULT_COMPILER,
+                DEFAULT_PLATFORM_FLAGS,
+                DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             new FakeSourcePath("different"),
             DEFAULT_INPUT_TYPE,
@@ -529,9 +544,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            DEFAULT_COMPILER,
-            platformFlags,
-            ruleFlags,
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                DEFAULT_COMPILER,
+                platformFlags,
+                ruleFlags),
             output,
             new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
@@ -664,9 +682,12 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            new DefaultCompiler(compilerTool),
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
+            new CompilerDelegate(
+                pathResolver,
+                DEFAULT_SANITIZER,
+                new DefaultCompiler(compilerTool),
+                ImmutableList.<String>of(),
+                ImmutableList.<String>of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -686,13 +707,18 @@ public class CxxPreprocessAndCompileTest {
     Path output = Paths.get("test.o");
     Path input = Paths.get("test.ii");
 
+    CompilerDelegate compilerDelegate = new CompilerDelegate(
+        pathResolver,
+        DEFAULT_SANITIZER,
+        COMPILER_WITH_COLOR_SUPPORT,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of());
+
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            COMPILER_WITH_COLOR_SUPPORT,
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
+            compilerDelegate,
             output,
             new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
@@ -704,18 +730,6 @@ public class CxxPreprocessAndCompileTest {
         /* preprocessable */ true,
         /* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
-
-    buildRule =
-        CxxPreprocessAndCompile.compile(
-            params,
-            pathResolver,
-            COMPILER_WITH_COLOR_SUPPORT,
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
-            output,
-            new FakeSourcePath(input.toString()),
-            DEFAULT_INPUT_TYPE,
-            DEFAULT_SANITIZER);
 
     command = buildRule.makeMainStep().makeCompileCommand(
         input.toString(),
@@ -763,29 +777,6 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> command = buildRule.makeMainStep().makePreprocessCommand(
         /* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
-
-    buildRule =
-        CxxPreprocessAndCompile.preprocess(
-            params,
-            pathResolver,
-            new PreprocessorDelegate(
-                pathResolver,
-                DEFAULT_SANITIZER,
-                DEFAULT_WORKING_DIR,
-                PREPROCESSOR_WITH_COLOR_SUPPORT,
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of(),
-                ImmutableSet.<Path>of(),
-                ImmutableSet.<Path>of(),
-                ImmutableSet.<Path>of(),
-                DEFAULT_FRAMEWORK_ROOTS,
-                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                Optional.<SourcePath>of(new FakeSourcePath(filesystem, prefixHeader.toString())),
-                ImmutableList.of(CxxHeaders.builder().build())),
-            output,
-            new FakeSourcePath(input.toString()),
-            DEFAULT_INPUT_TYPE,
-            DEFAULT_SANITIZER);
 
     command = buildRule.makeMainStep().makePreprocessCommand(
         /* allowColorsInDiagnostics */ true);

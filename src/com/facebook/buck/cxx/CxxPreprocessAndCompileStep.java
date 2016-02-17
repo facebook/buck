@@ -559,24 +559,42 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   public enum Operation {
+    /**
+     * Run the compiler on post-preprocessed source files.
+     */
     COMPILE,
+    /**
+     * Run the preprocessor and compiler on source files.
+     */
     COMPILE_MUNGE_DEBUGINFO,
+    /**
+     * Preprocess a source file.
+     */
     PREPROCESS,
+    /**
+     * Run the preprocessor and compiler separately, piping the output of the preprocessor to the
+     * compiler.
+     */
     PIPED_PREPROCESS_AND_COMPILE,
     ;
 
+    /**
+     * Returns whether the step has a preprocessor component.
+     */
     public boolean isPreprocess() {
       return this == COMPILE_MUNGE_DEBUGINFO ||
           this == PREPROCESS ||
           this == PIPED_PREPROCESS_AND_COMPILE;
     }
 
+    /**
+     * Returns whether the step has a compilation component.
+     */
     public boolean isCompile() {
       return this == COMPILE ||
           this == COMPILE_MUNGE_DEBUGINFO ||
           this == PIPED_PREPROCESS_AND_COMPILE;
     }
-
   }
 
   public static class ToolCommand {

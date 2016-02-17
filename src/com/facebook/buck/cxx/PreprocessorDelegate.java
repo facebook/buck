@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -152,7 +153,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * Get the command for standalone preprocessor calls.
    */
-  public ImmutableList<String> getPreprocessorCommand() {
+  public ImmutableList<String> getCommand() {
     return ImmutableList.<String>builder()
         .addAll(preprocessor.getCommandPrefix(resolver))
         .addAll(getPreprocessorPlatformPrefix())
@@ -162,7 +163,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   }
 
-  public ImmutableMap<String, String> getPreprocessorEnvironment() {
+  public ImmutableMap<String, String> getEnvironment() {
     return preprocessor.getEnvironment(resolver);
   }
 
@@ -263,11 +264,6 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   public Optional<SupportsColorsInOutput> getColorSupport() {
-    if (preprocessor instanceof SupportsColorsInOutput) {
-      return Optional.of((SupportsColorsInOutput) preprocessor);
-    } else {
-      return Optional.absent();
-    }
+    return Optionals.cast(preprocessor, SupportsColorsInOutput.class);
   }
-
 }

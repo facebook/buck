@@ -71,4 +71,12 @@ public class Optionals {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  public static <T, U> Optional<U> cast(T instance, Class<U> cls) {
+    if (cls.isInstance(instance)) {
+      return Optional.of((U) instance);
+    } else {
+      return Optional.absent();
+    }
+  }
 }
