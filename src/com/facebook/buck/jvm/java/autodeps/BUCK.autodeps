@@ -1,6 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 947ce1b86cb1004dbebc12105c5da1290bd5aa97 #@#
+#@# GENERATED FILE: DO NOT MODIFY 05a944e3218f30a302a415e9d227887af359247f #@#
 {
   "autodeps" : [
+    "//src/com/facebook/buck/android:rules",
     "//src/com/facebook/buck/autodeps:model",
     "//src/com/facebook/buck/cli:config",
     "//src/com/facebook/buck/graph:graph",

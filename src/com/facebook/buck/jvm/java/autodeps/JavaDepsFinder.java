@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.autodeps;
 
+import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.autodeps.DepsForBuildFiles;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
@@ -139,6 +140,7 @@ public class JavaDepsFinder {
   }
 
   private static final Set<BuildRuleType> RULES_TO_VISIT = ImmutableSet.of(
+      AndroidLibraryDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE);
 
