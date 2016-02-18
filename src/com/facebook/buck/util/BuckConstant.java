@@ -58,6 +58,7 @@ public class BuckConstant {
   public static final String DEFAULT_CACHE_DIR = BUCK_OUTPUT_DIRECTORY + "/cache";
 
   // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
+  public static final String TRASH_DIR = BUCK_OUTPUT_DIRECTORY + "/.trash";
   public static final Path TRASH_PATH = BUCK_OUTPUT_PATH.resolve(".trash");
 
   private BuckConstant() {}

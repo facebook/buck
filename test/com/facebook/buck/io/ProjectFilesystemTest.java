@@ -33,9 +33,12 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -577,19 +580,20 @@ public class ProjectFilesystemTest {
         "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
-    assertEquals(
-        "Should ignore paths, sans trailing slashes",
-        ImmutableSet.of(
-            BuckConstant.BUCK_OUTPUT_PATH,
-            Paths.get(".idea"),
-            Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
-            Paths.get(BuckConstant.DEFAULT_CACHE_DIR),
-            Paths.get(".git"),
-            Paths.get("foo"),
-            Paths.get("bar"),
-            Paths.get("baz"),
-            Paths.get("a/b/c")),
-        ignorePaths);
+    assertThat(
+        FluentIterable.from(ignorePaths).toSortedSet(Ordering.<Path>natural()),
+        equalTo(
+            ImmutableSortedSet.of(
+                BuckConstant.BUCK_OUTPUT_PATH,
+                BuckConstant.TRASH_PATH,
+                Paths.get(".idea"),
+                Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
+                Paths.get(BuckConstant.DEFAULT_CACHE_DIR),
+                Paths.get(".git"),
+                Paths.get("foo"),
+                Paths.get("bar"),
+                Paths.get("baz"),
+                Paths.get("a/b/c"))));
   }
 
   @Test

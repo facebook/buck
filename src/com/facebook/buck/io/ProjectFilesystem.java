@@ -223,11 +223,13 @@ public class ProjectFilesystem {
             return Iterables.getOnlyElement(filtered);
           }
         })
-        // So we claim to ignore this path to preserve existing behaviour
-        .append(root.getFileSystem().getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY))
+        // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
+        // really don't end up ignoring it in reality (see extractIgnorePaths).
+        .append(ImmutableSet.of(root.getFileSystem().getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY)))
         // "Path" is Iterable, so avoid adding each segment.
         // We use the default value here because that's what we've always done.
         .append(ImmutableSet.of(getCacheDir(root, Optional.of(BuckConstant.DEFAULT_CACHE_DIR))))
+        .append(ImmutableSet.of(root.getFileSystem().getPath(BuckConstant.TRASH_DIR)))
         .toSortedSet(Ordering.<Path>natural());
   }
 
