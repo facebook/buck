@@ -8,7 +8,7 @@ except:
 
 setup(
     name = 'pywatchman',
-    version = '1.2.0',
+    version = '1.3.0',
     description = 'Watchman client for python',
     author = 'Wez Furlong, Siddharth Agarwal',
     author_email = 'wez@fb.com',
@@ -31,5 +31,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent'
     ],
-    zip_safe = True
+    zip_safe = True,
+    scripts=['bin/watchman-wait', 'bin/watchman-make']
 )

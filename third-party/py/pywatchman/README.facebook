@@ -1,5 +1,5 @@
-Project URL: https://bitbucket.org/facebook/hgwatchman/
-Upstream revision: 6df08b7274dab6961da9d7f44be0e12c31213acf
-Version: 3.6.0
-License: BSD
-Local modifications: none
+Project URL: https://github.com/facebook/watchman
+Upstream revision: 222447241292c10d0a4eb49ec8659515456d1cb6
+Version: 1.3.0 (v4.4.0 tag of project)
+License: Apache 2.0
+Local modifications: We've only taken parts of the python/ directory

@@ -64,9 +64,18 @@ class CommandError(WatchmanError):
     self.msg is the message returned by watchman.
     """
 
-    def __init__(self, msg):
+    def __init__(self, msg, cmd=None):
         self.msg = msg
+        self.cmd = cmd
         super(CommandError, self).__init__('watchman command error: %s' % msg)
+
+    def setCommand(self, cmd):
+        self.cmd = cmd
+
+    def __str__(self):
+        if self.cmd:
+            return '%s, while executing %s' % (self.msg, self.cmd)
+        return self.msg
 
 
 class Transport(object):
@@ -84,6 +93,9 @@ class Transport(object):
     def write(self, buf):
         """ write some data """
         raise NotImplementedError()
+
+    def setTimeout(self, value):
+        pass
 
     def readLine(self):
         """ read a line
@@ -123,6 +135,8 @@ class Codec(object):
     def send(self, *args):
         raise NotImplementedError()
 
+    def setTimeout(self, value):
+        self.transport.setTimeout(value)
 
 class UnixSocketTransport(Transport):
     """ local unix domain socket transport """
@@ -144,6 +158,10 @@ class UnixSocketTransport(Transport):
     def close(self):
         self.sock.close()
         self.sock = None
+
+    def setTimeout(self, value):
+        self.timeout = value
+        self.sock.settimeout(self.timeout)
 
     def readBytes(self, size):
         try:
@@ -250,6 +268,9 @@ class CLIProcessTransport(Transport):
 class BserCodec(Codec):
     """ use the BSER encoding.  This is the default, preferred codec """
 
+    def _loads(self, response):
+        return bser.loads(response)
+
     def receive(self):
         buf = [self.transport.readBytes(sniff_len)]
         if not buf[0]:
@@ -264,7 +285,7 @@ class BserCodec(Codec):
 
         response = ''.join(buf)
         try:
-            res = bser.loads(response)
+            res = self._loads(response)
             return res
         except ValueError as e:
             raise WatchmanError('watchman response decode error: %s' % e)
@@ -272,6 +293,13 @@ class BserCodec(Codec):
     def send(self, *args):
         cmd = bser.dumps(*args)
         self.transport.write(cmd)
+
+class ImmutableBserCodec(BserCodec):
+    """ use the BSER encoding, decoding values using the newer
+        immutable object support """
+
+    def _loads(self, response):
+        return bser.loads(response, False)
 
 
 class JsonCodec(Codec):
@@ -306,14 +334,17 @@ class client(object):
     sendConn = None
     recvConn = None
     subs = {}  # Keyed by subscription name
+    sub_by_root = {} # Keyed by root, then by subscription name
     logs = []  # When log level is raised
     unilateral = ['log', 'subscription']
     tport = None
+    useImmutableBser = None
 
     def __init__(self, sockpath=None, timeout=1.0, transport=None,
-                 sendEncoding=None, recvEncoding=None):
+                 sendEncoding=None, recvEncoding=None, useImmutableBser=False):
         self.sockpath = sockpath
         self.timeout = timeout
+        self.useImmutableBser = useImmutableBser
 
         transport = transport or os.getenv('WATCHMAN_TRANSPORT') or 'local'
         if transport == 'local' and os.name == 'nt':
@@ -337,11 +368,18 @@ class client(object):
 
     def _parseEncoding(self, enc):
         if enc == 'bser':
+            if self.useImmutableBser:
+                return ImmutableBserCodec
             return BserCodec
         elif enc == 'json':
             return JsonCodec
         else:
             raise WatchmanError('invalid encoding %s' % enc)
+
+    def _hasprop(self, result, name):
+        if self.useImmutableBser:
+            return hasattr(result, name)
+        return name in result
 
     def _resolvesockname(self):
         # if invoked via a trigger, watchman will set this env var; we
@@ -410,17 +448,25 @@ class client(object):
 
         self._connect()
         result = self.recvConn.receive()
-        if 'error' in result:
+        if self._hasprop(result, 'error'):
             raise CommandError(result['error'])
 
-        if 'log' in result:
+        if self._hasprop(result, 'log'):
             self.logs.append(result['log'])
 
-        if 'subscription' in result:
+        if self._hasprop(result, 'subscription'):
             sub = result['subscription']
             if not (sub in self.subs):
                 self.subs[sub] = []
             self.subs[sub].append(result)
+
+            # also accumulate in {root,sub} keyed store
+            root = result['root']
+            if not root in self.sub_by_root:
+                self.sub_by_root[root] = {}
+            if not sub in self.sub_by_root[root]:
+                self.sub_by_root[root][sub] = []
+            self.sub_by_root[root][sub].append(result)
 
         return result
 
@@ -441,7 +487,7 @@ class client(object):
             self.logs = []
         return res
 
-    def getSubscription(self, name, remove=True):
+    def getSubscription(self, name, remove=True, root=None):
         """ Retrieve the data associated with a named subscription
 
         If remove is True (the default), the subscription data is removed
@@ -449,7 +495,25 @@ class client(object):
         the buffer.
 
         Returns None if there is no data associated with `name`
+
+        If root is not None, then only return the subscription
+        data that matches both root and name.  When used in this way,
+        remove processing impacts both the unscoped and scoped stores
+        for the subscription data.
         """
+
+        if root is not None:
+            if not root in self.sub_by_root:
+                return None
+            if not name in self.sub_by_root[root]:
+                return None
+            sub = self.sub_by_root[root][name]
+            if remove:
+                del self.sub_by_root[root][name]
+                # don't let this grow unbounded
+                if name in self.subs:
+                    del self.subs[name]
+            return sub
 
         if not (name in self.subs):
             return None
@@ -468,12 +532,16 @@ class client(object):
         """
 
         self._connect()
-        self.sendConn.send(args)
+        try:
+            self.sendConn.send(args)
 
-        res = self.receive()
-        while self.isUnilateralResponse(res):
             res = self.receive()
-        return res
+            while self.isUnilateralResponse(res):
+                res = self.receive()
+            return res
+        except CommandError as ex:
+            ex.setCommand(args)
+            raise ex
 
     def capabilityCheck(self, optional=None, required=None):
         """ Perform a server capability check """
@@ -481,7 +549,7 @@ class client(object):
             'optional': optional or [],
             'required': required or []})
 
-        if not 'capabilities' in res:
+        if not self._hasprop(res, 'capabilities'):
             # Server doesn't support capabilities, so we need to
             # synthesize the results based on the version
             capabilities.synthesize(res, opts)
@@ -489,3 +557,7 @@ class client(object):
                 raise CommandError(res['error'])
 
         return res
+
+    def setTimeout(self, value):
+        self.recvConn.setTimeout(value)
+        self.sendConn.setTimeout(value)
