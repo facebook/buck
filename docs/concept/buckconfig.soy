@@ -1407,8 +1407,8 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     <p>
     If set to <code>watchman</code>, Buck will try to use Watchman (if available) instead of Java filesystem
-    crawls to improve the speed when searching for <code>BUCK</code> files. (This is used for commands like <code>buck project</code> and
-    <code>buck build //path/to/...</code>.)
+    crawls to improve the speed when searching for <code>BUCK</code> files. (This is used for commands
+    like <code>buck project</code> and <code>buck build {literal}//path/to/...{/literal}</code>.)
     </p>
     <p>
     If set to <code>filesystem_crawl</code>, Buck will never try to use Watchman, and will always use
