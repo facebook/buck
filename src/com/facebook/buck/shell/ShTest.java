@@ -216,6 +216,7 @@ public class ShTest
         .setType("custom")
         .addCommand(getResolver().getAbsolutePath(test).toString())
         .addAllCommand(Arg.stringify(args))
+        .setEnv(Arg.stringify(env))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

@@ -138,7 +138,6 @@ public class GenruleDescriptionTest {
     BuildRule shTest =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:test"))
             .setTest(new FakeSourcePath("test.sh"))
-            .setArgs(ImmutableList.of("$(location //:rule)"))
             .build(ruleResolver);
 
     Genrule genrule =

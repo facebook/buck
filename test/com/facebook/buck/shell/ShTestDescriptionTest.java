@@ -44,11 +44,12 @@ public class ShTestDescriptionTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
-    ShTest shTest =
-        (ShTest) new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
+    ShTestBuilder shTestBuilder =
+        new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setTest(new FakeSourcePath("test.sh"))
-            .setArgs(ImmutableList.of("$(location //:dep)"))
-            .build(resolver);
+            .setArgs(ImmutableList.of("$(location //:dep)"));
+    assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
+    ShTest shTest = (ShTest) shTestBuilder.build(resolver);
     assertThat(
         shTest.getDeps(),
         Matchers.contains(dep));
@@ -68,11 +69,12 @@ public class ShTestDescriptionTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
-    ShTest shTest =
-        (ShTest) new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
+    ShTestBuilder shTestBuilder =
+        new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setTest(new FakeSourcePath("test.sh"))
-            .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"))
-            .build(resolver);
+            .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"));
+    assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
+    ShTest shTest = (ShTest) shTestBuilder.build(resolver);
     assertThat(
         shTest.getDeps(),
         Matchers.contains(dep));
