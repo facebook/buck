@@ -51,11 +51,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -97,18 +102,24 @@ public class DefaultJavaLibraryIntegrationTest {
     // Verify the build cache.
     Path buildCache = workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR);
     assertTrue(Files.isDirectory(buildCache));
+
+    int totalArtifactsCount = getAllFilesInPath(buildCache).size();
+
     assertEquals("There should be two entries (a zip and metadata) in the build cache.",
         2,
-        buildCache.toFile().listFiles().length);
+        totalArtifactsCount);
 
     // Run `buck clean`.
     ProcessResult cleanResult = workspace.runBuckCommand("clean");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
-    assertEquals("The build cache should still exist.", 2, buildCache.toFile().listFiles().length);
+
+    totalArtifactsCount = getAllFilesInPath(buildCache).size();
+    assertEquals("The build cache should still exist.", 2, totalArtifactsCount);
 
     // Corrupt the build cache!
     File artifactZip =
-        FluentIterable.from(ImmutableList.copyOf(buildCache.toFile().listFiles()))
+        FluentIterable.from(
+            ImmutableList.copyOf(buildCache.toFile().listFiles()[0].listFiles()[0].listFiles()))
             .toSortedList(Ordering.natural())
             .get(0);
     FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);
@@ -444,5 +455,22 @@ public class DefaultJavaLibraryIntegrationTest {
     String content = Strings.nullToEmpty(new String(Files.readAllBytes(file), UTF_8)).trim();
     assertFalse(relativePathToFile + " should not be empty.", content.isEmpty());
     return content;
+  }
+
+  private ImmutableList<Path> getAllFilesInPath(Path path) throws IOException {
+    final List<Path> allFiles = new ArrayList<>();
+    Files.walkFileTree(
+        path,
+        ImmutableSet.<FileVisitOption>of(),
+        Integer.MAX_VALUE,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file,
+              BasicFileAttributes attrs) throws IOException {
+            allFiles.add(file);
+            return super.visitFile(file, attrs);
+          }
+        });
+    return ImmutableList.copyOf(allFiles);
   }
 }

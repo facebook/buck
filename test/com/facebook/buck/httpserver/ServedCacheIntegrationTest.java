@@ -23,11 +23,13 @@ import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
-import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
+import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -228,7 +230,11 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testMalformedDirCacheMetaData() throws Exception {
-    Path cacheFilePath = tmpDir.getRoot().resolve("test-cache/" + A_FILE_RULE_KEY + ".metadata");
+    ArtifactCache cache = TestArtifactCaches.createDirCacheForTest(
+        projectFilesystem.getRootPath(),
+        Paths.get("test-cache"));
+    Path cacheFilePath = DirArtifactCacheTestUtil.getPathForRuleKey(
+        cache, A_FILE_RULE_KEY, Optional.of(".metadata"));
     assertThat(projectFilesystem.exists(cacheFilePath), Matchers.is(true));
     try (DataOutputStream outputStream =
              new DataOutputStream(projectFilesystem.newFileOutputStream(cacheFilePath))) {

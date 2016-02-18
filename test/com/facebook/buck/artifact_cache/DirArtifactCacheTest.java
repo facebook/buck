@@ -43,6 +43,7 @@ import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -269,7 +270,22 @@ public class DirArtifactCacheTest {
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
     assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
 
-    assertEquals(6, cacheDir.toFile().listFiles().length);
+    ImmutableList<File> cachedFiles = ImmutableList.copyOf(dirArtifactCache.getAllFilesInCache());
+    assertEquals(3, cacheDir.toFile().listFiles().length);
+    assertEquals(6, cachedFiles.size());
+
+    ImmutableSet<String> filenames = FluentIterable.from(cachedFiles).transform(
+        new Function<File, String>() {
+          @Override
+          public String apply(File input) {
+            return input.toPath().getFileName().toString();
+          }
+        }).toSet();
+
+    for (RuleKey ruleKey : ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)) {
+      filenames.contains(ruleKey.toString());
+      filenames.contains(ruleKey.toString() + ".metadata");
+    }
   }
 
   @Test
@@ -406,10 +422,16 @@ public class DirArtifactCacheTest {
   @Test
   public void testDeleteSome() throws IOException {
     Path cacheDir = tmpDir.newFolder();
-    Path fileW = cacheDir.resolve("w");
-    Path fileX = cacheDir.resolve("x");
-    Path fileY = cacheDir.resolve("y");
-    Path fileZ = cacheDir.resolve("z");
+
+    Path fileW = cacheDir.resolve("11").resolve("11").resolve("w");
+    Path fileX = cacheDir.resolve("22").resolve("22").resolve("x");
+    Path fileY = cacheDir.resolve("33").resolve("33").resolve("y");
+    Path fileZ = cacheDir.resolve("44").resolve("44").resolve("z");
+
+    Files.createDirectories(fileW.getParent());
+    Files.createDirectories(fileX.getParent());
+    Files.createDirectories(fileY.getParent());
+    Files.createDirectories(fileZ.getParent());
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
@@ -432,9 +454,10 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache.deleteOldFiles();
 
+    File[] filesInCache = dirArtifactCache.getAllFilesInCache();
     assertEquals(
         ImmutableSet.of(fileZ, fileW),
-        FluentIterable.of(cacheDir.toFile().listFiles()).transform(
+        FluentIterable.of(filesInCache).transform(
             new Function<File, Path>() {
               @Override
               public Path apply(File input) {
@@ -464,7 +487,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache = new DirArtifactCache(
         "dir",
         new ProjectFilesystem(cacheDir),
-        Paths.get("."),
+        cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(9L));
 
@@ -496,11 +519,11 @@ public class DirArtifactCacheTest {
             LazyPath.ofInstance(fileX)).getType());
 
     Files.setAttribute(
-        cacheDir.resolve(ruleKeyX.toString()),
+        dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.<String>absent()),
         "lastAccessTime",
         FileTime.fromMillis(0));
     Files.setAttribute(
-        cacheDir.resolve(ruleKeyX.toString() + ".metadata"),
+        dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.of(".metadata")),
         "lastAccessTime",
         FileTime.fromMillis(0));
 
@@ -513,11 +536,11 @@ public class DirArtifactCacheTest {
             LazyPath.ofInstance(fileY)).getType());
 
     Files.setAttribute(
-        cacheDir.resolve(ruleKeyY.toString()),
+        dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.<String>absent()),
         "lastAccessTime",
         FileTime.fromMillis(1000));
     Files.setAttribute(
-        cacheDir.resolve(ruleKeyY.toString() + ".metadata"),
+        dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.of(".metadata")),
         "lastAccessTime",
         FileTime.fromMillis(1000));
 
@@ -596,6 +619,28 @@ public class DirArtifactCacheTest {
     assertThat(
         result.getMetadata(),
         Matchers.equalTo(metadata));
+
+    cache.close();
+  }
+
+  @Test
+  public void testFolderLevelsForRuleKeys() throws IOException {
+    DirArtifactCache cache = new DirArtifactCache(
+        "dir",
+        new FakeProjectFilesystem(),
+        Paths.get("cache"),
+        /* doStore */ false,
+        /* maxCacheSizeBytes */ Optional.<Long>absent());
+
+    Path result = cache.getPathForRuleKey(
+        new RuleKey("aabb0123123234e324"),
+        Optional.<String>absent());
+    assertThat(result.endsWith(Paths.get("aa/bb/aabb0123123234e324")), Matchers.equalTo(true));
+
+    result = cache.getPathForRuleKey(
+        new RuleKey("aabb0123123234e324"),
+        Optional.<String>of(".ext"));
+    assertThat(result.endsWith(Paths.get("aa/bb/aabb0123123234e324.ext")), Matchers.equalTo(true));
 
     cache.close();
   }

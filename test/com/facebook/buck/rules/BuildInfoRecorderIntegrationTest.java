@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -28,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.DefaultClock;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +38,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 
 public class BuildInfoRecorderIntegrationTest {
@@ -58,12 +59,21 @@ public class BuildInfoRecorderIntegrationTest {
             }
         });
     DebuggableTemporaryFolder cacheDir = new DebuggableTemporaryFolder();
-    ArtifactCache artifactCache = TestArtifactCaches.createDirCacheForTest(cacheDir);
+    ArtifactCache artifactCache = TestArtifactCaches
+        .createDirCacheForTest(cacheDir);
     buildInfoRecorder.performUploadToArtifactCache(
         ImmutableSet.of(new RuleKey(RULE_KEY)),
         artifactCache,
         new BuckEventBus(new DefaultClock(), new BuildId()));
-    assertTrue(cacheDir.getRootPath().resolve(Paths.get(RULE_KEY)).toFile().exists());
+    assertTrue(
+        cacheDir.getRootPath().resolve(
+            DirArtifactCacheTestUtil
+                .getPathForRuleKey(
+                    artifactCache,
+                    new RuleKey(RULE_KEY),
+                    Optional.<String>absent()))
+        .toFile()
+        .exists());
   }
 
   private static BuildInfoRecorder createBuildInfoRecorder(ProjectFilesystem filesystem) {

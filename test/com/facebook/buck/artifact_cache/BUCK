@@ -4,6 +4,7 @@ java_library(
     'DummyArtifactCache.java',
     'InMemoryArtifactCache.java',
     'TestArtifactCaches.java',
+    'DirArtifactCacheTestUtil.java',
   ],
   deps = [
     '//src/com/facebook/buck/artifact_cache:artifact_cache',

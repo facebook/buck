@@ -21,6 +21,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class TestArtifactCaches {
@@ -35,6 +36,16 @@ public class TestArtifactCaches {
         "dir",
         new ProjectFilesystem(cacheDir.getRootPath()),
         Paths.get("."),
+        true,
+        Optional.<Long>absent());
+  }
+
+  public static ArtifactCache createDirCacheForTest(
+      Path filesystemRoot, Path cacheDir) throws IOException {
+    return new DirArtifactCache(
+        "dir",
+        new ProjectFilesystem(filesystemRoot),
+        cacheDir,
         true,
         Optional.<Long>absent());
   }

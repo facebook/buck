@@ -19,7 +19,11 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
+import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -187,9 +191,15 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     Sha1HashCode androidBinaryRuleKey = buildLog.getRuleKey("//apps/sample:app_comp_str");
-    Path cachedFile = workspace.getPath(
-        BuckConstant.DEFAULT_CACHE_DIR + "/" + androidBinaryRuleKey.getHash());
-    Files.delete(cachedFile);
+
+    ArtifactCache cache = TestArtifactCaches.createDirCacheForTest(
+        workspace.getPath("."),
+        workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR));
+    Path cachedFile = DirArtifactCacheTestUtil.getPathForRuleKey(
+        cache,
+        new RuleKey(androidBinaryRuleKey.getHash()),
+        Optional.<String>absent());
+    Files.delete(workspace.resolve(cachedFile));
 
     workspace.runBuckCommand("clean").assertSuccess();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
