@@ -60,14 +60,16 @@ public class OCamlBuild extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path baseArtifactDir = ocamlContext.getOutput().getParent();
+    Path baseArtifactDir = ocamlContext.getNativeOutput().getParent();
     buildableContext.recordArtifact(baseArtifactDir);
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_DIR));
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), ocamlContext.getOutput().getParent()),
+        new MakeCleanDirectoryStep(
+            getProjectFilesystem(),
+            ocamlContext.getNativeOutput().getParent()),
         new OCamlBuildStep(
             getResolver(),
             getProjectFilesystem(),
@@ -80,7 +82,7 @@ public class OCamlBuild extends AbstractBuildRule {
 
   @Override
   public Path getPathToOutput() {
-    return ocamlContext.getOutput();
+    return ocamlContext.getNativeOutput();
   }
 
 }

@@ -77,7 +77,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput() {
+  public NativeLinkableInput getLinkableInput() {
     Preconditions.checkState(
         bytecodeLib.equals(
             nativeLib.replaceFirst(
@@ -116,7 +116,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getCompileDeps() {
+  public ImmutableSortedSet<BuildRule> getNativeCompileDeps() {
     return ImmutableSortedSet.of();
   }
 

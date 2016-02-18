@@ -37,7 +37,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   private final ImmutableList<SourcePath> objFiles;
   private final OCamlBuildContext ocamlContext;
   private final BuildRule ocamlLibraryBuild;
-  private final ImmutableSortedSet<BuildRule> compileDeps;
+  private final ImmutableSortedSet<BuildRule> nativeCompileDeps;
   private final ImmutableSortedSet<BuildRule> bytecodeCompileDeps;
   private final ImmutableSortedSet<BuildRule> bytecodeLinkDeps;
 
@@ -49,7 +49,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
       ImmutableList<SourcePath> objFiles,
       OCamlBuildContext ocamlContext,
       BuildRule ocamlLibraryBuild,
-      ImmutableSortedSet<BuildRule> compileDeps,
+      ImmutableSortedSet<BuildRule> nativeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeLinkDeps) {
     super(params, resolver);
@@ -57,7 +57,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
     this.objFiles = objFiles;
     this.ocamlContext = ocamlContext;
     this.ocamlLibraryBuild = ocamlLibraryBuild;
-    this.compileDeps = compileDeps;
+    this.nativeCompileDeps = nativeCompileDeps;
     this.bytecodeCompileDeps = bytecodeCompileDeps;
     this.bytecodeLinkDeps = bytecodeLinkDeps;
     staticLibraryTarget = OCamlRuleBuilder.createStaticLibraryBuildTarget(
@@ -65,7 +65,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput() {
+  public NativeLinkableInput getLinkableInput() {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     // Add linker flags.
@@ -77,7 +77,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
             getResolver(),
             new BuildTargetSourcePath(
                 ocamlLibraryBuild.getBuildTarget(),
-                OCamlBuildContext.getOutputPath(
+                OCamlBuildContext.getNativeOutputPath(
                     staticLibraryTarget.getUnflavoredBuildTarget(),
                     /* isLibrary */ true))));
 
@@ -91,7 +91,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
 
   @Override
   public Path getIncludeLibDir() {
-    return OCamlBuildContext.getCompileOutputDir(
+    return OCamlBuildContext.getCompileNativeOutputDir(
         staticLibraryTarget.getUnflavoredBuildTarget(),
         true);
   }
@@ -102,8 +102,8 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getCompileDeps() {
-    return compileDeps;
+  public ImmutableSortedSet<BuildRule> getNativeCompileDeps() {
+    return nativeCompileDeps;
   }
 
   @Override

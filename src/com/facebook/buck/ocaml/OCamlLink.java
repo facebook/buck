@@ -51,7 +51,7 @@ public class OCamlLink extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableList<Arg> depInput;
   @AddToRuleKey
-  private final ImmutableList<Arg> nativeDepInput;
+  private final ImmutableList<Arg> cDepInput;
   @AddToRuleKey
   private final boolean isLibrary;
   @AddToRuleKey
@@ -67,7 +67,7 @@ public class OCamlLink extends AbstractBuildRule {
       ImmutableList<String> flags,
       Path outputRelativePath,
       ImmutableList<Arg> depInput,
-      ImmutableList<Arg> nativeDepInput,
+      ImmutableList<Arg> cDepInput,
       boolean isLibrary,
       boolean isBytecode) {
     super(params, resolver);
@@ -79,7 +79,7 @@ public class OCamlLink extends AbstractBuildRule {
     this.flags = flags;
     this.outputRelativePath = outputRelativePath;
     this.depInput = depInput;
-    this.nativeDepInput = nativeDepInput;
+    this.cDepInput = cDepInput;
     this.isLibrary = isLibrary;
     this.isBytecode = isBytecode;
   }
@@ -102,7 +102,7 @@ public class OCamlLink extends AbstractBuildRule {
             flags,
             getProjectFilesystem().resolve(outputRelativePath),
             depInput,
-            nativeDepInput,
+            cDepInput,
             FluentIterable.from(inputs)
                 .transform(getResolver().getAbsolutePathFunction())
                 .toList(),

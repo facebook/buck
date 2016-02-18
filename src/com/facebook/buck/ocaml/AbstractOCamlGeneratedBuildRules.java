@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractOCamlGeneratedBuildRules {
   public abstract ImmutableList<BuildRule> getRules();
-  public abstract ImmutableSortedSet<BuildRule> getCompileDeps();
+  public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps();
   public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
   public abstract ImmutableList<SourcePath> getObjectFiles();
   public abstract BuildRule getBytecodeLink();

@@ -31,10 +31,17 @@ public interface OCamlLibrary extends BuildRule {
 
   Iterable<String> getBytecodeIncludeDirs();
 
-  ImmutableSortedSet<BuildRule> getCompileDeps();
+  /**
+   * Dependencies for the native (ocamlopt) build
+   */
+  ImmutableSortedSet<BuildRule> getNativeCompileDeps();
+
+  /**
+   * Dependencies for the bytecode (ocamlc) build
+   */
   ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
   ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
 
-  NativeLinkableInput getNativeLinkableInput();
+  NativeLinkableInput getLinkableInput();
 
 }

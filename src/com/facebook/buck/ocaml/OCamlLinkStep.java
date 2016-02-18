@@ -40,7 +40,7 @@ public class OCamlLinkStep extends ShellStep {
   public final ImmutableList<String> flags;
   public final Path output;
   public final ImmutableList<Arg> depInput;
-  public final ImmutableList<Arg> nativeDepInput;
+  public final ImmutableList<Arg> cDepInput;
   public final ImmutableList<Path> input;
   public final boolean isLibrary;
   public final boolean isBytecode;
@@ -55,7 +55,7 @@ public class OCamlLinkStep extends ShellStep {
       ImmutableList<String> flags,
       Path output,
       ImmutableList<Arg> depInput,
-      ImmutableList<Arg> nativeDepInput,
+      ImmutableList<Arg> cDepInput,
       ImmutableList<Path> input,
       boolean isLibrary,
       boolean isBytecode) {
@@ -66,7 +66,7 @@ public class OCamlLinkStep extends ShellStep {
     this.flags = flags;
     this.output = output;
     this.depInput = depInput;
-    this.nativeDepInput = nativeDepInput;
+    this.cDepInput = cDepInput;
     this.input = input;
     this.isLibrary = isLibrary;
     this.isBytecode = isBytecode;
@@ -115,7 +115,7 @@ public class OCamlLinkStep extends ShellStep {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),
-                FluentIterable.from(nativeDepInput)
+                FluentIterable.from(cDepInput)
                     .transformAndConcat(Arg.stringListFunction())))
         .build();
   }
