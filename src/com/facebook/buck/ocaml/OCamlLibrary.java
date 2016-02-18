@@ -42,7 +42,6 @@ public interface OCamlLibrary extends BuildRule {
   ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
   ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
 
-  NativeLinkableInput getNativeLinkableInput();
-  NativeLinkableInput getBytecodeLinkableInput();
+  NativeLinkableInput getLinkableInput();
 
 }

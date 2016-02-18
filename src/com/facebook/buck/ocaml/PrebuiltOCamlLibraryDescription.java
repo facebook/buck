@@ -61,8 +61,6 @@ public class PrebuiltOCamlLibraryDescription
 
     final BuildTarget target = params.getBuildTarget();
 
-    final boolean bytecodeOnly = args.bytecodeOnly.or(false);
-
     final String libDir = args.libDir.or("lib");
 
     final String libName = args.libName.or(target.getShortName());
@@ -74,14 +72,9 @@ public class PrebuiltOCamlLibraryDescription
     final Path libPath = target.getBasePath().resolve(libDir);
     final Path includeDir = libPath.resolve(args.includeDir.or(""));
 
-    final Optional<SourcePath> staticNativeLibraryPath = bytecodeOnly
-        ? Optional.<SourcePath>absent()
-        : Optional.<SourcePath>of(new PathSourcePath(
-          params.getProjectFilesystem(),
-          libPath.resolve(nativeLib)));
-    final SourcePath staticBytecodeLibraryPath = new PathSourcePath(
+    final SourcePath staticNativeLibraryPath = new PathSourcePath(
         params.getProjectFilesystem(),
-        libPath.resolve(bytecodeLib));
+        libPath.resolve(nativeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
         FluentIterable.from(cLibs)
           .transform(new Function<String, SourcePath>() {
@@ -100,8 +93,9 @@ public class PrebuiltOCamlLibraryDescription
     return new PrebuiltOCamlLibrary(
         params,
         new SourcePathResolver(resolver),
+        nativeLib,
+        bytecodeLib,
         staticNativeLibraryPath,
-        staticBytecodeLibraryPath,
         staticCLibraryPaths,
         bytecodeLibraryPath,
         libPath,
@@ -117,7 +111,6 @@ public class PrebuiltOCamlLibraryDescription
     public Optional<String> bytecodeLib;
     public Optional<ImmutableList<String>> cLibs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<Boolean> bytecodeOnly;
   }
 
 }

@@ -12,7 +12,7 @@ prebuilt_ocaml_library(
     name = 'plus',
     lib_dir = 'third_party/lib',
     native_lib = 'libplus_lib.cmxa',
-    bytecode_lib = 'libplus_lib_bc.cma',
+    bytecode_lib = 'libplus_lib.cma',
     c_libs = ['libplus_lib.a'],
     visibility = [
         'PUBLIC',

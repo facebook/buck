@@ -68,7 +68,6 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
         resolver,
         srcs,
         /*isLibrary*/ true,
-        args.bytecodeOnly.or(false),
         flags.build(),
         linkerflags);
   }
@@ -85,7 +84,6 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableList<String>> linkerFlags;
     public Optional<String> warningsFlags;
-    public Optional<Boolean> bytecodeOnly;
   }
 
 }

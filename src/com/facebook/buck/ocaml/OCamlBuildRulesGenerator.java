@@ -63,7 +63,6 @@ public class OCamlBuildRulesGenerator {
 
   private final Compiler cCompiler;
   private final Compiler cxxCompiler;
-  private final boolean bytecodeOnly;
 
   public OCamlBuildRulesGenerator(
       BuildRuleParams params,
@@ -73,8 +72,7 @@ public class OCamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlInput,
       ImmutableList<SourcePath> cInput,
       Compiler cCompiler,
-      Compiler cxxCompiler,
-      boolean bytecodeOnly) {
+      Compiler cxxCompiler) {
     this.params = params;
     this.pathResolver = pathResolver;
     this.resolver = resolver;
@@ -83,7 +81,6 @@ public class OCamlBuildRulesGenerator {
     this.cInput = cInput;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
-    this.bytecodeOnly = bytecodeOnly;
   }
 
   /**
@@ -92,24 +89,19 @@ public class OCamlBuildRulesGenerator {
   OCamlGeneratedBuildRules generate() {
 
     ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
-    ImmutableList.Builder<BuildRule> nativeCompileDeps = ImmutableList.builder();
-    ImmutableList.Builder<BuildRule> bytecodeCompileDeps = ImmutableList.builder();
+
+    ImmutableList<SourcePath> cmxFiles = generateMLNativeCompilation(mlInput);
 
     ImmutableList<SourcePath> objFiles = generateCCompilation(cInput);
 
-    if (!this.bytecodeOnly) {
-      ImmutableList<SourcePath> cmxFiles = generateMLNativeCompilation(mlInput);
-      nativeCompileDeps.addAll(pathResolver.filterBuildRuleInputs(cmxFiles));
-      BuildRule nativeLink = generateNativeLinking(
-          ImmutableList.<SourcePath>builder()
-              .addAll(Iterables.concat(cmxFiles, objFiles))
-              .build()
-      );
-      rules.add(nativeLink);
-    }
+    BuildRule link = generateNativeLinking(
+        ImmutableList.<SourcePath>builder()
+            .addAll(Iterables.concat(cmxFiles, objFiles))
+            .build()
+    );
+    rules.add(link);
 
     ImmutableList<SourcePath> cmoFiles = generateMLBytecodeCompilation(mlInput);
-    bytecodeCompileDeps.addAll(pathResolver.filterBuildRuleInputs(cmoFiles));
     BuildRule bytecodeLink = generateBytecodeLinking(
         ImmutableList.<SourcePath>builder()
             .addAll(Iterables.concat(cmoFiles, objFiles))
@@ -123,8 +115,10 @@ public class OCamlBuildRulesGenerator {
 
     return OCamlGeneratedBuildRules.builder()
         .setRules(rules.build())
-        .setNativeCompileDeps(ImmutableSortedSet.copyOf(nativeCompileDeps.build()))
-        .setBytecodeCompileDeps(ImmutableSortedSet.copyOf(bytecodeCompileDeps.build()))
+        .setNativeCompileDeps(
+            ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(cmxFiles)))
+        .setBytecodeCompileDeps(
+            ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(cmoFiles)))
         .setObjectFiles(objFiles)
         .setBytecodeLink(bytecodeLink)
         .build();

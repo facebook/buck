@@ -73,13 +73,14 @@ public class OCamlLinkStep extends ShellStep {
 
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-    final String linkExt = isBytecode
-        ? OCamlCompilables.OCAML_CMA
-        : OCamlCompilables.OCAML_CMXA;
-
     for (String linkInput : Arg.stringify(depInput)) {
-      if (isLibrary && linkInput.endsWith(linkExt)) {
+      if (isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA)) {
         continue;
+      }
+      if (isBytecode) {
+        linkInput = linkInput.replaceAll(
+            OCamlCompilables.OCAML_CMXA_REGEX,
+            OCamlCompilables.OCAML_CMA);
       }
       ocamlInputBuilder.add(linkInput);
     }

@@ -41,21 +41,17 @@ public class OCamlBuild extends AbstractBuildRule {
   private final Compiler cCompiler;
   @AddToRuleKey
   private final Compiler cxxCompiler;
-  @AddToRuleKey
-  private final boolean bytecodeOnly;
 
   public OCamlBuild(
       BuildRuleParams params,
       SourcePathResolver resolver,
       OCamlBuildContext ocamlContext,
       Compiler cCompiler,
-      Compiler cxxCompiler,
-      boolean bytecodeOnly) {
+      Compiler cxxCompiler) {
     super(params, resolver);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
-    this.bytecodeOnly = bytecodeOnly;
 
     Preconditions.checkNotNull(ocamlContext.getInput());
   }
@@ -66,10 +62,8 @@ public class OCamlBuild extends AbstractBuildRule {
       BuildableContext buildableContext) {
     Path baseArtifactDir = ocamlContext.getNativeOutput().getParent();
     buildableContext.recordArtifact(baseArtifactDir);
-    if (!bytecodeOnly) {
-      buildableContext.recordArtifact(
-          baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_DIR));
-    }
+    buildableContext.recordArtifact(
+        baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_DIR));
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
     return ImmutableList.of(
@@ -83,13 +77,12 @@ public class OCamlBuild extends AbstractBuildRule {
             cCompiler.getEnvironment(getResolver()),
             cCompiler.getCommandPrefix(getResolver()),
             cxxCompiler.getEnvironment(getResolver()),
-            cxxCompiler.getCommandPrefix(getResolver()),
-            bytecodeOnly));
+            cxxCompiler.getCommandPrefix(getResolver())));
   }
 
   @Override
   public Path getPathToOutput() {
-    return bytecodeOnly ? ocamlContext.getBytecodeOutput() : ocamlContext.getNativeOutput();
+    return ocamlContext.getNativeOutput();
   }
 
 }

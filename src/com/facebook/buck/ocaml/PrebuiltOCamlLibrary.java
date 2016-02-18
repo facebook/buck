@@ -29,7 +29,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,9 +41,11 @@ import javax.annotation.Nullable;
 class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @AddToRuleKey
-  private final Optional<SourcePath> staticNativeLibraryPath;
+  private final String nativeLib;
   @AddToRuleKey
-  private final SourcePath staticBytecodeLibraryPath;
+  private final String bytecodeLib;
+  @AddToRuleKey
+  private final SourcePath staticNativeLibraryPath;
   @AddToRuleKey
   private final ImmutableList<SourcePath> staticCLibraryPaths;
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -57,29 +59,40 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   public PrebuiltOCamlLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Optional<SourcePath> staticNativeLibraryPath,
-      SourcePath staticBytecodeLibraryPath,
+      String nativeLib,
+      String bytecodeLib,
+      SourcePath staticNativeLibraryPath,
       ImmutableList<SourcePath> staticCLibraryPaths,
       SourcePath bytecodeLibraryPath,
       Path libPath,
       Path includeDir) {
     super(params, resolver);
+    this.nativeLib = nativeLib;
+    this.bytecodeLib = bytecodeLib;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
-    this.staticBytecodeLibraryPath = staticBytecodeLibraryPath;
     this.staticCLibraryPaths = staticCLibraryPaths;
     this.bytecodeLibraryPath = bytecodeLibraryPath;
     this.libPath = libPath;
     this.includeDir = includeDir;
   }
 
-  private NativeLinkableInput getLinkableInput(SourcePath sourcePath) {
+  @Override
+  public NativeLinkableInput getLinkableInput() {
+    Preconditions.checkState(
+        bytecodeLib.equals(
+            nativeLib.replaceFirst(
+                OCamlCompilables.OCAML_CMXA_REGEX,
+                OCamlCompilables.OCAML_CMA)),
+        "Bytecode library should have the same name as native library but with a .cma extension"
+    );
+
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.add(
         new SourcePathArg(
             getResolver(),
-            sourcePath));
+            staticNativeLibraryPath));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
       argsBuilder.add(
           new SourcePathArg(
@@ -90,23 +103,6 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
         argsBuilder.build(),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
-  }
-
-  @Override
-  public NativeLinkableInput getNativeLinkableInput() {
-    if (staticNativeLibraryPath.isPresent()) {
-      return getLinkableInput(staticNativeLibraryPath.get());
-    } else {
-      return NativeLinkableInput.of(
-          ImmutableList.<Arg>of(),
-          ImmutableSet.<FrameworkPath>of(),
-          ImmutableSet.<FrameworkPath>of());
-    }
-  }
-
-  @Override
-  public NativeLinkableInput getBytecodeLinkableInput() {
-    return getLinkableInput(staticBytecodeLibraryPath);
   }
 
   @Override
@@ -133,7 +129,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(getResolver().filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
-        .addAll(getResolver().filterBuildRuleInputs(staticBytecodeLibraryPath))
+        .addAll(getResolver().filterBuildRuleInputs(staticNativeLibraryPath))
         .build();
   }
 
