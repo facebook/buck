@@ -32,7 +32,8 @@ public class GoCompileStep extends ShellStep {
   private final Path packageName;
   private final ImmutableList<String> flags;
   private final ImmutableList<Path> srcs;
-  private ImmutableList<Path> includeDirectories;
+  private final ImmutableList<Path> includeDirectories;
+  private final GoPlatform platform;
   private final Path output;
 
   public GoCompileStep(
@@ -43,6 +44,7 @@ public class GoCompileStep extends ShellStep {
       Path packageName,
       ImmutableList<Path> srcs,
       ImmutableList<Path> includeDirectories,
+      GoPlatform platform,
       Path output) {
     super(workingDirectory);
     this.environment = environment;
@@ -51,6 +53,7 @@ public class GoCompileStep extends ShellStep {
     this.packageName = packageName;
     this.srcs = srcs;
     this.includeDirectories = includeDirectories;
+    this.platform = platform;
     this.output = output;
   }
 
@@ -82,7 +85,11 @@ public class GoCompileStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return environment;
+    return ImmutableMap.<String, String>builder()
+        .putAll(environment)
+        .put("GOOS", platform.getGoOs())
+        .put("GOARCH", platform.getGoArch())
+        .build();
   }
 
   @Override

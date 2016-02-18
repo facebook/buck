@@ -20,6 +20,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -46,6 +47,12 @@ public class MoreMaps {
           ent.getValue());
     }
     return transformedMap.build();
+  }
+
+  public static <K, V> ImmutableMap<K, V> merge(Map<K, V> first, Map<K, V> second) {
+    Map<K, V> mutableMap = new HashMap<>(first);
+    mutableMap.putAll(second);
+    return ImmutableMap.copyOf(mutableMap);
   }
 
 }

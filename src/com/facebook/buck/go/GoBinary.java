@@ -20,17 +20,19 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -43,26 +45,30 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
   @AddToRuleKey
   private final ImmutableList<String> linkerFlags;
   @AddToRuleKey
-  private final Linker cxxLinker;
+  private final Optional<Linker> cxxLinker;
+  @AddToRuleKey
+  private final GoPlatform platform;
 
-  private final GoLinkable mainObject;
-  private final GoSymlinkTree linkTree;
+  private final GoCompile mainObject;
+  private final SymlinkTree linkTree;
 
   private final Path output;
 
   public GoBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Linker cxxLinker,
-      GoSymlinkTree linkTree,
-      GoLinkable mainObject,
+      Optional<Linker> cxxLinker,
+      SymlinkTree linkTree,
+      GoCompile mainObject,
       Tool linker,
-      ImmutableList<String> linkerFlags) {
+      ImmutableList<String> linkerFlags,
+      GoPlatform platform) {
     super(params, resolver);
     this.cxxLinker = cxxLinker;
     this.linker = linker;
     this.linkTree = linkTree;
     this.mainObject = mainObject;
+    this.platform = platform;
     this.output = BuildTargets.getGenPath(
         params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName());
     this.linkerFlags = linkerFlags;
@@ -85,18 +91,23 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     // There is no way to specify real-ld environment variables to the go linker - just hope
     // that the two sets don't collide.
+    ImmutableList<String> cxxLinkerCommand = ImmutableList.of();
     ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
-    environment.putAll(cxxLinker.getEnvironment(getResolver()));
+    if (cxxLinker.isPresent()) {
+      environment.putAll(cxxLinker.get().getEnvironment(getResolver()));
+      cxxLinkerCommand = cxxLinker.get().getCommandPrefix(getResolver());
+    }
     environment.putAll(linker.getEnvironment(getResolver()));
     return ImmutableList.<Step>of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
             environment.build(),
-            cxxLinker.getCommandPrefix(getResolver()),
+            cxxLinkerCommand,
             linker.getCommandPrefix(getResolver()),
             linkerFlags,
             ImmutableList.<Path>of(linkTree.getRoot()),
+            platform,
             mainObject.getPathToOutput(),
             GoLinkStep.LinkMode.EXECUTABLE,
             output)

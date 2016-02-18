@@ -3,5 +3,5 @@ package printer
 import "fmt"
 
 func Print(m string) {
-	fmt.Println(m)
+	fmt.Println(m + "!")
 }

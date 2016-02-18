@@ -47,6 +47,7 @@ public class GoLinkStep extends ShellStep {
   private final ImmutableList<String> linkCommandPrefix;
   private final ImmutableList<String> flags;
   private final ImmutableList<Path> libraryPaths;
+  private final GoPlatform platform;
   private final Path mainArchive;
   private final LinkMode linkMode;
   private final Path output;
@@ -58,6 +59,7 @@ public class GoLinkStep extends ShellStep {
       ImmutableList<String> linkCommandPrefix,
       ImmutableList<String> flags,
       ImmutableList<Path> libraryPaths,
+      GoPlatform platform,
       Path mainArchive,
       LinkMode linkMode,
       Path output) {
@@ -67,6 +69,7 @@ public class GoLinkStep extends ShellStep {
     this.linkCommandPrefix = linkCommandPrefix;
     this.flags = flags;
     this.libraryPaths = libraryPaths;
+    this.platform = platform;
     this.mainArchive = mainArchive;
     this.linkMode = linkMode;
     this.output = output;
@@ -92,6 +95,8 @@ public class GoLinkStep extends ShellStep {
             FluentIterable.from(cxxLinkCommandPrefix).skip(1)
                 .transform(Escaper.BASH_ESCAPER).join(Joiner.on(" ")));
       }
+    } else {
+      command.add("-linkmode", "internal");
     }
     command.add(mainArchive.toString());
 
@@ -100,7 +105,11 @@ public class GoLinkStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return environment;
+    return ImmutableMap.<String, String>builder()
+        .putAll(environment)
+        .put("GOOS", platform.getGoOs())
+        .put("GOARCH", platform.getGoArch())
+        .build();
   }
 
   @Override
