@@ -932,12 +932,16 @@
           <exclude name="com/facebook/buck/intellij/plugin/**" />
         </fileset>
         <fileset dir="${immutables.gensrc.dir}" />
-        <link href="http://docs.oracle.com/javase/7/docs/api/" />
+        <link href="http://docs.oracle.com/javase/7/docs/api/"
+              offline="true"
+              packagelistloc="third-party/java/javase" />
         <link href="http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc/"
               offline="true"
               packagelistloc="third-party/java/guava"/>
-        <!-- The latest version of the javadocs is only for 4.10 -->
-        <link href="https://junit-team.github.io/junit/javadoc/latest/" />
+        <!-- The latest version of the javadocs is only for 4.12 -->
+        <link href="https://junit-team.github.io/junit/javadoc/latest/"
+              offline="true"
+              packagelistloc="third-party/java/junit" />
         <additional-links />
       </javadoc>
       <record name="@{destdir}/javadoc.log" action="stop" />
