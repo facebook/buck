@@ -136,7 +136,7 @@ public class ZipStepTest {
     // Make sure we have the right attributes.
     try (ZipFile zip = new ZipFile(out.toFile())) {
       ZipArchiveEntry entry = zip.getEntry("child/");
-      assertNotEquals(entry.getUnixMode() & ZipStep.S_IFDIR, 0);
+      assertNotEquals(entry.getUnixMode() & ProjectFilesystem.S_IFDIR, 0);
     }
 
     try (Zip zip = new Zip(out, false)) {

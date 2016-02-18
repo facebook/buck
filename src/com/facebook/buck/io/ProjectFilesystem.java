@@ -116,6 +116,13 @@ public class ProjectFilesystem {
       DIRECTORY_AND_CONTENTS,
   }
 
+  // Extended attribute bits for directories and symlinks; see:
+  // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
+  public static final long S_IFDIR = 0040000;
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
+  public static final long S_IFLNK = 0120000;
+
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
 
@@ -990,14 +997,7 @@ public class ProjectFilesystem {
         // We want deterministic ZIPs, so avoid mtimes.
         entry.setFakeTime();
 
-        // Support executable files.  If we detect this file is executable, store this
-        // information as 0100 in the field typically used in zip implementations for
-        // POSIX file permissions.  We'll use this information when unzipping.
-        if (isExecutable(path)) {
-          entry.setExternalAttributes(
-              MorePosixFilePermissions.toMode(
-                  EnumSet.of(PosixFilePermission.OWNER_EXECUTE)) << 16);
-        }
+        entry.setExternalAttributes(getFileAttributesForZipEntry(path));
 
         zip.putNextEntry(entry);
         if (!isDirectory) {
@@ -1020,6 +1020,31 @@ public class ProjectFilesystem {
         zip.closeEntry();
       }
     }
+  }
+
+  public long getFileAttributesForZipEntry(Path path) throws IOException {
+    long mode = 0;
+    // Support executable files.  If we detect this file is executable, store this
+    // information as 0100 in the field typically used in zip implementations for
+    // POSIX file permissions.  We'll use this information when unzipping.
+    if (isExecutable(path)) {
+      mode |=
+          MorePosixFilePermissions.toMode(
+              EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
+    }
+
+    if (isDirectory(path)) {
+      mode |= S_IFDIR;
+    }
+
+    if (isSymLink(path)) {
+      mode |= S_IFLNK;
+    }
+
+    // Propagate any additional permissions
+    mode |= MorePosixFilePermissions.toMode(getPosixFilePermissions(path));
+
+    return mode << 16;
   }
 
   @Override

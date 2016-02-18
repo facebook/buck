@@ -20,7 +20,6 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -41,8 +40,6 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -54,11 +51,6 @@ import java.util.zip.ZipEntry;
 public class ZipStep implements Step {
 
   private static final Logger LOG = Logger.get(ZipStep.class);
-
-  // Extended attribute bits for directories and symlinks; see:
-  // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
-  public static final long S_IFDIR = 0040000;
-  public static final long S_IFLNK = 0120000;
 
   private final ProjectFilesystem filesystem;
   private final Path pathToZipFile;
@@ -150,31 +142,10 @@ public class ZipStep implements Step {
               }.hash(Hashing.crc32()).padToLong());
         }
 
-        long mode = 0;
-        // Support executable files.  If we detect this file is executable, store this
-        // information as 0100 in the field typically used in zip implementations for
-        // POSIX file permissions.  We'll use this information when unzipping.
-        if (filesystem.isExecutable(path)) {
-          mode |=
-              MorePosixFilePermissions.toMode(
-                  EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
-        }
-
-        if (isDirectory) {
-          mode |= S_IFDIR;
-        }
-
-        if (filesystem.isSymLink(path)) {
-          mode |= S_IFLNK;
-        }
-
-        // Propagate any additional permissions
-        mode |= MorePosixFilePermissions.toMode(filesystem.getPosixFilePermissions(path));
-
-        long externalAttributes = mode << 16;
+        long externalAttributes = filesystem.getFileAttributesForZipEntry(path);
         LOG.verbose(
-            "Setting mode for entry %s path %s to 0x%08X (0x%08X)",
-            entryName, path, mode, externalAttributes);
+            "Setting mode for entry %s path %s to 0x%08X",
+            entryName, path, externalAttributes);
         entry.setExternalAttributes(externalAttributes);
         return entry;
       }

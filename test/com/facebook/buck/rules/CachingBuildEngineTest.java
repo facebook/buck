@@ -2954,6 +2954,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         CustomZipEntry entry = new CustomZipEntry(mapEntry.getKey());
         // We want deterministic ZIPs, so avoid mtimes. -1 is timzeone independent, 0 is not.
         entry.setTime(ZipConstants.getFakeTime());
+        // We set the external attributes to this magic value which seems to match the attributes
+        // of entries created by {@link InMemoryArtifactCache}.
+        entry.setExternalAttributes(420 << 16);
         zip.putNextEntry(entry);
         zip.write(mapEntry.getValue().getBytes());
         zip.closeEntry();
