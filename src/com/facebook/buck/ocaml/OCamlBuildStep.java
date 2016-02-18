@@ -44,6 +44,7 @@ public class OCamlBuildStep implements Step {
   private final ImmutableList<String> cCompiler;
   private final ImmutableMap<String, String> cxxCompilerEnvironment;
   private final ImmutableList<String> cxxCompiler;
+  private final boolean bytecodeOnly;
 
   private final boolean hasGeneratedSources;
   private final OCamlDepToolStep depToolStep;
@@ -55,7 +56,8 @@ public class OCamlBuildStep implements Step {
       ImmutableMap<String, String> cCompilerEnvironment,
       ImmutableList<String> cCompiler,
       ImmutableMap<String, String> cxxCompilerEnvironment,
-      ImmutableList<String> cxxCompiler) {
+      ImmutableList<String> cxxCompiler,
+      boolean bytecodeOnly) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
@@ -63,6 +65,7 @@ public class OCamlBuildStep implements Step {
     this.cCompiler = cCompiler;
     this.cxxCompilerEnvironment = cxxCompilerEnvironment;
     this.cxxCompiler = cxxCompiler;
+    this.bytecodeOnly = bytecodeOnly;
 
     hasGeneratedSources = ocamlContext.getLexInput().size() > 0 ||
         ocamlContext.getYaccInput().size() > 0;
@@ -110,13 +113,16 @@ public class OCamlBuildStep implements Step {
     // module A depends on modules B, C, D.
     ImmutableList<Path> sortedInput = sortDependency(depToolStep.getStdout());
     ImmutableList.Builder<Path> nativeLinkerInputs = ImmutableList.builder();
-    int mlCompileNativeExitCode = executeMLNativeCompilation(
-        context,
-        filesystem.getRootPath(),
-        sortedInput,
-        nativeLinkerInputs);
-    if (mlCompileNativeExitCode != 0) {
-      return mlCompileNativeExitCode;
+
+    if (!bytecodeOnly) {
+      int mlCompileNativeExitCode = executeMLNativeCompilation(
+          context,
+          filesystem.getRootPath(),
+          sortedInput,
+          nativeLinkerInputs);
+      if (mlCompileNativeExitCode != 0) {
+        return mlCompileNativeExitCode;
+      }
     }
 
     ImmutableList.Builder<Path> bytecodeLinkerInputs = ImmutableList.builder();
@@ -137,10 +143,12 @@ public class OCamlBuildStep implements Step {
 
     ImmutableList<Path> cObjects = cLinkerInputs.build();
 
-    nativeLinkerInputs.addAll(cObjects);
-    int nativeLinkExitCode = executeLinking(context, nativeLinkerInputs.build());
-    if (nativeLinkExitCode != 0) {
-      return nativeLinkExitCode;
+    if (!bytecodeOnly) {
+      nativeLinkerInputs.addAll(cObjects);
+      int nativeLinkExitCode = executeNativeLinking(context, nativeLinkerInputs.build());
+      if (nativeLinkExitCode != 0) {
+        return nativeLinkExitCode;
+      }
     }
 
     bytecodeLinkerInputs.addAll(cObjects);
@@ -198,7 +206,7 @@ public class OCamlBuildStep implements Step {
     return 0;
   }
 
-  private int executeLinking(
+  private int executeNativeLinking(
       ExecutionContext context,
       ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
 

@@ -69,6 +69,7 @@ public class OCamlBinaryDescription implements
         resolver,
         srcs,
          /*isLibrary*/ false,
+        args.bytecodeOnly.or(false),
         flags.build(),
         linkerFlags);
   }
@@ -85,6 +86,7 @@ public class OCamlBinaryDescription implements
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableList<String>> linkerFlags;
     public Optional<String> warningsFlags;
+    public Optional<Boolean> bytecodeOnly;
   }
 
 }

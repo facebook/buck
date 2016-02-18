@@ -29,6 +29,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,7 +41,7 @@ import javax.annotation.Nullable;
 class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @AddToRuleKey
-  private final SourcePath staticNativeLibraryPath;
+  private final Optional<SourcePath> staticNativeLibraryPath;
   @AddToRuleKey
   private final SourcePath staticBytecodeLibraryPath;
   @AddToRuleKey
@@ -56,7 +57,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   public PrebuiltOCamlLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath staticNativeLibraryPath,
+      Optional<SourcePath> staticNativeLibraryPath,
       SourcePath staticBytecodeLibraryPath,
       ImmutableList<SourcePath> staticCLibraryPaths,
       SourcePath bytecodeLibraryPath,
@@ -93,7 +94,14 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput() {
-    return getLinkableInput(staticNativeLibraryPath);
+    if (staticNativeLibraryPath.isPresent()) {
+      return getLinkableInput(staticNativeLibraryPath.get());
+    } else {
+      return NativeLinkableInput.of(
+          ImmutableList.<Arg>of(),
+          ImmutableSet.<FrameworkPath>of(),
+          ImmutableSet.<FrameworkPath>of());
+    }
   }
 
   @Override
