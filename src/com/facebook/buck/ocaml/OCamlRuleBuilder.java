@@ -154,19 +154,34 @@ public class OCamlRuleBuilder {
     }
   }
 
-  private static NativeLinkableInput getLinkableInput(Iterable<BuildRule> deps) {
+  private static ImmutableList<BuildRule> getTransitiveOCamlLibraryDeps(Iterable<BuildRule> deps) {
+    return TopologicalSort.sort(
+        BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
+            deps,
+            Predicates.instanceOf(OCamlLibrary.class),
+            Predicates.instanceOf(OCamlLibrary.class)),
+        Predicates.<BuildRule>alwaysTrue());
+  }
+
+  private static NativeLinkableInput getNativeLinkableInput(Iterable<BuildRule> deps) {
     List<NativeLinkableInput> inputs = Lists.newArrayList();
 
     // Add in the linkable input from OCaml libraries.
-    ImmutableList<BuildRule> ocamlDeps =
-        TopologicalSort.sort(
-            BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-                deps,
-                Predicates.instanceOf(OCamlLibrary.class),
-                Predicates.instanceOf(OCamlLibrary.class)),
-            Predicates.<BuildRule>alwaysTrue());
+    ImmutableList<BuildRule> ocamlDeps = getTransitiveOCamlLibraryDeps(deps);
     for (BuildRule dep : ocamlDeps) {
-      inputs.add(((OCamlLibrary) dep).getLinkableInput());
+      inputs.add(((OCamlLibrary) dep).getNativeLinkableInput());
+    }
+
+    return NativeLinkableInput.concat(inputs);
+  }
+
+  private static NativeLinkableInput getBytecodeLinkableInput(Iterable<BuildRule> deps) {
+    List<NativeLinkableInput> inputs = Lists.newArrayList();
+
+    // Add in the linkable input from OCaml libraries.
+    ImmutableList<BuildRule> ocamlDeps = getTransitiveOCamlLibraryDeps(deps);
+    for (BuildRule dep : ocamlDeps) {
+      inputs.add(((OCamlLibrary) dep).getBytecodeLinkableInput());
     }
 
     return NativeLinkableInput.concat(inputs);
@@ -211,8 +226,10 @@ public class OCamlRuleBuilder {
         .transformAndConcat(getLibInclude(true))
         .toList();
 
-    NativeLinkableInput linkableInput =
-        getLinkableInput(params.getDeps());
+    NativeLinkableInput nativeLinkableInput =
+        getNativeLinkableInput(params.getDeps());
+    NativeLinkableInput bytecodeLinkableInput =
+        getBytecodeLinkableInput(params.getDeps());
     NativeLinkableInput cLinkableInput =
         getCLinkableInput(ocamlBuckConfig.getCxxPlatform(), params.getDeps());
 
@@ -221,7 +238,8 @@ public class OCamlRuleBuilder {
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
     allDepsBuilder.addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)));
     allDepsBuilder.addAll(
-        FluentIterable.from(linkableInput.getArgs())
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .append(bytecodeLinkableInput.getArgs())
             .append(cLinkableInput.getArgs())
             .transformAndConcat(Arg.getDepsFunction(pathResolver)));
     for (OCamlLibrary library : ocamlInput) {
@@ -260,8 +278,8 @@ public class OCamlRuleBuilder {
             .setNativeIncludes(nativeIncludes)
             .setBytecodeIncludes(bytecodeIncludes)
             .setOCamlInput(ocamlInput)
-            .setNativeLinkableInput(linkableInput)
-            .setBytecodeLinkableInput(linkableInput)
+            .setNativeLinkableInput(nativeLinkableInput)
+            .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
             .setBuildTarget(buildTarget.getUnflavoredBuildTarget())
             .setLibrary(isLibrary)
@@ -347,8 +365,10 @@ public class OCamlRuleBuilder {
         .transformAndConcat(getLibInclude(true))
         .toList();
 
-    NativeLinkableInput linkableInput =
-        getLinkableInput(params.getDeps());
+    NativeLinkableInput nativeLinkableInput =
+        getNativeLinkableInput(params.getDeps());
+    NativeLinkableInput bytecodeLinkableInput =
+        getBytecodeLinkableInput(params.getDeps());
     NativeLinkableInput cLinkableInput =
         getCLinkableInput(ocamlBuckConfig.getCxxPlatform(), params.getDeps());
 
@@ -364,7 +384,10 @@ public class OCamlRuleBuilder {
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)))
                 .addAll(
-                    FluentIterable.from(linkableInput.getArgs())
+                    FluentIterable.from(nativeLinkableInput.getArgs())
+                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                .addAll(
+                    FluentIterable.from(bytecodeLinkableInput.getArgs())
                         .transformAndConcat(Arg.getDepsFunction(pathResolver)))
                 .addAll(
                     FluentIterable.from(cLinkableInput.getArgs())
@@ -394,8 +417,8 @@ public class OCamlRuleBuilder {
             .setNativeIncludes(nativeIncludes)
             .setBytecodeIncludes(bytecodeIncludes)
             .setOCamlInput(ocamlInput)
-            .setNativeLinkableInput(linkableInput)
-            .setBytecodeLinkableInput(linkableInput)
+            .setNativeLinkableInput(nativeLinkableInput)
+            .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
             .setBuildTarget(buildTarget.getUnflavoredBuildTarget())
             .setLibrary(isLibrary)

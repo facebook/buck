@@ -75,6 +75,9 @@ public class PrebuiltOCamlLibraryDescription
     final SourcePath staticNativeLibraryPath = new PathSourcePath(
         params.getProjectFilesystem(),
         libPath.resolve(nativeLib));
+    final SourcePath staticBytecodeLibraryPath = new PathSourcePath(
+        params.getProjectFilesystem(),
+        libPath.resolve(bytecodeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
         FluentIterable.from(cLibs)
           .transform(new Function<String, SourcePath>() {
@@ -93,9 +96,8 @@ public class PrebuiltOCamlLibraryDescription
     return new PrebuiltOCamlLibrary(
         params,
         new SourcePathResolver(resolver),
-        nativeLib,
-        bytecodeLib,
         staticNativeLibraryPath,
+        staticBytecodeLibraryPath,
         staticCLibraryPaths,
         bytecodeLibraryPath,
         libPath,
