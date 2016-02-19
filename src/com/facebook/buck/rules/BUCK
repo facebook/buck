@@ -130,6 +130,10 @@ java_immutables_library(
     # is repaired by exporting this rule.
     '//src/com/facebook/buck/parser:rule_pattern',
 
+    # AbstractDescriptionArg uses the @SuppressFieldNotInitialized annotation,
+    # it is required by all subclasses to make them build with Infer.
+    '//third-party/java/infer-annotations:infer-annotations',
+
     # ExternalTestRunnerTestSpec implements
     # com.fasterxml.jackson.databind.JsonSerializable.
     '//third-party/java/jackson:jackson-databind',
