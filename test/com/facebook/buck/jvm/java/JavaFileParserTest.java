@@ -22,11 +22,16 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
 public class JavaFileParserTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private static final String JAVA_CODE_WITH_MANY_CLASSES = Joiner.on('\n').join(
       "package com.example;",
@@ -181,6 +186,56 @@ public class JavaFileParserTest {
         "extractFeaturesFromJavaCode should be able to find an ordinary import",
         ImmutableSortedSet.of("java.util.Map"),
         features.requiredSymbols);
+  }
+
+  private static final String JAVA_CODE_WITH_IMPORTS_THAT_DO_NOT_FOLLOW_THE_NAMING_CONVENTIONS =
+      Joiner.on('\n').join(
+          "package com.example;",
+          "",
+          "import com.facebook.buck.nsOuter.nsInner;",
+          "",
+          "import org.mozilla.intl.chardet.nsDetector;",
+          "import org.mozilla.intl.chardet.nsICharsetDetectionObserver;",
+          "import org.mozilla.intl.chardet.nsPSMDetector;",
+          "",
+          "public class AnExample {}"
+      );
+
+  @Test
+  public void testExtractingRequiredSymbolsWithImportsThatDoNotFollowTheNamingConventions() {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
+        JAVA_CODE_WITH_IMPORTS_THAT_DO_NOT_FOLLOW_THE_NAMING_CONVENTIONS);
+
+    assertEquals(
+        ImmutableSortedSet.of(
+            "com.facebook.buck.nsOuter",
+            "org.mozilla.intl.chardet.nsDetector",
+            "org.mozilla.intl.chardet.nsICharsetDetectionObserver",
+            "org.mozilla.intl.chardet.nsPSMDetector"),
+        features.requiredSymbols);
+  }
+
+  private static final String JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS =
+      Joiner.on('\n').join(
+          "package com.example;",
+          "",
+          "import com.facebook.buck.badactor;",
+          "",
+          "public class AnExample {}"
+      );
+
+  /**
+   * Verifies that an import that completely violates the expectations around naming conventions
+   * will result in an exception being thrown.
+   */
+  @Test
+  public void testExtractingRequiredSymbolsWithImportsThatHaveNoCapitalLetters() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("No component with a capital letter in fully qualified name: " +
+        "com.facebook.buck.badactor");
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS);
   }
 
   private static final String JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES = Joiner.on('\n').join(
