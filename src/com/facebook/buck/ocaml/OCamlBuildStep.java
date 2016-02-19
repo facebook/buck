@@ -236,7 +236,7 @@ public class OCamlBuildStep implements Step {
         ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(resolver),
         flags.build(),
         ocamlContext.getBytecodeOutput(),
-        ocamlContext.getNativeLinkableInput().getArgs(),
+        ocamlContext.getBytecodeLinkableInput().getArgs(),
         ocamlContext.getCLinkableInput().getArgs(),
         linkerInputs,
         ocamlContext.isLibrary(),
