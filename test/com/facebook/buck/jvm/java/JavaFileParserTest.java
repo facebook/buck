@@ -509,6 +509,35 @@ public class JavaFileParserTest {
         features.requiredSymbols);
   }
 
+  private static final String PROPERTY_LOOKUP_EXPRESSION = Joiner.on('\n').join(
+      "package com.example;",
+      "",
+      "import java.util.*;",
+      "",
+      "public class AnExample {",
+      "  public static void main(String[] args) {",
+      "    int numArgs = args.length;",
+      "    List<String> asArray = new ArrayList(numArgs);",
+      "  }",
+      "}"
+  );
+
+  @Test
+  public void testExtractingRequiredSymbolsWithPropertyLookupExpression()
+      throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
+        PROPERTY_LOOKUP_EXPRESSION);
+
+    assertEquals(
+        "args.length should not appear in features.requiredSymbols.",
+        ImmutableSortedSet.of(
+            "java.util.ArrayList",
+            "java.util.List"
+        ),
+        features.requiredSymbols);
+  }
+
   private static final String JAVA_FULL_FEATURED_EXAMPLE =
       Joiner.on('\n').join(
         "package com.example;",

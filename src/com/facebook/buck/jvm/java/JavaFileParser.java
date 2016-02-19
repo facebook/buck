@@ -545,7 +545,12 @@ public class JavaFileParser {
         ASTNode parent = ancestor.getParent();
         if (!(parent instanceof PackageDeclaration) && !(parent instanceof ImportDeclaration)) {
           String symbol = ancestor.getFullyQualifiedName();
-          addTypeFromDotDelimitedSequence(symbol);
+
+          // If it does not start with an uppercase letter, it is probably because it is a property
+          // lookup.
+          if (CharMatcher.JAVA_UPPER_CASE.matches(symbol.charAt(0))) {
+            addTypeFromDotDelimitedSequence(symbol);
+          }
         }
 
         return false;
