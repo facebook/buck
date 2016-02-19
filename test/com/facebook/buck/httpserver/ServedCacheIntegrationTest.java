@@ -25,11 +25,12 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
+import com.facebook.buck.io.BorrowablePath;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -93,8 +94,7 @@ public class ServedCacheIntegrationTest {
     dirCache.store(
         ImmutableSet.of(A_FILE_RULE_KEY),
         A_FILE_METADATA,
-        A_FILE_PATH
-    );
+        BorrowablePath.withPath(A_FILE_PATH));
   }
 
   @After
@@ -343,7 +343,7 @@ public class ServedCacheIntegrationTest {
       public ListenableFuture<Void> store(
           ImmutableSet<RuleKey> ruleKeys,
           ImmutableMap<String, String> metadata,
-          Path output) {
+          BorrowablePath output) {
         return Futures.immediateFuture(null);
       }
 
@@ -433,7 +433,10 @@ public class ServedCacheIntegrationTest {
     CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
-    serverBackedCache.store(ImmutableSet.of(ruleKey), metadata, originalDataPath);
+    serverBackedCache.store(
+        ImmutableSet.of(ruleKey),
+        metadata,
+        BorrowablePath.withPath(originalDataPath));
 
     cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
@@ -477,7 +480,10 @@ public class ServedCacheIntegrationTest {
     CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
-    serverBackedCache.store(ImmutableSet.of(ruleKey), metadata, originalDataPath);
+    serverBackedCache.store(
+        ImmutableSet.of(ruleKey),
+        metadata,
+        BorrowablePath.withPath(originalDataPath));
 
     cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));

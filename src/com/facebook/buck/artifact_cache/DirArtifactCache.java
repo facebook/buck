@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -57,6 +58,7 @@ public class DirArtifactCache implements ArtifactCache {
   private static final float STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER = 0.5f;
   // How much of the max size to leave if we decide to delete old files.
   private static final float MAX_BYTES_TRIM_RATIO = 2 / 3f;
+  private static final String TMP_EXTENSION = ".tmp";
 
   private final String name;
   private final ProjectFilesystem filesystem;
@@ -128,14 +130,14 @@ public class DirArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      Path output) {
+      BorrowablePath output) {
 
     if (!doStore) {
       return Futures.immediateFuture(null);
     }
 
     try {
-
+      Optional<Path> borrowedAndStoredArtifactPath = Optional.absent();
       for (RuleKey ruleKey : ruleKeys) {
         Path artifactPath = getPathForRuleKey(ruleKey, Optional.<String>absent());
         Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
@@ -146,20 +148,23 @@ public class DirArtifactCache implements ArtifactCache {
 
         filesystem.mkdirs(getParentDirForRuleKey(ruleKey));
 
-        // Write to a temporary file and move the file to its final location atomically to protect
-        // against partial artifacts (whether due to buck interruption or filesystem failure) posing
-        // as valid artifacts during subsequent buck runs.
-        Path tmp = filesystem.createTempFile(cacheDir, "artifact", ".tmp");
-        try {
-          filesystem.copyFile(output, tmp);
-          filesystem.move(tmp, artifactPath, StandardCopyOption.REPLACE_EXISTING);
+        if (!output.canBorrow()) {
+          storeArtifactOutput(output.getPath(), artifactPath);
+        } else {
+          // This branch means that we are apparently the only users of the `output`, so instead
+          // of making a safe transfer of the output to the dir cache (copy+move), we can just
+          // move it without copying.  This significantly optimizes the Disk I/O.
+          if (!borrowedAndStoredArtifactPath.isPresent()) {
+            borrowedAndStoredArtifactPath = Optional.of(artifactPath);
+            filesystem.move(output.getPath(), artifactPath, StandardCopyOption.REPLACE_EXISTING);
+          } else {
+            storeArtifactOutput(borrowedAndStoredArtifactPath.get(), artifactPath);
+          }
           bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
-        } finally {
-          filesystem.deleteFileAtPathIfExists(tmp);
         }
 
         // Now, write the meta data artifact.
-        tmp = filesystem.createTempFile(cacheDir, "metadata", ".tmp");
+        Path tmp = filesystem.createTempFile(cacheDir, "metadata", TMP_EXTENSION);
         try {
           try (DataOutputStream out = new DataOutputStream(filesystem.newFileOutputStream(tmp))) {
             out.writeInt(metadata.size());
@@ -217,6 +222,20 @@ public class DirArtifactCache implements ArtifactCache {
       result = result.resolve(f);
     }
     return result;
+  }
+
+  private void storeArtifactOutput(Path output, Path artifactPath) throws IOException {
+    // Write to a temporary file and move the file to its final location atomically to protect
+    // against partial artifacts (whether due to buck interruption or filesystem failure) posing
+    // as valid artifacts during subsequent buck runs.
+    Path tmp = filesystem.createTempFile(cacheDir, "artifact", TMP_EXTENSION);
+    try {
+      filesystem.copyFile(output, tmp);
+      filesystem.move(tmp, artifactPath);
+      bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
+    } finally {
+      filesystem.deleteFileAtPathIfExists(tmp);
+    }
   }
 
   /**

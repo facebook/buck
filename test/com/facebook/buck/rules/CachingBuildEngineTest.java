@@ -32,6 +32,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
@@ -298,7 +299,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                   public ListenableFuture<Void> store(
                       ImmutableSet<RuleKey> ruleKeys,
                       ImmutableMap<String, String> metadata,
-                      Path output) {
+                      BorrowablePath output) {
                     try {
                       Thread.sleep(500);
                     } catch (InterruptedException e) {
@@ -1284,7 +1285,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             new RuleKey("bbbb").toString(),
             BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
             inputRuleKey.toString()),
-        artifact);
+        BorrowablePath.withPath(artifact));
 
     // Create the build engine.
     CachingBuildEngine cachingBuildEngine =
@@ -2190,7 +2191,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     cache.store(
         ImmutableSet.of(artifactKey),
         ImmutableMap.<String, String>of(),
-        artifact);
+        BorrowablePath.withPath(artifact));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -2800,8 +2801,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
    * its constructor.
    * <p>
    * This makes it possible to react to a call to
-   * {@link ArtifactCache#store(ImmutableSet, ImmutableMap, Path)} and ensure that there will be a
-   * zip file in place immediately after the captured method has been invoked.
+   * {@link ArtifactCache#store(ImmutableSet, ImmutableMap, BorrowablePath)} and ensure that
+   * there will be a zip file in place immediately after the captured method has been invoked.
    */
   private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
 
@@ -2825,7 +2826,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     public ListenableFuture<Void> store(
         ImmutableSet<RuleKey> ruleKeys,
         ImmutableMap<String, String> metadata,
-        Path output) {
+        BorrowablePath output) {
       throw new UnsupportedOperationException();
     }
 

@@ -17,12 +17,11 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import java.nio.file.Path;
 
 public interface ArtifactCache extends AutoCloseable {
   /**
@@ -47,11 +46,12 @@ public interface ArtifactCache extends AutoCloseable {
    *
    * @param ruleKeys keys to store the artifact under
    * @param metadata additional information to store with the artifact
-   * @param output path to read artifact from
+   * @param output path to read artifact from. If its borrowable, you may freely move the file into
+   *               cache without obtaining a copy of the file.
    * @return {@link ListenableFuture} that completes once the store has finished.
    */
   ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata, Path output)
+      ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata, BorrowablePath output)
       throws InterruptedException;
 
   /**

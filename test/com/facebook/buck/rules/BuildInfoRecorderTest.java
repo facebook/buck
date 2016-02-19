@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
@@ -175,7 +176,7 @@ public class BuildInfoRecorderTest {
           public ListenableFuture<Void> store(
               ImmutableSet<RuleKey> ruleKeys,
               ImmutableMap<String, String> metadata,
-              Path output) {
+              BorrowablePath output) {
             stored.set(true);
 
             // Verify the build metadata.
@@ -184,7 +185,7 @@ public class BuildInfoRecorderTest {
                 Matchers.equalTo("build-metadata"));
 
             // Verify zip contents
-            try (Zip zip = new Zip(output, /* forWriting */ false)) {
+            try (Zip zip = new Zip(output.getPath(), /* forWriting */ false)) {
               assertEquals(
                   ImmutableSet.of(
                       "",

@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Started;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -45,6 +46,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
 
@@ -269,7 +271,7 @@ public class HttpArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       final ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final Path output)
+      final BorrowablePath output)
       throws InterruptedException {
     if (!isStoreSupported()) {
       return Futures.immediateFuture(null);
@@ -279,6 +281,14 @@ public class HttpArtifactCache implements ArtifactCache {
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             ArtifactCacheEvent.getTarget(metadata), ruleKeys);
     buckEventBus.post(scheduled);
+
+    final Path tmp;
+    try {
+      tmp = getPathForArtifact(output);
+    } catch (IOException e) {
+      LOGGER.error(e, "Failed to store artifact in temp file: " + output.getPath().toString());
+      return Futures.immediateFuture(null);
+    }
 
     // HTTP Store operations are asynchronous.
     return httpWriteExecutorService.submit(
@@ -292,7 +302,7 @@ public class HttpArtifactCache implements ArtifactCache {
                     .setRuleKeys(ruleKeys);
 
             try {
-              storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
+              storeImpl(ruleKeys, metadata, tmp, finishedEventBuilder);
               buckEventBus.post(finishedEventBuilder.build());
 
             } catch (IOException e) {
@@ -309,10 +319,29 @@ public class HttpArtifactCache implements ArtifactCache {
                       .setErrorMessage(e.toString())
                       .build());
             }
+            try {
+              projectFilesystem.deleteFileAtPathIfExists(tmp);
+            } catch (IOException e) {
+              LOGGER.warn(e, "Failed to delete file %s", tmp);
+            }
           }
         },
         /* result */ null
     );
+  }
+
+  /// depending on if we can borrow the output or not, we will either use output directly or
+  /// hold it temporary in hidden place
+  private Path getPathForArtifact(BorrowablePath output) throws IOException {
+    Path tmp;
+    if (output.canBorrow()) {
+      tmp = output.getPath();
+    } else {
+      Optional<Path> tmpDirPath = projectFilesystem.getPathRelativeToProjectRoot(Paths.get("tmp"));
+      tmp = projectFilesystem.createTempFile(tmpDirPath.get(), "artifact", ".tmp");
+      projectFilesystem.copyFile(output.getPath(), tmp);
+    }
+    return tmp;
   }
 
   private void reportFailure(Exception exception, String format, Object... args) {

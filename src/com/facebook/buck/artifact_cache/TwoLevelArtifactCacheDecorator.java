@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -83,7 +84,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   public ListenableFuture<Void> store(
       final ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final Path output) throws InterruptedException {
+      final BorrowablePath output) throws InterruptedException {
 
     return Futures.transformAsync(
         attemptTwoLevelStore(ruleKeys, metadata, output),
@@ -101,20 +102,20 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   private ListenableFuture<Boolean> attemptTwoLevelStore(
       final ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final Path output) {
+      final BorrowablePath output) {
 
     ListenableFuture<Optional<String>> contentHash = Futures.transformAsync(
         Futures.<Void>immediateFuture(null),
         new AsyncFunction<Void, Optional<String>>() {
           @Override
           public ListenableFuture<Optional<String>> apply(Void input) throws Exception {
-            long fileSize = projectFilesystem.getFileSize(output);
+            long fileSize = projectFilesystem.getFileSize(output.getPath());
 
             if (fileSize < twoLevelStoreThreshold) {
               return Futures.immediateFuture(Optional.<String>absent());
             }
 
-            String hashCode = "2c00" + projectFilesystem.computeSha1(output);
+            String hashCode = "2c00" + projectFilesystem.computeSha1(output.getPath());
             return Futures.transform(
                 delegate.store(
                     ImmutableSet.of(new RuleKey(hashCode)),
@@ -139,7 +140,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
                 delegate.store(
                     ruleKeys,
                     ImmutableMap.of(METADATA_KEY, input.get()),
-                    emptyFilePath),
+                    BorrowablePath.withPath(emptyFilePath)),
                 Functions.constant(true));
           }
         },

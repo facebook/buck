@@ -19,6 +19,7 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -168,7 +169,10 @@ public class ArtifactCacheHandler extends AbstractHandler {
         return HttpServletResponse.SC_NOT_ACCEPTABLE;
       }
 
-      artifactCache.get().store(storeRequest.getRuleKeys(), storeRequest.getMetadata(), temp);
+      artifactCache.get().store(
+          storeRequest.getRuleKeys(),
+          storeRequest.getMetadata(),
+          BorrowablePath.withPath(temp));
       return HttpServletResponse.SC_ACCEPTED;
     } catch (InterruptedException e) {
       response.getWriter().write("Interrupted while serving request.");

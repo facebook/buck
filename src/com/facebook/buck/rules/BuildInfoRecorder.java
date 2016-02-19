@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
@@ -287,7 +288,7 @@ public class BuildInfoRecorder {
         ruleKeys);
     eventBus.post(started);
 
-    Path zip;
+    final Path zip;
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
     ImmutableMap<String, String> buildMetadata;
     try {
@@ -308,14 +309,16 @@ public class BuildInfoRecorder {
     }
 
     // Store the artifact, including any additional metadata.
-    final Path finalZip = zip;
-    ListenableFuture<Void> storeFuture = artifactCache.store(ruleKeys, buildMetadata, zip);
+    ListenableFuture<Void> storeFuture = artifactCache.store(
+        ruleKeys,
+        buildMetadata,
+        BorrowablePath.withPath(zip));
     storeFuture.addListener(
         new Runnable() {
           @Override
           public void run() {
             try {
-              Files.delete(finalZip);
+              Files.deleteIfExists(zip);
             } catch (IOException e) {
               throw new RuntimeException(e);
             }

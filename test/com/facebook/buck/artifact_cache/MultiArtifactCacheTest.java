@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -69,7 +70,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache1.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile.get());
+        BorrowablePath.withPath(dummyFile.get()));
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
@@ -80,7 +81,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache2.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile.get());
+        BorrowablePath.withPath(dummyFile.get()));
     assertEquals("Fetch should succeed after store",
         CacheResultType.HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
@@ -99,7 +100,7 @@ public class MultiArtifactCacheTest {
     multiArtifactCache.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile.get());
+        BorrowablePath.withPath(dummyFile.get()));
 
     assertEquals(
         "MultiArtifactCache.store() should store to all contained ArtifactCaches",

@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
@@ -59,7 +60,7 @@ public class TwoLeveArtifactCacheDecoratorTest {
     twoLevelCache.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        dummyFile.get());
+        BorrowablePath.withPath(dummyFile.get()));
     assertThat(
         twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
         Matchers.equalTo(CacheResultType.HIT));
@@ -67,7 +68,7 @@ public class TwoLeveArtifactCacheDecoratorTest {
     twoLevelCache.store(
         ImmutableSet.of(dummyRuleKey2),
         ImmutableMap.<String, String>of(),
-        dummyFile.get());
+        BorrowablePath.withPath(dummyFile.get()));
 
     assertThat(
         twoLevelCache.fetch(dummyRuleKey2, dummyFile).getType(),

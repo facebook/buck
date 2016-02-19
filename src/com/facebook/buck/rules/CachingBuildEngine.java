@@ -22,6 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
@@ -42,7 +43,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -1245,27 +1245,27 @@ public class CachingBuildEngine implements BuildEngine {
       manifest.serialize(outputStream);
     }
 
-    final NamedTemporaryFile tempFile = new NamedTemporaryFile("buck.", ".manifest");
+    final Path tempFile = Files.createTempFile("buck.", ".manifest");
     try {
       // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
       // `ArtifactCache` interface uses raw paths.
       try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
            OutputStream outputStream =
                new GZIPOutputStream(
-                   new BufferedOutputStream(Files.newOutputStream(tempFile.get())))) {
+                   new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
         ByteStreams.copy(inputStream, outputStream);
       }
       cache
           .store(
               ImmutableSet.of(manifestKey.getFirst()),
               ImmutableMap.<String, String>of(),
-              tempFile.get())
+              BorrowablePath.withPath(tempFile))
           .addListener(
               new Runnable() {
                 @Override
                 public void run() {
                   try {
-                    tempFile.close();
+                    Files.deleteIfExists(tempFile);
                   } catch (IOException e) {
                     LOG.warn(
                         e,
@@ -1276,7 +1276,7 @@ public class CachingBuildEngine implements BuildEngine {
               },
               MoreExecutors.directExecutor());
     } catch (InterruptedException e) {
-      tempFile.close();
+      Files.deleteIfExists(tempFile);
       throw e;
     }
   }

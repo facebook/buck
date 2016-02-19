@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Throwables;
@@ -29,7 +30,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 
 public class InMemoryArtifactCache implements ArtifactCache {
@@ -78,8 +78,8 @@ public class InMemoryArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      Path output) {
-    try (InputStream inputStream = Files.newInputStream(output)) {
+      BorrowablePath output) {
+    try (InputStream inputStream = Files.newInputStream(output.getPath())) {
       store(ruleKeys, metadata, ByteStreams.toByteArray(inputStream));
     } catch (IOException e) {
       throw Throwables.propagate(e);
