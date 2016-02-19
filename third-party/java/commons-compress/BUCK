@@ -2,6 +2,9 @@ prebuilt_jar(
   name = 'commons-compress',
   binary_jar = 'commons-compress-1.8.1.jar',
   javadoc_url = 'http://commons.apache.org/proper/commons-compress/javadocs/api-1.8.1/',
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     'PUBLIC',
   ],

@@ -20,7 +20,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 public interface TargetNodeToBuildRuleTransformer {
 
-  <T> BuildRule transform(
+  <T extends AbstractDescriptionArg> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
       TargetNode<T> targetNode)

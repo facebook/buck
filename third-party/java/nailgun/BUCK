@@ -5,6 +5,9 @@ prebuilt_jar(
   deps = [
     '//third-party/java/jna:jna',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//test/...',

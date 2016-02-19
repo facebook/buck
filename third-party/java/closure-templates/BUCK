@@ -6,6 +6,9 @@ prebuilt_jar(
     '//third-party/java/guice:guice',
     '//third-party/java/icu4j:icu4j',
   ],
+  licenses = [
+    'COPYING',
+  ],
   visibility = [
     '//src/com/facebook/buck/httpserver:',
     '//test/com/facebook/buck/httpserver:',

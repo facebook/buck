@@ -4,6 +4,9 @@ java_library(
   deps = [
     '//third-party/java/guava:guava',
   ],
+  licenses = [
+    'NOTICE',
+  ],
   visibility = ['PUBLIC'],
 )
 

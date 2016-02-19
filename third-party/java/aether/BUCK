@@ -6,6 +6,9 @@ prebuilt_jar(
   deps = [
     ':aether-api',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',
     '//third-party/java/maven:maven-aether-provider',
@@ -23,6 +26,9 @@ prebuilt_jar(
     ':aether-spi',
     ':aether-util',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',
     '//src/com/facebook/buck/maven:util',
@@ -34,6 +40,9 @@ prebuilt_jar(
   maven_coords = 'org.eclipse.aether:aether-api:1.0.2.v20150114',
   binary_jar = 'aether-api-1.0.2.v20150114.jar',
   source_jar = 'aether-api-1.0.2.v20150114-sources.jar',
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     'PUBLIC',
   ],
@@ -52,6 +61,9 @@ prebuilt_jar(
     ':aether-spi',
     ':aether-util',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',
     '//src/com/facebook/buck/maven:util',
@@ -65,6 +77,9 @@ prebuilt_jar(
   source_jar = 'aether-spi-1.0.2.v20150114-sources.jar',
   deps = [
     ':aether-api',
+  ],
+  licenses = [
+    'LICENSE',
   ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',
@@ -86,6 +101,9 @@ prebuilt_jar(
     ':aether-api',
     ':aether-spi',
     ':aether-util',
+  ],
+  licenses = [
+    'LICENSE',
   ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',

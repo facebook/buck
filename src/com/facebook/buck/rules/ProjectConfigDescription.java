@@ -51,7 +51,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
 
   @TargetName(name = "project_config")
   @SuppressFieldNotInitialized
-    public static class Arg {
+    public static class Arg extends AbstractDescriptionArg {
     public Optional<BuildTarget> srcTarget;
     public Optional<ImmutableList<String>> srcRoots;
     public Optional<BuildTarget> testTarget;

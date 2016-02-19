@@ -6,6 +6,7 @@
     "cmd" : null,
     "cmdExe" : null,
     "executable" : null,
+    "licenses" : [ ],
     "name" : "example",
     "out" : "baz.txt",
     "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ],

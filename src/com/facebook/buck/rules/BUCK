@@ -43,6 +43,7 @@ java_immutables_library(
   name = 'build_rule',
   srcs = [
     'AbstractBuildRule.java',
+    'AbstractDescriptionArg.java',
     'AbstractSourcePath.java',
     'ActionGraph.java',
     'ActionGraphEvent.java',

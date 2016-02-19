@@ -6,6 +6,9 @@ prebuilt_jar(
   deps = [
     '//third-party/java/hamcrest:hamcrest-junit',
   ],
+  licenses = [
+    'LICENSE-junit.txt',
+  ],
   visibility = [
     '//src/com/facebook/buck/testrunner:junit',
     '//test/...',

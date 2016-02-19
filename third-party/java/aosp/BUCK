@@ -1,6 +1,12 @@
 java_library(
   name = 'aosp',
   srcs = glob(['src/**/*.java']),
+  tests = [
+    ':tests',
+  ],
+  licenses = [
+    'NOTICE',
+  ],
   visibility = [
     'PUBLIC',
   ],
@@ -15,6 +21,9 @@ java_library(
     ':aosp',
     '//third-party/java/junit:junit',
   ],
+  licenses = [
+    'NOTICE',
+  ],
 )
 
 java_test(
@@ -26,7 +35,7 @@ java_test(
     ':testutils',
     '//third-party/java/junit:junit',
   ],
-  source_under_test = [
-    ':aosp',
+  licenses = [
+    'NOTICE',
   ],
 )

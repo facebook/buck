@@ -17,6 +17,7 @@
 package com.facebook.buck.zip;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -55,7 +56,7 @@ public class ZipDescription implements Description<ZipDescription.Arg> {
         args.srcs);
   }
 
-  public class Arg {
+  public class Arg extends AbstractDescriptionArg {
     public Optional<String> out;
     public ImmutableSortedSet<SourcePath> srcs;
 

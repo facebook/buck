@@ -2,6 +2,9 @@ python_library(
   name = 'pywatchman',
   base_module = '',
   srcs = glob(['pywatchman/*.py']),
+  licenses = [
+    'LICENSE',
+  ],
   visibility = ['PUBLIC'],
 )
 
@@ -11,6 +14,9 @@ python_library(
 zip_file(
   name = 'pywatchman-archive',
   srcs = glob(['pywatchman/*.py']),
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     'PUBLIC',
   ],

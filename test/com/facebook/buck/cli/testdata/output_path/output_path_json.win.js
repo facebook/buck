@@ -1,0 +1,18 @@
+[
+{
+  "bash":null,
+  "buck.base_path":"",
+  "buck.direct_dependencies":[],
+  "buck.outputPath":"buck-out\\gen\\test\\test-output",
+  "buck.type":"genrule",
+  "cmd":null,
+  "cmdExe":null,
+  "executable":null,
+  "licenses":[],
+  "name":"test",
+  "out":"test-output",
+  "srcs":[],
+  "tests":[],
+  "visibility":[]
+}
+]

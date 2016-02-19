@@ -13,6 +13,7 @@
   "exportedDeps": [],
   "extraArguments": [],
   "generatedSymbols": [],
+  "licenses": [],
   "javac": null,
   "javacJar": null,
   "javaVersion": null,

@@ -6,6 +6,8 @@ genrule(
   cmd = None,
   cmdExe = None,
   executable = None,
+  licenses = [
+  ],
   out = "baz.txt",
   srcs = [
     "foo.txt",
@@ -21,6 +23,8 @@ genrule(
 
 keystore(
   name = "debug_keystore",
+  licenses = [
+  ],
   properties = "debug.keystore.properties",
   store = "debug.keystore",
   deps = [

@@ -1,6 +1,10 @@
 prebuilt_jar(
   name = 'jetty-all',
   binary_jar = 'jetty-all-9.2.10.v20150310.jar',
+  licenses = [
+    'license-epl.html',
+    'LICENSE-APACHE',
+  ],
 #  source_jar = ':jetty-source',
 )
 

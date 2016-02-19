@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -78,7 +79,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
   }
 
   @SuppressFieldNotInitialized
-  public class Arg {
+  public class Arg extends AbstractDescriptionArg {
     public URI url;
     public String sha1;
     public Optional<String> out;

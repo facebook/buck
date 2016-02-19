@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,7 +64,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
    * Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}.
    * @param <T> the type of the TargetNode.
    */
-  abstract class TypedIjLibraryRule<T> implements IjLibraryRule {
+  abstract class TypedIjLibraryRule<T extends AbstractDescriptionArg> implements IjLibraryRule {
     abstract BuildRuleType getType();
 
     abstract void apply(TargetNode<T> targetNode, IjLibrary.Builder library);

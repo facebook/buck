@@ -253,7 +253,7 @@ public class TargetNodeVisibilityTest {
       return new FakeBuildRule(params, new SourcePathResolver(resolver));
     }
 
-    public static class FakeArg {
+    public static class FakeArg extends AbstractDescriptionArg {
 
     }
   }

@@ -8,6 +8,9 @@ python_library(
     # frontend manually finds the `pkg_resources` locations.
     #'//third-party/py/setuptools:pkg_resources',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     'PUBLIC',
   ],

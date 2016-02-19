@@ -6,6 +6,8 @@ genrule(
   cmd = None,
   cmdExe = None,
   executable = None,
+  licenses = [
+  ],
   out = "baz.txt",
   srcs = [
     "foo.txt",

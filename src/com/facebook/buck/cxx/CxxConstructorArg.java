@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -32,7 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 
 @SuppressFieldNotInitialized
-public class CxxConstructorArg implements HasTests {
+public class CxxConstructorArg extends AbstractDescriptionArg implements HasTests {
 
   public Optional<ImmutableSortedSet<SourceWithFlags>> srcs;
   public Optional<PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>>> platformSrcs;

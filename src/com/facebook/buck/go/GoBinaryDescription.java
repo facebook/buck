@@ -18,6 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -73,7 +74,7 @@ public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
     public Optional<List<String>> compilerFlags;
     public Optional<List<String>> linkerFlags;

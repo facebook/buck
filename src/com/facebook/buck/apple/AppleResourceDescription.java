@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -65,7 +66,7 @@ public class AppleResourceDescription implements Description<AppleResourceDescri
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractDescriptionArg {
     public Set<SourcePath> dirs;
     public Set<SourcePath> files;
     public Optional<Set<SourcePath>> variants;

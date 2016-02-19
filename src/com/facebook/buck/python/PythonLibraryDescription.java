@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonLibraryDescription.Arg;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -40,7 +41,7 @@ public class PythonLibraryDescription implements Description<Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("python_library");
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractDescriptionArg {
     public Optional<SourceList> srcs;
     public Optional<PatternMatchedCollection<SourceList>> platformSrcs;
     public Optional<SourceList> resources;

@@ -8,6 +8,7 @@
   "cmd":null,
   "cmdExe":null,
   "executable":null,
+  "licenses":[],
   "name":"test",
   "out":"test-output",
   "srcs":[],

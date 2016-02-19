@@ -5,6 +5,9 @@ prebuilt_jar(
     '//third-party/java/cglib:cglib',
     '//third-party/java/objenesis:objenesis',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//test/...',
   ],

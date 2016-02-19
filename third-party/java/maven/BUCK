@@ -2,6 +2,9 @@ prebuilt_jar(
   name = 'maven-repository-metadata',
   binary_jar = 'maven-repository-metadata-3.2.5.jar',
   source_jar = 'maven-repository-metadata-3.2.5-sources.jar',
+  licenses = [
+    'LICENSE',
+  ],
   deps = [
     '//third-party/java/plexus:plexus-utils',
   ],
@@ -11,6 +14,9 @@ prebuilt_jar(
   name = 'maven-model-builder',
   binary_jar = 'maven-model-builder-3.2.5.jar',
   source_jar = 'maven-model-builder-3.2.5-sources.jar',
+  licenses = [
+    'LICENSE',
+  ],
   deps = [
     ':maven-model',
     '//third-party/java/plexus:plexus-component-annotations',
@@ -26,6 +32,9 @@ prebuilt_jar(
   name = 'maven-model',
   binary_jar = 'maven-model-3.2.5.jar',
   source_jar = 'maven-model-3.2.5-sources.jar',
+  licenses = [
+    'LICENSE',
+  ],
   deps = [
     '//third-party/java/plexus:plexus-utils',
   ],
@@ -39,6 +48,9 @@ prebuilt_jar(
   name = 'maven-aether-provider',
   binary_jar = 'maven-aether-provider-3.2.5.jar',
   source_jar = 'maven-aether-provider-3.2.5-sources.jar',
+  licenses = [
+    'LICENSE',
+  ],
   deps = [
     ':maven-model',
     ':maven-model-builder',

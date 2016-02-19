@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
@@ -42,7 +43,7 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
   }
 
   @Override
-  public <T> BuildRule transform(
+  public <T extends AbstractDescriptionArg> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
       TargetNode<T> targetNode) throws NoSuchBuildTargetException {

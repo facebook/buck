@@ -18,6 +18,7 @@ package com.facebook.buck.dotnet;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -75,7 +76,7 @@ public class CSharpLibraryDescription implements Description<CSharpLibraryDescri
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractDescriptionArg {
     public FrameworkVersion frameworkVer;
     public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableMap<String, SourcePath>> resources;

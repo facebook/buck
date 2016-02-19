@@ -2,6 +2,9 @@ prebuilt_jar(
   name = 'jimfs',
   binary_jar = 'jimfs-1.0.jar',
   source_jar = 'jimfs-1.0-sources.jar',
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//test/...',
   ],

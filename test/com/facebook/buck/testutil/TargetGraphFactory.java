@@ -18,6 +18,7 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
@@ -31,9 +32,10 @@ public class TargetGraphFactory {
 
   private TargetGraphFactory() {}
 
-  public static TargetGraph newInstance(Iterable<TargetNode<?>> nodes) {
-    Map<BuildTarget, TargetNode<?>> builder = new HashMap<>();
-    for (TargetNode<?> node : nodes) {
+  public static TargetGraph newInstance(
+      Iterable<TargetNode<? extends AbstractDescriptionArg>> nodes) {
+    Map<BuildTarget, TargetNode<? extends AbstractDescriptionArg>> builder = new HashMap<>();
+    for (TargetNode<? extends AbstractDescriptionArg> node : nodes) {
       builder.put(node.getBuildTarget(), node);
       BuildTarget unflavoredTarget =
           BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
@@ -41,10 +43,12 @@ public class TargetGraphFactory {
         builder.put(unflavoredTarget, node);
       }
     }
-    ImmutableMap<BuildTarget, TargetNode<?>> map = ImmutableMap.copyOf(builder);
+    ImmutableMap<BuildTarget, TargetNode<? extends AbstractDescriptionArg>> map =
+        ImmutableMap.copyOf(builder);
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    for (TargetNode<?> node : map.values()) {
+    MutableDirectedGraph<TargetNode<? extends AbstractDescriptionArg>> graph =
+        new MutableDirectedGraph<>();
+    for (TargetNode<? extends AbstractDescriptionArg> node : map.values()) {
       graph.addNode(node);
       for (BuildTarget dep : node.getDeps()) {
         graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
@@ -53,7 +57,8 @@ public class TargetGraphFactory {
     return new TargetGraph(graph, map);
   }
 
-  public static TargetGraph newInstance(TargetNode<?>... nodes) {
+  @SafeVarargs
+  public static TargetGraph newInstance(TargetNode<? extends AbstractDescriptionArg>... nodes) {
     return newInstance(ImmutableSet.copyOf(nodes));
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -69,7 +70,7 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
     public Optional<Set<String>> features;
     public Optional<Set<String>> rustcFlags;

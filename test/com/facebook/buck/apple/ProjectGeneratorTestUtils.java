@@ -35,6 +35,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -64,7 +65,8 @@ public final class ProjectGeneratorTestUtils {
    */
   private ProjectGeneratorTestUtils() {}
 
-  public static <T> T createDescriptionArgWithDefaults(Description<T> description) {
+  public static <T extends AbstractDescriptionArg> T
+  createDescriptionArgWithDefaults(Description<T> description) {
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       Object value;

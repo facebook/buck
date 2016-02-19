@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -96,7 +97,7 @@ public class AndroidInstrumentationTestDescription
 
 
   @SuppressFieldNotInitialized
-  public static class Arg implements HasSourceUnderTest {
+  public static class Arg extends AbstractDescriptionArg implements HasSourceUnderTest {
     public BuildTarget apk;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<String>> contacts;

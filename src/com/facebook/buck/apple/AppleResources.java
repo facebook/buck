@@ -21,6 +21,7 @@ import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -63,7 +64,7 @@ public class AppleResources {
         .toSet();
   }
 
-  public static <T> void collectResourceDirsAndFiles(
+  public static <T extends AbstractDescriptionArg> void collectResourceDirsAndFiles(
       TargetGraph targetGraph,
       TargetNode<T> targetNode,
       ImmutableSet.Builder<SourcePath> resourceDirs,

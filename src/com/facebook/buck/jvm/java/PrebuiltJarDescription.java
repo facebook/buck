@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -47,7 +48,7 @@ import java.nio.file.Path;
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg> {
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractDescriptionArg {
     public SourcePath binaryJar;
     public Optional<SourcePath> sourceJar;
     public Optional<SourcePath> gwtJar;

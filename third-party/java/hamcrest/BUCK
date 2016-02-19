@@ -5,6 +5,9 @@ java_library(
     ':java-hamcrest',
     ':hamcrest-junit',
   ],
+  licenses = [
+    'LICENSE.txt',
+  ],
   visibility = [
     '//test/...',
     '//third-party/java/junit:junit',
@@ -14,6 +17,9 @@ java_library(
 prebuilt_jar(
   name = 'java-hamcrest',
   binary_jar = 'java-hamcrest-2.0.0.0.jar',
+  licenses = [
+    'LICENSE.txt',
+  ],
   visibility = [
     '//test/...',
     '//third-party/java/junit:junit',
@@ -25,6 +31,9 @@ prebuilt_jar(
   binary_jar = 'hamcrest-junit-2.0.0.0.jar',
   deps = [
     ':java-hamcrest',
+  ],
+  licenses = [
+    'LICENSE.txt',
   ],
   visibility = [
     '//test/...',

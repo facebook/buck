@@ -456,6 +456,8 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 <h2>Arguments</h2>
 <ul class="{css arglist}">
   {$args|noAutoescape}
+  {call buck.visibility_arg /}
+  {call buck.licenses_arg /}
 </ul>
 
 {if $examples}
@@ -801,8 +803,25 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .cmd_query}
+{call .cmd_link}{param name : 'query' /}{/call}
+{/template}
+
+/***/
 {template .concept_buckconfig}
 <a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>
+{/template}
+
+/***/
+{template .licenses_arg}
+{call buck.arg}
+  {param name: 'licenses' /}
+  {param default: '[]' /}
+  {param desc}
+  Set of license files for this library.  To get the list of license files for a given{sp}
+  {call buck.build_rule /} and all of its dependencies, you can use {call buck.cmd_query /}.
+  {/param}
+{/call}
 {/template}
 
 /***/

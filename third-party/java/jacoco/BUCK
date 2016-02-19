@@ -16,17 +16,26 @@ prebuilt_jar(
   name = 'core',
   binary_jar = 'org.jacoco.core-0.7.5.201505241946.jar',
   source_jar = 'org.jacoco.core-0.7.5.201505241946-sources.jar',
+  licenses = [
+    'license.html',
+  ],
 )
 
 prebuilt_jar(
   name = 'report',
   binary_jar = 'org.jacoco.report-0.7.5.201505241946.jar',
   source_jar = 'org.jacoco.report-0.7.5.201505241946-sources.jar',
+  licenses = [
+    'license.html',
+  ],
 )
 
 prebuilt_jar(
   name = 'agent',
   binary_jar = 'jacocoagent.jar',
+  licenses = [
+    'license.html',
+  ],
   visibility = [
     'PUBLIC',
   ],

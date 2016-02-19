@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -74,7 +75,7 @@ public class GoLibraryDescription implements Description<GoLibraryDescription.Ar
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements HasTests {
+  public static class Arg extends AbstractDescriptionArg implements HasTests {
     public ImmutableSet<SourcePath> srcs;
     public Optional<List<String>> compilerFlags;
     public Optional<String> packageName;

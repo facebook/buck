@@ -4,5 +4,8 @@ prebuilt_jar(
   deps = [
     '//third-party/java/jna:jna',
   ],
+  licenses = [
+    'LICENSE',
+  ],
   visibility = ['PUBLIC'],
 )

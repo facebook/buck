@@ -5,6 +5,9 @@ prebuilt_jar(
   deps = [
     '//third-party/java/okio:okio',
   ],
+  licenses = [
+    'LICENSE.txt',
+  ],
   visibility = [
     'PUBLIC',
   ],

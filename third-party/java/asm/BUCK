@@ -5,6 +5,9 @@ prebuilt_jar(
   name = 'asm',
   binary_jar = 'asm-debug-all-5.0.3.jar',
   source_jar = 'asm-5.0.3-src.zip',
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     'PUBLIC',
   ],

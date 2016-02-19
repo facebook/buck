@@ -4,6 +4,9 @@ prebuilt_jar(
   deps = [
     ':java-allocation-instrumenter',
   ],
+  licenses = [
+    'LICENSE.txt',
+  ],
   visibility = [
     '//test/...',
   ],
@@ -17,6 +20,9 @@ genrule(
   cmd = '$(exe //third-party/java/jarjar:jarjar) process ' \
       '$SRCDIR/jarjar-rules.txt $(location :caliper-all) $OUT',
   out = 'caliper_shaded.jar',
+  licenses = [
+    'LICENSE.txt',
+  ],
 )
 
 
@@ -26,6 +32,9 @@ prebuilt_jar(
   deps = [
     ':java-allocation-instrumenter',
   ],
+  licenses = [
+    'LICENSE.txt',
+  ],
   visibility = [
     '//test/...',
   ],
@@ -34,4 +43,7 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'java-allocation-instrumenter',
   binary_jar = 'java-allocation-instrumenter-3.0.jar',
+  licenses = [
+    'LICENSE.txt',
+  ],
 )

@@ -126,7 +126,7 @@ public class TargetNodeTest {
             BuildTargetFactory.newInstance("//example/path:two")));
   }
 
-  public class Arg {
+  public class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<BuildTarget> deps;
     public ImmutableSortedSet<SourcePath> sourcePaths;
     public Optional<SourceWithFlags> appleSource;

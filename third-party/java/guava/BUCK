@@ -2,5 +2,8 @@ prebuilt_jar(
   name = 'guava',
   binary_jar = 'guava-19.0.jar',
   source_jar = 'guava-19.0-sources.jar',
+  licenses = [
+    'COPYING',
+  ],
   visibility = ['PUBLIC'],
 )

@@ -91,7 +91,10 @@ public class KnownBuildRuleTypesTest {
 
   private static BuildRuleParams buildRuleParams;
 
-  private static class TestDescription implements Description<Object> {
+  private static class TestDescription implements Description<TestDescription.Arg> {
+
+    static class Arg extends AbstractDescriptionArg {
+    };
 
     public static final BuildRuleType TYPE = BuildRuleType.of("known_rule_test");
 
@@ -111,12 +114,12 @@ public class KnownBuildRuleTypesTest {
     }
 
     @Override
-    public Object createUnpopulatedConstructorArg() {
-      return new Object();
+    public Arg createUnpopulatedConstructorArg() {
+      return new Arg();
     }
 
     @Override
-    public <A> BuildRule createBuildRule(
+    public <A extends Arg> BuildRule createBuildRule(
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,

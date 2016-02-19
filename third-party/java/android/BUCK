@@ -1,3 +1,5 @@
+# TODO(t10086051) track license information here
+
 prebuilt_jar(
   name = 'sdklib',
   binary_jar = 'sdklib.jar',

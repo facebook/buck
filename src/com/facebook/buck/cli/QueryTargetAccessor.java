@@ -21,6 +21,7 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;
@@ -42,7 +43,7 @@ public class QueryTargetAccessor {
 
   private QueryTargetAccessor() { }
 
-  public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
+  public static <T extends AbstractDescriptionArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TargetNode<T> node,
       String attribute)
       throws QueryException {
@@ -75,7 +76,7 @@ public class QueryTargetAccessor {
   /**
    * Filters the objects in the given attribute that satisfy the given predicate.
    */
-  public static <T> ImmutableSet<Object> filterAttributeContents(
+  public static <T extends AbstractDescriptionArg> ImmutableSet<Object> filterAttributeContents(
       TargetNode<T> node,
       String attribute,
       final Predicate<Object> predicate)

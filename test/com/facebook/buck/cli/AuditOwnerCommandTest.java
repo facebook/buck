@@ -35,6 +35,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -96,7 +97,7 @@ public class AuditOwnerCommandTest {
       return new FakeBuildRule(params, new SourcePathResolver(resolver));
     }
 
-    public static class FakeArg {
+    public static class FakeArg extends AbstractDescriptionArg {
       public ImmutableSet<Path> inputs;
     }
   }

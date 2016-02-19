@@ -1,6 +1,9 @@
 prebuilt_jar(
   name = 'cglib',
   binary_jar = 'cglib-nodep-2.2.jar',
+  licenses = [
+    'LICENSE',
+  ],
   visibility = [
     '//test/com/facebook/buck/rules:testutil',
     '//third-party/java/easymock:easymock',

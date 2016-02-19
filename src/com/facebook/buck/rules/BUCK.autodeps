@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8e62ceb665f33884587214cd1e0212bd552c9af2 #@#
+#@# GENERATED FILE: DO NOT MODIFY b954790ba87b8698855ab2564ea34f82bfff9475 #@#
 {
   "build_event" : [
     "//src/com/facebook/buck/event:event",
@@ -31,6 +31,7 @@
     "//third-party/java/gson:gson",
     "//third-party/java/guava:guava",
     "//third-party/java/immutables:processor",
+    "//third-party/java/infer-annotations:infer-annotations",
     "//third-party/java/jackson:jackson-annotations",
     "//third-party/java/jackson:jackson-core",
     "//third-party/java/jackson:jackson-databind",
