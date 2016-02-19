@@ -18,6 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -64,22 +65,22 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
         compileParams.getBuildTarget());
   }
 
-  @Override
-  public NativeLinkableInput getLinkableInput() {
+  private NativeLinkableInput getLinkableInput(boolean isBytecode) {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     // Add linker flags.
     inputBuilder.addAllArgs(StringArg.from(linkerFlags));
 
     // Add arg and input for static library.
+    UnflavoredBuildTarget staticBuildTarget = staticLibraryTarget.getUnflavoredBuildTarget();
     inputBuilder.addArgs(
         new SourcePathArg(
             getResolver(),
             new BuildTargetSourcePath(
                 ocamlLibraryBuild.getBuildTarget(),
-                OCamlBuildContext.getNativeOutputPath(
-                    staticLibraryTarget.getUnflavoredBuildTarget(),
-                    /* isLibrary */ true))));
+                isBytecode
+                ? OCamlBuildContext.getBytecodeOutputPath(staticBuildTarget, /* isLibrary */ true)
+                : OCamlBuildContext.getNativeOutputPath(staticBuildTarget, /* isLibrary */ true))));
 
     // Add args and inputs for C object files.
     for (SourcePath objFile : objFiles) {
@@ -87,6 +88,16 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
     }
 
     return inputBuilder.build();
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkableInput() {
+    return getLinkableInput(false);
+  }
+
+  @Override
+  public NativeLinkableInput getBytecodeLinkableInput() {
+    return getLinkableInput(true);
   }
 
   @Override
