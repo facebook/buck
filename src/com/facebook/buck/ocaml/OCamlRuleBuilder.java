@@ -124,6 +124,7 @@ public class OCamlRuleBuilder {
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
       boolean isLibrary,
+      boolean bytecodeOnly,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -140,6 +141,7 @@ public class OCamlRuleBuilder {
           resolver,
           srcs,
           isLibrary,
+          bytecodeOnly,
           argFlags,
           linkerFlags);
     } else {
@@ -149,6 +151,7 @@ public class OCamlRuleBuilder {
           resolver,
           srcs,
           isLibrary,
+          bytecodeOnly,
           argFlags,
           linkerFlags);
     }
@@ -203,6 +206,7 @@ public class OCamlRuleBuilder {
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
       boolean isLibrary,
+      boolean bytecodeOnly,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps;
@@ -295,7 +299,8 @@ public class OCamlRuleBuilder {
         pathResolver,
         ocamlContext,
         ocamlBuckConfig.getCCompiler(),
-        ocamlBuckConfig.getCxxCompiler());
+        ocamlBuckConfig.getCxxCompiler(),
+        bytecodeOnly);
     resolver.addToIndex(ocamlLibraryBuild);
 
     if (isLibrary) {
@@ -342,6 +347,7 @@ public class OCamlRuleBuilder {
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
       boolean isLibrary,
+      boolean bytecodeOnly,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps;
@@ -444,7 +450,8 @@ public class OCamlRuleBuilder {
         mlInput,
         cInput,
         ocamlBuckConfig.getCCompiler(),
-        ocamlBuckConfig.getCxxCompiler());
+        ocamlBuckConfig.getCxxCompiler(),
+        bytecodeOnly);
 
     OCamlGeneratedBuildRules result = generator.generate();
 

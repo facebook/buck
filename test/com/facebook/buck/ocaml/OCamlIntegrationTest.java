@@ -19,6 +19,7 @@ package com.facebook.buck.ocaml;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createOCamlLinkTarget;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createStaticLibraryBuildTarget;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -319,7 +320,33 @@ public class OCamlIntegrationTest {
   }
 
   @Test
-  public void testPrebuiltLibrary() throws IOException {
+  public void testPrebuiltLibraryBytecodeOnly() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "ocaml",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//ocaml_ext_bc:ocaml_ext");
+    BuildTarget binary = createOCamlLinkTarget(target);
+    BuildTarget bytecode = OCamlBuildRulesGenerator.addBytecodeFlavor(binary);
+    BuildTarget libplus = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//ocaml_ext_bc:plus");
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, bytecode, libplus);
+
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    assertFalse(buildLog.getAllTargets().contains(binary));
+    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(bytecode.toString());
+  }
+
+  @Test
+  public void testPrebuiltLibraryMac() throws IOException {
     if (Platform.detect() == Platform.MACOS) {
       ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
           this,
@@ -331,21 +358,29 @@ public class OCamlIntegrationTest {
           workspace.getDestPath(),
           "//ocaml_ext_mac:ocaml_ext");
       BuildTarget binary = createOCamlLinkTarget(target);
+      BuildTarget bytecode = OCamlBuildRulesGenerator.addBytecodeFlavor(binary);
       BuildTarget libplus = BuildTargetFactory.newInstance(
           workspace.getDestPath(),
           "//ocaml_ext_mac:plus");
-      ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, libplus);
+      ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, bytecode, libplus);
 
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       BuckBuildLog buildLog = workspace.getBuildLog();
-      assertTrue(buildLog.getAllTargets().containsAll(targets));
+      for (BuildTarget t : targets) {
+        assertTrue(
+            String.format("Expected %s to be built", t.toString()),
+            buildLog.getAllTargets().contains(t));
+      }
       buildLog.assertTargetBuiltLocally(target.toString());
       buildLog.assertTargetBuiltLocally(binary.toString());
 
       workspace.resetBuildLogFile();
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      buildLog = workspace.getBuildLog();
-      assertTrue(buildLog.getAllTargets().containsAll(targets));
+      for (BuildTarget t : targets) {
+        assertTrue(
+            String.format("Expected %s to be built", t.toString()),
+            buildLog.getAllTargets().contains(t));
+      }
       buildLog.assertTargetHadMatchingRuleKey(target.toString());
       buildLog.assertTargetHadMatchingRuleKey(binary.toString());
 

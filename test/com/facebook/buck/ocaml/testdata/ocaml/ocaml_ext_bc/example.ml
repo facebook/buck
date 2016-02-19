@@ -1,0 +1,1 @@
+let go () = Plus.plus2 1 2

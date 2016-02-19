@@ -1,0 +1,30 @@
+ocaml_binary(
+    name = 'ocaml_ext',
+    srcs = [
+        'main_plus.ml',
+    ],
+    deps = [
+        ':example',
+    ],
+    bytecode_only = True,
+)
+
+ocaml_library(
+    name = 'example',
+    srcs = [
+        'example.ml',
+    ],
+    deps = [
+        ':plus',
+    ],
+    bytecode_only = True,
+)
+
+prebuilt_ocaml_library(
+    name = 'plus',
+    bytecode_lib = 'libplus_lib.cma',
+    visibility = [
+        'PUBLIC',
+    ],
+    bytecode_only = True,
+)
