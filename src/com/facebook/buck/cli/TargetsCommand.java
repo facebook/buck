@@ -807,7 +807,7 @@ public class TargetsCommand extends AbstractCommand {
     // Hash each target's rule description and contents of any files.
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
         TargetGraphHashing.hashTargetGraph(
-            params.getCell().getFilesystem(),
+            params.getCell(),
             targetGraphWithTests,
             fileHashLoader,
             matchingBuildTargetsWithTests);

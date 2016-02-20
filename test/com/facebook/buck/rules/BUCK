@@ -109,6 +109,7 @@ java_test(
     '//src/com/facebook/buck/python:support',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:target_graph_hashing',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/rules/coercer:coercer',
     '//src/com/facebook/buck/rules/coercer:types',

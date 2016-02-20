@@ -1,0 +1,7 @@
+cxx_library(
+  name = 'cxxlib2',
+  srcs = ['diff.cpp'],
+  exported_headers = ['diff.hpp'],
+  compiler_flags = ['-g'],
+  visibility = ['PUBLIC'],
+)

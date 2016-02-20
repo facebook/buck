@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d80c20fecd52cae4dde86fc6ea2bde90748515de #@#
+#@# GENERATED FILE: DO NOT MODIFY c29173e64372065ccf585b43c87fe8e4d71de534 #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -53,6 +53,7 @@
     "//src/com/facebook/buck/rules:build_rule",
     "//src/com/facebook/buck/rules:rule_key",
     "//src/com/facebook/buck/rules:rules",
+    "//src/com/facebook/buck/rules:target_graph_hashing",
     "//src/com/facebook/buck/rules:types",
     "//src/com/facebook/buck/rules/coercer:coercer",
     "//src/com/facebook/buck/rules/coercer:types",

@@ -1,0 +1,10 @@
+cxx_library(
+  name = 'cxxlib',
+  srcs = ['sum.cpp'],
+  exported_headers = ['sum.hpp'],
+  compiler_flags = ['-g'],
+  exported_deps = [
+    '@ternary//:cxxlib2'
+  ],
+  visibility = ['PUBLIC'],
+)

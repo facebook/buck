@@ -104,6 +104,20 @@ public class InterCellIntegrationTest {
   }
 
   @Test
+  public void shouldBeAbleToUseTargetsCommandXCell() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
+
+    // Everything is as it should be.
+    // Otherwise a HumanReadableException would be thrown
+  }
+
+  @Test
   public void shouldBeAbleToUseACxxLibraryXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
@@ -114,6 +128,27 @@ public class InterCellIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
 
+    result.assertSuccess();
+  }
+
+  @Test
+  public void shouldBeAbleToUseMultipleXCell() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    ProjectWorkspace primary = createWorkspace("inter-cell/multi-cell/primary");
+    primary.setUp();
+    ProjectWorkspace secondary = createWorkspace("inter-cell/multi-cell/secondary");
+    secondary.setUp();
+    ProjectWorkspace ternary = createWorkspace("inter-cell/multi-cell/ternary");
+    ternary.setUp();
+    registerCell(secondary, "ternary", ternary);
+    registerCell(primary, "secondary", secondary);
+
+    primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
+    secondary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib");
+    ternary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib2");
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
     result.assertSuccess();
   }
 

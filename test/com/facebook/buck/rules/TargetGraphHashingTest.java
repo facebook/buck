@@ -46,13 +46,15 @@ import java.util.Map;
 public class TargetGraphHashingTest {
 
   @Test
-  public void emptyTargetGraphHasEmptyHashes() throws IOException {
+  public void emptyTargetGraphHasEmptyHashes() throws IOException, InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    TestCellBuilder cellBuilder = new TestCellBuilder()
+      .setFilesystem(projectFilesystem);
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
         TargetGraphHashing.hashTargetGraph(
-            projectFilesystem,
+            cellBuilder.build(),
             targetGraph,
             new NullFileHashCache(),
             ImmutableList.<BuildTarget>of())
@@ -61,8 +63,10 @@ public class TargetGraphHashingTest {
   }
 
   @Test
-  public void hashChangesWhenSrcContentChanges() throws IOException {
+  public void hashChangesWhenSrcContentChanges() throws IOException, InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    TestCellBuilder cellBuilder = new TestCellBuilder()
+      .setFilesystem(projectFilesystem);
 
     TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//foo:lib"),
@@ -79,13 +83,13 @@ public class TargetGraphHashingTest {
             projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
 
     Map<BuildTarget, HashCode> baseResult = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         targetGraph,
         baseCache,
         ImmutableList.of(node.getBuildTarget()));
 
     Map<BuildTarget, HashCode> modifiedResult = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         targetGraph,
         modifiedCache,
         ImmutableList.of(node.getBuildTarget()));
@@ -100,8 +104,11 @@ public class TargetGraphHashingTest {
   }
 
   @Test
-  public void twoNodeIndependentRootsTargetGraphHasExpectedHashes() throws IOException {
+  public void twoNodeIndependentRootsTargetGraphHasExpectedHashes()
+      throws IOException, InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    TestCellBuilder cellBuilder = new TestCellBuilder()
+      .setFilesystem(projectFilesystem);
 
     TargetNode<?> nodeA = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//foo:lib"),
@@ -121,19 +128,19 @@ public class TargetGraphHashingTest {
             projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultsA = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         targetGraphA,
         fileHashCache,
         ImmutableList.of(nodeA.getBuildTarget()));
 
     Map<BuildTarget, HashCode> resultsB = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         targetGraphB,
         fileHashCache,
         ImmutableList.of(nodeB.getBuildTarget()));
 
     Map<BuildTarget, HashCode> commonResults = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         commonTargetGraph,
         fileHashCache,
         ImmutableList.of(nodeA.getBuildTarget(), nodeB.getBuildTarget()));
@@ -171,8 +178,10 @@ public class TargetGraphHashingTest {
   }
 
   @Test
-  public void hashChangesForDependentNodeWhenDepsChange() throws IOException {
+  public void hashChangesForDependentNodeWhenDepsChange() throws IOException, InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    TestCellBuilder cellBuilder = new TestCellBuilder()
+      .setFilesystem(projectFilesystem);
 
     BuildTarget nodeTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//dep:lib");
@@ -195,13 +204,13 @@ public class TargetGraphHashingTest {
             projectFilesystem.resolve("dep/DepLib.java"), HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultA = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         targetGraphA,
         fileHashCache,
         ImmutableList.of(nodeTarget));
 
     Map<BuildTarget, HashCode> resultB = TargetGraphHashing.hashTargetGraph(
-        projectFilesystem,
+        cellBuilder.build(),
         targetGraphB,
         fileHashCache,
         ImmutableList.of(nodeTarget));

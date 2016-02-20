@@ -56,14 +56,14 @@ public class TargetGraphHashing {
    * build targets and their dependencies.
    */
   public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
-      ProjectFilesystem projectFilesystem,
+      Cell rootCell,
       TargetGraph targetGraph,
       FileHashLoader fileHashLoader,
       Iterable<BuildTarget> roots) throws IOException {
     try {
       Map<BuildTarget, HashCode> buildTargetHashes = new HashMap<>();
       TargetGraphHashingTraversal traversal = new TargetGraphHashingTraversal(
-          projectFilesystem,
+          rootCell,
           targetGraph,
           fileHashLoader,
           buildTargetHashes);
@@ -76,17 +76,17 @@ public class TargetGraphHashing {
 
   private static class TargetGraphHashingTraversal
       extends AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>> {
-    private final ProjectFilesystem projectFilesystem;
+    private final Cell rootCell;
     private final TargetGraph targetGraph;
     private final FileHashLoader fileHashLoader;
     private final Map<BuildTarget, HashCode> buildTargetHashes;
 
     public TargetGraphHashingTraversal(
-        ProjectFilesystem projectFilesystem,
+        Cell rootCell,
         TargetGraph targetGraph,
         FileHashLoader fileHashLoader,
         Map<BuildTarget, HashCode> buildTargetHashes) {
-      this.projectFilesystem = projectFilesystem;
+      this.rootCell = rootCell;
       this.targetGraph = targetGraph;
       this.fileHashLoader = fileHashLoader;
       this.buildTargetHashes = buildTargetHashes;
@@ -126,11 +126,13 @@ public class TargetGraphHashing {
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
 
+      ProjectFilesystem cellFilesystem = rootCell.getCell(node.getBuildTarget()).getFilesystem();
+
       // Hash the contents of all input files and directories.
       PathHashing.hashPaths(
           hasher,
           fileHashLoader,
-          projectFilesystem,
+          cellFilesystem,
           ImmutableSortedSet.copyOf(node.getInputs()));
 
       // We've already visited the dependencies (this is a depth-first traversal), so
