@@ -1,6 +1,6 @@
 prebuilt_jar(
   name = 'jackson-datatype-guava',
-  binary_jar = 'jackson-datatype-guava-2.0.6.jar',
+  binary_jar = 'jackson-datatype-guava-2.5.5.jar',
   licenses = [
     'LICENSE',
   ],
@@ -8,4 +8,3 @@ prebuilt_jar(
     'PUBLIC',
   ],
 )
-
