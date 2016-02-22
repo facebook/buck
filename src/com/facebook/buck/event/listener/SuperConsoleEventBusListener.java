@@ -39,6 +39,7 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestStatusMessage;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
@@ -726,7 +727,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         finished.getThreadId(),
         Optional.<TestSummaryEvent>absent());
     TestResultSummary testResult = finished.getTestResultSummary();
-    switch (testResult.getType()) {
+    ResultType resultType = testResult.getType();
+    switch (resultType) {
       case SUCCESS:
         testPasses.incrementAndGet();
         break;
