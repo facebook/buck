@@ -6,6 +6,7 @@ java_test(
     '//src/com/facebook/buck/event:event',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
   ],
   visibility = [

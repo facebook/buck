@@ -18,6 +18,7 @@ package com.facebook.buck.counters;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
 
 import org.immutables.value.Value;
 
@@ -26,5 +27,6 @@ import org.immutables.value.Value;
 abstract class AbstractCounterSnapshot {
   abstract String getCategory();
   abstract ImmutableMap<String, String> getTags();
+  abstract ImmutableSetMultimap<String, String> getTagSets();
   abstract ImmutableMap<String, Long> getValues();
 }

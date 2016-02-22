@@ -78,6 +78,13 @@ public class CounterRegistryImpl implements CounterRegistry {
   }
 
   @Override
+  public TagSetCounter newTagSetCounter(
+      String category, String name, ImmutableMap<String, String> tags) {
+    return registerCounter(
+        new TagSetCounter(category, name, tags));
+  }
+
+  @Override
   public void close() throws IOException {
     flushCountersFuture.cancel(false);
   }

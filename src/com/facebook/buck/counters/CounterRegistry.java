@@ -30,4 +30,9 @@ public interface CounterRegistry extends Closeable {
       String category,
       String name,
       ImmutableMap<String, String> tags);
+
+  TagSetCounter newTagSetCounter(
+      String category,
+      String name,
+      ImmutableMap<String, String> tags);
 }

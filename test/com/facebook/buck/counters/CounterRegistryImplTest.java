@@ -19,6 +19,7 @@ package com.facebook.buck.counters;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -81,6 +82,7 @@ public class CounterRegistryImplTest {
     try (CounterRegistryImpl registry = new CounterRegistryImpl(executor, eventBus)) {
       Assert.assertNotNull(registry.newIntegerCounter(CATEGORY, "counter1", TAGS));
       Assert.assertNotNull(registry.newSamplingCounter(CATEGORY, "counter2", TAGS));
+      Assert.assertNotNull(registry.newTagSetCounter(CATEGORY, "counter3", TAGS));
     }
   }
 
@@ -89,13 +91,22 @@ public class CounterRegistryImplTest {
     try (CounterRegistryImpl registry = new CounterRegistryImpl(executor, eventBus)) {
       IntegerCounter counter = registry.newIntegerCounter(CATEGORY, NAME, TAGS);
       counter.inc(42);
+      TagSetCounter tagSetCounter = registry.newTagSetCounter(CATEGORY, "TagSet_Counter", TAGS);
+      tagSetCounter.put("key1", "value1");
+      tagSetCounter.putAll(ImmutableSetMultimap.of("key2", "value2", "key3", "value3"));
       Assert.assertTrue(flushCountersRunnable.hasCaptured());
       flushCountersRunnable.getValue().run();
       Assert.assertTrue(countersFinishEvent.hasCaptured());
       CountersSnapshotEvent.Finished event =
           (CountersSnapshotEvent.Finished) countersFinishEvent.getValue();
-      Assert.assertEquals(1, event.getSnapshots().size());
+      Assert.assertEquals(2, event.getSnapshots().size());
       Assert.assertEquals(42, (long) event.getSnapshots().get(0).getValues().values().toArray()[0]);
+      Assert.assertEquals(
+          ImmutableSetMultimap.of(
+              "key1", "value1",
+              "key2", "value2",
+              "key3", "value3"),
+          event.getSnapshots().get(1).getTagSets());
     }
   }
 }
