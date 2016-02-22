@@ -111,6 +111,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
   }
 
+  public Preprocessor getPreprocessor() {
+    return preprocessor;
+  }
+
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     builder.setReflectively("preprocessor", preprocessor);
