@@ -16,10 +16,17 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Optional;
 
 public interface LuaConfig {
   Tool getLua(BuildRuleResolver resolver);
+  Optional<BuildTarget> getNativeStarterLibrary();
+  Optional<BuildTarget> getLuaCxxLibraryTarget();
+  AbstractCxxLibrary getLuaCxxLibrary(BuildRuleResolver resolver);
+  Optional<LuaBinaryDescription.StarterType> getStarterType();
   String getExtension();
 }

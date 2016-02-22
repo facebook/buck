@@ -178,6 +178,7 @@ java_immutables_library(
     'NoopBuildRule.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
+    'WriteStringTemplateRule.java',
     'SymlinkTree.java',
     'TargetGraphAndTargets.java',
     'TestRule.java',

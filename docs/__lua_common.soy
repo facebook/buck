@@ -1,0 +1,25 @@
+{namespace lua_common}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of <code>.lua</code> files included in this library.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .base_module_arg}
+{call buck.arg}
+  {param name: 'base_module' /}
+  {param default : 'None' /}
+  {param desc}
+  The package for which the given specified sources and resources should reside in their final
+  location in the top-level binary. If unset, the project relative directory that houses the
+  BUCK file is used.
+  {/param}
+{/call}
+{/template}

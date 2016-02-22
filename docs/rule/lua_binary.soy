@@ -1,0 +1,70 @@
+{namespace lua_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'lua_binary()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to build a executable that uses Lua sources
+      from all transitive lua_library() dependencies.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>lua_library()</code> rule is used to group together Lua sources
+to be packaged into a top-level {call buck.lua_binary /} rule.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'main_module' /}
+  {param desc}
+  The module which serves as the entry point for this rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  {call buck.lua_library /} rules to this binary will access.
+  {/param}
+{/call}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+lua_binary(
+  name = 'tailer',
+  main_module = 'tailer',
+  deps = [
+    ':tailerutils',
+  ],
+)
+
+lua_library(
+  name = 'tailerutils',
+  srcs = glob(['*.lua']),
+)
+</pre>{/literal}
+
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

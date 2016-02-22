@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 57049604ac985f4efcf2ac76320001e07fe1e8ac #@#
+#@# GENERATED FILE: DO NOT MODIFY b0640dff9e2ce030f619781fab46c73faac2bfce #@#
 {
   "build_event" : [
     "//src/com/facebook/buck/event:event",
@@ -64,7 +64,8 @@
     "//third-party/java/immutables:processor",
     "//third-party/java/infer-annotations:infer-annotations",
     "//third-party/java/jackson:jackson-annotations",
-    "//third-party/java/jsr:jsr305"
+    "//third-party/java/jsr:jsr305",
+    "//third-party/java/stringtemplate:stringtemplate"
   ],
   "target_graph_hashing" : [
     "//src/com/facebook/buck/graph:graph",

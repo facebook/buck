@@ -24,15 +24,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuildRuleResolverTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() throws Exception {
@@ -115,6 +123,29 @@ public class BuildRuleResolverTest {
     assertThat(rule, is(notNullValue()));
     assertThat(rule.getBuildTarget(), is(equalTo(target)));
     assertThat(rule, is(equalTo(existing)));
+  }
+
+  @Test
+  public void getRuleWithTypeMissingRule() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(Matchers.containsString("could not be resolved"));
+    resolver.getRuleWithType(BuildTargetFactory.newInstance("//:non-existent"), BuildRule.class);
+  }
+
+  @Test
+  public void getRuleWithTypeWrongType() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
+    TargetNode<?> library = builder.build();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    builder.build(resolver);
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(Matchers.containsString("not of expected type"));
+    resolver.getRuleWithType(BuildTargetFactory.newInstance("//foo:bar"), JavaBinary.class);
   }
 
 }

@@ -9,7 +9,8 @@ java_immutables_library(
     '//test/com/facebook/buck/lua:lua',
   ],
   resources = [
-    'run_inplace.lua.in',
+    'native-starter.cpp.in',
+    'starter.lua.in',
   ],
   autodeps = True,
   visibility = [

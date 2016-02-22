@@ -20,51 +20,112 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.FakeExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 
+@RunWith(Parameterized.class)
 public class LuaBinaryIntegrationTest {
 
   private ProjectWorkspace workspace;
   private Path lua;
 
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(
+        Arrays.asList(LuaBinaryDescription.StarterType.values()));
+  }
+
+  @Parameterized.Parameter
+  public LuaBinaryDescription.StarterType starterType;
+
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws Exception {
 
     // We don't currently support windows.
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that a Lua interpreter is available on the system.
-    LuaBuckConfig config =
+    LuaBuckConfig fakeConfig =
         new LuaBuckConfig(
             FakeBuckConfig.builder().build(),
             new ExecutableFinder());
-    Optional<Path> luaOptional = config.getSystemLua();
+    Optional<Path> luaOptional = fakeConfig.getSystemLua();
     assumeTrue(luaOptional.isPresent());
     lua = luaOptional.get();
+
+    // Try to detect if a Lua devel package is available, which is needed to C/C++ support.
+    if (starterType == LuaBinaryDescription.StarterType.NATIVE) {
+      CxxPlatform cxxPlatform =
+          DefaultCxxPlatforms.build(
+              Platform.detect(),
+              new CxxBuckConfig(FakeBuckConfig.builder().build()));
+      ProcessBuilder builder = new ProcessBuilder();
+      builder.command(
+          ImmutableList.<String>builder()
+              .addAll(
+                  cxxPlatform.getCc().getCommandPrefix(
+                      new SourcePathResolver(
+                          new BuildRuleResolver(
+                              TargetGraph.EMPTY,
+                              new BuildTargetNodeToBuildRuleTransformer()))))
+              .add("-includelua.h", "-E", "-")
+              .build());
+      builder.redirectInput(ProcessBuilder.Redirect.PIPE);
+      Process process = builder.start();
+      process.getOutputStream().close();
+      int exitCode = process.waitFor();
+      assumeTrue("Lua devel package required for native starter", exitCode == 0);
+    }
 
     // Setup the workspace.
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "lua_binary", tmp);
     workspace.setUp();
+    workspace.writeContentsToPath(
+        Joiner.on(System.lineSeparator()).join(
+            ImmutableList.of(
+                "[lua]",
+                "  starter_type = " + starterType.toString().toLowerCase())),
+        ".buckconfig");
+    LuaBuckConfig config = getLuaBuckConfig();
+    assertThat(config.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
   }
 
   @Test
@@ -118,7 +179,7 @@ public class LuaBinaryIntegrationTest {
             .splitToList(result.getStdout().trim()),
         Matchers.contains(
             ImmutableList.<Matcher<? super String>>of(
-                Matchers.equalTo(lua.toString()),
+                Matchers.anyOf(Matchers.equalTo(lua.toString()), Matchers.equalTo("nil")),
                 Matchers.endsWith(arg0.toString()))));
 
     // with args...
@@ -129,10 +190,27 @@ public class LuaBinaryIntegrationTest {
             .splitToList(result.getStdout().trim()),
         Matchers.contains(
             ImmutableList.<Matcher<? super String>>of(
-                Matchers.equalTo(lua.toString()),
+                Matchers.anyOf(Matchers.equalTo(lua.toString()), Matchers.equalTo("nil")),
                 Matchers.endsWith(arg0.toString()),
                 Matchers.equalTo("hello"),
                 Matchers.equalTo("world"))));
+  }
+
+  private LuaBuckConfig getLuaBuckConfig() throws IOException {
+    Config rawConfig =
+        Config.createDefaultConfig(
+            tmp.getRootPath(),
+            ImmutableMap.<String, ImmutableMap<String, String>>of());
+    BuckConfig buckConfig =
+        new BuckConfig(
+            rawConfig,
+            new ProjectFilesystem(tmp.getRootPath()),
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.<String, String>of());
+    return new LuaBuckConfig(
+        buckConfig,
+        new FakeExecutableFinder(ImmutableList.<Path>of()));
   }
 
 }

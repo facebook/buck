@@ -1,0 +1,67 @@
+{namespace lua_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'lua_library()' /}
+    {param prettify: true /}
+    {param description}
+      A lua_library() rule is used to group Lua source files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>lua_library()</code> rule is used to group together Lua sources
+to be packaged into a top-level {call buck.lua_binary /} rule.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call lua_common.srcs_arg /}
+
+{call lua_common.base_module_arg /}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Other <code>lua_library()</code> rules which list <code>srcs</code> from
+  which this rule imports modules.
+  {/param}
+{/call}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# A rule that includes a single .py file.
+lua_library(
+  name = 'fileutil',
+  srcs = ['fileutil.lua'],
+)
+
+# A rule that uses glob() to include all sources in the directory which the
+# rule is defined.  It also lists a resource file that gets packaged with
+# the sources in this rule.
+lua_library(
+  name = 'testutil',
+  srcs = glob(['testutil/**/*.lua'],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

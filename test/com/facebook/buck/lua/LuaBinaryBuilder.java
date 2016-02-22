@@ -16,6 +16,9 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
@@ -31,7 +34,13 @@ public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.A
   }
 
   public LuaBinaryBuilder(BuildTarget target, LuaConfig config) {
-    this(new LuaBinaryDescription(config), target);
+    this(
+        new LuaBinaryDescription(
+            config,
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS),
+        target);
   }
 
   public LuaBinaryBuilder(BuildTarget target) {

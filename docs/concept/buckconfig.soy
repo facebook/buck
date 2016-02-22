@@ -67,6 +67,7 @@ The following sections are recognized by Buck:
     'java',
     'httpserver',
     'log',
+    'lua',
     'maven_repositories',
     'ndk',
     'project',
@@ -1219,6 +1220,106 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     The sample rate of Buck invocations to steam logs to {call buckconfig.log_remote_log_url /}.
     Valid values are defined by the set of numbers, <code>n</code>, where <code>0 <= n <= 1</code>.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'lua' /}
+  {param description}
+    This section defines settings relevant to <code>lua_*</code> rules.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'lua' /}
+  {param name: 'lua' /}
+  {param example_value: '/usr/bin/lua' /}
+  {param description}
+    The path to the Lua interpreter.  By default, Buck will search for the binary{sp}
+    <code>lua</code> in your <code>PATH</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'lua' /}
+  {param name: 'cxx_library' /}
+  {param example_value: '//third-party/lua:lua' /}
+  {param description}
+    The build target of the Lua C library to use to link a standalone interpreter.
+    By default, Buck will use <code>-llua</code> from the C/C++ linker's default
+    library search path.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'lua' /}
+  {param name: 'starter_type' /}
+  {param example_value: 'pure' /}
+  {param description}
+    The method for bootstrapping Lua binaries.  By default, <code>native</code> is chosen
+    if the binary contains native libraries and <code>pure</code> is chosen otherwise.
+    <ul>
+        <li>
+          <code>pure</code>: The binary bootstrap process uses pure Lua code.  This method
+          cannot be used if the binary includes native code.
+        </li>
+        <li>
+          <code>native</code>: The binary bootstrap process links in the Lua C library
+          (specified in {call buckconfig.lua_cxx_library /}) to form a standalone native
+          interpreter.
+        </li>
+    </ul>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'lua' /}
+  {param name: 'native_starter_library' /}
+  {param example_value: '//third-party/lua:starter' /}
+  {param description}
+    A C/C++ library to use as a custom starter for Lua binaries which use the
+    <code>NATIVE</code> bootstrap method.  The library is expected to define the
+    following function:
+
+{literal}<pre class="prettyprint lang-cpp">
+#ifdef __cplusplus
+extern "C"
+#endif
+int run_starter(
+    int argc,
+    const char **argv,
+    const char *main_module,
+    const char *modules_dir,
+    const char *extension_suffix);
+</pre>{/literal}
+
+    Where the arguments are as follows:
+    <ul>
+        <li>
+          <code>argc</code>: The number of command-line arguments.
+        </li>
+        <li>
+          <code>argv</code>: The array of command-line arguments.
+        </li>
+        <li>
+          <code>main_module</code>: The name of the binary's main module.
+        </li>
+        <li>
+          <code>modules_dir</code>: The path, relative the binary, to the modules directory.
+        </li>
+        <li>
+          <code>extension_suffix</code>: The suffix used for native libraries (e.g. <code>.so</code>).
+        </li>
+    </ul>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'lua' /}
+  {param name: 'extension' /}
+  {param example_value: '.lex' /}
+  {param description}
+    The extension to use for Lua binaries.  Defaults to <code>.lex</code>.
   {/param}
 {/call}
 

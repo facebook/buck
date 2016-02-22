@@ -50,6 +50,7 @@ public class LuaBinaryDescriptionTest {
                 BuildTargetFactory.newInstance("//:rule"),
                 FakeLuaConfig.DEFAULT
                     .withExtension(".override"))
+            .setMainModule("main")
             .build(resolver);
     assertThat(binary.getBinPath().toString(), Matchers.endsWith(".override"));
   }
@@ -65,6 +66,7 @@ public class LuaBinaryDescriptionTest {
             FakeLuaConfig.DEFAULT
                 .withLua(override)
                 .withExtension(".override"))
+            .setMainModule("main")
             .build(resolver);
     assertThat(binary.getLua(), Matchers.is(override));
   }

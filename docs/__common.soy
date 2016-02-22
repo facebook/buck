@@ -225,6 +225,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'prebuilt_jar',
             'prebuilt_native_library',
         ],
+        'lua': [
+            'lua_binary',
+            'lua_library',
+        ],
         'python': [
             'prebuilt_python_library',
             'python_binary',
@@ -304,6 +308,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'Java' /}
         {param rules: $platformRulesMap['java'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Lua' /}
+        {param rules: $platformRulesMap['lua'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param platform: 'Python' /}
@@ -632,6 +640,16 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .java_library}
 {call .ruleLink}{param name : 'java_library' /}{/call}
+{/template}
+
+/***/
+{template .lua_binary}
+{call .ruleLink}{param name : 'lua_binary' /}{/call}
+{/template}
+
+/***/
+{template .lua_library}
+{call .ruleLink}{param name : 'lua_library' /}{/call}
 {/template}
 
 /***/

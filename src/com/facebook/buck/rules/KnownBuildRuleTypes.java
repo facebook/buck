@@ -607,7 +607,12 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             testTempDirOverride));
     builder.register(new KeystoreDescription());
-    builder.register(new LuaBinaryDescription(new LuaBuckConfig(config, new ExecutableFinder())));
+    builder.register(
+        new LuaBinaryDescription(
+            new LuaBuckConfig(config, new ExecutableFinder()),
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);

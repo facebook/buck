@@ -46,13 +46,11 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getNativeLibraries();
 
-  public static LuaPackageComponents concat(Iterable<LuaPackageComponents> inputs) {
-    LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
-    for (LuaPackageComponents input : inputs) {
-      builder.putAllModules(input.getModules());
-      builder.putAllNativeLibraries(input.getNativeLibraries());
-    }
-    return builder.build();
+  public static void addComponents(
+      LuaPackageComponents.Builder builder,
+      LuaPackageComponents components) {
+    builder.putAllModules(components.getModules());
+    builder.putAllNativeLibraries(components.getNativeLibraries());
   }
 
   @Override
@@ -66,6 +64,13 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(resolver.filterBuildRuleInputs(getModules().values()))
         .addAll(resolver.filterBuildRuleInputs(getNativeLibraries().values()))
+        .build();
+  }
+
+  public ImmutableSortedSet<SourcePath> getInputs() {
+    return ImmutableSortedSet.<SourcePath>naturalOrder()
+        .addAll(getModules().values())
+        .addAll(getNativeLibraries().values())
         .build();
   }
 

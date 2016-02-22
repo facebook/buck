@@ -33,6 +33,8 @@ import com.google.common.collect.Iterables;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nullable;
+
 /**
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
  * represents. Once parsing is complete, instances of this class can be considered immutable.
@@ -85,15 +87,18 @@ public class BuildRuleResolver {
     return Iterables.unmodifiableIterable(buildRuleIndex.values());
   }
 
+  private <T> T fromNullable(BuildTarget target, @Nullable T rule) {
+    if (rule == null) {
+      throw new HumanReadableException("Rule for target '%s' could not be resolved.", target);
+    }
+    return rule;
+  }
+
   /**
    * Returns the {@link BuildRule} with the {@code buildTarget}.
    */
   public BuildRule getRule(BuildTarget buildTarget) {
-    BuildRule rule = buildRuleIndex.get(buildTarget);
-    if (rule == null) {
-      throw new HumanReadableException("Rule for target '%s' could not be resolved.", buildTarget);
-    }
-    return rule;
+    return fromNullable(buildTarget, buildRuleIndex.get(buildTarget));
   }
 
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
@@ -159,6 +164,10 @@ public class BuildRuleResolver {
       }
     }
     return Optional.absent();
+  }
+
+  public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
+    return fromNullable(buildTarget, getRuleOptionalWithType(buildTarget, cls).orNull());
   }
 
   public Function<BuildTarget, BuildRule> getRuleFunction() {

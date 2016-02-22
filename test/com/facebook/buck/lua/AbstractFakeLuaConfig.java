@@ -16,12 +16,18 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
+
+import java.nio.file.Paths;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -39,6 +45,18 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
   @Override
   public Tool getLua(BuildRuleResolver resolver) {
     return getLua();
+  }
+
+  @Value.Default
+  public AbstractCxxLibrary getLuaCxxLibrary() {
+    return new SystemLuaCxxLibrary(
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(Paths.get(""), Optional.<String>absent(), "//system", "lua")));
+  }
+
+  @Override
+  public AbstractCxxLibrary getLuaCxxLibrary(BuildRuleResolver resolver) {
+    return getLuaCxxLibrary();
   }
 
   @Override
