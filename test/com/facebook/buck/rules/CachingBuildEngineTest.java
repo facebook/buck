@@ -1285,7 +1285,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             new RuleKey("bbbb").toString(),
             BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
             inputRuleKey.toString()),
-        BorrowablePath.withPath(artifact));
+        BorrowablePath.notBorrowablePath(artifact));
 
     // Create the build engine.
     CachingBuildEngine cachingBuildEngine =
@@ -2191,7 +2191,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     cache.store(
         ImmutableSet.of(artifactKey),
         ImmutableMap.<String, String>of(),
-        BorrowablePath.withPath(artifact));
+        BorrowablePath.notBorrowablePath(artifact));
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();

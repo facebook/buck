@@ -312,7 +312,7 @@ public class BuildInfoRecorder {
     ListenableFuture<Void> storeFuture = artifactCache.store(
         ruleKeys,
         buildMetadata,
-        BorrowablePath.withPath(zip));
+        BorrowablePath.notBorrowablePath(zip));
     storeFuture.addListener(
         new Runnable() {
           @Override

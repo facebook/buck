@@ -172,7 +172,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
       artifactCache.get().store(
           storeRequest.getRuleKeys(),
           storeRequest.getMetadata(),
-          BorrowablePath.withPath(temp));
+          BorrowablePath.notBorrowablePath(temp));
       return HttpServletResponse.SC_ACCEPTED;
     } catch (InterruptedException e) {
       response.getWriter().write("Interrupted while serving request.");

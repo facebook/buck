@@ -338,6 +338,7 @@ public class HttpArtifactCache implements ArtifactCache {
       tmp = output.getPath();
     } else {
       Optional<Path> tmpDirPath = projectFilesystem.getPathRelativeToProjectRoot(Paths.get("tmp"));
+      projectFilesystem.mkdirs(tmpDirPath.get());
       tmp = projectFilesystem.createTempFile(tmpDirPath.get(), "artifact", ".tmp");
       projectFilesystem.copyFile(output.getPath(), tmp);
     }

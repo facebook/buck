@@ -160,8 +160,8 @@ public class DirArtifactCache implements ArtifactCache {
           } else {
             storeArtifactOutput(borrowedAndStoredArtifactPath.get(), artifactPath);
           }
-          bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
         }
+        bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
 
         // Now, write the meta data artifact.
         Path tmp = filesystem.createTempFile(cacheDir, "metadata", TMP_EXTENSION);

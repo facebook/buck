@@ -70,7 +70,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache1.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        BorrowablePath.withPath(dummyFile.get()));
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
@@ -81,7 +81,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache2.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        BorrowablePath.withPath(dummyFile.get()));
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
     assertEquals("Fetch should succeed after store",
         CacheResultType.HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
@@ -100,7 +100,7 @@ public class MultiArtifactCacheTest {
     multiArtifactCache.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        BorrowablePath.withPath(dummyFile.get()));
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
 
     assertEquals(
         "MultiArtifactCache.store() should store to all contained ArtifactCaches",

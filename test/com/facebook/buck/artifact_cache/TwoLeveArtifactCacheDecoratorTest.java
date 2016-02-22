@@ -60,7 +60,7 @@ public class TwoLeveArtifactCacheDecoratorTest {
     twoLevelCache.store(
         ImmutableSet.of(dummyRuleKey),
         ImmutableMap.<String, String>of(),
-        BorrowablePath.withPath(dummyFile.get()));
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
     assertThat(
         twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
         Matchers.equalTo(CacheResultType.HIT));
@@ -68,7 +68,7 @@ public class TwoLeveArtifactCacheDecoratorTest {
     twoLevelCache.store(
         ImmutableSet.of(dummyRuleKey2),
         ImmutableMap.<String, String>of(),
-        BorrowablePath.withPath(dummyFile.get()));
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
 
     assertThat(
         twoLevelCache.fetch(dummyRuleKey2, dummyFile).getType(),

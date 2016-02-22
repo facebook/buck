@@ -140,7 +140,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
                 delegate.store(
                     ruleKeys,
                     ImmutableMap.of(METADATA_KEY, input.get()),
-                    BorrowablePath.withPath(emptyFilePath)),
+                    BorrowablePath.notBorrowablePath(emptyFilePath)),
                 Functions.constant(true));
           }
         },

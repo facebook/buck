@@ -26,12 +26,6 @@ import java.io.File;
 public class BorrowablePathTest {
 
   @Test
-  public void testByDefaultPathCanBeBorrowed() {
-    BorrowablePath p = BorrowablePath.withPath(new File("/tmp/path").toPath());
-    assertThat(p.canBorrow(), Matchers.equalTo(true));
-  }
-
-  @Test
   public void testExplicitBorrow() {
     BorrowablePath p = BorrowablePath.borrowablePath(new File("/tmp/path").toPath());
     assertThat(p.canBorrow(), Matchers.equalTo(true));

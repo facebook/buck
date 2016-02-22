@@ -25,12 +25,6 @@ import java.nio.file.Path;
 public class BorrowablePath {
   public enum Behaviour {
     /**
-     * Means that it is not clear whether its safe to borrow the contents or not. Context awareness
-     * may help you to make correct decision.
-     */
-    UNSPECIFIED,
-
-    /**
      * You should NOT borrow the path. It may be used in other places.
      */
     NOT_BORROWABLE,
@@ -52,10 +46,6 @@ public class BorrowablePath {
     return new BorrowablePath(path, Behaviour.NOT_BORROWABLE);
   }
 
-  public static BorrowablePath withPath(Path path) {
-    return new BorrowablePath(path, Behaviour.UNSPECIFIED);
-  }
-
   private BorrowablePath(Path path, Behaviour behaviour) {
     this.path = path;
     this.behaviour = behaviour;
@@ -66,7 +56,7 @@ public class BorrowablePath {
    * returns true, believing that you know better what you are doing.
    */
   public boolean canBorrow() {
-    return behaviour != Behaviour.NOT_BORROWABLE;
+    return behaviour == Behaviour.BORROWABLE;
   }
 
   /**

@@ -1259,7 +1259,7 @@ public class CachingBuildEngine implements BuildEngine {
           .store(
               ImmutableSet.of(manifestKey.getFirst()),
               ImmutableMap.<String, String>of(),
-              BorrowablePath.withPath(tempFile))
+              BorrowablePath.notBorrowablePath(tempFile))
           .addListener(
               new Runnable() {
                 @Override
