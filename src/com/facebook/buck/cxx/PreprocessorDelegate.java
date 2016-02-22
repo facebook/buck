@@ -25,11 +25,13 @@ import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -81,6 +83,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       return absoluteString.length() > relativeString.length() ? relativePath : path;
     }
   };
+  private final Supplier<ImmutableMap<Path, Path>> replacementPaths;
+  private final Supplier<ImmutableMultimap<String, SourcePath>> pathToSourcePathMap;
 
   public PreprocessorDelegate(
       SourcePathResolver resolver,
@@ -109,6 +113,9 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.workingDir = workingDir;
     this.resolver = resolver;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
+
+    this.replacementPaths = MoreSuppliers.weakMemoize(new ReplacementPathsSupplier());
+    this.pathToSourcePathMap = MoreSuppliers.weakMemoize(new PathToSourcePathMapSupplier());
   }
 
   public Preprocessor getPreprocessor() {
@@ -140,18 +147,15 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    */
   public ImmutableMap<Path, Path> getReplacementPaths()
       throws CxxHeaders.ConflictingHeadersException {
-    ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
-    for (Map.Entry<Path, SourcePath> entry :
-        CxxHeaders.concat(includes).getFullNameToPathMap().entrySet()) {
-      // TODO(#9117006): We don't currently support a way to serialize `SourcePath` objects in a
-      // cache-compatible format, and we certainly can't use absolute paths here.  So, for now,
-      // just use relative paths.  The consequence here is that debug paths and error/warning
-      // messages may be incorrect when referring to headers in another cell.
-      replacementPathsBuilder.put(
-          Preconditions.checkNotNull(minLengthPathRepresentation.apply(entry.getKey())),
-          resolver.getRelativePath(entry.getValue()));
+    try {
+      return replacementPaths.get();
+    } catch (RuntimeException e) {
+      Throwable cause = e.getCause();
+      if (cause != null) {
+        Throwables.propagateIfInstanceOf(cause, CxxHeaders.ConflictingHeadersException.class);
+      }
+      throw e;
     }
-    return replacementPathsBuilder.build();
   }
 
   /**
@@ -249,17 +253,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     // correct (e.g. there may be two `SourcePath` includes with the same relative path, but
     // coming from different cells).  Favor correctness in this case and just add *all*
     // `SourcePath`s that have relative paths matching those specific in the dep file.
-    ImmutableMultimap<String, SourcePath> pathToSourcePathMap;
-    try {
-      pathToSourcePathMap =
-          Multimaps.index(
-              CxxHeaders.concat(includes).getFullNameToPathMap().values(),
-              Functions.compose(
-                  Functions.toStringFunction(),
-                  resolver.getRelativePathFunction()));
-    } catch (CxxHeaders.ConflictingHeadersException e) {
-      throw Throwables.propagate(e);
-    }
+    ImmutableMultimap<String, SourcePath> pathToSourcePathMap = this.pathToSourcePathMap.get();
     for (String line : depFileLines) {
       inputs.addAll(pathToSourcePathMap.get(line));
     }
@@ -269,5 +263,44 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   public Optional<SupportsColorsInOutput> getColorSupport() {
     return Optionals.cast(preprocessor, SupportsColorsInOutput.class);
+  }
+
+  private class ReplacementPathsSupplier implements Supplier<ImmutableMap<Path, Path>> {
+    @Override
+    public ImmutableMap<Path, Path> get() {
+      try {
+        ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
+        for (Map.Entry<Path, SourcePath> entry :
+            CxxHeaders.concat(includes).getFullNameToPathMap().entrySet()) {
+          // TODO(#9117006): We don't currently support a way to serialize `SourcePath` objects in a
+          // cache-compatible format, and we certainly can't use absolute paths here.  So, for now,
+          // just use relative paths.  The consequence here is that debug paths and error/warning
+          // messages may be incorrect when referring to headers in another cell.
+          replacementPathsBuilder.put(
+              Preconditions.checkNotNull(minLengthPathRepresentation.apply(entry.getKey())),
+              resolver.getRelativePath(entry.getValue()));
+        }
+        return replacementPathsBuilder.build();
+      } catch (CxxHeaders.ConflictingHeadersException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+
+  private class PathToSourcePathMapSupplier
+      implements Supplier<ImmutableMultimap<String, SourcePath>> {
+    @Override
+    public ImmutableMultimap<String, SourcePath> get() {
+      try {
+        return Multimaps.index(
+            CxxHeaders.concat(includes).getFullNameToPathMap().values(),
+            Functions.compose(
+                Functions.toStringFunction(),
+                resolver.getRelativePathFunction()));
+      } catch (CxxHeaders.ConflictingHeadersException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 }
