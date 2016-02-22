@@ -64,9 +64,9 @@ public class DefaultKnownBuildRuleTypes {
       for (String path : uniquePaths) {
         processMap.put(
             ProcessExecutorParams.builder()
-                .setCommand(ImmutableList.of(path + File.separator + python.getKey(), "-V"))
+                .setCommand(ImmutableList.of(path + File.separator + python.getKey(), "-"))
                 .build(),
-            new FakeProcess(0, "Python " + python.getValue(), ""));
+            new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
       }
     }
     return processMap.build();

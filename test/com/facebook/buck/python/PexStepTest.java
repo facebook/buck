@@ -44,6 +44,7 @@ import java.util.Map;
 public class PexStepTest {
 
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
+  private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6.9");
   private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
   private static final Path TEMP_PATH = Paths.get("/tmp/");
@@ -68,6 +69,7 @@ public class PexStepTest {
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
+            PYTHON_VERSION,
             TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
@@ -82,6 +84,7 @@ public class PexStepTest {
 
     assertThat(command, startsWith(Joiner.on(" ").join(PEX_COMMAND)));
     assertThat(command, containsString("--python " + PYTHON_PATH));
+    assertThat(command, containsString("--python-version " + PYTHON_VERSION));
     assertThat(command, containsString("--entry-point " + ENTRY_POINT));
     assertThat(command, endsWith(" " + DEST_PATH));
   }
@@ -94,6 +97,7 @@ public class PexStepTest {
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
+            PYTHON_VERSION,
             TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
@@ -118,6 +122,7 @@ public class PexStepTest {
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
+            PYTHON_VERSION,
             TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
@@ -156,6 +161,7 @@ public class PexStepTest {
                 .add("--some", "--args")
                 .build(),
             PYTHON_PATH,
+            PYTHON_VERSION,
             TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
