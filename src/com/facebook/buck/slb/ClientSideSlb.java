@@ -75,7 +75,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
   }
 
   @Override
-  public URI getBestServer() throws IOException {
+  public URI getBestServer() throws NoHealthyServersException {
     return healthManager.getBestServer(clock.currentTimeMillis());
   }
 

@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
@@ -86,7 +85,7 @@ public class ServerHealthManager {
     servers.get(server).reportRequestSuccess(epochMillis);
   }
 
-  public URI getBestServer(long epochMillis) throws IOException {
+  public URI getBestServer(long epochMillis) throws NoHealthyServersException {
     ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
     Map<URI, PerServerData.Builder> allPerServerData = Maps.newHashMap();
     try {
