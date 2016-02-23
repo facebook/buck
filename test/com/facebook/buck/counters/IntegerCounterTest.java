@@ -16,6 +16,7 @@
 
 package com.facebook.buck.counters;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Assert;
@@ -44,21 +45,19 @@ public class IntegerCounterTest {
     IntegerCounter counter = createCounter();
     Assert.assertEquals(0, counter.get());
     counter.inc(42);
-    Assert.assertTrue(counter.hasData());
     Assert.assertEquals(42, counter.get());
-    counter.reset();
+    counter.flush();
     Assert.assertEquals(0, counter.get());
-    Assert.assertFalse(counter.hasData());
   }
 
   @Test
   public void testSnapshot() {
     IntegerCounter counter = createCounter();
     counter.inc(42);
-    checkSnapshot(counter.getSnapshot(), 42);
-    counter.reset();
-    Assert.assertFalse(counter.hasData());
-    Assert.assertEquals(0, counter.getSnapshot().getValues().size());
+    Optional<CounterSnapshot> snapshot = counter.flush();
+    Assert.assertTrue(snapshot.isPresent());
+    checkSnapshot(snapshot.get(), 42);
+    Assert.assertFalse(counter.flush().isPresent());
   }
 
   private void checkSnapshot(CounterSnapshot snapshot, long expectedValue) {

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.counters;
 
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +36,7 @@ public class TagSetCounterTest {
   @Test
   public void snapshotBeforePutIsEmpty() {
     TagSetCounter counter = createCounter();
-    assertThat(counter.getSnapshot().getTagSets().entries(), empty());
+    assertThat(counter.flush().isPresent(), is(false));
   }
 
   @Test
@@ -44,8 +44,18 @@ public class TagSetCounterTest {
     TagSetCounter counter = createCounter();
     counter.put("key1", "value1");
     assertThat(
-        counter.getSnapshot().getTagSets(),
+        counter.flush().get().getTagSets(),
         equalTo(ImmutableSetMultimap.of("key1", "value1")));
+  }
+
+  @Test
+  public void snapshotAfterFlushIsEmpty() {
+    TagSetCounter counter = createCounter();
+    counter.put("key1", "value1");
+    counter.flush();
+    assertThat(
+        counter.flush().isPresent(),
+        is(false));
   }
 
   @Test
@@ -54,7 +64,7 @@ public class TagSetCounterTest {
     counter.put("key1", "value1");
     counter.put("key1", "value2");
     assertThat(
-        counter.getSnapshot().getTagSets(),
+        counter.flush().get().getTagSets(),
         equalTo(ImmutableSetMultimap.of("key1", "value1", "key1", "value2")));
   }
 
@@ -63,7 +73,7 @@ public class TagSetCounterTest {
     TagSetCounter counter = createCounter();
     counter.putAll(ImmutableSetMultimap.of("key1", "value1", "key1", "value2", "key2", "value3"));
     assertThat(
-        counter.getSnapshot().getTagSets(),
+        counter.flush().get().getTagSets(),
         equalTo(
             ImmutableSetMultimap.of("key1", "value1", "key1", "value2", "key2", "value3")));
   }

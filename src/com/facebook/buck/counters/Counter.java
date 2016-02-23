@@ -17,6 +17,7 @@
 package com.facebook.buck.counters;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
@@ -34,23 +35,12 @@ public abstract class Counter {
   }
 
   /**
-   * Resets the counter to defaults (as if it had just been constructed).
-   */
-  public abstract void reset();
-
-  /**
-   * Gets a snapshot of the current internal state of the counter.
+   * If the counter has no data, returns an absent value.
    *
-   * @return A snapshot of the counter.
+   * Otherwise, creates a snapshot of the current internal state of the counter
+   * builder, resets the counter, then returns the snapshot.
    */
-  public abstract CounterSnapshot getSnapshot();
-
-  /**
-   * Whether this counter contains any data or if it's still in the initial/reset() state.
-   *
-   * @return true if it has any data, false otherwise.
-   */
-  public abstract boolean hasData();
+  public abstract Optional<CounterSnapshot> flush();
 
   public String getCategory() {
     return info.getCategory();
@@ -85,13 +75,6 @@ public abstract class Counter {
   @Override
   public String toString() {
     return info.toString();
-  }
-
-  protected CounterSnapshot.Builder newInitializedBuilder() {
-    CounterSnapshot.Builder builder = CounterSnapshot.builder();
-    builder.setTags(getTags());
-    builder.setCategory(getCategory());
-    return builder;
   }
 
   @Value.Immutable

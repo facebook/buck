@@ -16,6 +16,7 @@
 
 package com.facebook.buck.counters;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 public class SamplingCounter extends Counter {
@@ -26,7 +27,6 @@ public class SamplingCounter extends Counter {
 
   public SamplingCounter(String category, String name, ImmutableMap<String, String> tags) {
     super(category, name, tags);
-    reset();
   }
 
   public long getMin() {
@@ -62,32 +62,23 @@ public class SamplingCounter extends Counter {
   }
 
   @Override
-  public void reset() {
+  public Optional<CounterSnapshot> flush() {
     synchronized (this) {
-      sum = 0;
-      count = 0;
-      min = 0;
-      max = 0;
-    }
-  }
-
-  @Override
-  public CounterSnapshot getSnapshot() {
-    CounterSnapshot.Builder snapshot = newInitializedBuilder();
-    synchronized (this) {
-      if (hasData()) {
+      if (count > 0) {
+        CounterSnapshot.Builder snapshot = CounterSnapshot.builderForCounter(this);
         snapshot.putValues(getName() + "_count", count);
         snapshot.putValues(getName() + "_avg", getAverage());
         snapshot.putValues(getName() + "_min", min);
         snapshot.putValues(getName() + "_max", max);
+        sum = 0;
+        count = 0;
+        min = 0;
+        max = 0;
+        return Optional.of(snapshot.build());
+      } else {
+        return Optional.absent();
       }
     }
-    return snapshot.build();
-  }
-
-  @Override
-  public boolean hasData() {
-    return count > 0;
   }
 
   public long getCount() {

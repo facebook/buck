@@ -16,6 +16,7 @@
 
 package com.facebook.buck.counters;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 public class IntegerCounter extends Counter {
@@ -24,7 +25,6 @@ public class IntegerCounter extends Counter {
 
   public IntegerCounter(String category, String name, ImmutableMap<String, String> tags) {
     super(category, name, tags);
-    reset();
   }
 
   public void inc() {
@@ -43,26 +43,17 @@ public class IntegerCounter extends Counter {
   }
 
   @Override
-  public void reset() {
-    synchronized (this) {
-      value = 0;
-      hasData = false;
-    }
-  }
-
-  @Override
-  public CounterSnapshot getSnapshot() {
-    CounterSnapshot.Builder snapshot = newInitializedBuilder();
+  public Optional<CounterSnapshot> flush() {
     synchronized (this) {
       if (hasData) {
+        CounterSnapshot.Builder snapshot = CounterSnapshot.builderForCounter(this);
         snapshot.putValues(getName(), value);
+        value = 0;
+        hasData = false;
+        return Optional.of(snapshot.build());
+      } else {
+        return Optional.absent();
       }
     }
-    return snapshot.build();
-  }
-
-  @Override
-  public boolean hasData() {
-    return hasData;
   }
 }

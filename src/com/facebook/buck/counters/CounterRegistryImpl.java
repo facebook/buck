@@ -17,6 +17,7 @@
 package com.facebook.buck.counters;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -101,19 +102,17 @@ public class CounterRegistryImpl implements CounterRegistry {
     CountersSnapshotEvent.Started startedEvent = CountersSnapshotEvent.started();
     eventBus.post(startedEvent);
 
-    List<CounterSnapshot> snapshots = null;
+    List<Optional<CounterSnapshot>> snapshots = null;
     synchronized (this) {
       snapshots = Lists.newArrayListWithCapacity(counters.size());
       for (Counter counter : counters) {
-        if (counter.hasData()) {
-          snapshots.add(counter.getSnapshot());
-          counter.reset();
-        }
+        snapshots.add(counter.flush());
       }
     }
 
     CountersSnapshotEvent.Finished finishedEvent = CountersSnapshotEvent.finished(
-        startedEvent, ImmutableList.copyOf(snapshots));
+        startedEvent, ImmutableList.copyOf(Optional.presentInstances(snapshots)));
     eventBus.post(finishedEvent);
   }
+
 }

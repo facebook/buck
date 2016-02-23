@@ -25,6 +25,13 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCounterSnapshot {
+  public static CounterSnapshot.Builder builderForCounter(Counter counter) {
+    CounterSnapshot.Builder builder = CounterSnapshot.builder();
+    builder.setTags(counter.getTags());
+    builder.setCategory(counter.getCategory());
+    return builder;
+  }
+
   abstract String getCategory();
   abstract ImmutableMap<String, String> getTags();
   abstract ImmutableSetMultimap<String, String> getTagSets();

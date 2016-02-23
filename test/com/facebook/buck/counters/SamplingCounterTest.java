@@ -16,6 +16,7 @@
 
 package com.facebook.buck.counters;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Assert;
@@ -49,7 +50,7 @@ public class SamplingCounterTest {
     Assert.assertEquals(0, counter.getCount());
     counter.addSample(84);
     Assert.assertEquals(1, counter.getCount());
-    counter.reset();
+    counter.flush();
     Assert.assertEquals(0, counter.getCount());
   }
 
@@ -57,19 +58,20 @@ public class SamplingCounterTest {
   public void testSnapshot() {
     SamplingCounter counter = createCounter();
     counter.addSample(42);
-    checkSnapshot(counter.getSnapshot(), 42);
-    counter.reset();
+    Optional<CounterSnapshot> snapshot = counter.flush();
+    Assert.assertTrue(snapshot.isPresent());
+    checkSnapshot(snapshot.get(), 42);
     counter.addSample(21);
-    Assert.assertTrue(counter.hasData());
-    checkSnapshot(counter.getSnapshot(), 21);
+    Optional<CounterSnapshot> snapshot2 = counter.flush();
+    Assert.assertTrue(snapshot2.isPresent());
+    checkSnapshot(snapshot2.get(), 21);
   }
 
   @Test
   public void testSnapshotWithoutSamples() {
     SamplingCounter counter = createCounter();
-    Assert.assertFalse(counter.hasData());
-    CounterSnapshot snapshot = counter.getSnapshot();
-    Assert.assertEquals(0, snapshot.getValues().size());
+    Optional<CounterSnapshot> snapshot = counter.flush();
+    Assert.assertFalse(snapshot.isPresent());
   }
 
   private void checkSnapshot(CounterSnapshot snapshot, long expectedValue) {

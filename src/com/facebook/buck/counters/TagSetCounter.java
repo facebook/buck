@@ -16,6 +16,7 @@
 
 package com.facebook.buck.counters;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -41,25 +42,16 @@ public class TagSetCounter extends Counter {
   }
 
   @Override
-  public void reset() {
+  public Optional<CounterSnapshot> flush() {
     synchronized (this) {
-      tagSets.clear();
-    }
-  }
-
-  @Override
-  public CounterSnapshot getSnapshot() {
-    CounterSnapshot.Builder snapshot = newInitializedBuilder();
-    synchronized (this) {
-      snapshot.putAllTagSets(tagSets);
-    }
-    return snapshot.build();
-  }
-
-  @Override
-  public boolean hasData() {
-    synchronized (this) {
-      return !tagSets.isEmpty();
+      if (!tagSets.isEmpty()) {
+        CounterSnapshot.Builder snapshot = CounterSnapshot.builderForCounter(this);
+        snapshot.putAllTagSets(tagSets);
+        tagSets.clear();
+        return Optional.of(snapshot.build());
+      } else {
+        return Optional.absent();
+      }
     }
   }
 }
