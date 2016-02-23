@@ -99,9 +99,6 @@ public class CounterRegistryImpl implements CounterRegistry {
   }
 
   private void flushCounters() {
-    CountersSnapshotEvent.Started startedEvent = CountersSnapshotEvent.started();
-    eventBus.post(startedEvent);
-
     List<Optional<CounterSnapshot>> snapshots = null;
     synchronized (this) {
       snapshots = Lists.newArrayListWithCapacity(counters.size());
@@ -110,9 +107,9 @@ public class CounterRegistryImpl implements CounterRegistry {
       }
     }
 
-    CountersSnapshotEvent.Finished finishedEvent = CountersSnapshotEvent.finished(
-        startedEvent, ImmutableList.copyOf(Optional.presentInstances(snapshots)));
-    eventBus.post(finishedEvent);
+    CountersSnapshotEvent event = new CountersSnapshotEvent(
+        ImmutableList.copyOf(Optional.presentInstances(snapshots)));
+    eventBus.post(event);
   }
 
 }

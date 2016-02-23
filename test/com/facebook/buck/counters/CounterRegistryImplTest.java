@@ -43,8 +43,7 @@ public class CounterRegistryImplTest {
   private BuckEventBus eventBus;
   private ScheduledThreadPoolExecutor executor;
   private Capture<Runnable> flushCountersRunnable;
-  private Capture<BuckEvent> countersStartEvent;
-  private Capture<BuckEvent> countersFinishEvent;
+  private Capture<BuckEvent> countersEvent;
 
   // Apparently EasyMock does not deal very well with Generic Types using wildcard ?.
   // Several workarounds can be found on StackOverflow this one being the list intrusive.
@@ -54,16 +53,13 @@ public class CounterRegistryImplTest {
   @Before
   @SuppressWarnings("unchecked")
   public void setUp() {
-    this.countersStartEvent = EasyMock.newCapture();
-    this.countersFinishEvent = EasyMock.newCapture();
+    this.countersEvent = EasyMock.newCapture();
     this.mockFuture = EasyMock.createMock(ScheduledFuture.class);
     this.flushCountersRunnable = EasyMock.newCapture();
     this.eventBus = EasyMock.createNiceMock(BuckEventBus.class);
     this.executor = EasyMock.createNiceMock(ScheduledThreadPoolExecutor.class);
 
-    this.eventBus.post(EasyMock.capture(countersStartEvent));
-    EasyMock.expectLastCall();
-    this.eventBus.post(EasyMock.capture(countersFinishEvent));
+    this.eventBus.post(EasyMock.capture(countersEvent));
     EasyMock.expectLastCall();
     EasyMock.expect(this.executor
         .scheduleAtFixedRate(
@@ -96,9 +92,9 @@ public class CounterRegistryImplTest {
       tagSetCounter.putAll(ImmutableSetMultimap.of("key2", "value2", "key3", "value3"));
       Assert.assertTrue(flushCountersRunnable.hasCaptured());
       flushCountersRunnable.getValue().run();
-      Assert.assertTrue(countersFinishEvent.hasCaptured());
-      CountersSnapshotEvent.Finished event =
-          (CountersSnapshotEvent.Finished) countersFinishEvent.getValue();
+      Assert.assertTrue(countersEvent.hasCaptured());
+      CountersSnapshotEvent event =
+          (CountersSnapshotEvent) countersEvent.getValue();
       Assert.assertEquals(2, event.getSnapshots().size());
       Assert.assertEquals(42, (long) event.getSnapshots().get(0).getValues().values().toArray()[0]);
       Assert.assertEquals(

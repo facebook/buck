@@ -18,62 +18,28 @@ package com.facebook.buck.counters;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-/**
- * Base class for events about building.
- */
-public abstract class CountersSnapshotEvent extends AbstractBuckEvent {
+public class CountersSnapshotEvent extends AbstractBuckEvent {
 
-  public CountersSnapshotEvent(EventKey eventKey) {
-    super(eventKey);
+  private final ImmutableList<CounterSnapshot> snapshots;
+
+  public CountersSnapshotEvent(Iterable<CounterSnapshot> snapshots) {
+    super(EventKey.unique());
+    this.snapshots = ImmutableList.copyOf(snapshots);
   }
 
-  public static Started started() {
-    return new Started();
+  public ImmutableList<CounterSnapshot> getSnapshots() {
+    return snapshots;
   }
 
-  public static Finished finished(Started started, ImmutableList<CounterSnapshot> snapshots) {
-    return new Finished(started, snapshots);
+  @Override
+  public String getEventName() {
+    return "CountersSnapshot";
   }
 
-  public static class Started extends CountersSnapshotEvent {
-    protected Started() {
-      super(EventKey.unique());
-    }
-
-    @Override
-    public String getEventName() {
-      return "CountersSnapshot.Started";
-    }
-
-    @Override
-    protected String getValueString() {
-      return getEventName();
-    }
-  }
-
-  public static class Finished extends CountersSnapshotEvent {
-    private final ImmutableList<CounterSnapshot> snapshots;
-
-    protected Finished(Started started, ImmutableList<CounterSnapshot> snapshots) {
-      super(started.getEventKey());
-      this.snapshots = Preconditions.checkNotNull(snapshots);
-    }
-
-    public ImmutableList<CounterSnapshot> getSnapshots() {
-      return snapshots;
-    }
-
-    @Override
-    public String getEventName() {
-      return "CountersSnapshot.Finished";
-    }
-
-    @Override
-    protected String getValueString() {
-      return String.format("%s with [%d] counters.", getEventName(), snapshots.size());
-    }
+  @Override
+  protected String getValueString() {
+    return String.format("%s with [%d] counters.", getEventName(), snapshots.size());
   }
 }
