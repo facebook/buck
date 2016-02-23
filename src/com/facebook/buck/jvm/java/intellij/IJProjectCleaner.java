@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -160,6 +161,7 @@ public class IJProjectCleaner {
       }
 
       for (File file : files) {
+        file = file.getAbsoluteFile();
         if (filesToKeep.contains(file)) {
           LOG.warn("Skipping " + file);
           continue;
@@ -199,6 +201,10 @@ public class IJProjectCleaner {
       actions.add(new DirectoryCleaner(directory, filenameFilter));
 
       for (File subdirectory : subdirectories) {
+        if (Files.isSymbolicLink(subdirectory.toPath())) {
+          continue;
+        }
+
         addCandidateDirectoryFinder(actions, subdirectory);
       }
 
