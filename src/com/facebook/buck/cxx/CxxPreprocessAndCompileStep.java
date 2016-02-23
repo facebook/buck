@@ -185,6 +185,18 @@ public class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
+  private ImmutableList<String> makeGeneratePchCommand(boolean allowColorInDiagnostics) {
+    return ImmutableList.<String>builder()
+        .addAll(preprocessorCommand.get().getCommand(allowColorInDiagnostics))
+        // Using x-header language type directs the compiler to generate a PCH file.
+        .add("-x", inputType.getPrecompiledHeaderLanguage().get())
+        // PCH file generation can also output dep files.
+        .addAll(getDepFileArgs(getDepTemp()))
+        .add(input.toString())
+        .add("-o", output.toString())
+        .build();
+  }
+
   private void safeCloseProcessor(@Nullable ManagedRunnable processor) {
     if (processor != null) {
       try {
@@ -511,6 +523,8 @@ public class CxxPreprocessAndCompileStep implements Step {
             allowColorsInDiagnostics);
       case PREPROCESS:
         return makePreprocessCommand(allowColorsInDiagnostics);
+      case GENERATE_PCH:
+        return makeGeneratePchCommand(allowColorsInDiagnostics);
       // $CASES-OMITTED$
       default:
         throw new RuntimeException("invalid operation type");
@@ -573,24 +587,39 @@ public class CxxPreprocessAndCompileStep implements Step {
      * compiler.
      */
     PIPED_PREPROCESS_AND_COMPILE,
+    GENERATE_PCH,
     ;
 
     /**
      * Returns whether the step has a preprocessor component.
      */
     public boolean isPreprocess() {
-      return this == COMPILE_MUNGE_DEBUGINFO ||
-          this == PREPROCESS ||
-          this == PIPED_PREPROCESS_AND_COMPILE;
+      switch (this) {
+        case COMPILE_MUNGE_DEBUGINFO:
+        case PREPROCESS:
+        case PIPED_PREPROCESS_AND_COMPILE:
+        case GENERATE_PCH:
+          return true;
+        case COMPILE:
+          return false;
+      }
+      throw new RuntimeException("unhandled case");
     }
 
     /**
      * Returns whether the step has a compilation component.
      */
     public boolean isCompile() {
-      return this == COMPILE ||
-          this == COMPILE_MUNGE_DEBUGINFO ||
-          this == PIPED_PREPROCESS_AND_COMPILE;
+      switch (this) {
+        case COMPILE:
+        case COMPILE_MUNGE_DEBUGINFO:
+        case PIPED_PREPROCESS_AND_COMPILE:
+          return true;
+        case PREPROCESS:
+        case GENERATE_PCH:
+          return false;
+      }
+      throw new RuntimeException("unhandled case");
     }
   }
 

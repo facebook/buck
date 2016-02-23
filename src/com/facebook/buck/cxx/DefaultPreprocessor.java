@@ -51,6 +51,11 @@ public class DefaultPreprocessor implements Preprocessor {
   }
 
   @Override
+  public boolean supportsPrecompiledHeaders() {
+    return false;
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
     return tool.getDeps(resolver);
   }

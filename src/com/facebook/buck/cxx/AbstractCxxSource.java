@@ -36,25 +36,44 @@ abstract class AbstractCxxSource {
 
   public enum Type {
 
-    C("c", "cpp-output", "c"),
-    CXX("c++", "c++-cpp-output", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
-    OBJC("objective-c", "objective-c-cpp-output", "m"),
-    OBJCXX("objective-c++", "objective-c++-cpp-output", "mm"),
+    C("c", "cpp-output", Optional.of("c-header"), "c"),
+    CXX(
+        "c++",
+        "c++-cpp-output",
+        Optional.of("c++-header"),
+        "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
+    OBJC("objective-c", "objective-c-cpp-output", Optional.of("objective-c-header"), "m"),
+    OBJCXX("objective-c++", "objective-c++-cpp-output", Optional.of("objective-c++-header"), "mm"),
+
     C_CPP_OUTPUT("cpp-output", "cpp-output", "i"),
     CXX_CPP_OUTPUT("c++-cpp-output", "c++-cpp-output", "ii"),
     OBJC_CPP_OUTPUT("objective-c-cpp-output", "objective-c-cpp-output", "mi"),
     OBJCXX_CPP_OUTPUT("objective-c++-cpp-output", "objective-c++-cpp-output", "mii"),
+
     ASSEMBLER("assembler", "assembler", "s"),
     ASSEMBLER_WITH_CPP("assembler-with-cpp", "assembler", "S"),
     ;
 
     private final String language;
     private final String preprocessedLanguage;
+    private final Optional<String> precompiledHeaderLanguage;
     private final ImmutableSet<String> extensions;
 
-    Type(String language, String preprocessedLanguage, String... extensions) {
+    Type(
+        String language,
+        String preprocessedLanguage,
+        String... extensions) {
+      this(language, preprocessedLanguage, Optional.<String>absent(), extensions);
+    }
+
+    Type(
+        String language,
+        String preprocessedLanguage,
+        Optional<String> precompiledHeaderLanguage,
+        String... extensions) {
       this.language = language;
       this.preprocessedLanguage = preprocessedLanguage;
+      this.precompiledHeaderLanguage = precompiledHeaderLanguage;
       this.extensions = ImmutableSet.copyOf(extensions);
     }
 
@@ -73,6 +92,15 @@ abstract class AbstractCxxSource {
 
     public String getPreprocessedLanguage() {
       return preprocessedLanguage;
+    }
+
+    /**
+     * "Language" type to pass to the compiler in order to generate a precompiled header.
+     *
+     * Will be {@code absent} for source types which do not support precompiled headers.
+     */
+    public Optional<String> getPrecompiledHeaderLanguage() {
+      return precompiledHeaderLanguage;
     }
 
     public boolean isPreprocessable() {

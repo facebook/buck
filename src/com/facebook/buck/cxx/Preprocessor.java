@@ -29,4 +29,6 @@ public interface Preprocessor extends Tool {
 
   boolean supportsHeaderMaps();
 
+  boolean supportsPrecompiledHeaders();
+
 }

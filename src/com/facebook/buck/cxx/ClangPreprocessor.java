@@ -88,6 +88,11 @@ public class ClangPreprocessor implements Preprocessor, SupportsColorsInOutput {
   }
 
   @Override
+  public boolean supportsPrecompiledHeaders() {
+    return true;
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
     return tool.getDeps(resolver);
   }
