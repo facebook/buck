@@ -81,6 +81,26 @@ public class EventSerializationTest {
   }
 
   @Test
+  public void testProjectGenerationEventFinished() throws IOException {
+    ProjectGenerationEvent.Finished event = ProjectGenerationEvent.finished();
+    event.configure(timestamp, nanoTime, threadId, buildId);
+    String message = new ObjectMapper().writeValueAsString(event);
+    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"type\":\"ProjectGenerationFinished\"," +
+        "\"eventKey\":{\"value\":4242}}", message);
+  }
+
+  @Test
+  public void testProjectGenerationEventStarted() throws IOException {
+    ProjectGenerationEvent.Started event = ProjectGenerationEvent.started();
+    event.configure(timestamp, nanoTime, threadId, buildId);
+    String message = new ObjectMapper().writeValueAsString(event);
+    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"type\":\"ProjectGenerationStarted\"," +
+        "\"eventKey\":{\"value\":4242}}", message);
+  }
+
+  @Test
   public void testParseEventStarted() throws IOException {
     ParseEvent.Started event = ParseEvent.started(ImmutableList.<BuildTarget>of());
     event.configure(timestamp, nanoTime, threadId, buildId);
