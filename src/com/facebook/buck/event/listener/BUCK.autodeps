@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0b2f0a60588d321e3f62fcbcbbc7e6caab3e80fd #@#
+#@# GENERATED FILE: DO NOT MODIFY b30ec47f4b62a3c15950bf4bb09de729820c1123 #@#
 {
   "listener" : [
     "//src/com/facebook/buck/android:steps",
@@ -6,6 +6,7 @@
     "//src/com/facebook/buck/cli:config",
     "//src/com/facebook/buck/cli:events",
     "//src/com/facebook/buck/counters:counters",
+    "//src/com/facebook/buck/distributed:distributed",
     "//src/com/facebook/buck/event:event",
     "//src/com/facebook/buck/httpserver:httpserver",
     "//src/com/facebook/buck/i18n:i18n",

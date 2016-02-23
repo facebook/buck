@@ -20,6 +20,9 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistributedBuild;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
@@ -82,6 +85,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
+  private static final String DISTRIBUTED_LONG_ARG = "--distributed";
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -136,6 +140,12 @@ public class BuildCommand extends AbstractCommand {
       name = SHOW_OUTPUT_LONG_ARG,
       usage = "Print the absolute path to the output for each of the built rules.")
   private boolean showOutput;
+
+  @Option(
+      name = DISTRIBUTED_LONG_ARG,
+      usage = "Whether to run in distributed build mode. (experimental)",
+      hidden = true)
+  private boolean useDistributedBuild = false;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -295,7 +305,7 @@ public class BuildCommand extends AbstractCommand {
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    BuildEvent.Started started = BuildEvent.started(getArguments());
+    BuildEvent.Started started = BuildEvent.started(getArguments(), useDistributedBuild);
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
           started,
@@ -311,7 +321,12 @@ public class BuildCommand extends AbstractCommand {
       return 1;
     }
 
-    int exitCode = executeBuild(params, actionGraphAndResolver, executorService);
+    int exitCode = -1;
+    if (useDistributedBuild) {
+      exitCode = executeDistributedBuild(params);
+    } else {
+      exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
+    }
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 
     if (exitCode == 0 && showOutput) {
@@ -319,6 +334,14 @@ public class BuildCommand extends AbstractCommand {
     }
 
     return exitCode;
+  }
+
+  private int executeDistributedBuild(CommandRunnerParams params) {
+    // TODO(ruibm): Add here distributed build magic.
+    DistributedBuild build = new DistributedBuild(
+        new DistBuildService(new DistBuildConfig(params.getBuckConfig())),
+        params.getBuckEventBus());
+    return build.executeAndPrintFailuresToEventBus();
   }
 
   private void showOutputs(
@@ -405,7 +428,7 @@ public class BuildCommand extends AbstractCommand {
     return actionGraphAndResolver;
   }
 
-  protected int executeBuild(
+  protected int executeLocalBuild(
       CommandRunnerParams params,
       Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver,
       ListeningExecutorService executor)

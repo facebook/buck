@@ -1,0 +1,9 @@
+java_test(
+  name = 'distributed',
+  srcs = glob(['*Test.java']),
+  autodeps = True,
+  deps = [
+    '//src/com/facebook/buck/cli:config',
+    '//third-party/java/easymock:easymock',
+  ]
+)

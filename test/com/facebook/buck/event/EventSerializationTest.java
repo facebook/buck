@@ -131,7 +131,8 @@ public class EventSerializationTest {
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"eventKey\":{\"value\":4242}," +
-        "\"buildArgs\":[\"//base:short\"], \"type\":\"BuildStarted\"}",
+        "\"buildArgs\":[\"//base:short\"], \"distributedBuild\":false," +
+        "\"type\":\"BuildStarted\"}",
         message);
   }
 

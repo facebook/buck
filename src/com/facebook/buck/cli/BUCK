@@ -43,6 +43,7 @@ java_library(
     '//src/com/facebook/buck/artifact_cache:config',
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/distributed:distributed',
     '//src/com/facebook/buck/d:d',
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/go:go',

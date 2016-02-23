@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c29173e64372065ccf585b43c87fe8e4d71de534 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3a0256d1485544746b4a566e1ddb673712c124af #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -20,6 +20,7 @@
     "//src/com/facebook/buck/counters:counters",
     "//src/com/facebook/buck/cxx:platform",
     "//src/com/facebook/buck/cxx:rules",
+    "//src/com/facebook/buck/distributed:distributed",
     "//src/com/facebook/buck/event:event",
     "//src/com/facebook/buck/event/listener:listener",
     "//src/com/facebook/buck/file:downloader",

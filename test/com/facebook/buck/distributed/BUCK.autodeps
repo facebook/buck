@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY 78dd732df7a3b49cc43cec11221bb3d8f8c70b96 #@#
+{
+  "distributed" : [
+    "//src/com/facebook/buck/distributed:distributed",
+    "//src/com/facebook/buck/event:event",
+    "//test/com/facebook/buck/cli:FakeBuckConfig",
+    "//third-party/java/junit:junit"
+  ]
+}

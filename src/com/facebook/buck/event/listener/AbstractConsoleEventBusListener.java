@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -126,6 +127,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsKeeper networkStatsKeeper;
 
+  private volatile double distributedBuildProgress = -1;
+
   public AbstractConsoleEventBusListener(Console console, Clock clock, Locale locale) {
     this.console = console;
     this.clock = clock;
@@ -162,10 +165,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected Optional<Double> getApproximateBuildProgress() {
-    if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getApproximateBuildProgress();
+    if (buildStarted != null && buildStarted.isDistributedBuild()) {
+      return Optional.of(distributedBuildProgress);
     } else {
-      return Optional.<Double>absent();
+      if (progressEstimator.isPresent()) {
+        return progressEstimator.get().getApproximateBuildProgress();
+      } else {
+        return Optional.<Double>absent();
+      }
     }
   }
 
@@ -427,6 +434,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
     httpShutdownEvent = event;
+  }
+
+  @Subscribe
+  public void distributedBuildStatus(DistBuildStatusEvent event) {
+    distributedBuildProgress = event.getStatus().getPercentProgress();
   }
 
   protected int getHttpUploadFinishedCount() {

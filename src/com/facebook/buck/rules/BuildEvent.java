@@ -34,7 +34,11 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   }
 
   public static Started started(Iterable<String> buildArgs) {
-    return new Started(ImmutableSet.copyOf(buildArgs));
+    return started(buildArgs, false);
+  }
+
+  public static Started started(Iterable<String> buildArgs, boolean isDistributedBuild) {
+    return new Started(ImmutableSet.copyOf(buildArgs), isDistributedBuild);
   }
 
   public static Finished finished(Started started, int exitCode) {
@@ -50,10 +54,12 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   public static class Started extends BuildEvent {
 
     private final ImmutableSet<String> buildArgs;
+    private final boolean isDistributedBuild;
 
-    protected Started(ImmutableSet<String> buildArgs) {
+    protected Started(ImmutableSet<String> buildArgs, boolean isDistributedBuild) {
       super(EventKey.unique());
       this.buildArgs = buildArgs;
+      this.isDistributedBuild = isDistributedBuild;
     }
 
     @Override
@@ -68,6 +74,10 @@ public abstract class BuildEvent extends AbstractBuckEvent {
 
     public ImmutableSet<String> getBuildArgs() {
       return buildArgs;
+    }
+
+    public boolean isDistributedBuild() {
+      return isDistributedBuild;
     }
   }
 

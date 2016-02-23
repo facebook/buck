@@ -1,0 +1,10 @@
+#@# GENERATED FILE: DO NOT MODIFY dab5410e2da182d16203ef2eaa6cdc8af7355bcc #@#
+{
+  "distributed" : [
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/immutables:processor"
+  ]
+}
