@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.httpserver.WebServerBuckEventListener;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -177,6 +178,72 @@ public class WebServerBuckEventListenerTest {
             "test",
             "//:simple_test");
     build.assertSuccess();
+
+    verify(webServerBuckEventListener);
+  }
+
+  @Test
+  public void hasBuckCompilerErrorOccurredThenEventsCalled()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "buck_events/compiler_error", tmp);
+    workspace.setUp();
+
+    WebServerBuckEventListener webServerBuckEventListener =
+        createMock(WebServerBuckEventListener.class);
+
+    //Build started
+    webServerBuckEventListener.buildStarted(anyObject(BuildEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Build progress Event
+    webServerBuckEventListener
+        .buildProgressUpdated(anyObject(ProgressEvent.BuildProgressUpdated.class));
+    EasyMock.expectLastCall().atLeastOnce();
+
+    //Build finished
+    webServerBuckEventListener.buildFinished(anyObject(BuildEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Parse started
+    webServerBuckEventListener.parseStarted(anyObject(ParseEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Parse progress Event
+    webServerBuckEventListener
+        .parsingProgressUpdated(anyObject(ProgressEvent.ParsingProgressUpdated.class));
+    EasyMock.expectLastCall().atLeastOnce();
+
+    //Parse finished
+    webServerBuckEventListener.parseFinished(anyObject(ParseEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Step started
+    //This target has only 1 step
+    webServerBuckEventListener.stepStarted(anyObject(StepEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Step finished
+    webServerBuckEventListener.stepFinished(anyObject(StepEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Compiler error
+    webServerBuckEventListener.compilerErrorEvent(anyObject(CompilerErrorEvent.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Output trace
+    webServerBuckEventListener.outputTrace(anyObject(BuildId.class));
+    EasyMock.expectLastCall().times(1);
+
+    EasyMock.replay(webServerBuckEventListener);
+
+    ProjectWorkspace.ProcessResult build =
+        workspace.runBuckdCommand(
+            new TestContext(),
+            webServerBuckEventListener,
+            "build",
+            "//:broken");
+    build.assertFailure();
 
     verify(webServerBuckEventListener);
   }
