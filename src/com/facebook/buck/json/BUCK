@@ -1,9 +1,28 @@
+RULES_SRCS = [
+  'JsonConcatenate.java',
+]
+java_immutables_library(
+  name = 'rules',
+  srcs = RULES_SRCS,
+  autodeps = True,
+  visibility = [ 'PUBLIC' ],
+)
+
+STEPS_SRCS = [
+  'JsonConcatenateStep.java',
+]
+java_library(
+  name = 'steps',
+  srcs = STEPS_SRCS,
+  autodeps = True,
+)
+
 JSON_IMMUTABLES = [
   'AbstractProjectBuildFileParserOptions.java',
 ]
 java_immutables_library(
   name = 'json',
-  srcs = glob(['*.java'], excludes = JSON_IMMUTABLES),
+  srcs = glob(['*.java'], excludes = JSON_IMMUTABLES + RULES_SRCS + STEPS_SRCS),
   immutable_srcs = JSON_IMMUTABLES,
   tests = [
     '//test/com/facebook/buck/json:json',

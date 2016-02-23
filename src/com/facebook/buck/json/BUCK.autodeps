@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5060026ebdb8e03fe09d1cd5c81bbf6118e44342 #@#
+#@# GENERATED FILE: DO NOT MODIFY 42e6a9d8c6afe66e19e09cde71424755937672aa #@#
 {
   "json" : [
     "//src/com/facebook/buck/bser:bser",
@@ -14,6 +14,22 @@
     "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
     "//third-party/java/immutables:processor",
+    "//third-party/java/jsr:jsr305"
+  ],
+  "rules" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/json:steps",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/step/fs:fs",
+    "//third-party/java/guava:guava"
+  ],
+  "steps" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/json:json",
+    "//src/com/facebook/buck/step:step",
+    "//third-party/java/guava:guava",
     "//third-party/java/jsr:jsr305"
   ]
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -68,7 +69,7 @@ public final class CxxInferEnhancer {
   }
 
 
-  public static CxxInferReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
+  public static JsonConcatenate requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -76,8 +77,8 @@ public final class CxxInferEnhancer {
       CxxConstructorArg args,
       CxxInferTools inferTools,
       CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
-    Optional<CxxInferReport> existingRule = resolver.getRuleOptionalWithType(
-        params.getBuildTarget(), CxxInferReport.class);
+    Optional<JsonConcatenate> existingRule = resolver.getRuleOptionalWithType(
+        params.getBuildTarget(), JsonConcatenate.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
@@ -322,7 +323,7 @@ public final class CxxInferEnhancer {
             captureAnalyzeRules));
   }
 
-  private static CxxInferReport createInferReportRule(
+  private static JsonConcatenate createInferReportRule(
       BuildRuleParams buildRuleParams,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
@@ -344,7 +345,7 @@ public final class CxxInferEnhancer {
 
 
     return buildRuleResolver.addToIndex(
-        new CxxInferReport(
+        new JsonConcatenate(
             buildRuleParams.copyWithDeps(
                 Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -353,6 +354,10 @@ public final class CxxInferEnhancer {
                         .build()),
                 buildRuleParams.getExtraDeps()),
             sourcePathResolver,
-            reportsToMerge));
+            reportsToMerge,
+            "merge-reports",
+            "Merge Infer Reports",
+            "infer",
+            "report.json"));
   }
 }

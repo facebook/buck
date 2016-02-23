@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.json;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -30,36 +31,52 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /*
- * This merges together all the reports coming from all the dependencies
+ * Concatenates Json arrays in files
  */
-public class CxxInferReport extends AbstractBuildRule {
+public class JsonConcatenate extends AbstractBuildRule {
 
-  private ImmutableSortedSet<Path> reportsToMerge;
-  private Path resultsDir;
-  private Path report;
+  private final String stepShortName;
+  private final String stepDescription;
+  private ImmutableSortedSet<Path> inputs;
+  private Path outputDirectory;
+  private Path output;
 
-  public CxxInferReport(
+  public JsonConcatenate(
       BuildRuleParams buildRuleParams,
       SourcePathResolver sourcePathResolver,
-      ImmutableSortedSet<Path> reportsToMerge) {
+      ImmutableSortedSet<Path> inputs,
+      String stepShortName,
+      String stepDescription,
+      String outputDirectoryPrefix,
+      String outputName) {
     super(buildRuleParams, sourcePathResolver);
-    this.reportsToMerge = reportsToMerge;
-    this.resultsDir = BuildTargets.getGenPath(this.getBuildTarget(), "infer-%s");
-    this.report = this.resultsDir.resolve("report.json");
+    this.inputs = inputs;
+    this.outputDirectory =
+        BuildTargets.getGenPath(this.getBuildTarget(), outputDirectoryPrefix + "-%s");
+    this.output = this.outputDirectory.resolve(outputName);
+    this.stepShortName = stepShortName;
+    this.stepDescription = stepDescription;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(report);
+    buildableContext.recordArtifact(output);
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), resultsDir))
-        .add(new InferMergeReportsStep(getProjectFilesystem(), reportsToMerge, report))
+        .add(new MkdirStep(projectFilesystem, outputDirectory))
+        .add(
+            new JsonConcatenateStep(
+                projectFilesystem,
+                inputs,
+                output,
+                stepShortName,
+                stepDescription))
         .build();
   }
 
   @Override
   public Path getPathToOutput() {
-    return report;
+    return output;
   }
 }

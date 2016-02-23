@@ -20,10 +20,12 @@ java_test(
   name = 'json',
   srcs = glob(STANDARD_TEST_SRCS),
   deps = [
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/json:json',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//third-party/java/gson:gson',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/json:json',
-    '//third-party/java/gson:gson',
   ],
 )
