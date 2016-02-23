@@ -111,7 +111,13 @@ public class PrebuiltCxxLibrary
   }
 
   protected String getSoname(CxxPlatform cxxPlatform) {
-    return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
+    return PrebuiltCxxLibraryDescription.getSoname(
+        getBuildTarget(),
+        params.getCellRoots(),
+        ruleResolver,
+        cxxPlatform,
+        soname,
+        libName);
   }
 
   /**
@@ -125,6 +131,8 @@ public class PrebuiltCxxLibrary
     Path sharedLibraryPath =
         PrebuiltCxxLibraryDescription.getSharedLibraryPath(
             getBuildTarget(),
+            params.getCellRoots(),
+            ruleResolver,
             cxxPlatform,
             libDir,
             libName);
@@ -151,6 +159,8 @@ public class PrebuiltCxxLibrary
     Path staticPicLibraryPath =
         PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
             getBuildTarget(),
+            params.getCellRoots(),
+            ruleResolver,
             cxxPlatform,
             libDir,
             libName);
@@ -162,6 +172,8 @@ public class PrebuiltCxxLibrary
     Path staticLibraryPath =
         PrebuiltCxxLibraryDescription.getStaticLibraryPath(
             getBuildTarget(),
+            params.getCellRoots(),
+            ruleResolver,
             cxxPlatform,
             libDir,
             libName);
@@ -272,6 +284,8 @@ public class PrebuiltCxxLibrary
                 getStaticPicLibrary(cxxPlatform).get() :
                 PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                     getBuildTarget(),
+                    params.getCellRoots(),
+                    ruleResolver,
                     cxxPlatform,
                     libDir,
                     libName);

@@ -89,6 +89,16 @@ public class MacroHandler {
       final BuildRuleResolver resolver,
       String blob)
       throws MacroException {
+    ImmutableMap<String, MacroReplacer> replacers = getMacroReplacers(
+        target,
+        cellNames,
+        resolver);
+    return MACRO_FINDER.replace(replacers, blob);
+  }
+
+  public ImmutableMap<String, MacroReplacer> getMacroReplacers(
+      final BuildTarget target,
+      final Function<Optional<String>, Path> cellNames, final BuildRuleResolver resolver) {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
       replacers.put(
@@ -104,7 +114,7 @@ public class MacroHandler {
             }
           });
     }
-    return MACRO_FINDER.replace(replacers.build(), blob);
+    return replacers.build();
   }
 
   public ImmutableList<BuildRule> extractBuildTimeDeps(
