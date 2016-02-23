@@ -19,6 +19,7 @@ package com.facebook.buck.counters;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.Closeable;
+import java.util.Collection;
 
 public interface CounterRegistry extends Closeable {
   IntegerCounter newIntegerCounter(
@@ -35,4 +36,6 @@ public interface CounterRegistry extends Closeable {
       String category,
       String name,
       ImmutableMap<String, String> tags);
+
+  void registerCounters(Collection<Counter> counters);
 }

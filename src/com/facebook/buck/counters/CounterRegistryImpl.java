@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
@@ -83,6 +84,16 @@ public class CounterRegistryImpl implements CounterRegistry {
       String category, String name, ImmutableMap<String, String> tags) {
     return registerCounter(
         new TagSetCounter(category, name, tags));
+  }
+
+  @Override
+  public void registerCounters(Collection<Counter> countersToRegister) {
+    synchronized (this) {
+      Preconditions.checkState(
+          counters.addAll(countersToRegister),
+          "Duplicate counters=[%s]",
+          countersToRegister);
+    }
   }
 
   @Override

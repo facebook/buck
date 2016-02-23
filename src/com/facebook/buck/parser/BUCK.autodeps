@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b3ec009430139a570d22294943865f0749c38166 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3ce68c261f3a7033de4b332508bc955160f45b93 #@#
 {
   "config" : [
     "//src/com/facebook/buck/cli:config",
@@ -7,6 +7,7 @@
   ],
   "parser" : [
     "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/counters:counters",
     "//src/com/facebook/buck/event:event",
     "//src/com/facebook/buck/graph:graph",
     "//src/com/facebook/buck/io:io",

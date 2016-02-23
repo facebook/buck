@@ -19,6 +19,8 @@ package com.facebook.buck.parser;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.counters.Counter;
+import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -65,6 +67,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import com.google.common.collect.MapDifference;
 import com.google.common.collect.SetMultimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -108,8 +111,12 @@ class DaemonicParserState {
   private static final String INCLUDES_META_RULE = "__includes";
   private static final String CONFIGS_META_RULE = "__configs";
 
+  private static final String COUNTER_CATEGORY = "buck_parser_state";
+  private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
+
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
+  private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final OptimisticLoadingCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   @GuardedBy("this")
   private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
@@ -135,7 +142,7 @@ class DaemonicParserState {
    * reevaluated if the environment changes.
    */
   @GuardedBy("cachedStateLock")
-  private ImmutableMap<String, String> cachedEnvironment;
+  private Optional<ImmutableMap<String, String>> cachedEnvironment;
 
   /**
    * The default includes used by the previous run of the parser in each cell (the key is the
@@ -158,6 +165,10 @@ class DaemonicParserState {
       int parsingThreads) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
+    this.cacheInvalidatedByEnvironmentVariableChangeCounter = new TagSetCounter(
+        COUNTER_CATEGORY,
+        INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
+        ImmutableMap.<String, String>of());
     this.allRawNodes = new OptimisticLoadingCache<>(parsingThreads);
     this.targetsCornucopia = HashMultimap.create();
     this.allTargetNodes = new OptimisticLoadingCache<>(parsingThreads);
@@ -176,7 +187,7 @@ class DaemonicParserState {
         });
     this.buildFileDependents = HashMultimap.create();
     this.buildFileConfigs = new HashMap<>();
-    this.cachedEnvironment = ImmutableMap.of();
+    this.cachedEnvironment = Optional.absent();
     this.cachedIncludes = new ConcurrentHashMap<>();
     this.knownCells = Collections.synchronizedSet(new HashSet<Cell>());
 
@@ -695,9 +706,25 @@ class DaemonicParserState {
     try (AutoCloseableLock updateLock = cachedStateLock.updateLock()) {
       Iterable<String> expected = cachedIncludes.get(cell.getRoot());
 
-      if (!cellEnv.equals(cachedEnvironment)) {
+      if (!cachedEnvironment.isPresent()) {
+        LOG.debug("Cached environment not present, invalidating caches for first run.");
+        invalidateCaches = true;
+      } else if (!cellEnv.equals(cachedEnvironment.get())) {
         // Contents of System.getenv() have changed. Cowardly refuse to accept we'll parse
         // everything the same way.
+        MapDifference<String, String> diff = Maps.difference(cachedEnvironment.get(), cellEnv);
+        LOG.warn("Invalidating cache on environment change (%s)", diff);
+        SetMultimap<String, String> environmentChanges = HashMultimap.create();
+        environmentChanges.putAll(
+            INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
+            diff.entriesOnlyOnLeft().keySet());
+        environmentChanges.putAll(
+            INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
+            diff.entriesOnlyOnRight().keySet());
+        environmentChanges.putAll(
+            INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
+            diff.entriesDiffering().keySet());
+        cacheInvalidatedByEnvironmentVariableChangeCounter.putAll(environmentChanges);
         invalidateCaches = true;
       } else if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
         // Someone's changed the default includes. That's almost definitely caused all our lovingly
@@ -710,7 +737,7 @@ class DaemonicParserState {
       }
 
       try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
-        cachedEnvironment = cellEnv;
+        cachedEnvironment = Optional.of(cellEnv);
         cachedIncludes.put(cell.getRoot(), defaultIncludes);
       }
     }
@@ -728,6 +755,12 @@ class DaemonicParserState {
     buildFileDependents.clear();
     buildFileConfigs.clear();
     knownCells.clear();
+  }
+
+  public ImmutableList<Counter> getCounters() {
+    return ImmutableList.<Counter>of(
+        cacheInvalidatedByEnvironmentVariableChangeCounter
+    );
   }
 
   @Override

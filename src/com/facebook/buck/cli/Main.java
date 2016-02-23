@@ -945,6 +945,13 @@ public final class Main {
               typeCoercerFactory,
               new ConstructorArgMarshaller(typeCoercerFactory));
         }
+
+        // Because the Parser is potentially constructed before the CounterRegistry,
+        // we need to manually register its counters after it's created.
+        //
+        // The counters will be unregistered once the counter registry is closed.
+        counterRegistry.registerCounters(parser.getCounters());
+
         JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
 
         Optional<ProcessManager> processManager;

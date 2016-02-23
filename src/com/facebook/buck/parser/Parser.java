@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.counters.Counter;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -477,5 +478,9 @@ public class Parser {
 
   public Optional<BuckEvent> getParseStartTime() {
     return Optional.absent();
+  }
+
+  public ImmutableList<Counter> getCounters() {
+    return permState.getCounters();
   }
 }
