@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.CompilerErrorEvent;
+import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.httpserver.WebServerBuckEventListener;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -39,6 +40,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+/**
+ * This tests capture the expectations of the intellij buck plugin.
+ * Upon modification, please inform the team that is currently maintaining the intellij buck plugin.
+ */
 public class WebServerBuckEventListenerTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -244,6 +249,58 @@ public class WebServerBuckEventListenerTest {
             "build",
             "//:broken");
     build.assertFailure();
+
+    verify(webServerBuckEventListener);
+  }
+
+  @Test
+  public void hasBuckProjectGenerationStartedThenEventsCalled()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "buck_events", tmp);
+    workspace.setUp();
+
+    WebServerBuckEventListener webServerBuckEventListener =
+        createMock(WebServerBuckEventListener.class);
+
+    //Parse started
+    webServerBuckEventListener.parseStarted(anyObject(ParseEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Parse progress Event
+    webServerBuckEventListener
+        .parsingProgressUpdated(anyObject(ProgressEvent.ParsingProgressUpdated.class));
+    EasyMock.expectLastCall().atLeastOnce();
+
+    //Parse finished
+    webServerBuckEventListener.parseFinished(anyObject(ParseEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Project generation started
+    webServerBuckEventListener
+        .projectGenerationStarted(
+            anyObject(ProjectGenerationEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Project generation finished
+    webServerBuckEventListener
+        .projectGenerationFinished(
+            anyObject(ProjectGenerationEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Output trace
+    webServerBuckEventListener.outputTrace(anyObject(BuildId.class));
+    EasyMock.expectLastCall().times(1);
+
+    EasyMock.replay(webServerBuckEventListener);
+
+    ProjectWorkspace.ProcessResult build =
+        workspace.runBuckdCommand(
+            new TestContext(),
+            webServerBuckEventListener,
+            "project",
+            "//:foo");
+    build.assertSuccess();
 
     verify(webServerBuckEventListener);
   }
