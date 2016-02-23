@@ -714,17 +714,11 @@ class DaemonicParserState {
         // everything the same way.
         MapDifference<String, String> diff = Maps.difference(cachedEnvironment.get(), cellEnv);
         LOG.warn("Invalidating cache on environment change (%s)", diff);
-        SetMultimap<String, String> environmentChanges = HashMultimap.create();
-        environmentChanges.putAll(
-            INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
-            diff.entriesOnlyOnLeft().keySet());
-        environmentChanges.putAll(
-            INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
-            diff.entriesOnlyOnRight().keySet());
-        environmentChanges.putAll(
-            INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
-            diff.entriesDiffering().keySet());
-        cacheInvalidatedByEnvironmentVariableChangeCounter.putAll(environmentChanges);
+        Set<String> environmentChanges = new HashSet<>();
+        environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
+        environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
+        environmentChanges.addAll(diff.entriesDiffering().keySet());
+        cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
         invalidateCaches = true;
       } else if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
         // Someone's changed the default includes. That's almost definitely caused all our lovingly

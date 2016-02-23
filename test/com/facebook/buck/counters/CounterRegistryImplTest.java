@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -110,8 +111,8 @@ public class CounterRegistryImplTest {
       IntegerCounter counter = registry.newIntegerCounter(CATEGORY, NAME, TAGS);
       counter.inc(42);
       TagSetCounter tagSetCounter = registry.newTagSetCounter(CATEGORY, "TagSet_Counter", TAGS);
-      tagSetCounter.put("key1", "value1");
-      tagSetCounter.putAll(ImmutableSetMultimap.of("key2", "value2", "key3", "value3"));
+      tagSetCounter.add("value1");
+      tagSetCounter.addAll(ImmutableSet.of("value2", "value3"));
       Assert.assertTrue(flushCountersRunnable.hasCaptured());
       flushCountersRunnable.getValue().run();
       Assert.assertTrue(countersEvent.hasCaptured());
@@ -121,9 +122,9 @@ public class CounterRegistryImplTest {
       Assert.assertEquals(42, (long) event.getSnapshots().get(0).getValues().values().toArray()[0]);
       Assert.assertEquals(
           ImmutableSetMultimap.of(
-              "key1", "value1",
-              "key2", "value2",
-              "key3", "value3"),
+              "TagSet_Counter", "value1",
+              "TagSet_Counter", "value2",
+              "TagSet_Counter", "value3"),
           event.getSnapshots().get(1).getTagSets());
     }
   }

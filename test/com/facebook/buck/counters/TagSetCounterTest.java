@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 
 import org.junit.Test;
@@ -34,24 +35,24 @@ public class TagSetCounterTest {
   );
 
   @Test
-  public void snapshotBeforePutIsEmpty() {
+  public void snapshotBeforeAddIsEmpty() {
     TagSetCounter counter = createCounter();
     assertThat(counter.flush().isPresent(), is(false));
   }
 
   @Test
-  public void snapshotAfterPutContainsValue() {
+  public void snapshotAfterAddContainsValue() {
     TagSetCounter counter = createCounter();
-    counter.put("key1", "value1");
+    counter.add("value1");
     assertThat(
         counter.flush().get().getTagSets(),
-        equalTo(ImmutableSetMultimap.of("key1", "value1")));
+        equalTo(ImmutableSetMultimap.of("Counter_Name", "value1")));
   }
 
   @Test
   public void snapshotAfterFlushIsEmpty() {
     TagSetCounter counter = createCounter();
-    counter.put("key1", "value1");
+    counter.add("value1");
     counter.flush();
     assertThat(
         counter.flush().isPresent(),
@@ -59,23 +60,24 @@ public class TagSetCounterTest {
   }
 
   @Test
-  public void snapshotWithPutSameKeyMultipleTimesIncludesAllValues() {
+  public void snapshotWithAddSameKeyMultipleTimesIncludesAllValues() {
     TagSetCounter counter = createCounter();
-    counter.put("key1", "value1");
-    counter.put("key1", "value2");
+    counter.add("value1");
+    counter.add("value2");
     assertThat(
         counter.flush().get().getTagSets(),
-        equalTo(ImmutableSetMultimap.of("key1", "value1", "key1", "value2")));
+        equalTo(ImmutableSetMultimap.of("Counter_Name", "value1", "Counter_Name", "value2")));
   }
 
   @Test
-  public void snapshotWithPutAllIncludesAllValues() {
+  public void snapshotWithAddAllIncludesAllValues() {
     TagSetCounter counter = createCounter();
-    counter.putAll(ImmutableSetMultimap.of("key1", "value1", "key1", "value2", "key2", "value3"));
+    counter.addAll(ImmutableSet.of("value1", "value2", "value3"));
     assertThat(
         counter.flush().get().getTagSets(),
         equalTo(
-            ImmutableSetMultimap.of("key1", "value1", "key1", "value2", "key2", "value3")));
+            ImmutableSetMultimap.of(
+                "Counter_Name", "value1", "Counter_Name", "value2", "Counter_Name", "value3")));
   }
 
   private TagSetCounter createCounter() {

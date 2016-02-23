@@ -18,36 +18,37 @@ package com.facebook.buck.counters;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.SetMultimap;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TagSetCounter extends Counter {
-  private SetMultimap<String, String> tagSets = HashMultimap.create();
+  private Set<String> tagSet = new HashSet<String>();
 
   public TagSetCounter(String category, String name, ImmutableMap<String, String> tags) {
     super(category, name, tags);
   }
 
-  public void put(String key, String value) {
+  public void add(String value) {
     synchronized (this) {
-      tagSets.put(key, value);
+      tagSet.add(value);
     }
   }
 
-  public void putAll(Multimap<String, String> newTagSets) {
+  public void addAll(Collection<String> values) {
     synchronized (this) {
-      tagSets.putAll(newTagSets);
+      tagSet.addAll(values);
     }
   }
 
   @Override
   public Optional<CounterSnapshot> flush() {
     synchronized (this) {
-      if (!tagSets.isEmpty()) {
+      if (!tagSet.isEmpty()) {
         CounterSnapshot.Builder snapshot = CounterSnapshot.builderForCounter(this);
-        snapshot.putAllTagSets(tagSets);
-        tagSets.clear();
+        snapshot.putAllTagSets(getName(), tagSet);
+        tagSet.clear();
         return Optional.of(snapshot.build());
       } else {
         return Optional.absent();
