@@ -88,6 +88,7 @@ public class CounterRegistryImpl implements CounterRegistry {
   @Override
   public void close() throws IOException {
     flushCountersFuture.cancel(false);
+    flushCounters();
   }
 
   private <T extends Counter> T registerCounter(T counter) {

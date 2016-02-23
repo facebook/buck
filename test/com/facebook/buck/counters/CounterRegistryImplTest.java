@@ -219,4 +219,42 @@ public class CounterRegistryImplTest {
                   .build()));
     }
   }
+
+  @Test
+  public void closingRegistryBeforeTimerFiresFlushesCounters() throws IOException {
+    BuckEventBus fakeEventBus = new BuckEventBus(
+        new FakeClock(0),
+        MoreExecutors.newDirectExecutorService(),
+        new BuildId("12345"),
+        1000);
+    SnapshotEventListener listener = new SnapshotEventListener();
+    fakeEventBus.register(listener);
+    FakeExecutor fakeExecutor = new FakeExecutor();
+
+    try (CounterRegistryImpl registry = new CounterRegistryImpl(fakeExecutor, fakeEventBus)) {
+      IntegerCounter counter = registry.newIntegerCounter(CATEGORY, NAME, TAGS);
+      counter.inc(42);
+      assertThat(
+          "No events should be flushed before timer fires",
+          listener.snapshotEvents,
+          empty());
+    }
+
+    // We explicitly do not call fakeExecutor.drain() here, because we want to simulate what
+    // happens when the registry is closed before the executor fires.
+
+    assertThat(
+        "One snapshot event should be flushed when registry closed before timer fires",
+        listener.snapshotEvents,
+        hasSize(1));
+    assertThat(
+        "Expected snapshot should be flushed when registry closed before timer fires",
+        listener.snapshotEvents.get(0).getSnapshots(),
+        hasItem(
+            CounterSnapshot.builder()
+                .setCategory(CATEGORY)
+                .setTags(TAGS)
+                .putValues(NAME, 42)
+                .build()));
+  }
 }
