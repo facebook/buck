@@ -62,7 +62,7 @@ public class BuckEventBus implements Closeable {
   }
 
   @VisibleForTesting
-  BuckEventBus(
+  public BuckEventBus(
       Clock clock,
       ExecutorService executorService,
       BuildId buildId,

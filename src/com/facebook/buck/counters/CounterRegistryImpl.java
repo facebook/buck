@@ -107,9 +107,12 @@ public class CounterRegistryImpl implements CounterRegistry {
       }
     }
 
-    CountersSnapshotEvent event = new CountersSnapshotEvent(
-        ImmutableList.copyOf(Optional.presentInstances(snapshots)));
-    eventBus.post(event);
+    ImmutableList<CounterSnapshot> presentSnapshots = ImmutableList.copyOf(
+        Optional.presentInstances(snapshots));
+    if (!presentSnapshots.isEmpty()) {
+      CountersSnapshotEvent event = new CountersSnapshotEvent(presentSnapshots);
+      eventBus.post(event);
+    }
   }
 
 }
