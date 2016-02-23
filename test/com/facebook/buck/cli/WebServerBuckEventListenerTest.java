@@ -20,6 +20,8 @@ import com.facebook.buck.httpserver.WebServerBuckEventListener;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -96,6 +98,84 @@ public class WebServerBuckEventListenerTest {
             webServerBuckEventListener,
             "build",
             "//:foo");
+    build.assertSuccess();
+
+    verify(webServerBuckEventListener);
+  }
+
+  @Test
+  public void hasBuckTestStartedThenEventsCalled() throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "buck_events/test", tmp);
+    workspace.setUp();
+
+    WebServerBuckEventListener webServerBuckEventListener =
+        createMock(WebServerBuckEventListener.class);
+
+    //Build started
+    webServerBuckEventListener.buildStarted(anyObject(BuildEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Build progress Event
+    webServerBuckEventListener
+        .buildProgressUpdated(anyObject(ProgressEvent.BuildProgressUpdated.class));
+    EasyMock.expectLastCall().atLeastOnce();
+
+    //Build finished
+    webServerBuckEventListener.buildFinished(anyObject(BuildEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Parse started
+    webServerBuckEventListener.parseStarted(anyObject(ParseEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Parse progress Event
+    webServerBuckEventListener
+        .parsingProgressUpdated(anyObject(ProgressEvent.ParsingProgressUpdated.class));
+    EasyMock.expectLastCall().atLeastOnce();
+
+    //Parse finished
+    webServerBuckEventListener.parseFinished(anyObject(ParseEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Step started
+    //This target has only 1 step
+    webServerBuckEventListener.stepStarted(anyObject(StepEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Step finished
+    webServerBuckEventListener.stepFinished(anyObject(StepEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Individual test started
+    //This target has only 1 test
+    webServerBuckEventListener.testAwaitingResults(anyObject(IndividualTestEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Individual test finished
+    webServerBuckEventListener.testResultsAvailable(anyObject(IndividualTestEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Test started
+    webServerBuckEventListener.testRunStarted(anyObject(TestRunEvent.Started.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Test finished
+    webServerBuckEventListener.testRunCompleted(anyObject(TestRunEvent.Finished.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Output trace
+    webServerBuckEventListener.outputTrace(anyObject(BuildId.class));
+    EasyMock.expectLastCall().times(1);
+
+    EasyMock.replay(webServerBuckEventListener);
+
+    ProjectWorkspace.ProcessResult build =
+        workspace.runBuckdCommand(
+            new TestContext(),
+            webServerBuckEventListener,
+            "test",
+            "//:simple_test");
     build.assertSuccess();
 
     verify(webServerBuckEventListener);
