@@ -569,7 +569,7 @@ public class KnownBuildRuleTypes {
             cxxPlatforms,
             defaultTestRuleTimeoutMs));
     builder.register(new DBinaryDescription(dBuckConfig, defaultCxxPlatform));
-    builder.register(new DLibraryDescription(dBuckConfig));
+    builder.register(new DLibraryDescription(dBuckConfig, defaultCxxPlatform));
     builder.register(new DTestDescription(
             dBuckConfig, defaultTestRuleTimeoutMs, defaultCxxPlatform));
     builder.register(new ExportFileDescription());

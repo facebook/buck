@@ -135,7 +135,7 @@ abstract class DDescriptionUtils {
         /* bundleLoader */ Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         NativeLinkableInput.builder()
-            .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlagsForBinary()))
+            .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlags()))
             .addAllArgs(SourcePathArg.from(sourcePathResolver, sourcePaths))
             .build());
   }
@@ -164,8 +164,19 @@ abstract class DDescriptionUtils {
     if (existingRule.isPresent()) {
       return (DCompileBuildRule) existingRule.get();
     } else {
+      ImmutableSet.Builder<String> includeFlagsBuilder =
+        ImmutableSet.<String>builder();
+      includeFlagsBuilder.add(
+          "-I" + params.getBuildTarget().getBasePath());
+      for (BuildRule dep : params.getDeps()) {
+        if (dep instanceof DLibrary) {
+          includeFlagsBuilder.add("-I" + dep.getBuildTarget().getBasePath());
+        }
+      }
       ImmutableList<String> flags = ImmutableList.<String>builder()
+          .addAll(dBuckConfig.getBaseCompilerFlags())
           .addAll(compilerFlags)
+          .addAll(includeFlagsBuilder.build())
           .add("-c")
           .build();
       DCompileBuildRule rule = new DCompileBuildRule(

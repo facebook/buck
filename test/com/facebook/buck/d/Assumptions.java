@@ -31,7 +31,8 @@ abstract class Assumptions {
     try {
       DBuckConfig dBuckConfig = new DBuckConfig(FakeBuckConfig.builder().build());
       dBuckConfig.getDCompiler();
-      dBuckConfig.getLinkerFlagsForBinary();
+      dBuckConfig.getBaseCompilerFlags();
+      dBuckConfig.getLinkerFlags();
     } catch (Exception e) {
       exception = e;
     }

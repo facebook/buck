@@ -21,42 +21,30 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
-public class DLibrary extends DCompileBuildRule implements NativeLinkable {
+public class DLibrary extends NoopBuildRule implements NativeLinkable {
   BuildRuleParams params;
   BuildRuleResolver buildRuleResolver;
 
   public DLibrary(
       BuildRuleParams params,
-      SourcePathResolver sourcePathResolver,
       BuildRuleResolver buildRuleResolver,
-      ImmutableSortedSet<SourcePath> srcs,
-      Tool compiler) {
-    super(
-        params,
-        sourcePathResolver,
-        srcs,
-        ImmutableList.of("-lib"),
-        compiler,
-        BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/lib" + params.getBuildTarget().getShortName() + ".a"));
-
+      SourcePathResolver sourcePathResolver) {
+    super(params, sourcePathResolver);
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
   }

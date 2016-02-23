@@ -105,6 +105,7 @@ The following sections are recognized by Buck:
     'cache',
     'color',
     'cxx',
+    'd',
     'download',
     'go',
     'groovy',
@@ -753,6 +754,58 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: 'true' /}
   {param description}
     Enables (default) or disables colorized output in the terminal.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'd' /}
+  {param description}
+    This section configures how code written in D is compiled.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'base_compiler_flags' /}
+  {param example_value: '-I/some/path -g -O3' /}
+  {param description}
+    Flags to pass to every invocation of the D compiler.
+    This is a space-separated list.
+    It defaults to an empty list.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'compiler' /}
+  {param example_value: '/opt/dmd/bin/dmd' /}
+  {param description}
+    Path to the D compiler.
+    If this parameter is not specified, Buck attempts to find the D
+    compiler automatically.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'library_path' /}
+  {param example_value: '/usr/local/lib:/opt/dmd/lib' /}
+  {param description}
+    Directories to be searched for the D runtime libraries.
+    This is a colon-separated list.
+    If this parameter is not specified, Buck attempts to detect the
+    location of the libraries automatically.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'linker_flags' /}
+  {param example_value: '"-L/path to phobos" -lphobos2' /}
+  {param description}
+    Flags to pass to the linker when linking D code into an executable.
+    This is a space-separated list.
+    If omitted, this value is constructed from d.library_path.
   {/param}
 {/call}
 

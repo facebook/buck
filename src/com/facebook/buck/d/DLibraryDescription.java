@@ -16,6 +16,11 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.Archive;
+import com.facebook.buck.cxx.Archives;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -28,16 +33,24 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 public class DLibraryDescription implements Description<DLibraryDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("d_library");
 
   private final DBuckConfig dBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public DLibraryDescription(DBuckConfig dBuckConfig) {
+  public DLibraryDescription(
+      DBuckConfig dBuckConfig,
+      CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -56,12 +69,76 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       A args) {
-    return new DLibrary(
+
+    return createStaticLibraryBuildRule(
         params,
-        new SourcePathResolver(buildRuleResolver),
         buildRuleResolver,
+        new SourcePathResolver(buildRuleResolver),
+        dBuckConfig,
+        cxxPlatform,
         args.srcs,
-        dBuckConfig.getDCompiler());
+        /* compilerFlags */ ImmutableList.<String>of(),
+        CxxSourceRuleFactory.PicType.PDC);
+  }
+
+  /**
+   * @return a BuildRule that creates a static library.
+   */
+  private static BuildRule createStaticLibraryBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      DBuckConfig dBuckConfig,
+      CxxPlatform cxxPlatform,
+      Iterable<SourcePath> sources,
+      ImmutableList<String> compilerFlags,
+      CxxSourceRuleFactory.PicType pic) {
+
+    ImmutableList<SourcePath> compiledSources =
+      DDescriptionUtils.sourcePathsForCompiledSources(
+          sources,
+          compilerFlags,
+          params,
+          ruleResolver,
+          pathResolver,
+          cxxPlatform,
+          dBuckConfig);
+
+    // Write a build rule to create the archive for this library.
+    BuildTarget staticTarget =
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            pic);
+
+    Path staticLibraryPath =
+        CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            pic);
+
+    Archive archiveRule = Archives.createArchiveRule(
+        pathResolver,
+        staticTarget,
+        params.copyWithBuildTarget(
+            BuildTarget.builder().from(params.getBuildTarget())
+            .addFlavors(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.STATIC_FLAVOR)
+            .build()),
+        cxxPlatform.getAr(),
+        cxxPlatform.getRanlib(),
+        staticLibraryPath,
+        compiledSources);
+    ruleResolver.addToIndex(archiveRule);
+
+    return new DLibrary(
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>of(archiveRule))),
+        ruleResolver,
+        pathResolver);
   }
 
   @SuppressFieldNotInitialized

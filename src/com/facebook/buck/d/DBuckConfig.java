@@ -52,14 +52,28 @@ public class DBuckConfig {
   }
 
   /**
-   * @return a list of flags that must be passed to the linker to link D binaries
+   * @return a list of flags that must be passed to the compiler.
    */
-  ImmutableList<String> getLinkerFlagsForBinary() {
+  ImmutableList<String> getBaseCompilerFlags() {
+    // If flags are configured in buckconfig, return those.
+    // Else, return an empty list (no flags), as that should normally work.
+    return delegate.getOptionalListWithoutComments(
+        "d", "base_compiler_flags", ' ').or(ImmutableList.<String>of());
+  }
+
+  /**
+   * @return a list of flags that must be passed to the linker to link D binaries.
+   */
+  public ImmutableList<String> getLinkerFlags() {
     Optional<ImmutableList<String>> configuredFlags =
-        delegate.getOptionalListWithoutComments("d", "linker_flags_for_binary");
+      delegate.getOptionalListWithoutComments(
+          "d",
+          "linker_flags",
+          ' ');
     if (configuredFlags.isPresent()) {
       return configuredFlags.get();
     } else {
+      // No flags configured; generate them based on library paths.
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(
           FluentIterable
@@ -82,7 +96,7 @@ public class DBuckConfig {
    */
   private Iterable<Path> getBaseLibraryPaths() {
     Optional<ImmutableList<String>> configuredPaths =
-        delegate.getOptionalListWithoutComments("d", "library_path");
+        delegate.getOptionalListWithoutComments("d", "library_path", ':');
 
     if (configuredPaths.isPresent()) {
       return FluentIterable
@@ -141,18 +155,20 @@ public class DBuckConfig {
 
     if (phobosPath.isPresent()) {
       LOG.debug("Detected path to Phobos: " + phobosPath.get());
-      return ImmutableList.of(phobosPath.get().getParent());
+    } else {
+      throw new HumanReadableException(
+          "Phobos not found, and not configured using d.library_path");
     }
 
-    throw new HumanReadableException(
-        "D standard library not found, and not configured using d.library_path");
+    return ImmutableList.of(phobosPath.get().getParent());
   }
 
   /**
    * @return the Path to the D compiler.
    */
   private Path getDCompilerPath() {
-    Path compilerPath = delegate.getPath("d", "compiler").or(DEFAULT_D_COMPILER);
+    Path compilerPath = delegate.getPath("d", "compiler", /*isCellRootRelative=*/false)
+      .or(DEFAULT_D_COMPILER);
 
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }
