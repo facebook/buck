@@ -219,16 +219,6 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add(clang);
     if (isLibrary) {
       commandArgs.add("-fPIC");
-    }
-
-    // TODO(Coneko): These should be here only once, fix this once we unify on a single
-    // preprocessing mode
-    for (int i = 0; i < 2; ++i) {
-      commandArgs.addAll(commandArgs1);
-      commandArgs.addAll(commandArgs2);
-    }
-
-    if (isLibrary) {
       commandArgs.add("-fPIC");
     }
 

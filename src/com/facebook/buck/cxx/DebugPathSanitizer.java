@@ -44,6 +44,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nonnull;
+
 /**
  * Encapsulates all the logic to sanitize debug paths in native code.  Currently, this just
  * supports sanitizing the compilation directory that compilers typically embed in binaries
@@ -65,7 +67,7 @@ public class DebugPathSanitizer {
           .softValues()
           .build(new CacheLoader<Path, ImmutableBiMap<Path, Path>>() {
             @Override
-            public ImmutableBiMap<Path, Path> load(Path key) {
+            public ImmutableBiMap<Path, Path> load(@Nonnull Path key) {
               return getAllPathsWork(key);
             }
           });
@@ -130,8 +132,8 @@ public class DebugPathSanitizer {
     };
   }
 
-  public ImmutableList<String> sanitizeFlags(Optional<ImmutableList<String>> flags) {
-    return FluentIterable.from(flags.or(ImmutableList.<String>of()))
+  public ImmutableList<String> sanitizeFlags(ImmutableList<String> flags) {
+    return FluentIterable.from(flags)
         .transform(sanitize(Optional.<Path>absent()))
         .toList();
   }

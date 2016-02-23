@@ -205,16 +205,16 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     // from contributing to the rule key.
     builder.setReflectively(
         "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(platformPreprocessorFlags));
+        sanitizer.sanitizeFlags(platformPreprocessorFlags.or(ImmutableList.<String>of())));
     builder.setReflectively(
         "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(rulePreprocessorFlags));
+        sanitizer.sanitizeFlags(rulePreprocessorFlags.or(ImmutableList.<String>of())));
     builder.setReflectively(
         "platformCompilerFlags",
-        sanitizer.sanitizeFlags(platformCompilerFlags));
+        sanitizer.sanitizeFlags(platformCompilerFlags.or(ImmutableList.<String>of())));
     builder.setReflectively(
         "ruleCompilerFlags",
-        sanitizer.sanitizeFlags(ruleCompilerFlags));
+        sanitizer.sanitizeFlags(ruleCompilerFlags.or(ImmutableList.<String>of())));
 
     return builder;
   }

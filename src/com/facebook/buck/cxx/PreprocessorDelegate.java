@@ -133,10 +133,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     // from contributing to the rule key.
     builder.setReflectively(
         "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(Optional.of(platformPreprocessorFlags)));
+        sanitizer.sanitizeFlags(platformPreprocessorFlags));
     builder.setReflectively(
         "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(Optional.of(rulePreprocessorFlags)));
+        sanitizer.sanitizeFlags(rulePreprocessorFlags));
 
     builder.setReflectively("frameworkRoots", frameworkRoots);
     return builder;
@@ -161,14 +161,15 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * Get the command for standalone preprocessor calls.
    */
-  public ImmutableList<String> getCommand() {
+  public ImmutableList<String> getCommand(
+      ImmutableList<String> platformCompilerFlags,
+      ImmutableList<String> ruleCompilerFlags) {
     return ImmutableList.<String>builder()
         .addAll(preprocessor.getCommandPrefix(resolver))
-        .addAll(getPreprocessorPlatformPrefix())
-        .addAll(getPreprocessorSuffix())
+        .addAll(getPreprocessorPlatformPrefix(platformCompilerFlags))
+        .addAll(getPreprocessorSuffix(ruleCompilerFlags))
         .addAll(preprocessor.getExtraFlags().or(ImmutableList.<String>of()))
         .build();
-
   }
 
   public ImmutableMap<String, String> getEnvironment() {
@@ -176,20 +177,34 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   /**
-   * Get platform preprocessor flags for composing into the compiler command line.
+   * @param platformCompilerFlags compiler flags used for compilation.  We copy these in when doing
+   *                              standalone preprocessing so that macros implicitly defined by the
+   *                              driver are set properly.
+   * @return platform preprocessor flags for composing into the compiler command line.
    */
-  public ImmutableList<String> getPreprocessorPlatformPrefix() {
-    return platformPreprocessorFlags;
+  private ImmutableList<String> getPreprocessorPlatformPrefix(
+      ImmutableList<String> platformCompilerFlags) {
+    return ImmutableList.<String>builder()
+        .addAll(platformPreprocessorFlags)
+        .addAll(platformCompilerFlags)
+        .build();
   }
 
   /**
-   * Get preprocessor flags for composing into the compiler command line that should be appended
-   * after the rest.
-   *
-   * This is important when there are flags that overwrite previous flags.
+   * Get platform preprocessor flags for composing into the compiler command line.
    */
-  public ImmutableList<String> getPreprocessorSuffix() {
+  public ImmutableList<String> getPreprocessorPlatformPrefix() {
+    return getPreprocessorPlatformPrefix(ImmutableList.<String>of());
+  }
 
+  /**
+   * @param ruleCompilerFlags compiler flags used for compilation.  We copy these in when doing
+   *                          standalone preprocessing so that macros implicitly defined by the
+   *                          driver are set properly.
+   * @return preprocessor flags for composing into the compiler command line that should be appended
+   *         after the rest.  This is important when there are flags that overwrite previous flags.
+   */
+  private ImmutableList<String> getPreprocessorSuffix(ImmutableList<String> ruleCompilerFlags) {
     return ImmutableList.<String>builder()
         .addAll(rulePreprocessorFlags)
         .addAll(
@@ -223,7 +238,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
                     .transform(frameworkPathSearchPathFunction)
                     .transform(Functions.toStringFunction())
                     .toSortedSet(Ordering.natural())))
+        .addAll(ruleCompilerFlags)
         .build();
+  }
+
+  public ImmutableList<String> getPreprocessorSuffix() {
+    return getPreprocessorSuffix(ImmutableList.<String>of());
   }
 
   /**

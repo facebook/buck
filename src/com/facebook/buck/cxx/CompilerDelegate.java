@@ -62,10 +62,10 @@ class CompilerDelegate implements RuleKeyAppendable {
     builder.setReflectively("compiler", compiler);
     builder.setReflectively(
         "platformCompilerFlags",
-        sanitizer.sanitizeFlags(Optional.of(platformCompilerFlags)));
+        sanitizer.sanitizeFlags(platformCompilerFlags));
     builder.setReflectively(
         "ruleCompilerFlags",
-        sanitizer.sanitizeFlags(Optional.of(ruleCompilerFlags)));
+        sanitizer.sanitizeFlags(ruleCompilerFlags));
     return builder;
   }
 
@@ -92,6 +92,14 @@ class CompilerDelegate implements RuleKeyAppendable {
     return builder.build();
   }
 
+  public ImmutableList<String> getPlatformCompilerFlags() {
+    return platformCompilerFlags;
+  }
+
+  public ImmutableList<String> getRuleCompilerFlags() {
+    return ruleCompilerFlags;
+  }
+
   public ImmutableMap<String, String> getEnvironment() {
     return compiler.getEnvironment(resolver);
   }
@@ -103,4 +111,5 @@ class CompilerDelegate implements RuleKeyAppendable {
   public Optional<SupportsColorsInOutput> getColorSupport() {
     return Optionals.cast(compiler, SupportsColorsInOutput.class);
   }
+
 }

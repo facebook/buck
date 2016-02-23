@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
@@ -91,34 +90,6 @@ public class CxxPlatformsTest {
             CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(
             CxxPlatformUtils.DEFAULT_PLATFORM));
-  }
-
-  @Test
-  public void combinesPreprocessAndCompileFlagsIsDefault() {
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "cxx", ImmutableMap.of(
-            "cflags", "-Wtest",
-            "cxxflags", "-Wexample",
-            "cppflags", "-Wp",
-            "cxxppflags", "-Wxp"));
-
-    CxxBuckConfig buckConfig =
-        new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
-
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
-
-    assertThat(
-        platform.getCflags(),
-        hasItem("-Wtest"));
-    assertThat(
-        platform.getCxxflags(),
-        hasItem("-Wexample"));
-    assertThat(
-        platform.getCppflags(),
-        hasItems("-Wtest", "-Wp"));
-    assertThat(
-        platform.getCxxppflags(),
-        hasItems("-Wexample", "-Wxp"));
   }
 
   @Test

@@ -134,10 +134,16 @@ public class CxxCompilationDatabaseTest {
                     },
                     Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
-              Paths.get("test.ii"),
-              new FakeSourcePath(filesystem, "test.cpp"),
-              CxxSource.Type.CXX,
-              CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
+                new CompilerDelegate(
+                    testSourcePathResolver,
+                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    new DefaultCompiler(new HashedFileTool(Paths.get("compiler"))),
+                    ImmutableList.<String>of(),
+                    ImmutableList.<String>of()),
+                Paths.get("test.ii"),
+                new FakeSourcePath(filesystem, "test.cpp"),
+                CxxSource.Type.CXX,
+                CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)

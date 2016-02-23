@@ -42,13 +42,13 @@ public class DefaultCxxPlatformsTest {
         containsInAnyOrder("-std=gnu11"));
     assertThat(
         cxxPlatform.getCppflags(),
-        containsInAnyOrder("-std=gnu11", "-DCFOO"));
+        containsInAnyOrder("-DCFOO"));
     assertThat(
         cxxPlatform.getCxxflags(),
         containsInAnyOrder("-std=c++11"));
     assertThat(
         cxxPlatform.getCxxppflags(),
-        containsInAnyOrder("-std=c++11", "-DCXXFOO"));
+        containsInAnyOrder("-DCXXFOO"));
   }
 
 

@@ -172,7 +172,9 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocess.getPreprocessorDelegate().get().getCommand(),
+              cxxPreprocess.getPreprocessorDelegate().get().getCommand(
+                  ImmutableList.<String>of(),
+                  ImmutableList.<String>of()),
               platformFlags));
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -182,7 +184,9 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(),
+              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(
+                  ImmutableList.<String>of(),
+                  ImmutableList.<String>of()),
               platformFlags));
     }
 
@@ -302,62 +306,6 @@ public class CxxSourceRuleFactoryTest {
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picPreprocessAndCompile.getBuildTarget());
     }
-
-    @Test
-    public void compilerFlagsFromPlatformArePropagated() {
-      BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-      BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-
-      ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
-      CxxPlatform platform = DefaultCxxPlatforms.build(
-          new CxxBuckConfig(
-              FakeBuckConfig.builder().setSections(
-                  ImmutableMap.of(
-                      "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))
-                  .build()));
-
-      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
-          .setParams(params)
-          .setResolver(resolver)
-          .setPathResolver(new SourcePathResolver(resolver))
-          .setCxxPlatform(platform)
-          .setPicType(CxxSourceRuleFactory.PicType.PDC)
-          .build();
-
-      String name = "source.ii";
-      CxxSource cxxSource = CxxSource.of(
-          CxxSource.Type.CXX_CPP_OUTPUT,
-          new FakeSourcePath(name),
-          ImmutableList.<String>of());
-
-      // Verify that platform flags make it to the compile rule.
-      CxxPreprocessAndCompile cxxCompile =
-          cxxSourceRuleFactory.requireCompileBuildRule(name, cxxSource);
-      assertNotEquals(
-          -1,
-          Collections.indexOfSubList(cxxCompile.makeMainStep().getCommand(), platformFlags));
-
-      name = "source.cpp";
-      cxxSource = CxxSource.of(
-          CxxSource.Type.CXX,
-          new FakeSourcePath(name),
-          ImmutableList.<String>of());
-
-      // Verify that platform flags make it to the compile rule.
-      CxxPreprocessAndCompile cxxPreprocessAndCompile =
-          cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
-              name,
-              cxxSource,
-              CxxPreprocessMode.SEPARATE);
-      assertNotEquals(
-          -1,
-          Collections.indexOfSubList(
-              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(),
-              platformFlags));
-    }
-
 
     @Test
     public void checkPrefixHeaderIsIncluded() {
@@ -553,7 +501,9 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cPreprocess =
           cxxSourceRuleFactory.requirePreprocessBuildRule(sourceName, cSource);
       ImmutableList<String> cPreprocessCommand =
-          cPreprocess.getPreprocessorDelegate().get().getCommand();
+          cPreprocess.getPreprocessorDelegate().get().getCommand(
+              ImmutableList.<String>of(),
+              ImmutableList.<String>of());
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);
       assertContains(cPreprocessCommand, perFileFlags);

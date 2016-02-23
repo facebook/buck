@@ -241,15 +241,12 @@ public class CxxPlatforms {
     builder
         .addAllAsflags(asflags)
         .addAllAsppflags(config.getFlags("asppflags").or(DEFAULT_ASPPFLAGS))
-        .addAllAsppflags(asflags)
         .addAllCflags(cflags)
         .addAllCflags(compilerOnlyFlags)
         .addAllCxxflags(cxxflags)
         .addAllCxxflags(compilerOnlyFlags)
         .addAllCppflags(config.getFlags("cppflags").or(DEFAULT_CPPFLAGS))
-        .addAllCppflags(cflags)
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
-        .addAllCxxppflags(cxxflags)
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));
@@ -261,12 +258,9 @@ public class CxxPlatforms {
     builder
         .addAllAsflags(platform.getAsflags())
         .addAllAsppflags(platform.getAsppflags())
-        .addAllAsppflags(platform.getAsflags())
         .addAllCflags(platform.getCflags())
         .addAllCxxflags(platform.getCxxflags())
         .addAllCppflags(platform.getCppflags())
-        .addAllCppflags(platform.getCflags())
-        .addAllCxxppflags(platform.getCxxflags())
         .addAllCxxppflags(platform.getCxxppflags())
         .addAllLdflags(platform.getLdflags())
         .addAllArflags(platform.getArflags())

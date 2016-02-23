@@ -470,13 +470,13 @@ public class AppleCxxPlatformsTest {
         hasItem("-std=gnu11"));
     assertThat(
         cxxPlatform.getCppflags(),
-        hasItems("-std=gnu11", "-DCTHING"));
+        hasItems("-DCTHING"));
     assertThat(
         cxxPlatform.getCxxflags(),
         hasItem("-std=c++11"));
     assertThat(
         cxxPlatform.getCxxppflags(),
-        hasItems("-std=c++11", "-DCXXTHING"));
+        hasItems("-DCXXTHING"));
   }
 
   @Test
@@ -557,13 +557,13 @@ AppleSdkPaths appleSdkPaths =
         hasItems("-std=gnu11", "-Wnoerror"));
     assertThat(
         cxxPlatform.getCppflags(),
-        hasItems("-std=gnu11",  "-Wnoerror", "-DCTHING", "-DCTHING2"));
+        hasItems("-DCTHING", "-DCTHING2"));
     assertThat(
         cxxPlatform.getCxxflags(),
         hasItems("-std=c++11", "-Woption"));
     assertThat(
         cxxPlatform.getCxxppflags(),
-        hasItems("-std=c++11", "-Woption", "-DCXXTHING", "-DCXXTHING2"));
+        hasItems("-DCXXTHING", "-DCXXTHING2"));
   }
 
   @Test
