@@ -18,7 +18,7 @@ package com.facebook.buck.util.network;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -41,7 +41,7 @@ public class HttpPutLoggerTest {
       }
     };
     HttpPutLogger httpPutLogger =
-        new HttpPutLogger(testEndpoint, new ObjectMapper());
+        new HttpPutLogger(testEndpoint, ObjectMappers.newDefaultInstance());
 
     String entry1 = "{\"e\":1}";
     String entry2 = "{\"e\":2}";

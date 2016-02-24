@@ -14,6 +14,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/simulate:simulate',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:object_mapper',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/jvm/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',

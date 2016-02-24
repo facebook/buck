@@ -36,9 +36,11 @@ public class FileSerializationEventBusListener implements BuckEventListener, Clo
   private final ObjectMapper objectMapper;
   private final BufferedWriter bufferedWriter;
 
-  public FileSerializationEventBusListener(Path outputPath) throws IOException {
-    objectMapper = new ObjectMapper();
-    bufferedWriter = Files.newBufferedWriter(
+  public FileSerializationEventBusListener(
+      Path outputPath,
+      ObjectMapper objectMapper) throws IOException {
+    this.objectMapper = objectMapper;
+    this.bufferedWriter = Files.newBufferedWriter(
         outputPath,
         StandardCharsets.UTF_8,
         StandardOpenOption.CREATE,

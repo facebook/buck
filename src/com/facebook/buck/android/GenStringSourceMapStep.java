@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.XmlDomParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -145,7 +146,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // write nativeStrings out to a file
     Path outputPath = destinationPath.resolve("strings.json");
     try {
-      ObjectMapper mapper = new ObjectMapper();
+      ObjectMapper mapper = ObjectMappers.newDefaultInstance();
       mapper.writeValue(filesystem.getPathForRelativePath(outputPath).toFile(), nativeStrings);
     } catch (IOException ex) {
       context.logError(

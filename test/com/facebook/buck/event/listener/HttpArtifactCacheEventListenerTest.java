@@ -24,6 +24,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.network.RemoteLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -39,7 +40,7 @@ import org.junit.Test;
 public class HttpArtifactCacheEventListenerTest {
 
   private static final BuildId BUILD_ID = new BuildId("My Super ID");
-  private static final ObjectMapper CONVERTER = new ObjectMapper();
+  private static final ObjectMapper CONVERTER = ObjectMappers.newDefaultInstance();
 
   private RemoteLogger logger;
   private HttpArtifactCacheListener listener;

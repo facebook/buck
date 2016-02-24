@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.network.RemoteLogger;
@@ -75,7 +76,7 @@ public class RemoteLogUploaderEventListenerTest {
     }
   }
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
   private static final BuildEnvironmentDescription BUILD_ENVIRONMENT_DESCRIPTION =
       BuildEnvironmentDescription.builder()

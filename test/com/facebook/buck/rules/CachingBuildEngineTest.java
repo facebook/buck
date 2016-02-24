@@ -32,8 +32,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
@@ -42,6 +40,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.BorrowablePath;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -69,6 +69,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -137,6 +138,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           NOOP_RULE_KEY_FACTORY);
+  private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -431,7 +433,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .build();
 
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -518,7 +520,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .build();
 
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -572,7 +574,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(BUILD_TARGET)
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(BUILD_TARGET)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -669,7 +671,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(depTarget)
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(depTarget)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
     FakeBuildRule ruleToTest = new FakeBuildRule(BUILD_TARGET, filesystem, pathResolver, dep);
@@ -679,7 +681,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(BUILD_TARGET)
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(BUILD_TARGET)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -791,7 +793,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(transitiveRuntimeDep.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(transitiveRuntimeDep.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -808,7 +810,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(runtimeDep.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(runtimeDep.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -824,7 +826,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -975,7 +977,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget())
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -1171,7 +1173,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -1264,7 +1266,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -1275,7 +1277,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ImmutableMap.of(
             BuildInfo.getPathToMetadataDirectory(target)
                 .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
-            new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+            MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
             output.toString(),
             "stuff"));
     cache.store(
@@ -1432,7 +1434,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     inspector.assertFileContents(
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE).toString(),
-        new ObjectMapper().writeValueAsString(ImmutableList.of(input.toString())));
+        MAPPER.writeValueAsString(ImmutableList.of(input.toString())));
   }
 
   @Test
@@ -1514,13 +1516,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(input.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(input.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE));
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -1598,13 +1600,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(input.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(input.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE));
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -1701,13 +1703,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY));
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(input.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(input.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE));
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+        MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -2185,7 +2187,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ImmutableMap.of(
             BuildInfo.getPathToMetadataDirectory(target)
                 .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
-            new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
+            MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
             output.toString(),
             "stuff"));
     cache.store(
@@ -2570,7 +2572,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
@@ -2629,7 +2631,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepopulate the recorded paths metadata.
     filesystem.writeContentsToPath(
-        new ObjectMapper().writeValueAsString(ImmutableList.of()),
+        MAPPER.writeValueAsString(ImmutableList.of()),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.simulate;
 
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Assert;
@@ -32,7 +33,7 @@ public class SimulateTimesTest {
   private static final String KNOWN_TIME_AGGREGATE = "avg";
   private static final String ANOTHER_KNOWN_TIME_AGGREGATE = "p50";
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMappers.newDefaultInstance();
 
   @Test
   public void testReadingFileWithExistingTimeType() throws IOException {

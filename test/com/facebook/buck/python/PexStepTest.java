@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.startsWith;
 
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -133,7 +133,7 @@ public class PexStepTest {
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
 
-    Map<String, Object> args = new ObjectMapper().readValue(
+    Map<String, Object> args = ObjectMappers.newDefaultInstance().readValue(
         step.getStdin(TestExecutionContext.newInstance()).get(),
         Map.class);
     assertThat(

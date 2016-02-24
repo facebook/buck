@@ -71,6 +71,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -453,7 +454,8 @@ public class SuperConsoleEventBusListenerTest {
             logPath);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
-        eventBus);
+        eventBus,
+        ObjectMappers.newDefaultInstance());
     listener.setProgressEstimator(e);
     eventBus.register(listener);
 
@@ -1723,7 +1725,8 @@ public class SuperConsoleEventBusListenerTest {
             logPath);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
-        eventBus);
+        eventBus,
+        ObjectMappers.newDefaultInstance());
     listener.setProgressEstimator(e);
     eventBus.register(listener);
 

@@ -149,7 +149,7 @@ public class ShTest
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context,
+      final ExecutionContext context,
       boolean isUsingTestSelectors,
       boolean isDryRun) {
     final ImmutableSet<String> contacts = getContacts();
@@ -173,7 +173,7 @@ public class ShTest
         public TestResults call() throws Exception {
           Optional<String> resultsFileContents =
               getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
-          ObjectMapper mapper = new ObjectMapper();
+          ObjectMapper mapper = context.getObjectMapper();
           TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
               TestResultSummary.class);
           TestCaseSummary testCaseSummary = new TestCaseSummary(

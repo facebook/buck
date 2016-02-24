@@ -126,6 +126,7 @@ java_test(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:object_mapper',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/cache:cache',
     '//src/com/facebook/buck/util/concurrent:concurrent',

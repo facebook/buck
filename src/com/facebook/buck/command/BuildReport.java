@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
@@ -133,7 +134,7 @@ public class BuildReport {
     report.put("success", isOverallSuccess);
     report.put("results", results);
     report.put("failures", failures);
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     return objectMapper.writeValueAsString(report);
   }

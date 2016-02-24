@@ -36,8 +36,7 @@ prebuilt_jar(
     'LICENSE',
   ],
   visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//test/...',
+    '//src/com/facebook/buck/util:object_mapper',
   ],
 )
 

@@ -80,6 +80,7 @@ import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreFunctions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -106,8 +107,6 @@ import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfa
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -507,9 +506,7 @@ public final class Main {
     this.stdErr = stdErr;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
-    this.objectMapper = new ObjectMapper().registerModule(new GuavaModule());
-    // Add support for serializing Path and other JDK 7 objects.
-    this.objectMapper.registerModule(new Jdk7Module());
+    this.objectMapper = ObjectMappers.newDefaultInstance();
     this.externalEventsListeners = ImmutableList.copyOf(externalEventsListeners);
   }
 
@@ -869,7 +866,8 @@ public final class Main {
 
         ProgressEstimator progressEstimator = new ProgressEstimator(
             filesystem.getRootPath(),
-            buildEventBus);
+            buildEventBus,
+            objectMapper);
         consoleListener.setProgressEstimator(progressEstimator);
 
         eventListeners = addEventListeners(
@@ -975,7 +973,7 @@ public final class Main {
           Optional<Path> eventsOutputPath = subcommand.getEventsOutputPath();
           if (eventsOutputPath.isPresent()) {
             BuckEventListener listener =
-                new FileSerializationEventBusListener(eventsOutputPath.get());
+                new FileSerializationEventBusListener(eventsOutputPath.get(), objectMapper);
             buildEventBus.register(listener);
           }
         }

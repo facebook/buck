@@ -52,7 +52,7 @@ public class ProgressEstimator {
   @Nullable
   private String command;
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   private BuckEventBus buckEventBus;
 
@@ -77,7 +77,11 @@ public class ProgressEstimator {
   private final AtomicDouble projectGenerationProgress = new AtomicDouble(-1.0);
   private final AtomicDouble buildProgress = new AtomicDouble(-1.0);
 
-  public ProgressEstimator(Path rootRepositoryPath, BuckEventBus buckEventBus) {
+  public ProgressEstimator(
+      Path rootRepositoryPath,
+      BuckEventBus buckEventBus,
+      ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
     this.rootRepositoryPath = rootRepositoryPath;
     this.command = null;
     this.buckEventBus = buckEventBus;

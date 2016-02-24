@@ -3,6 +3,7 @@ java_test(
   srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/util:object_mapper',
     '//test/com/facebook/buck/json:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/guava:guava',

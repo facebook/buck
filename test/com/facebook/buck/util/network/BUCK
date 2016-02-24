@@ -5,6 +5,7 @@ java_test(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/network:network',
+    '//src/com/facebook/buck/util:object_mapper',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

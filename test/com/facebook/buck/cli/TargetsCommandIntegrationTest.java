@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
@@ -382,7 +383,7 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand(
         "targets", "--json", "--show-output", "//:test");
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 
     // Parse the observed JSON.
     JsonNode observed = objectMapper.readTree(

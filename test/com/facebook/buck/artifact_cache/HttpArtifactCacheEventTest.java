@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -34,7 +35,7 @@ import java.io.IOException;
 
 public class HttpArtifactCacheEventTest {
 
-  private static final ObjectMapper JSON_CONVERTER = new ObjectMapper();
+  private static final ObjectMapper JSON_CONVERTER = ObjectMappers.newDefaultInstance();
 
   private static final ImmutableList<RuleKey> TEST_RULE_KEYS = ImmutableList.of(
       new RuleKey("1234567890"),

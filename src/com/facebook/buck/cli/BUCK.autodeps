@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7dc17c275d0635af8e126cd2755d65f28206f4aa #@#
+#@# GENERATED FILE: DO NOT MODIFY 23a2292aab4c5b7607c3c0c6849bdddd926979f7 #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -73,6 +73,7 @@
     "//src/com/facebook/buck/util:escaper",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:object_mapper",
     "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util:watchman",
     "//src/com/facebook/buck/util/cache:cache",
@@ -91,8 +92,6 @@
     "//third-party/java/infer-annotations:infer-annotations",
     "//third-party/java/jackson:jackson-core",
     "//third-party/java/jackson:jackson-databind",
-    "//third-party/java/jackson:jackson-datatype-jdk7",
-    "//third-party/java/jackson-datatype-guava:jackson-datatype-guava",
     "//third-party/java/jsr:jsr305",
     "//third-party/java/nailgun:nailgun"
   ],

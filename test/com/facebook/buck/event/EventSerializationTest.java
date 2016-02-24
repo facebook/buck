@@ -65,6 +65,10 @@ import java.util.HashSet;
 
 public class EventSerializationTest {
 
+  // The hardcoded strings depend on this being an vanilla mapper.
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   private long timestamp;
   private long nanoTime;
   private long threadId;
@@ -84,7 +88,7 @@ public class EventSerializationTest {
   public void testProjectGenerationEventFinished() throws IOException {
     ProjectGenerationEvent.Finished event = ProjectGenerationEvent.finished();
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"type\":\"ProjectGenerationFinished\"," +
         "\"eventKey\":{\"value\":4242}}", message);
@@ -94,7 +98,7 @@ public class EventSerializationTest {
   public void testProjectGenerationEventStarted() throws IOException {
     ProjectGenerationEvent.Started event = ProjectGenerationEvent.started();
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"type\":\"ProjectGenerationStarted\"," +
         "\"eventKey\":{\"value\":4242}}", message);
@@ -104,7 +108,7 @@ public class EventSerializationTest {
   public void testParseEventStarted() throws IOException {
     ParseEvent.Started event = ParseEvent.started(ImmutableList.<BuildTarget>of());
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildTargets\":[],\"type\":\"ParseStarted\"," +
         "\"eventKey\":{\"value\":4242}}", message);
@@ -116,7 +120,7 @@ public class EventSerializationTest {
             BuildTargetFactory.newInstance("//base:short#flv")));
     ParseEvent.Finished event = ParseEvent.finished(started, Optional.<TargetGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildTargets\":[{\"cell\":{\"present\":false},\"baseName\":\"//base\"," +
         "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"," +
@@ -127,7 +131,7 @@ public class EventSerializationTest {
   public void testBuildEventStarted() throws IOException {
     BuildEvent.Started event = BuildEvent.started(ImmutableSet.of("//base:short"));
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"eventKey\":{\"value\":4242}," +
@@ -142,7 +146,7 @@ public class EventSerializationTest {
         BuildEvent.started(ImmutableSet.of("//base:short")),
         0);
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"eventKey\":{\"value\":4242}," +
@@ -155,7 +159,7 @@ public class EventSerializationTest {
     BuildRule rule = generateFakeBuildRule();
     BuildRuleEvent.Started event = BuildRuleEvent.started(rule);
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
@@ -177,7 +181,7 @@ public class EventSerializationTest {
             Optional.<HashCode>absent(),
             Optional.<Long>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
             "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
@@ -194,7 +198,7 @@ public class EventSerializationTest {
     TestRunEvent.Started event = TestRunEvent.started(
         true, TestSelectorList.empty(), false, ImmutableSet.<String>of());
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"runAllTests\":true," +
         "\"eventKey\":{\"value\":256329280}," +
@@ -207,7 +211,7 @@ public class EventSerializationTest {
         ImmutableSet.of("target"),
         ImmutableList.of(generateFakeTestResults()));
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\",\"" +
         "results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\":" +
         "null,\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
@@ -227,7 +231,7 @@ public class EventSerializationTest {
   public void testIndividualTestEventStarted() throws IOException {
     IndividualTestEvent.Started event = IndividualTestEvent.started(ImmutableList.of(""));
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"type\":\"AwaitingResults\",\"eventKey\":{\"value\":-594614447}}",
         message);
@@ -238,7 +242,7 @@ public class EventSerializationTest {
     IndividualTestEvent.Finished event = IndividualTestEvent.finished(ImmutableList.<String>of(),
         generateFakeTestResults());
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"eventKey\":{\"value\":-594614477}," +
         "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
@@ -260,7 +264,7 @@ public class EventSerializationTest {
         PerfEventId.of("PerfId"),
         "value", Optional.of(BuildTargetFactory.newInstance("//:fake")));
     event.configure(timestamp, nanoTime, threadId, buildId);
-    String message = new ObjectMapper().writeValueAsString(event);
+    String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
             "\"eventKey\":{\"value\":4242},\"eventId\":\"PerfId\",\"eventType\":\"STARTED\"," +
             "\"eventInfo\":{\"value\":{\"present\":true}},\"type\":\"PerfEventPerfIdStarted\"}",
@@ -308,13 +312,12 @@ public class EventSerializationTest {
   }
 
   private void assertJsonEquals(String expected, String actual) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    JsonFactory factory = mapper.getFactory();
+    JsonFactory factory = MAPPER.getFactory();
     JsonParser jsonParser = factory.createParser(
         String.format(expected, timestamp, nanoTime, threadId, buildId));
-    JsonNode expectedObject = mapper.readTree(jsonParser);
+    JsonNode expectedObject = MAPPER.readTree(jsonParser);
     jsonParser = factory.createParser(actual);
-    JsonNode actualObject = mapper.readTree(jsonParser);
+    JsonNode actualObject = MAPPER.readTree(jsonParser);
     matchJsonObjects("/", expectedObject, actualObject);
     assertEquals(expectedObject, actualObject);
   }

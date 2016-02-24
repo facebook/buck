@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 89c73d0cf5c135cba860b1f9b1c135e59903408c #@#
+#@# GENERATED FILE: DO NOT MODIFY ed871b39a22e5986eb54e121620c2ad1f992ead9 #@#
 {
   "command" : [
     "//src/com/facebook/buck/android:utils",
@@ -14,6 +14,7 @@
     "//src/com/facebook/buck/timing:timing",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:object_mapper",
     "//src/com/facebook/buck/util/concurrent:concurrent",
     "//src/com/facebook/buck/util/environment:platform",
     "//src/com/facebook/buck/util/immutables:immutables",

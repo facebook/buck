@@ -99,12 +99,24 @@ java_library(
   ],
 )
 
+OBJECT_MAPPER_SRCS = [
+ 'ObjectMappers.java',
+]
+java_library(
+  name = 'object_mapper',
+  srcs = OBJECT_MAPPER_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_immutables_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
     excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
-               WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS),
+               WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS + OBJECT_MAPPER_SRCS),
   tests = [
     '//test/com/facebook/buck/util:util',
   ],

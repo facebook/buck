@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b5183a421ab17c0c4cd604c07564ddd03d64ff80 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4e488748701c20b80615ab7227eb42f13b9bc0c5 #@#
 {
   "exceptions" : [
     "//src/com/facebook/buck/util:exceptions",
@@ -75,6 +75,7 @@
     "//src/com/facebook/buck/util:constants",
     "//src/com/facebook/buck/util:escaper",
     "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util:object_mapper",
     "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util/environment:platform",
     "//src/com/facebook/buck/util/immutables:immutables",
@@ -114,6 +115,7 @@
     "//src/com/facebook/buck/util:escaper",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:object_mapper",
     "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util/concurrent:concurrent",
     "//src/com/facebook/buck/util/environment:platform",

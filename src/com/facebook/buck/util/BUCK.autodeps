@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0fb88b2f96611ecdf066fb9dec5b672a6b826a15 #@#
+#@# GENERATED FILE: DO NOT MODIFY b1b4f3d6c6e7835c44b68c06a4283333b68c8daa #@#
 {
   "constants" : [
     "//third-party/java/guava:guava",
@@ -21,6 +21,11 @@
     "//third-party/java/immutables:processor",
     "//third-party/java/jsr:jsr305",
     "//third-party/java/nuprocess:nuprocess"
+  ],
+  "object_mapper" : [
+    "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jackson:jackson-datatype-jdk7",
+    "//third-party/java/jackson-datatype-guava:jackson-datatype-guava"
   ],
   "util" : [
     "//src/com/facebook/buck/io:io",

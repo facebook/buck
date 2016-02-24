@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Rule;
@@ -81,7 +81,7 @@ public class AutodepsWriterTest {
     int numWritten = AutodepsWriter.write(
         depsForBuildFiles,
         /* buildFileName */ "BUCK",
-        new ObjectMapper(),
+        ObjectMappers.newDefaultInstance(),
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         /* numThreads */ 1);
     workspace.verify();

@@ -167,7 +167,7 @@ public class RunShTestAndRecordResultStep implements Step {
           test.getStderr());
     }
 
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = context.getObjectMapper();
     try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
       mapper.writeValue(outputStream, summary);
     } catch (IOException e) {

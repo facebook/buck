@@ -44,8 +44,8 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -487,7 +487,7 @@ public class DaemonIntegrationTest {
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
             .setFilesystem(filesystem)
             .build(),
-        new ObjectMapper());
+        ObjectMappers.newDefaultInstance());
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
@@ -498,7 +498,7 @@ public class DaemonIntegrationTest {
                     .build())
                 .setFilesystem(filesystem)
                 .build(),
-            new ObjectMapper()));
+            ObjectMappers.newDefaultInstance()));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -510,7 +510,7 @@ public class DaemonIntegrationTest {
                         ImmutableMap.of("somename", "someothervalue"))).build())
                 .setFilesystem(filesystem)
                 .build(),
-            new ObjectMapper()));
+            ObjectMappers.newDefaultInstance()));
   }
 
   @Test
@@ -551,7 +551,7 @@ public class DaemonIntegrationTest {
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
-        new ObjectMapper());
+        ObjectMappers.newDefaultInstance());
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -565,6 +565,6 @@ public class DaemonIntegrationTest {
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),
-            new ObjectMapper()));
+            ObjectMappers.newDefaultInstance()));
   }
 }
