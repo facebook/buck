@@ -17,9 +17,11 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.google.common.collect.ImmutableSet;
 
-public class CompilerErrorEvent extends AbstractBuckEvent {
+public class CompilerErrorEvent extends AbstractBuckEvent
+    implements CompilerErrorEventExternalInterface {
   private final BuildTarget target;
   private final String error;
   private final ImmutableSet<String> suggestions;
@@ -53,18 +55,21 @@ public class CompilerErrorEvent extends AbstractBuckEvent {
 
   @Override
   public String getEventName() {
-    return "CompilerErrorEvent";
+    return COMPILER_ERROR_EVENT;
   }
 
+  @Override
   public String getError() {
     return error;
   }
 
+  @Override
   public String getTarget() {
     return target.getFullyQualifiedName();
   }
 
   public CompilerType getCompilerType() { return compilerType; }
 
+  @Override
   public ImmutableSet<String> getSuggestions() { return suggestions; }
 }

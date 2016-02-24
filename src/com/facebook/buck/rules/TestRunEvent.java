@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.event.external.events.TestRunFinishedEventInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
 
@@ -79,7 +80,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "RunStarted";
+      return TEST_RUN_STARTED;
     }
 
     @Override
@@ -96,7 +97,8 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
     }
   }
 
-  public static class Finished extends TestRunEvent {
+  public static class Finished extends TestRunEvent
+      implements TestRunFinishedEventInterface<TestResults> {
 
     private final List<TestResults> completedResults;
 
@@ -107,7 +109,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "RunComplete";
+      return RUN_COMPLETE;
     }
 
     @Override
@@ -115,6 +117,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
       return completedResults.toString();
     }
 
+    @Override
     public List<TestResults> getResults() {
       return completedResults;
     }

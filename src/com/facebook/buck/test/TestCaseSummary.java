@@ -16,6 +16,7 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.event.external.elements.TestCaseSummaryExternalInterface;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,7 +29,7 @@ import java.util.Locale;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class TestCaseSummary {
+public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestResultSummary> {
 
   /**
    * Transformation to annotate TestCaseSummary marking them as being read from cached results
@@ -109,19 +110,23 @@ public class TestCaseSummary {
     this.isCached = isCached;
   }
 
+  @Override
   public boolean isSuccess() {
     return isSuccess;
   }
 
+  @Override
   public boolean hasAssumptionViolations() {
     return hasAssumptionViolations;
   }
 
+  @Override
   public String getTestCaseName() {
     return testCaseName;
   }
 
   /** @return the total time to run all of the tests in this test case, in milliseconds */
+  @Override
   public long getTotalTime() {
     return totalTime;
   }
@@ -176,6 +181,7 @@ public class TestCaseSummary {
         testCaseName);
   }
 
+  @Override
   public ImmutableList<TestResultSummary> getTestResults() {
     return testResults;
   }
@@ -185,10 +191,12 @@ public class TestCaseSummary {
     return testResults.size() - failureCount - skippedCount;
   }
 
+  @Override
   public int getSkippedCount() {
     return skippedCount;
   }
 
+  @Override
   public int getFailureCount() {
     return failureCount;
   }

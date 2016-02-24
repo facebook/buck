@@ -1,0 +1,18 @@
+java_library(
+  name = 'external_lib',
+  srcs = glob(['**/*.java']),
+  provided_deps = [
+    '//third-party/java/guava:guava',
+    "//third-party/java/jackson:jackson-annotations",
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_binary(
+  name = 'external',
+  deps = [
+    ':external_lib',
+  ],
+)

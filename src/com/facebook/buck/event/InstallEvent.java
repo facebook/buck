@@ -57,7 +57,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
 
     @Override
     public String getEventName() {
-      return "InstallStarted";
+      return INSTALL_STARTED;
     }
   }
 
@@ -84,7 +84,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
 
     @Override
     public String getEventName() {
-      return "InstallFinished";
+      return INSTALL_FINISHED;
     }
 
     @Override

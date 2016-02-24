@@ -19,6 +19,7 @@ package com.facebook.buck.test;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
+import com.facebook.buck.event.external.elements.TestResultsExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,12 +33,13 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractTestResults {
+abstract class AbstractTestResults implements TestResultsExternalInterface<TestCaseSummary> {
 
   @Value.Parameter
   public abstract BuildTarget getBuildTarget();
 
   @Value.Derived
+  @Override
   public boolean isSuccess() {
     for (TestCaseSummary result : getTestCases()) {
       if (!result.isSuccess()) {
@@ -48,6 +50,7 @@ abstract class AbstractTestResults {
   }
 
   @Value.Derived
+  @Override
   public boolean hasAssumptionViolations() {
     for (TestCaseSummary result : getTestCases()) {
       if (result.hasAssumptionViolations()) {
@@ -81,6 +84,7 @@ abstract class AbstractTestResults {
   }
 
   @Value.Parameter
+  @Override
   public abstract ImmutableList<TestCaseSummary> getTestCases();
 
   @Value.Parameter
@@ -93,6 +97,7 @@ abstract class AbstractTestResults {
   public abstract ImmutableList<Path> getTestLogPaths();
 
   @Value.Default
+  @Override
   public boolean getDependenciesPassTheirTests() {
     return true;
   }
@@ -103,6 +108,7 @@ abstract class AbstractTestResults {
   }
 
   @Value.Default
+  @Override
   public int getTotalNumberOfTests() {
     return 0;
   }

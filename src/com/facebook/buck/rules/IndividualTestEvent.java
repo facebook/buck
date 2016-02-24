@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
 
 public abstract class IndividualTestEvent extends AbstractBuckEvent {
 
@@ -42,7 +43,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "AwaitingResults";
+      return INDIVIDUAL_TEST_AWAITING_RESULTS;
     }
 
     @Override
@@ -51,7 +52,8 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
     }
   }
 
-  public static class Finished extends IndividualTestEvent {
+  public static class Finished extends IndividualTestEvent
+      implements IndividualTesEventFinishedExternalInterface<TestResults> {
 
     private final TestResults results;
 
@@ -61,13 +63,14 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
       this.results = results;
     }
 
+    @Override
     public TestResults getResults() {
       return results;
     }
 
     @Override
     public String getEventName() {
-      return "ResultsAvailable";
+      return RESULTS_AVAILABLE;
     }
 
     @Override

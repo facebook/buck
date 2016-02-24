@@ -17,8 +17,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.external.events.ProgressEventInterface;
 
-public abstract class ProgressEvent extends AbstractBuckEvent {
+public abstract class ProgressEvent extends AbstractBuckEvent implements ProgressEventInterface {
 
   protected final double progressValue;
 
@@ -44,6 +45,7 @@ public abstract class ProgressEvent extends AbstractBuckEvent {
     return "progress=" + String.valueOf(progressValue);
   }
 
+  @Override
   public double getProgressValue() {
     return progressValue;
   }
@@ -55,7 +57,7 @@ public abstract class ProgressEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "ParsingProgressUpdated";
+      return PARSING_PROGRESS_UPDATED;
     }
   }
 
@@ -66,7 +68,7 @@ public abstract class ProgressEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "ProjectGenerationProgressUpdated";
+      return PROJECT_GENERATION_PROGRESS_UPDATED;
     }
   }
 
@@ -77,7 +79,7 @@ public abstract class ProgressEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "BuildProgressUpdated";
+      return BUILD_PROGRESS_UPDATED;
     }
   }
 

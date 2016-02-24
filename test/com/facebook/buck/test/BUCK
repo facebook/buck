@@ -5,6 +5,7 @@ java_test(
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',
     '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/event/external:external_lib',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:config',
     '//src/com/facebook/buck/test:test',
@@ -18,6 +19,7 @@ java_library(
   name = 'testutil',
   srcs = glob(['*.java'], excludes=['*Test.java']),
   deps = [
+    '//src/com/facebook/buck/event/external:external_lib',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/test:test',
     '//third-party/java/guava:guava',

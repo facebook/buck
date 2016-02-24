@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
 
@@ -27,7 +28,8 @@ import java.util.UUID;
 /**
  * Base class for events about steps.
  */
-public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class StepEvent extends AbstractBuckEvent
+    implements LeafEvent, StepEventExternalInterface {
 
   private final String shortName;
   private final String description;
@@ -42,10 +44,12 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
     this.uuid = uuid;
   }
 
+  @Override
   public String getShortStepName() {
     return shortName;
   }
 
+  @Override
   public String getDescription() {
     return description;
   }
@@ -79,7 +83,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
 
     @Override
     public String getEventName() {
-      return "StepStarted";
+      return STEP_STARTED;
     }
   }
 
@@ -97,7 +101,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
 
     @Override
     public String getEventName() {
-      return "StepFinished";
+      return STEP_FINISHED;
     }
 
     @Override

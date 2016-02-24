@@ -64,7 +64,7 @@ public abstract class BuildEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "BuildStarted";
+      return BUILD_STARTED;
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class BuildEvent extends AbstractBuckEvent {
 
     @Override
     public String getEventName() {
-      return "BuildFinished";
+      return BUILD_FINISHED;
     }
 
     @Override

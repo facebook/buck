@@ -16,6 +16,7 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.event.external.elements.TestResultSummaryExternalInterface;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
@@ -30,7 +31,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class TestResultSummary {
+public class TestResultSummary implements TestResultSummaryExternalInterface {
 
   private final String testCaseName;
 
@@ -92,10 +93,12 @@ public class TestResultSummary {
         stdErr);
   }
 
+  @Override
   public String getTestName() {
     return testName;
   }
 
+  @Override
   public String getTestCaseName() {
     return testCaseName;
   }
@@ -107,6 +110,7 @@ public class TestResultSummary {
    * differently if they please.
    */
   @JsonIgnore
+  @Override
   public boolean isSuccess() {
     return type != ResultType.FAILURE;
   }
@@ -116,22 +120,27 @@ public class TestResultSummary {
   }
 
   /** @return how long the test took, in milliseconds */
+  @Override
   public long getTime() {
     return time;
   }
 
+  @Override
   @Nullable public String getMessage() {
     return message;
   }
 
+  @Override
   @Nullable public String getStacktrace() {
     return stacktrace;
   }
 
+  @Override
   @Nullable public String getStdOut() {
     return stdOut;
   }
 
+  @Override
   @Nullable public String getStdErr() {
     return stdErr;
   }

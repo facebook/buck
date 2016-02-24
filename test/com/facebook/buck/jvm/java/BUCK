@@ -102,6 +102,7 @@ java_test(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/event/external:external_lib',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/json:json',

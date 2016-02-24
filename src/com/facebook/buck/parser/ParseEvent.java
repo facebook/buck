@@ -68,7 +68,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
 
     @Override
     public String getEventName() {
-      return "ParseStarted";
+      return PARSE_STARTED;
     }
   }
 
@@ -83,7 +83,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
 
     @Override
     public String getEventName() {
-      return "ParseFinished";
+      return PARSE_FINISHED;
     }
 
     @JsonIgnore
