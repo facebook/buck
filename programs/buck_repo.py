@@ -16,9 +16,11 @@ import buck_version
 JAVA_CLASSPATHS = [
     "build/abi_processor/classes",
     "build/classes",
+    "build/src-gen/classes",
     "build/aosp/classes",
     "build/dx_classes",
     "src",
+    "src-gen",
     "third-party/java/android/sdklib.jar",
     "third-party/java/android/sdk-common-24.2.3.jar",
     "third-party/java/android/common-24.2.3.jar",
@@ -68,6 +70,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/servlet-api/javax.servlet-api-3.1.0.jar",
     "third-party/java/slf4j/slf4j-api-1.7.2.jar",
     "third-party/java/stringtemplate/ST-4.0.8.jar",
+    "third-party/java/thrift/libthrift-0.9.3.jar",
     "third-party/java/xz-java-1.3/xz-1.3.jar",
     # maven/aether libs
     "third-party/java/aether/aether-api-1.0.2.v20150114.jar",

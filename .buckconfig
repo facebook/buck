@@ -82,6 +82,7 @@
         org.apache.maven.model => //third-party/java/maven:maven-model, \
         org.apache.maven.model.building => //third-party/java/maven:maven-model-builder, \
         org.apache.maven.repository.internal => //third-party/java/maven:maven-aether-provider, \
+        org.apache.thrift => //third-party/java/thrift:libthrift, \
         org.eclipse.aether => //third-party/java/aether:aether-api, \
         org.eclipse.aether.connector.basic => //third-party/java/aether:aether-connector-basic, \
         org.eclipse.aether.impl => //third-party/java/aether:aether-impl, \

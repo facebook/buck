@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5568dbbb4e6ed381dca60aaed2debe5178d5baa7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7dc17c275d0635af8e126cd2755d65f28206f4aa #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -60,6 +60,7 @@
     "//src/com/facebook/buck/rules/coercer:types",
     "//src/com/facebook/buck/rules/keys:keys",
     "//src/com/facebook/buck/simulate:simulate",
+    "//src/com/facebook/buck/slb:slb",
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/step/fs:fs",
     "//src/com/facebook/buck/test:config",

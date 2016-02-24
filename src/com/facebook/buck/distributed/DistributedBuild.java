@@ -33,7 +33,7 @@ public class DistributedBuild {
   public int executeAndPrintFailuresToEventBus() {
     int jobsDone = 0;
     while (jobsDone < TOTAL_JOBS) {
-      distBuildService.doMagic();
+      distBuildService.submitJob();
       DistBuildStatus status = DistBuildStatus.builder()
           .setPercentProgress(((float) jobsDone) / TOTAL_JOBS)
           .build();

@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.slb.NoHealthyServersException;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
@@ -336,10 +337,10 @@ public class BuildCommand extends AbstractCommand {
     return exitCode;
   }
 
-  private int executeDistributedBuild(CommandRunnerParams params) {
+  private int executeDistributedBuild(CommandRunnerParams params) throws NoHealthyServersException {
     // TODO(ruibm): Add here distributed build magic.
     DistributedBuild build = new DistributedBuild(
-        new DistBuildService(new DistBuildConfig(params.getBuckConfig())),
+        new DistBuildService(new DistBuildConfig(params.getBuckConfig()), params.getBuckEventBus()),
         params.getBuckEventBus());
     return build.executeAndPrintFailuresToEventBus();
   }

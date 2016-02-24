@@ -302,6 +302,7 @@
     <pathelement location="${immutables-value-standalone.jar}" />
     <pathelement location="${src.dir}" />
     <pathelement location="${aosp.classes.dir}" />
+    <pathelement location="${manual.gensrc.dir}" />
   </path>
 
   <!-- The set of Immutables value type source files which have not
@@ -350,7 +351,7 @@
 
   <target name="generate-immutables" depends="compile-aosp, check-immutables" if="${generate-immutables-needed}">
     <mkdir dir="${immutables.gensrc.dir}" />
-    <javac srcdir="${src.dir}:${immutables.gensrc.dir}"
+    <javac srcdir="${src.dir}:${manual.gensrc.dir}:${immutables.gensrc.dir}"
            classpathref="classpath-generate-immutables"
            includeAntRuntime="no"
            includes="${immutables-srcs-flattened}">

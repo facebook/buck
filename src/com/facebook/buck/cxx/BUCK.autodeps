@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6b99cbc4b3a1c3266b5702338acdae535fd3cce9 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3d24623bce6a1c0a771ec1a771427840637a86a4 #@#
 {
   "framework_path_arg" : [
     "//src/com/facebook/buck/rules:build_rule",
@@ -22,7 +22,8 @@
     "//src/com/facebook/buck/util:io",
     "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor"
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jsr:jsr305"
   ],
   "rules" : [
     "//src/com/facebook/buck/android:packageable",
