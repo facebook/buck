@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.MacroException;
@@ -45,7 +46,8 @@ import java.util.Set;
 public class CxxBinaryDescription implements
     Description<CxxBinaryDescription.Arg>,
     Flavored,
-    ImplicitDepsInferringDescription<CxxBinaryDescription.Arg> {
+    ImplicitDepsInferringDescription<CxxBinaryDescription.Arg>,
+    MetadataProvidingDescription<CxxBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_binary");
 
@@ -128,11 +130,9 @@ public class CxxBinaryDescription implements
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
-          .paramsWithoutCompilationDatabaseFlavor(params);
       CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
           .createBuildRulesForCxxBinaryDescriptionArg(
-              paramsWithoutCompilationDatabaseFlavor,
+              params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE),
               resolver,
               cxxPlatform,
               args,
@@ -142,6 +142,14 @@ public class CxxBinaryDescription implements
           pathResolver,
           preprocessMode,
           cxxLinkAndCompileRules.compileRules);
+    }
+
+    if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return CxxDescriptionEnhancer.createUberCompilationDatabase(
+          cxxPlatforms.getValue(flavors).isPresent() ?
+              params :
+              params.withFlavor(defaultCxxPlatform.getFlavor()),
+          resolver);
     }
 
     if (flavors.contains(CxxInferEnhancer.INFER)) {
@@ -242,19 +250,45 @@ public class CxxBinaryDescription implements
         ImmutableSet.of(
             CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
             CxxCompilationDatabase.COMPILATION_DATABASE,
+            CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
             CxxInferEnhancer.INFER,
             CxxInferEnhancer.INFER_ANALYZE));
 
     return flavors.isEmpty();
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends LinkableCxxConstructorArg {
+  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
+    return cxxPlatforms;
   }
-
-  public FlavorDomain<CxxPlatform> getCxxPlatforms() { return cxxPlatforms; }
 
   public CxxPlatform getDefaultCxxPlatform() {
     return defaultCxxPlatform;
   }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      final Class<U> metadataClass) throws NoSuchBuildTargetException {
+    if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
+        !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      return Optional.absent();
+    }
+    return CxxDescriptionEnhancer
+        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
+        .transform(
+            new Function<CxxCompilationDatabaseDependencies, U>() {
+              @Override
+              public U apply(CxxCompilationDatabaseDependencies input) {
+                return metadataClass.cast(input);
+              }
+            }
+        );
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends LinkableCxxConstructorArg {
+  }
+
 }

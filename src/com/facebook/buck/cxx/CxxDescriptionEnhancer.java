@@ -17,10 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -32,6 +34,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
@@ -41,7 +44,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
@@ -737,13 +739,11 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       CxxPreprocessMode preprocessMode,
       CxxConstructorArg arg) throws NoSuchBuildTargetException {
-    BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
-        .paramsWithoutCompilationDatabaseFlavor(params);
     // Invoking requireObjects has the side-effect of invoking
     // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
     // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
-        paramsWithoutCompilationDatabaseFlavor,
+        params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE),
         ruleResolver,
         pathResolver,
         cxxPlatform,
@@ -756,6 +756,66 @@ public class CxxDescriptionEnhancer {
         pathResolver,
         preprocessMode,
         objects.keySet());
+  }
+
+  public static BuildRule createUberCompilationDatabase(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
+    Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
+        ruleResolver.requireMetadata(
+            params
+                .withoutFlavor(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
+                .withFlavor(CxxCompilationDatabase.COMPILATION_DATABASE)
+                .getBuildTarget(),
+            CxxCompilationDatabaseDependencies.class);
+    Preconditions.checkState(compilationDatabases.isPresent());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    return new JsonConcatenate(
+        params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(
+                    pathResolver.filterBuildRuleInputs(
+                        compilationDatabases.get().getSourcePaths()))),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        pathResolver,
+        ImmutableSortedSet.copyOf(
+            pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths())),
+        "compilation-database-concatenate",
+        "Concatenate compilation databases",
+        "uber-compilation-database",
+        "compile_commands.json");
+  }
+
+  public static Optional<CxxCompilationDatabaseDependencies> createCompilationDatabaseDependencies(
+      BuildTarget buildTarget,
+      FlavorDomain<CxxPlatform> platforms,
+      BuildRuleResolver resolver,
+      CxxConstructorArg args) throws NoSuchBuildTargetException {
+    Preconditions.checkState(
+        buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE));
+    Optional<Flavor> cxxPlatformFlavor = platforms.getFlavor(buildTarget);
+    Preconditions.checkState(
+        cxxPlatformFlavor.isPresent(),
+        "Could not find cxx platform in:\n%s",
+        Joiner.on(", ").join(buildTarget.getFlavors()));
+    ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
+    for (BuildTarget dep : args.deps.get()) {
+      Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
+          resolver.requireMetadata(
+              BuildTarget.builder(dep)
+                  .addFlavors(CxxCompilationDatabase.COMPILATION_DATABASE)
+                  .addFlavors(cxxPlatformFlavor.get())
+                  .build(),
+              CxxCompilationDatabaseDependencies.class);
+      if (compilationDatabases.isPresent()) {
+        sourcePaths.addAll(compilationDatabases.get().getSourcePaths());
+      }
+    }
+    // Not all parts of Buck use require yet, so require the rule here so it's available in the
+    // resolver for the parts that don't.
+    resolver.requireRule(buildTarget);
+    sourcePaths.add(new BuildTargetSourcePath(buildTarget));
+    return Optional.of(CxxCompilationDatabaseDependencies.of(sourcePaths.build()));
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(

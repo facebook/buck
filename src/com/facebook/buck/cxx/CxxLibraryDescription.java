@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -70,7 +71,8 @@ import java.util.regex.Pattern;
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
-    Flavored {
+    Flavored,
+    MetadataProvidingDescription<CxxLibraryDescription.Arg> {
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
@@ -123,6 +125,7 @@ public class CxxLibraryDescription implements
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return cxxPlatforms.containsAnyOf(flavors) ||
         flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE) ||
+        flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE) ||
         flavors.contains(CxxInferEnhancer.INFER) ||
         flavors.contains(CxxInferEnhancer.INFER_ANALYZE);
 
@@ -513,26 +516,6 @@ public class CxxLibraryDescription implements
         blacklist);
   }
 
-  /**
-   * @return a {@link CxxCompilationDatabase} rule which builds a compilation database for this
-   * C/C++ library.
-   */
-  private static CxxCompilationDatabase createCompilationDatabaseBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      CxxLibraryDescription.Arg args,
-      CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    return CxxDescriptionEnhancer.createCompilationDatabase(
-        params,
-        resolver,
-        sourcePathResolver,
-        cxxPlatform,
-        preprocessMode,
-        args);
-  }
-
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -564,12 +547,24 @@ public class CxxLibraryDescription implements
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
-      return createCompilationDatabaseBuildRule(
+      CxxPlatform cxxPlatform = platform.isPresent()
+          ? platform.get()
+          : DefaultCxxPlatforms.build(cxxBuckConfig);
+      SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+      return CxxDescriptionEnhancer.createCompilationDatabase(
           params,
           resolver,
-          platform.isPresent() ? platform.get() : DefaultCxxPlatforms.build(cxxBuckConfig),
-          args,
-          preprocessMode);
+          sourcePathResolver,
+          cxxPlatform,
+          preprocessMode,
+          args);
+    } else if (params.getBuildTarget().getFlavors()
+        .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return CxxDescriptionEnhancer.createUberCompilationDatabase(
+          platform.isPresent() ?
+              params :
+              params.withFlavor(DefaultCxxPlatforms.build(cxxBuckConfig).getFlavor()),
+          resolver);
     } else if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
@@ -800,6 +795,28 @@ public class CxxLibraryDescription implements
 
   public FlavorDomain<CxxPlatform> getCxxPlatforms() {
     return cxxPlatforms;
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      final Class<U> metadataClass) throws NoSuchBuildTargetException {
+    if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
+        !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      return Optional.absent();
+    }
+    return CxxDescriptionEnhancer
+        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
+        .transform(
+            new Function<CxxCompilationDatabaseDependencies, U>() {
+              @Override
+              public U apply(CxxCompilationDatabaseDependencies input) {
+                return metadataClass.cast(input);
+              }
+            }
+        );
   }
 
   @SuppressFieldNotInitialized

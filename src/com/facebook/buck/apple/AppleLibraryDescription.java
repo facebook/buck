@@ -60,6 +60,7 @@ public class AppleLibraryDescription implements
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CxxCompilationDatabase.COMPILATION_DATABASE,
+      CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
@@ -216,11 +217,15 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
-    if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
-      return Optional.absent();
-    }
-    if (!buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
-      return Optional.absent();
+    if (!metadataClass.isAssignableFrom(FrameworkDependencies.class) ||
+        !buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      AppleDescriptions.populateCxxLibraryDescriptionArg(
+          new SourcePathResolver(resolver),
+          delegateArg,
+          args,
+          buildTarget);
+      return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
     }
     Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
     Preconditions.checkState(

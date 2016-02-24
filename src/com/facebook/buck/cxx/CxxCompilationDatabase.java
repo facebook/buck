@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -38,21 +37,20 @@ import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 public class CxxCompilationDatabase extends AbstractBuildRule implements HasPostBuildSteps {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
+  public static final Flavor UBER_COMPILATION_DATABASE =
+      ImmutableFlavor.of("uber-compilation-database");
 
   @AddToRuleKey
   private final CxxPreprocessMode preprocessMode;
@@ -83,21 +81,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
         pathResolver,
         compileRules.build(),
         preprocessMode);
-  }
-
-  static BuildRuleParams paramsWithoutCompilationDatabaseFlavor(BuildRuleParams params) {
-    Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
-    Preconditions.checkArgument(flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE));
-    flavors.remove(CxxCompilationDatabase.COMPILATION_DATABASE);
-    BuildTarget target = BuildTarget
-        .builder(params.getBuildTarget().getUnflavoredBuildTarget())
-        .addAllFlavors(flavors)
-        .build();
-
-    return params.copyWithChanges(
-        target,
-        params.getDeclaredDeps(),
-        params.getExtraDeps());
   }
 
   CxxCompilationDatabase(

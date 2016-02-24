@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -55,15 +56,18 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
-public class AppleBinaryDescription
-    implements Description<AppleBinaryDescription.Arg>, Flavored {
+public class AppleBinaryDescription implements
+    Description<AppleBinaryDescription.Arg>,
+    Flavored,
+    MetadataProvidingDescription<AppleBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
   public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       APP_FLAVOR,
-      CxxCompilationDatabase.COMPILATION_DATABASE);
+      CxxCompilationDatabase.COMPILATION_DATABASE,
+      CxxCompilationDatabase.UBER_COMPILATION_DATABASE);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
@@ -303,6 +307,21 @@ public class AppleBinaryDescription
         fatBinaryInfo.getRepresentativePlatform().getLipo(),
         inputs,
         BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      Class<U> metadataClass) throws NoSuchBuildTargetException {
+    CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+    AppleDescriptions.populateCxxBinaryDescriptionArg(
+        new SourcePathResolver(resolver),
+        delegateArg,
+        args,
+        buildTarget);
+    return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
   }
 
   @SuppressFieldNotInitialized
