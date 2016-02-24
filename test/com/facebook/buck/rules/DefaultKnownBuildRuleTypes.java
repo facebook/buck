@@ -62,11 +62,15 @@ public class DefaultKnownBuildRuleTypes {
     ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> processMap = ImmutableMap.builder();
     for (Map.Entry<String, String> python : PYTHONS.entrySet()) {
       for (String path : uniquePaths) {
-        processMap.put(
-            ProcessExecutorParams.builder()
-                .setCommand(ImmutableList.of(path + File.separator + python.getKey(), "-"))
-                .build(),
-            new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
+        for (String extension : new String[]{"", ".exe", ".EXE"}) {
+          processMap.put(
+              ProcessExecutorParams.builder()
+                  .setCommand(ImmutableList.of(
+                      path + File.separator + python.getKey() + extension,
+                      "-"))
+                  .build(),
+              new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
+        }
       }
     }
     return processMap.build();

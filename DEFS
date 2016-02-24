@@ -121,6 +121,9 @@ def java_test(
       # http://arihantwin.blogspot.com/2012/08/getting-error-illegal-local-variable.html
       '-XX:-UseSplitVerifier',
 
+      # Don't use the system-installed JNA; extract it from the local jar.
+      '-Djna.nosys=true',
+
       # Add -Dsun.zip.disableMemoryMapping=true to work around a JDK issue
       # related to modifying JAR/ZIP files that have been loaded into memory:
       #
