@@ -351,7 +351,7 @@ public class PrebuiltCxxLibraryDescription implements
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
-        params.copyWithExtraDeps(
+        params.appendExtraDeps(
             new Supplier<ImmutableSortedSet<BuildRule>>() {
               @Override
               public ImmutableSortedSet<BuildRule> get() {
@@ -461,7 +461,7 @@ public class PrebuiltCxxLibraryDescription implements
         args.libDir.transform(macroArgFunction);
 
     return new PrebuiltCxxLibrary(
-        params.copyWithExtraDeps(
+        params.appendExtraDeps(
             new Supplier<ImmutableSortedSet<BuildRule>>() {
               @Override
               public ImmutableSortedSet<BuildRule> get() {
