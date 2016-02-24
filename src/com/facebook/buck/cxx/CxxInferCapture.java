@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.util.LinkedHashSet;
 
 /**
  * Generate the CFG for a source file
@@ -49,10 +48,10 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
 
   @AddToRuleKey
   private final CxxInferTools inferTools;
-  private final Optional<ImmutableList<String>> platformPreprocessorFlags;
-  private final Optional<ImmutableList<String>> rulePreprocessorFlags;
-  private final Optional<ImmutableList<String>> platformCompilerFlags;
-  private final Optional<ImmutableList<String>> ruleCompilerFlags;
+  private final ImmutableList<String> platformPreprocessorFlags;
+  private final ImmutableList<String> rulePreprocessorFlags;
+  private final ImmutableList<String> platformCompilerFlags;
+  private final ImmutableList<String> ruleCompilerFlags;
   @AddToRuleKey
   private final SourcePath input;
   private final CxxSource.Type inputType;
@@ -74,10 +73,10 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   CxxInferCapture(
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
-      Optional<ImmutableList<String>> platformPreprocessorFlags,
-      Optional<ImmutableList<String>> rulePreprocessorFlags,
-      Optional<ImmutableList<String>> platformCompilerFlags,
-      Optional<ImmutableList<String>> ruleCompilerFlags,
+      ImmutableList<String> platformPreprocessorFlags,
+      ImmutableList<String> rulePreprocessorFlags,
+      ImmutableList<String> platformCompilerFlags,
+      ImmutableList<String> ruleCompilerFlags,
       SourcePath input,
       AbstractCxxSource.Type inputType,
       Path output,
@@ -109,26 +108,26 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   }
 
   private ImmutableList<String> getPreprocessorPlatformPrefix() {
-    return platformPreprocessorFlags.get();
+    return platformPreprocessorFlags;
   }
 
   private ImmutableList<String> getCompilerPlatformPrefix() {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(getPreprocessorPlatformPrefix());
-    flags.addAll(platformCompilerFlags.get());
+    flags.addAll(platformCompilerFlags);
     return flags.build();
   }
 
   private ImmutableList<String> getCompilerSuffix() {
     ImmutableList.Builder<String> suffix = ImmutableList.builder();
     suffix.addAll(getPreprocessorSuffix());
-    suffix.addAll(ruleCompilerFlags.get());
+    suffix.addAll(ruleCompilerFlags);
     return suffix.build();
   }
 
   private ImmutableList<String> getPreprocessorSuffix() {
     return ImmutableList.<String>builder()
-        .addAll(new LinkedHashSet<>(rulePreprocessorFlags.get()))
+        .addAll(ImmutableSet.copyOf(rulePreprocessorFlags))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
@@ -203,19 +202,12 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
-    builder.setReflectively(
-        "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(platformPreprocessorFlags.or(ImmutableList.<String>of())));
-    builder.setReflectively(
-        "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(rulePreprocessorFlags.or(ImmutableList.<String>of())));
-    builder.setReflectively(
-        "platformCompilerFlags",
-        sanitizer.sanitizeFlags(platformCompilerFlags.or(ImmutableList.<String>of())));
-    builder.setReflectively(
-        "ruleCompilerFlags",
-        sanitizer.sanitizeFlags(ruleCompilerFlags.or(ImmutableList.<String>of())));
-
-    return builder;
+    return builder
+        .setReflectively(
+            "platformPreprocessorFlags",
+            sanitizer.sanitizeFlags(platformPreprocessorFlags))
+        .setReflectively("rulePreprocessorFlags", sanitizer.sanitizeFlags(rulePreprocessorFlags))
+        .setReflectively("platformCompilerFlags", sanitizer.sanitizeFlags(platformCompilerFlags))
+        .setReflectively("ruleCompilerFlags", sanitizer.sanitizeFlags(ruleCompilerFlags));
   }
 }
