@@ -23,7 +23,6 @@
       .buckd, \
       build, \
       bin, \
-      src/com/facebook/buck/intellij/plugin, \
 
     ; Common temp file patterns:
     ; .*\.swp$ (vim)
