@@ -77,6 +77,11 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
         currentText = "";
       }
       baseDir = project.getBaseDir().findFileByRelativePath(currentText);
+
+      // If the base dir is still null, then we have a bad relative path
+      if (baseDir == null) {
+        return;
+      }
     }
     // get the files under the base folder
     VirtualFile[] files = baseDir.getChildren();
