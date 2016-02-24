@@ -117,10 +117,10 @@ class FbJsonTestResult(unittest._TextTestResult):
             test = self._current_setup_class_test
 
         self._results.append({
-            'testCaseName': test._testMethodName,
-            'testCase': '{0}.{1}'.format(
+            'testCaseName': '{0}.{1}'.format(
                 test.__class__.__module__,
                 test.__class__.__name__),
+            'testCase': test._testMethodName,
             'type': self._current_status,
             'time': int((time.time() - self._test_start_time) * 1000),
             'message': os.linesep.join(self._messages),
