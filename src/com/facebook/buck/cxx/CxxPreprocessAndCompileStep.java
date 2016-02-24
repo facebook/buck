@@ -274,7 +274,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         context.getBuckEventBus().post(
             createConsoleEvent(
                 context,
-                preprocessorCommand.get(),
+                preprocessorCommand.get().supportsColorsInDiagnostics(),
                 preprocessStatus == 0 ? Level.WARNING : Level.SEVERE,
                 preprocessErr));
       }
@@ -284,7 +284,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         context.getBuckEventBus().post(
             createConsoleEvent(
                 context,
-                compilerCommand.get(),
+                compilerCommand.get().supportsColorsInDiagnostics(),
                 compileStatus == 0 ? Level.WARNING : Level.SEVERE,
                 compileErr));
       }
@@ -386,7 +386,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       context.getBuckEventBus().post(
           createConsoleEvent(
               context,
-              operation == Operation.PREPROCESS ? preprocessorCommand.get() : compilerCommand.get(),
+              preprocessorCommand.or(compilerCommand).get().supportsColorsInDiagnostics(),
               exitCode == 0 ? Level.WARNING : Level.SEVERE,
               err));
     }
@@ -396,10 +396,10 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private ConsoleEvent createConsoleEvent(
       ExecutionContext context,
-      ToolCommand command,
+      boolean commandOutputsColor,
       Level level,
       String message) {
-    if (context.getAnsi().isAnsiTerminal() && command.supportsColorsInDiagnostics()) {
+    if (context.getAnsi().isAnsiTerminal() && commandOutputsColor) {
       return ConsoleEvent.createForMessageWithAnsiEscapeCodes(level, message);
     } else {
       return ConsoleEvent.create(level, message);
