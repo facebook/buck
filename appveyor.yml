@@ -1,0 +1,20 @@
+install:
+  - cinst -y jdk8
+  - cinst -y ant -ignoreDependencies
+  - set JAVA_HOME=C:\Program Files\Java\jdk1.8.0
+  - set PATH=%JAVA_HOME%\bin;%PATH%
+  - set BUCK_EXTRA_JAVA_ARGS=-Djna.nosys=true
+  - python --version
+  - java -version
+  - ant -version
+
+
+build_script:
+  - "bin\\buck build buck"
+
+test_script:
+  - "bin\\buck test --all --test-selectors=@windows_failures.txt"
+
+artifacts:
+  - path: buck-out\gen\programs\buck.pex
+
