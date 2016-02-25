@@ -1,5 +1,0 @@
-java_test(
-  name = 'a',
-  srcs = ['TestA.java'],
-  deps = [ '//lib:junit' ],
-)
