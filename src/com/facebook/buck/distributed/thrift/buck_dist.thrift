@@ -25,9 +25,26 @@ struct BuildId {
   1 : optional string id;
 }
 
+enum BuildStatus {
+  UNKNOWN = 0,
+
+  // In the build queue waiting for an available machine.
+  QUEUED = 1,
+
+  // A build machine has started the build.
+  BUILDING = 2,
+
+  // The build has completed completely.
+  FINISHED_SUCCESSFULLY = 3,
+
+  // The build has failed.
+  FAILED = 4,
+}
+
 struct BuildJob {
   1: optional BuildId buildId;
   2: optional DebugInfo debug;
+  3: optional BuildStatus status = BuildStatus.UNKNOWN;
 }
 
 
@@ -57,9 +74,9 @@ struct BuildStatusResponse {
 ##############################################################################
 
 enum FrontendRequestType {
-  UNKNOWN,
-  START_BUILD,
-  BUILD_STATUS,
+  UNKNOWN = 0,
+  START_BUILD = 1,
+  BUILD_STATUS = 2,
 }
 
 struct FrontendRequest {

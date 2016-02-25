@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
@@ -29,6 +30,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.facebook.buck.timing.DefaultClock;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
@@ -40,14 +42,16 @@ import java.util.concurrent.TimeUnit;
 
 public class DistBuildService {
   private static final Logger LOG = Logger.get(DistBuildService.class);
-  private static final int BUILD_DURATION_SECONDS = 10;
+  private static final int BUILD_DURATION_MS = 10000;
 
   private final DistBuildConfig distBuildConfig;
   private final String frontendUrl;
+  private final BuckEventBus eventBus;
 
   public DistBuildService(DistBuildConfig distBuildConfig, BuckEventBus eventBus)
       throws NoHealthyServersException {
     this.distBuildConfig = distBuildConfig;
+    this.eventBus = eventBus;
     try {
       HttpLoadBalancer client =
           distBuildConfig.getFrontendConfig().createHttpClientSideSlb(new DefaultClock(), eventBus);
@@ -59,11 +63,13 @@ public class DistBuildService {
     }
   }
 
-  public DistBuildService(DistBuildConfig distBuildConfig, String frontendUrl) {
+  public DistBuildService(DistBuildConfig distBuildConfig, BuckEventBus eventBus,
+      String frontendUrl) {
     Preconditions.checkNotNull(frontendUrl);
     Preconditions.checkState(!frontendUrl.isEmpty(),
         "Distributed build frontend URL cannot be empty.");
     this.distBuildConfig = distBuildConfig;
+    this.eventBus = eventBus;
     this.frontendUrl = frontendUrl;
   }
 
@@ -98,7 +104,7 @@ public class DistBuildService {
       job = response.getStartBuild().getBuildJob();
       id = job.getBuildId();
       LOG.info("Submitted job. Build id = " + id.getId());
-      printLogBookFromJob(job);
+      logDebugInfo(job);
 
       // poll for buildStatus
       status.setBuildId(id);
@@ -106,24 +112,44 @@ public class DistBuildService {
       request.setType(FrontendRequestType.BUILD_STATUS);
       request.setBuildStatus(status);
       Stopwatch stopwatch = Stopwatch.createStarted();
-      while (stopwatch.elapsed(TimeUnit.SECONDS) < BUILD_DURATION_SECONDS) {
+
+      do {
         thriftClient.writeAndSend(request);
 
         // check response
+        response.clear();
         thriftClient.read(response);
         Preconditions.checkState(response.getType().equals(FrontendRequestType.BUILD_STATUS));
         job = response.getBuildStatus().getBuildJob();
         Preconditions.checkState(job.getBuildId().equals(id));
-        Thread.sleep(1000);
-      }
+        LOG.info("Got build status: " + job.getStatus().toString());
 
-      // print status
+        eventBus.post(new DistBuildStatusEvent(
+            DistBuildStatus.builder()
+                .setETAMillis(BUILD_DURATION_MS - stopwatch.elapsed(TimeUnit.MILLISECONDS))
+                .setStatus(job.getStatus().toString())
+                .setMessage(getLastLogLine(job))
+                .build()));
+
+        Thread.sleep(1000);
+      } while (!(job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
+                 job.getStatus().equals(BuildStatus.FAILED)));
+
+      // log status
       LOG.info("Build was " +
           (response.isWasSuccessful() ? "" : "not ") +
           "successful!");
       if (response.isSetErrorMessage()) {
         LOG.error("Error msg: " + response.getErrorMessage());
       }
+      logDebugInfo(job);
+
+      eventBus.post(new DistBuildStatusEvent(
+          DistBuildStatus.builder()
+              .setStatus(job.getStatus().toString())
+              .setETAMillis(0)
+              .setMessage(getLastLogLine(job))
+              .build()));
 
       thriftClient.close();
     } catch (Exception e) {
@@ -131,13 +157,22 @@ public class DistBuildService {
     }
   }
 
-  public void printLogBookFromJob(BuildJob job) {
+  private Optional<String> getLastLogLine(BuildJob job)  {
+    if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
+      return Optional.of(
+          job.getDebug().getLogBook().get(job.getDebug().getLogBook().size() - 1).getName());
+    }
+    return Optional.absent();
+  }
+
+  private void logDebugInfo(BuildJob job) {
     DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
       LOG.debug("Received debug info: ");
       for (LogRecord log : job.getDebug().getLogBook()) {
         Date date = new Date(log.getTimestampMillis());
-        String dateString = format.format(date) + "." + (log.getTimestampMillis() % 1000);
+        String dateString = format.format(date) + "." +
+            String.format("%03d", log.getTimestampMillis() % 1000);
         LOG.debug("[" + dateString + "] " + log.getName());
       }
     }

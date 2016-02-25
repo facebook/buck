@@ -6,6 +6,9 @@ java_immutables_library(
     '//test/com/facebook/buck/event/listener:listener',
   ],
   autodeps = True,
+  deps = [
+    '//third-party/java/thrift:libthrift',
+  ],
   visibility = [
     'PUBLIC',
   ],

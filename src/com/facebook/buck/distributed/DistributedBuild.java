@@ -16,31 +16,17 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.event.BuckEventBus;
-
 // TODO(ruibm): Currently this class only implements dummy behaviour to mock the distbuild.
 public class DistributedBuild {
-  private static final int TOTAL_JOBS = 648;
 
   private final DistBuildService distBuildService;
-  private final BuckEventBus eventBus;
 
-  public DistributedBuild(DistBuildService distBuildService, BuckEventBus eventBus) {
-    this.eventBus = eventBus;
+  public DistributedBuild(DistBuildService distBuildService) {
     this.distBuildService = distBuildService;
   }
 
   public int executeAndPrintFailuresToEventBus() {
-    int jobsDone = 0;
-    while (jobsDone < TOTAL_JOBS) {
-      distBuildService.submitJob();
-      DistBuildStatus status = DistBuildStatus.builder()
-          .setPercentProgress(((float) jobsDone) / TOTAL_JOBS)
-          .build();
-      eventBus.post(new DistBuildStatusEvent(status));
-      jobsDone += TOTAL_JOBS / 3;
-    }
-
+    distBuildService.submitJob();
     return 0;
   }
 }

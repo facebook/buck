@@ -17,11 +17,13 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
-public class DistBuildStatusEvent extends AbstractBuckEvent {
+public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent {
 
   private final DistBuildStatus status;
 
@@ -44,13 +46,28 @@ public class DistBuildStatusEvent extends AbstractBuckEvent {
     return this.getClass().getName();
   }
 
+  @Override
+  public String getCategory() {
+    return this.getClass().getName();
+  }
+
   // TODO(ruibm): This will be replaced with whatever thrift message the server returns.
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractDistBuildStatus {
     /**
-     * @return A value between [0.0, 1.0].
+     * @return get ETA in millis
      */
-    abstract double getPercentProgress();
+    abstract long getETAMillis();
+
+    /**
+     * @return dist-build status
+     */
+    abstract String getStatus();
+
+    /**
+     * @return the message to display
+     */
+    abstract Optional<String> getMessage();
   }
 }

@@ -16,16 +16,21 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.log.Logger;
+
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
+import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.TSimpleJSONProtocol;
 import org.apache.thrift.transport.THttpClient;
 import org.apache.thrift.transport.TTransportException;
 
 public class ThriftOverHttp implements AutoCloseable {
+  private static final Logger LOG = Logger.get(ThriftOverHttp.class);
   private static final int READ_TIMEOUT_MS = 50000;
   private THttpClient transport;
   private TProtocol proto;
@@ -61,6 +66,7 @@ public class ThriftOverHttp implements AutoCloseable {
   }
 
   public void write(TBase<?, ?> struct) throws TException {
+    LOG.debug("sending: " + jsonize(struct));
     struct.write(proto);
   }
 
@@ -70,10 +76,16 @@ public class ThriftOverHttp implements AutoCloseable {
 
   public void read(TBase<?, ?> struct) throws TException {
     struct.read(proto);
+    LOG.debug("received: " + jsonize(struct));
   }
 
   @Override
   public void close() throws Exception {
     transport.close();
+  }
+
+  public String jsonize(TBase<?, ?> struct) throws TException {
+    TSerializer serializer = new TSerializer(new TSimpleJSONProtocol.Factory());
+    return new String(serializer.serialize(struct));
   }
 }

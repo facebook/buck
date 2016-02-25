@@ -438,7 +438,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void distributedBuildStatus(DistBuildStatusEvent event) {
-    distributedBuildProgress = event.getStatus().getPercentProgress();
+    if (buildStarted != null)  {
+      long elapsed = clock.currentTimeMillis() - buildStarted.getTimestamp();
+      long left = event.getStatus().getETAMillis();
+      if (elapsed + left > 0) {
+        distributedBuildProgress = ((double) elapsed) / (elapsed + left);
+      } else {
+        distributedBuildProgress = 0;
+      }
+    }
   }
 
   protected int getHttpUploadFinishedCount() {

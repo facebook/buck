@@ -340,8 +340,8 @@ public class BuildCommand extends AbstractCommand {
   private int executeDistributedBuild(CommandRunnerParams params) throws NoHealthyServersException {
     // TODO(ruibm): Add here distributed build magic.
     DistributedBuild build = new DistributedBuild(
-        new DistBuildService(new DistBuildConfig(params.getBuckConfig()), params.getBuckEventBus()),
-        params.getBuckEventBus());
+        new DistBuildService(new DistBuildConfig(params.getBuckConfig()), params.getBuckEventBus())
+    );
     return build.executeAndPrintFailuresToEventBus();
   }
 

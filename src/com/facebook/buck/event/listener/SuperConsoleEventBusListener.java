@@ -19,6 +19,8 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.distributed.DistBuildStatus;
+import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
@@ -136,6 +138,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int threadLineLimitOnError;
   private final boolean shouldAlwaysSortThreadsByTime;
 
+  private Optional<DistBuildStatus> distBuildStatus;
   private int lastNumLinesPrinted;
 
   public SuperConsoleEventBusListener(
@@ -184,6 +187,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.threadLineLimitOnWarning = config.getThreadLineLimitOnWarning();
     this.threadLineLimitOnError = config.getThreadLineLimitOnError();
     this.shouldAlwaysSortThreadsByTime = config.shouldAlwaysSortThreadsByTime();
+    this.distBuildStatus = Optional.absent();
   }
 
   /**
@@ -293,6 +297,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       lines.add(getNetworkStatsLine(buildFinished));
+      if (buildStarted != null && buildStarted.isDistributedBuild()) {
+        lines.add(getDistBuildLine());
+      }
       // Log build time, excluding time spent in parsing.
       String jobSummary = null;
       if (ruleCount.isPresent()) {
@@ -461,6 +468,31 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             "%d Artifacts",
             networkStatsKeeper.getDownloadedArtifactDownloaded()));
     return parseLine + " " + "(" + Joiner.on(", ").join(columns) + ")";
+  }
+
+  private String getDistBuildLine()  {
+    // create a local reference to avoid inconsistencies
+    Optional<DistBuildStatus> distBuildStatus = this.distBuildStatus;
+    boolean finished = distBuildStatus.isPresent() &&
+        (distBuildStatus.get().getStatus() == "FINISHED_SUCCESSFULLY" ||
+            distBuildStatus.get().getStatus() == "FAILED");
+    String parseLine = finished ? "[-] " : "[+] ";
+
+    parseLine += "DISTBUILD STATUS: ";
+
+    if (!distBuildStatus.isPresent()) {
+      parseLine += "Initializing...";
+      return parseLine;
+    }
+    parseLine += distBuildStatus.get().getStatus() + " ...";
+
+    if (!finished) {
+      parseLine += " ETA: " + formatElapsedTime(distBuildStatus.get().getETAMillis());
+    }
+    if (distBuildStatus.get().getMessage().isPresent()) {
+      parseLine += " (" + distBuildStatus.get().getMessage().get() + ")";
+    }
+    return parseLine;
   }
 
   /**
@@ -642,6 +674,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
+  }
+
+  @Subscribe
+  public void distributedBuildStatusUpdate(DistBuildStatusEvent event) {
+    distBuildStatus = Optional.of(event.getStatus());
   }
 
   @Subscribe
