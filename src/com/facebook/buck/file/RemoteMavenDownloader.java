@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Path;
@@ -28,10 +29,15 @@ public class RemoteMavenDownloader implements Downloader {
 
   private final HttpDownloader downloader;
   private final Optional<String> mavenRepo;
+  private final Optional<PasswordAuthentication> passwordAuthentication;
 
-  public RemoteMavenDownloader(Optional<Proxy> proxy, String mavenRepo) {
+  public RemoteMavenDownloader(
+      Optional<Proxy> proxy,
+      String mavenRepo,
+      Optional<PasswordAuthentication> passwordAuthentication) {
     this.mavenRepo = Optional.of(mavenRepo);
     this.downloader = new HttpDownloader(proxy);
+    this.passwordAuthentication = passwordAuthentication;
   }
 
   @Override
@@ -42,6 +48,6 @@ public class RemoteMavenDownloader implements Downloader {
 
     URI httpUri = MavenUrlDecoder.toHttpUrl(mavenRepo, uri);
 
-    return downloader.fetch(eventBus, httpUri, output);
+    return downloader.fetch(eventBus, httpUri, passwordAuthentication, output);
   }
 }

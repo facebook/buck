@@ -19,6 +19,7 @@ package com.facebook.buck.file;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
+import com.google.common.io.BaseEncoding;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Files;
@@ -48,6 +50,15 @@ public class HttpDownloader implements Downloader {
 
   @Override
   public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
+	  return fetch(eventBus, uri, Optional.<PasswordAuthentication>absent(), output);
+  }
+
+  public boolean fetch(
+      BuckEventBus eventBus,
+      URI uri,
+      Optional<PasswordAuthentication> authentication,
+      Path output
+  ) throws IOException {
     if (!("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
       return false;
     }
@@ -57,6 +68,14 @@ public class HttpDownloader implements Downloader {
 
     try {
       HttpURLConnection connection = createConnection(uri);
+
+      if (authentication.isPresent()) {
+        PasswordAuthentication p = authentication.get();
+        String authStr = p.getUserName() + ":" + new String(p.getPassword());
+        String authEncoded = BaseEncoding.base64().encode(authStr.getBytes());
+        connection.addRequestProperty("Authorization", "Basic " + authEncoded);
+      }
+
       if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {
         LOG.info("Unable to download %s: %s", uri, connection.getResponseMessage());
         return false;

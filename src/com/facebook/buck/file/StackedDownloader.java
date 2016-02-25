@@ -28,12 +28,14 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * A {@link Downloader} which is composed of many other downloaders. When asked to download a
@@ -56,10 +58,13 @@ public class StackedDownloader implements Downloader {
     DownloadConfig downloadConfig = new DownloadConfig(config);
     Optional<Proxy> proxy = downloadConfig.getProxy();
 
-    for (String repo : downloadConfig.getAllMavenRepos()) {
+
+    for (Map.Entry<String, String> kv : downloadConfig.getAllMavenRepos().entrySet()) {
+      String repoName = kv.getKey();
+      String repo = kv.getValue();
       // Check the type.
       if (repo.startsWith("http:") || repo.startsWith("https://")) {
-        downloaders.add(new RemoteMavenDownloader(proxy, repo));
+        downloaders.add(new RemoteMavenDownloader(proxy, repo, downloadConfig.getRepoCredentials(repoName)));
       } else if (repo.startsWith("file:")) {
         try {
           URL url = new URL(repo);
