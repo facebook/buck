@@ -50,7 +50,7 @@ public class HttpDownloader implements Downloader {
 
   @Override
   public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-	  return fetch(eventBus, uri, Optional.<PasswordAuthentication>absent(), output);
+    return fetch(eventBus, uri, Optional.<PasswordAuthentication>absent(), output);
   }
 
   public boolean fetch(

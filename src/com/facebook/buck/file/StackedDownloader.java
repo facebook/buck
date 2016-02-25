@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
