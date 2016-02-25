@@ -30,7 +30,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -41,8 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.immutables.value.Value;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -52,8 +49,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
-@Value.Enclosing
-@BuckStyleImmutable
 public class NdkCxxPlatforms {
 
   /**
