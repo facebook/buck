@@ -130,8 +130,7 @@ public class CxxPrecompiledHeader
                     ImmutableList.<String>builder()
                         .addAll(
                             preprocessorDelegate.getPreprocessor().getCommandPrefix(getResolver()))
-                        .addAll(preprocessorDelegate.getPreprocessorPlatformPrefix())
-                        .addAll(preprocessorDelegate.getPreprocessorSuffix())
+                        .addAll(preprocessorDelegate.getFlagsWithSearchPaths().getAllFlags())
                         .build(),
                     preprocessorDelegate.getEnvironment(),
                     preprocessorDelegate.getColorSupport())),

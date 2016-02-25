@@ -189,9 +189,7 @@ public class CxxPreprocessAndCompile
     if (preprocessDelegate.isPresent()) {
       preprocessorCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
-              getPreprocessorDelegate().get().getCommand(
-                  compilerDelegate.getPlatformCompilerFlags(),
-                  compilerDelegate.getRuleCompilerFlags()),
+              getPreprocessorDelegate().get().getCommand(compilerDelegate.getCompilerFlags()),
               preprocessDelegate.get().getEnvironment(),
               preprocessDelegate.get().getColorSupport()));
     } else {
@@ -204,8 +202,8 @@ public class CxxPreprocessAndCompile
           new CxxPreprocessAndCompileStep.ToolCommand(
               compilerDelegate.getCommand(
                   operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO
-                      ? preprocessDelegate
-                      : Optional.<PreprocessorDelegate>absent()),
+                      ? preprocessDelegate.get().getFlagsWithSearchPaths()
+                      : CxxToolFlags.of()),
               compilerDelegate.getEnvironment(),
               compilerDelegate.getColorSupport()));
     } else {
@@ -259,7 +257,8 @@ public class CxxPreprocessAndCompile
     }
     PreprocessorDelegate effectivePreprocessorDelegate = preprocessRule.preprocessDelegate.get();
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(compilerDelegate.getCommand(Optional.of(effectivePreprocessorDelegate)));
+    cmd.addAll(
+        compilerDelegate.getCommand(effectivePreprocessorDelegate.getFlagsWithSearchPaths()));
     // use the input of the preprocessor, since the fact that this is going through preprocessor is
     // hidden to compdb.
     cmd.add("-x", preprocessRule.inputType.getLanguage());

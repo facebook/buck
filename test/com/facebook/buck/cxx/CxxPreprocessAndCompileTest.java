@@ -102,14 +102,13 @@ public class CxxPreprocessAndCompileTest {
       new PreprocessorWithColorSupport(new HashedFileTool(Paths.get("preprocessor")));
   private static final Compiler COMPILER_WITH_COLOR_SUPPORT =
       new CompilerWithColorSupport(new HashedFileTool(Paths.get("compiler")));
-  private static final ImmutableList<String> DEFAULT_PLATFORM_FLAGS =
-      ImmutableList.of("-fsanitize=address");
-  private static final ImmutableList<String> DEFAULT_RULE_FLAGS =
-      ImmutableList.of("-O3");
-  private static final ImmutableList<String> DEFAULT_PREPROCESSOR_PLATFORM_FLAGS =
-      ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_PREPROCESOR_RULE_FLAGS =
-      ImmutableList.of("-DTEST");
+  private static final CxxToolFlags DEFAULT_TOOL_FLAGS = CxxToolFlags.explicitBuilder()
+      .addPlatformFlags("-fsanitize=address")
+      .addRuleFlags("-O3")
+      .build();
+  private static final CxxToolFlags DEFAULT_PREPROCESSOR_FLAGS = CxxToolFlags.explicitBuilder()
+      .addRuleFlags("-DTEST")
+      .build();
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
@@ -174,8 +173,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                DEFAULT_TOOL_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -191,8 +189,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 new DefaultCompiler(new HashedFileTool(Paths.get("different"))),
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                DEFAULT_TOOL_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -210,8 +207,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS,
+                DEFAULT_TOOL_FLAGS,
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -223,8 +219,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                DEFAULT_TOOL_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -241,8 +236,10 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                ImmutableList.of("-different"),
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.explicitBuilder()
+                    .addPlatformFlags("-different")
+                    .setRuleFlags(DEFAULT_TOOL_FLAGS.getRuleFlags())
+                    .build()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -259,8 +256,10 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                ImmutableList.of("-other", "flags")),
+                CxxToolFlags.explicitBuilder()
+                    .setPlatformFlags(DEFAULT_TOOL_FLAGS.getPlatformFlags())
+                    .addRuleFlags("-other", "flags")
+                    .build()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -277,8 +276,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                DEFAULT_TOOL_FLAGS),
             DEFAULT_OUTPUT,
             new FakeSourcePath("different"),
             DEFAULT_INPUT_TYPE,
@@ -316,8 +314,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
-                DEFAULT_PREPROCESOR_RULE_FLAGS,
+                DEFAULT_PREPROCESSOR_FLAGS,
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -329,8 +326,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -348,8 +344,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
-                DEFAULT_PREPROCESOR_RULE_FLAGS,
+                DEFAULT_PREPROCESSOR_FLAGS,
                 ImmutableSet.of(Paths.get("different")),
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -361,8 +356,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -381,8 +375,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
-                DEFAULT_PREPROCESOR_RULE_FLAGS,
+                DEFAULT_PREPROCESSOR_FLAGS,
                 DEFAULT_INCLUDE_ROOTS,
                 ImmutableSet.of(Paths.get("different")),
                 DEFAULT_HEADER_MAPS,
@@ -394,8 +387,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -414,8 +406,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
-                DEFAULT_PREPROCESOR_RULE_FLAGS,
+                DEFAULT_PREPROCESSOR_FLAGS,
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 ImmutableSet.of(Paths.get("different")),
@@ -427,8 +418,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -446,8 +436,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
-                DEFAULT_PREPROCESOR_RULE_FLAGS,
+                DEFAULT_PREPROCESSOR_FLAGS,
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -459,8 +448,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -504,8 +492,10 @@ public class CxxPreprocessAndCompileTest {
         ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
 
     // Generate a rule key for the defaults.
-    ImmutableList<String> platformFlags1 = ImmutableList.of("-Isomething/foo");
-    ImmutableList<String> ruleFlags1 = ImmutableList.of("-Isomething/bar");
+    CxxToolFlags flags1 = CxxToolFlags.explicitBuilder()
+        .addPlatformFlags("-Isomething/foo")
+        .addRuleFlags("-Isomething/bar")
+        .build();
 
     RuleKey ruleKey1 = ruleKeyBuilderFactory.build(
         CxxPreprocessAndCompile.preprocess(
@@ -516,8 +506,7 @@ public class CxxPreprocessAndCompileTest {
                 sanitizer1,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                platformFlags1,
-                ruleFlags1,
+                flags1,
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -529,16 +518,17 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
             sanitizer1));
 
     // Generate a rule key for the defaults.
-    ImmutableList<String> platformFlags2 = ImmutableList.of("-Idifferent/foo");
-    ImmutableList<String> ruleFlags2 = ImmutableList.of("-Idifferent/bar");
+    CxxToolFlags flags2 = CxxToolFlags.explicitBuilder()
+        .addPlatformFlags("-Idifferent/foo")
+        .addRuleFlags("-Idifferent/bar")
+        .build();
 
     RuleKey ruleKey2 = ruleKeyBuilderFactory.build(
         CxxPreprocessAndCompile.preprocess(
@@ -549,8 +539,7 @@ public class CxxPreprocessAndCompileTest {
                 sanitizer2,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                platformFlags2,
-                ruleFlags2,
+                flags2,
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -562,8 +551,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -574,15 +562,16 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void usesCorrectCommandForCompile() {
-
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    ImmutableList<String> platformFlags = ImmutableList.of("-ffunction-sections");
-    ImmutableList<String> ruleFlags = ImmutableList.of("-O3");
+    CxxToolFlags flags = CxxToolFlags.explicitBuilder()
+        .addPlatformFlags("-ffunction-sections")
+        .addRuleFlags("-O3")
+        .build();
     Path output = Paths.get("test.o");
     Path depFile = Paths.get("test.o.dep");
     Path input = Paths.get("test.ii");
@@ -591,12 +580,7 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            new CompilerDelegate(
-                pathResolver,
-                DEFAULT_SANITIZER,
-                DEFAULT_COMPILER,
-                platformFlags,
-                ruleFlags),
+            new CompilerDelegate(pathResolver, DEFAULT_SANITIZER, DEFAULT_COMPILER, flags),
             output,
             new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
@@ -628,8 +612,10 @@ public class CxxPreprocessAndCompileTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ImmutableList<String> platformFlags = ImmutableList.of("-Dtest=blah");
-    ImmutableList<String> ruleFlags = ImmutableList.of("-Dfoo=bar");
+    CxxToolFlags preprocessorFlags = CxxToolFlags.explicitBuilder()
+        .addPlatformFlags("-Dtest=blah")
+        .addRuleFlags("-Dfoo=bar")
+        .build();
     Path output = Paths.get("test.ii");
     Path depFile = Paths.get("test.ii.dep");
     Path input = Paths.get("test.cpp");
@@ -644,8 +630,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 DEFAULT_PREPROCESSOR,
-                platformFlags,
-                ruleFlags,
+                preprocessorFlags,
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
@@ -657,8 +642,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of()),
+                CxxToolFlags.of()),
             output,
             new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
@@ -714,8 +698,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 new DefaultPreprocessor(preprocessorTool),
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of(),
+                CxxToolFlags.of(),
                 DEFAULT_INCLUDE_ROOTS,
                 DEFAULT_SYSTEM_INCLUDE_ROOTS,
                 DEFAULT_HEADER_MAPS,
@@ -727,8 +710,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -745,8 +727,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 new DefaultCompiler(compilerTool),
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of()),
+                CxxToolFlags.of()),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -770,8 +751,7 @@ public class CxxPreprocessAndCompileTest {
         pathResolver,
         DEFAULT_SANITIZER,
         COMPILER_WITH_COLOR_SUPPORT,
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of());
+        CxxToolFlags.of());
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
@@ -819,8 +799,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_SANITIZER,
                 DEFAULT_WORKING_DIR,
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of(),
+                CxxToolFlags.of(),
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
                 ImmutableSet.<Path>of(),
@@ -832,8 +811,7 @@ public class CxxPreprocessAndCompileTest {
                 pathResolver,
                 DEFAULT_SANITIZER,
                 DEFAULT_COMPILER,
-                DEFAULT_PLATFORM_FLAGS,
-                DEFAULT_RULE_FLAGS),
+                CxxToolFlags.of()),
             output,
             new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,

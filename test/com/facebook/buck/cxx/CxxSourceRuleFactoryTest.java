@@ -172,9 +172,7 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocess.getPreprocessorDelegate().get().getCommand(
-                  ImmutableList.<String>of(),
-                  ImmutableList.<String>of()),
+              cxxPreprocess.getPreprocessorDelegate().get().getCommand(CxxToolFlags.of()),
               platformFlags));
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -184,9 +182,7 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(
-                  ImmutableList.<String>of(),
-                  ImmutableList.<String>of()),
+              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(CxxToolFlags.of()),
               platformFlags));
     }
 
@@ -501,9 +497,7 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cPreprocess =
           cxxSourceRuleFactory.requirePreprocessBuildRule(sourceName, cSource);
       ImmutableList<String> cPreprocessCommand =
-          cPreprocess.getPreprocessorDelegate().get().getCommand(
-              ImmutableList.<String>of(),
-              ImmutableList.<String>of());
+          cPreprocess.getPreprocessorDelegate().get().getCommand(CxxToolFlags.of());
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);
       assertContains(cPreprocessCommand, perFileFlags);

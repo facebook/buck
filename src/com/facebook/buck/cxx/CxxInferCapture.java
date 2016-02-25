@@ -48,10 +48,8 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
 
   @AddToRuleKey
   private final CxxInferTools inferTools;
-  private final ImmutableList<String> platformPreprocessorFlags;
-  private final ImmutableList<String> rulePreprocessorFlags;
-  private final ImmutableList<String> platformCompilerFlags;
-  private final ImmutableList<String> ruleCompilerFlags;
+  private final CxxToolFlags preprocessorFlags;
+  private final CxxToolFlags compilerFlags;
   @AddToRuleKey
   private final SourcePath input;
   private final CxxSource.Type inputType;
@@ -73,10 +71,8 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   CxxInferCapture(
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
-      ImmutableList<String> platformPreprocessorFlags,
-      ImmutableList<String> rulePreprocessorFlags,
-      ImmutableList<String> platformCompilerFlags,
-      ImmutableList<String> ruleCompilerFlags,
+      CxxToolFlags preprocessorFlags,
+      CxxToolFlags compilerFlags,
       SourcePath input,
       AbstractCxxSource.Type inputType,
       Path output,
@@ -89,10 +85,8 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
       CxxInferTools inferTools,
       DebugPathSanitizer sanitizer) {
     super(buildRuleParams, pathResolver);
-    this.platformPreprocessorFlags = platformPreprocessorFlags;
-    this.rulePreprocessorFlags = rulePreprocessorFlags;
-    this.platformCompilerFlags = platformCompilerFlags;
-    this.ruleCompilerFlags = ruleCompilerFlags;
+    this.preprocessorFlags = preprocessorFlags;
+    this.compilerFlags = compilerFlags;
     this.input = input;
     this.inputType = inputType;
     this.output = output;
@@ -107,46 +101,27 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     this.sanitizer = sanitizer;
   }
 
-  private ImmutableList<String> getPreprocessorPlatformPrefix() {
-    return platformPreprocessorFlags;
-  }
-
-  private ImmutableList<String> getCompilerPlatformPrefix() {
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
-    flags.addAll(getPreprocessorPlatformPrefix());
-    flags.addAll(platformCompilerFlags);
-    return flags.build();
-  }
-
-  private ImmutableList<String> getCompilerSuffix() {
-    ImmutableList.Builder<String> suffix = ImmutableList.builder();
-    suffix.addAll(getPreprocessorSuffix());
-    suffix.addAll(ruleCompilerFlags);
-    return suffix.build();
-  }
-
-  private ImmutableList<String> getPreprocessorSuffix() {
-    return ImmutableList.<String>builder()
-        .addAll(ImmutableSet.copyOf(rulePreprocessorFlags))
-        .addAll(
+  private CxxToolFlags getSearchPathFlags() {
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
                 FluentIterable.from(prefixHeader.asSet())
                     .transform(getResolver().deprecatedPathFunction())
                     .transform(Functions.toStringFunction())))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
                 Iterables.transform(headerMaps, Functions.toStringFunction())))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
                 Iterables.transform(includeRoots, Functions.toStringFunction())))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-isystem"),
                 Iterables.transform(systemIncludeRoots, Functions.toStringFunction())))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
                 FluentIterable.from(frameworkRoots)
@@ -168,8 +143,9 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
         .add("--out", resultsDir.toString())
         .add("--")
         .add("clang")
-        .addAll(getCompilerPlatformPrefix())
-        .addAll(getCompilerSuffix())
+        .addAll(
+            CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
+                .getAllFlags())
         .add("-x", inputType.getLanguage())
         .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
         .add("-c")
@@ -205,9 +181,15 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     return builder
         .setReflectively(
             "platformPreprocessorFlags",
-            sanitizer.sanitizeFlags(platformPreprocessorFlags))
-        .setReflectively("rulePreprocessorFlags", sanitizer.sanitizeFlags(rulePreprocessorFlags))
-        .setReflectively("platformCompilerFlags", sanitizer.sanitizeFlags(platformCompilerFlags))
-        .setReflectively("ruleCompilerFlags", sanitizer.sanitizeFlags(ruleCompilerFlags));
+            sanitizer.sanitizeFlags(preprocessorFlags.getPlatformFlags()))
+        .setReflectively(
+            "rulePreprocessorFlags",
+            sanitizer.sanitizeFlags(preprocessorFlags.getRuleFlags()))
+        .setReflectively(
+            "platformCompilerFlags",
+            sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()))
+        .setReflectively(
+            "ruleCompilerFlags",
+            sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 }

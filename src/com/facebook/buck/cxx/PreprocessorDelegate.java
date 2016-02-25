@@ -59,8 +59,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
 
   // Fields that added to the rule key with some processing.
-  private final ImmutableList<String> platformPreprocessorFlags;
-  private final ImmutableList<String> rulePreprocessorFlags;
+  private final CxxToolFlags preprocessorFlags;
   private final ImmutableSet<FrameworkPath> frameworkRoots;
 
   // Fields that are not added to the rule key.
@@ -91,8 +90,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       DebugPathSanitizer sanitizer,
       Path workingDir,
       Preprocessor preprocessor,
-      List<String> platformPreprocessorFlags,
-      List<String> rulePreprocessorFlags,
+      CxxToolFlags preprocessorFlags,
       Set<Path> includeRoots,
       Set<Path> systemIncludeRoots,
       Set<Path> headerMaps,
@@ -103,8 +101,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.preprocessor = preprocessor;
     this.prefixHeader = prefixHeader;
     this.includes = ImmutableList.copyOf(includes);
-    this.platformPreprocessorFlags = ImmutableList.copyOf(platformPreprocessorFlags);
-    this.rulePreprocessorFlags = ImmutableList.copyOf(rulePreprocessorFlags);
+    this.preprocessorFlags = preprocessorFlags;
     this.frameworkRoots = ImmutableSet.copyOf(frameworkRoots);
     this.includeRoots = ImmutableSet.copyOf(includeRoots);
     this.systemIncludeRoots = ImmutableSet.copyOf(systemIncludeRoots);
@@ -133,10 +130,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     // from contributing to the rule key.
     builder.setReflectively(
         "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(platformPreprocessorFlags));
+        sanitizer.sanitizeFlags(preprocessorFlags.getPlatformFlags()));
     builder.setReflectively(
         "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(rulePreprocessorFlags));
+        sanitizer.sanitizeFlags(preprocessorFlags.getRuleFlags()));
 
     builder.setReflectively("frameworkRoots", frameworkRoots);
     return builder;
@@ -160,14 +157,13 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   /**
    * Get the command for standalone preprocessor calls.
+   *
+   * @param compilerFlags flags to append.
    */
-  public ImmutableList<String> getCommand(
-      ImmutableList<String> platformCompilerFlags,
-      ImmutableList<String> ruleCompilerFlags) {
+  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
     return ImmutableList.<String>builder()
         .addAll(preprocessor.getCommandPrefix(resolver))
-        .addAll(getPreprocessorPlatformPrefix(platformCompilerFlags))
-        .addAll(getPreprocessorSuffix(ruleCompilerFlags))
+        .addAll(CxxToolFlags.concat(getFlagsWithSearchPaths(), compilerFlags).getAllFlags())
         .addAll(preprocessor.getExtraFlags().or(ImmutableList.<String>of()))
         .build();
   }
@@ -176,74 +172,48 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessor.getEnvironment(resolver);
   }
 
-  /**
-   * @param platformCompilerFlags compiler flags used for compilation.  We copy these in when doing
-   *                              standalone preprocessing so that macros implicitly defined by the
-   *                              driver are set properly.
-   * @return platform preprocessor flags for composing into the compiler command line.
-   */
-  private ImmutableList<String> getPreprocessorPlatformPrefix(
-      ImmutableList<String> platformCompilerFlags) {
-    return ImmutableList.<String>builder()
-        .addAll(platformPreprocessorFlags)
-        .addAll(platformCompilerFlags)
-        .build();
+  public CxxToolFlags getFlagsWithSearchPaths() {
+    return CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags());
   }
 
   /**
-   * Get platform preprocessor flags for composing into the compiler command line.
+   * Flags derived from search paths.
    */
-  public ImmutableList<String> getPreprocessorPlatformPrefix() {
-    return getPreprocessorPlatformPrefix(ImmutableList.<String>of());
-  }
-
-  /**
-   * @param ruleCompilerFlags compiler flags used for compilation.  We copy these in when doing
-   *                          standalone preprocessing so that macros implicitly defined by the
-   *                          driver are set properly.
-   * @return preprocessor flags for composing into the compiler command line that should be appended
-   *         after the rest.  This is important when there are flags that overwrite previous flags.
-   */
-  private ImmutableList<String> getPreprocessorSuffix(ImmutableList<String> ruleCompilerFlags) {
-    return ImmutableList.<String>builder()
-        .addAll(rulePreprocessorFlags)
-        .addAll(
+  private CxxToolFlags getSearchPathFlags() {
+    // It doesn't matter whether these go in platform or rules, since they are strictly additive.
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
                 FluentIterable.from(prefixHeader.asSet())
                     .transform(resolver.getAbsolutePathFunction())
                     .transform(Functions.toStringFunction())))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
                 Iterables.transform(
                     headerMaps,
                     Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
                 Iterables.transform(
                     includeRoots,
                     Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-isystem"),
                 Iterables.transform(
                     systemIncludeRoots,
                     Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
-        .addAll(
+        .addAllRuleFlags(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
                 FluentIterable.from(frameworkRoots)
                     .transform(frameworkPathSearchPathFunction)
                     .transform(Functions.toStringFunction())
                     .toSortedSet(Ordering.natural())))
-        .addAll(ruleCompilerFlags)
         .build();
-  }
-
-  public ImmutableList<String> getPreprocessorSuffix() {
-    return getPreprocessorSuffix(ImmutableList.<String>of());
   }
 
   /**
