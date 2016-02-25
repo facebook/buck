@@ -505,14 +505,14 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   public ImmutableList<String> getCommand() {
-    return getCommand(false);
-  }
-
-  public ImmutableList<String> getCommand(boolean allowColorsInDiagnostics) {
     // We set allowColorsInDiagnostics to false here because this function is only used by the
     // compilation database (its contents should not depend on how Buck was invoked) and in the
     // step's description. It is not used to determine what command this step runs, which needs
     // to decide whether to use colors or not based on whether the terminal supports them.
+    return getCommand(false);
+  }
+
+  public ImmutableList<String> getCommand(boolean allowColorsInDiagnostics) {
     switch (operation) {
       case COMPILE:
       case COMPILE_MUNGE_DEBUGINFO:
