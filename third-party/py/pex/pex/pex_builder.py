@@ -370,7 +370,7 @@ class PEXBuilder(object):
           self._chroot.write(provider.get_resource_string(source_name, fn),
             os.path.join(self.BOOTSTRAP_DIR, target_location, fn), 'bootstrap')
 
-  def freeze(self, bytecode_compile=True, code_hash=True):
+  def freeze(self, bytecode_compile=True):
     """Freeze the PEX.
 
     :param bytecode_compile: If True, precompile .py files into .pyc files when freezing code.
@@ -380,8 +380,7 @@ class PEXBuilder(object):
     """
     self._ensure_unfrozen('Freezing the environment')
     self._prepare_inits()
-    if code_hash:
-      self._prepare_code_hash()
+    self._prepare_code_hash()
     self._prepare_manifest()
     self._prepare_bootstrap()
     self._prepare_main()

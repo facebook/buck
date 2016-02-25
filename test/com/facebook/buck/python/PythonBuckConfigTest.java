@@ -16,7 +16,6 @@
 
 package com.facebook.buck.python;
 
-import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -70,8 +69,8 @@ public class PythonBuckConfigTest {
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
             Paths.get("usr", "bin", "python"),
-            new ProcessExecutor.Result(0, "", "CPython 2 7 5\n"));
-    assertEquals("CPython 2.7.5", version.toString());
+            new ProcessExecutor.Result(0, "", "Python 2.7.5\n"));
+    assertEquals("Python 2.7", version.toString());
   }
 
   @Test
@@ -265,18 +264,34 @@ public class PythonBuckConfigTest {
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
             Paths.get("non", "important", "path"),
-            new ProcessExecutor.Result(0, "", "CPython 2 7 6\n"));
-    assertEquals("CPython 2.7.6", version.toString());
+            new ProcessExecutor.Result(0, "", "pyrun 2.7.6 (release 2.0.0)\n"));
+    assertEquals("pyrun 2.7", version.toString());
   }
 
   @Test
-  public void testGetWindowsVersion() throws Exception {
-    String output = "CPython 2 7 10\r\n";
+  public void testGetPypyVersion() throws Exception {
+    String pypyOutput =
+        "Python 2.7.10 (850edf14b2c75573720f59e95767335fb1affe55, Oct 30 2015, 00:18:28)\n" +
+        "[PyPy 4.0.0 with GCC 4.2.1 Compatible Apple LLVM 7.0.0 (clang-700.1.76)]\n";
+
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
             Paths.get("non", "important", "path"),
-            new ProcessExecutor.Result(0, "", output));
-    assertThat(version.toString(), Matchers.equalTo("CPython 2.7.10"));
+            new ProcessExecutor.Result(0, "", pypyOutput));
+    assertThat(version.toString(), Matchers.equalTo("Python 2.7"));
+  }
+
+  @Test
+  public void testGetPypyWindowsVersion() throws Exception {
+    String pypyOutput =
+        "Python 2.7.10 (850edf14b2c75573720f59e95767335fb1affe55, Oct 30 2015, 00:18:28)\r\n" +
+        "[PyPy 4.0.0 with GCC 4.2.1 Compatible Apple LLVM 7.0.0 (ok that was a lie)]\r\n";
+
+    PythonVersion version =
+        PythonBuckConfig.extractPythonVersion(
+            Paths.get("non", "important", "path"),
+            new ProcessExecutor.Result(0, "", pypyOutput));
+    assertThat(version.toString(), Matchers.equalTo("Python 2.7"));
   }
 
   @Test
@@ -290,23 +305,10 @@ public class PythonBuckConfigTest {
     assertThat(
         config.getDefaultPythonPlatform(
             new FakeProcessExecutor(
-                Functions.constant(new FakeProcess(0, "CPython 2 7 5", "")),
+                Functions.constant(new FakeProcess(0, "Python 2.7.5", "")),
                 new TestConsole()))
             .getCxxLibrary(),
         Matchers.equalTo(Optional.of(library)));
   }
 
-  @Test
-  public void testPexArgs() throws Exception {
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder().setSections(
-                ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world"))).build(),
-            new AlwaysFoundExecutableFinder());
-    BuildRuleResolver resolver = new BuildRuleResolver(
-        TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
-    assertThat(
-        config.getPexTool(resolver).getCommandPrefix(new SourcePathResolver(resolver)),
-        hasConsecutiveItems("--hello", "--world"));
-  }
 }

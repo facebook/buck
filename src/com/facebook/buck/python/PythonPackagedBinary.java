@@ -33,7 +33,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -106,9 +105,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     // Make sure the parent directory exists.
     steps.add(new MkdirStep(getProjectFilesystem(), binPath.getParent()));
 
-    // Delete any other pex that was there (when switching between pex styles).
-    steps.add(new RmStep(getProjectFilesystem(), binPath, /* force */ true, /* recurse */ true));
-
     Path workingDirectory = BuildTargets.getGenPath(
         getBuildTarget(), "__%s__working_directory");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
@@ -123,7 +119,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                 .addAll(buildArgs)
                 .build(),
             pythonEnvironment.getPythonPath(),
-            pythonEnvironment.getPythonVersion(),
             workingDirectory,
             binPath,
             mainModule,

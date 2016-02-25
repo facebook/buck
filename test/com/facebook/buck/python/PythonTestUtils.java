@@ -32,7 +32,7 @@ public class PythonTestUtils {
           ImmutableFlavor.of("default"),
           new PythonEnvironment(
               Paths.get("python"),
-              PythonVersion.of("CPython", "2.6")),
+              PythonVersion.of("2.6")),
           Optional.<BuildTarget>absent());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =

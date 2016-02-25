@@ -8,4 +8,3 @@ Local modifications:
    system, as this got more problematic to fake in our own `pkg_resources` module.
  - Fixed usage of os.link (does not exist on windows).
  - Fixed prebuilt package resolution when pexs have '#' in the name.
- - Added the ability to not hash the contents of the pex (used for in-place builds).

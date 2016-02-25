@@ -26,7 +26,7 @@ if not zipfile.is_zipfile(sys.argv[0]):
 import pkg_resources
 
 from pex.pex_builder import PEXBuilder
-from pex.interpreter import PythonInterpreter, PythonIdentity
+from pex.interpreter import PythonInterpreter
 
 
 def dereference_symlinks(src):
@@ -56,6 +56,7 @@ def closable_named_temporary_file():
         os.remove(fp.name)
 
 
+
 def copy_package(pex_builder, package, resource='', prefix=''):
     """
     Copies the code of a package to the pex using the pkg_resources API.
@@ -83,10 +84,8 @@ def copy_package(pex_builder, package, resource='', prefix=''):
 def main():
     parser = optparse.OptionParser(usage="usage: %prog [options] output")
     parser.add_option('--entry-point', default='__main__')
-    parser.add_option('--directory', action='store_true', default=False)
     parser.add_option('--no-zip-safe', action='store_false', dest='zip_safe', default=True)
-    parser.add_option('--python', default='')
-    parser.add_option('--python-version', default='')
+    parser.add_option('--python', default=sys.executable)
     parser.add_option('--preload', action='append', default=[])
     options, args = parser.parse_args()
     if len(args) == 1:
@@ -99,76 +98,71 @@ def main():
     # to be passed as a CLA.
     manifest = json.load(sys.stdin)
 
-    # The version of pkg_resources.py (from setuptools) on some distros is
-    # too old for PEX.  So we keep a recent version in the buck repo and
-    # force it into the process by constructing a custom PythonInterpreter
-    # instance using it.
-    if not options.python:
-        options.python = sys.executable
-        identity = PythonIdentity.get()
-    elif not options.python_version:
-        # Note: this is expensive (~500ms). prefer passing --python-version when possible.
-        identity = PythonInterpreter.from_binary(options.python).identity
-    else:
-        # Convert "CPython 2.7.9" to "CPython 2 7 9"
-        identity = PythonIdentity.from_id_string(
-            options.python_version.replace('.', ' '))
+    # Setup a temp dir that the PEX builder will use as its scratch dir.
+    tmp_dir = tempfile.mkdtemp()
+    try:
 
-    interpreter = PythonInterpreter(
-        options.python,
-        identity,
-        extras={})
+        # The version of pkg_resources.py (from setuptools) on some distros is
+        # too old for PEX.  So we keep a recent version in the buck repo and
+        # force it into the process by constructing a custom PythonInterpreter
+        # instance using it.
+        interpreter = PythonInterpreter(
+            options.python,
+            PythonInterpreter.from_binary(options.python).identity,
+            extras={})
 
-    pex_builder = PEXBuilder(
-        path=output if options.directory else None,
-        interpreter=interpreter,
-    )
+        pex_builder = PEXBuilder(
+            path=tmp_dir,
+            interpreter=interpreter,
+        )
 
-    # Set whether this PEX as zip-safe, meaning everything will stayed zipped up
-    # and we'll rely on python's zip-import mechanism to load modules from
-    # the PEX.  This may not work in some situations (e.g. native
-    # libraries, libraries that want to find resources via the FS).
-    pex_builder.info.zip_safe = options.zip_safe
+        # Set whether this PEX as zip-safe, meaning everything will stayed zipped up
+        # and we'll rely on python's zip-import mechanism to load modules from
+        # the PEX.  This may not work in some situations (e.g. native
+        # libraries, libraries that want to find resources via the FS).
+        pex_builder.info.zip_safe = options.zip_safe
 
-    # Set the starting point for this PEX.
-    pex_builder.info.entry_point = options.entry_point
+        # Set the starting point for this PEX.
+        pex_builder.info.entry_point = options.entry_point
 
-    # Copy in our version of `pkg_resources`.
-    copy_package(pex_builder, 'pkg_resources', prefix=pex_builder.BOOTSTRAP_DIR)
+        # Copy in our version of `pkg_resources`.
+        copy_package(pex_builder, 'pkg_resources', prefix=pex_builder.BOOTSTRAP_DIR)
 
-    # Add the sources listed in the manifest.
-    for dst, src in manifest['modules'].iteritems():
-        # NOTE(agallagher): calls the `add_source` and `add_resource` below
-        # hard-link the given source into the PEX temp dir.  Since OS X and
-        # Linux behave different when hard-linking a source that is a
-        # symbolic link (Linux does *not* follow symlinks), resolve any
-        # layers of symlinks here to get consistent behavior.
-        try:
-            pex_builder.add_source(dereference_symlinks(src), dst)
-        except OSError as e:
-            raise Exception("Failed to add {}: {}".format(src, e))
+        # Add the sources listed in the manifest.
+        for dst, src in manifest['modules'].iteritems():
+            # NOTE(agallagher): calls the `add_source` and `add_resource` below
+            # hard-link the given source into the PEX temp dir.  Since OS X and
+            # Linux behave different when hard-linking a source that is a
+            # symbolic link (Linux does *not* follow symlinks), resolve any
+            # layers of symlinks here to get consistent behavior.
+            try:
+                pex_builder.add_source(dereference_symlinks(src), dst)
+            except OSError as e:
+                raise Exception("Failed to add {}: {}".format(src, e))
 
-    # Add resources listed in the manifest.
-    for dst, src in manifest['resources'].iteritems():
-        # NOTE(agallagher): see rationale above.
-        pex_builder.add_resource(dereference_symlinks(src), dst)
+        # Add resources listed in the manifest.
+        for dst, src in manifest['resources'].iteritems():
+            # NOTE(agallagher): see rationale above.
+            pex_builder.add_resource(dereference_symlinks(src), dst)
 
-    # Add prebuilt libraries listed in the manifest.
-    for req in manifest.get('prebuiltLibraries', []):
-        try:
-            pex_builder.add_dist_location(req)
-        except Exception as e:
-            raise Exception("Failed to add {}: {}".format(req, e))
+        # Add prebuilt libraries listed in the manifest.
+        for req in manifest.get('prebuiltLibraries', []):
+            try:
+                pex_builder.add_dist_location(req)
+            except Exception as e:
+                raise Exception("Failed to add {}: {}".format(req, e))
 
-    # Add resources listed in the manifest.
-    for dst, src in manifest['nativeLibraries'].iteritems():
-        # NOTE(agallagher): see rationale above.
-        pex_builder.add_resource(dereference_symlinks(src), dst)
+        # Add resources listed in the manifest.
+        for dst, src in manifest['nativeLibraries'].iteritems():
+            # NOTE(agallagher): see rationale above.
+            pex_builder.add_resource(dereference_symlinks(src), dst)
 
-    if options.directory:
-        pex_builder.freeze(code_hash=False, bytecode_compile=False)
-    else:
+        # Generate the PEX file.
         pex_builder.build(output)
+
+    # Always try cleaning up the scratch dir, ignoring failures.
+    finally:
+        shutil.rmtree(tmp_dir, True)
 
 
 sys.exit(main())

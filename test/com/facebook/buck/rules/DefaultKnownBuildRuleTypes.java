@@ -65,11 +65,10 @@ public class DefaultKnownBuildRuleTypes {
         for (String extension : new String[]{"", ".exe", ".EXE"}) {
           processMap.put(
               ProcessExecutorParams.builder()
-                  .setCommand(ImmutableList.of(
-                      path + File.separator + python.getKey() + extension,
-                      "-"))
+                  .setCommand(
+                      ImmutableList.of(path + File.separator + python.getKey() + extension, "-V"))
                   .build(),
-              new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
+              new FakeProcess(0, "Python " + python.getValue(), ""));
         }
       }
     }

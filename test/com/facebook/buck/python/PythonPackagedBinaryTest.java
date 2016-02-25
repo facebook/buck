@@ -78,7 +78,7 @@ public class PythonPackagedBinaryTest {
         ImmutableList.<String>of(),
         new HashedFileTool(Paths.get("dummy_path_to_pex_runner")),
         ".pex",
-        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("CPython", "2.7.11")),
+        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         "main",
         PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(
