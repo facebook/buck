@@ -187,6 +187,7 @@ java_library(
     '//src/com/facebook/buck/jvm/java/autodeps:autodeps',
     '//src/com/facebook/buck/jvm/java/intellij:intellij',
     '//test/com/facebook/buck/jvm/java:java',
+    '//test/com/facebook/buck/jvm/java/autodeps:autodeps',
     '//test/com/facebook/buck/jvm/java/intellij:intellij',
   ],
 )

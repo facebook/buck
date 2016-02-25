@@ -18,20 +18,32 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.autodeps.AutodepsWriter;
 import com.facebook.buck.autodeps.DepsForBuildFiles;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
@@ -90,10 +102,53 @@ public class AutodepsCommand extends AbstractCommand {
         return 1;
       }
 
+      BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
+          graph,
+          new BuildTargetNodeToBuildRuleTransformer());
+      BuildEngine buildEngine = new CachingBuildEngine(
+          executorService,
+          params.getFileHashCache(),
+          CachingBuildEngine.BuildMode.SHALLOW,
+          params.getBuckConfig().getDependencySchedulingOrder(),
+          params.getBuckConfig().getBuildDepFiles(),
+          params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+          buildRuleResolver);
+
+      // Create a BuildEngine because we store symbol information as build artifacts.
+      BuckEventBus eventBus = params.getBuckEventBus();
+      ExecutionContext executionContext = ExecutionContext.builder()
+          .setConsole(params.getConsole())
+          .setConcurrencyLimit(concurrencyLimit)
+          .setEventBus(eventBus)
+          .setEnvironment(/* environment */ ImmutableMap.<String, String>of())
+          .setExecutors(ImmutableMap.of(ExecutionContext.ExecutorPool.CPU, executorService))
+          .setJavaPackageFinder(params.getJavaPackageFinder())
+          .setObjectMapper(params.getObjectMapper())
+          .setPlatform(params.getPlatform())
+          .build();
+      StepRunner stepRunner = new DefaultStepRunner(executionContext);
+
+      BuildContext buildContext = ImmutableBuildContext.builder()
+          // Note we do not create a real action graph because we do not need one.
+          .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+          .setStepRunner(stepRunner)
+          .setClock(params.getClock())
+          .setArtifactCache(params.getArtifactCache())
+          .setJavaPackageFinder(executionContext.getJavaPackageFinder())
+          .setEventBus(eventBus)
+          .setBuildId(eventBus.getBuildId())
+          .putAllEnvironment(executionContext.getEnvironment())
+          .setKeepGoing(false)
+          .setShouldReportAbsolutePaths(false)
+          .build();
+
       // Traverse the TargetGraph to find all of the auto-generated dependencies.
       JavaDepsFinder javaDepsFinder = JavaDepsFinder.createJavaDepsFinder(
           params.getBuckConfig(),
-          params.getCell().getCellRoots());
+          params.getCell().getCellRoots(),
+          params.getObjectMapper(),
+          buildContext,
+          buildEngine);
       Console console = params.getConsole();
       DepsForBuildFiles depsForBuildFiles = javaDepsFinder.findDepsForBuildFiles(graph, console);
 

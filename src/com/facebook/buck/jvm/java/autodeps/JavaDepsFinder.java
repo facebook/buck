@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.autodeps.DepsForBuildFiles;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -29,17 +28,19 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -50,9 +51,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-import com.google.common.io.Files;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
@@ -66,15 +67,6 @@ public class JavaDepsFinder {
 
   private static final String BUCK_CONFIG_SECTION = "autodeps";
 
-  private static final Predicate<String> NOT_A_BUILT_IN_SYMBOL = new Predicate<String>() {
-    @Override
-    public boolean apply(String symbol) {
-      // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
-      // provided by JSRs.
-      return !symbol.startsWith("java.");
-    }
-  };
-
   /**
    * Map of symbol prefixes to [prebuilt_]java_library build rules that provide the respective
    * symbol. Keys are sorted from longest to shortest so the first match encountered wins. Note
@@ -83,17 +75,29 @@ public class JavaDepsFinder {
   private final ImmutableSortedMap<String, BuildTarget> javaPackageMapping;
 
   private final JavaFileParser javaFileParser;
+  private final ObjectMapper objectMapper;
+  private final BuildContext buildContext;
+  private final BuildEngine buildEngine;
 
   public JavaDepsFinder(
       ImmutableSortedMap<String, BuildTarget> javaPackageMapping,
-      JavaFileParser javaFileParser) {
+      JavaFileParser javaFileParser,
+      ObjectMapper objectMapper,
+      BuildContext buildContext,
+      BuildEngine buildEngine) {
     this.javaPackageMapping = javaPackageMapping;
     this.javaFileParser = javaFileParser;
+    this.objectMapper = objectMapper;
+    this.buildContext = buildContext;
+    this.buildEngine = buildEngine;
   }
 
   public static JavaDepsFinder createJavaDepsFinder(
       BuckConfig buckConfig,
-      final Function<Optional<String>, Path> cellNames) {
+      final Function<Optional<String>, Path> cellNames,
+      ObjectMapper objectMapper,
+      BuildContext buildContext,
+      BuildEngine buildEngine) {
     Optional<String> javaPackageMappingOption = buckConfig.getValue(
         BUCK_CONFIG_SECTION,
         "java-package-mappings");
@@ -136,7 +140,12 @@ public class JavaDepsFinder {
     JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
     JavaFileParser javaFileParser = JavaFileParser.createJavaFileParser(javacOptions);
 
-    return new JavaDepsFinder(javaPackageMapping, javaFileParser);
+    return new JavaDepsFinder(
+        javaPackageMapping,
+        javaFileParser,
+        objectMapper,
+        buildContext,
+        buildEngine);
   }
 
   private static final Set<BuildRuleType> RULES_TO_VISIT = ImmutableSet.of(
@@ -180,65 +189,35 @@ public class JavaDepsFinder {
           return;
         }
 
-        JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
-        boolean autodeps = arg.autodeps.or(false);
+        // Set up the appropriate fields for java_library().
+        boolean autodeps;
+        ImmutableSortedSet<BuildTarget> providedDeps;
+        ImmutableSortedSet<BuildTarget> exportedDeps;
+        if (node.getConstructorArg() instanceof JavaLibraryDescription.Arg) {
+          JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
+          autodeps = arg.autodeps.or(false);
+          providedDeps = arg.providedDeps.or(ImmutableSortedSet.<BuildTarget>of());
+          exportedDeps = arg.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of());
+        } else {
+          throw new IllegalStateException("TargetNode must be a JavaLibrary");
+        }
+
         BuildTarget buildTarget = node.getBuildTarget();
         if (autodeps) {
           rulesWithAutodeps.add(buildTarget);
-          rulesWithAutodepsToProvidedDeps.putAll(
-              buildTarget,
-              arg.providedDeps.or(ImmutableSortedSet.<BuildTarget>of()));
+          rulesWithAutodepsToProvidedDeps.putAll(buildTarget, providedDeps);
         }
 
-        for (BuildTarget exportedDep : arg.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of())) {
+        for (BuildTarget exportedDep : exportedDeps) {
           ruleToRulesThatExportIt.put(exportedDep, buildTarget);
         }
 
-        // The build target should be recorded as a provider for every symbol in its
-        // generated_symbols set (if it exists). It is common to use this for symbols that are
-        // generated via annotation processors.
-        if (arg.generatedSymbols.isPresent()) {
-          for (String symbol : arg.generatedSymbols.get()) {
-            symbolToProviders.put(symbol, buildTarget);
-          }
+        Symbols symbols = getJavaFileFeatures(node, autodeps);
+        if (autodeps) {
+          ruleToRequiredSymbols.putAll(buildTarget, symbols.required);
         }
-
-        // As a performance improvement, we should graph enhance a rule for the java_library() rule
-        // that depends on the following inputs:
-        //
-        // 1. The javaPackageMapping
-        // 2. The JavacOptions used to create the JavaFileParser.
-        // 3. The names and contents of the srcs.
-        //
-        // The output file for the enhanced rule would be the total set of required/provided symbols
-        // across all of the java_library() rule's srcs. If we could pull that result from cache,
-        // that would avoid a lot of work here because it would eliminate all of the Java parsing.
-        for (SourcePath src : arg.srcs.get()) {
-          if (!(src instanceof PathSourcePath)) {
-            continue;
-          }
-
-          PathSourcePath sourcePath = (PathSourcePath) src;
-          ProjectFilesystem filesystem = sourcePath.getFilesystem();
-          Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
-          String code;
-          try {
-            code = Files.toString(absolutePath.toFile(), Charsets.UTF_8);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-
-          JavaFileParser.JavaFileFeatures features = javaFileParser
-              .extractFeaturesFromJavaCode(code);
-          if (autodeps) {
-            ruleToRequiredSymbols.putAll(
-                buildTarget,
-                FluentIterable.from(features.requiredSymbols).filter(NOT_A_BUILT_IN_SYMBOL));
-          }
-
-          for (String providedEntity : features.providedSymbols) {
-            symbolToProviders.put(providedEntity, buildTarget);
-          }
+        for (String providedEntity : symbols.provided) {
+          symbolToProviders.put(providedEntity, buildTarget);
         }
       }
     }.traverse();
@@ -326,6 +305,48 @@ public class JavaDepsFinder {
     }
 
     return depsForBuildFiles;
+  }
+
+  private Symbols getJavaFileFeatures(TargetNode<?> node, boolean shouldRecordRequiredSymbols) {
+    // Build a JavaLibrarySymbolsFinder to create the JavaFileFeatures. By making use of Buck's
+    // build cache, we can often avoid running a Java parser.
+    Object argForNode = node.getConstructorArg();
+    JavaSymbolsRule.SymbolsFinder symbolsFinder;
+    ImmutableSortedSet<String> generatedSymbols;
+    if (argForNode instanceof JavaLibraryDescription.Arg) {
+      JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) argForNode;
+      // The build target should be recorded as a provider for every symbol in its
+      // generated_symbols set (if it exists). It is common to use this for symbols that are
+      // generated via annotation processors.
+      generatedSymbols = arg.generatedSymbols.or(ImmutableSortedSet.<String>of());
+      symbolsFinder = new JavaLibrarySymbolsFinder(
+          arg.srcs.get(),
+          javaFileParser,
+          shouldRecordRequiredSymbols);
+    } else {
+      throw new IllegalStateException("TargetNode must be a JavaLibrary");
+    }
+    BuildTarget buildTarget = node.getBuildTarget();
+
+    // Build the rule, leveraging Buck's build cache.
+    JavaSymbolsRule buildRule = new JavaSymbolsRule(
+        buildTarget,
+        symbolsFinder,
+        generatedSymbols,
+        objectMapper,
+        node.getRuleFactoryParams().getProjectFilesystem());
+    ListenableFuture<BuildResult> future = buildEngine.build(buildContext, buildRule);
+    BuildResult result = Futures.getUnchecked(future);
+
+    Symbols features;
+    if (result.getSuccess() != null) {
+      features = buildRule.getFeatures();
+    } else {
+      Throwable failure = result.getFailure();
+      Preconditions.checkNotNull(failure);
+      throw new RuntimeException("Failed to extract Java symbols for " + buildTarget, failure);
+    }
+    return features;
   }
 
   /**

@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
@@ -270,8 +271,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
     // We also know that the rules all depend on the default includes for the
     // cell.
-    Iterable<String> defaultIncludes =
-        new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
+    BuckConfig buckConfig = cell.getBuckConfig();
+    Iterable<String> defaultIncludes = new ParserConfig(buckConfig).getDefaultIncludes();
     for (String include : defaultIncludes) {
       // Default includes are given as "//path/to/file". They look like targets
       // but they are not. However, I bet someone will try and treat it like a
