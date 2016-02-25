@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,8 +31,10 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class MoreSuppliersTest {
   @Test
@@ -78,34 +81,49 @@ public class MoreSuppliersTest {
 
     TestDelegate delegate = new TestDelegate();
     final Supplier<Object> supplier = MoreSuppliers.weakMemoize(delegate);
-    ListeningExecutorService executor =
-        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(numFetchers));
+    ExecutorService threadPool = Executors.newFixedThreadPool(numFetchers);
 
-    class Fetcher implements Callable<Object> {
-      @Override
-      public Object call() {
-        // Signal that this particular fetcher is ready.
-        semaphore.release();
-        return supplier.get();
+    try {
+      ListeningExecutorService executor = MoreExecutors.listeningDecorator(threadPool);
+
+      class Fetcher implements Callable<Object> {
+        @Override
+        public Object call() {
+          // Signal that this particular fetcher is ready.
+          semaphore.release();
+          return supplier.get();
+        }
       }
+
+      ImmutableList.Builder<Callable<Object>> fetcherBuilder = ImmutableList.builder();
+      for (int i = 0; i < numFetchers; i++) {
+        fetcherBuilder.add(new Fetcher());
+      }
+
+      @SuppressWarnings("unchecked")
+      List<ListenableFuture<Object>> futures =
+          (List<ListenableFuture<Object>>) (List<?>) executor.invokeAll(fetcherBuilder.build());
+
+      // Wait for all fetchers to finish.
+      List<Object> results = Futures.allAsList(futures).get();
+
+      Assert.assertEquals("should only have been called once", 1, delegate.getTimesCalled());
+      Assert.assertThat(
+          "all result items are the same",
+          ImmutableSet.copyOf(results),
+          Matchers.hasSize(1));
+
+      Preconditions.checkState(
+          threadPool.shutdownNow().isEmpty(),
+          "All jobs should have completed");
+      Preconditions.checkState(
+          threadPool.awaitTermination(10, TimeUnit.SECONDS),
+          "Thread pool should terminate in a reasonable amount of time");
+    } finally {
+      // In case exceptions were thrown, attempt to shut down the thread pool.
+      threadPool.shutdownNow();
+      threadPool.awaitTermination(10, TimeUnit.SECONDS);
     }
-
-    ImmutableList.Builder<Callable<Object>> fetcherBuilder = ImmutableList.builder();
-    for (int i = 0; i < numFetchers; i++) {
-      fetcherBuilder.add(new Fetcher());
-    }
-    @SuppressWarnings("unchecked")
-    List<ListenableFuture<Object>> futures =
-        (List<ListenableFuture<Object>>) (List<?>) executor.invokeAll(fetcherBuilder.build());
-
-    // Wait for all fetchers to finish.
-    List<Object> results = Futures.allAsList(futures).get();
-
-    Assert.assertEquals("should only have been called once", 1, delegate.getTimesCalled());
-    Assert.assertThat(
-        "all result items are the same",
-        ImmutableSet.copyOf(results),
-        Matchers.hasSize(1));
   }
 
   @Test
