@@ -18,24 +18,19 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
-public class OptimisticLoadingCacheTest {
+public class ConcurrentMapCacheTest {
 
   @Test
   public void shouldAllowAnEntryToBeAdded() throws ExecutionException {
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
-    cache.get("cake", new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return 1;
-      }
-    });
+    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
+    cache.get("cake", 1);
 
     Integer value = cache.getIfPresent("cake");
 
@@ -44,13 +39,8 @@ public class OptimisticLoadingCacheTest {
 
   @Test
   public void shouldRemoveValues() throws ExecutionException {
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
-    cache.get("cake", new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return 1;
-      }
-    });
+    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
+    cache.get("cake", 1);
 
     cache.invalidate("cake");
 
@@ -59,31 +49,40 @@ public class OptimisticLoadingCacheTest {
 
   @Test
   public void shouldOnlyAddAnItemOnceToTheCache() throws ExecutionException {
-    final AtomicInteger value = new AtomicInteger(1);
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
-    Callable<Integer> loader = new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return value.getAndIncrement();
-      }
-    };
+    ConcurrentMapCache<String, WeirdInt> cache = new ConcurrentMapCache<>(1);
+    WeirdInt value = new WeirdInt(42);
+    WeirdInt value2 = new WeirdInt(42);
 
-    cache.get("cake", loader);
-    cache.get("cake", loader);
+    cache.get("cake", value);
+    cache.get("cake", value2);
 
-    assertEquals(1, cache.getIfPresent("cake").intValue());
+    assertThat(cache.getIfPresent("cake"), Matchers.is(value));
   }
 
-  @Test(expected = ExecutionException.class)
+  @Test(expected = NullPointerException.class)
   public void disallowsNullValuesInTheCache() throws ExecutionException {
-    OptimisticLoadingCache<String, Integer> cache = new OptimisticLoadingCache<>(1);
-    cache.get("cake", new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return null;
-      }
-    });
-
+    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
+    cache.get("cake", null);
   }
 
+  private static class WeirdInt {
+    private int value;
+
+    public WeirdInt(int value) {
+      this.value = value;
+    }
+
+    @Override
+    public int hashCode() {
+      return value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof WeirdInt)) {
+        return false;
+      }
+      return ((WeirdInt) obj).value == value;
+    }
+  }
 }

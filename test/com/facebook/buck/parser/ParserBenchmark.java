@@ -33,6 +33,8 @@ import com.google.caliper.api.Macrobenchmark;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,7 +43,6 @@ import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ParserBenchmark {
@@ -57,7 +58,7 @@ public class ParserBenchmark {
   private ProjectFilesystem filesystem;
   private Cell cell;
   private BuckEventBus eventBus;
-  private ExecutorService executorService;
+  private ListeningExecutorService executorService;
 
   @Before
   public void setUpTest() throws Exception {
@@ -111,7 +112,7 @@ public class ParserBenchmark {
         .build();
 
     eventBus = BuckEventBusFactory.newInstance();
-    executorService = Executors.newFixedThreadPool(threadCount);
+    executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);

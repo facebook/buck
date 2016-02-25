@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
@@ -28,7 +27,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.JsonObjectHashing;
-import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
@@ -59,15 +57,14 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import com.google.common.collect.MapDifference;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -75,7 +72,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Collections;
@@ -84,7 +80,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -100,7 +95,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * {@link #invalidateIfProjectBuildFileParserStateChanged(Cell)} in order to ensure that state is maintained correctly.
  */
 @ThreadSafe
-class DaemonicParserState {
+class DaemonicParserState implements ParsePipeline.Cache {
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
 
   /**
@@ -115,13 +110,13 @@ class DaemonicParserState {
   private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
 
   private final TypeCoercerFactory typeCoercerFactory;
-  private final ConstructorArgMarshaller marshaller;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
-  private final OptimisticLoadingCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
-  @GuardedBy("this")
+  @GuardedBy("nodesAndTargetsLock")
+  private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
+  @GuardedBy("nodesAndTargetsLock")
   private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
-  private final OptimisticLoadingCache<BuildTarget, TargetNode<?>> allTargetNodes;
-  private final Predicate<BuildTarget> hasCachedTargetNodeForBuildTargetPredicate;
+  @GuardedBy("nodesAndTargetsLock")
+  private final ConcurrentMapCache<BuildTarget, TargetNode<?>> allTargetNodes;
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
   /**
@@ -158,26 +153,19 @@ class DaemonicParserState {
   private final Set<Cell> knownCells;
 
   private final AutoCloseableReadWriteUpdateLock cachedStateLock;
+  private final AutoCloseableReadWriteUpdateLock nodesAndTargetsLock;
 
   public DaemonicParserState(
       TypeCoercerFactory typeCoercerFactory,
-      ConstructorArgMarshaller marshaller,
       int parsingThreads) {
     this.typeCoercerFactory = typeCoercerFactory;
-    this.marshaller = marshaller;
     this.cacheInvalidatedByEnvironmentVariableChangeCounter = new TagSetCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
         ImmutableMap.<String, String>of());
-    this.allRawNodes = new OptimisticLoadingCache<>(parsingThreads);
+    this.allRawNodes = new ConcurrentMapCache<>(parsingThreads);
     this.targetsCornucopia = HashMultimap.create();
-    this.allTargetNodes = new OptimisticLoadingCache<>(parsingThreads);
-    this.hasCachedTargetNodeForBuildTargetPredicate = new Predicate<BuildTarget>() {
-      @Override
-      public boolean apply(BuildTarget buildTarget) {
-        return hasCachedTargetNodeForBuildTarget(buildTarget);
-      }
-    };
+    this.allTargetNodes = new ConcurrentMapCache<>(parsingThreads);
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override
@@ -192,227 +180,148 @@ class DaemonicParserState {
     this.knownCells = Collections.synchronizedSet(new HashSet<Cell>());
 
     this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
+    this.nodesAndTargetsLock = new AutoCloseableReadWriteUpdateLock();
   }
 
-  public ImmutableList<Map<String, Object>> getAllRawNodes(
-      Cell cell,
-      ProjectBuildFileParser parser,
-      Path buildFile) throws BuildFileParseException, InterruptedException {
-    Preconditions.checkState(buildFile.isAbsolute());
-    invalidateIfProjectBuildFileParserStateChanged(cell);
-    invalidateIfBuckConfigHasChanged(cell, buildFile);
-
-    try {
-      return loadRawNodes(cell, buildFile, parser);
-    } catch (UncheckedExecutionException | ExecutionException e) {
-      throw propagate(e);
-    }
+  public TypeCoercerFactory getTypeCoercerFactory() {
+    return typeCoercerFactory;
   }
 
-  public ImmutableSet<TargetNode<?>> getAllTargetNodes(
-      final BuckEventBus eventBus,
+  @Override
+  public Optional<TargetNode<?>> lookupTargetNode(
       final Cell cell,
-      ProjectBuildFileParser parser,
-      final Path buildFile,
-      final TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
-    Preconditions.checkState(buildFile.isAbsolute());
-    invalidateIfProjectBuildFileParserStateChanged(cell);
-    invalidateIfBuckConfigHasChanged(cell, buildFile);
-    try {
-      List<Map<String, Object>> allRawNodes = loadRawNodes(cell, buildFile, parser);
-
-      ImmutableSet.Builder<TargetNode<?>> nodes = ImmutableSet.builder();
-      for (final Map<String, Object> rawNode : allRawNodes) {
-        UnflavoredBuildTarget unflavored = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
-        final BuildTarget target = BuildTarget.of(unflavored);
-
-        TargetNode<?> node = allTargetNodes.get(target, new Callable<TargetNode<?>>() {
-          @Override
-          public TargetNode<?> call() throws Exception {
-            return createTargetNode(eventBus, cell, buildFile, target, rawNode, nodeListener);
-          }
-        });
-
-        nodes.add(node);
-      }
-      return nodes.build();
-    } catch (UncheckedExecutionException | ExecutionException e) {
-      throw propagate(e);
-    }
-  }
-
-  public TargetNode<?> getTargetNode(
-      final BuckEventBus eventBus,
-      final Cell cell,
-      final ProjectBuildFileParser parser,
-      final BuildTarget target,
-      final TargetNodeListener nodeListener
-  ) throws BuildFileParseException, BuildTargetException, InterruptedException {
+      final BuildTarget target) throws BuildTargetException {
     invalidateIfProjectBuildFileParserStateChanged(cell);
     final Path buildFile = cell.getAbsolutePathToBuildFile(target);
     invalidateIfBuckConfigHasChanged(cell, buildFile);
-    try {
-      return allTargetNodes.get(
-          target,
-          new Callable<TargetNode<?>>() {
-            @Override
-            public TargetNode<?> call() throws Exception {
-              Preconditions.checkState(buildFile.isAbsolute());
-              List<Map<String, Object>> rawNodes = loadRawNodes(cell, buildFile, parser);
-
-              for (Map<String, Object> rawNode : rawNodes) {
-                Object shortName = rawNode.get("name");
-
-                if (target.getShortName().equals(shortName)) {
-                  return createTargetNode(
-                      eventBus,
-                      cell,
-                      buildFile,
-                      target,
-                      rawNode,
-                      nodeListener);
-                }
-              }
-
-              throw new HumanReadableException(
-                  NoSuchBuildTargetException.createForMissingBuildRule(
-                      target,
-                      BuildTargetPatternParser.forBaseName(target.getBaseName()),
-                      cell.getBuildFileName(),
-                      "Defined in file: " + buildFile));
-            }
-          });
-    } catch (UncheckedExecutionException | ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
-      throw propagate(e);
+    try (AutoCloseableLock readLock = nodesAndTargetsLock.readLock()) {
+      return Optional.<TargetNode<?>>fromNullable(allTargetNodes.getIfPresent(target));
     }
   }
 
-  public boolean hasCachedTargetNodeForBuildTarget(BuildTarget buildTarget) {
-    return allTargetNodes.containsKey(buildTarget);
-  }
-
-  public Predicate<BuildTarget> getHasCachedTargetNodeForBuildTargetPredicate() {
-    return hasCachedTargetNodeForBuildTargetPredicate;
-  }
-
-  private RuntimeException propagate(Throwable e)
-      throws BuildFileParseException, InterruptedException {
-    Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetParseException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), HumanReadableException.class);
-    Throwables.propagateIfInstanceOf(e.getCause(), InterruptedException.class);
-    if (e instanceof ExecutionException | e instanceof UncheckedExecutionException) {
-      Throwable cause = e.getCause();
-      if (cause instanceof ExecutionException | cause instanceof UncheckedExecutionException) {
-        throw propagate(cause);
+  @Override
+  public TargetNode<?> putTargetNodeIfNotPresent(
+      final Cell cell,
+      final BuildTarget target,
+      TargetNode<?> targetNode) throws BuildTargetException {
+    invalidateIfProjectBuildFileParserStateChanged(cell);
+    final Path buildFile = cell.getAbsolutePathToBuildFile(target);
+    invalidateIfBuckConfigHasChanged(cell, buildFile);
+    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+      TargetNode<?> updatedNode = allTargetNodes.get(target, targetNode);
+      if (updatedNode == targetNode) {
+        targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
       }
-
-      if (cause != null) {
-        return Throwables.propagate(cause);
-      }
+      return updatedNode;
     }
-
-    return Throwables.propagate(e);
   }
 
-  private ImmutableList<Map<String, Object>> loadRawNodes(
+  @Override
+  @SuppressWarnings("unchecked")
+  public ImmutableList<Map<String, Object>> putRawNodesIfNotPresent(
       final Cell cell,
       final Path buildFile,
-      final ProjectBuildFileParser parser) throws ExecutionException {
-    return allRawNodes.get(
-        buildFile,
-        new Callable<ImmutableList<Map<String, Object>>>() {
-          @SuppressWarnings("unchecked")
-          @Override
-          public ImmutableList<Map<String, Object>> call() throws Exception {
-            List<Map<String, Object>> rawNodes = parser.getAllRulesAndMetaRules(buildFile);
-            ImmutableSet<Path> dependentsOfEveryNode = ImmutableSet.of();
-            ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs =
-                ImmutableMap.of();
-            ImmutableList.Builder<Map<String, Object>> toReturn = ImmutableList.builder();
-            for (Map<String, Object> rawNode : rawNodes) {
-              if (rawNode.containsKey(INCLUDES_META_RULE)) {
-                // INCLUDES_META_RULE maps to a list of file paths: the head is a
-                // dependent build file and the tail is a list of the files it includes.
-                List<String> fileNames = ((List<String>) rawNode.get(INCLUDES_META_RULE));
-                Preconditions.checkNotNull(fileNames);
-                dependentsOfEveryNode = FluentIterable.from(fileNames)
-                    .transform(
-                        new Function<String, Path>() {
-                          @Override
-                          public Path apply(String path) {
-                            return cell.getFilesystem().resolve(Paths.get(path));
-                          }
-                        })
-                    .toSet();
-              } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
-                ImmutableMap.Builder<String, ImmutableMap<String, Optional<String>>> builder =
-                    ImmutableMap.builder();
-                Map<String, Map<String, String>> configsMeta =
-                    Preconditions.checkNotNull(
-                        (Map<String, Map<String, String>>) rawNode.get(CONFIGS_META_RULE));
-                for (Map.Entry<String, Map<String, String>> ent : configsMeta.entrySet()) {
-                  builder.put(
-                      ent.getKey(),
-                      ImmutableMap.copyOf(
-                          Maps.transformValues(
-                              ent.getValue(),
-                              new Function<String, Optional<String>>() {
-                                @Override
-                                public Optional<String> apply(@Nullable String input) {
-                                  return Optional.fromNullable(input);
-                                }
-                              })));
-                }
-                configs = builder.build();
-              } else {
-                toReturn.add(rawNode);
-              }
-            }
+      final ImmutableList<Map<String, Object>> rawNodes) {
+    Preconditions.checkState(buildFile.isAbsolute());
+    // Technically this leads to inconsistent state if the state change happens after rawNodes
+    // were computed, but before we reach the synchronized section here, however that's a problem
+    // we already have, as we don't invalidate any nodes that have been retrieved from the cache
+    // (and so the partially-constructed graph will contain stale nodes if the cash was invalidated
+    // mid-way through the parse).
+    invalidateIfProjectBuildFileParserStateChanged(cell);
 
-            synchronized (this) {
-              buildFileConfigs.put(buildFile, configs);
+    final ImmutableList.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
+        ImmutableList.builder();
+    ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
+    ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs =
+        ImmutableMap.of();
+    for (Map<String, Object> rawNode : rawNodes) {
+      if (rawNode.containsKey(INCLUDES_META_RULE)) {
+        for (String path :
+            Preconditions.checkNotNull((List<String>) rawNode.get(INCLUDES_META_RULE))) {
+          dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
+        }
+      } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
+        ImmutableMap.Builder<String, ImmutableMap<String, Optional<String>>> builder =
+            ImmutableMap.builder();
+        Map<String, Map<String, String>> configsMeta =
+            Preconditions.checkNotNull(
+                (Map<String, Map<String, String>>) rawNode.get(CONFIGS_META_RULE));
+        for (Map.Entry<String, Map<String, String>> ent : configsMeta.entrySet()) {
+          builder.put(
+              ent.getKey(),
+              ImmutableMap.copyOf(
+                  Maps.transformValues(
+                      ent.getValue(),
+                      new Function<String, Optional<String>>() {
+                        @Override
+                        public Optional<String> apply(@Nullable String input) {
+                          return Optional.fromNullable(input);
+                        }
+                      })));
+        }
+        configs = builder.build();
+      } else {
+        withoutMetaIncludesBuilder.add(rawNode);
+      }
+    }
+    final ImmutableList<Map<String, Object>> withoutMetaIncludes =
+        withoutMetaIncludesBuilder.build();
 
-              // We now know all the nodes. They all implicitly depend on everything in
-              // the "dependentsOfEveryNode" set.
-              for (Path dependent : dependentsOfEveryNode) {
-                buildFileDependents.put(dependent, buildFile);
-              }
-            }
+    // We also know that the rules all depend on the default includes for the
+    // cell.
+    Iterable<String> defaultIncludes =
+        new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
+    for (String include : defaultIncludes) {
+      // Default includes are given as "//path/to/file". They look like targets
+      // but they are not. However, I bet someone will try and treat it like a
+      // target, so find the owning cell if necessary, and then fully resolve
+      // the path against the owning cell's root.
+      int slashesIndex = include.indexOf("//");
+      Preconditions.checkState(slashesIndex != -1);
+      dependentsOfEveryNode.add(cell.getFilesystem().resolve(include.substring(2)));
+    }
 
-            // We also know that the rules all depend on the default includes for the
-            // cell.
-            BuckConfig buckConfig = cell.getBuckConfig();
-            Iterable<String> defaultIncludes =
-                new ParserConfig(buckConfig).getDefaultIncludes();
-            synchronized (this) {
-              for (String include : defaultIncludes) {
-                // Default includes are given as "//path/to/file". They look like targets
-                // but they are not. However, I bet someone will try and treat it like a
-                // target, so find the owning cell if necessary, and then fully resolve
-                // the path against the owning cell's root.
-                int slashesIndex = include.indexOf("//");
-                Preconditions.checkState(slashesIndex != -1);
+    synchronized (this) {
+      try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+        ImmutableList<Map<String, Object>> updated =
+            allRawNodes.get(buildFile, withoutMetaIncludes);
+        buildFileConfigs.put(buildFile, configs);
 
-                buildFileDependents.put(
-                    cell.getFilesystem().resolve(include.substring(2)),
-                    buildFile);
-              }
-            }
-
-            return toReturn.build();
+        if (updated == withoutMetaIncludes) {
+          // We now know all the nodes. They all implicitly depend on everything in
+          // the "dependentsOfEveryNode" set.
+          for (Path dependent : dependentsOfEveryNode.build()) {
+            buildFileDependents.put(dependent, buildFile);
           }
-        });
+        }
+        return updated;
+      }
+    }
+  }
+
+  @Override
+  public Optional<ImmutableList<Map<String, Object>>> lookupRawNodes(
+      final Cell cell,
+      final Path buildFile) {
+    Preconditions.checkState(buildFile.isAbsolute());
+    invalidateIfProjectBuildFileParserStateChanged(cell);
+    invalidateIfBuckConfigHasChanged(cell, buildFile);
+
+    try (AutoCloseableLock readLock = nodesAndTargetsLock.readLock()) {
+      return Optional.fromNullable(allRawNodes.getIfPresent(buildFile));
+    }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private TargetNode<?> createTargetNode(
+  public static TargetNode<?> createTargetNode(
       BuckEventBus eventBus,
       Cell cell,
       Path buildFile,
       BuildTarget target,
       Map<String, Object> rawNode,
+      ConstructorArgMarshaller marshaller,
+      TypeCoercerFactory typeCoercerFactory,
       TargetNodeListener nodeListener) {
     BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
 
@@ -480,9 +389,6 @@ class DaemonicParserState {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        synchronized (this) {
-          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
-        }
         TargetNode<?> node = new TargetNode(
             hasher.hash(),
             description,
@@ -506,7 +412,7 @@ class DaemonicParserState {
     }
   }
 
-  private BuildRuleType parseBuildRuleTypeFromRawRule(
+  private static BuildRuleType parseBuildRuleTypeFromRawRule(
       Cell cell,
       Map<String, Object> map) {
     String type = (String) Preconditions.checkNotNull(
@@ -563,7 +469,8 @@ class DaemonicParserState {
         }
       } catch (ExecutionException | UncheckedExecutionException e) {
         try {
-          throw propagate(e);
+          Throwables.propagateIfInstanceOf(e, BuildFileParseException.class);
+          Throwables.propagate(e);
         } catch (BuildFileParseException bfpe) {
           LOG.warn("Unable to parse already parsed build file.", bfpe);
         }
@@ -631,20 +538,22 @@ class DaemonicParserState {
     // Paths from Watchman are not absolute.
     path = cell.getFilesystem().resolve(path);
 
-    // If the path is a build file for the cell, nuke the targets that it owns first. We don't need
-    // to check whether or not the path ends in the build file name, since we know that these are
-    // the only things that get added. Which makes for an easy life.
-    List<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
-    if (rawNodes != null) {
-      // Invalidate the target nodes first
-      for (Map<String, Object> rawNode : rawNodes) {
-        UnflavoredBuildTarget target = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
-        allTargetNodes.invalidateAll(targetsCornucopia.get(target));
-        targetsCornucopia.removeAll(target);
-      }
+    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+      // If the path is a build file for the cell, nuke the targets that it owns first. We don't
+      // need to check whether or not the path ends in the build file name, since we know that
+      // these are the only things that get added. Which makes for an easy life.
+      List<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
+      if (rawNodes != null) {
+        // Invalidate the target nodes first
+        for (Map<String, Object> rawNode : rawNodes) {
+          UnflavoredBuildTarget target = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
+          allTargetNodes.invalidateAll(targetsCornucopia.get(target));
+          targetsCornucopia.removeAll(target);
+        }
 
-      // And then the raw node itself.
-      allRawNodes.invalidate(path);
+        // And then the raw node itself.
+        allRawNodes.invalidate(path);
+      }
     }
 
     // We may have been given a file that other build files depend on. Iteratively remove those.
@@ -743,9 +652,11 @@ class DaemonicParserState {
 
   private synchronized void invalidateAllCaches() {
     LOG.debug("Invalidating all caches");
-    allTargetNodes.invalidateAll();
-    targetsCornucopia.clear();
-    allRawNodes.invalidateAll();
+    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+      allTargetNodes.invalidateAll();
+      targetsCornucopia.clear();
+      allRawNodes.invalidateAll();
+    }
     buildFileDependents.clear();
     buildFileConfigs.clear();
     knownCells.clear();

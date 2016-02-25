@@ -72,6 +72,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -93,8 +95,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.SortedMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @RunWith(Parameterized.class)
@@ -117,7 +117,7 @@ public class ParserTest {
   private BuckEventBus eventBus;
   private Cell cell;
   private ParseEventStartedCounter counter;
-  private ExecutorService executorService;
+  private ListeningExecutorService executorService;
 
   public ParserTest(int threads, boolean parallelParsing) {
     this.threads = threads;
@@ -199,7 +199,7 @@ public class ParserTest {
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
 
-    executorService = Executors.newFixedThreadPool(threads);
+    executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threads));
   }
 
   @After
@@ -2019,7 +2019,7 @@ public class ParserTest {
       Cell cell,
       Predicate<TargetNode<?>> filter,
       BuckEventBus buckEventBus,
-      Executor executor)
+      ListeningExecutorService executor)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     return FluentIterable
         .from(

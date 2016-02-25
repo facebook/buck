@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -77,7 +78,7 @@ public class IntraCellIntegrationTest {
         BuckEventBusFactory.newInstance(),
         cell,
         false,
-        Executors.newSingleThreadExecutor(),
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(BuildTargetFactory.newInstance(
             cell.getFilesystem(),
             "//just-a-directory:rule")));
@@ -92,7 +93,7 @@ public class IntraCellIntegrationTest {
           BuckEventBusFactory.newInstance(),
           childCell,
           false,
-          Executors.newSingleThreadExecutor(),
+          MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
           ImmutableSet.of(BuildTargetFactory.newInstance(
               childCell.getFilesystem(),
               "//:child-target")));

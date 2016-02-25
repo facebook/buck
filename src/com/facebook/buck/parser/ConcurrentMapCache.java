@@ -19,10 +19,8 @@ package com.facebook.buck.parser;
 import com.google.common.base.Preconditions;
 
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -30,7 +28,7 @@ import javax.annotation.Nullable;
  * A lightweight wrapper over a {@link ConcurrentMap} that imitates the bits of the public API of
  * {@link com.google.common.cache.Cache} that's used by the {@link Parser}.
  */
-class OptimisticLoadingCache<K, V> {
+class ConcurrentMapCache<K, V> {
 
   /**
    * Resizing is expensive.  This saves us four resizes from the normal default of 16.
@@ -44,26 +42,22 @@ class OptimisticLoadingCache<K, V> {
 
   private final ConcurrentMap<K, V> values;
 
-  public OptimisticLoadingCache(int parsingThreads) {
+  public ConcurrentMapCache(int numThreads) {
     this.values = new ConcurrentHashMap<>(
         DEFAULT_INITIAL_CAPACITY,
         DEFAULT_LOAD_FACTOR,
-        parsingThreads);
+        numThreads);
   }
 
-  public V get(K key, Callable<V> loader) throws ExecutionException {
+  public V get(K key, V newValue) {
     V value = values.get(key);
     if (value != null) {
       return value;
     }
 
-    try {
-      value = Preconditions.checkNotNull(loader.call());
-      V seen = values.putIfAbsent(key, value);
-      return seen == null ? value : seen;
-    } catch (Exception e) {
-      throw new ExecutionException(e);
-    }
+    value = Preconditions.checkNotNull(newValue);
+    V seen = values.putIfAbsent(key, value);
+    return seen == null ? value : seen;
   }
 
   @Nullable
@@ -86,13 +80,6 @@ class OptimisticLoadingCache<K, V> {
   }
 
   public void invalidateAll() {
-    smash();
-  }
-
-  /**
-   * Humorous renaming of {@link java.util.Map#clear()}. "OLC smash!" Geddit? No? Oh well.
-   */
-  public void smash() {
     values.clear();
   }
 }

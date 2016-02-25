@@ -1,0 +1,7 @@
+java_library(
+  name = 'lib',
+  deps = [
+    '//a:a',
+    '//b:b',
+  ],
+)

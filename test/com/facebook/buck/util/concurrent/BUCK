@@ -13,6 +13,7 @@ java_library(
   name = 'testutil',
   srcs = [
     'FakeListeningExecutorService.java',
+    'ExplicitRunExecutorService.java',
   ],
   deps = [
     '//third-party/java/guava:guava',

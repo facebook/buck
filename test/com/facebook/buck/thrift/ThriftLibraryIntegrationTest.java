@@ -57,6 +57,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -114,7 +115,7 @@ public class ThriftLibraryIntegrationTest {
         eventBus,
         cell,
         false,
-        Executors.newSingleThreadExecutor(),
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(target));
 
     TargetNodeToBuildRuleTransformer transformer = new BuildTargetNodeToBuildRuleTransformer();

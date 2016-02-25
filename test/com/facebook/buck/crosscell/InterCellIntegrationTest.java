@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.ini4j.Ini;
@@ -290,7 +291,7 @@ public class InterCellIntegrationTest {
         eventBus,
         primaryCell,
         false,
-        Executors.newSingleThreadExecutor(),
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(namedTarget));
   }
 
