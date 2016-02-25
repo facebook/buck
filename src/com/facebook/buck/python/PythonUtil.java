@@ -270,7 +270,7 @@ public class PythonUtil {
             allComponents.addNativeLibraries(
                 Paths.get(ent.getKey()),
                 ent.getValue(),
-                params.getBuildTarget());
+                nativeLinkable.getBuildTarget());
           }
         }
       }
