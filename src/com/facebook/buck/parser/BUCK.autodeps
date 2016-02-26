@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3ce68c261f3a7033de4b332508bc955160f45b93 #@#
+#@# GENERATED FILE: DO NOT MODIFY b516b71a9b8a6edf77c530465161fb5a4becf587 #@#
 {
   "config" : [
     "//src/com/facebook/buck/cli:config",
@@ -24,6 +24,7 @@
     "//src/com/facebook/buck/util:io",
     "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util/concurrent:concurrent",
+    "//src/com/facebook/buck/util/environment:env-filter",
     "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
     "//third-party/java/immutables:processor",
