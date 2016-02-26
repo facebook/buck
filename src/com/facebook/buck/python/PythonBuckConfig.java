@@ -261,8 +261,8 @@ public class PythonBuckConfig {
           "else:\n" +
           "  subversion = 'CPython'\n" +
           "\n" +
-          "print('%s %s %s %s' % (subversion, sys.version_info[0], " +
-          "sys.version_info[1], sys.version_info[2]))\n";
+          "print('%s %s %s' % (subversion, sys.version_info[0], " +
+          "sys.version_info[1]))\n";
 
       ProcessExecutor.Result versionResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-").build(),
@@ -293,7 +293,7 @@ public class PythonBuckConfig {
       String[] versionLines = versionString.split("\\r?\\n");
 
       String[] compatibilityVersion = versionLines[0].split(" ");
-      if (compatibilityVersion.length != 4) {
+      if (compatibilityVersion.length != 3) {
         throw new HumanReadableException(
             "`%s - < [code]` returned an invalid version string %s",
             pythonPath,
@@ -302,7 +302,7 @@ public class PythonBuckConfig {
 
       return PythonVersion.of(
           compatibilityVersion[0],
-          compatibilityVersion[1] + "." + compatibilityVersion[2] + "." + compatibilityVersion[3]);
+          compatibilityVersion[1] + "." + compatibilityVersion[2]);
     } else {
       throw new HumanReadableException(versionResult.getStderr().get());
     }

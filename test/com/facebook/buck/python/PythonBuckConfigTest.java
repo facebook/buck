@@ -70,8 +70,8 @@ public class PythonBuckConfigTest {
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
             Paths.get("usr", "bin", "python"),
-            new ProcessExecutor.Result(0, "", "CPython 2 7 5\n"));
-    assertEquals("CPython 2.7.5", version.toString());
+            new ProcessExecutor.Result(0, "", "CPython 2 7\n"));
+    assertEquals("CPython 2.7", version.toString());
   }
 
   @Test
@@ -265,18 +265,18 @@ public class PythonBuckConfigTest {
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
             Paths.get("non", "important", "path"),
-            new ProcessExecutor.Result(0, "", "CPython 2 7 6\n"));
-    assertEquals("CPython 2.7.6", version.toString());
+            new ProcessExecutor.Result(0, "", "CPython 2 7\n"));
+    assertEquals("CPython 2.7", version.toString());
   }
 
   @Test
   public void testGetWindowsVersion() throws Exception {
-    String output = "CPython 2 7 10\r\n";
+    String output = "CPython 2 7\r\n";
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
             Paths.get("non", "important", "path"),
             new ProcessExecutor.Result(0, "", output));
-    assertThat(version.toString(), Matchers.equalTo("CPython 2.7.10"));
+    assertThat(version.toString(), Matchers.equalTo("CPython 2.7"));
   }
 
   @Test
@@ -290,7 +290,7 @@ public class PythonBuckConfigTest {
     assertThat(
         config.getDefaultPythonPlatform(
             new FakeProcessExecutor(
-                Functions.constant(new FakeProcess(0, "CPython 2 7 5", "")),
+                Functions.constant(new FakeProcess(0, "CPython 2 7", "")),
                 new TestConsole()))
             .getCxxLibrary(),
         Matchers.equalTo(Optional.of(library)));
@@ -304,7 +304,7 @@ public class PythonBuckConfigTest {
                 ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world"))).build(),
             new AlwaysFoundExecutableFinder());
     BuildRuleResolver resolver = new BuildRuleResolver(
-        TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     assertThat(
         config.getPexTool(resolver).getCommandPrefix(new SourcePathResolver(resolver)),
         hasConsecutiveItems("--hello", "--world"));

@@ -35,6 +35,8 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;

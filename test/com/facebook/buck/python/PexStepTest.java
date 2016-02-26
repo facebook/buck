@@ -44,7 +44,7 @@ import java.util.Map;
 public class PexStepTest {
 
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
-  private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6.9");
+  private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6");
   private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
   private static final Path TEMP_PATH = Paths.get("/tmp/");

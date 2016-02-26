@@ -110,9 +110,11 @@ def main():
         # Note: this is expensive (~500ms). prefer passing --python-version when possible.
         identity = PythonInterpreter.from_binary(options.python).identity
     else:
-        # Convert "CPython 2.7.9" to "CPython 2 7 9"
-        identity = PythonIdentity.from_id_string(
-            options.python_version.replace('.', ' '))
+        # Convert "CPython 2.7" to "CPython 2 7 0"
+        python_version = options.python_version.replace('.', ' ').split()
+        if len(python_version) == 3:
+            python_version.append('0')
+        identity = PythonIdentity.from_id_string(' '.join(python_version))
 
     interpreter = PythonInterpreter(
         options.python,

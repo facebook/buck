@@ -28,7 +28,7 @@ abstract class AbstractPythonVersion {
   public abstract String getInterpreterName();
 
   @Value.Parameter
-  public abstract String getVersionString();  // X.Y.Z
+  public abstract String getVersionString();  // X.Y
 
   @Override
   public String toString() {
