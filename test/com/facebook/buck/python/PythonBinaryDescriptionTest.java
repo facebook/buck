@@ -45,6 +45,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -701,7 +702,7 @@ public class PythonBinaryDescriptionTest {
           resolver.getRuleOptionalWithType(
               ((BuildTargetSourcePath) path).getTarget(), CxxLink.class).get();
       assertThat(
-          link.getArgs(),
+          Arg.stringify(link.getArgs()),
           Matchers.hasItem("-flag"));
     }
   }

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -242,7 +243,7 @@ public class CxxTestDescriptionTest {
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(
-        binary.getArgs(),
+        Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(
         binary.getDeps(),
@@ -277,7 +278,7 @@ public class CxxTestDescriptionTest {
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(
-        binary.getArgs(),
+        Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(
         binary.getDeps(),
@@ -309,7 +310,7 @@ public class CxxTestDescriptionTest {
         (CxxLink) resolver.getRule(
             CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(
-        binary.getArgs(),
+        Arg.stringify(binary.getArgs()),
         Matchers.not(
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));

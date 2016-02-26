@@ -20,6 +20,7 @@ import static com.facebook.buck.android.AndroidBinaryGraphEnhancer.PACKAGE_STRIN
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
@@ -201,6 +202,7 @@ public class AndroidBinaryDescription
         args.buildConfigValuesFile,
         Optional.<Integer>absent(),
         nativePlatforms,
+        args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         dxExecutorService);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -365,6 +367,7 @@ public class AndroidBinaryDescription
     public Optional<Integer> xzCompressionLevel;
     public Optional<Boolean> packageAssetLibraries;
     public Optional<Boolean> compressAssetLibraries;
+    public Optional<Boolean> enableRelinker;
 
     /** This will never be absent after this Arg is populated. */
     public Optional<BuildConfigFields> buildConfigValues;

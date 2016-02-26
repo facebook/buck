@@ -32,7 +32,7 @@ public abstract class AbstractExecutionStep implements Step {
   }
 
   @Override
-  public abstract int execute(ExecutionContext context) throws IOException;
+  public abstract int execute(ExecutionContext context) throws IOException, InterruptedException;
 
   @Override
   public String getShortName() {

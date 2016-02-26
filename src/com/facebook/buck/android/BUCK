@@ -104,6 +104,9 @@ RULES_SRCS = [
   # library, but are added here to avoid circular dependencies.
   'ApkInstallStep.java',
   'InstrumentationStep.java',
+  'relinker/RelinkerRule.java',
+  'relinker/NativeRelinker.java',
+  'relinker/Symbols.java',
 ]
 java_immutables_library(
   name = 'rules',

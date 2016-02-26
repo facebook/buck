@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -264,7 +265,7 @@ public class CxxBinaryDescriptionTest {
         Matchers.hasItem(dep.getBuildTarget()));
     CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
     assertThat(
-        binary.getArgs(),
+        Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(
         binary.getDeps(),
@@ -294,7 +295,7 @@ public class CxxBinaryDescriptionTest {
         Matchers.hasItem(dep.getBuildTarget()));
     CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
     assertThat(
-        binary.getArgs(),
+        Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(
         binary.getDeps(),
@@ -322,7 +323,7 @@ public class CxxBinaryDescriptionTest {
         Matchers.hasItem(dep.getBuildTarget()));
     CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
     assertThat(
-        binary.getArgs(),
+        Arg.stringify(binary.getArgs()),
         Matchers.not(
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
@@ -354,7 +355,7 @@ public class CxxBinaryDescriptionTest {
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
     CxxBinary binary = (CxxBinary) binaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        binary.getRule().getArgs(),
+        Arg.stringify(binary.getRule().getArgs()),
         Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
   }
 }

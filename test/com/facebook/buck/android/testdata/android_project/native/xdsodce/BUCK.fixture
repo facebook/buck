@@ -1,0 +1,40 @@
+cxx_library(
+  name = 'top',
+  headers = [
+    'top.h',
+  ],
+  srcs = [
+    'top.cpp',
+  ],
+  deps = [
+    ':mid',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+  can_be_asset = True,
+)
+
+cxx_library(
+  name = 'mid',
+  headers = [
+    'mid.h',
+  ],
+  srcs = [
+    'mid.cpp',
+  ],
+  exported_deps = [
+    ':bot',
+  ],
+)
+
+cxx_library(
+  name = 'bot',
+  headers = [
+    'bot.h',
+  ],
+  srcs = [
+    'bot.cpp',
+  ],
+)
+

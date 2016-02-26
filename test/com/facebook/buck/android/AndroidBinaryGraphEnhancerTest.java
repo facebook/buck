@@ -134,6 +134,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService());
 
     BuildTarget aaptPackageResourcesTarget =
@@ -253,6 +254,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService());
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
@@ -373,6 +375,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
 
@@ -417,6 +420,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
 
@@ -488,6 +492,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
 

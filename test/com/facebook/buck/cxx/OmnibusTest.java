@@ -436,7 +436,7 @@ public class OmnibusTest {
       NativeLinkableInput... inputs) {
     for (NativeLinkableInput input : inputs) {
       assertThat(
-          link.getArgs(),
+          Arg.stringify(link.getArgs()),
           Matchers.hasItems(Arg.stringify(input.getArgs()).toArray(new String[1])));
     }
   }

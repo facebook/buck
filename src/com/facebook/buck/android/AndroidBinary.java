@@ -169,6 +169,12 @@ public class AndroidBinary
     }
   }
 
+  enum RelinkerMode {
+    ENABLED,
+    DISABLED,
+    ;
+  }
+
   @AddToRuleKey
   private final Keystore keystore;
   @AddToRuleKey

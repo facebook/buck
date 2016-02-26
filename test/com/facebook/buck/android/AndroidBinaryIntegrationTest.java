@@ -18,18 +18,30 @@ package com.facebook.buck.android;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 
 import org.apache.commons.compress.archivers.zip.ZipUtil;
@@ -42,14 +54,15 @@ import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 public class AndroidBinaryIntegrationTest {
@@ -250,6 +263,105 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_bar.so");
   }
+
+  private Path unzip(Path tmpDir, Path zipPath, String name) throws IOException {
+    Path outPath = tmpDir.resolve(zipPath.getFileName());
+    try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
+      Files.copy(
+          zipFile.getInputStream(zipFile.getEntry(name)),
+          outPath,
+          StandardCopyOption.REPLACE_EXISTING);
+      return outPath;
+    }
+  }
+
+  @Test
+  public void testNativeRelinker() throws IOException, InterruptedException {
+    // TODO(cjhopman): is this really the simplest way to get the objdump tool?
+    AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
+        workspace.asCell().getFilesystem(),
+        Optional.<String>absent(),
+        Optional.<String>absent(),
+        new DefaultPropertyFinder(
+            workspace.asCell().getFilesystem(),
+            ImmutableMap.copyOf(System.getenv())));
+
+    Optional<Path> ndkPath = androidResolver.findAndroidNdkDir();
+    assertTrue(ndkPath.isPresent());
+
+    ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
+        new ProjectFilesystem(ndkPath.get()),
+        NdkCxxPlatformCompiler.builder()
+            .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
+            .setVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
+            .setGccVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
+            .build(),
+        NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+        NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
+        NdkCxxPlatforms.DEFAULT_CPU_ABIS,
+        Platform.detect()).values();
+    assertFalse(platforms.isEmpty());
+    NdkCxxPlatform platform = platforms.iterator().next();
+
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_top.so");
+    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_mid.so");
+    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_bot.so");
+
+    Path tmpDir = tmpFolder.newFolder("xdso");
+    Path lib = unzip(
+        tmpDir, apkPath, "lib/x86/libnative_xdsodce_top.so");
+    Symbols sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
+
+    assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
+    assertTrue(sym.undefined.contains("_Z10midFromTopi"));
+    assertTrue(sym.undefined.contains("_Z10botFromTopi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
+
+    assertTrue(sym.global.contains("_Z10midFromTopi"));
+    assertTrue(sym.undefined.contains("_Z10botFromMidi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
+
+    assertTrue(sym.global.contains("_Z10botFromTopi"));
+    assertTrue(sym.global.contains("_Z10botFromMidi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    // Run some verification on the same apk with native_relinker disabled.
+    apkPath = workspace.buildAndReturnOutput("//apps/sample:app_no_xdso_dce");
+    zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_top.so");
+    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_mid.so");
+    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_bot.so");
+
+    lib = unzip(
+        tmpDir, apkPath, "lib/x86/libnative_xdsodce_top.so");
+    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
+
+    assertTrue(sym.all.contains("_Z6unusedi"));
+
+    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
+
+    assertTrue(sym.all.contains("_Z6unusedi"));
+
+    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
+
+    assertTrue(sym.all.contains("_Z6unusedi"));
+  }
+
 
   @Test
   public void testHeaderOnlyCxxLibrary() throws IOException {

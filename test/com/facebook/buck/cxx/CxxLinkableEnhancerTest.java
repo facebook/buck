@@ -309,7 +309,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertFalse(executable.getArgs().contains("-shared"));
+    assertFalse(executable.getArgs().contains(StringArg.from("-shared")));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib.
@@ -329,7 +329,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertTrue(shared.getArgs().contains("-shared"));
+    assertTrue(Arg.stringify(shared.getArgs()).contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib with a SONAME.
@@ -349,8 +349,9 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertTrue(sharedWithSoname.getArgs().contains("-shared"));
-    assertNotEquals(Collections.indexOfSubList(sharedWithSoname.getArgs(), sonameArgs), -1);
+    ImmutableList<String> args = Arg.stringify(sharedWithSoname.getArgs());
+    assertTrue(args.contains("-shared"));
+    assertNotEquals(Collections.indexOfSubList(args, sonameArgs), -1);
   }
 
   @Test
@@ -394,10 +395,11 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertTrue(staticLink.getArgs().contains(staticArg) ||
-        staticLink.getArgs().contains("-Wl," + staticArg));
-    assertFalse(staticLink.getArgs().contains(sharedArg));
-    assertFalse(staticLink.getArgs().contains("-Wl," + sharedArg));
+    ImmutableList<String> args = Arg.stringify(staticLink.getArgs());
+    assertTrue(args.contains(staticArg) ||
+        args.contains("-Wl," + staticArg));
+    assertFalse(args.contains(sharedArg));
+    assertFalse(args.contains("-Wl," + sharedArg));
 
     // Construct a CxxLink object which links using shared dependencies.
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -416,11 +418,12 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertFalse(sharedLink.getArgs().contains(staticArg));
-    assertFalse(sharedLink.getArgs().contains("-Wl," + staticArg));
+    args = Arg.stringify(sharedLink.getArgs());
+    assertFalse(args.contains(staticArg));
+    assertFalse(args.contains("-Wl," + staticArg));
     assertTrue(
-        sharedLink.getArgs().contains(sharedArg) ||
-            sharedLink.getArgs().contains("-Wl," + sharedArg));
+        args.contains(sharedArg) ||
+            args.contains("-Wl," + sharedArg));
   }
 
   @Test
@@ -458,7 +461,7 @@ public class CxxLinkableEnhancerTest {
               NativeLinkableInput.builder()
                   .setArgs(DEFAULT_INPUTS)
                   .build());
-      assertThat(lib.getArgs(), hasItem(ent.getValue()));
+      assertThat(Arg.stringify(lib.getArgs()), hasItem(ent.getValue()));
     }
   }
 
@@ -532,10 +535,10 @@ public class CxxLinkableEnhancerTest {
                 new FakeSourcePath("simple.o")))
             .build());
     assertThat(
-        cxxLink.getArgs(),
+        Arg.stringify(cxxLink.getArgs()),
         hasItem("-bundle"));
     assertThat(
-        cxxLink.getArgs(),
+        Arg.stringify(cxxLink.getArgs()),
         hasConsecutiveItems(
             "-bundle_loader",
             filesystem.resolve("path/to/MyBundleLoader").toString()));

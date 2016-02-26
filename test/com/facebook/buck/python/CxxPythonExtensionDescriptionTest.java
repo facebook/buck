@@ -349,7 +349,7 @@ public class CxxPythonExtensionDescriptionTest {
             PY2,
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
-        py2Ext.getArgs(),
+        Arg.stringify(py2Ext.getArgs()),
         Matchers.allOf(Matchers.hasItem("-lpython2"), Matchers.not(Matchers.hasItem("-lpython3"))));
 
     // Get the py3 extension, and verify it pulled in the py3 lib but not the py2 lib.
@@ -358,7 +358,7 @@ public class CxxPythonExtensionDescriptionTest {
             PY3,
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
-        py3Ext.getArgs(),
+        Arg.stringify(py3Ext.getArgs()),
         Matchers.allOf(Matchers.hasItem("-lpython3"), Matchers.not(Matchers.hasItem("-lpython2"))));
   }
 

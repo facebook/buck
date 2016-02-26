@@ -24,13 +24,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -98,7 +96,7 @@ public class CxxLink
     return output;
   }
 
-  public Tool getLinker() {
+  public Linker getLinker() {
     return linker;
   }
 
@@ -106,8 +104,7 @@ public class CxxLink
     return output;
   }
 
-  @VisibleForTesting
-  public ImmutableList<String> getArgs() {
-    return Arg.stringify(args);
+  public ImmutableList<Arg> getArgs() {
+    return args;
   }
 }

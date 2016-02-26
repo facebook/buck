@@ -640,7 +640,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setForceStatic(true)
             .build(resolver);
     assertThat(
-        cxxLink.getArgs(),
+        Arg.stringify(cxxLink.getArgs()),
         Matchers.hasItem("--some-flag"));
   }
 

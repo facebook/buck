@@ -140,6 +140,7 @@ public class AndroidInstrumentationApkDescription
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         nativePlatforms,
+        AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService);
 
     AndroidGraphEnhancementResult enhancementResult =

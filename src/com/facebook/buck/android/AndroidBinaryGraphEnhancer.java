@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
@@ -118,6 +119,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<SourcePath> buildConfigValuesFile,
       Optional<Integer> xzCompressionLevel,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService) {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
@@ -148,7 +150,8 @@ public class AndroidBinaryGraphEnhancer {
         ruleResolver,
         originalParams,
         nativePlatforms,
-        cpuFilters);
+        cpuFilters,
+        relinkerMode);
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {

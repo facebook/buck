@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidBinary.RelinkerMode;
+import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -51,6 +53,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final BuildRuleResolver ruleResolver;
   private final SourcePathResolver pathResolver;
   private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
+  private final RelinkerMode relinkerMode;
 
   /**
    * Maps a {@link NdkCxxPlatforms.TargetCpuType} to the {@link CxxPlatform} we need to use to build C/C++
@@ -62,13 +65,15 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       BuildRuleResolver ruleResolver,
       BuildRuleParams originalParams,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters) {
+      ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters,
+      RelinkerMode relinkerMode) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.pathResolver = new SourcePathResolver(ruleResolver);
     this.buildRuleParams = originalParams;
     this.ruleResolver = ruleResolver;
     this.nativePlatforms = nativePlatforms;
     this.cpuFilters = cpuFilters;
+    this.relinkerMode = relinkerMode;
   }
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
@@ -153,8 +158,30 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       return Optional.absent();
     }
 
-    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap = generateStripRules(
-        nativeLinkableLibs);
+    if (relinkerMode == RelinkerMode.ENABLED &&
+        (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
+      NativeRelinker relinker = new NativeRelinker(
+          buildRuleParams.copyWithExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibs.values()))
+                      .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
+                      .build()
+              )),
+          pathResolver,
+          nativePlatforms,
+          nativeLinkableLibs,
+          nativeLinkableLibsAssets);
+
+      nativeLinkableLibs = relinker.getRelinkedLibs();
+      nativeLinkableLibsAssets = relinker.getRelinkedLibsAssets();
+      for (BuildRule rule : relinker.getRules()) {
+        ruleResolver.addToIndex(rule);
+      }
+    }
+
+    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
+        generateStripRules(nativeLinkableLibs);
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
         generateStripRules(nativeLinkableLibsAssets);
 

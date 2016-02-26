@@ -73,7 +73,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ruleResolver,
             originalParams,
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
-            ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of()
+            ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
+            AndroidBinary.RelinkerMode.DISABLED
         );
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
@@ -142,7 +143,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ruleResolver,
             originalParams,
             nativePlatforms,
-            ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7)
+            ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
+            AndroidBinary.RelinkerMode.DISABLED
         );
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(

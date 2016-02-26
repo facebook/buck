@@ -368,7 +368,7 @@ public class CxxLibraryDescriptionTest {
     Linker linker = cxxPlatform.getLd();
     ImmutableList<String> sonameArgs = ImmutableList.copyOf(linker.soname(soname));
     assertThat(
-        rule.getArgs(),
+        Arg.stringify(rule.getArgs()),
         Matchers.hasItems(sonameArgs.toArray(new String[sonameArgs.size()])));
   }
 
@@ -824,7 +824,7 @@ public class CxxLibraryDescriptionTest {
 
     assertThat(lib.getDeps(), Matchers.hasItem(loc));
     assertThat(
-        lib.getArgs(),
+        Arg.stringify(lib.getArgs()),
         Matchers.hasItem(
             Matchers.containsString(Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
@@ -868,13 +868,13 @@ public class CxxLibraryDescriptionTest {
 
     assertThat(lib.getDeps(), Matchers.hasItem(loc));
     assertThat(
-        lib.getArgs(),
+        Arg.stringify(lib.getArgs()),
         Matchers.hasItem(
             String.format(
                 "-Wl,--version-script=%s",
                 Preconditions.checkNotNull(loc.getPathToOutput()).toAbsolutePath())));
     assertThat(
-        lib.getArgs(),
+        Arg.stringify(lib.getArgs()),
         Matchers.not(Matchers.hasItem(loc.getPathToOutput().toAbsolutePath().toString())));
   }
 
@@ -917,7 +917,7 @@ public class CxxLibraryDescriptionTest {
 
     assertThat(lib.getDeps(), Matchers.not(Matchers.hasItem(loc)));
     assertThat(
-        lib.getArgs(),
+        Arg.stringify(lib.getArgs()),
         Matchers.not(
             Matchers.hasItem(
                 Matchers.containsString(
@@ -1257,7 +1257,7 @@ public class CxxLibraryDescriptionTest {
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
     CxxLink library = (CxxLink) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        library.getArgs(),
+        Arg.stringify(library.getArgs()),
         Matchers.hasItems("-L", "/another/path", "$SDKROOT/usr/lib", "-la", "-lz"));
   }
 
