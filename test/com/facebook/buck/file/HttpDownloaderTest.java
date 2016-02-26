@@ -43,6 +43,8 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class HttpDownloaderTest {
 
   private final Path neverUsed = Paths.get("never/used");
@@ -78,7 +80,7 @@ public class HttpDownloaderTest {
 
     Capture<String> capturedAuth = EasyMock.newCapture();
 
-    final HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
+    final HttpURLConnection connection = EasyMock.createNiceMock(HttpsURLConnection.class);
     EasyMock.expect(connection.getResponseCode()).andStubReturn(HTTP_FORBIDDEN);
     connection.addRequestProperty(eq("Authorization"), capture(capturedAuth));
     EasyMock.expectLastCall();
