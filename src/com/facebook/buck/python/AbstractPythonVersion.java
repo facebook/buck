@@ -25,11 +25,14 @@ import org.immutables.value.Value;
 abstract class AbstractPythonVersion {
 
   @Value.Parameter
-  public abstract String getVersionString();
+  public abstract String getInterpreterName();
+
+  @Value.Parameter
+  public abstract String getVersionString();  // X.Y.Z
 
   @Override
   public String toString() {
-    return getVersionString();
+    return getInterpreterName() + " " + getVersionString();
   }
 
 }

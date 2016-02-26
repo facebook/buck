@@ -37,7 +37,7 @@ import java.io.IOException;
 public class PrebuiltPythonLibraryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder().doNotDeleteOnExit();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
   public ProjectWorkspace workspace;
 
   @Before
@@ -58,10 +58,11 @@ public class PrebuiltPythonLibraryIntegrationTest {
                     new CapturingPrintStream(),
                     Ansi.withoutTty())))
         .getPythonVersion()
-        .getVersionString()
-        .substring("Python ".length());
-    if (!version.equals("2.6")) {
-      workspace.move("dist/package-0.1-py2.6.egg", "dist/package-0.1-py" + version + ".egg");
+        .getVersionString();
+    if (!version.startsWith("2.6")) {
+      workspace.move(
+          "dist/package-0.1-py2.6.egg",
+          "dist/package-0.1-py" + version.substring(0, 3) + ".egg");
     }
   }
 

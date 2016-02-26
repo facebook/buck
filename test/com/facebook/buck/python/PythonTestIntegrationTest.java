@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -105,10 +104,10 @@ public class PythonTestIntegrationTest {
 
   @Test
   public void testPythonTestTimeout() throws IOException {
-      ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
-      String stderr = result.getStderr();
-      result.assertSpecialExitCode("test should fail", 42);
-      assertTrue(stderr, stderr.contains("Following test case timed out: //:test-spinning"));
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
+    String stderr = result.getStderr();
+    result.assertSpecialExitCode("test should fail", 42);
+    assertTrue(stderr, stderr.contains("Following test case timed out: //:test-spinning"));
   }
 
   @Test
@@ -146,18 +145,18 @@ public class PythonTestIntegrationTest {
 
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
-    PythonVersion pythonVersion =
+    PythonVersion actualVersion =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPythonEnvironment(new ProcessExecutor(new TestConsole()))
             .getPythonVersion();
-    String actualVersion = Splitter.on(' ').splitToList(pythonVersion.getVersionString()).get(1);
     assumeTrue(
         String.format(
             "Needs at least Python-%s, but found Python-%s: %s",
             expectedVersion,
             actualVersion,
             message),
-        new VersionStringComparator().compare(actualVersion, expectedVersion) >= 0);
+        new VersionStringComparator().compare(
+            actualVersion.getVersionString(), expectedVersion) >= 0);
   }
 
   private static <T> T getOnlyValue(Iterable<T> iterable) {
