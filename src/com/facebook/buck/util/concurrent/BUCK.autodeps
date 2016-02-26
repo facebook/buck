@@ -1,6 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY d5ef0cdfa06c055dd7a7e86dbf0b7e5fcc1bdd2a #@#
+#@# GENERATED FILE: DO NOT MODIFY d40cb53bfd7ab7de7e0367fc33f4602061501869 #@#
 {
   "concurrent" : [
+    "//third-party/java/concurrent-locks:concurrent-locks",
     "//third-party/java/guava:guava",
     "//third-party/java/jsr:jsr305"
   ]

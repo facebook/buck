@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -151,7 +152,8 @@ public class JavaDepsFinder {
   private static final Set<BuildRuleType> RULES_TO_VISIT = ImmutableSet.of(
       AndroidLibraryDescription.TYPE,
       JavaLibraryDescription.TYPE,
-      JavaTestDescription.TYPE);
+      JavaTestDescription.TYPE,
+      PrebuiltJarDescription.TYPE);
 
   public DepsForBuildFiles findDepsForBuildFiles(final TargetGraph graph, Console console) {
     final Set<BuildTarget> rulesWithAutodeps = new HashSet<>();
@@ -189,7 +191,7 @@ public class JavaDepsFinder {
           return;
         }
 
-        // Set up the appropriate fields for java_library().
+        // Set up the appropriate fields for java_library() vs. prebuilt_jar().
         boolean autodeps;
         ImmutableSortedSet<BuildTarget> providedDeps;
         ImmutableSortedSet<BuildTarget> exportedDeps;
@@ -198,8 +200,12 @@ public class JavaDepsFinder {
           autodeps = arg.autodeps.or(false);
           providedDeps = arg.providedDeps.or(ImmutableSortedSet.<BuildTarget>of());
           exportedDeps = arg.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of());
+        } else if (node.getConstructorArg() instanceof PrebuiltJarDescription.Arg) {
+          autodeps = false;
+          providedDeps = ImmutableSortedSet.of();
+          exportedDeps = ImmutableSortedSet.of();
         } else {
-          throw new IllegalStateException("TargetNode must be a JavaLibrary");
+          throw new IllegalStateException("This rule is not supported by autodeps: " + node);
         }
 
         BuildTarget buildTarget = node.getBuildTarget();
@@ -310,6 +316,7 @@ public class JavaDepsFinder {
   private Symbols getJavaFileFeatures(TargetNode<?> node, boolean shouldRecordRequiredSymbols) {
     // Build a JavaLibrarySymbolsFinder to create the JavaFileFeatures. By making use of Buck's
     // build cache, we can often avoid running a Java parser.
+    BuildTarget buildTarget = node.getBuildTarget();
     Object argForNode = node.getConstructorArg();
     JavaSymbolsRule.SymbolsFinder symbolsFinder;
     ImmutableSortedSet<String> generatedSymbols;
@@ -324,9 +331,10 @@ public class JavaDepsFinder {
           javaFileParser,
           shouldRecordRequiredSymbols);
     } else {
-      throw new IllegalStateException("TargetNode must be a JavaLibrary");
+      PrebuiltJarDescription.Arg arg = (PrebuiltJarDescription.Arg) argForNode;
+      generatedSymbols = ImmutableSortedSet.of();
+      symbolsFinder = new PrebuiltJarSymbolsFinder(arg.binaryJar);
     }
-    BuildTarget buildTarget = node.getBuildTarget();
 
     // Build the rule, leveraging Buck's build cache.
     JavaSymbolsRule buildRule = new JavaSymbolsRule(

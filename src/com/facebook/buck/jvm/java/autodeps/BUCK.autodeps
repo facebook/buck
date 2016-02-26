@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6c18a5ad5faa52d5684c11ec369ee9ad9988f415 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0c56299b647594dbdf5a9d4cfa81d095488dd277 #@#
 {
   "autodeps" : [
     "//src/com/facebook/buck/android:rules",
@@ -17,6 +17,7 @@
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/step/fs:fs",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
     "//third-party/java/guava:guava",
     "//third-party/java/jackson:jackson-databind",
     "//third-party/java/jsr:jsr305"

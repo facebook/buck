@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableList;
  */
 @JsonSerialize
 final class Symbols {
+  static final Symbols EMPTY = new Symbols();
+
   @JsonSerialize
   @JsonDeserialize
   final Iterable<String> provided;
