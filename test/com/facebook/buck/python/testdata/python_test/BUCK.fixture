@@ -43,3 +43,10 @@ python_test(
     'test_setup_class_failure.py',
   ],
 )
+
+python_test(
+  name='test-setup-class-failure-with-test-suite',
+  srcs=[
+    'test_setup_class_failure_with_test_suite.py',
+  ],
+)

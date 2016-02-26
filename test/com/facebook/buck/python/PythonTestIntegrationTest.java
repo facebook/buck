@@ -131,6 +131,19 @@ public class PythonTestIntegrationTest {
         Matchers.containsString("test_that_passes (test_success.Test) ... ok"));
   }
 
+  @Test
+  public void testPythonSetupClassFailureWithTestSuite() throws IOException, InterruptedException {
+    assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
+    TestResultSummary result =
+        getOnlyValue(flatten(workspace.runBuckTest("//:test-setup-class-failure-with-test-suite")));
+    assertThat(
+        result.getTestCaseName(),
+        Matchers.equalTo("test_setup_class_failure_with_test_suite.Test"));
+    assertThat(result.getTestName(), Matchers.equalTo("test_that_passes"));
+    assertThat(result.getType(), Matchers.equalTo(ResultType.FAILURE));
+    assertThat(result.getMessage(), Matchers.containsString("setup failure!"));
+  }
+
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
     PythonVersion pythonVersion =

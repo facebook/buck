@@ -66,23 +66,15 @@ class CallbackStream(object):
         return False
 
 
-class BuckTestSuite(unittest.TestSuite):
-
-    # Save the current tests in the result, so that we can access it in the
-    # event of an error during setup.
-    def _tearDownPreviousClass(self, test, result):
-        super(BuckTestSuite, self)._tearDownPreviousClass(test, result)
-        result._current_setup_class_test = test
-
-
 class FbJsonTestResult(unittest._TextTestResult):
     """
     Our own TestResult class that outputs data in a format that can be easily
     parsed by fbmake's test runner.
     """
 
-    def __init__(self, stream, descriptions, verbosity):
+    def __init__(self, stream, descriptions, verbosity, suite):
         super(FbJsonTestResult, self).__init__(stream, descriptions, verbosity)
+        self._suite = suite
         self._results = []
         self._current_test = None
         self._saved_stdout = sys.stdout
@@ -105,16 +97,38 @@ class FbJsonTestResult(unittest._TextTestResult):
         self._stdout = ''
         self._stderr = ''
 
+    def _find_next_test(self, suite):
+        """
+        Find the next test that has not been run.
+        """
+
+        for test in suite:
+
+            # We identify test suites by test that are iterable (as is done in
+            # the builtin python test harness).  If we see one, recurse on it.
+            if hasattr(test, '__iter__'):
+                test = self._find_next_test(test)
+
+            # The builtin python test harness sets test references to `None`
+            # after they have run, so we know we've found the next test up
+            # if it's not `None`.
+            if test is not None:
+                return test
+
     def stopTest(self, test):
         sys.stdout = self._saved_stdout
         sys.stderr = self._saved_stderr
 
         super(FbJsonTestResult, self).stopTest(test)
 
-        # This test may actually be a placeholder if a failure occured during
-        # test setup.  If so, use the test saved during the setup.
+        # If a failure occured during module/class setup, then this "test" may
+        # actually be a `_ErrorHolder`, which doesn't contain explicit info
+        # about the upcoming test.  Since we really only care about the test
+        # name field (i.e. `_testMethodName`), we use that to detect an actual
+        # test cases, and fall back to looking the test up from the suite
+        # otherwise.
         if not hasattr(test, '_testMethodName'):
-            test = self._current_setup_class_test
+            test = self._find_next_test(self._suite)
 
         self._results.append({
             'testCaseName': '{0}.{1}'.format(
@@ -199,11 +213,16 @@ class FbJsonTestResult(unittest._TextTestResult):
 
 class FbJsonTestRunner(unittest.TextTestRunner):
 
+    def __init__(self, suite, **kwargs):
+        super(FbJsonTestRunner, self).__init__(**kwargs)
+        self._suite = suite
+
     def _makeResult(self):
         return FbJsonTestResult(
             self.stream,
             self.descriptions,
-            self.verbosity)
+            self.verbosity,
+            self._suite)
 
 
 def _format_test_name(test_class, attrname):
@@ -245,8 +264,7 @@ class Loader(object):
 
     def load_all(self):
         loader = RegexTestLoader(self.regex)
-        loader.suiteClass = BuckTestSuite
-        test_suite = BuckTestSuite()
+        test_suite = unittest.TestSuite()
         for module_name in self.modules:
             __import__(module_name, level=0)
             module = sys.modules[module_name]
@@ -376,7 +394,7 @@ class MainProgram(object):
             unittest.installHandler()
 
         # Run the tests
-        runner = FbJsonTestRunner(verbosity=self.options.verbosity)
+        runner = FbJsonTestRunner(test_suite, verbosity=self.options.verbosity)
         result = runner.run(test_suite)
 
         return result
