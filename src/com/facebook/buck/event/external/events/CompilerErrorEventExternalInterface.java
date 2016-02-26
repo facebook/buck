@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableSet;
  * This type is intended to be used by external applications (like the Intellij Buck plugin)
  * to deserialize events coming from the webserver.
  */
-public interface CompilerErrorEventExternalInterface {
+public interface CompilerErrorEventExternalInterface extends BuckEventExternalInterface {
   // Sent when a compiler error has been found
   String COMPILER_ERROR_EVENT = "CompilerErrorEvent";
   /**
