@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
@@ -59,11 +60,12 @@ public class StackedDownloader implements Downloader {
 
 
     for (Map.Entry<String, String> kv : downloadConfig.getAllMavenRepos().entrySet()) {
-      String repoName = kv.getKey();
       String repo = kv.getValue();
       // Check the type.
       if (repo.startsWith("http:") || repo.startsWith("https://")) {
-        downloaders.add(new RemoteMavenDownloader(proxy, repo, downloadConfig.getRepoCredentials(repoName)));
+        String repoName = kv.getKey();
+        Optional<PasswordAuthentication> credentials = downloadConfig.getRepoCredentials(repoName);
+        downloaders.add(new RemoteMavenDownloader(proxy, repo, credentials));
       } else if (repo.startsWith("file:")) {
         try {
           URL url = new URL(repo);

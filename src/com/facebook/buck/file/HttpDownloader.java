@@ -70,10 +70,14 @@ public class HttpDownloader implements Downloader {
       HttpURLConnection connection = createConnection(uri);
 
       if (authentication.isPresent()) {
-        PasswordAuthentication p = authentication.get();
-        String authStr = p.getUserName() + ":" + new String(p.getPassword());
-        String authEncoded = BaseEncoding.base64().encode(authStr.getBytes());
-        connection.addRequestProperty("Authorization", "Basic " + authEncoded);
+        if ("https".equals(uri.getScheme())) {
+          PasswordAuthentication p = authentication.get();
+          String authStr = p.getUserName() + ":" + new String(p.getPassword());
+          String authEncoded = BaseEncoding.base64().encode(authStr.getBytes());
+          connection.addRequestProperty("Authorization", "Basic " + authEncoded);
+        } else {
+          LOG.info("Refusing to send basic authentication over plain http.");
+        }
       }
 
       if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {

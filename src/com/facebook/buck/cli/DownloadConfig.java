@@ -70,12 +70,12 @@ public class DownloadConfig {
   }
 
   public Optional<PasswordAuthentication> getRepoCredentials(String repo) {
-	  Optional<String> user = delegate.getValue("credentials", repo + "_user");
-	  Optional<String> password = delegate.getValue("credentials", repo + "_pass");
-	  if (!user.isPresent() || !password.isPresent()) {
-        return Optional.absent();
-	  }
+    Optional<String> user = delegate.getValue("credentials", repo + "_user");
+    Optional<String> password = delegate.getValue("credentials", repo + "_pass");
+    if (!user.isPresent() || !password.isPresent()) {
+      return Optional.absent();
+    }
 
-	  return Optional.of(new PasswordAuthentication(user.get(), password.get().toCharArray()));
+    return Optional.of(new PasswordAuthentication(user.get(), password.get().toCharArray()));
   }
 }
