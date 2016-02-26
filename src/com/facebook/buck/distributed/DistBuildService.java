@@ -37,6 +37,7 @@ import com.google.common.base.Stopwatch;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
@@ -47,6 +48,7 @@ public class DistBuildService {
   private final DistBuildConfig distBuildConfig;
   private final String frontendUrl;
   private final BuckEventBus eventBus;
+  private final DateFormat dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
 
   public DistBuildService(DistBuildConfig distBuildConfig, BuckEventBus eventBus)
       throws NoHealthyServersException {
@@ -124,12 +126,11 @@ public class DistBuildService {
         Preconditions.checkState(job.getBuildId().equals(id));
         LOG.info("Got build status: " + job.getStatus().toString());
 
-        eventBus.post(new DistBuildStatusEvent(
-            DistBuildStatus.builder()
-                .setETAMillis(BUILD_DURATION_MS - stopwatch.elapsed(TimeUnit.MILLISECONDS))
-                .setStatus(job.getStatus().toString())
-                .setMessage(getLastLogLine(job))
-                .build()));
+        DistBuildStatus distBuildStatus =
+            prepareStatusFromJob(job)
+            .setETAMillis(BUILD_DURATION_MS - stopwatch.elapsed(TimeUnit.MILLISECONDS))
+            .build();
+        eventBus.post(new DistBuildStatusEvent(distBuildStatus));
 
         Thread.sleep(1000);
       } while (!(job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
@@ -144,12 +145,8 @@ public class DistBuildService {
       }
       logDebugInfo(job);
 
-      eventBus.post(new DistBuildStatusEvent(
-          DistBuildStatus.builder()
-              .setStatus(job.getStatus().toString())
-              .setETAMillis(0)
-              .setMessage(getLastLogLine(job))
-              .build()));
+      DistBuildStatus distBuildStatus = prepareStatusFromJob(job).setETAMillis(0).build();
+      eventBus.post(new DistBuildStatusEvent(distBuildStatus));
 
       thriftClient.close();
     } catch (Exception e) {
@@ -157,23 +154,27 @@ public class DistBuildService {
     }
   }
 
-  private Optional<String> getLastLogLine(BuildJob job)  {
-    if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
-      return Optional.of(
-          job.getDebug().getLogBook().get(job.getDebug().getLogBook().size() - 1).getName());
+  private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
+    Optional<List<LogRecord>> logBook = Optional.absent();
+    Optional<String> lastLine = Optional.absent();
+    if (job.isSetDebug() && job.getDebug().isSetLogBook())  {
+      logBook = Optional.of(job.getDebug().getLogBook());
+      if (logBook.get().size() > 0) {
+        lastLine = Optional.of(logBook.get().get(logBook.get().size() - 1).getName());
+      }
     }
-    return Optional.absent();
+
+    return DistBuildStatus.builder()
+        .setStatus(job.getStatus())
+        .setMessage(lastLine)
+        .setLogBook(logBook);
   }
 
   private void logDebugInfo(BuildJob job) {
-    DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
       LOG.debug("Received debug info: ");
       for (LogRecord log : job.getDebug().getLogBook()) {
-        Date date = new Date(log.getTimestampMillis());
-        String dateString = format.format(date) + "." +
-            String.format("%03d", log.getTimestampMillis() % 1000);
-        LOG.debug("[" + dateString + "] " + log.getName());
+        LOG.debug(dateFormat.format(new Date(log.getTimestampMillis())) + log.getName());
       }
     }
   }

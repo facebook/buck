@@ -145,6 +145,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1359,7 +1360,8 @@ public final class Main {
           executionEnvironment,
           webServer,
           locale,
-          testLogPath);
+          testLogPath,
+          TimeZone.getDefault());
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;

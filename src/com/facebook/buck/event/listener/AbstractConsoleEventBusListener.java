@@ -127,7 +127,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsKeeper networkStatsKeeper;
 
-  private volatile double distributedBuildProgress = -1;
+  private volatile double distributedBuildProgress = 0;
 
   public AbstractConsoleEventBusListener(Console console, Clock clock, Locale locale) {
     this.console = console;

@@ -31,6 +31,10 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.distributed.DistBuildStatus;
+import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -95,8 +99,11 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -120,6 +127,8 @@ public class SuperConsoleEventBusListenerTest {
   private Path logPath;
   private SuperConsoleConfig emptySuperConsoleConfig =
       new SuperConsoleConfig(FakeBuckConfig.builder().build());
+
+  private final TimeZone timeZone = TimeZone.getTimeZone("UTC");
 
   @Before
   public void createTestLogFile() {
@@ -161,7 +170,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -451,7 +461,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
         eventBus,
@@ -571,6 +582,233 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
+  public void testSimpleDistBuildWithProgress() throws IOException {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            emptySuperConsoleConfig,
+            console,
+            fakeClock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent(),
+            Locale.US,
+            logPath,
+            timeZone);
+    ProgressEstimator e = new ProgressEstimator(
+        getStorageForTest().getParent().getParent(),
+        eventBus,
+        ObjectMappers.newDefaultInstance());
+    listener.setProgressEstimator(e);
+    eventBus.register(listener);
+
+    ProjectBuildFileParseEvents.Started parseEventStarted =
+        new ProjectBuildFileParseEvents.Started();
+    rawEventBus.post(
+        configureTestEventAtTime(
+            parseEventStarted,
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        "[+] PARSING BUCK FILES...0.0s"));
+
+    validateConsole(
+        console, listener, 100L, ImmutableList.of(
+            "[+] PARSING BUCK FILES...0.1s"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Finished(parseEventStarted),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(
+        console, listener, 200L, ImmutableList.of(
+            "[-] PARSING BUCK FILES...FINISHED 0.2s"));
+
+    // trigger a distributed build instead of a local build
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs, true);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            buildEventStarted,
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
+    rawEventBus.post(configureTestEventAtTime(
+        parseStarted,
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 300L, ImmutableList.of(
+        "[+] PROCESSING BUCK FILES...0.1s"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(ParseEvent.finished(parseStarted,
+            Optional.<TargetGraph>absent()),
+            300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            400L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+
+    validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
+        DOWNLOAD_STRING,
+        "[+] DISTBUILD STATUS: INIT...",
+        "[+] BUILDING...0.1s [0%]"));
+
+    rawEventBus.post(configureTestEventAtTime(
+        new DistBuildStatusEvent(
+          DistBuildStatus.builder()
+            .setStatus(BuildStatus.QUEUED)
+            .setMessage("step 1")
+            .setETAMillis(2000)
+            .setLogBook(Optional.<List<LogRecord>>absent())
+            .build()
+        ), 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 900L, ImmutableList.of(
+        parsingLine,
+        DOWNLOAD_STRING,
+        "[+] DISTBUILD STATUS: QUEUED... ETA: 2.0s (step 1)",
+        "[+] BUILDING...0.5s [29%]"));
+
+
+    LinkedList<LogRecord> debugLogs = new LinkedList<LogRecord>();
+    LogRecord log = new LogRecord();
+    log.setName("buck-client");
+    log.setTimestampMillis(0);
+    debugLogs.add(log);
+    final String distDebugLine = "Distributed build debug info:";
+    final String logLine1 = "[1970-01-01 00:00:00.000] buck-client";
+
+    rawEventBus.post(configureTestEventAtTime(
+        new DistBuildStatusEvent(
+            DistBuildStatus.builder()
+                .setStatus(BuildStatus.BUILDING)
+                .setMessage("step 2")
+                .setETAMillis(1800)
+                .setLogBook(debugLogs)
+                .build()
+        ), 1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 1100L, ImmutableList.of(
+        distDebugLine,
+        logLine1,
+        parsingLine,
+        DOWNLOAD_STRING,
+        "[+] DISTBUILD STATUS: BUILDING... ETA: 1.8s (step 2)",
+        "[+] BUILDING...0.7s [50%]"));
+
+
+    log = new LogRecord();
+    log.setName("buck-frontend");
+    log.setTimestampMillis(100);
+    debugLogs.add(log);
+    final String logLine2 = "[1970-01-01 00:00:00.100] buck-frontend";
+
+    rawEventBus.post(configureTestEventAtTime(
+        new DistBuildStatusEvent(
+            DistBuildStatus.builder()
+                .setStatus(BuildStatus.BUILDING)
+                .setMessage("step 2")
+                .setETAMillis(1600)
+                .setLogBook(debugLogs)
+                .build()
+        ), 1200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 1300L, ImmutableList.of(
+        distDebugLine,
+        logLine1,
+        logLine2,
+        parsingLine,
+        DOWNLOAD_STRING,
+        "[+] DISTBUILD STATUS: BUILDING... ETA: 1.6s (step 2)",
+        "[+] BUILDING...0.9s [64%]"));
+
+
+    log = new LogRecord();
+    log.setName("build_slave_start");
+    log.setTimestampMillis(200);
+    debugLogs.add(log);
+    final String logLine3 = "[1970-01-01 00:00:00.200] build_slave_start";
+
+    log = new LogRecord();
+    log.setName("build_slave_end");
+    log.setTimestampMillis(300);
+    debugLogs.add(log);
+    final String logLine4 = "[1970-01-01 00:00:00.300] build_slave_end";
+
+    rawEventBus.post(configureTestEventAtTime(
+        new DistBuildStatusEvent(
+            DistBuildStatus.builder()
+                .setStatus(BuildStatus.FINISHED_SUCCESSFULLY)
+                .setMessage("step 3")
+                .setETAMillis(0)
+                .setLogBook(debugLogs)
+                .build()
+        ), 1400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    final String distbuildLine = "[-] DISTBUILD STATUS: FINISHED_SUCCESSFULLY... (step 3)";
+    validateConsole(console, listener, 1500L, ImmutableList.of(
+        distDebugLine,
+        logLine1,
+        logLine2,
+        logLine3,
+        logLine4,
+        parsingLine,
+        DOWNLOAD_STRING,
+        distbuildLine,
+        "[+] BUILDING...1.1s [100%]"));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildEvent.finished(buildEventStarted, 0),
+        1600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    final String buildingLine = "[-] BUILDING...FINISHED 1.2s [100%]";
+
+    validateConsole(console, listener, 1600L, ImmutableList.of(
+        distDebugLine,
+        logLine1,
+        logLine2,
+        logLine3,
+        logLine4,
+        parsingLine,
+        FINISHED_DOWNLOAD_STRING,
+        distbuildLine,
+        buildingLine));
+
+    rawEventBus.post(configureTestEventAtTime(
+        ConsoleEvent.severe("I've made a huge mistake."),
+        1700L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsoleWithLogLines(
+        console,
+        listener,
+        1750L,
+        ImmutableList.of(
+            distDebugLine,
+            logLine1,
+            logLine2,
+            logLine3,
+            logLine4,
+            parsingLine,
+            FINISHED_DOWNLOAD_STRING,
+            distbuildLine,
+            buildingLine),
+        ImmutableList.of("I've made a huge mistake."));
+  }
+
+  @Test
   public void testSimpleTest() {
     SourcePathResolver pathResolver =
         new SourcePathResolver(
@@ -599,7 +837,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -886,7 +1125,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1170,7 +1410,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1469,7 +1710,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     // Start the build.
@@ -1638,7 +1880,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1665,7 +1908,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1722,7 +1966,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest().getParent().getParent(),
         eventBus,
@@ -1780,7 +2025,8 @@ public class SuperConsoleEventBusListenerTest {
                 System.getProperties()),
             Optional.<WebServer>absent(),
             Locale.US,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     rawEventBus.post(ConsoleEvent.info("Hello world!"));
@@ -1824,7 +2070,8 @@ public class SuperConsoleEventBusListenerTest {
                      System.getProperties()),
                  Optional.<WebServer>absent(),
                  Locale.US,
-                 logPath)) {
+                 logPath,
+                 timeZone)) {
 
       FakeThreadStateRenderer fakeRenderer =
           new FakeThreadStateRenderer(ImmutableList.of(2L, 1L, 4L, 8L, 5L));
@@ -1962,7 +2209,8 @@ public class SuperConsoleEventBusListenerTest {
             Optional.<WebServer>absent(),
             // Note we use de_DE to ensure we get a decimal comma in the output.
             Locale.GERMAN,
-            logPath);
+            logPath,
+            timeZone);
     eventBus.register(listener);
 
     rawEventBus.post(
