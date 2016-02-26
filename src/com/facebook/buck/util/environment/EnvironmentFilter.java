@@ -31,15 +31,20 @@ public class EnvironmentFilter {
 
   // Always exclude environment variables with these names.
   private static final ImmutableSet<String> ENV_TO_REMOVE = ImmutableSet.of(
+      "ARCANIST",         // Phabricator / Arcanist cruft.
       "Apple_PubSub_Socket_Render", // OS X pubsub control variable.
       "BUCK_BUILD_ID",    // Build ID passed in from Python.
       "BUCK_CLASSPATH",   // Main classpath; set in Python
       "CLASSPATH",        // Bootstrap classpath; set in Python.
       "CMD_DURATION",      // Added to environment by 'fish' shell.
+      "com.apple.java.jvmTask", // Added to environment by Apple JVM.
       "COMP_WORDBREAKS",  // Set by the programmable completion part of bash.
       "ITERM_SESSION_ID", // Added by iTerm on OS X.
       "ITERM_PROFILE",    // Added by iTerm on OS X.
+      "JAVA_ARCH",        // More OS X cruft.
       "KRB5CCNAME",       // Kerberos authentication adds this.
+      "KRB5RCACHETYPE",   // More Kerberos cruft.
+      "MallocNanoZone",   // Added to environment by Xcode
       "OLDPWD",           // Previous working directory; set by bash's cd builtin.
       "PROMPT_COMMAND",   // Prompt control variable, just in case someone exports it.
       "PS1",              // Same.
@@ -53,7 +58,10 @@ public class EnvironmentFilter {
       "SSH_CLIENT",       // Same.
       "SSH_CONNECTION",   // Same.
       "SSH_TTY",          // Same.
+      "SUDO_COMMAND",     // Folks shouldn't run buck under sudo, but..
       "TERM_SESSION_ID",  // UUID added to environment by OS X.
+      "TERM_PROGRAM",     // Added to environment by OS X.
+      "TERM_PROGRAM_VERSION", // Added to environment by OS X.
       "TMUX",             // tmux session management variable.
       "TMUX_PANE",        // Current tmux pane.
       "XPC_FLAGS",        // More OS X cruft.
@@ -67,11 +75,30 @@ public class EnvironmentFilter {
       "SCRIPT",         // Populated by script command: http://www.freebsd.org/cgi/man.cgi?script
       "NAILGUN_TTY_0",  // Nailgun stdin supports ANSI escape sequences.
       "NAILGUN_TTY_1",  // Nailgun stdout supports ANSI escape sequences.
-      "NAILGUN_TTY_2"   // Nailgun stderr supports ANSI escape sequences.
+      "NAILGUN_TTY_2",  // Nailgun stderr supports ANSI escape sequences.
+      "TERM"            // The type of terminal we're connected to, used by AnsiEnvironmentChecking
+  );
+
+  // Ignore environment variables whose names start with this string.
+  private static final ImmutableSet<String> ENV_PREFIXES_TO_IGNORE = ImmutableSet.of(
+      "JAVA_MAIN_CLASS_"
   );
 
   public static final Predicate<String> NOT_IGNORED_ENV_PREDICATE =
-      Predicates.not(Predicates.in(ENV_TO_IGNORE));
+      Predicates.not(
+          Predicates.or(
+              Predicates.in(ENV_TO_IGNORE),
+              new Predicate<String>() {
+                @Override
+                public boolean apply(String value) {
+                  for (String prefix : ENV_PREFIXES_TO_IGNORE) {
+                    if (value.startsWith(prefix)) {
+                      return true;
+                    }
+                  }
+                  return false;
+                }
+              }));
 
   // Utility class, do not instantiate.
   private EnvironmentFilter() { }

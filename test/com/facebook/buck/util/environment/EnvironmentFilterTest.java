@@ -17,6 +17,7 @@
 package com.facebook.buck.util.environment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
@@ -91,5 +92,10 @@ public class EnvironmentFilterTest {
     assertTrue(filteredEnvironment.containsKey("test_id"));
     assertTrue(filteredEnvironment.containsKey("Test_Another_Id"));
     assertTrue(filteredEnvironment.containsKey("TEST_PATH"));
+  }
+
+  @Test
+  public void ignoredPrefixesAreIgnored() {
+    assertFalse(EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE.apply("JAVA_MAIN_CLASS_12345"));
   }
 }
