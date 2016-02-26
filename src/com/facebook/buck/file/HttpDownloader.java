@@ -34,6 +34,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HttpsURLConnection;
+
 /**
  * Download a file over HTTP.
  */
@@ -70,7 +72,7 @@ public class HttpDownloader implements Downloader {
       HttpURLConnection connection = createConnection(uri);
 
       if (authentication.isPresent()) {
-        if ("https".equals(uri.getScheme())) {
+        if ("https".equals(uri.getScheme()) && connection instanceof HttpsURLConnection) {
           PasswordAuthentication p = authentication.get();
           String authStr = p.getUserName() + ":" + new String(p.getPassword());
           String authEncoded = BaseEncoding.base64().encode(authStr.getBytes());
