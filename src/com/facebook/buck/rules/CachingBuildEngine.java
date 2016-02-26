@@ -89,7 +89,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -118,8 +117,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final ConcurrentMap<BuildTarget, ListenableFuture<RuleKey>> ruleKeys =
       Maps.newConcurrentMap();
 
-  private final ConcurrentMap<BuildTarget, ListenableFuture<ImmutableSortedSet<BuildRule>>>
-      ruleDeps = Maps.newConcurrentMap();
+  private final RuleDepsCache ruleDeps;
 
   @Nullable
   private volatile Throwable firstFailure = null;
@@ -141,6 +139,8 @@ public class CachingBuildEngine implements BuildEngine {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       final BuildRuleResolver resolver) {
+    this.ruleDeps = new RuleDepsCache(service);
+
     this.service = service;
     this.buildMode = buildMode;
     this.dependencySchedulingOrder = dependencySchedulingOrder;
@@ -171,6 +171,8 @@ public class CachingBuildEngine implements BuildEngine {
       long maxDepFileCacheEntries,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
+    this.ruleDeps = new RuleDepsCache(service);
+
     this.service = service;
     this.buildMode = buildMode;
     this.dependencySchedulingOrder = dependencySchedulingOrder;
@@ -852,7 +854,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildRule rule,
       final Set<BuildRule> seen) {
     return Futures.transformAsync(
-        getRuleDeps(rule),
+        ruleDeps.get(rule),
         new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
           @Override
           public ListenableFuture<List<Object>> apply(
@@ -882,28 +884,6 @@ public class CachingBuildEngine implements BuildEngine {
     return seen.size();
   }
 
-  private synchronized ListenableFuture<ImmutableSortedSet<BuildRule>> getRuleDeps(
-      final BuildRule rule) {
-    ListenableFuture<ImmutableSortedSet<BuildRule>> deps = ruleDeps.get(rule.getBuildTarget());
-    if (deps == null) {
-      deps =
-          service.submit(
-              new Callable<ImmutableSortedSet<BuildRule>>() {
-                @Override
-                public ImmutableSortedSet<BuildRule> call() throws Exception {
-                  ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-                  deps.addAll(rule.getDeps());
-                  if (rule instanceof HasRuntimeDeps) {
-                    deps.addAll(((HasRuntimeDeps) rule).getRuntimeDeps());
-                  }
-                  return deps.build();
-                }
-              });
-      ruleDeps.put(rule.getBuildTarget(), deps);
-    }
-    return deps;
-  }
-
   private synchronized ListenableFuture<RuleKey> calculateRuleKey(
       final BuildRule rule,
       final BuildContext context) {
@@ -914,7 +894,7 @@ public class CachingBuildEngine implements BuildEngine {
       // one, we need to wait for them to complete.
       ListenableFuture<List<RuleKey>> depKeys =
           Futures.transformAsync(
-              getRuleDeps(rule),
+              ruleDeps.get(rule),
               new AsyncFunction<ImmutableSortedSet<BuildRule>, List<RuleKey>>() {
                 @Override
                 public ListenableFuture<List<RuleKey>> apply(
