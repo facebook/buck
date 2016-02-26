@@ -105,17 +105,17 @@ public class CxxLibraryDescription implements
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform defaultCxxPlatform;
   private final InferBuckConfig inferBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPreprocessMode preprocessMode;
 
   public CxxLibraryDescription(
-      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
       InferBuckConfig inferBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPreprocessMode preprocessMode) {
-    this.cxxBuckConfig = cxxBuckConfig;
+    this.defaultCxxPlatform = defaultCxxPlatform;
     this.inferBuckConfig = inferBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
     this.preprocessMode = preprocessMode;
@@ -547,9 +547,7 @@ public class CxxLibraryDescription implements
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
-      CxxPlatform cxxPlatform = platform.isPresent()
-          ? platform.get()
-          : DefaultCxxPlatforms.build(cxxBuckConfig);
+      CxxPlatform cxxPlatform = platform.or(defaultCxxPlatform);
       SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
       return CxxDescriptionEnhancer.createCompilationDatabase(
           params,
@@ -563,14 +561,14 @@ public class CxxLibraryDescription implements
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           platform.isPresent() ?
               params :
-              params.withFlavor(DefaultCxxPlatforms.build(cxxBuckConfig).getFlavor()),
+              params.withFlavor(defaultCxxPlatform.getFlavor()),
           resolver);
     } else if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           new SourcePathResolver(resolver),
-          platform.isPresent() ? platform.get() : DefaultCxxPlatforms.build(cxxBuckConfig),
+          platform.or(defaultCxxPlatform),
           args,
           new CxxInferTools(inferBuckConfig),
           new CxxInferSourceFilter(inferBuckConfig));
@@ -579,7 +577,7 @@ public class CxxLibraryDescription implements
           params,
           resolver,
           new SourcePathResolver(resolver),
-          platform.isPresent() ? platform.get() : DefaultCxxPlatforms.build(cxxBuckConfig),
+          platform.or(defaultCxxPlatform),
           args,
           new CxxInferTools(inferBuckConfig),
           new CxxInferSourceFilter(inferBuckConfig));

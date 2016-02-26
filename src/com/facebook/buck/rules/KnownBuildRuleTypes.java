@@ -468,7 +468,7 @@ public class KnownBuildRuleTypes {
             cxxBuckConfig.getPreprocessMode());
 
     CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
-        cxxBuckConfig,
+        defaultCxxPlatform,
         inferBuckConfig,
         cxxPlatforms,
         cxxBuckConfig.getPreprocessMode());

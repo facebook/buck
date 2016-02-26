@@ -155,7 +155,7 @@ public class FakeAppleRuleDescriptions {
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
     new AppleLibraryDescription(
         new CxxLibraryDescription(
-            new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
+            DEFAULT_PLATFORM,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_APPLE_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),

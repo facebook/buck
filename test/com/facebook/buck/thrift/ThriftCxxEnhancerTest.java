@@ -68,14 +68,13 @@ public class ThriftCxxEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#cpp");
   private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder().build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
-  private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(BUCK_CONFIG));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       FlavorDomain.of("C/C++ Platform", CXX_PLATFORM);
   private static final CxxLibraryDescription CXX_LIBRARY_DESCRIPTION =
       new CxxLibraryDescription(
-          CXX_BUCK_CONFIG,
+          CXX_PLATFORM,
           new InferBuckConfig(BUCK_CONFIG),
           CXX_PLATFORMS,
           CxxPreprocessMode.SEPARATE);
@@ -608,7 +607,7 @@ public class ThriftCxxEnhancerTest {
     // propagated.
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
-            CXX_BUCK_CONFIG,
+            CXX_PLATFORM,
             new InferBuckConfig(BUCK_CONFIG),
             CXX_PLATFORMS,
             CxxPreprocessMode.SEPARATE) {
@@ -672,7 +671,7 @@ public class ThriftCxxEnhancerTest {
     // propagated.
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
-            CXX_BUCK_CONFIG,
+            CXX_PLATFORM,
             new InferBuckConfig(BUCK_CONFIG),
             CXX_PLATFORMS,
             CxxPreprocessMode.SEPARATE) {
