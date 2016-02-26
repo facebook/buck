@@ -112,10 +112,13 @@ class DaemonicParserState implements ParsePipeline.Cache {
   private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
   private static final String INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME =
       "invalidated_by_default_includes";
+  private static final String INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME =
+      "invalidated_by_watch_overflow";
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
+  private final IntegerCounter cacheInvalidatedByWatchOverflowCounter;
   @GuardedBy("nodesAndTargetsLock")
   private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   @GuardedBy("nodesAndTargetsLock")
@@ -172,6 +175,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
     this.cacheInvalidatedByDefaultIncludesChangeCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME,
+        ImmutableMap.<String, String>of());
+    this.cacheInvalidatedByWatchOverflowCounter = new IntegerCounter(
+        COUNTER_CATEGORY,
+        INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME,
         ImmutableMap.<String, String>of());
     this.targetsCornucopia = HashMultimap.create();
     this.allTargetNodes = new ConcurrentMapCache<>(parsingThreads);
@@ -446,9 +453,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
   public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
     if (!WatchEvents.isPathChangeEvent(event)) {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
-      LOG.debug("Parser invalidating entire cache on overflow.");
+      LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", event);
 
-      invalidateAllCaches();
+      if (invalidateAllCaches()) {
+        LOG.warn("Invalidated cache on watch event %s.", event);
+        cacheInvalidatedByWatchOverflowCounter.inc();
+      }
       return;
     }
 
@@ -712,7 +722,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
   public ImmutableList<Counter> getCounters() {
     return ImmutableList.<Counter>of(
         cacheInvalidatedByEnvironmentVariableChangeCounter,
-        cacheInvalidatedByDefaultIncludesChangeCounter
+        cacheInvalidatedByDefaultIncludesChangeCounter,
+        cacheInvalidatedByWatchOverflowCounter
     );
   }
 
