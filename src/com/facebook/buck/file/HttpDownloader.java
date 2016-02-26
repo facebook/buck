@@ -77,6 +77,7 @@ public class HttpDownloader implements Downloader {
           connection.addRequestProperty("Authorization", "Basic " + authEncoded);
         } else {
           LOG.info("Refusing to send basic authentication over plain http.");
+          return false;
         }
       }
 
