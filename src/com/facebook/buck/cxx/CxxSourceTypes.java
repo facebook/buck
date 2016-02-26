@@ -39,7 +39,7 @@ public class CxxSourceTypes {
   }
 
   /**
-   * Returns true for source types which can be run through the C preprocessor.
+   * Returns true for source types which can be built with the C compiler without a preprocessor.
    */
   public static boolean isCompilableType(CxxSource.Type sourceType) {
     return
