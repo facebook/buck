@@ -3,15 +3,22 @@
     "src",
     "plugin"
   ],
+  "checkers_blacklist": [
+    "src-gen"
+  ],
   "eradicate_whitelist": [
     "src",
     "plugin"
   ],
   "eradicate_blacklist": [
-    "src/com/facebook/buck/junit"
+    "src/com/facebook/buck/junit",
+    "src-gen"
   ],
   "infer_whitelist": [
     "src",
     "plugin"
+  ],
+  "infer_blacklist": [
+    "src-gen"
   ]
 }
