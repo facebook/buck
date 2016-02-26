@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -549,6 +550,28 @@ public class CxxPythonExtensionDescriptionTest {
     assertThat(
         binary3.getComponents().getNativeLibraries().keySet(),
         Matchers.not(Matchers.contains(Paths.get("libdep.so"))));
+  }
+
+  @Test
+  public void runtimeDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule cxxBinary =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
+    new CxxLibraryBuilder(PYTHON3_DEP_TARGET).build(resolver);
+    CxxPythonExtension cxxPythonExtension =
+        (CxxPythonExtension) new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:ext"),
+            FlavorDomain.of("Python Platform", PY2, PY3),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms())
+            .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        cxxPythonExtension.getRuntimeDeps(),
+        Matchers.hasItem(cxxBinary));
   }
 
 }

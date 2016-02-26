@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
@@ -28,7 +29,9 @@ import com.google.common.base.Function;
 
 import java.nio.file.Path;
 
-public abstract class CxxPythonExtension extends NoopBuildRule implements PythonPackagable {
+public abstract class CxxPythonExtension
+    extends NoopBuildRule
+    implements PythonPackagable, HasRuntimeDeps {
 
   public CxxPythonExtension(
       BuildRuleParams params,

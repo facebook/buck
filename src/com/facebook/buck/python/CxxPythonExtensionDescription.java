@@ -397,6 +397,11 @@ public class CxxPythonExtensionDescription implements
         };
       }
 
+      @Override
+      public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+        return getDeclaredDeps();
+      }
+
     };
   }
 
