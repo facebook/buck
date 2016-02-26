@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.counters.Counter;
+import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -109,9 +110,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
   private static final String COUNTER_CATEGORY = "buck_parser_state";
   private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
+  private static final String INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME =
+      "invalidated_by_default_includes";
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
+  private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
   @GuardedBy("nodesAndTargetsLock")
   private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   @GuardedBy("nodesAndTargetsLock")
@@ -165,6 +169,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
         INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
         ImmutableMap.<String, String>of());
     this.allRawNodes = new ConcurrentMapCache<>(parsingThreads);
+    this.cacheInvalidatedByDefaultIncludesChangeCounter = new IntegerCounter(
+        COUNTER_CATEGORY,
+        INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME,
+        ImmutableMap.<String, String>of());
     this.targetsCornucopia = HashMultimap.create();
     this.allTargetNodes = new ConcurrentMapCache<>(parsingThreads);
     this.buildFileTrees = CacheBuilder.newBuilder().build(
@@ -634,6 +642,11 @@ class DaemonicParserState implements ParsePipeline.Cache {
         // Someone's changed the default includes. That's almost definitely caused all our lovingly
         // cached data to be enormously wonky.
         invalidateCaches = true;
+        LOG.warn(
+            "Invalidating cache on default includes change (%s != %s)",
+            expected,
+            defaultIncludes);
+        cacheInvalidatedByDefaultIncludesChangeCounter.inc();
       }
 
       if (!invalidateCaches) {
@@ -665,7 +678,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
   public ImmutableList<Counter> getCounters() {
     return ImmutableList.<Counter>of(
-        cacheInvalidatedByEnvironmentVariableChangeCounter
+        cacheInvalidatedByEnvironmentVariableChangeCounter,
+        cacheInvalidatedByDefaultIncludesChangeCounter
     );
   }
 
