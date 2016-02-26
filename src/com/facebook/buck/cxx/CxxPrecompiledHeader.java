@@ -133,7 +133,7 @@ public class CxxPrecompiledHeader
                         .addAll(preprocessorDelegate.getFlagsWithSearchPaths().getAllFlags())
                         .build(),
                     preprocessorDelegate.getEnvironment(),
-                    preprocessorDelegate.getColorSupport())),
+                    preprocessorDelegate.getFlagsForColorDiagnostics())),
             Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
             replacementPaths,
             sanitizer,

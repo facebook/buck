@@ -21,12 +21,10 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -251,8 +249,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     return inputs.build();
   }
 
-  public Optional<SupportsColorsInOutput> getColorSupport() {
-    return Optionals.cast(preprocessor, SupportsColorsInOutput.class);
+  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+    return preprocessor.getFlagsForColorDiagnostics();
   }
 
   private class ReplacementPathsSupplier implements Supplier<ImmutableMap<Path, Path>> {

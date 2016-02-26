@@ -38,7 +38,6 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -63,8 +62,7 @@ import java.nio.file.Paths;
 public class CxxPreprocessAndCompileTest {
 
   private static class PreprocessorWithColorSupport
-      extends DefaultPreprocessor
-      implements SupportsColorsInOutput {
+      extends DefaultPreprocessor {
 
     static final String COLOR_FLAG = "-use-color-in-preprocessor";
 
@@ -73,14 +71,13 @@ public class CxxPreprocessAndCompileTest {
     }
 
     @Override
-    public ImmutableList<String> getArgsForColorsInOutput() {
-      return ImmutableList.of(COLOR_FLAG);
+    public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+      return Optional.of(ImmutableList.of(COLOR_FLAG));
     }
   }
 
   private static class CompilerWithColorSupport
-      extends DefaultCompiler
-      implements SupportsColorsInOutput {
+      extends DefaultCompiler {
 
     static final String COLOR_FLAG = "-use-color-in-compiler";
 
@@ -89,8 +86,8 @@ public class CxxPreprocessAndCompileTest {
     }
 
     @Override
-    public ImmutableList<String> getArgsForColorsInOutput() {
-      return ImmutableList.of(COLOR_FLAG);
+    public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+      return Optional.of(ImmutableList.of(COLOR_FLAG));
     }
   }
 

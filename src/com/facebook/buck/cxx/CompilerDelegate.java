@@ -20,8 +20,6 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SupportsColorsInOutput;
-import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,8 +87,8 @@ class CompilerDelegate implements RuleKeyAppendable {
     return Ordering.natural().immutableSortedCopy(compiler.getInputs());
   }
 
-  public Optional<SupportsColorsInOutput> getColorSupport() {
-    return Optionals.cast(compiler, SupportsColorsInOutput.class);
+  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+    return compiler.getFlagsForColorDiagnostics();
   }
 
 }

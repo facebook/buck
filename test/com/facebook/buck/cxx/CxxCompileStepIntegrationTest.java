@@ -25,7 +25,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -92,12 +91,12 @@ public class CxxCompileStepIntegrationTest {
             new CxxPreprocessAndCompileStep.ToolCommand(
                 preprocessorCommand.build(),
                 ImmutableMap.<String, String>of(),
-                Optional.<SupportsColorsInOutput>absent())),
+                Optional.<ImmutableList<String>>absent())),
         Optional.of(
             new CxxPreprocessAndCompileStep.ToolCommand(
                 compilerCommand.build(),
                 ImmutableMap.<String, String>of(),
-                Optional.<SupportsColorsInOutput>absent())),
+                Optional.<ImmutableList<String>>absent())),
         ImmutableMap.<Path, Path>of(),
         sanitizer,
         Optional.<Function<String, Iterable<String>>>absent());

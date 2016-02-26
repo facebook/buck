@@ -24,4 +24,6 @@ public interface Compiler extends Tool {
 
   Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir);
 
+  Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
+
 }

@@ -191,7 +191,7 @@ public class CxxPreprocessAndCompile
           new CxxPreprocessAndCompileStep.ToolCommand(
               getPreprocessorDelegate().get().getCommand(compilerDelegate.getCompilerFlags()),
               preprocessDelegate.get().getEnvironment(),
-              preprocessDelegate.get().getColorSupport()));
+              preprocessDelegate.get().getFlagsForColorDiagnostics()));
     } else {
       preprocessorCommand = Optional.absent();
     }
@@ -205,7 +205,7 @@ public class CxxPreprocessAndCompile
                       ? preprocessDelegate.get().getFlagsWithSearchPaths()
                       : CxxToolFlags.of()),
               compilerDelegate.getEnvironment(),
-              compilerDelegate.getColorSupport()));
+              compilerDelegate.getFlagsForColorDiagnostics()));
     } else {
       compilerCommand = Optional.absent();
     }

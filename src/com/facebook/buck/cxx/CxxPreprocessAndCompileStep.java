@@ -21,7 +21,6 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -626,22 +625,22 @@ public class CxxPreprocessAndCompileStep implements Step {
   public static class ToolCommand {
     private final ImmutableList<String> command;
     private final ImmutableMap<String, String> environment;
-    private final Optional<SupportsColorsInOutput> colorSupport;
+    private final Optional<ImmutableList<String>> flagsForColorDiagnostics;
 
     public ToolCommand(
         ImmutableList<String> command,
         ImmutableMap<String, String> environment,
-        Optional<SupportsColorsInOutput> colorSupport) {
+        Optional<ImmutableList<String>> flagsForColorDiagnostics) {
       this.command = command;
       this.environment = environment;
-      this.colorSupport = colorSupport;
+      this.flagsForColorDiagnostics = flagsForColorDiagnostics;
     }
 
     public ImmutableList<String> getCommand(boolean allowColorsInDiagnostics) {
-      if (allowColorsInDiagnostics && colorSupport.isPresent()) {
+      if (allowColorsInDiagnostics && flagsForColorDiagnostics.isPresent()) {
         return ImmutableList.<String>builder()
             .addAll(command)
-            .addAll(colorSupport.get().getArgsForColorsInOutput())
+            .addAll(flagsForColorDiagnostics.get())
             .build();
       } else {
         return command;
@@ -653,7 +652,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
 
     public boolean supportsColorsInDiagnostics() {
-      return colorSupport.isPresent();
+      return flagsForColorDiagnostics.isPresent();
     }
   }
 

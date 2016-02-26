@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SupportsColorsInOutput;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -31,7 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ClangPreprocessor implements Preprocessor, SupportsColorsInOutput {
+public class ClangPreprocessor implements Preprocessor {
 
   private static final String PRAGMA_TOKEN = "_Pragma";
   private static final String PRAGMA_TOKEN_PLACEHOLDER = "__BUCK__PRAGMA_PLACEHOLDER__";
@@ -51,6 +50,11 @@ public class ClangPreprocessor implements Preprocessor, SupportsColorsInOutput {
             "-Wno-builtin-macro-redefined",
             "-Wno-error=builtin-macro-redefined",
             "-D" + PRAGMA_TOKEN + "=" + PRAGMA_TOKEN_PLACEHOLDER));
+  }
+
+  @Override
+  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+    return Optional.of(ImmutableList.of("-fcolor-diagnostics"));
   }
 
   @Override
@@ -117,10 +121,5 @@ public class ClangPreprocessor implements Preprocessor, SupportsColorsInOutput {
     return builder
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());
-  }
-
-  @Override
-  public ImmutableList<String> getArgsForColorsInOutput() {
-    return ImmutableList.of("-fcolor-diagnostics");
   }
 }

@@ -41,6 +41,11 @@ public class DefaultPreprocessor implements Preprocessor {
   }
 
   @Override
+  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
+    return Optional.absent();
+  }
+
+  @Override
   public Optional<Function<String, Iterable<String>>> getExtraLineProcessor() {
     return Optional.absent();
   }
