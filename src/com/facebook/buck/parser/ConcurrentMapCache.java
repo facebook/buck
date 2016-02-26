@@ -82,4 +82,8 @@ class ConcurrentMapCache<K, V> {
   public void invalidateAll() {
     values.clear();
   }
+
+  public boolean isEmpty() {
+    return values.isEmpty();
+  }
 }

@@ -142,7 +142,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
    * reevaluated if the environment changes.
    */
   @GuardedBy("cachedStateLock")
-  private Optional<ImmutableMap<String, String>> cachedEnvironment;
+  private ImmutableMap<String, String> cachedEnvironment;
 
   /**
    * The default includes used by the previous run of the parser in each cell (the key is the
@@ -184,7 +184,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
         });
     this.buildFileDependents = HashMultimap.create();
     this.buildFileConfigs = new HashMap<>();
-    this.cachedEnvironment = Optional.absent();
+    this.cachedEnvironment = ImmutableMap.of();
     this.cachedIncludes = new ConcurrentHashMap<>();
     this.knownCells = Collections.synchronizedSet(new HashSet<Cell>());
 
@@ -620,60 +620,93 @@ class DaemonicParserState implements ParsePipeline.Cache {
     ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getEnvironment();
     Iterable<String> defaultIncludes = new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
 
-    boolean invalidateCaches = false;
+    boolean invalidatedByEnvironmentVariableChange = false;
+    boolean invalidatedByDefaultIncludesChange = false;
+    Iterable<String> expected;
+    ImmutableMap<String, String> originalCachedEnvironment;
     try (AutoCloseableLock updateLock = cachedStateLock.updateLock()) {
-      Iterable<String> expected = cachedIncludes.get(cell.getRoot());
+      originalCachedEnvironment = cachedEnvironment;
+      expected = cachedIncludes.get(cell.getRoot());
 
-      if (!cachedEnvironment.isPresent()) {
-        LOG.debug("Cached environment not present, invalidating caches for first run.");
-        invalidateCaches = true;
-      } else if (!cellEnv.equals(cachedEnvironment.get())) {
+      if (!cellEnv.equals(cachedEnvironment)) {
         // Contents of System.getenv() have changed. Cowardly refuse to accept we'll parse
         // everything the same way.
-        MapDifference<String, String> diff = Maps.difference(cachedEnvironment.get(), cellEnv);
-        LOG.warn("Invalidating cache on environment change (%s)", diff);
-        Set<String> environmentChanges = new HashSet<>();
-        environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
-        environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
-        environmentChanges.addAll(diff.entriesDiffering().keySet());
-        cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
-        invalidateCaches = true;
+        invalidatedByEnvironmentVariableChange = true;
       } else if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
         // Someone's changed the default includes. That's almost definitely caused all our lovingly
         // cached data to be enormously wonky.
-        invalidateCaches = true;
-        LOG.warn(
-            "Invalidating cache on default includes change (%s != %s)",
-            expected,
-            defaultIncludes);
-        cacheInvalidatedByDefaultIncludesChangeCounter.inc();
+        invalidatedByDefaultIncludesChange = true;
       }
 
-      if (!invalidateCaches) {
+      if (!invalidatedByEnvironmentVariableChange && !invalidatedByDefaultIncludesChange) {
         return;
       }
 
       try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
-        cachedEnvironment = Optional.of(cellEnv);
+        cachedEnvironment = cellEnv;
         cachedIncludes.put(cell.getRoot(), defaultIncludes);
       }
     }
     synchronized (this) {
-      invalidateAllCaches();
+      if (invalidateAllCaches()) {
+        if (invalidatedByEnvironmentVariableChange) {
+          MapDifference<String, String> diff = Maps.difference(originalCachedEnvironment, cellEnv);
+          LOG.warn("Invalidating cache on environment change (%s)", diff);
+          Set<String> environmentChanges = new HashSet<>();
+          environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
+          environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
+          environmentChanges.addAll(diff.entriesDiffering().keySet());
+          cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
+        }
+        if (invalidatedByDefaultIncludesChange) {
+          LOG.warn(
+              "Invalidating cache on default includes change (%s != %s)",
+              expected,
+              defaultIncludes);
+          cacheInvalidatedByDefaultIncludesChangeCounter.inc();
+        }
+      }
       knownCells.add(cell);
     }
   }
 
-  private synchronized void invalidateAllCaches() {
-    LOG.debug("Invalidating all caches");
+  private synchronized boolean invalidateAllCaches() {
+    LOG.debug("Starting to invalidate all caches..");
     try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+      boolean invalidated = false;
+      if (!allTargetNodes.isEmpty()) {
+        invalidated = true;
+      }
       allTargetNodes.invalidateAll();
+      if (!targetsCornucopia.isEmpty()) {
+        invalidated = true;
+      }
       targetsCornucopia.clear();
+      if (!allRawNodes.isEmpty()) {
+        invalidated = true;
+      }
       allRawNodes.invalidateAll();
+      if (!buildFileDependents.isEmpty()) {
+        invalidated = true;
+      }
+      buildFileDependents.clear();
+      if (!buildFileConfigs.isEmpty()) {
+        invalidated = true;
+      }
+      buildFileConfigs.clear();
+      if (!knownCells.isEmpty()) {
+        invalidated = true;
+      }
+      knownCells.clear();
+
+      if (invalidated) {
+        LOG.debug("Cache data invalidated.");
+      } else {
+        LOG.debug("Caches were empty, no data invalidated.");
+      }
+
+      return invalidated;
     }
-    buildFileDependents.clear();
-    buildFileConfigs.clear();
-    knownCells.clear();
   }
 
   public ImmutableList<Counter> getCounters() {
