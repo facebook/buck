@@ -47,17 +47,6 @@ import java.nio.file.Path;
 
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg> {
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath binaryJar;
-    public Optional<SourcePath> sourceJar;
-    public Optional<SourcePath> gwtJar;
-    public Optional<String> javadocUrl;
-    public Optional<String> mavenCoords;
-
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-  }
-
   public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_jar");
 
   @Override
@@ -97,7 +86,8 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         args.sourceJar,
         args.gwtJar,
         args.javadocUrl,
-        args.mavenCoords);
+        args.mavenCoords,
+        args.provided.or(false));
 
     UnflavoredBuildTarget prebuiltJarBuildTarget = params.getBuildTarget().checkUnflavored();
     BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
@@ -166,5 +156,17 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       }
     }
     return new ExistingOuputs(params, resolver, input);
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AbstractDescriptionArg {
+    public SourcePath binaryJar;
+    public Optional<SourcePath> sourceJar;
+    public Optional<SourcePath> gwtJar;
+    public Optional<String> javadocUrl;
+    public Optional<String> mavenCoords;
+    public Optional<Boolean> provided;
+
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

@@ -22,3 +22,22 @@ prebuilt_jar(
   name = 'junit',
   binary_jar = 'junit.jar',
 )
+
+java_library(
+  name = 'library_2',
+  srcs = [ 'Example.java' ],
+  deps = [ ':guava', ':junit_provided' ],
+)
+
+java_binary(
+  name = 'binary_2',
+  deps = [
+    ':library_2',
+  ],
+)
+
+prebuilt_jar(
+  name = 'junit_provided',
+  binary_jar = 'junit.jar',
+  provided = True,
+)
