@@ -104,6 +104,7 @@ The following sections are recognized by Buck:
     'buildfile',
     'cache',
     'color',
+    'credentials',
     'cxx',
     'd',
     'download',
@@ -738,6 +739,32 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     When performing a store artifacts smaller than this size will be stored
     directly, without the content hash redirection.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'credentials' /}
+  {param description}
+    This section configures credentials to be used when fetching from
+    authenticated Maven repositories via HTTPS.
+    <p>
+    For a repository <code>repo</code> appearing in
+    {call buckconfig.maven_repositories /}, Buck reads the values of
+    {sp}<code>repo_user</code> and <code>repo_pass</code> in this section
+    (if present), and passes them to the server using {sp}
+    <a href="https://en.wikipedia.org/wiki/Basic_access_authentication#Client_side">basic access authentication</a>
+    {sp}when fetching.
+    <p>
+    Note that authenticating in this way over plain HTTP connections is
+    disallowed and will result in an error.
+
+{literal}<pre class="prettyprint lang-ini">
+[maven_repositories]
+  repo = https://example.com/repo
+[credentials]
+  repo_user = joeuser
+  repo_pass = hunter2
+</pre>{/literal}
   {/param}
 {/call}
 
