@@ -18,10 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 
 public class DownloadConfig {
@@ -52,13 +53,13 @@ public class DownloadConfig {
     return delegate.getValue("download", "maven_repo");
   }
 
-  public ImmutableSet<String> getAllMavenRepos() {
-    ImmutableSortedSet.Builder<String> repos = ImmutableSortedSet.naturalOrder();
-    repos.addAll(delegate.getEntriesForSection("maven_repositories").values());
+  public ImmutableMap<String, String> getAllMavenRepos() {
+    ImmutableSortedMap.Builder<String, String> repos = ImmutableSortedMap.naturalOrder();
+    repos.putAll(delegate.getEntriesForSection("maven_repositories"));
 
     Optional<String> defaultRepo = getMavenRepo();
     if (defaultRepo.isPresent()) {
-      repos.add(defaultRepo.get());
+      repos.put(defaultRepo.get(), defaultRepo.get());
     }
 
     return repos.build();
@@ -66,5 +67,15 @@ public class DownloadConfig {
 
   public boolean isDownloadAtRuntimeOk() {
     return delegate.getBooleanValue("download", "in_build", false);
+  }
+
+  public Optional<PasswordAuthentication> getRepoCredentials(String repo) {
+    Optional<String> user = delegate.getValue("credentials", repo + "_user");
+    Optional<String> password = delegate.getValue("credentials", repo + "_pass");
+    if (!user.isPresent() || !password.isPresent()) {
+      return Optional.absent();
+    }
+
+    return Optional.of(new PasswordAuthentication(user.get(), password.get().toCharArray()));
   }
 }
