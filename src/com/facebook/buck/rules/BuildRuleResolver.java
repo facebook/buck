@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -65,6 +66,11 @@ public class BuildRuleResolver {
               private <T extends AbstractDescriptionArg, U> Optional<U> load(
                   TargetNode<T> node,
                   Class<U> metadataClass) throws NoSuchBuildTargetException {
+                T arg = node.getConstructorArg();
+                if (metadataClass.isAssignableFrom(arg.getClass())) {
+                  return Optional.of(metadataClass.cast(arg));
+                }
+
                 Description<T> description = node.getDescription();
                 if (!(description instanceof MetadataProvidingDescription)) {
                   return Optional.absent();
@@ -74,7 +80,7 @@ public class BuildRuleResolver {
                 return metadataProvidingDescription.createMetadata(
                     node.getBuildTarget(),
                     BuildRuleResolver.this,
-                    node.getConstructorArg(),
+                    arg,
                     metadataClass);
               }
             });
@@ -139,11 +145,8 @@ public class BuildRuleResolver {
       return (Optional<T>) metadataCache.get(
           new Pair<BuildTarget, Class<?>>(target, metadataClass));
     } catch (ExecutionException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof NoSuchBuildTargetException) {
-        throw (NoSuchBuildTargetException) cause;
-      }
-      throw new RuntimeException(e);
+      Throwables.propagateIfInstanceOf(e.getCause(), NoSuchBuildTargetException.class);
+      throw Throwables.propagate(e);
     }
   }
 
