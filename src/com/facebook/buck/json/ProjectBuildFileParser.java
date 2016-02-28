@@ -331,6 +331,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
     int numRules = 0;
     buckEventBus.post(parseBuckFileStarted);
+    List<Map<String, Object>> result = null;
     try {
       String buildFileString = buildFile.toString();
       LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
@@ -339,7 +340,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdinWriter.flush();
 
       LOG.debug("Parsing output of process %s...", buckPyProcess);
-      List<Map<String, Object>> result;
       try {
         Object deserializedValue = bserDeserializer.deserializeBserValue(
             buckPyProcess.getInputStream());
@@ -353,7 +353,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       LOG.debug("Parsed %d rules from process", numRules);
       return result;
     } finally {
-      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, numRules));
+      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, result));
     }
   }
 

@@ -21,6 +21,8 @@ import com.facebook.buck.event.EventKey;
 import com.google.common.base.Objects;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for events about parsing build files..
@@ -46,8 +48,8 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
     return new Started(buckFilePath);
   }
 
-  public static Finished finished(Started started, int numRules) {
-    return new Finished(started, numRules);
+  public static Finished finished(Started started, List<Map<String, Object>> rules) {
+    return new Finished(started, rules);
   }
 
   public static class Started extends ParseBuckFileEvent {
@@ -62,11 +64,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
   }
 
   public static class Finished extends ParseBuckFileEvent {
-    private final int numRules;
+    private final List<Map<String, Object>> rules;
 
-    protected Finished(Started started, int numRules) {
+    protected Finished(Started started, List<Map<String, Object>> rules) {
       super(started.getEventKey(), started.getBuckFilePath());
-      this.numRules = numRules;
+      this.rules = rules;
     }
 
     @Override
@@ -75,7 +77,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
     }
 
     public int getNumRules() {
-      return numRules;
+      return rules == null ? 0 : rules.size();
+    }
+
+    public List<Map<String, Object>> getRules() {
+      return rules;
     }
 
     @Override
@@ -90,7 +96,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(super.hashCode(), numRules);
+      return Objects.hashCode(super.hashCode(), getNumRules());
     }
   }
 }
