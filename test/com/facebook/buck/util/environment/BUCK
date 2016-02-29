@@ -2,6 +2,19 @@ STANDARD_TEST_SRCS = [
   '*Test.java',
 ]
 
+java_immutables_library(
+  name = 'testutil',
+  deps = [
+    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//third-party/java/guava:guava',
+  ],
+  srcs = glob(['*.java'], excludes=STANDARD_TEST_SRCS),
+  visibility = [
+    '//test/...',
+  ],
+)
+
 java_test(
   name = 'environment',
   srcs = glob(STANDARD_TEST_SRCS),
