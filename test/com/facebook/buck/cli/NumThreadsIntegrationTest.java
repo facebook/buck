@@ -60,12 +60,12 @@ public class NumThreadsIntegrationTest {
     Path buckconfig = workspace.getPath(".buckconfig");
     Files.delete(buckconfig);
 
-    int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
+    int numThreads = Runtime.getRuntime().availableProcessors();
     ProcessResult buildResult3 = workspace.runBuckCommand(
         "build", "//:noop", "--verbose", "10");
     assertThat(
         "Once .buckconfig is deleted, the number of threads should be " +
-        "a function of the number of processors.",
+        "equal to the number of processors.",
         buildResult3.getStderr(),
         containsString("Creating a build with " + numThreads + " threads.\n"));
   }
@@ -86,11 +86,11 @@ public class NumThreadsIntegrationTest {
         "  initial_targets = //:noop",
         "  ide = intellij");
     Files.write(workspace.getPath(".buckconfig"), newBuckProject.getBytes(UTF_8));
-    int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
+    int numThreads = Runtime.getRuntime().availableProcessors();
     ProcessResult buildResult2 = workspace.runBuckCommand("project", "--verbose", "10");
     assertThat(
         "Once num_threads is removed from .buckconfig, the number of threads should be " +
-        "a function of the number of processors.",
+        "equal to the number of processors.",
         buildResult2.getStderr(),
         containsString("Creating a build with " + numThreads + " threads.\n"));
   }

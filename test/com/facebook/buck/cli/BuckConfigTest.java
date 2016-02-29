@@ -422,7 +422,7 @@ public class BuckConfigTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     assertThat(
         buckConfig.getNumThreads(),
-        Matchers.equalTo((int) (Runtime.getRuntime().availableProcessors() * 1.25)));
+        Matchers.equalTo(Runtime.getRuntime().availableProcessors()));
   }
 
   @Test

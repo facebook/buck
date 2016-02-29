@@ -754,7 +754,7 @@ public class BuckConfig {
    * @return the number of threads Buck should use.
    */
   public int getNumThreads() {
-    return getNumThreads((int) (Runtime.getRuntime().availableProcessors() * 1.25));
+    return getNumThreads(Runtime.getRuntime().availableProcessors());
   }
 
   /**
