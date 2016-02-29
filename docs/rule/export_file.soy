@@ -120,10 +120,8 @@ export_file(
 
 genrule(
   name = 'demo',
-  srcs = [],
-  deps = [':example'],
   out = 'result.html'
-  cmd = 'cp ${:example} $OUT',
+  cmd = 'cp $(location :example) $OUT',
 )
 </pre>
 {/literal}
