@@ -16,8 +16,10 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -28,23 +30,19 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
 
-public class GoBinaryDescription implements Description<GoBinaryDescription.Arg> {
+public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>, Flavored {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("go_binary");
 
   private final GoBuckConfig goBuckConfig;
 
-  private final CxxPlatform cxxPlatform;
-
-  public GoBinaryDescription(GoBuckConfig goBuckConfig, CxxPlatform cxxPlatform) {
+  public GoBinaryDescription(GoBuckConfig goBuckConfig) {
     this.goBuckConfig = goBuckConfig;
-    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -58,19 +56,27 @@ public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>
   }
 
   @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors);
+  }
+
+  @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
+    GoPlatform platform = goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget())
+        .or(goBuckConfig.getDefaultPlatform());
+
     return GoDescriptors.createGoBinaryRule(
         params,
         resolver,
         goBuckConfig,
-        cxxPlatform,
         args.srcs,
-        args.compilerFlags.or(ImmutableList.<String>of()),
-        args.linkerFlags.or(ImmutableList.<String>of()));
+        args.compilerFlags.get(),
+        args.linkerFlags.get(),
+        platform);
   }
 
   @SuppressFieldNotInitialized

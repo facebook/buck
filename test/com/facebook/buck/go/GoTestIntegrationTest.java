@@ -65,6 +65,18 @@ public class GoTestIntegrationTest {
   }
 
   @Test
+  public void testGoTestAfterChange() throws IOException {
+    // This test should pass.
+    workspace.runBuckCommand("test", "//:test-success").assertSuccess();
+
+    workspace.replaceFileContents("base.go", "n1 + n2", "n1 + n2 + 1");
+    workspace.runBuckCommand("test", "//:test-success").assertTestFailure();
+
+    workspace.replaceFileContents("base.go", "n1 + n2 + 1", "n1 + n2 * 1");
+    workspace.runBuckCommand("test", "//:test-success").assertSuccess();
+  }
+
+    @Test
   public void testGoInternalTest() throws IOException {
     ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
         "test", "//:test-success-internal");

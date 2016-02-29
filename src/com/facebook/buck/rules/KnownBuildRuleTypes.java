@@ -415,7 +415,7 @@ public class KnownBuildRuleTypes {
 
     RustBuckConfig rustBuckConfig = new RustBuckConfig(config);
 
-    GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor);
+    GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor, cxxPlatforms);
 
     HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
 
@@ -575,13 +575,12 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
-    builder.register(new GoBinaryDescription(goBuckConfig, defaultCxxPlatform));
+    builder.register(new GoBinaryDescription(goBuckConfig));
     builder.register(new GoLibraryDescription(goBuckConfig));
     builder.register(
         new GoTestDescription(
             goBuckConfig,
-            defaultTestRuleTimeoutMs,
-            defaultCxxPlatform));
+            defaultTestRuleTimeoutMs));
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.register(
         new GroovyLibraryDescription(

@@ -99,6 +99,23 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void libraryWithPrefixAfterChange() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "library_with_prefix", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.containsString("Hello, world!"));
+    workspace.writeContentsToPath(
+        workspace.getFileContents("messenger/printer.go").replace('!', '?'),
+        "messenger/printer.go");
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.containsString("Hello, world?"));
+  }
+
+  @Test
   public void nonGoLibraryDepErrors() throws IOException, InterruptedException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(Matchers.containsString("is not an instance of go_library"));

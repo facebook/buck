@@ -16,8 +16,10 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -28,6 +30,8 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -35,32 +39,34 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class GoTestDescription implements Description<GoTestDescription.Arg> {
+public class GoTestDescription implements
+    Description<GoTestDescription.Arg>,
+    Flavored,
+    MetadataProvidingDescription<GoTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("go_test");
+  private static final Flavor TEST_LIBRARY_FLAVOR = ImmutableFlavor.of("test-library");
 
   private final GoBuckConfig goBuckConfig;
   private final Optional<Long> defaultTestRuleTimeoutMs;
-  private final CxxPlatform cxxPlatform;
 
   public GoTestDescription(
       GoBuckConfig goBuckConfig,
-      Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform) {
+      Optional<Long> defaultTestRuleTimeoutMs) {
     this.goBuckConfig = goBuckConfig;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -73,17 +79,69 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
     return new Arg();
   }
 
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors) ||
+        flavors.contains(TEST_LIBRARY_FLAVOR);
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      final BuildRuleResolver resolver,
+      A args,
+      Class<U> metadataClass) throws NoSuchBuildTargetException {
+    Optional<GoPlatform> platform =
+        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+
+    if (metadataClass.isAssignableFrom(GoLinkable.class) &&
+        buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
+      Preconditions.checkState(platform.isPresent());
+
+      Path packageName = getGoPackageName(resolver, buildTarget, args);
+
+      SourcePath output = new BuildTargetSourcePath(
+          resolver.requireRule(buildTarget).getBuildTarget());
+      return Optional.of(metadataClass.cast(GoLinkable.builder()
+          .setGoLinkInput(ImmutableMap.of(packageName, output))
+          .build()));
+    } else if (
+        buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR) &&
+        buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
+      Preconditions.checkState(platform.isPresent());
+
+      ImmutableSet<BuildTarget> deps;
+      if (args.library.isPresent()) {
+        GoLibraryDescription.Arg libraryArg = resolver.requireMetadata(
+            args.library.get(), GoLibraryDescription.Arg.class).get();
+        deps = ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .addAll(args.deps.get())
+            .addAll(libraryArg.deps.get())
+            .build();
+      } else {
+        deps = args.deps.get();
+      }
+
+      return Optional.of(metadataClass.cast(GoDescriptors.requireTransitiveGoLinkables(
+          buildTarget,
+          resolver,
+          platform.get(),
+          deps,
+          /* includeSelf */ true)));
+    } else {
+      return Optional.absent();
+    }
+  }
+
   private GoTestMain requireTestMainGenRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableSet<SourcePath> srcs,
-      Path packageName) {
-
+      Path packageName) throws NoSuchBuildTargetException {
     Tool testMainGenerator = GoDescriptors.getTestMainGenerator(
         goBuckConfig,
         params,
         resolver,
-        cxxPlatform,
         params.getProjectFilesystem());
 
     SourcePathResolver sourceResolver = new SourcePathResolver(resolver);
@@ -111,87 +169,22 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    GoPlatform platform = goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget())
+        .or(goBuckConfig.getDefaultPlatform());
 
-    BuildTarget testLibraryTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("test-library"))
-            .build();
-
-    GoLibrary testLibrary;
-    if (args.library.isPresent()) {
-      BuildRule untypedLibrary = resolver.getRule(args.library.get());
-      if (!(untypedLibrary instanceof GoLibrary)) {
-        throw new HumanReadableException(
-            "Library specified in %s (%s) is not a go_library rule.",
-            params.getBuildTarget(), args.library.get());
-      }
-
-      if (args.packageName.isPresent()) {
-        throw new HumanReadableException(
-            "Test target %s specifies both library and package_name - only one should be specified",
-            params.getBuildTarget());
-      }
-
-      final GoLibrary library = (GoLibrary) untypedLibrary;
-      if (!library.getTests().contains(params.getBuildTarget())) {
-        throw new HumanReadableException(
-            "go internal test target %s is not listed in `tests` of library %s",
-            params.getBuildTarget(), args.library.get());
-      }
-
-      final Supplier<ImmutableSortedSet<BuildRule>> initialExtraDeps = params.getExtraDeps();
-      testLibrary = GoDescriptors.createMergedGoLibraryRule(
-          params.copyWithChanges(
-              testLibraryTarget,
-              params.getDeclaredDeps(),
-              new Supplier<ImmutableSortedSet<BuildRule>>() {
-                @Override
-                public ImmutableSortedSet<BuildRule> get() {
-                  return ImmutableSortedSet.copyOf(
-                      Sets.difference(initialExtraDeps.get(), ImmutableSortedSet.of(library)));
-                }
-              }),
+    if (params.getBuildTarget().getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
+      return createTestLibrary(
+          params,
           resolver,
-          library,
-          args.srcs,
-          args.compilerFlags.get());
-    } else {
-      Path packageName;
-      if (args.packageName.isPresent()) {
-        packageName = Paths.get(args.packageName.get());
-      } else {
-        packageName = goBuckConfig.getDefaultPackageName(params.getBuildTarget());
-        packageName = packageName.resolveSibling(packageName.getFileName() + "_test");
-      }
-
-      testLibrary = GoDescriptors.createGoLibraryRule(
-          params.copyWithBuildTarget(testLibraryTarget),
-          resolver,
-          goBuckConfig,
-          packageName,
-          args.srcs,
-          args.compilerFlags.or(ImmutableList.<String>of()),
-          ImmutableSortedSet.<BuildTarget>of()
-      );
+          args,
+          platform);
     }
-    resolver.addToIndex(testLibrary);
 
-    GoTestMain generatedTestMain = requireTestMainGenRule(
-        params, resolver, args.srcs, testLibrary.getGoPackageName());
-    GoBinary testMain = GoDescriptors.createGoBinaryRule(
-        params.copyWithChanges(
-            BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(ImmutableFlavor.of("test-main"))
-                .build(),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(generatedTestMain))
-        ),
+    GoBinary testMain = createTestMainRule(
+        params,
         resolver,
-        goBuckConfig,
-        cxxPlatform,
-        ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
-        args.compilerFlags.get(),
-        args.linkerFlags.get());
+        args,
+        platform);
     resolver.addToIndex(testMain);
 
     return new GoTest(
@@ -205,6 +198,138 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
         args.contacts.get(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.runTestSeparately.or(false));
+  }
+
+  private GoBinary createTestMainRule(
+      BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      Arg args,
+      GoPlatform platform) throws NoSuchBuildTargetException {
+    Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
+
+    BuildRuleParams testTargetParams = params.copyWithBuildTarget(
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(TEST_LIBRARY_FLAVOR)
+            .build());
+    BuildRule testLibrary = new NoopBuildRule(testTargetParams, new SourcePathResolver(resolver));
+    resolver.addToIndex(testLibrary);
+
+    BuildRule generatedTestMain = requireTestMainGenRule(
+        params, resolver, args.srcs, packageName);
+    GoBinary testMain = GoDescriptors.createGoBinaryRule(
+        params.copyWithChanges(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(ImmutableFlavor.of("test-main"))
+                .build(),
+            Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
+            Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
+        resolver,
+        goBuckConfig,
+        ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
+        args.compilerFlags.get(),
+        args.linkerFlags.get(),
+        platform);
+    resolver.addToIndex(testMain);
+    return testMain;
+  }
+
+  private Path getGoPackageName(BuildRuleResolver resolver, BuildTarget target, Arg args)
+      throws NoSuchBuildTargetException {
+    target = target.withFlavors();  // remove flavors.
+
+    if (args.library.isPresent()) {
+      final Optional<GoLibraryDescription.Arg> libraryArg = resolver.requireMetadata(
+          args.library.get(), GoLibraryDescription.Arg.class);
+      if (!libraryArg.isPresent()) {
+        throw new HumanReadableException(
+            "Library specified in %s (%s) is not a go_library rule.",
+            target, args.library.get());
+      }
+
+      if (args.packageName.isPresent()) {
+        throw new HumanReadableException(
+            "Test target %s specifies both library and package_name - only one should be specified",
+            target);
+      }
+
+      if (!libraryArg.get().tests.get().contains(target)) {
+        throw new HumanReadableException(
+            "go internal test target %s is not listed in `tests` of library %s",
+            target, args.library.get());
+      }
+
+      return libraryArg.get().packageName.transform(MorePaths.TO_PATH).or(
+          goBuckConfig.getDefaultPackageName(args.library.get()));
+    } else if (args.packageName.isPresent()) {
+      return Paths.get(args.packageName.get());
+    } else {
+      Path packageName = goBuckConfig.getDefaultPackageName(target);
+      return packageName.resolveSibling(packageName.getFileName() + "_test");
+    }
+
+  }
+
+  private GoCompile createTestLibrary(
+      BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      Arg args,
+      GoPlatform platform) throws NoSuchBuildTargetException {
+    Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
+    GoCompile testLibrary;
+    if (args.library.isPresent()) {
+      // We should have already type-checked the arguments in the base rule.
+      final GoLibraryDescription.Arg libraryArg = resolver.requireMetadata(
+          args.library.get(), GoLibraryDescription.Arg.class).get();
+
+      final BuildRuleParams originalParams = params;
+      BuildRuleParams testTargetParams = params.copyWithDeps(
+          new Supplier<ImmutableSortedSet<BuildRule>>() {
+            @Override
+            public ImmutableSortedSet<BuildRule> get() {
+              return ImmutableSortedSet.<BuildRule>naturalOrder()
+                  .addAll(originalParams.getDeclaredDeps().get())
+                  .addAll(resolver.getAllRules(libraryArg.deps.get()))
+                  .build();
+            }
+          },
+          new Supplier<ImmutableSortedSet<BuildRule>>() {
+            @Override
+            public ImmutableSortedSet<BuildRule> get() {
+              final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+              return ImmutableSortedSet.<BuildRule>naturalOrder()
+                  .addAll(originalParams.getExtraDeps().get())
+                  // Make sure to include dynamically generated sources as deps.
+                  .addAll(sourcePathResolver.filterBuildRuleInputs(libraryArg.srcs))
+                  .build();
+            }
+          });
+
+      testLibrary = GoDescriptors.createGoCompileRule(
+          testTargetParams,
+          resolver,
+          goBuckConfig,
+          packageName,
+          ImmutableSet.<SourcePath>builder()
+              .addAll(libraryArg.srcs)
+              .addAll(args.srcs)
+              .build(),
+          ImmutableList.<String>builder()
+              .addAll(libraryArg.compilerFlags.get())
+              .addAll(args.compilerFlags.get())
+              .build(),
+          platform);
+    } else {
+      testLibrary = GoDescriptors.createGoCompileRule(
+          params,
+          resolver,
+          goBuckConfig,
+          packageName,
+          args.srcs,
+          args.compilerFlags.get(),
+          platform);
+    }
+
+    return testLibrary;
   }
 
   @SuppressFieldNotInitialized
