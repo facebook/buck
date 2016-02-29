@@ -78,14 +78,14 @@ public class ParserConfigTest {
     BuckConfig config = FakeBuckConfig.builder()
         .setSections(
             "[project]",
-            "parsing_threads = 5",
+            "parsing_threads = 3",
             "parallel_parsing = true")
         .build();
 
     ParserConfig parserConfig = new ParserConfig(config);
 
     assertTrue(parserConfig.getEnableParallelParsing());
-    assertEquals(5, parserConfig.getNumParsingThreads());
+    assertEquals(3, parserConfig.getNumParsingThreads());
   }
 
   @Test
@@ -93,7 +93,7 @@ public class ParserConfigTest {
     BuckConfig config = FakeBuckConfig.builder()
         .setSections(
             "[project]",
-            "parsing_threads = 5",
+            "parsing_threads = 3",
             "parallel_parsing = false")
         .build();
 
