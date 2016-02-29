@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class GoCompileStep extends ShellStep {
 
@@ -33,6 +34,7 @@ public class GoCompileStep extends ShellStep {
   private final Path packageName;
   private final ImmutableList<String> flags;
   private final ImmutableList<Path> srcs;
+  private final ImmutableMap<Path, Path> importPathMap;
   private final ImmutableList<Path> includeDirectories;
   private final Optional<Path> asmHeaderPath;
   private final boolean allowExternalReferences;
@@ -46,6 +48,7 @@ public class GoCompileStep extends ShellStep {
       ImmutableList<String> flags,
       Path packageName,
       ImmutableList<Path> srcs,
+      ImmutableMap<Path, Path> importPathMap,
       ImmutableList<Path> includeDirectories,
       Optional<Path> asmHeaderPath,
       boolean allowExternalReferences,
@@ -57,6 +60,7 @@ public class GoCompileStep extends ShellStep {
     this.flags = flags;
     this.packageName = packageName;
     this.srcs = srcs;
+    this.importPathMap = importPathMap;
     this.includeDirectories = includeDirectories;
     this.asmHeaderPath = asmHeaderPath;
     this.allowExternalReferences = allowExternalReferences;
@@ -77,6 +81,10 @@ public class GoCompileStep extends ShellStep {
 
     for (Path dir : includeDirectories) {
       commandBuilder.add("-I", dir.toString());
+    }
+
+    for (Map.Entry<Path, Path> importMap : importPathMap.entrySet()) {
+      commandBuilder.add("-importmap", importMap.getKey() + "=" + importMap.getValue());
     }
 
     if (asmHeaderPath.isPresent()) {

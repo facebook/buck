@@ -99,6 +99,17 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void vendoredLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "vendored_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.containsString("Hello, world!"));
+  }
+
+  @Test
   public void libraryWithPrefix() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "library_with_prefix", tmp);

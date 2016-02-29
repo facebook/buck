@@ -1,0 +1,12 @@
+go_library(
+  name = 'messenger',
+  srcs = [
+    'messenger.go',
+  ],
+  deps = [
+    '//vendor/printer:printer',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
