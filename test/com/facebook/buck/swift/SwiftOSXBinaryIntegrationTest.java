@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,6 +40,7 @@ public class SwiftOSXBinaryIntegrationTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Ignore("t10220393")
   @Test
   public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {
     assumeThat(
@@ -59,6 +61,7 @@ public class SwiftOSXBinaryIntegrationTest {
         equalTo("Hello, \uD83C\uDF0E!\n"));
   }
 
+  @Ignore("t10220393")
   @Test
   public void changingSourceOfSwiftLibraryDepRelinksBinary() throws IOException {
     assumeThat(
