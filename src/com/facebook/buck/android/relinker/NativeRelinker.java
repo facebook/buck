@@ -17,6 +17,8 @@ package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.Flavor;
@@ -27,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -218,18 +221,30 @@ public class NativeRelinker {
       }
     };
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
+    BuildRuleParams relinkerParams = buildRuleParams
+        .withFlavor(ImmutableFlavor.of("xdso-dce"))
+        .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
+        .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
+        .appendExtraDeps(relinkerDeps);
+    BuildRule baseRule = resolver.getRule(source).orNull();
+    ImmutableList<Arg> linkerArgs = ImmutableList.<Arg>of();
+    Linker linker = null;
+    if (baseRule != null && baseRule instanceof CxxLink) {
+      CxxLink link = (CxxLink) baseRule;
+      linkerArgs = link.getArgs();
+      linker = link.getLinker();
+    }
+
     return new RelinkerRule(
-        buildRuleParams
-            .withFlavor(ImmutableFlavor.of("xdso-dce"))
-            .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
-            .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
-            .appendExtraDeps(relinkerDeps),
+        relinkerParams,
         resolver,
+        ImmutableList.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
         cpuType,
-        source,
         nativePlatforms.get(cpuType),
-        resolver.getRule(source).orNull(),
-        ImmutableList.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded))
+        source,
+        linker != null,
+        linker,
+        linkerArgs
     );
   }
 

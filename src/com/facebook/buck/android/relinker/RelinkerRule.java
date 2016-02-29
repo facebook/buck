@@ -18,13 +18,13 @@ package com.facebook.buck.android.relinker;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -41,6 +41,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
@@ -61,27 +62,41 @@ class RelinkerRule extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final NdkCxxPlatform cxxPlatform;
   @AddToRuleKey
-  @Nullable
-  private final BuildRule baseRule;
+  private final Boolean isRelinkable;
+  @AddToRuleKey
+  private final ImmutableList<Arg> linkerArgs;
+  @AddToRuleKey
+  private final Linker linker;
+
   private final BuildRuleParams buildRuleParams;
 
   public RelinkerRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      ImmutableList<SourcePath> symbolsNeededPaths,
       NdkCxxPlatforms.TargetCpuType cpuType,
-      SourcePath baseLibSourcePath,
       NdkCxxPlatform cxxPlatform,
-      BuildRule baseRule,
-      ImmutableList<SourcePath> symbolsNeededPaths) {
-    // TODO(cjhopman): does this need to add the dependencies from the base rule?
-    // TODO(cjhopman): does a top down build work right?
-    super(buildRuleParams, resolver);
+      SourcePath baseLibSourcePath,
+      boolean isRelinkable,
+      Linker linker,
+      ImmutableList<Arg> linkerArgs) {
+    super(withDepsFromArgs(buildRuleParams, resolver, linkerArgs), resolver);
     this.cpuType = cpuType;
     this.cxxPlatform = cxxPlatform;
-    this.baseRule = baseRule;
+    this.isRelinkable = isRelinkable;
+    this.linkerArgs = linkerArgs;
     this.buildRuleParams = buildRuleParams;
     this.symbolsNeededPaths = symbolsNeededPaths;
     this.baseLibSourcePath = baseLibSourcePath;
+    this.linker = linker;
+  }
+
+  private static BuildRuleParams withDepsFromArgs(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      ImmutableList<Arg> args) {
+    return params.appendExtraDeps(
+        Iterables.concat(Iterables.transform(args, Arg.getDepsFunction(resolver))));
   }
 
   private static String getVersionScript(Set<String> needed, Set<String> provided) {
@@ -127,10 +142,9 @@ class RelinkerRule extends AbstractBuildRule {
       BuildableContext buildableContext) {
 
     final ImmutableList.Builder<Step> relinkerSteps = ImmutableList.builder();
-    if (isRelinkable()) {
-      CxxLink cxxLink = (CxxLink) baseRule;
+    if (isRelinkable) {
       ImmutableList<Arg> args = ImmutableList.<Arg>builder()
-          .addAll(cxxLink.getArgs())
+          .addAll(linkerArgs)
           .add(
               new StringArg(
                   "-Wl,--version-script=" + getRelativeVersionFilePath().toString()))
@@ -140,7 +154,7 @@ class RelinkerRule extends AbstractBuildRule {
           new CxxLink(
               buildRuleParams.withFlavor(ImmutableFlavor.of("cxx-link")),
               getResolver(),
-              cxxLink.getLinker(),
+              linker,
               getLibFilePath(),
               args).getBuildSteps(context, buildableContext));
       buildableContext.recordArtifact(getRelativeVersionFilePath());
@@ -154,7 +168,7 @@ class RelinkerRule extends AbstractBuildRule {
           @Override
           public int execute(ExecutionContext context) throws IOException, InterruptedException {
             ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
-            if (!isRelinkable()) {
+            if (!isRelinkable) {
               getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
             } else {
               writeVersionScript(symbolsNeeded);
@@ -249,9 +263,5 @@ class RelinkerRule extends AbstractBuildRule {
           Files.readAllLines(getResolver().getAbsolutePath(source), Charsets.UTF_8));
     }
     return symbolsNeeded.build();
-  }
-
-  private boolean isRelinkable() {
-    return baseRule instanceof CxxLink;
   }
 }
