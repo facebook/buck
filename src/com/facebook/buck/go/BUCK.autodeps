@@ -1,10 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 3a3336d6597f5042e969ac04ec3e5c117a86a5c2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9a6f98c1f2557c1fd57cd77c0b8881487a407223 #@#
 {
   "go" : [
     "//src/com/facebook/buck/cli:config",
     "//src/com/facebook/buck/cxx:platform",
-    "//src/com/facebook/buck/graph:graph",
+    "//src/com/facebook/buck/cxx:rules",
+    "//src/com/facebook/buck/go:immutables",
     "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/log:api",
     "//src/com/facebook/buck/model:model",
     "//src/com/facebook/buck/parser:rule_pattern",
     "//src/com/facebook/buck/rules:build_rule",
@@ -17,8 +19,17 @@
     "//src/com/facebook/buck/util:escaper",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/environment:platform",
     "//third-party/java/guava:guava",
-    "//third-party/java/infer-annotations:infer-annotations",
-    "//third-party/java/jsr:jsr305"
+    "//third-party/java/infer-annotations:infer-annotations"
+  ],
+  "immutables" : [
+    "//src/com/facebook/buck/cxx:platform",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor"
   ]
 }

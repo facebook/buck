@@ -175,6 +175,7 @@ java_immutables_library(
     'InstallableApk.java',
     'Manifest.java',
     'NoopBuildRule.java',
+    'NoopBuildRuleWithTests.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
     'RuleDepsCache.java',
