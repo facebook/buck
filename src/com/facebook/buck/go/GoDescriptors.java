@@ -105,6 +105,7 @@ abstract class GoDescriptors {
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
+      List<String> assemblerFlags,
       GoPlatform platform) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -134,6 +135,10 @@ abstract class GoDescriptors {
         ImmutableSet.copyOf(srcs),
         ImmutableList.copyOf(compilerFlags),
         goBuckConfig.getCompiler(),
+        ImmutableList.copyOf(assemblerFlags),
+        goBuckConfig.getAssemblerIncludeDirs(),
+        goBuckConfig.getAssembler(),
+        goBuckConfig.getPacker(),
         platform);
   }
 
@@ -143,6 +148,7 @@ abstract class GoDescriptors {
       GoBuckConfig goBuckConfig,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
+      List<String> assemblerFlags,
       List<String> linkerFlags,
       GoPlatform platform) throws NoSuchBuildTargetException {
     BuildTarget libraryTarget =
@@ -156,6 +162,7 @@ abstract class GoDescriptors {
         Paths.get("main"),
         srcs,
         compilerFlags,
+        assemblerFlags,
         platform);
     resolver.addToIndex(library);
 
@@ -224,6 +231,7 @@ abstract class GoDescriptors {
         ImmutableSet.<SourcePath>of(new PathSourcePath(
                 projectFilesystem,
                 MorePaths.relativize(projectFilesystem.getRootPath(), extractTestMainGenerator()))),
+        ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         goBuckConfig.getDefaultPlatform());

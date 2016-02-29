@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,48 +18,36 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
-public class GoCompileStep extends ShellStep {
+public class GoAssembleStep extends ShellStep {
 
   private final ImmutableMap<String, String> environment;
-  private final ImmutableList<String> compilerCommandPrefix;
-  private final Path packageName;
+  private final ImmutableList<String> asmCommandPrefix;
   private final ImmutableList<String> flags;
-  private final ImmutableList<Path> srcs;
+  private final Path src;
   private final ImmutableList<Path> includeDirectories;
-  private final Optional<Path> asmHeaderPath;
-  private final boolean allowExternalReferences;
   private final GoPlatform platform;
   private final Path output;
 
-  public GoCompileStep(
+  public GoAssembleStep(
       Path workingDirectory,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> compilerCommandPrefix,
+      ImmutableList<String> asmCommandPrefix,
       ImmutableList<String> flags,
-      Path packageName,
-      ImmutableList<Path> srcs,
+      Path src,
       ImmutableList<Path> includeDirectories,
-      Optional<Path> asmHeaderPath,
-      boolean allowExternalReferences,
       GoPlatform platform,
       Path output) {
     super(workingDirectory);
     this.environment = environment;
-    this.compilerCommandPrefix = compilerCommandPrefix;
+    this.asmCommandPrefix = asmCommandPrefix;
     this.flags = flags;
-    this.packageName = packageName;
-    this.srcs = srcs;
+    this.src = src;
     this.includeDirectories = includeDirectories;
-    this.asmHeaderPath = asmHeaderPath;
-    this.allowExternalReferences = allowExternalReferences;
     this.platform = platform;
     this.output = output;
   }
@@ -67,29 +55,18 @@ public class GoCompileStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
-        .addAll(compilerCommandPrefix)
-        .add("-p", packageName.toString())
-        .add("-pack")
+        .addAll(asmCommandPrefix)
         .add("-trimpath", workingDirectory.toString())
-        .add("-nolocalimports")
         .addAll(flags)
+        .add("-D", "GOOS_" + platform.getGoOs())
+        .add("-D", "GOARCH_" + platform.getGoArch())
         .add("-o", output.toString());
 
     for (Path dir : includeDirectories) {
       commandBuilder.add("-I", dir.toString());
     }
 
-    if (asmHeaderPath.isPresent()) {
-      commandBuilder.add("-asmhdr", asmHeaderPath.get().toString());
-    }
-
-    if (!allowExternalReferences) {
-      // -complete means the package does not use any non Go code, so external functions
-      // (e.g. Cgo, asm) aren't allowed.
-      commandBuilder.add("-complete");
-    }
-
-    commandBuilder.addAll(FluentIterable.from(srcs).transform(Functions.toStringFunction()));
+    commandBuilder.add(src.toString());
 
     return commandBuilder.build();
   }
@@ -105,6 +82,6 @@ public class GoCompileStep extends ShellStep {
 
   @Override
   public String getShortName() {
-    return "go compile";
+    return "go asm";
   }
 }

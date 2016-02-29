@@ -75,6 +75,7 @@ public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>
         goBuckConfig,
         args.srcs,
         args.compilerFlags.get(),
+        args.assemblerFlags.get(),
         args.linkerFlags.get(),
         platform);
   }
@@ -83,6 +84,7 @@ public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
     public Optional<List<String>> compilerFlags;
+    public Optional<List<String>> assemblerFlags;
     public Optional<List<String>> linkerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

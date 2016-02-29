@@ -227,6 +227,7 @@ public class GoTestDescription implements
         goBuckConfig,
         ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
         args.compilerFlags.get(),
+        args.assemblerFlags.get(),
         args.linkerFlags.get(),
         platform);
     resolver.addToIndex(testMain);
@@ -317,6 +318,10 @@ public class GoTestDescription implements
               .addAll(libraryArg.compilerFlags.get())
               .addAll(args.compilerFlags.get())
               .build(),
+          ImmutableList.<String>builder()
+              .addAll(libraryArg.assemblerFlags.get())
+              .addAll(args.assemblerFlags.get())
+              .build(),
           platform);
     } else {
       testLibrary = GoDescriptors.createGoCompileRule(
@@ -326,6 +331,7 @@ public class GoTestDescription implements
           packageName,
           args.srcs,
           args.compilerFlags.get(),
+          args.assemblerFlags.get(),
           platform);
     }
 
@@ -338,6 +344,7 @@ public class GoTestDescription implements
     public Optional<BuildTarget> library;
     public Optional<String> packageName;
     public Optional<List<String>> compilerFlags;
+    public Optional<List<String>> assemblerFlags;
     public Optional<List<String>> linkerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSet<String>> contacts;

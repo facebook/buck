@@ -22,7 +22,9 @@ Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
   {param name : 'srcs' /}
   {param desc}
   <p>
-    The set of Go source files to be compiled by this rule.
+    The set of source files to be compiled by this rule. .go files will be compiled with the Go
+    compiler, .s files will be compiled with the assembler, and everything else is assumed to be
+    files that may be <code>#include</code>d by the assembler.
   </p>
   {/param}
 {/call}
@@ -47,6 +49,17 @@ Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
   {param default : '[]' /}
   {param desc}
   The set of additional compiler flags to pass to <code>go tool compile</code>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .assembler_flags_arg}
+{call buck.arg}
+  {param name : 'assembler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional assembler flags to pass to <code>go tool asm</code>.
   {/param}
 {/call}
 {/template}

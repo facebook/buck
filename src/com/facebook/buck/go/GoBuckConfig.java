@@ -134,6 +134,12 @@ public class GoBuckConfig {
   Tool getCompiler() {
     return getGoTool("compiler", "compile", "compiler_flags");
   }
+  Tool getAssembler() {
+    return getGoTool("assembler", "asm", "asm_flags");
+  }
+  Tool getPacker() {
+    return getGoTool("packer", "pack", "");
+  }
   Tool getLinker() {
     return getGoTool("linker", "link", "linker_flags");
   }
@@ -147,6 +153,11 @@ public class GoBuckConfig {
     return delegate.getTool(SECTION, "test_main_gen", resolver);
   }
 
+  ImmutableList<Path> getAssemblerIncludeDirs() {
+    // TODO(mikekap): Allow customizing this via config.
+    return ImmutableList.of(goRootSupplier.get().resolve("pkg").resolve("include"));
+  }
+
   private Tool getGoTool(
       final String configName, final String toolName, final String extraFlagsConfigKey) {
     Optional<Path> toolPath = delegate.getPath(SECTION, configName);
@@ -155,8 +166,10 @@ public class GoBuckConfig {
     }
 
     CommandTool.Builder builder = new CommandTool.Builder(new HashedFileTool(toolPath.get()));
-    for (String arg : getFlags(extraFlagsConfigKey)) {
-      builder.addArg(arg);
+    if (!extraFlagsConfigKey.isEmpty()) {
+      for (String arg : getFlags(extraFlagsConfigKey)) {
+        builder.addArg(arg);
+      }
     }
     builder.addEnvironment("GOROOT", goRootSupplier.get().toString());
     return builder.build();
@@ -178,7 +191,7 @@ public class GoBuckConfig {
     // would create a recursion.
     Optional<Path> goRoot = delegate.getPath(SECTION, "root");
     if (goRoot.isPresent()) {
-      return goRoot.get().resolve("bin/go");
+      return goRoot.get().resolve("bin").resolve("go");
     }
 
     return new ExecutableFinder().getExecutable(DEFAULT_GO_TOOL, delegate.getEnvironment());
