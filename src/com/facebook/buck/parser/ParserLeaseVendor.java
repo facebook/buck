@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -85,14 +86,28 @@ class ParserLeaseVendor<P extends AutoCloseable> implements AutoCloseable {
         new AsyncFunction<P, T>() {
           @Override
           public ListenableFuture<T> apply(P input) throws Exception {
-            try {
-              return withParser.apply(input);
-            } finally {
-              returnParser(cell, input);
-            }
+            return withParser.apply(input);
           }
         },
         executorService);
+
+    Futures.addCallback(
+        futureWork,
+        new FutureCallback<T>() {
+          @Override
+          public void onSuccess (T result){
+            onCompletion();
+          }
+
+          @Override
+          public void onFailure (Throwable t){
+            onCompletion();
+          }
+
+          private void onCompletion() {
+            returnParser(cell, Futures.getUnchecked(obtainedParser));
+          }
+        });
     return futureWork;
   }
 

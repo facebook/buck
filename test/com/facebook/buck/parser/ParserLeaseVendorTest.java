@@ -172,6 +172,102 @@ public class ParserLeaseVendorTest {
     }
   }
 
+  @Test
+  public void cancelScheduledWork() throws Exception {
+    Cell cell = EasyMock.createMock(Cell.class);
+    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
+        Executors.newFixedThreadPool(4));
+
+    try (ParserLeaseVendor<ParserForTest> vendor =
+             new ParserLeaseVendor<>(
+                 /* maxParsers */ 2,
+                 new Function<Cell, ParserForTest>() {
+                   @Override
+                   public ParserForTest apply(Cell input) {
+                     return new ParserForTest();
+                   }
+                 })) {
+
+      ImmutableSet.Builder<ListenableFuture<?>> futures = ImmutableSet.builder();
+      for (int i = 0; i < 5; ++i) {
+        futures.add(
+            vendor.leaseParser(
+                cell,
+                new AsyncFunction<ParserForTest, Void>() {
+                  @Override
+                  public ListenableFuture<Void> apply(ParserForTest input) throws Exception {
+                    Preconditions.checkNotNull(input);
+                    Thread.sleep(50);
+                    return Futures.immediateFuture(null);
+                  }
+                },
+                executorService));
+      }
+      for (ListenableFuture<?> future : futures.build()) {
+        future.cancel(true);
+      }
+
+      // Make sure it's still possible to do work.
+      vendor.leaseParser(
+          cell,
+          new AsyncFunction<ParserForTest, Void>() {
+            @Override
+            public ListenableFuture<Void> apply(ParserForTest input) throws Exception {
+              return Futures.immediateFuture(null);
+            }
+          },
+          executorService).get();
+    } finally {
+      executorService.shutdown();
+    }
+  }
+
+  @Test
+  public void workThatThrows() throws Exception {
+    Cell cell = EasyMock.createMock(Cell.class);
+    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
+        Executors.newFixedThreadPool(4));
+
+    try (ParserLeaseVendor<ParserForTest> vendor =
+             new ParserLeaseVendor<>(
+                 /* maxParsers */ 2,
+                 new Function<Cell, ParserForTest>() {
+                   @Override
+                   public ParserForTest apply(Cell input) {
+                     return new ParserForTest();
+                   }
+                 })) {
+
+      ImmutableSet.Builder<ListenableFuture<?>> futures = ImmutableSet.builder();
+      for (int i = 0; i < 5; ++i) {
+        futures.add(
+            vendor.leaseParser(
+                cell,
+                new AsyncFunction<ParserForTest, Void>() {
+                  @Override
+                  public ListenableFuture<Void> apply(ParserForTest input) throws Exception {
+                    throw new Exception("haha!");
+                  }
+                },
+                executorService));
+      }
+      Futures.successfulAsList(futures.build()).get();
+
+      // Make sure it's still possible to do work.
+      vendor.leaseParser(
+          cell,
+          new AsyncFunction<ParserForTest, Void>() {
+            @Override
+            public ListenableFuture<Void> apply(ParserForTest input) throws Exception {
+              return Futures.immediateFuture(null);
+            }
+          },
+          executorService).get();
+    } finally {
+      executorService.shutdown();
+    }
+  }
+
   private static class ParserForTest implements AutoCloseable {
     private AtomicInteger sleepCallCount = new AtomicInteger(0);
 
