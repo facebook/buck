@@ -117,10 +117,13 @@ public class CxxPreprocessAndCompileStep implements Step {
    *
    * @return Half-configured ProcessBuilder
    */
-  private ProcessBuilder makeSubprocessBuilder() {
+  private ProcessBuilder makeSubprocessBuilder(ExecutionContext context) {
     ProcessBuilder builder = new ProcessBuilder();
     builder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
+
+    builder.environment().clear();
+    builder.environment().putAll(context.getEnvironment());
 
     // A forced compilation directory is set in the constructor.  Now, we can't actually force
     // the compiler to embed this into the binary -- all we can do set the PWD environment to
@@ -212,13 +215,13 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(preprocessorCommand.isPresent());
     Preconditions.checkState(compilerCommand.isPresent());
     ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
-    ProcessBuilder preprocessBuilder = makeSubprocessBuilder();
+    ProcessBuilder preprocessBuilder = makeSubprocessBuilder(context);
     preprocessBuilder.command(makePreprocessCommand(context.getAnsi().isAnsiTerminal()));
     preprocessBuilder.environment().putAll(preprocessorCommand.get().getEnvironment());
     preprocessBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
 
     ByteArrayOutputStream compileError = new ByteArrayOutputStream();
-    ProcessBuilder compileBuilder = makeSubprocessBuilder();
+    ProcessBuilder compileBuilder = makeSubprocessBuilder(context);
     compileBuilder.command(
         makeCompileCommand(
             "-",
@@ -325,7 +328,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private int executeOther(ExecutionContext context) throws Exception {
-    ProcessBuilder builder = makeSubprocessBuilder();
+    ProcessBuilder builder = makeSubprocessBuilder(context);
 
     builder.command(getCommand(context.getAnsi().isAnsiTerminal()));
     // If we're preprocessing, file output goes through stdout, so we can postprocess it.
