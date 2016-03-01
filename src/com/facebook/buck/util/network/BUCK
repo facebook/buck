@@ -10,6 +10,7 @@ java_library(
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/event/listener/noos:listener',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:environment',

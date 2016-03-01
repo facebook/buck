@@ -21,6 +21,7 @@ java_library(
   autodeps = True,
   visibility = [
     '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/event/listener/noos:listener',
     '//src/com/facebook/buck/jvm/java:support',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
