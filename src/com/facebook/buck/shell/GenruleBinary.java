@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -49,7 +50,10 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(getBuildTarget(), getPathToOutput()))
+        .addArg(
+            new SourcePathArg(
+                getResolver(),
+                new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())))
         .build();
   }
 

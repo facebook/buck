@@ -25,6 +25,7 @@ java_test(
     '//src/com/facebook/buck/rules/coercer:types',
     '//src/com/facebook/buck/rules/keys:keys',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:command_tool',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/shell:rules',

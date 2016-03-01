@@ -158,7 +158,7 @@ public class GoBuckConfig {
     for (String arg : getFlags(extraFlagsConfigKey)) {
       builder.addArg(arg);
     }
-    builder.addEnvironment("GOROOT", goRootSupplier.get().toString());
+    builder.addEnv("GOROOT", goRootSupplier.get().toString());
     return builder.build();
   }
 

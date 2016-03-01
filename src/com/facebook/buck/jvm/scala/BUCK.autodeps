@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 228718acbce9260c4536cf0c1ccce08d91202b9a #@#
+#@# GENERATED FILE: DO NOT MODIFY 8c645f15523e1cac3ee9f356be83725d316ceeff #@#
 {
   "rules" : [
     "//src/com/facebook/buck/cli:config",
@@ -11,6 +11,7 @@
     "//src/com/facebook/buck/model:model",
     "//src/com/facebook/buck/parser:rule_pattern",
     "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/rules:command_tool",
     "//src/com/facebook/buck/shell:steps",
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/util:exceptions",

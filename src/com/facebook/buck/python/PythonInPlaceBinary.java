@@ -28,6 +28,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -151,7 +152,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder(python)
-        .addArg(new BuildTargetSourcePath(getBuildTarget()))
+        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
         .addDep(linkTree)
         .addInputs(components.getModules().values())
         .addInputs(components.getResources().values())

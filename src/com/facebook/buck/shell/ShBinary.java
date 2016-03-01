@@ -31,6 +31,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
@@ -130,7 +131,8 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(getBuildTarget(), output))
+        .addArg(
+            new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget(), output)))
         .addInput(main)
         .addInputs(resources)
         .build();

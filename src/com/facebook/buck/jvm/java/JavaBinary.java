@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -196,7 +197,7 @@ public class JavaBinary extends AbstractBuildRule
     return new CommandTool.Builder()
         .addArg("java")
         .addArg("-jar")
-        .addArg(new BuildTargetSourcePath(getBuildTarget()))
+        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
         .build();
   }
 }

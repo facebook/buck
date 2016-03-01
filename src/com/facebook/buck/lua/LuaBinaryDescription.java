@@ -270,7 +270,7 @@ public class LuaBinaryDescription implements
                 .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))
                 .build()));
     return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(target))
+        .addArg(new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)))
         .build();
   }
 
@@ -310,7 +310,7 @@ public class LuaBinaryDescription implements
                 "EXT_SUFFIX",
                 Escaper.escapeAsPythonString(cxxPlatform.getSharedLibraryExtension()))));
     return new CommandTool.Builder(lua)
-        .addArg(new BuildTargetSourcePath(target))
+        .addArg(new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)))
         .build();
   }
 

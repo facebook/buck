@@ -165,6 +165,11 @@ public class DarwinLinker implements Linker {
       return pathResolver.filterBuildRuleInputs(symbolFiles);
     }
 
+    @Override
+    public ImmutableCollection<SourcePath> getInputs() {
+      return ImmutableList.copyOf(symbolFiles);
+    }
+
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
     // `-u` command line option.
     @Override

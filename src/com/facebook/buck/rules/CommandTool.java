@@ -16,14 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * A {@link Tool} based on a list of arguments formed by {@link SourcePath}s.
@@ -90,7 +91,7 @@ public class CommandTool implements Tool {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
     }
     for (Arg arg : args) {
-      command.add(arg.format(resolver));
+      arg.appendToCommandLine(command);
     }
     return command.build();
   }
@@ -101,9 +102,7 @@ public class CommandTool implements Tool {
     if (baseTool.isPresent()) {
       env.putAll(baseTool.get().getEnvironment(resolver));
     }
-    for (ImmutableMap.Entry<String, Arg> var : environment.entrySet()) {
-      env.put(var.getKey(), var.getValue().format(resolver));
-    }
+    env.putAll(Arg.stringify(environment));
     return env.build();
   }
 
@@ -139,38 +138,35 @@ public class CommandTool implements Tool {
     }
 
     /**
-     * Add a {@link String} argument represented by the format string to the command.  The
-     * {@code inputs} will be resolved and used to format the format string when this argument is
-     * added to the command.
-     *
-     * @param format the format string representing the argument.
-     * @param inputs {@link SourcePath}s to use when formatting {@code format}.
+     * Adds an argument.
      */
-    public Builder addArg(String format, SourcePath... inputs) {
-      args.add(new Arg(format, ImmutableList.copyOf(inputs)));
+    public Builder addArg(Arg arg) {
+      args.add(arg);
       return this;
     }
 
-    /**
-     * Add a `SourcePath` as an argument to the command.
-     */
-    public Builder addArg(SourcePath input) {
-      return addArg("%s", input);
+    public Builder addArg(String arg) {
+      return addArg(new StringArg(arg));
     }
 
     /**
-     * Adds an environment variable key=value.
+     * Adds an environment variable key=arg.
      */
-    public Builder addEnvironment(String key, String format, SourcePath... inputs) {
-      environment.put(key, new Arg(format, ImmutableList.copyOf(inputs)));
+    public Builder addEnv(String key, Arg arg) {
+      environment.put(key, arg);
       return this;
     }
 
+    public Builder addEnv(String key, String val) {
+      return addEnv(key, new StringArg(val));
+    }
+
     /**
-     * Add a `SourcePath` as an environment variable value.
+     * Adds a map of env vars.
      */
-    public Builder addEnvironment(String key, SourcePath value) {
-      return addEnvironment(key, "%s", value);
+    public Builder addAllEnv(Map<String, ? extends Arg> env) {
+      environment.putAll(env);
+      return this;
     }
 
     /**
@@ -204,38 +200,6 @@ public class CommandTool implements Tool {
           environment.build(),
           extraInputs.build(),
           extraDeps.build());
-    }
-
-  }
-
-  // Represents a single "argument" in the command list.
-  private static class Arg implements RuleKeyAppendable {
-
-    private final String format;
-    private final ImmutableList<SourcePath> inputs;
-
-    public Arg(String format, ImmutableList<SourcePath> inputs) {
-      this.format = format;
-      this.inputs = inputs;
-    }
-
-    public String format(SourcePathResolver resolver) {
-      return String.format(
-          format,
-          (Object[]) FluentIterable.from(ImmutableList.copyOf(inputs))
-              .transform(resolver.getAbsolutePathFunction())
-              .toArray(Path.class));
-    }
-
-    public ImmutableList<SourcePath> getInputs() {
-      return inputs;
-    }
-
-    @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder
-          .setReflectively("format", format)
-          .setReflectively("inputs", inputs);
     }
 
   }

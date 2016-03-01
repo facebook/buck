@@ -19,7 +19,9 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroHandler;
@@ -27,6 +29,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -71,6 +74,21 @@ public class MacroArg extends Arg {
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
+  }
+
+  @Override
+  public ImmutableCollection<SourcePath> getInputs() {
+    ImmutableCollection<BuildRule> rules;
+    try {
+      rules = expander.extractBuildTimeDeps(target, cellNames, resolver, unexpanded);
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+    ImmutableList.Builder<SourcePath> paths = ImmutableList.builder();
+    for (BuildRule rule : rules) {
+      paths.add(new BuildTargetSourcePath(rule.getBuildTarget()));
+    }
+    return paths.build();
   }
 
   @Override

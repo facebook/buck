@@ -30,6 +30,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -90,7 +91,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder(pathToPexExecuter)
-        .addArg(new BuildTargetSourcePath(getBuildTarget(), getBinPath()))
+        .addArg(
+            new SourcePathArg(
+                getResolver(),
+                new BuildTargetSourcePath(getBuildTarget(), getBinPath())))
         .build();
   }
 

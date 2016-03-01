@@ -57,6 +57,19 @@ public abstract class FrameworkPathArg extends Arg {
   }
 
   @Override
+  public ImmutableCollection<SourcePath> getInputs() {
+    return FluentIterable.from(frameworkPaths)
+        .transformAndConcat(
+            new Function<FrameworkPath, Iterable<SourcePath>>() {
+              @Override
+              public Iterable<SourcePath> apply(FrameworkPath input) {
+                return input.getSourcePath().asSet();
+              }
+            })
+        .toList();
+  }
+
+  @Override
   public String toString() {
     return frameworkPaths.toString();
   }

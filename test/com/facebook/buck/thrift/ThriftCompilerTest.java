@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -52,7 +53,7 @@ import java.nio.file.Paths;
 public class ThriftCompilerTest {
 
   private static final Tool DEFAULT_COMPILER =
-      new CommandTool.Builder().addArg(new FakeSourcePath("thrift")).build();
+      new CommandTool.Builder().addArg(new StringArg("thrift")).build();
   private static final ImmutableList<String> DEFAULT_FLAGS = ImmutableList.of("--allow-64-bits");
   private static final Path DEFAULT_OUTPUT_DIR = Paths.get("output-dir");
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.thrift");
@@ -107,7 +108,7 @@ public class ThriftCompilerTest {
         new ThriftCompiler(
             params,
             resolver,
-            new CommandTool.Builder().addArg(new FakeSourcePath("different")).build(),
+            new CommandTool.Builder().addArg(new StringArg("different")).build(),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_DIR,
             DEFAULT_INPUT,

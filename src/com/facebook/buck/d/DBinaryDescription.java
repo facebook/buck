@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -87,8 +88,10 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
     // Create a Tool for the executable.
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
     executableBuilder.addArg(
-        new BuildTargetSourcePath(
-            nativeLinkable.getBuildTarget()));
+        new SourcePathArg(
+            new SourcePathResolver(buildRuleResolver),
+            new BuildTargetSourcePath(
+                nativeLinkable.getBuildTarget())));
 
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -55,28 +56,11 @@ public class CommandToolTest {
     // Test command and inputs for just passing the source path.
     CommandTool tool =
         new CommandTool.Builder()
-            .addArg(path)
+            .addArg(new SourcePathArg(pathResolver, path))
             .build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(
-            Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
-    assertThat(
-        tool.getDeps(pathResolver),
-        Matchers.contains(rule));
-    assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
-
-    // Test command and inputs when using the path in a format.
-    tool =
-        new CommandTool.Builder()
-            .addArg("prefix:%s", path)
-            .build();
-    assertThat(
-        tool.getCommandPrefix(pathResolver),
-        Matchers.contains(
-            "prefix:" +
             Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
     assertThat(
         tool.getDeps(pathResolver),
@@ -99,20 +83,11 @@ public class CommandToolTest {
     // Test command and inputs for just passing the source path.
     CommandTool tool =
         new CommandTool.Builder()
-            .addArg(path)
+            .addArg(new SourcePathArg(pathResolver, path))
             .build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(pathResolver.getAbsolutePath(path).toString()));
-
-    // Test command and inputs when using the path in a format.
-    tool =
-        new CommandTool.Builder()
-            .addArg("prefix:%s", path)
-            .build();
-    assertThat(
-        tool.getCommandPrefix(pathResolver),
-        Matchers.contains("prefix:" + pathResolver.getAbsolutePath(path)));
   }
 
   @Test
@@ -146,7 +121,7 @@ public class CommandToolTest {
     CommandTool tool =
         new CommandTool.Builder()
             .addArg("runit")
-            .addEnvironment("PATH", path)
+            .addEnv("PATH", new SourcePathArg(pathResolver, path))
             .build();
 
     assertThat(tool.getEnvironment(pathResolver), Matchers.hasEntry(
@@ -162,7 +137,7 @@ public class CommandToolTest {
     SourcePath path = new FakeSourcePath("input");
     CommandTool tool =
         new CommandTool.Builder()
-            .addArg("exec %s", path)
+            .addArg(new SourcePathArg(pathResolver, path))
             .build();
 
     FileHashCache hashCache = FakeFileHashCache.createFromStrings(

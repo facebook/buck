@@ -719,7 +719,8 @@ public class CxxDescriptionEnhancer {
     resolver.addToIndex(cxxLink);
 
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.
-    executableBuilder.addArg(new BuildTargetSourcePath(cxxLink.getBuildTarget()));
+    executableBuilder.addArg(
+        new SourcePathArg(sourcePathResolver, new BuildTargetSourcePath(cxxLink.getBuildTarget())));
 
     return new CxxLinkAndCompileRules(
         cxxLink,

@@ -40,6 +40,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,7 +85,7 @@ public class ThriftJavaEnhancerTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         resolver,
         new CommandTool.Builder()
-            .addArg(new FakeSourcePath("compiler"))
+            .addArg(new StringArg("compiler"))
             .build(),
         ImmutableList.<String>of(),
         Paths.get("output"),

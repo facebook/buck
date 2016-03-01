@@ -18,6 +18,7 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
@@ -58,6 +59,11 @@ public class SanitizedArg extends Arg {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableCollection<SourcePath> getInputs() {
     return ImmutableList.of();
   }
 

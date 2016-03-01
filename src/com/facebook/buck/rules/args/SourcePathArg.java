@@ -49,6 +49,11 @@ public class SourcePathArg extends Arg {
   }
 
   @Override
+  public ImmutableCollection<SourcePath> getInputs() {
+    return ImmutableList.of(path);
+  }
+
+  @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder.setReflectively("arg", path);
   }

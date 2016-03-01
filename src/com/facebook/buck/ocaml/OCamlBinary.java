@@ -27,6 +27,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,8 @@ public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule, H
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(binary.getBuildTarget()))
+        .addArg(
+            new SourcePathArg(getResolver(), new BuildTargetSourcePath(binary.getBuildTarget())))
         .build();
   }
 

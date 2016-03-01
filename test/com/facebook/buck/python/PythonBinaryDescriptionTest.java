@@ -46,6 +46,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -335,7 +336,10 @@ public class PythonBinaryDescriptionTest {
           @Override
           public Tool getPexTool(BuildRuleResolver resolver) {
             return new CommandTool.Builder()
-                .addArg(new BuildTargetSourcePath(pexTool.getBuildTarget()))
+                .addArg(
+                    new SourcePathArg(
+                        new SourcePathResolver(resolver),
+                        new BuildTargetSourcePath(pexTool.getBuildTarget())))
                 .build();
           }
         };

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -244,7 +245,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     return new CommandTool.Builder()
         .addArg("java")
         .addArg("-jar")
-        .addArg(new BuildTargetSourcePath(getBuildTarget()))
+        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
         .build();
   }
 

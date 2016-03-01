@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 894c1c2e6b0ae1a69666f7084e576085abc18b7a #@#
+#@# GENERATED FILE: DO NOT MODIFY 2d5c2073982c1c26d15b819c7f5df1081b687ecb #@#
 {
   "autodeps" : [
     "//src/com/facebook/buck/android:rules",
@@ -55,7 +55,9 @@
     "//src/com/facebook/buck/model:model",
     "//src/com/facebook/buck/parser:rule_pattern",
     "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/rules:command_tool",
     "//src/com/facebook/buck/rules:rules",
+    "//src/com/facebook/buck/rules/args:args",
     "//src/com/facebook/buck/rules/keys:keys",
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/step/fs:fs",

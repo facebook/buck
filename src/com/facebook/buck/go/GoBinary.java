@@ -30,6 +30,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
@@ -77,7 +78,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(getBuildTarget()))
+        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
         .build();
   }
 
@@ -98,7 +99,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
       cxxLinkerCommand = cxxLinker.get().getCommandPrefix(getResolver());
     }
     environment.putAll(linker.getEnvironment(getResolver()));
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
@@ -106,7 +107,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
             cxxLinkerCommand,
             linker.getCommandPrefix(getResolver()),
             linkerFlags,
-            ImmutableList.<Path>of(linkTree.getRoot()),
+            ImmutableList.of(linkTree.getRoot()),
             platform,
             mainObject.getPathToOutput(),
             GoLinkStep.LinkMode.EXECUTABLE,

@@ -38,6 +38,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -179,8 +180,14 @@ public class ExecutableMacroExpanderTest {
           @Override
           public Tool getExecutableCommand() {
             return new CommandTool.Builder()
-                .addArg(new BuildTargetSourcePath(dep1.getBuildTarget()))
-                .addArg(new BuildTargetSourcePath(dep2.getBuildTarget()))
+                .addArg(
+                    new SourcePathArg(
+                        getResolver(),
+                        new BuildTargetSourcePath(dep1.getBuildTarget())))
+                .addArg(
+                    new SourcePathArg(
+                        getResolver(),
+                        new BuildTargetSourcePath(dep2.getBuildTarget())))
                 .build();
           }
         });

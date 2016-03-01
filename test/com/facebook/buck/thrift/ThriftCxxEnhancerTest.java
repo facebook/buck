@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.base.Optional;
@@ -107,7 +108,7 @@ public class ThriftCxxEnhancerTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         resolver,
         new CommandTool.Builder()
-            .addArg(new FakeSourcePath("compiler"))
+            .addArg(new StringArg("compiler"))
             .build(),
         ImmutableList.<String>of(),
         Paths.get("output"),
