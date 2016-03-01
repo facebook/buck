@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -317,10 +318,12 @@ public class AppleLibraryIntegrationTest {
     MoreAsserts.assertContentsEqual(
         workspace.getPath(
             "first/buck-out/gen/Libraries/TestLibrary/" +
-                "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"),
+                "TestLibrary#compile-" + sanitize("TestClass.m.o") + ",iphonesimulator-x86_64/" +
+                "TestClass.m.o"),
         workspace.getPath(
             "second/buck-out/gen/Libraries/TestLibrary/" +
-                "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"));
+                "TestLibrary#compile-" + sanitize("TestClass.m.o") + ",iphonesimulator-x86_64/" +
+                "TestClass.m.o"));
     MoreAsserts.assertContentsEqual(
         workspace.getPath(
             "first/buck-out/gen/Libraries/TestLibrary/" +

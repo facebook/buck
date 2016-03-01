@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -121,7 +122,9 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("c++")
             .add("-c")
             .add("-o")
-            .add("buck-out/gen/binary_with_dep#compile-foo.cpp.o,default/foo.cpp.o")
+            .add(
+                "buck-out/gen/binary_with_dep#compile-" + sanitize("foo.cpp.o") +
+                    ",default/foo.cpp.o")
             .add(rootPath.resolve(Paths.get("foo.cpp")).toRealPath().toString())
             .build());
   }
@@ -172,7 +175,9 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("c++")
             .add("-c")
             .add("-o")
-            .add("buck-out/gen/library_with_header#compile-pic-bar.cpp.o,default/bar.cpp.o")
+            .add(
+                "buck-out/gen/library_with_header#compile-pic-" + sanitize("bar.cpp.o") +
+                    ",default/bar.cpp.o")
             .add(rootPath.resolve(Paths.get("bar.cpp")).toRealPath().toString())
             .build());
   }
@@ -219,7 +224,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("c++")
             .add("-c")
             .add("-o")
-            .add("buck-out/gen/test#compile-pic-test.cpp.o,default/test.cpp.o")
+            .add("buck-out/gen/test#compile-pic-" + sanitize("test.cpp.o") + ",default/test.cpp.o")
             .add(rootPath.resolve(Paths.get("test.cpp")).toRealPath().toString())
             .build());
   }

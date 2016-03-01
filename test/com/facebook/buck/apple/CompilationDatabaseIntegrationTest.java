@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
@@ -78,7 +79,7 @@ public class CompilationDatabaseIntegrationTest {
         "//Libraries/EXExample:EXExample#compilation-database,iphonesimulator-x86_64");
     assertEquals(
         Paths.get("buck-out/gen/Libraries/EXExample/" +
-            "__EXExample#compilation-database,iphonesimulator-x86_64.json"),
+                "__EXExample#compilation-database,iphonesimulator-x86_64.json"),
         tmp.getRoot().relativize(compilationDatabase));
 
     // Parse the compilation_database.json file.
@@ -103,24 +104,25 @@ public class CompilationDatabaseIntegrationTest {
     // Verify the entries in the compilation database.
     assertFlags(
         "Libraries/EXExample/EXExample/EXExampleModel.m",
-        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
-            "EXExampleModel.m.o,iphonesimulator-x86_64/EXExample/EXExampleModel.m.o",
+        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-" +
+            sanitize("EXExample/EXExampleModel.m.o") + ",iphonesimulator-x86_64/" +
+            "EXExample/EXExampleModel.m.o",
         /* isLibrary */ true,
         fileToEntry,
         frameworks,
         includes);
     assertFlags(
         "Libraries/EXExample/EXExample/EXUser.mm",
-        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
-            "EXUser.mm.o,iphonesimulator-x86_64/EXExample/EXUser.mm.o",
+        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-" +
+            sanitize("EXExample/EXUser.mm.o") + ",iphonesimulator-x86_64/EXExample/EXUser.mm.o",
         /* isLibrary */ true,
         fileToEntry,
         frameworks,
         includes);
     assertFlags(
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.m",
-        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
-            "Categories_NSString_Palindrome.m.o,iphonesimulator-x86_64/" +
+        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-" +
+            sanitize("EXExample/Categories/NSString+Palindrome.m.o") + ",iphonesimulator-x86_64/" +
             "EXExample/Categories/NSString+Palindrome.m.o",
         /* isLibrary */ true,
         fileToEntry,
@@ -135,7 +137,7 @@ public class CompilationDatabaseIntegrationTest {
         "//Apps/Weather:Weather#iphonesimulator-x86_64,compilation-database");
     assertEquals(
         Paths.get("buck-out/gen/Apps/Weather/" +
-            "__Weather#compilation-database,iphonesimulator-x86_64.json"),
+                "__Weather#compilation-database,iphonesimulator-x86_64.json"),
         tmp.getRoot().relativize(compilationDatabase));
 
     // Parse the compilation_database.json file.
@@ -160,16 +162,18 @@ public class CompilationDatabaseIntegrationTest {
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",
-        "buck-out/gen/Apps/Weather/Weather#compile-Weather_" +
-            "EXViewController.m.o,iphonesimulator-x86_64/Weather/EXViewController.m.o",
+        "buck-out/gen/Apps/Weather/Weather#compile-" +
+            sanitize("Weather/EXViewController.m.o") +
+            ",iphonesimulator-x86_64/Weather/EXViewController.m.o",
         /* isLibrary */ false,
         fileToEntry,
         frameworks,
         includes);
     assertFlags(
         "Apps/Weather/Weather/main.m",
-        "buck-out/gen/Apps/Weather/Weather#compile-Weather_" +
-            "main.m.o,iphonesimulator-x86_64/Weather/main.m.o",
+        "buck-out/gen/Apps/Weather/Weather#compile-" +
+            sanitize("Weather/main.m.o") +
+            ",iphonesimulator-x86_64/Weather/main.m.o",
         /* isLibrary */ false,
         fileToEntry,
         frameworks,

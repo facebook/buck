@@ -58,7 +58,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 @RunWith(Enclosed.class)
@@ -345,7 +347,7 @@ public class CxxSourceRuleFactoryTest {
     }
 
     @Test
-    public void duplicateRuleFetchedFromResolver() {
+    public void duplicateRuleFetchedFromResolverShouldCreateTheSameTarget() {
       BuildRuleResolver buildRuleResolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -384,6 +386,98 @@ public class CxxSourceRuleFactoryTest {
       assertEquals(objcCompile.getBuildTarget(), objcCompile2.getBuildTarget());
     }
   }
+
+  @RunWith(Parameterized.class)
+  public static class RulesForDifferentSourcesShouldCreateSeaparateTargets {
+    Map<String, String[]> testExampleSourceSets = new HashMap<String, String[]>() {
+      {
+        put(
+            "Preprocessable type",
+            new String[]{"1/2/3.c", "1_2/3.c", "1/2_3.c", "1_2_3.c"});
+        put(
+            "Compilable type",
+            new String[]{"1/2/3.i", "1_2/3.i", "1/2_3.i", "1_2_3.i"});
+        put(
+            "Same file in different directories",
+            new String[]{"one-path/file1.c", "another-path/file1.c"});
+        put(
+            "Various ASCII chars",
+            new String[]{"special/chars.c", "special_chars.c", "special chars.c",
+                "special!chars.c", "special(chars.c", "special,chars.c"});
+        put(
+            "Non-ASCII chars",
+            new String[]{"special/chars.c",
+                "specialאchars.c", "special漢chars.c", "specialДchars.c"});
+        put(
+            "One-char names",
+            new String[]{"_.c", ",.c", "漢.c"});
+      }};
+
+    @Parameterized.Parameters(name = "{0}, {1}")
+    public static Collection<Object[]> data() {
+      return Arrays.asList(
+          new Object[][]{
+              {"Preprocessable type", CxxPreprocessMode.COMBINED},
+              {"Preprocessable type", CxxPreprocessMode.PIPED},
+              {"Preprocessable type", CxxPreprocessMode.SEPARATE},
+              {"Compilable type", CxxPreprocessMode.COMBINED},
+              {"Compilable type", CxxPreprocessMode.PIPED},
+              {"Compilable type", CxxPreprocessMode.SEPARATE},
+              {"Same file in different directories", CxxPreprocessMode.COMBINED},
+              {"Various ASCII chars", CxxPreprocessMode.COMBINED},
+              {"Non-ASCII chars", CxxPreprocessMode.COMBINED},
+              {"One-char names", CxxPreprocessMode.COMBINED},
+          });
+    }
+
+    @Parameterized.Parameter(0)
+    public String testExampleSourceSet;
+
+    @Parameterized.Parameter(1)
+    public CxxPreprocessMode strategy;
+
+    @Test
+    public void test() {
+      BuildRuleResolver buildRuleResolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+      BuildTarget target = BuildTargetFactory.newInstance("//:target");
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+      ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+
+      BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
+      CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(buildRuleResolver)
+          .setPathResolver(new SourcePathResolver(buildRuleResolver))
+          .setCxxPlatform(platform)
+          .setPicType(CxxSourceRuleFactory.PicType.PDC)
+          .build();
+
+      String[] sourceNames = testExampleSourceSets.get(testExampleSourceSet);
+      Map<String, CxxSource> sources = new HashMap<>();
+      for (String sourceName : sourceNames) {
+        sources.put(
+            sourceName,
+            CxxSource.of(
+                CxxSource.Type.OBJC,
+                new FakeSourcePath(sourceName),
+                ImmutableList.<String>of())
+        );
+      }
+
+      ImmutableMap<CxxPreprocessAndCompile, SourcePath> rules =
+          cxxSourceRuleFactory.requirePreprocessAndCompileRules(
+              strategy,
+              ImmutableMap.copyOf(sources));
+
+      assertEquals(
+          String.format("Expected %d rules, but found only %d", sourceNames.length, rules.size()),
+          sourceNames.length, rules.size());
+    }
+  }
+
 
   @RunWith(Parameterized.class)
   public static class CorrectFlagsAreUsedForCompileAndPreprocessBuildRules {

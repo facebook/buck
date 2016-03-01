@@ -182,7 +182,10 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   public BuildTarget createPreprocessBuildTarget(String name, CxxSource.Type type) {
-    String outputName = Flavor.replaceInvalidCharacters(getPreprocessOutputName(type, name));
+    String outputName = CxxFlavorSanitizer.sanitize(
+        getPreprocessOutputName(
+            type,
+            name));
     return BuildTarget
         .builder(getParams().getBuildTarget())
         .addFlavors(getCxxPlatform().getFlavor())
@@ -285,7 +288,7 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   public BuildTarget createCompileBuildTarget(String name) {
-    String outputName = Flavor.replaceInvalidCharacters(getCompileOutputName(name));
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileOutputName(name));
     return BuildTarget
         .builder(getParams().getBuildTarget())
         .addFlavors(getCxxPlatform().getFlavor())
@@ -299,7 +302,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   public BuildTarget createInferCaptureBuildTarget(String name) {
-    String outputName = Flavor.replaceInvalidCharacters(getCompileOutputName(name));
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileOutputName(name));
     return BuildTarget
         .builder(getParams().getBuildTarget())
         .addAllFlavors(getParams().getBuildTarget().getFlavors())
@@ -415,10 +418,15 @@ abstract class AbstractCxxSourceRuleFactory {
     Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
+      if (!existingRule.get().getInput().equals(source.getPath())) {
+        throw new RuntimeException(
+            String.format("Hash collision for %s; a build rule would have been ignored.", name));
+      }
       return existingRule.get();
     }
 
     return createCompileBuildRule(name, source);
+
   }
 
   private CxxToolFlags computePreprocessorFlags(
@@ -550,12 +558,15 @@ abstract class AbstractCxxSourceRuleFactory {
     Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
         target, CxxPreprocessAndCompile.class);
     if (existingRule.isPresent()) {
+      if (!existingRule.get().getInput().equals(source.getPath())) {
+        throw new RuntimeException(
+            String.format("Hash collision for %s; a build rule would have been ignored.", name));
+      }
       return existingRule.get();
     }
 
     return createPreprocessAndCompileBuildRule(name, source, strategy);
   }
-
 
   public ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
