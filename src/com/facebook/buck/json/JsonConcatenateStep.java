@@ -29,7 +29,7 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-class JsonConcatenateStep implements Step {
+public class JsonConcatenateStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final String shortName;

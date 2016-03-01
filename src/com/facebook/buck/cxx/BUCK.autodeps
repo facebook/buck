@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 74724b46b5d89eb3056bec3bbd5093f828c79f1a #@#
+#@# GENERATED FILE: DO NOT MODIFY adb5de01c9f1d6ba2ca097409839bf381d1780ab #@#
 {
   "framework_path_arg" : [
     "//src/com/facebook/buck/rules:build_rule",
@@ -35,6 +35,7 @@
     "//src/com/facebook/buck/graph:graph",
     "//src/com/facebook/buck/io:io",
     "//src/com/facebook/buck/json:rules",
+    "//src/com/facebook/buck/json:steps",
     "//src/com/facebook/buck/jvm/java:support",
     "//src/com/facebook/buck/log:api",
     "//src/com/facebook/buck/model:model",

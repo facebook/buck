@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
-import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -28,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -37,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 
@@ -69,7 +66,7 @@ public final class CxxInferEnhancer {
   }
 
 
-  public static JsonConcatenate requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
+  public static CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -77,8 +74,8 @@ public final class CxxInferEnhancer {
       CxxConstructorArg args,
       CxxInferTools inferTools,
       CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
-    Optional<JsonConcatenate> existingRule = resolver.getRuleOptionalWithType(
-        params.getBuildTarget(), JsonConcatenate.class);
+    Optional<CxxInferComputeReport> existingRule = resolver.getRuleOptionalWithType(
+        params.getBuildTarget(), CxxInferComputeReport.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
@@ -323,29 +320,13 @@ public final class CxxInferEnhancer {
             captureAnalyzeRules));
   }
 
-  private static JsonConcatenate createInferReportRule(
+  private static CxxInferComputeReport createInferReportRule(
       BuildRuleParams buildRuleParams,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
       CxxInferAnalyze analysisToReport) {
-    ImmutableSortedSet<Path> reportsToMergeFromDeps =
-        FluentIterable.from(analysisToReport.getTransitiveAnalyzeRules())
-            .transform(
-                new Function<CxxInferAnalyze, Path>() {
-                  @Override
-                  public Path apply(CxxInferAnalyze input) {
-                    return input.getPathToOutput();
-                  }
-                }).toSortedSet(Ordering.natural());
-
-    ImmutableSortedSet<Path> reportsToMerge = ImmutableSortedSet.<Path>naturalOrder()
-        .addAll(reportsToMergeFromDeps)
-        .add(analysisToReport.getPathToOutput())
-        .build();
-
-
     return buildRuleResolver.addToIndex(
-        new JsonConcatenate(
+        new CxxInferComputeReport(
             buildRuleParams.copyWithDeps(
                 Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -354,10 +335,6 @@ public final class CxxInferEnhancer {
                         .build()),
                 buildRuleParams.getExtraDeps()),
             sourcePathResolver,
-            reportsToMerge,
-            "merge-reports",
-            "Merge Infer Reports",
-            "infer",
-            "report.json"));
+            analysisToReport));
   }
 }

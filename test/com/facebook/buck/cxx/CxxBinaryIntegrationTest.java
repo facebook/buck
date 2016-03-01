@@ -371,6 +371,43 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testInferCxxBinaryWithDepsEmitsAllTheDependenciesResultsDirs() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
+    String inputBuildTargetName =
+        inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
+
+    // Build the given target and check that it succeeds.
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    assertTrue(
+        workspace.getPath("buck-out/gen/foo/infer-binary_with_chain_deps#infer/infer-deps.txt")
+            .toFile().exists());
+
+    String loggedDeps = workspace.getFileContents(
+        "buck-out/gen/foo/infer-binary_with_chain_deps#infer/infer-deps.txt");
+
+    String expectedOutput =
+        "//foo:binary_with_chain_deps#infer-analyze\t" +
+            "buck-out/gen/foo/infer-analysis-binary_with_chain_deps#infer-analyze\n" +
+        "//foo:chain_dep_one#default,infer-analyze\t" +
+            "buck-out/gen/foo/infer-analysis-chain_dep_one#default,infer-analyze\n" +
+        "//foo:chain_dep_one#default,infer-capture-chain_dep_one.c.o\t" +
+            "buck-out/gen/foo/infer-out-chain_dep_one#default,infer-capture-chain_dep_one.c.o\n" +
+        "//foo:chain_dep_two#default,infer-analyze\t" +
+            "buck-out/gen/foo/infer-analysis-chain_dep_two#default,infer-analyze\n" +
+        "//foo:chain_dep_two#default,infer-capture-chain_dep_two.c.o\t" +
+            "buck-out/gen/foo/infer-out-chain_dep_two#default,infer-capture-chain_dep_two.c.o\n";
+
+    assertEquals(expectedOutput, loggedDeps);
+  }
+
+  @Test
   public void testInferCxxBinarySkipsBlacklistedFiles() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
