@@ -12,5 +12,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jetty" level="project" />
+    <orderEntry type="library" name="jackson-mrbean-2.5.5" level="project" />
+    <orderEntry type="library" name="buck-lib" level="project" />
+    <orderEntry type="module" module-name="buck" />
   </component>
 </module>
