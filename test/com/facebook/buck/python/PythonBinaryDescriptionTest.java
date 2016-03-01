@@ -463,7 +463,7 @@ public class PythonBinaryDescriptionTest {
 
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
-            .setHeaderOnly(true)
+            .setProvided(true)
             .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
 
     CxxPythonExtensionBuilder extensionBuilder =

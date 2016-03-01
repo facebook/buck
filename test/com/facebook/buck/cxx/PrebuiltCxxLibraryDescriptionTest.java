@@ -886,4 +886,21 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Matchers.<Map.Entry<String, SourcePath>>empty());
   }
 
+  @Test
+  public void headerOnlyLibPrefersAnyLinking() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setHeaderOnly(true);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build()),
+            new BuildTargetNodeToBuildRuleTransformer());
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
+    assertThat(
+        rule.getPreferredLinkage(CXX_PLATFORM),
+        Matchers.equalTo(NativeLinkable.Linkage.ANY));
+  }
+
 }

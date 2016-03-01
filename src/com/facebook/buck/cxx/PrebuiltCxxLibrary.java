@@ -311,6 +311,9 @@ public class PrebuiltCxxLibrary
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    if (headerOnly) {
+      return Linkage.ANY;
+    }
     if (forceStatic) {
       return Linkage.STATIC;
     }
