@@ -29,7 +29,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
-public interface Description<T extends AbstractDescriptionArg> {
+public interface Description<T> {
 
   /**
    * @return The {@link BuildRuleType} being described.

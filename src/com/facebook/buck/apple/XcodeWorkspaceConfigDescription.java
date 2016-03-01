@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -83,7 +82,7 @@ public class XcodeWorkspaceConfigDescription
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg {
     public Optional<BuildTarget> srcTarget;
     public Optional<ImmutableSortedSet<BuildTarget>> extraTests;
     public Optional<ImmutableSortedSet<BuildTarget>> extraTargets;

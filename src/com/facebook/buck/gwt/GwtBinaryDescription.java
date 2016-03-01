@@ -21,7 +21,6 @@ import com.facebook.buck.gwt.GwtBinary.Style;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -124,7 +123,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg {
     public Optional<ImmutableSortedSet<String>> modules;
     public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;

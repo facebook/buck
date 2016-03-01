@@ -28,7 +28,6 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -257,7 +256,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasAppleBundleFields, HasTests {
+  public static class Arg implements HasAppleBundleFields, HasTests {
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
     public SourcePath infoPlist;

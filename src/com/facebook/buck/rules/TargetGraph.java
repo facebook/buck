@@ -40,20 +40,20 @@ import javax.annotation.Nullable;
 public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
 
   public static final TargetGraph EMPTY = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<? extends AbstractDescriptionArg>>(),
+      new MutableDirectedGraph<TargetNode<?>>(),
       ImmutableMap.<BuildTarget, TargetNode<?>>of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
 
   public TargetGraph(
-      MutableDirectedGraph<TargetNode<? extends AbstractDescriptionArg>> graph,
-      ImmutableMap<BuildTarget, TargetNode<? extends AbstractDescriptionArg>> index) {
+      MutableDirectedGraph<TargetNode<?>> graph,
+      ImmutableMap<BuildTarget, TargetNode<?>> index) {
     super(graph);
     this.targetsToNodes = index;
   }
 
   @Nullable
-  public TargetNode<? extends AbstractDescriptionArg> getInternal(BuildTarget target) {
+  public TargetNode<?> getInternal(BuildTarget target) {
     TargetNode<?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
@@ -65,7 +65,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
     return node;
   }
 
-  public Optional<TargetNode<? extends AbstractDescriptionArg>> getOptional(BuildTarget target) {
+  public Optional<TargetNode<?>> getOptional(BuildTarget target) {
     return Optional.<TargetNode<?>>fromNullable(getInternal(target));
   }
 
@@ -77,7 +77,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
     return node;
   }
 
-  public Function<BuildTarget, TargetNode<? extends AbstractDescriptionArg>> get() {
+  public Function<BuildTarget, TargetNode<?>> get() {
     return new Function<BuildTarget, TargetNode<?>>() {
       @Override
       public TargetNode<?> apply(BuildTarget input) {
@@ -105,15 +105,15 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
    * @return A subgraph of the current graph.
    */
   public TargetGraph getSubgraph(
-      Iterable<? extends TargetNode<? extends AbstractDescriptionArg>> roots) {
-    final MutableDirectedGraph<TargetNode<? extends AbstractDescriptionArg>> subgraph =
+      Iterable<? extends TargetNode<?>> roots) {
+    final MutableDirectedGraph<TargetNode<?>> subgraph =
         new MutableDirectedGraph<>();
-    final Map<BuildTarget, TargetNode<? extends AbstractDescriptionArg>> index = new HashMap<>();
+    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
-    new AbstractBreadthFirstTraversal<TargetNode<? extends AbstractDescriptionArg>>(roots) {
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
       @Override
-      public ImmutableSet<TargetNode<? extends AbstractDescriptionArg>>visit(
-          TargetNode<? extends AbstractDescriptionArg> node) {
+      public ImmutableSet<TargetNode<?>>visit(
+          TargetNode<?> node) {
         subgraph.addNode(node);
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {
@@ -124,9 +124,9 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
               unflavoredBuildTarget,
               targetsToNodes.get(unflavoredBuildTarget));
         }
-        ImmutableSet<TargetNode<? extends AbstractDescriptionArg>> dependencies =
+        ImmutableSet<TargetNode<?>> dependencies =
             ImmutableSet.copyOf(getAll(node.getDeps()));
-        for (TargetNode<? extends AbstractDescriptionArg> dependency : dependencies) {
+        for (TargetNode<?> dependency : dependencies) {
           subgraph.addEdge(node, dependency);
         }
         return dependencies;

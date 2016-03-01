@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
@@ -54,7 +53,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   }
 
   @Override
-  public abstract ImmutableSet<TargetNode<? extends AbstractDescriptionArg>> getTargets();
+  public abstract ImmutableSet<TargetNode<?>> getTargets();
 
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the

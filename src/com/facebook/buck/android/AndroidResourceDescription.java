@@ -20,7 +20,6 @@ import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -205,7 +204,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg {
     public Optional<SourcePath> res;
     public Optional<SourcePath> assets;
     public Optional<Boolean> hasWhitelistedStrings;

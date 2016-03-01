@@ -22,7 +22,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -134,7 +133,7 @@ public class GoLibraryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
+  public static class Arg implements HasTests {
     public ImmutableSet<SourcePath> srcs;
     public Optional<List<String>> compilerFlags;
     public Optional<String> packageName;

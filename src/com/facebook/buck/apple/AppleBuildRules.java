@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
@@ -319,7 +318,7 @@ public final class AppleBuildRules {
     };
   }
 
-  public static <T extends AbstractDescriptionArg> ImmutableSet<AppleAssetCatalogDescription.Arg>
+  public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg>
   collectRecursiveAssetCatalogs(
       TargetGraph targetGraph,
       Iterable<TargetNode<T>> targetNodes) {

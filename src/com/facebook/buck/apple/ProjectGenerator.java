@@ -65,7 +65,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -2142,7 +2141,7 @@ public class ProjectGenerator {
     return isSourceUnderTest;
   }
 
-  private <T extends AbstractDescriptionArg> ImmutableSet<String>
+  private <T> ImmutableSet<String>
   collectRecursiveLibrarySearchPaths(
       Iterable<TargetNode<T>> targetNodes) {
     return new ImmutableSet.Builder<String>()
@@ -2161,7 +2160,7 @@ public class ProjectGenerator {
                 })).build();
   }
 
-  private <T extends AbstractDescriptionArg> ImmutableSet<String>
+  private <T> ImmutableSet<String>
   collectRecursiveFrameworkSearchPaths(
       Iterable<TargetNode<T>> targetNodes) {
     return new ImmutableSet.Builder<String>()
@@ -2180,7 +2179,7 @@ public class ProjectGenerator {
                 })).build();
   }
 
-  private <T extends AbstractDescriptionArg> Iterable<FrameworkPath>
+  private <T> Iterable<FrameworkPath>
   collectRecursiveFrameworkDependencies(
       Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
@@ -2209,7 +2208,7 @@ public class ProjectGenerator {
             });
   }
 
-  private <T extends AbstractDescriptionArg> Iterable<String>
+  private <T> Iterable<String>
   collectRecursiveSearchPathsForFrameworkPaths(
       Iterable<TargetNode<T>> targetNodes,
       final Function<
@@ -2237,7 +2236,7 @@ public class ProjectGenerator {
             });
   }
 
-  private <T extends AbstractDescriptionArg> Iterable<String>
+  private <T> Iterable<String>
   collectRecursiveExportedPreprocessorFlags(
       Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
@@ -2262,7 +2261,7 @@ public class ProjectGenerator {
             });
   }
 
-  private <T extends AbstractDescriptionArg> Iterable<String> collectRecursiveExportedLinkerFlags(
+  private <T> Iterable<String> collectRecursiveExportedLinkerFlags(
       Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
@@ -2287,7 +2286,7 @@ public class ProjectGenerator {
             });
   }
 
-  private <T extends AbstractDescriptionArg> ImmutableSet<PBXFileReference>
+  private <T> ImmutableSet<PBXFileReference>
   collectRecursiveLibraryDependencies(
       Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable

@@ -75,10 +75,11 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def named(name, visibility=[], build_env=None):",
+        "def named(name, licenses=[], visibility=[], build_env=None):",
         "  add_rule({",
         "    'buck.type' : 'named',",
         "    'name' : name,",
+        "    'licenses' : licenses,",
         "    'visibility' : visibility,",
         "  }, build_env)",
         "",
@@ -97,11 +98,12 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
             "@provide_for_build",
-            "def noname(foobar, visibility=[], build_env=None):",
+            "def noname(foobar, licenses=[], visibility=[], build_env=None):",
             "  add_rule({",
             "    'buck.type' : 'noname',",
             "    'name' : 'lollerskates',",
             "    'foobar' : foobar,",
+            "    'licenses' : licenses,",
             "    'visibility' : visibility,",
             "  }, build_env)",
             "",
@@ -146,7 +148,8 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def either(name, dog, fake, cat=None, egg=None, visibility=[], build_env=None):",
+        "def either(name, dog, fake, cat=None, egg=None, " +
+            "licenses=[], visibility=[], build_env=None):",
         "  add_rule({",
         "    'buck.type' : 'either',",
         "    'name' : name,",
@@ -154,6 +157,7 @@ public class BuckPyFunctionTest {
         "    'fake' : fake,",
         "    'cat' : cat,",
         "    'egg' : egg,",
+        "    'licenses' : licenses,",
         "    'visibility' : visibility,",
         "  }, build_env)",
         "",
@@ -185,12 +189,14 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def case(name, all_this_was_fields, some_field, visibility=[], build_env=None):",
+        "def case(name, all_this_was_fields, some_field, " +
+            "licenses=[], visibility=[], build_env=None):",
         "  add_rule({",
         "    'buck.type' : 'case',",
         "    'name' : name,",
         "    'hintedField' : all_this_was_fields,",
         "    'someField' : some_field,",
+        "    'licenses' : licenses,",
         "    'visibility' : visibility,",
         "  }, build_env)",
         "",

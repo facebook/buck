@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -83,7 +84,7 @@ public class BuckPyFunction {
     for (ParamInfo<?> param : Iterables.concat(mandatory, optional)) {
       appendPythonParameter(builder, param);
     }
-    builder.append("visibility=[], build_env=None):\n")
+    builder.append("licenses=[], visibility=[], build_env=None):\n")
 
         // Define the rule.
         .append("  add_rule({\n")
@@ -105,6 +106,7 @@ public class BuckPyFunction {
           .append(",\n");
     }
 
+    builder.append("    'licenses' : licenses,\n");
     builder.append("    'visibility' : visibility,\n");
     builder.append("  }, build_env)\n\n");
 
@@ -138,6 +140,14 @@ public class BuckPyFunction {
     if ("name".equals(param.getName())) {
       if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");
+      }
+      return true;
+    }
+
+    if ("licenses".equals(param.getName())) {
+      if (!param.getResultClass().isAssignableFrom(Set.class)) {
+        throw new HumanReadableException(
+            "'licenses' parameter must be something that implements java.util.Set");
       }
       return true;
     }

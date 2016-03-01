@@ -17,14 +17,13 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 @SuppressFieldNotInitialized
-public class ReactNativeLibraryArgs extends AbstractDescriptionArg {
+public class ReactNativeLibraryArgs {
   public Optional<ImmutableSortedSet<SourcePath>> srcs;
   public SourcePath entryPath;
   public String bundleName;

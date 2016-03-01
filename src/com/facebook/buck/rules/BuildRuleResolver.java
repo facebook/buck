@@ -63,7 +63,7 @@ public class BuildRuleResolver {
               }
 
               @SuppressWarnings("unchecked")
-              private <T extends AbstractDescriptionArg, U> Optional<U> load(
+              private <T, U> Optional<U> load(
                   TargetNode<T> node,
                   Class<U> metadataClass) throws NoSuchBuildTargetException {
                 T arg = node.getConstructorArg();

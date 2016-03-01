@@ -93,7 +93,7 @@ public class KnownBuildRuleTypesTest {
 
   private static class TestDescription implements Description<TestDescription.Arg> {
 
-    static class Arg extends AbstractDescriptionArg {
+    static class Arg {
     };
 
     public static final BuildRuleType TYPE = BuildRuleType.of("known_rule_test");

@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -141,7 +140,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
+  public static class Arg implements HasTests {
     public String out;
     public Optional<String> bash;
     public Optional<String> cmd;

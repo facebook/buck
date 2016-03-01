@@ -17,7 +17,6 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -59,7 +58,7 @@ public class PrebuiltPythonLibraryDescription
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg {
     public SourcePath binarySrc;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
