@@ -18,12 +18,10 @@ package com.facebook.buck.intellij.plugin.ws.buckevents.consumers;
 
 import com.intellij.util.messages.Topic;
 
-import java.math.BigInteger;
-
 public interface RulesParsingProgressUpdateConsumer {
   Topic<RulesParsingProgressUpdateConsumer> BUCK_PARSE_PROGRESS_UPDATE = Topic.create(
       "buck.parse-rule.update",
       RulesParsingProgressUpdateConsumer.class
   );
-  void consumeParseRuleProgressUpdate(String build, BigInteger timestamp, float progressValue);
+  void consumeParseRuleProgressUpdate(long timestamp, double progressValue);
 }

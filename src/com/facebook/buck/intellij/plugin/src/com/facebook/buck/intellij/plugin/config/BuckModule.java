@@ -21,8 +21,6 @@ import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandler;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsQueue;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
@@ -38,11 +36,7 @@ public final class BuckModule implements ProjectComponent {
     public BuckModule(final Project project) {
         mProject = project;
 
-        BuckEventsConsumerFactory consumerFactory = new BuckEventsConsumerFactory(project);
-        BuckEventsQueue queue = new BuckEventsQueue(consumerFactory);
-
         mEventHandler = new BuckEventHandler(
-            queue,
             new Runnable() {
                 @Override
                 public void run() {

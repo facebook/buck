@@ -16,30 +16,16 @@
 
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 public class BuckEventHandler implements BuckEventHandlerInterface {
-
-    private BuckEventsQueueInterface mQueue;
 
     private Runnable mOnConnectHandler = null;
     private Runnable mOnDisconnectHandler = null;
 
-
-    private Gson mGson;
-
-    public BuckEventHandler(BuckEventsQueueInterface queue,
-                            Runnable onConnectHandler,
+    public BuckEventHandler(Runnable onConnectHandler,
                             Runnable onDisconnectHandler) {
 
         mOnConnectHandler = onConnectHandler;
         mOnDisconnectHandler = onDisconnectHandler;
-        mQueue = queue;
-
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(BuckEventInterface.class, new BuckEventAdapter());
-        mGson = builder.create();
     }
 
     @Override
@@ -58,10 +44,5 @@ public class BuckEventHandler implements BuckEventHandlerInterface {
 
     @Override
     public void onMessage(final String message) {
-        final BuckEventInterface be = mGson.fromJson(message, BuckEventInterface.class);
-
-        if (!be.getEventType().equals(BuckEventUnknown.eventType)) {
-            mQueue.add(be);
-        }
     }
 }

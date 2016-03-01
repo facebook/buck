@@ -29,15 +29,14 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgre
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingProgressUpdateConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 
 import javax.swing.tree.DefaultTreeModel;
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -63,12 +62,12 @@ public class BuckEventsConsumer implements
     private DefaultTreeModel mTreeModel;
     private Map<String, List<String>> mErrors =
             Collections.synchronizedMap(new HashMap<String, List<String>>());
-    private float mBuildProgressValue = 0;
-    private float mParseProgressValue = 0;
-    private BigInteger mMainBuildStartTimestamp = BigInteger.ZERO;
-    private BigInteger mMainBuildEndTimestamp = BigInteger.ZERO;
-    private BigInteger mParseFilesStartTimestamp = BigInteger.ZERO;
-    private BigInteger mParseFilesEndTimestamp = BigInteger.ZERO;
+    private double mBuildProgressValue = 0;
+    private double mParseProgressValue = 0;
+    private long mMainBuildStartTimestamp = 0;
+    private long mMainBuildEndTimestamp = 0;
+    private long mParseFilesStartTimestamp = 0;
+    private long mParseFilesEndTimestamp = 0;
 
     BuckTreeNodeBuild mCurrentBuildRootElement;
     BuckTreeNodeDetail mBuildProgress;
@@ -107,7 +106,7 @@ public class BuckEventsConsumer implements
 
         mTreeModel.setRoot(mCurrentBuildRootElement);
 
-        mMainBuildStartTimestamp = BigInteger.ZERO;
+        mMainBuildStartTimestamp = 0;
 
         mConnection = mProject.getMessageBus().connect();
 
@@ -123,9 +122,8 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeBuckBuildProgressUpdate(String build,
-                                              BigInteger timestamp,
-                                              float progressValue) {
+    public void consumeBuckBuildProgressUpdate(long timestamp,
+                                              double progressValue) {
 
         mBuildProgressValue = progressValue;
         final String message = "Current build progress: " +
@@ -141,18 +139,15 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeParseRuleStart(String build,
-                                      BigInteger timestamp,
-                                      PartBuildRule[] buildTargets) {
+    public void consumeParseRuleStart(long timestamp) {
         mParseFilesStartTimestamp = timestamp;
     }
 
     @Override
-    public void consumeParseRuleEnd(String build, BigInteger timestamp) {
-        consumeParseRuleProgressUpdate(build, timestamp, 1.0f);
+    public void consumeParseRuleEnd(long timestamp) {
+        consumeParseRuleProgressUpdate(timestamp, 1.0f);
         mParseFilesEndTimestamp = timestamp;
-        float duration = mParseFilesEndTimestamp.
-            subtract(mParseFilesStartTimestamp).floatValue() / 1000;
+        float duration = (mParseFilesEndTimestamp - mParseFilesStartTimestamp) / 1000;
         final String message = "File parsing ended, took " + duration + " seconds!";
 
         ApplicationManager.getApplication().invokeLater(new Runnable() {
@@ -165,9 +160,8 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeParseRuleProgressUpdate(String build,
-                                               BigInteger timestamp,
-                                               float progressValue) {
+    public void consumeParseRuleProgressUpdate(long timestamp,
+                                               double progressValue) {
         if (mParseProgressValue != 1.0f) {
             mParseProgressValue = progressValue;
             final String message = "Current file parsing progress: " +
@@ -184,11 +178,10 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeCompilerError(String build,
-                                     String target,
-                                     BigInteger timestamp,
+    public void consumeCompilerError(String target,
+                                     long timestamp,
                                      String error,
-                                     String[] suggestions) {
+                                     ImmutableSet<String> suggestions) {
         List<String> existingErrors;
         if (mErrors.containsKey(target)) {
             existingErrors = mErrors.get(target);
@@ -260,10 +253,9 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeBuildEnd(final String build, final BigInteger timestamp) {
+    public void consumeBuildEnd(final long timestamp) {
         mMainBuildEndTimestamp = timestamp;
-        float duration = mMainBuildEndTimestamp.
-                subtract(mMainBuildStartTimestamp).floatValue() / 1000;
+        float duration = (mMainBuildEndTimestamp - mMainBuildStartTimestamp) / 1000;
         final String message = "Build ended, took " + duration + " seconds!";
 
         int errors = 0;
@@ -307,7 +299,7 @@ public class BuckEventsConsumer implements
             public void run() {
 
                 //set progress to 100%
-                consumeBuckBuildProgressUpdate(build, timestamp, 1f);
+                consumeBuckBuildProgressUpdate(timestamp, 1f);
 
                 ApplicationManager.getApplication().invokeLater(new Runnable() {
                   @Override
@@ -341,7 +333,7 @@ public class BuckEventsConsumer implements
     }
 
     @Override
-    public void consumeBuildStart(String build, BigInteger timestamp) {
+    public void consumeBuildStart(long timestamp) {
         log("Starting build\n");
         mMainBuildStartTimestamp = timestamp;
     }

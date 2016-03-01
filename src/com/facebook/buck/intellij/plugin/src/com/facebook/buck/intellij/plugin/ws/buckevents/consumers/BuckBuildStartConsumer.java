@@ -18,12 +18,10 @@ package com.facebook.buck.intellij.plugin.ws.buckevents.consumers;
 
 import com.intellij.util.messages.Topic;
 
-import java.math.BigInteger;
-
 public interface BuckBuildStartConsumer {
     Topic<BuckBuildStartConsumer> BUCK_BUILD_START = Topic.create(
             "buck.build.start",
             BuckBuildStartConsumer.class
     );
-    void consumeBuildStart(String build, BigInteger timestamp);
+    void consumeBuildStart(long timestamp);
 }

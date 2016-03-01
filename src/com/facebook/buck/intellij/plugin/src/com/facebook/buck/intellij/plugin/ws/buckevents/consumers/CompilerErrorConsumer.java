@@ -16,18 +16,16 @@
 
 package com.facebook.buck.intellij.plugin.ws.buckevents.consumers;
 
+import com.google.common.collect.ImmutableSet;
 import com.intellij.util.messages.Topic;
-
-import java.math.BigInteger;
 
 public interface CompilerErrorConsumer {
     Topic<CompilerErrorConsumer> COMPILER_ERROR_CONSUMER = Topic.create(
             "buck.compiler.error",
             CompilerErrorConsumer.class
     );
-    void consumeCompilerError(String build,
-                              String target,
-                              BigInteger timestamp,
+    void consumeCompilerError(String target,
+                              long timestamp,
                               String error,
-                              String[] suggestions);
+                              ImmutableSet<String> suggestions);
 }

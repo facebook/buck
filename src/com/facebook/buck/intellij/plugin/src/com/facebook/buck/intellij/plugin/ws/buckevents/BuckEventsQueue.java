@@ -29,15 +29,7 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
 
     @Override
     public void add(BuckEventInterface event) {
-        offer(event);
-    }
-
-    private void offer(BuckEventInterface event) {
-        if (event.getPriority() == BuckEventBase.PRIORITY_HIGH ||
-                event.getPriority() == BuckEventBase.PRIORITY_MED) {
-            handleHighPriEvent(event);
-            return;
-        }
+        handleHighPriEvent(event);
     }
 
     private void handleHighPriEvent(final BuckEventInterface event) {

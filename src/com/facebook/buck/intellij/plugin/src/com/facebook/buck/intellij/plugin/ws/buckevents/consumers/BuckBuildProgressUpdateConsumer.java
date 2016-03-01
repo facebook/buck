@@ -18,12 +18,10 @@ package com.facebook.buck.intellij.plugin.ws.buckevents.consumers;
 
 import com.intellij.util.messages.Topic;
 
-import java.math.BigInteger;
-
 public interface BuckBuildProgressUpdateConsumer {
     Topic<BuckBuildProgressUpdateConsumer> BUCK_BUILD_PROGRESS_UPDATE = Topic.create(
             "buck.build.progress.update",
             BuckBuildProgressUpdateConsumer.class
     );
-    void consumeBuckBuildProgressUpdate(String build, BigInteger timestamp, float progressValue);
+    void consumeBuckBuildProgressUpdate(long timestamp, double progressValue);
 }

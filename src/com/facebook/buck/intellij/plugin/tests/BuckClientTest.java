@@ -16,11 +16,7 @@
 
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.BuckSocket;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventBuildStart;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandlerInterface;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventInterface;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsQueueInterface;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -86,57 +82,5 @@ public class BuckClientTest {
         socket.onMessage("some text 3");
         socket.onMessage("some text 4");
         assertEquals("some text 4", handler.getLastMessage());
-    }
-
-    public class TestQueue implements BuckEventsQueueInterface {
-
-        private BuckEventInterface mLastEvent = null;
-        public BuckEventInterface getLastEvent() {
-            return mLastEvent;
-        }
-
-        @Override
-        public void add(BuckEventInterface event) {
-            mLastEvent = event;
-        }
-    }
-
-    @Test
-    public void testJSONMessage() {
-        String msg = "{\"timestamp\":1444139582383,\"nanoTime\":6792657544005," +
-                "\"threadId\":190,\"buildId\":\"668d2288-c853-4de1-81dc-f307c7df045e\"," +
-                "\"eventKey\":{\"value\":12326},\"buildArgs\":[\"sometarget\"]," +
-                "\"type\":\"BuildStarted\"}";
-
-        TestQueue queue = new TestQueue();
-        BuckEventHandler handler = new BuckEventHandler(
-            queue,
-            new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            },
-            new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            }
-        );
-
-        BuckClient client = new BuckClient(1234, handler);
-
-        // Set the socket we control
-        BuckSocket socket = new BuckSocket(handler);
-
-        client.setSocket(socket);
-
-        client.connect();
-
-        socket.onMessage(msg);
-
-        BuckEventInterface event = queue.getLastEvent();
-        assertTrue(event instanceof BuckEventBuildStart);
     }
 }

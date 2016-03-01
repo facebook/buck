@@ -16,15 +16,12 @@
 
 package com.facebook.buck.intellij.plugin.ws.buckevents.consumers;
 
-import com.facebook.buck.intellij.plugin.ws.buckevents.parts.PartBuildRule;
 import com.intellij.util.messages.Topic;
-
-import java.math.BigInteger;
 
 public interface RulesParsingStartConsumer {
     Topic<RulesParsingStartConsumer> BUCK_PARSE_RULE_START = Topic.create(
             "buck.parse-rule.start",
             RulesParsingStartConsumer.class
     );
-    void consumeParseRuleStart(String build, BigInteger timestamp, PartBuildRule[] buildTargets);
+    void consumeParseRuleStart(long timestamp);
 }
