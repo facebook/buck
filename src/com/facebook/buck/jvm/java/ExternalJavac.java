@@ -181,7 +181,8 @@ public class ExternalJavac implements Javac {
           filesystem,
           invokingRule,
           javaSourceFilePaths,
-          workingDirectory);
+          workingDirectory,
+          ".java");
     } catch (IOException e) {
       throw new HumanReadableException(
           "Unable to expand sources for %s into %s",
@@ -223,27 +224,28 @@ public class ExternalJavac implements Javac {
     return exitCode;
   }
 
-  private ImmutableList<Path> getExpandedSourcePaths(
+  public static ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
       ImmutableSet<Path> javaSourceFilePaths,
-      Optional<Path> workingDirectory) throws IOException {
+      Optional<Path> workingDirectory,
+      final String fileSuffix) throws IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
     for (Path path : javaSourceFilePaths) {
       String pathString = path.toString();
-      if (pathString.endsWith(".java")) {
+      if (pathString.endsWith(fileSuffix)) {
         sources.add(path);
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         if (!workingDirectory.isPresent()) {
           throw new HumanReadableException(
-              "Attempting to compile target %s which specified a .src.zip input %s but no " +
-                  "working directory was specified.",
+              "Attempting to compile target %s which specified a .src.zip or -sources.jar input " +
+                  "%s but no working directory was specified.",
               invokingRule.toString(),
               path);
         }
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
+        // For a zip of source files, add each source file separately to the list of paths.
         ImmutableList<Path> zipPaths = Unzip.extractZipFile(
             projectFilesystem.resolve(path),
             projectFilesystem.resolve(workingDirectory.get()),
@@ -254,7 +256,7 @@ public class ExternalJavac implements Javac {
                     new Predicate<Path>() {
                       @Override
                       public boolean apply(Path input) {
-                        return input.toString().endsWith(".java");
+                        return input.toString().endsWith(fileSuffix);
                       }
                     }));
       }

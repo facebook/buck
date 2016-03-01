@@ -61,13 +61,15 @@ class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
       BuildableContext buildableContext) {
     steps.add(
         new ScalacStep(
+            invokingRule,
             scalac,
             extraArguments,
             resolver,
             outputDirectory,
             sourceFilePaths,
             classpathEntries,
-            filesystem));
+            filesystem,
+            pathToSrcsList));
   }
 
   @Override
