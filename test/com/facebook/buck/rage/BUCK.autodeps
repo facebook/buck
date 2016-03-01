@@ -1,0 +1,19 @@
+#@# GENERATED FILE: DO NOT MODIFY d801a9b243ef577f2d7c9d24dcc10bbd00e7ce14 #@#
+{
+  "rage" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/model:build_id",
+    "//src/com/facebook/buck/rage:rage",
+    "//src/com/facebook/buck/rules:types",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:object_mapper",
+    "//src/com/facebook/buck/util:tristate",
+    "//src/com/facebook/buck/util/environment:environment",
+    "//test/com/facebook/buck/testutil:testutil",
+    "//test/com/facebook/buck/testutil/integration:integration",
+    "//third-party/java/guava:guava",
+    "//third-party/java/hamcrest:java-hamcrest",
+    "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/junit:junit"
+  ]
+}

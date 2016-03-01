@@ -21,6 +21,8 @@ java_library(
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util:tristate',
     '//src/com/facebook/buck/util/cache:cache',
     '//src/com/facebook/buck/zip:stream',
     '//test/com/facebook/buck/timing:testutil',

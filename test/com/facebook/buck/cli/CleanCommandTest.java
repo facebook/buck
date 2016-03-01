@@ -49,6 +49,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -129,6 +130,7 @@ public class CleanCommandTest extends EasyMockSupport {
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     return new CommandRunnerParams(
         new TestConsole(),
+        new ByteArrayInputStream("".getBytes("UTF-8")),
         cell,
         androidPlatformTargetSupplier,
         createMock(ArtifactCache.class),
@@ -143,7 +145,8 @@ public class CleanCommandTest extends EasyMockSupport {
         Optional.<WebServer>absent(),
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
-        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>());
+        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION);
   }
 
 }

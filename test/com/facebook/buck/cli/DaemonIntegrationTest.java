@@ -61,6 +61,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -237,7 +238,10 @@ public class DaemonIntegrationTest {
       @Override
       public void run() {
         try {
-          Main main = new Main(new CapturingPrintStream(), new CapturingPrintStream());
+          Main main = new Main(
+              new CapturingPrintStream(),
+              new CapturingPrintStream(),
+              new ByteArrayInputStream("".getBytes("UTF-8")));
           int exitCode = main.tryRunMainWithExitCode(
               new BuildId(),
               tmp.getRootPath(),

@@ -126,6 +126,7 @@ import org.kohsuke.args4j.CmdLineException;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -188,6 +189,7 @@ public final class Main {
   private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 10;
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
 
+  private final InputStream stdIn;
   private final PrintStream stdOut;
   private final PrintStream stdErr;
   private final ImmutableList<BuckEventListener> externalEventsListeners;
@@ -494,17 +496,19 @@ public final class Main {
   }
 
   @VisibleForTesting
-  public Main(PrintStream stdOut, PrintStream stdErr) {
-    this(stdOut, stdErr, ImmutableList.<BuckEventListener>of());
+  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
+    this(stdOut, stdErr, stdIn, ImmutableList.<BuckEventListener>of());
   }
 
   @VisibleForTesting
   public Main(
       PrintStream stdOut,
       PrintStream stdErr,
+      InputStream stdIn,
       List<BuckEventListener> externalEventsListeners) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
+    this.stdIn = stdIn;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
     this.objectMapper = ObjectMappers.newDefaultInstance();
@@ -822,7 +826,7 @@ public final class Main {
       // create a cached thread pool for cpu intensive tasks
       Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
       executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
-          Executors.newCachedThreadPool()));
+              Executors.newCachedThreadPool()));
 
       // The order of resources in the try-with-resources block is important: the BuckEventBus must
       // be the last resource, so that it is closed first and can deliver its queued events to the
@@ -871,6 +875,10 @@ public final class Main {
             objectMapper);
         consoleListener.setProgressEstimator(progressEstimator);
 
+        BuildEnvironmentDescription buildEnvironmentDescription = getBuildEnvironmentDescription(
+            executionEnvironment,
+            buckConfig);
+
         eventListeners = addEventListeners(
             buildEventBus,
             rootCell.getFilesystem(),
@@ -878,7 +886,7 @@ public final class Main {
             rootCell.getBuckConfig(),
             webServer,
             clock,
-            executionEnvironment,
+            buildEnvironmentDescription,
             console,
             consoleListener,
             rootCell.getKnownBuildRuleTypes(),
@@ -982,6 +990,7 @@ public final class Main {
         exitCode = command.run(
             new CommandRunnerParams(
                 console,
+                stdIn,
                 rootCell,
                 androidPlatformTargetSupplier,
                 artifactCache,
@@ -996,7 +1005,8 @@ public final class Main {
                 webServer,
                 buckConfig,
                 fileHashCache,
-                executors));
+                executors,
+                buildEnvironmentDescription));
         // Wait for HTTP writes to complete.
         closeHttpExecutorService(
             cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
@@ -1262,7 +1272,7 @@ public final class Main {
       BuckConfig config,
       Optional<WebServer> webServer,
       Clock clock,
-      ExecutionEnvironment executionEnvironment,
+      BuildEnvironmentDescription buildEnvironmentDescription,
       Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
@@ -1289,11 +1299,9 @@ public final class Main {
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
-    ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(config);
 
 
     Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
-    ImmutableMap<String, String> environmentExtraData = ImmutableMap.of();
     boolean shouldSample = config.getRemoteLogSampleRate()
         .transform(BuildIdSampler.CREATE_FUNCTION)
         .transform(MoreFunctions.<BuildId, Boolean>applyFunction(buildId))
@@ -1303,11 +1311,7 @@ public final class Main {
           new RemoteLogUploaderEventListener(
               objectMapper,
               RemoteLoggerFactory.create(remoteLogUrl.get(), objectMapper),
-              BuildEnvironmentDescription.of(
-                  executionEnvironment,
-                  artifactCacheConfig.getArtifactCacheModesRaw(),
-                  environmentExtraData)
-          ));
+              buildEnvironmentDescription));
     }
 
 
@@ -1335,6 +1339,17 @@ public final class Main {
     }
 
     return eventListeners;
+  }
+
+  private BuildEnvironmentDescription getBuildEnvironmentDescription(
+      ExecutionEnvironment executionEnvironment,
+      BuckConfig buckConfig) {
+    ImmutableMap.Builder<String, String> environmentExtraData = ImmutableMap.builder();
+
+    return BuildEnvironmentDescription.of(
+        executionEnvironment,
+        new ArtifactCacheBuckConfig(buckConfig).getArtifactCacheModesRaw(),
+        environmentExtraData.build());
   }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
@@ -1512,7 +1527,7 @@ public final class Main {
   }
 
   public static void main(String[] args) {
-    new Main(System.out, System.err).runMainThenExit(args, Optional.<NGContext>absent());
+    new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.<NGContext>absent());
   }
 
   /**
@@ -1523,7 +1538,8 @@ public final class Main {
   public static void nailMain(final NGContext context) throws InterruptedException {
     try (DaemonSlayer.ExecuteCommandHandle handle =
             DaemonSlayer.getSlayer(context).executeCommand()) {
-      new Main(context.out, context.err).runMainThenExit(context.getArgs(), Optional.of(context));
+      new Main(context.out, context.err, context.in)
+          .runMainThenExit(context.getArgs(), Optional.of(context));
     }
   }
 

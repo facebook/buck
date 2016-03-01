@@ -35,9 +35,6 @@ prebuilt_jar(
   licenses = [
     'LICENSE.txt',
   ],
-  visibility = [
-    '//test/...',
-  ],
 )
 
 prebuilt_jar(

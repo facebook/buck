@@ -28,6 +28,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -35,6 +36,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -44,6 +46,7 @@ class CommandRunnerParams {
 
   private final ArtifactCache artifactCache;
   private final Console console;
+  private final InputStream stdIn;
   private final ImmutableMap<String, String> environment;
   private final Parser parser;
   private final BuckEventBus eventBus;
@@ -58,9 +61,11 @@ class CommandRunnerParams {
   private final BuckConfig buckConfig;
   private final FileHashCache fileHashCache;
   private final Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors;
+  private final BuildEnvironmentDescription buildEnvironmentDescription;
 
   public CommandRunnerParams(
       Console console,
+      InputStream stdIn,
       Cell cell,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       ArtifactCache artifactCache,
@@ -75,8 +80,10 @@ class CommandRunnerParams {
       Optional<WebServer> webServer,
       BuckConfig buckConfig,
       FileHashCache fileHashCache,
-      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors) {
+      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors,
+      BuildEnvironmentDescription buildEnvironmentDescription) {
     this.console = console;
+    this.stdIn = stdIn;
     this.cell = cell;
     this.artifactCache = artifactCache;
     this.eventBus = eventBus;
@@ -92,10 +99,15 @@ class CommandRunnerParams {
     this.buckConfig = buckConfig;
     this.fileHashCache = fileHashCache;
     this.executors = executors;
+    this.buildEnvironmentDescription = buildEnvironmentDescription;
   }
 
   public Console getConsole() {
     return console;
+  }
+
+  public InputStream getStdIn() {
+    return stdIn;
   }
 
   public Cell getCell() {
@@ -156,6 +168,10 @@ class CommandRunnerParams {
 
   public Map<ExecutionContext.ExecutorPool, ListeningExecutorService> getExecutors() {
     return executors;
+  }
+
+  public BuildEnvironmentDescription getBuildEnvironmentDescription() {
+    return buildEnvironmentDescription;
   }
 
   protected ExecutionContext createExecutionContext() {

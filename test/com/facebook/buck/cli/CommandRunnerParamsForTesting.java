@@ -38,17 +38,33 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
 public class CommandRunnerParamsForTesting {
+
+  public static final BuildEnvironmentDescription BUILD_ENVIRONMENT_DESCRIPTION =
+      BuildEnvironmentDescription.builder()
+          .setUser("test")
+          .setHostname("test")
+          .setOs("test")
+          .setAvailableCores(1)
+          .setSystemMemory(1024L)
+          .setBuckDirty(TriState.FALSE)
+          .setBuckCommit("test")
+          .setJavaVersion("test")
+          .setJsonProtocolVersion(1)
+          .build();
 
   /** Utility class: do not instantiate. */
   private CommandRunnerParamsForTesting() {}
@@ -69,6 +85,7 @@ public class CommandRunnerParamsForTesting {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     return new CommandRunnerParams(
         console,
+        new ByteArrayInputStream("".getBytes("UTF-8")),
         cell,
         Main.createAndroidPlatformTargetSupplier(
             androidDirectoryResolver,
@@ -88,7 +105,8 @@ public class CommandRunnerParamsForTesting {
         webServer,
         config,
         new NullFileHashCache(),
-        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>());
+        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
+        BUILD_ENVIRONMENT_DESCRIPTION);
   }
 
   public static Builder builder() {

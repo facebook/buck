@@ -70,8 +70,10 @@ import org.hamcrest.Matchers;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.file.FileAlreadyExistsException;
@@ -375,6 +377,7 @@ public class ProjectWorkspace {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
     final CapturingPrintStream stderr = new CapturingPrintStream();
+    InputStream stdin = new ByteArrayInputStream("".getBytes());
 
     final ImmutableList.Builder<BuckEvent> capturedEventsListBuilder =
         new ImmutableList.Builder<>();
@@ -435,7 +438,7 @@ public class ProjectWorkspace {
     }
     ImmutableMap<String, String> sanizitedEnv = envBuilder.build();
 
-    Main main = new Main(stdout, stderr, eventListeners.build());
+    Main main = new Main(stdout, stderr, stdin, eventListeners.build());
     int exitCode = 0;
     try {
       exitCode = main.runMainWithExitCode(
