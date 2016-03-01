@@ -23,7 +23,7 @@ java_library(
     'SameThreadFailOnTimeout.java',
   ],
   tests = [
-    '//test/com/facebook/buck/testrunner:junit',
+    '//test/com/facebook/buck/testrunner:testrunner',
   ],
   autodeps = False, # See comment in deps. Should be manually maintained.
   deps = [
