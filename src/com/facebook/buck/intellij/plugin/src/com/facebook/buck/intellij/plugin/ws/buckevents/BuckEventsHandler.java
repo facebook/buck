@@ -25,14 +25,14 @@ import com.fasterxml.jackson.module.mrbean.MrBeanModule;
 
 import java.io.IOException;
 
-public class BuckEventHandler implements BuckEventsHandlerInterface {
+public class BuckEventsHandler implements BuckEventsHandlerInterface {
     private final BuckEventsQueueInterface mQueue;
     private final ObjectMapper mObjectMapper;
 
     private Runnable mOnConnectHandler = null;
     private Runnable mOnDisconnectHandler = null;
 
-    public BuckEventHandler(BuckEventsConsumerFactory consumerFactory,
+    public BuckEventsHandler(BuckEventsConsumerFactory consumerFactory,
                             Runnable onConnectHandler,
                             Runnable onDisconnectHandler) {
         mOnConnectHandler = onConnectHandler;

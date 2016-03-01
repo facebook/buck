@@ -23,7 +23,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandlerInterface;
+import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
 import com.intellij.openapi.diagnostic.Logger;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
@@ -46,7 +46,7 @@ public class BuckClient {
         return mConnected;
     }
 
-    public BuckClient(String host, int port, final BuckEventHandlerInterface handler) {
+    public BuckClient(String host, int port, final BuckEventsHandlerInterface handler) {
 
         scheduledThreadPoolExecutor =
             new ScheduledThreadPoolExecutor(
@@ -59,7 +59,7 @@ public class BuckClient {
                     }
             );
         mWSSocket = new BuckSocket(
-            new BuckEventHandlerInterface() {
+            new BuckEventsHandlerInterface() {
                 @Override
                 public void onConnect() {
                     handler.onConnect();
@@ -86,7 +86,7 @@ public class BuckClient {
         mPort = port;
     }
 
-    public BuckClient(int port, BuckEventHandlerInterface handler) {
+    public BuckClient(int port, BuckEventsHandlerInterface handler) {
         this("localhost", port, handler);
     }
 

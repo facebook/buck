@@ -16,7 +16,8 @@
 
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.BuckSocket;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandlerInterface;
+import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -25,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BuckClientTest {
 
-    public class TestBuckEventHandler implements BuckEventHandlerInterface {
+    public class TestBuckEventHandler implements BuckEventsHandlerInterface {
 
         private String lastMessage = "";
         public String getLastMessage() { return this.lastMessage; }

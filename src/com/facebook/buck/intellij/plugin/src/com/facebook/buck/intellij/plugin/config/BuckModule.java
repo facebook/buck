@@ -20,7 +20,8 @@ import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandler;
+import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandler;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
@@ -30,13 +31,14 @@ public final class BuckModule implements ProjectComponent {
 
     private Project mProject;
     private BuckClient mClient = new BuckClient();
-    private BuckEventHandler mEventHandler;
+    private BuckEventsHandler mEventHandler;
     private BuckEventsConsumer mBu;
 
     public BuckModule(final Project project) {
         mProject = project;
 
-        mEventHandler = new BuckEventHandler(
+        mEventHandler = new BuckEventsHandler(
+            new BuckEventsConsumerFactory(mProject),
             new Runnable() {
                 @Override
                 public void run() {

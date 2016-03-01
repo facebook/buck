@@ -16,28 +16,46 @@
 
 package com.facebook.buck.intellij.plugin.ws.buckevents;
 
+import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.application.ApplicationManager;
+
+import java.io.IOException;
 
 public class BuckEventsQueue implements BuckEventsQueueInterface {
 
-    private BuckEventsConsumerFactory mFactory;
+    private final BuckEventsConsumerFactory mFactory;
+    private ObjectMapper mObjectMapper;
+    private BuckEventsAdapter mBuckEventsAdapter;
 
-    public BuckEventsQueue(BuckEventsConsumerFactory factory) {
+    public BuckEventsQueue(ObjectMapper objectMapper, BuckEventsConsumerFactory factory) {
         mFactory = factory;
+        mObjectMapper = objectMapper;
+        mBuckEventsAdapter = new BuckEventsAdapter();
     }
 
     @Override
-    public void add(BuckEventInterface event) {
-        handleHighPriEvent(event);
+    public void add(String rawMessage, BuckEventExternalInterface event) {
+        handleEvent(rawMessage, event);
     }
 
-    private void handleHighPriEvent(final BuckEventInterface event) {
+    private void handleEvent(final String rawMessage, final BuckEventExternalInterface event) {
         ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
             @Override
             public void run() {
                 synchronized (BuckEventsQueue.this.mFactory) {
-                    event.handleEvent(BuckEventsQueue.this.mFactory);
+                    try {
+                        mBuckEventsAdapter.get(
+                            event.getEventName()).handleEvent(
+                            rawMessage,
+                            event,
+                            mFactory,
+                            mObjectMapper);
+                    } catch (IOException e) {
+                        // TODO(cosmin1123) Handle exception
+                        e.printStackTrace();
+                    }
                 }
             }
         });

@@ -21,6 +21,15 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
+  name = 'jackson-mrbean',
+  binary_jar = 'jackson-mrbean-2.5.5.jar',
+  licenses = [
+    'LICENSE',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+prebuilt_jar(
   name = 'jackson-core',
   binary_jar = 'jackson-core-2.5.5.jar',
   licenses = [

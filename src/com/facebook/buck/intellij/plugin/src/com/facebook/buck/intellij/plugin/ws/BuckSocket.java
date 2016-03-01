@@ -22,7 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventHandlerInterface;
+import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -34,13 +34,13 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 public class BuckSocket {
     private final CountDownLatch closeLatch;
 
-    private BuckEventHandlerInterface mEventsHandler;
+    private BuckEventsHandlerInterface mEventsHandler;
 
     @SuppressWarnings("unused")
     private Session session;
 
     public BuckSocket(
-        BuckEventHandlerInterface eventsHandler
+        BuckEventsHandlerInterface eventsHandler
     ) {
         mEventsHandler = eventsHandler;
         this.closeLatch = new CountDownLatch(1);

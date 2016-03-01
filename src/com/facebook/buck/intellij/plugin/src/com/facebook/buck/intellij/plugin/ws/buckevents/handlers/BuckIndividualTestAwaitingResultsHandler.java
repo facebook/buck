@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,10 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.intellij.plugin.ws.buckevents;
+package com.facebook.buck.intellij.plugin.ws.buckevents.handlers;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public interface BuckEventsQueueInterface {
-    void add(String rawMessage, BuckEventExternalInterface event);
+import java.io.IOException;
+
+public class BuckIndividualTestAwaitingResultsHandler implements BuckEventHandler {
+  @Override
+  public void handleEvent(
+      String rawMessage,
+      BuckEventExternalInterface event,
+      BuckEventsConsumerFactory buckEventsConsumerFactory,
+      ObjectMapper objectMapper) throws IOException {
+  }
 }
