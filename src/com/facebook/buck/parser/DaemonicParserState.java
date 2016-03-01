@@ -115,11 +115,19 @@ class DaemonicParserState implements ParsePipeline.Cache {
       "invalidated_by_default_includes";
   private static final String INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME =
       "invalidated_by_watch_overflow";
+  private static final String BUILD_FILES_INVALIDATED_BY_FILE_ADD_OR_REMOVE_COUNTER_NAME =
+      "build_files_invalidated_by_add_or_remove";
+  private static final String FILES_CHANGED_COUNTER_NAME = "files_changed";
+  private static final String RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME =
+      "rules_invalidated_by_watch_events";
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
   private final IntegerCounter cacheInvalidatedByWatchOverflowCounter;
+  private final IntegerCounter buildFilesInvalidatedByFileAddOrRemoveCounter;
+  private final IntegerCounter filesChangedCounter;
+  private final IntegerCounter rulesInvalidatedByWatchEventsCounter;
   @GuardedBy("nodesAndTargetsLock")
   private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   @GuardedBy("nodesAndTargetsLock")
@@ -180,6 +188,18 @@ class DaemonicParserState implements ParsePipeline.Cache {
     this.cacheInvalidatedByWatchOverflowCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME,
+        ImmutableMap.<String, String>of());
+    this.buildFilesInvalidatedByFileAddOrRemoveCounter = new IntegerCounter(
+        COUNTER_CATEGORY,
+        BUILD_FILES_INVALIDATED_BY_FILE_ADD_OR_REMOVE_COUNTER_NAME,
+        ImmutableMap.<String, String>of());
+    this.filesChangedCounter = new IntegerCounter(
+        COUNTER_CATEGORY,
+        FILES_CHANGED_COUNTER_NAME,
+        ImmutableMap.<String, String>of());
+    this.rulesInvalidatedByWatchEventsCounter = new IntegerCounter(
+        COUNTER_CATEGORY,
+        RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME,
         ImmutableMap.<String, String>of());
     this.targetsCornucopia = HashMultimap.create();
     this.allTargetNodes = new ConcurrentMapCache<>(parsingThreads);
@@ -463,6 +483,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
       return;
     }
 
+    filesChangedCounter.inc();
+
     Path path = (Path) event.context();
 
     for (Cell cell : knownCells) {
@@ -473,6 +495,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
           BuildFileTree buildFiles = buildFileTrees.get(cell);
 
           if (path.endsWith(cell.getBuildFileName())) {
+            LOG.debug(
+                "Build file %s changed, invalidating build file tree for cell %s",
+                path,
+                cell);
             // If a build file has been added or removed, reconstruct the build file tree.
             buildFileTrees.invalidate(cell);
           }
@@ -518,6 +544,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
       Cell cell,
       BuildFileTree buildFiles,
       Path path) {
+    LOG.debug("Invalidating rules dependent on change to %s in cell %s", path, cell);
     Set<Path> packageBuildFiles = new HashSet<>();
 
     // Find the closest ancestor package for the input path.  We'll definitely need to invalidate
@@ -543,6 +570,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
       return;
     }
 
+    buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
+
     // Invalidate all the packages we found.
     for (Path buildFile : packageBuildFiles) {
       invalidatePath(cell, buildFile.resolve(cell.getBuildFileName()));
@@ -555,8 +584,11 @@ class DaemonicParserState implements ParsePipeline.Cache {
    * @param path The File that has changed.
    */
   private synchronized void invalidatePath(Cell cell, Path path) {
+    LOG.debug("Invalidating path %s for cell %s", path, cell);
     // Paths from Watchman are not absolute.
     path = cell.getFilesystem().resolve(path);
+
+
 
     try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
       // If the path is a build file for the cell, nuke the targets that it owns first. We don't
@@ -564,9 +596,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
       // these are the only things that get added. Which makes for an easy life.
       List<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
       if (rawNodes != null) {
+        rulesInvalidatedByWatchEventsCounter.inc(rawNodes.size());
+
         // Invalidate the target nodes first
         for (Map<String, Object> rawNode : rawNodes) {
           UnflavoredBuildTarget target = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
+          LOG.debug("Invalidating target for path %s: %s", path, target);
           allTargetNodes.invalidateAll(targetsCornucopia.get(target));
           targetsCornucopia.removeAll(target);
         }
@@ -578,6 +613,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
     // We may have been given a file that other build files depend on. Iteratively remove those.
     Iterable<Path> dependents = buildFileDependents.get(path);
+    LOG.debug("Invalidating dependents for path %s: %s", path, dependents);
     for (Path dependent : dependents) {
       if (dependent.equals(path)) {
         continue;
@@ -728,7 +764,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
     return ImmutableList.<Counter>of(
         cacheInvalidatedByEnvironmentVariableChangeCounter,
         cacheInvalidatedByDefaultIncludesChangeCounter,
-        cacheInvalidatedByWatchOverflowCounter
+        cacheInvalidatedByWatchOverflowCounter,
+        buildFilesInvalidatedByFileAddOrRemoveCounter,
+        filesChangedCounter,
+        rulesInvalidatedByWatchEventsCounter
     );
   }
 

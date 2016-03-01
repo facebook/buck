@@ -461,12 +461,10 @@ public class Parser {
 
   @Subscribe
   public void onFileSystemChange(WatchEvent<?> event) throws InterruptedException {
-    if (LOG.isVerboseEnabled()) {
-      LOG.verbose(
-          "Parser watched event %s %s",
-          event.kind(),
-          WatchEvents.createContextString(event));
-    }
+    LOG.debug(
+        "Parser watched event %s %s",
+        event.kind(),
+        WatchEvents.createContextString(event));
 
     permState.invalidateBasedOn(event);
   }
