@@ -715,13 +715,14 @@ abstract class AbstractCxxSourceRuleFactory {
           getCxxPlatform().getDebugPathSanitizer(),
           getParams().getProjectFilesystem().getRootPath(),
           CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType()),
-          computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
-          getIncludeRoots(),
-          getSystemIncludeRoots(),
-          getHeaderMaps(),
-          getFrameworks(),
+          PreprocessorFlags.of(
+              getPrefixHeader(),
+              computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
+              getFrameworks(),
+              getHeaderMaps(),
+              getIncludeRoots(),
+              getSystemIncludeRoots()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
-          getPrefixHeader(),
           getIncludes());
     }
 

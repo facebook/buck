@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -31,19 +30,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Helper class for handling preprocessing related tasks of a cxx compilation rule.
@@ -52,18 +46,13 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   // Fields that are added to rule key as is.
   private final Preprocessor preprocessor;
-  private final Optional<SourcePath> prefixHeader;
   private final ImmutableList<CxxHeaders> includes;
   private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
 
   // Fields that added to the rule key with some processing.
-  private final CxxToolFlags preprocessorFlags;
-  private final ImmutableSet<FrameworkPath> frameworkRoots;
+  private final PreprocessorFlags preprocessorFlags;
 
   // Fields that are not added to the rule key.
-  private final ImmutableSet<Path> includeRoots;
-  private final ImmutableSet<Path> systemIncludeRoots;
-  private final ImmutableSet<Path> headerMaps;
   private final DebugPathSanitizer sanitizer;
   private final Path workingDir;
   private final SourcePathResolver resolver;
@@ -88,22 +77,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       DebugPathSanitizer sanitizer,
       Path workingDir,
       Preprocessor preprocessor,
-      CxxToolFlags preprocessorFlags,
-      Set<Path> includeRoots,
-      Set<Path> systemIncludeRoots,
-      Set<Path> headerMaps,
-      Set<FrameworkPath> frameworkRoots,
+      PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
-      Optional<SourcePath> prefixHeader,
       List<CxxHeaders> includes) {
     this.preprocessor = preprocessor;
-    this.prefixHeader = prefixHeader;
     this.includes = ImmutableList.copyOf(includes);
     this.preprocessorFlags = preprocessorFlags;
-    this.frameworkRoots = ImmutableSet.copyOf(frameworkRoots);
-    this.includeRoots = ImmutableSet.copyOf(includeRoots);
-    this.systemIncludeRoots = ImmutableSet.copyOf(systemIncludeRoots);
-    this.headerMaps = ImmutableSet.copyOf(headerMaps);
     this.sanitizer = sanitizer;
     this.workingDir = workingDir;
     this.resolver = resolver;
@@ -120,20 +99,9 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     builder.setReflectively("preprocessor", preprocessor);
-    builder.setReflectively("prefixHeader", prefixHeader);
     builder.setReflectively("includes", includes);
     builder.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
-
-    // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
-    // from contributing to the rule key.
-    builder.setReflectively(
-        "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(preprocessorFlags.getPlatformFlags()));
-    builder.setReflectively(
-        "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(preprocessorFlags.getRuleFlags()));
-
-    builder.setReflectively("frameworkRoots", frameworkRoots);
+    preprocessorFlags.appendToRuleKey(builder, sanitizer);
     return builder;
   }
 
@@ -171,47 +139,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   public CxxToolFlags getFlagsWithSearchPaths() {
-    return CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags());
-  }
-
-  /**
-   * Flags derived from search paths.
-   */
-  private CxxToolFlags getSearchPathFlags() {
-    // It doesn't matter whether these go in platform or rules, since they are strictly additive.
-    return CxxToolFlags.explicitBuilder()
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-include"),
-                FluentIterable.from(prefixHeader.asSet())
-                    .transform(resolver.getAbsolutePathFunction())
-                    .transform(Functions.toStringFunction())))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-I"),
-                Iterables.transform(
-                    headerMaps,
-                    Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-I"),
-                Iterables.transform(
-                    includeRoots,
-                    Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-isystem"),
-                Iterables.transform(
-                    systemIncludeRoots,
-                    Functions.compose(Functions.toStringFunction(), minLengthPathRepresentation))))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-F"),
-                FluentIterable.from(frameworkRoots)
-                    .transform(frameworkPathSearchPathFunction)
-                    .transform(Functions.toStringFunction())
-                    .toSortedSet(Ordering.natural())))
-        .build();
+    return preprocessorFlags.toToolFlags(
+        resolver,
+        minLengthPathRepresentation,
+        frameworkPathSearchPathFunction);
   }
 
   /**
@@ -229,8 +160,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
     // Add inputs that we always use.
     inputs.addAll(preprocessor.getInputs());
-    if (prefixHeader.isPresent()) {
-      inputs.add(prefixHeader.get());
+
+    // Prefix header is not represented in the dep file, so should be added manually.
+    if (preprocessorFlags.getPrefixHeader().isPresent()) {
+      inputs.add(preprocessorFlags.getPrefixHeader().get());
     }
 
     // Add any header/include inputs that our dependency file said we used.

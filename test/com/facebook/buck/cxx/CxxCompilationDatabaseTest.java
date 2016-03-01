@@ -34,7 +34,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -43,7 +42,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -98,6 +96,12 @@ public class CxxCompilationDatabaseTest {
             ImmutableFlavor.of("compile-test.cpp"))
         .build();
 
+    PreprocessorFlags preprocessorFlags = PreprocessorFlags.builder()
+        .addIncludePaths(
+            filesystem.resolve("foo/bar"),
+            filesystem.resolve("test"))
+        .build();
+
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
     BuildRuleParams compileBuildRuleParams;
     switch (strategy) {
@@ -113,13 +117,7 @@ public class CxxCompilationDatabaseTest {
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                     filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler"))),
-                    CxxToolFlags.of(),
-                    ImmutableSet.of(
-                        filesystem.resolve("foo/bar"),
-                        filesystem.resolve("test")),
-                    ImmutableSet.<Path>of(),
-                    ImmutableSet.<Path>of(),
-                    ImmutableSet.<FrameworkPath>of(),
+                    preprocessorFlags,
                     new RuleKeyAppendableFunction<FrameworkPath, Path>() {
                       @Override
                       public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
@@ -131,7 +129,6 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
                 new CompilerDelegate(
                     testSourcePathResolver,
@@ -175,13 +172,7 @@ public class CxxCompilationDatabaseTest {
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                     filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
-                    CxxToolFlags.of(),
-                    ImmutableSet.of(
-                        filesystem.resolve("foo/bar"),
-                        filesystem.resolve("test")),
-                    ImmutableSet.<Path>of(),
-                    ImmutableSet.<Path>of(),
-                    ImmutableSet.<FrameworkPath>of(),
+                    preprocessorFlags,
                     new RuleKeyAppendableFunction<FrameworkPath, Path>() {
                       @Override
                       public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
@@ -193,7 +184,6 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    Optional.<SourcePath>absent(),
                     ImmutableList.<CxxHeaders>of()),
                 new CompilerDelegate(
                     testSourcePathResolver,

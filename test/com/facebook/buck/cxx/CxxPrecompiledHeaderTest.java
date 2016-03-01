@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.empty;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -30,19 +30,14 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxPrecompiledHeaderTest {
@@ -72,13 +67,8 @@ public class CxxPrecompiledHeaderTest {
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
             Paths.get("./"),
             PREPROCESSOR_SUPPORTING_PCH,
-            CxxToolFlags.of(),
-            ImmutableSet.<Path>of(),
-            ImmutableSet.<Path>of(),
-            ImmutableSet.<Path>of(),
-            ImmutableSet.<FrameworkPath>of(),
+            PreprocessorFlags.builder().build(),
             CxxDescriptionEnhancer.frameworkPathToSearchPath(DEFAULT_PLATFORM, sourcePathResolver),
-            Optional.<SourcePath>absent(),
             ImmutableList.<CxxHeaders>of()),
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
