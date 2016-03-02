@@ -34,10 +34,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -294,7 +291,7 @@ public class ArtifactCacheBuckConfig {
 
     HttpCacheEntry.Builder builder = HttpCacheEntry.builder();
     builder.setName(cacheName);
-    builder.setUrl(getUri(section, HTTP_URL_FIELD_NAME).or(DEFAULT_HTTP_URL));
+    builder.setUrl(buckConfig.getUrl(section, HTTP_URL_FIELD_NAME).or(DEFAULT_HTTP_URL));
     builder.setTimeoutSeconds(
         buckConfig.getLong(section, HTTP_TIMEOUT_SECONDS_FIELD_NAME)
             .or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS).intValue());
@@ -311,21 +308,6 @@ public class ArtifactCacheBuckConfig {
             DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
     builder.setMaxStoreSize(buckConfig.getLong(section, HTTP_MAX_STORE_SIZE));
     return builder.build();
-  }
-
-  private Optional<URI> getUri(String section, String field) {
-    try {
-      // URL has stricter parsing rules than URI, so we want to use that constructor to surface
-      // the error message early. Passing around a URL is problematic as it hits DNS from the
-      // equals method, which is why the (new URL(...).toURI()) call instead of just URI.create.
-      Optional<String> value = buckConfig.getValue(section, field);
-      if (!value.isPresent()) {
-        return Optional.absent();
-      }
-      return Optional.of(new URL(value.get()).toURI());
-    } catch (URISyntaxException|MalformedURLException e) {
-      throw new HumanReadableException(e, "Malformed [cache]%s: %s", field, e.getMessage());
-    }
   }
 
   private boolean legacyCacheConfigurationFieldsPresent() {

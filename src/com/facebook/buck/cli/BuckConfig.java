@@ -635,6 +635,10 @@ public class BuckConfig {
     return config.getBooleanValue(sectionName, propertyName, defaultValue);
   }
 
+  public Optional<URI> getUrl(String section, String field) {
+    return config.getUrl(section, field);
+  }
+
   private <T> T required(String section, String field, Optional<T> value) {
     if (!value.isPresent()) {
       throw new HumanReadableException(String.format(

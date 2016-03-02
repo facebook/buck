@@ -1,5 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY cd5e92ac56bab2e26b35a7d4cca6538f351471f8 #@#
+#@# GENERATED FILE: DO NOT MODIFY b64e9b8eefb4b0826f2d0424cc2bf333fb95e428 #@#
 {
+  "config" : [
+    "//src/com/facebook/buck/cli:config",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor"
+  ],
   "rage" : [
     "//src/com/facebook/buck/io:io",
     "//src/com/facebook/buck/model:build_id",

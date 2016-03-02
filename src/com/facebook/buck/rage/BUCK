@@ -1,8 +1,22 @@
+CONFIG_SRCS = [
+  'RageBuckConfig.java',
+]
+
+java_immutables_library(
+  name='config',
+  autodeps=True,
+  srcs=CONFIG_SRCS,
+  visibility=[
+    'PUBLIC'
+  ]
+)
+
 java_immutables_library(
   name = 'rage',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes=CONFIG_SRCS),
   autodeps = True,
   visibility = [
     'PUBLIC'
   ],
 )
+

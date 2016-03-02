@@ -62,6 +62,7 @@ java_library(
     '//src/com/facebook/buck/parser:config',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/python:config',
+    '//src/com/facebook/buck/rage:config',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/rust:rust',
     '//src/com/facebook/buck/test:config',

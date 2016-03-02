@@ -32,6 +32,10 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -264,6 +268,27 @@ public class Config {
           value.get());
     }
   }
+
+  public Optional<URI> getUrl(String section, String field) {
+    try {
+      // URL has stricter parsing rules than URI, so we want to use that constructor to surface
+      // the error message early. Passing around a URL is problematic as it hits DNS from the
+      // equals method, which is why the (new URL(...).toURI()) call instead of just URI.create.
+      Optional<String> value = getValue(section, field);
+      if (!value.isPresent()) {
+        return Optional.absent();
+      }
+      return Optional.of(new URL(value.get()).toURI());
+    } catch (URISyntaxException | MalformedURLException e) {
+      throw new HumanReadableException(
+          e,
+          "Malformed url [%s]%s: %s",
+          section,
+          field,
+          e.getMessage());
+    }
+  }
+
 
   private static ImmutableMap<String, ImmutableMap<String, String>> sectionToEntriesFromMaps(
       ImmutableList<ImmutableMap<String, ImmutableMap<String, String>>> maps) {
