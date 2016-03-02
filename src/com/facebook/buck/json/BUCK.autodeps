@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 42e6a9d8c6afe66e19e09cde71424755937672aa #@#
+#@# GENERATED FILE: DO NOT MODIFY 5f87b1c048da822d97c9bd5cf71da01e8c8c99f7 #@#
 {
   "json" : [
     "//src/com/facebook/buck/bser:bser",
@@ -11,6 +11,7 @@
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
     "//src/com/facebook/buck/util:util",
+    "//src/com/facebook/buck/util/concurrent:concurrent",
     "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
     "//third-party/java/immutables:processor",

@@ -1,6 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY d40cb53bfd7ab7de7e0367fc33f4602061501869 #@#
+#@# GENERATED FILE: DO NOT MODIFY fd7ee8e7acfbefaeaa4ed63789f0cb87bb6da126 #@#
 {
   "concurrent" : [
+    "//src/com/facebook/buck/log:api",
     "//third-party/java/concurrent-locks:concurrent-locks",
     "//third-party/java/guava:guava",
     "//third-party/java/jsr:jsr305"
