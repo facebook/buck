@@ -151,7 +151,9 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     this.custom = custom;
   }
 
-  public int numValues() {
+  public int getNumArrayValues() {
+    Preconditions.checkState(idType == IdType.INT_ARRAY);
+
     Matcher matcher = INT_ARRAY_VALUES.matcher(idValue);
     if(!matcher.matches() || matcher.group(1) == null) {
       return 0;

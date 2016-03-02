@@ -76,29 +76,29 @@ public class AaptResourceCollectorTest {
 
   @Test
   public void testGetNextIdValueIfNonCustomType() {
-    Assert.assertEquals("0x7f010001", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, false));
-    Assert.assertEquals("0x7f010002", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, false));
-    Assert.assertEquals("0x7f020001", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER, false));
-    Assert.assertEquals("0x7f020002", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER, false));
-    Assert.assertEquals("0x7f010003", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, false));
-    Assert.assertEquals("0x7f020003", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER, false));
+    Assert.assertEquals("0x7f010001", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID));
+    Assert.assertEquals("0x7f010002", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID));
+    Assert.assertEquals("0x7f020001", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER));
+    Assert.assertEquals("0x7f020002", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER));
+    Assert.assertEquals("0x7f010003", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID));
+    Assert.assertEquals("0x7f020003", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER));
   }
 
   @Test
   public void testGetNextIdValueIfCustomType() {
-    Assert.assertEquals("0x7f010001 #", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, true));
-    Assert.assertEquals("0x7f010002", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, false));
-    Assert.assertEquals("0x7f010003 #", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, true));
+    Assert.assertEquals("0x7f010001 #", aaptResourceCollector.getNextCustomIdValue(RDotTxtEntry.RType.ID));
+    Assert.assertEquals("0x7f010002", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID));
+    Assert.assertEquals("0x7f010003 #", aaptResourceCollector.getNextCustomIdValue(RDotTxtEntry.RType.ID));
   }
 
   @Test
   public void testGetNextIdValueIfArrayType() {
-    Assert.assertEquals("{  }", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, 0));
-    Assert.assertEquals("{ 0x7f010001 }", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, 1));
-    Assert.assertEquals("{ 0x7f010002,0x7f010003,0x7f010004 }", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.ID, 3));
+    Assert.assertEquals("{  }", aaptResourceCollector.getNextArrayIdValue(RDotTxtEntry.RType.ID, 0));
+    Assert.assertEquals("{ 0x7f010001 }", aaptResourceCollector.getNextArrayIdValue(RDotTxtEntry.RType.ID, 1));
+    Assert.assertEquals("{ 0x7f010002,0x7f010003,0x7f010004 }", aaptResourceCollector.getNextArrayIdValue(RDotTxtEntry.RType.ID, 3));
 
-    Assert.assertEquals("{  }", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER, 0));
-    Assert.assertEquals("{ 0x7f020001,0x7f020002,0x7f020003 }", aaptResourceCollector.getNextIdValue(RDotTxtEntry.RType.INTEGER, 3));
+    Assert.assertEquals("{  }", aaptResourceCollector.getNextArrayIdValue(RDotTxtEntry.RType.INTEGER, 0));
+    Assert.assertEquals("{ 0x7f020001,0x7f020002,0x7f020003 }", aaptResourceCollector.getNextArrayIdValue(RDotTxtEntry.RType.INTEGER, 3));
   }
 
   protected RDotTxtEntry findResource(Set<RDotTxtEntry> resources, RDotTxtEntry rDotTxtEntry) {
