@@ -27,6 +27,9 @@ def is_covered_package_name(package_name):
     """We exclude third-party code."""
     if not package_name.startswith('com/facebook/buck/'):
         return False
+    # Exclude testrunner code, as it's executed as a separate process in tests
+    if package_name.startswith('com/facebook/buck/testrunner'):
+        return False
     return True
 
 
