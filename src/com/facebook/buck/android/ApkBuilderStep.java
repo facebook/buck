@@ -187,6 +187,15 @@ public class ApkBuilderStep implements Step {
     String alias = keystoreProperties.getAlias();
     char[] keyPassword = keystoreProperties.getKeypass().toCharArray();
     Key key = keystore.getKey(alias, keyPassword);
+    // key can be null if alias/password is incorrect.
+    if (key == null) {
+      throw new HumanReadableException(
+          "The keystore [%s] key.alias [%s] does not exist or does not identify a key-related " +
+              "entry",
+          pathToKeystore,
+          alias);
+    }
+
     Certificate certificate = keystore.getCertificate(alias);
 
     return new PrivateKeyAndCertificate((PrivateKey) key, (X509Certificate) certificate);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -514,4 +515,21 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckBuild("//apps/sample:instrumentation_apk").assertSuccess();
   }
 
+  @Test
+  public void testInvalidKeystoreKeyAlias() throws IOException {
+    workspace.replaceFileContents(
+        "keystores/debug.keystore.properties",
+        "key.alias=my_alias",
+        "key.alias=invalid_alias"
+    );
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    result.assertFailure("Invalid keystore key alias should fail.");
+
+    assertThat(
+        "error message for invalid keystore key alias is incorrect.",
+        result.getStderr(),
+        containsRegex("The keystore \\[.*\\] key\\.alias \\[.*\\].*does not exist"));
+  }
 }
