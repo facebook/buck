@@ -64,6 +64,17 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithAsm() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "asm", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//src/asm_test:bin");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("Sum is 6"));
+  }
+
+    @Test
   public void buildAfterChangeWorks() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);

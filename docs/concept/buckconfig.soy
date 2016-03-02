@@ -1130,6 +1130,24 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'go' /}
+  {param name: 'assembler' /}
+  {param example_value: '/usr/local/libexec/go/pkg/tool/darwin_amd64/asm' /}
+  {param description}
+    The full path to the Go assembler.  This is normally automatically discovered.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'packer' /}
+  {param example_value: '/usr/local/libexec/go/pkg/tool/darwin_amd64/pack' /}
+  {param description}
+    The full path to the Go packer.  This is normally automatically discovered.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'go' /}
   {param name: 'linker' /}
   {param example_value: '/usr/local/libexec/go/pkg/tool/darwin_amd64/link' /}
   {param description}

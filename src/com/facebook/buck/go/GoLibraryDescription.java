@@ -82,9 +82,7 @@ public class GoLibraryDescription implements
     Optional<GoPlatform> platform =
         goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
-    if (metadataClass.isAssignableFrom(Arg.class)) {
-      return Optional.of(metadataClass.cast(args));
-    } else if (metadataClass.isAssignableFrom(GoLinkable.class)) {
+    if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
 
       SourcePath output = new BuildTargetSourcePath(
@@ -127,6 +125,7 @@ public class GoLibraryDescription implements
               .or(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
           args.srcs,
           args.compilerFlags.or(ImmutableList.<String>of()),
+          args.assemblerFlags.get(),
           platform.get());
     }
 
@@ -137,6 +136,7 @@ public class GoLibraryDescription implements
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public ImmutableSet<SourcePath> srcs;
     public Optional<List<String>> compilerFlags;
+    public Optional<List<String>> assemblerFlags;
     public Optional<String> packageName;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
 
