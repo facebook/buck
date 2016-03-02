@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9f68c131a50b8330d75499f0c0be29d7117455f3 #@#
+#@# GENERATED FILE: DO NOT MODIFY 31499a77de665ce672bb3a76848fa7f1707b47fb #@#
 {
   "maven" : [
     "//src/com/facebook/buck/graph:graph",
@@ -11,6 +11,8 @@
     "//third-party/java/aether:aether-api",
     "//third-party/java/aether:aether-spi",
     "//third-party/java/aether:aether-util",
+    "//third-party/java/args4j:args4j",
+    "//third-party/java/gson:gson",
     "//third-party/java/guava:guava",
     "//third-party/java/jsr:jsr305",
     "//third-party/java/maven:maven-aether-provider",
@@ -24,6 +26,10 @@
     "//third-party/java/aether:aether-impl",
     "//third-party/java/aether:aether-spi",
     "//third-party/java/aether:aether-transport-http",
+    "//third-party/java/aether:aether-util",
+    "//third-party/java/args4j:args4j",
+    "//third-party/java/gson:gson",
+    "//third-party/java/guava:guava",
     "//third-party/java/maven:maven-aether-provider",
     "//third-party/java/slf4j:slf4j-api"
   ]

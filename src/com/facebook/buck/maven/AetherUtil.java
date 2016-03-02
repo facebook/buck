@@ -28,6 +28,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.helpers.NOPLoggerFactory;
 
@@ -50,6 +51,22 @@ public class AetherUtil {
         .setPolicy(new RepositoryPolicy(true, null, CHECKSUM_POLICY_FAIL))
         .build();
   }
+
+  public static RemoteRepository toRemoteRepository(ArtifactConfig.Repository repo) {
+    RemoteRepository.Builder builder = new RemoteRepository.Builder(repo.url, "default", repo.url)
+        .setPolicy(new RepositoryPolicy(true, null, CHECKSUM_POLICY_FAIL));
+
+    if (repo.user != null && repo.password != null) {
+      builder.setAuthentication(
+          new AuthenticationBuilder()
+              .addUsername(repo.user)
+              .addPassword(repo.password)
+              .build());
+    }
+
+    return builder.build();
+  }
+
 
   public static ServiceLocator initServiceLocator() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();

@@ -21,6 +21,7 @@ import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -32,6 +33,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -61,14 +65,20 @@ import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionScheme;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroupString;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -95,6 +105,20 @@ public class Resolver {
   private final ImmutableList<RemoteRepository> repos;
   private final ServiceLocator locator;
   private final VersionScheme versionScheme = new GenericVersionScheme();
+
+  public Resolver(ArtifactConfig config) {
+    this.buckRepoRoot = Paths.get(config.buckRepoRoot);
+    this.buckThirdPartyRelativePath = Paths.get(config.thirdParty);
+    this.localRepo = new LocalRepository(Paths.get(config.mavenLocalRepo).toFile());
+
+    ImmutableList.Builder<RemoteRepository> builder = ImmutableList.builder();
+    for (ArtifactConfig.Repository repo : config.repositories) {
+      builder.add(AetherUtil.toRemoteRepository(repo));
+    }
+    this.repos = builder.build();
+
+    this.locator = AetherUtil.initServiceLocator();
+  }
 
   public Resolver(
       Path buckRepoRoot,
@@ -439,25 +463,9 @@ public class Resolver {
         ':' + artifact.getClassifier();
   }
 
-  public static void main(String[] args) throws RepositoryException, IOException {
-    if (args.length < 5) {
-      System.err.println("Usage: java -jar resolver.jar buck-repo third-party " +
-              "maven-local-repo maven-url junit:junit:jar:4.12...");
-      System.exit(1);
-    }
-
-    Path buckRepoRoot = Paths.get(args[0]);
-    Path thirdParty = Paths.get(args[1]);
-    Path m2 = Paths.get(args[2]);
-    String mavenCentral = args[3];
-    String[] coords = Arrays.copyOfRange(args, 4, args.length);
-
-    new Resolver(
-        buckRepoRoot,
-        thirdParty,
-        m2,
-        mavenCentral)
-        .resolve(coords);
+  public static void main(String[] args) throws CmdLineException, RepositoryException, IOException {
+    ArtifactConfig artifactConfig = ArtifactConfig.fromCommandLineArgs(args);
+    new Resolver(artifactConfig).resolve(artifactConfig.artifacts.toArray(new String[0]));
   }
 
   /**
