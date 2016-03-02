@@ -1,13 +1,14 @@
-#@# GENERATED FILE: DO NOT MODIFY 8201d3d235f4482799f378d8f3237fdd40e0fcfd #@#
+#@# GENERATED FILE: DO NOT MODIFY 2b943daa9324ee5fdc52a01f22d77701d8a0f78d #@#
 {
   "rage" : [
-    "//src/com/facebook/buck/cli:config",
     "//src/com/facebook/buck/cli:config",
     "//src/com/facebook/buck/io:io",
     "//src/com/facebook/buck/model:build_id",
     "//src/com/facebook/buck/rage:config",
     "//src/com/facebook/buck/rage:rage",
     "//src/com/facebook/buck/rules:types",
+    "//src/com/facebook/buck/util:constants",
+    "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
     "//src/com/facebook/buck/util:object_mapper",
     "//src/com/facebook/buck/util:tristate",
@@ -18,6 +19,7 @@
     "//third-party/java/guava:guava",
     "//third-party/java/hamcrest:java-hamcrest",
     "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jetty:jetty",
     "//third-party/java/junit:junit"
   ]
 }

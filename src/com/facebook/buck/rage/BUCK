@@ -1,19 +1,23 @@
 CONFIG_SRCS = [
   'RageBuckConfig.java',
 ]
+CONFIG_IMMUTABLES = [
+  'AbstractRageConfig.java',
+]
 
 java_immutables_library(
-  name='config',
-  autodeps=True,
-  srcs=CONFIG_SRCS,
-  visibility=[
+  name = 'config',
+  srcs = CONFIG_SRCS,
+  immutable_srcs = CONFIG_IMMUTABLES,
+  autodeps = True,
+  visibility = [
     'PUBLIC'
   ]
 )
 
 java_immutables_library(
   name = 'rage',
-  srcs = glob(['*.java'], excludes=CONFIG_SRCS),
+  srcs = glob(['*.java'], excludes=CONFIG_SRCS + CONFIG_IMMUTABLES),
   autodeps = True,
   visibility = [
     'PUBLIC'

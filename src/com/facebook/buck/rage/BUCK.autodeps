@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b64e9b8eefb4b0826f2d0424cc2bf333fb95e428 #@#
+#@# GENERATED FILE: DO NOT MODIFY 34a5b897fd0e3cb72e1caa33400f195e4aa03ae4 #@#
 {
   "config" : [
     "//src/com/facebook/buck/cli:config",
@@ -10,7 +10,9 @@
     "//src/com/facebook/buck/io:io",
     "//src/com/facebook/buck/model:build_id",
     "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/rage:config",
     "//src/com/facebook/buck/util:constants",
+    "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util/environment:environment",
     "//src/com/facebook/buck/util/immutables:immutables",
     "//src/com/facebook/buck/util/unit:unit",

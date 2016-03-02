@@ -16,19 +16,15 @@
 
 package com.facebook.buck.rage;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 
-public class RageBuckConfig {
+import org.immutables.value.Value;
 
-  private static final String SECTION_NAME = "rage";
-  private static final String REPORT_UPLOAD_URL_FIELD = "report_upload_url";
+import java.net.URI;
 
-  private RageBuckConfig() {
-  }
-
-  public static RageConfig create(BuckConfig buckConfig) {
-    return RageConfig.builder()
-        .setReportUploadUri(buckConfig.getUrl(SECTION_NAME, REPORT_UPLOAD_URL_FIELD))
-        .build();
-  }
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractRageConfig {
+  Optional<URI> getReportUploadUri();
 }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY daec7e4b0572721497e3b64a205cb9368b0e8f76 #@#
+#@# GENERATED FILE: DO NOT MODIFY 139cb8ae6d9845bdc64585f67cae0efcca9c11a1 #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -51,6 +51,7 @@
     "//src/com/facebook/buck/parser:rule_pattern",
     "//src/com/facebook/buck/python:config",
     "//src/com/facebook/buck/query:query",
+    "//src/com/facebook/buck/rage:config",
     "//src/com/facebook/buck/rage:rage",
     "//src/com/facebook/buck/rules:build_rule",
     "//src/com/facebook/buck/rules:rule_key",

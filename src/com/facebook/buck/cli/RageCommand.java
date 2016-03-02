@@ -21,6 +21,8 @@ import com.facebook.buck.rage.AutomatedReport;
 import com.facebook.buck.rage.DefectReporter;
 import com.facebook.buck.rage.DefectSubmitResult;
 import com.facebook.buck.rage.InteractiveReport;
+import com.facebook.buck.rage.RageBuckConfig;
+import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 
 import org.kohsuke.args4j.Option;
@@ -35,12 +37,13 @@ public class RageCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    RageConfig rageConfig = RageBuckConfig.create(params.getBuckConfig());
     DirtyPrintStreamDecorator stdOut = params.getConsole().getStdOut();
 
     DefectSubmitResult defectSubmitResult;
     if (params.getConsole().getAnsi().isAnsiTerminal() && !nonInteractive) {
       InteractiveReport interactiveReport = new InteractiveReport(
-          new DefectReporter(filesystem, params.getObjectMapper()),
+          new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getStdIn(),
@@ -48,7 +51,7 @@ public class RageCommand extends AbstractCommand {
       defectSubmitResult = interactiveReport.collectAndSubmitResult();
     } else {
       AutomatedReport automatedReport = new AutomatedReport(
-          new DefectReporter(filesystem, params.getObjectMapper()),
+          new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getBuildEnvironmentDescription());

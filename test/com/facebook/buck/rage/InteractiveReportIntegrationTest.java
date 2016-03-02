@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rage;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -32,6 +33,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 
+
 public class InteractiveReportIntegrationTest {
 
   @Rule
@@ -45,9 +47,11 @@ public class InteractiveReportIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.asCell().getFilesystem();
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+    BuckConfig buckConfig = workspace.asCell().getBuckConfig();
     DefectReporter defectReporter = new DefectReporter(
         filesystem,
-        objectMapper);
+        objectMapper,
+        RageBuckConfig.create(buckConfig));
     CapturingPrintStream outputStream = new CapturingPrintStream();
     ByteArrayInputStream inputStream =
         new ByteArrayInputStream("report text\n0,1\n".getBytes("UTF-8"));

@@ -57,9 +57,11 @@ public class DefectReporterTest {
   @Test
   public void testAttachesPaths() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    RageConfig config = RageConfig.builder().build();
     DefectReporter reporter = new DefectReporter(
         filesystem,
-        ObjectMappers.newDefaultInstance());
+        ObjectMappers.newDefaultInstance(),
+        config);
 
     Path fileToBeIncluded = Paths.get("FileToBeIncluded.txt");
     filesystem.touch(fileToBeIncluded);
@@ -81,9 +83,11 @@ public class DefectReporterTest {
   public void testAttachesReport() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+    RageConfig config = RageConfig.builder().build();
     DefectReporter reporter = new DefectReporter(
         filesystem,
-        objectMapper);
+        objectMapper,
+        config);
 
     DefectSubmitResult defectSubmitResult = reporter.submitReport(
         DefectReport.builder()
