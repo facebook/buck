@@ -128,6 +128,15 @@ public class UnzipAar extends AbstractBuildRule
         }
 
         Path classesJar = unpackDirectory.resolve("classes.jar");
+        if (!getProjectFilesystem().exists(classesJar)) {
+          try {
+            JarDirectoryStepHelper.createEmptyJarFile(getProjectFilesystem(), classesJar, context);
+          } catch (IOException e) {
+            context.logError(e, "Failed to create empty jar %s", classesJar);
+            return 1;
+          }
+        }
+
         if (dirDoesNotExistOrIsEmpty) {
           try {
             getProjectFilesystem().copy(

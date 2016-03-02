@@ -29,6 +29,7 @@ import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -170,6 +171,21 @@ public class JarDirectoryStepHelper {
           blacklist,
           context);
     }
+  }
+
+  public static int createEmptyJarFile(
+      ProjectFilesystem filesystem,
+      Path pathToOutputFile,
+      ExecutionContext context) throws IOException {
+    return JarDirectoryStepHelper.createJarFile(
+        filesystem,
+        pathToOutputFile,
+        ImmutableSortedSet.<Path>of(),
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        true,
+        ImmutableList.<Pattern>of(),
+        context);
   }
 
   private static boolean mainClassPresent(

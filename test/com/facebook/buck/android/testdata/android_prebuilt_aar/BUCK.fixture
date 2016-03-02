@@ -26,6 +26,15 @@ genrule(
   ],
 )
 
+genrule(
+  name = 'gen_aar-no-classes-dot-jar',
+  cmd = '$(exe :aar_generator) --no-classes-dot-jar $TMP $OUT',
+  out = 'no_classes_dot_jar.aar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 python_binary(
   name = 'aar_generator',
   main = 'gen_aar.py',
@@ -65,6 +74,15 @@ android_binary(
   keystore = ':debug',
   deps = [
     '//android_prebuilt_aar-dep:aar-extra-res-entry',
+  ],
+)
+
+android_binary(
+  name = 'app-no-classes-dot-jar',
+  manifest = 'AndroidManifest.xml',
+  keystore = ':debug',
+  deps = [
+    '//android_prebuilt_aar-dep:aar-no-classes-dot-jar',
   ],
 )
 

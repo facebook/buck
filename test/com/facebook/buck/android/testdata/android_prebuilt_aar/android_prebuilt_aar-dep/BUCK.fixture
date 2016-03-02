@@ -17,6 +17,12 @@ android_prebuilt_aar(
   visibility = [ 'PUBLIC' ],
 )
 
+android_prebuilt_aar(
+  name = 'aar-no-classes-dot-jar',
+  aar = '//:gen_aar-no-classes-dot-jar',
+  visibility = [ 'PUBLIC' ],
+)
+
 android_library(
   name = 'lib',
   srcs = [ 'ExampleActivity.java' ],
