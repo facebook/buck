@@ -22,10 +22,14 @@ import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+
+import java.io.IOException;
 
 public final class BuckModule implements ProjectComponent {
 
@@ -33,6 +37,7 @@ public final class BuckModule implements ProjectComponent {
     private BuckClient mClient = new BuckClient();
     private BuckEventsHandler mEventHandler;
     private BuckEventsConsumer mBu;
+    private static final Logger LOG = Logger.getInstance(BuckModule.class);
 
     public BuckModule(final Project project) {
         mProject = project;
@@ -118,24 +123,39 @@ public final class BuckModule implements ProjectComponent {
     }
 
     public void connect() {
-        if (!mClient.isConnected()) {
-            BuckWSServerPortUtils wsPortUtils = new BuckWSServerPortUtils();
-            int port = wsPortUtils.getPort(this.mProject.getBasePath());
-            if (port != -1) {
-                mClient = new BuckClient(port, mEventHandler);
-                // Initiate connecting
-                this.mClient.connect();
-            } else {
-                BuckToolWindowFactory.outputConsoleMessage(mProject,
-                    "Your buck server is turned off.\n" +
-                        "It's possible that it can't get a port.\n" +
-                        "Try adding to your '.buckconfig.local' file:\n" +
-                        "[httpserver]\n" +
-                        "    port = 0\n" +
-                        "After that press the 'Connect to buck' button.\n",
-                    ConsoleViewContentType.ERROR_OUTPUT);
+        ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!mClient.isConnected()) {
+                    BuckWSServerPortUtils wsPortUtils = new BuckWSServerPortUtils();
+                    try {
+                        int port = wsPortUtils.getPort(BuckModule.this.mProject.getBasePath());
+
+                        if (port == BuckWSServerPortUtils.CONNECTION_FAILED) {
+                            BuckToolWindowFactory.outputConsoleMessage(
+                                mProject,
+                                "Your buck server may be turned off.\n" +
+                                    "It's possible that it can't get a port.\n" +
+                                    "Try adding to your '.buckconfig.local' file:\n" +
+                                    "[httpserver]\n" +
+                                    "    port = 0\n" +
+                                    "After that press the 'Connect to buck' button.\n",
+                                ConsoleViewContentType.ERROR_OUTPUT);
+                        } else {
+                            mClient = new BuckClient(port, mEventHandler);
+                            // Initiate connecting
+                            BuckModule.this.mClient.connect();
+                        }
+                    } catch (NumberFormatException e) {
+                        LOG.error(e);
+                    } catch (ExecutionException e) {
+                        LOG.error(e);
+                    } catch (IOException e) {
+                        LOG.error(e);
+                    }
+                }
             }
-        }
+        });
     }
 
     public void attach(BuckEventsConsumer bu, String target) {

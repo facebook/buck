@@ -18,17 +18,24 @@ package com.facebook.buck.intellij.plugin.config;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.diagnostic.Logger;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 
 public final class BuckWSServerPortUtils {
-  private int mPort = -1;
+  public static final int CONNECTION_FAILED = -1;
+  private static final String CONNECTION_FAILED_MESSAGE =
+      "Connecting to Buck failed with message: ";
 
+  private int mPort = CONNECTION_FAILED;
+  private static final Logger LOG = Logger.getInstance(BuckWSServerPortUtils.class);
   private static final String SEARCH_FOR = "http.port=";
 
-  public int getPort(String runInPath) {
+  public int getPort(String runInPath) throws
+      NumberFormatException, IOException, ExecutionException {
     String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setExePath(exec);
@@ -38,26 +45,19 @@ public final class BuckWSServerPortUtils {
     commandLine.addParameter("--http-port");
     commandLine.setRedirectErrorStream(true);
 
-      try {
-        Process p = null;
-        p = commandLine.createProcess();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            if (line.startsWith(BuckWSServerPortUtils.SEARCH_FOR)) {
-                try {
-                    mPort = Integer.parseInt(line.replace(BuckWSServerPortUtils.SEARCH_FOR, ""));
-                    return mPort;
-                } catch (java.lang.NumberFormatException ex) {
-                    mPort = -1;
-                }
-            }
+      Process p = commandLine.createProcess();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+      String text = "";
+      String line;
+      while ((line = reader.readLine()) != null) {
+        text += line;
+        if (line.startsWith(BuckWSServerPortUtils.SEARCH_FOR)) {
+          mPort = Integer.parseInt(line.replace(BuckWSServerPortUtils.SEARCH_FOR, ""));
+          return mPort;
         }
-      } catch (ExecutionException e) {
-          mPort = -1;
-      } catch (java.io.IOException e) {
-          mPort = -1;
+      }
+      if (mPort == CONNECTION_FAILED) {
+        LOG.error(CONNECTION_FAILED_MESSAGE + text);
       }
     return mPort;
   }
