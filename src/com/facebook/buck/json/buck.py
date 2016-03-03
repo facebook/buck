@@ -664,7 +664,7 @@ class BuildFileProcessor(object):
 
         # Try to process the .autodeps file. If there is a signature failure, then record the
         # error, but do not blow up.
-        error_message = None
+        invalid_signature_error_message = None
         autodeps_file = dirname + '/' + self._build_file_name + '.autodeps'
         has_autodeps = False
         autodeps = None
@@ -673,7 +673,7 @@ class BuildFileProcessor(object):
                 autodeps = self._parse_autodeps(autodeps_file)
                 has_autodeps = True
             except InvalidSignatureError as e:
-                error_message = e.message
+                invalid_signature_error_message = e.message
 
         build_env = BuildFileContext(
             base_path,
@@ -692,9 +692,9 @@ class BuildFileProcessor(object):
         if has_autodeps:
             build_env.includes.add(autodeps_file)
 
-        if error_message:
+        if invalid_signature_error_message:
             build_env.diagnostics.add(
-                DiagnosticMessageAndLevel(message=error_message, level='error'))
+                DiagnosticMessageAndLevel(message=invalid_signature_error_message, level='fatal'))
 
         return self._process(
             build_env,
