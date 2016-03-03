@@ -155,7 +155,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     Preconditions.checkState(idType == IdType.INT_ARRAY);
 
     Matcher matcher = INT_ARRAY_VALUES.matcher(idValue);
-    if(!matcher.matches() || matcher.group(1) == null) {
+    if (!matcher.matches() || matcher.group(1) == null) {
       return 0;
     }
 

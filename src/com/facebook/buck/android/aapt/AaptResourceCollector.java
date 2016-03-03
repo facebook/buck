@@ -90,13 +90,13 @@ public class AaptResourceCollector {
   }
 
   String getNextIdValue(RDotTxtEntry rDotTxtEntry) {
-      if(rDotTxtEntry.idType == IdType.INT_ARRAY) {
+      if (rDotTxtEntry.idType == IdType.INT_ARRAY) {
         return getNextArrayIdValue(rDotTxtEntry.type, rDotTxtEntry.getNumArrayValues());
-      } else if (rDotTxtEntry.type == RType.STYLEABLE ) {
+      } else if (rDotTxtEntry.type == RType.STYLEABLE) {
         // styleable int entries are just incremented ints that receive a value when created as
         // siblings of a style (non unique within R.txt)
         return rDotTxtEntry.idValue;
-      } else if(rDotTxtEntry.custom) {
+      } else if (rDotTxtEntry.custom) {
         return getNextCustomIdValue(rDotTxtEntry.type);
       } else {
         return getNextIdValue(rDotTxtEntry.type);
