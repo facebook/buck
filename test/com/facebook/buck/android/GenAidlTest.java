@@ -54,20 +54,6 @@ public class GenAidlTest {
 
   @Test
   public void testSimpleGenAidlRule() throws IOException {
-//    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-//    Path root = vfs.getPath("/");
-//    Files.createDirectories(root);
-//    ProjectFilesystem stubFilesystem = new ProjectFilesystem(root) {
-//      @Override
-//      public Path resolve(Path path) {
-//        return path;
-//      }
-//
-//      @Override
-//      public boolean exists(Path pathRelativeToProjectRoot) {
-//        return true;
-//      }
-//    };
     ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 
