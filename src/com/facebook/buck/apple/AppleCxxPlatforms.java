@@ -27,6 +27,8 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.DefaultCompiler;
+import com.facebook.buck.cxx.DefaultPreprocessor;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
@@ -243,31 +245,31 @@ public class AppleCxxPlatforms {
     }
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
-      targetFlavor,
-      config,
-      clangPath,
-      new ClangPreprocessor(clangPath),
-      new ClangCompiler(clangPath),
-      new ClangCompiler(clangXxPath),
-      new ClangPreprocessor(clangPath),
-      new ClangPreprocessor(clangXxPath),
-      new DarwinLinker(clangXxPath),
+        targetFlavor,
+        config,
+        new DefaultCompiler(clangPath),
+        new DefaultPreprocessor(clangPath),
+        new ClangCompiler(clangPath),
+        new ClangCompiler(clangXxPath),
+        new ClangPreprocessor(clangPath),
+        new ClangPreprocessor(clangXxPath),
+        new DarwinLinker(clangXxPath),
         ImmutableList.<String>builder()
-          .addAll(cflags)
-          .addAll(ldflags)
-          .build(),
-      strip,
-      new BsdArchiver(ar),
-      ranlib,
-      nm,
-      asflags,
-      ImmutableList.<String>of(),
-      cflags,
-      ImmutableList.<String>of(),
-      "dylib",
-      "%s.dylib",
-      Optional.of(debugPathSanitizer),
-      macros);
+            .addAll(cflags)
+            .addAll(ldflags)
+            .build(),
+        strip,
+        new BsdArchiver(ar),
+        ranlib,
+        nm,
+        asflags,
+        ImmutableList.<String>of(),
+        cflags,
+        ImmutableList.<String>of(),
+        "dylib",
+        "%s.dylib",
+        Optional.of(debugPathSanitizer),
+        macros);
 
     ApplePlatform platform = targetSdk.getApplePlatform();
 

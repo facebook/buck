@@ -324,6 +324,9 @@ abstract class AbstractCxxSourceRuleFactory {
   // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
   // compiler, and the C compiler for everything.
   private Compiler getCompiler(CxxSource.Type type) {
+    if (type == CxxSource.Type.ASSEMBLER || type == AbstractCxxSource.Type.ASSEMBLER_WITH_CPP) {
+      return getCxxPlatform().getAs();
+    }
     return CxxSourceTypes.needsCxxCompiler(type) ?
         getCxxPlatform().getCxx() :
         getCxxPlatform().getCc();

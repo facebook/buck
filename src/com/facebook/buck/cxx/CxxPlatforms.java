@@ -62,7 +62,7 @@ public class CxxPlatforms {
   public static CxxPlatform build(
       Flavor flavor,
       CxxBuckConfig config,
-      Tool as,
+      Compiler as,
       Preprocessor aspp,
       Compiler cc,
       Compiler cxx,
@@ -87,7 +87,7 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        .setAs(getTool(flavor, "as", config).or(as))
+        .setAs(getTool(flavor, "as", config).transform(getCompiler(as.getClass())).or(as))
         .setAspp(
             getTool(flavor, "aspp", config).transform(getPreprocessor(aspp.getClass())).or(aspp))
         // TODO(Coneko): Don't assume the compiler override specifies the same type of compiler as
@@ -129,7 +129,10 @@ public class CxxPlatforms {
     CxxPlatform.Builder builder = CxxPlatform.builder();
     builder
         .setFlavor(flavor)
-        .setAs(getTool(flavor, "as", config).or(defaultPlatform.getAs()))
+        .setAs(
+            getTool(flavor, "as", config)
+                .transform(getCompiler(defaultPlatform.getAs().getClass()))
+                .or(defaultPlatform.getAs()))
         .setAspp(
             getTool(flavor, "aspp", config)
                 .transform(getPreprocessor(defaultPlatform.getAspp().getClass()))

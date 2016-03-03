@@ -38,7 +38,6 @@ public class DefaultCxxPlatforms {
 
   public static final Flavor FLAVOR = ImmutableFlavor.of("default");
 
-  private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final Path DEFAULT_C_FRONTEND = Paths.get("/usr/bin/gcc");
   private static final Path DEFAULT_CXX_FRONTEND = Paths.get("/usr/bin/g++");
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
@@ -60,8 +59,8 @@ public class DefaultCxxPlatforms {
       return CxxPlatforms.build(
           FLAVOR,
           config,
-          new HashedFileTool(DEFAULT_AS),
-          new ClangPreprocessor(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
+          new DefaultCompiler(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
+          new DefaultPreprocessor(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
           new ClangCompiler(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
           new ClangCompiler(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
           new ClangPreprocessor(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
@@ -101,7 +100,7 @@ public class DefaultCxxPlatforms {
     return CxxPlatforms.build(
         FLAVOR,
         config,
-        new HashedFileTool(DEFAULT_AS),
+        new DefaultCompiler(new HashedFileTool(DEFAULT_C_FRONTEND)),
         new DefaultPreprocessor(new HashedFileTool(DEFAULT_C_FRONTEND)),
         new DefaultCompiler(new HashedFileTool(DEFAULT_C_FRONTEND)),
         new DefaultCompiler(new HashedFileTool(DEFAULT_CXX_FRONTEND)),

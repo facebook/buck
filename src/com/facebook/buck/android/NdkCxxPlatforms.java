@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.DefaultCompiler;
+import com.facebook.buck.cxx.DefaultPreprocessor;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
@@ -362,10 +364,18 @@ public class NdkCxxPlatforms {
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     cxxPlatformBuilder
         .setFlavor(flavor)
-        .setAs(getGccTool(ndkRoot, targetConfiguration, host, "as", version, executableFinder))
+        .setAs(
+            new DefaultCompiler(
+                getCTool(
+                    ndkRoot,
+                    targetConfiguration,
+                    host,
+                    compilerType.getCc(),
+                    version,
+                    executableFinder)))
         .addAllAsflags(getAsflags(ndkRoot, targetConfiguration, host))
         .setAspp(
-            compilerType.preprocessorFromTool(
+            new DefaultPreprocessor(
                 getCTool(
                     ndkRoot,
                     targetConfiguration,

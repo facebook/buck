@@ -52,7 +52,7 @@ public class CxxPlatformsTest {
     CxxPlatform borlandCxx452Platform =
       CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
-          .setAs(new HashedFileTool(Paths.get("borland")))
+          .setAs(new DefaultCompiler(new HashedFileTool(Paths.get("borland"))))
           .setAspp(new DefaultPreprocessor(new HashedFileTool(Paths.get("borland"))))
           .setCc(new DefaultCompiler(new HashedFileTool(Paths.get("borland"))))
           .setCpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("borland"))))

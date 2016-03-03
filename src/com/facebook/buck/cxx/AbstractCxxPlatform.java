@@ -37,7 +37,7 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   @Override
   Flavor getFlavor();
 
-  Tool getAs();
+  Compiler getAs();
   List<String> getAsflags();
 
   Preprocessor getAspp();

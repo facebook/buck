@@ -29,7 +29,7 @@ public class CxxPlatformUtils {
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("platform"))
-          .setAs(new HashedFileTool(Paths.get("tool")))
+          .setAs(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
           .setAspp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
           .setCc(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
           .setCpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
