@@ -164,7 +164,7 @@ public class DirArtifactCache implements ArtifactCache {
         bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
 
         // Now, write the meta data artifact.
-        Path tmp = filesystem.createTempFile(cacheDir, "metadata", TMP_EXTENSION);
+        Path tmp = filesystem.createTempFile(getPreparedTempFolder(), "metadata", TMP_EXTENSION);
         try {
           try (DataOutputStream out = new DataOutputStream(filesystem.newFileOutputStream(tmp))) {
             out.writeInt(metadata.size());
@@ -200,6 +200,18 @@ public class DirArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
+  private Path getPathToTempFolder() throws IOException {
+    return cacheDir.resolve("tmp");
+  }
+
+  private Path getPreparedTempFolder() throws IOException {
+    Path tmp = getPathToTempFolder();
+    if (!filesystem.exists(tmp)) {
+      filesystem.mkdirs(tmp);
+    }
+    return tmp;
+  }
+
   private ImmutableList<String> subfolders(RuleKey ruleKey) {
     if (ruleKey.toString().length() < 4) {
       return ImmutableList.of();
@@ -228,7 +240,7 @@ public class DirArtifactCache implements ArtifactCache {
     // Write to a temporary file and move the file to its final location atomically to protect
     // against partial artifacts (whether due to buck interruption or filesystem failure) posing
     // as valid artifacts during subsequent buck runs.
-    Path tmp = filesystem.createTempFile(cacheDir, "artifact", TMP_EXTENSION);
+    Path tmp = filesystem.createTempFile(getPreparedTempFolder(), "artifact", TMP_EXTENSION);
     try {
       filesystem.copyFile(output, tmp);
       filesystem.move(tmp, artifactPath);
@@ -285,7 +297,10 @@ public class DirArtifactCache implements ArtifactCache {
           @Override
           public FileVisitResult visitFile(Path file,
               BasicFileAttributes attrs) throws IOException {
-            allFiles.add(file.toFile());
+            // do not work with files in temp folder as they will be moved later
+            if (!file.getParent().equals(getPathToTempFolder())) {
+              allFiles.add(file.toFile());
+            }
             return super.visitFile(file, attrs);
           }
         });

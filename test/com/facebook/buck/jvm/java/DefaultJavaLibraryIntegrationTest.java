@@ -30,6 +30,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
+import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -103,7 +106,11 @@ public class DefaultJavaLibraryIntegrationTest {
     Path buildCache = workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR);
     assertTrue(Files.isDirectory(buildCache));
 
-    int totalArtifactsCount = getAllFilesInPath(buildCache).size();
+    ArtifactCache dirCache = TestArtifactCaches.createDirCacheForTest(
+        workspace.getDestPath(),
+        buildCache);
+
+    int totalArtifactsCount = DirArtifactCacheTestUtil.getAllFilesInCache(dirCache).length;
 
     assertEquals("There should be two entries (a zip and metadata) in the build cache.",
         2,
@@ -119,7 +126,7 @@ public class DefaultJavaLibraryIntegrationTest {
     // Corrupt the build cache!
     File artifactZip =
         FluentIterable.from(
-            ImmutableList.copyOf(buildCache.toFile().listFiles()[0].listFiles()[0].listFiles()))
+            ImmutableList.copyOf(DirArtifactCacheTestUtil.getAllFilesInCache(dirCache)))
             .toSortedList(Ordering.natural())
             .get(0);
     FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);

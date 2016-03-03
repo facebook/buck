@@ -284,7 +284,6 @@ public class DirArtifactCacheTest {
     assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
 
     ImmutableList<File> cachedFiles = ImmutableList.copyOf(dirArtifactCache.getAllFilesInCache());
-    assertEquals(3, cacheDir.toFile().listFiles().length);
     assertEquals(6, cachedFiles.size());
 
     ImmutableSet<String> filenames = FluentIterable.from(cachedFiles).transform(
