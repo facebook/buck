@@ -35,6 +35,8 @@ public class CxxPlatformUtils {
           .setCpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
           .setCxx(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
           .setCxxpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
+          .setCuda(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
+          .setCudapp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
           .setStrip(new HashedFileTool(Paths.get("tool")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))

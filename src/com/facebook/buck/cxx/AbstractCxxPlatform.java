@@ -20,6 +20,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
@@ -54,6 +55,12 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   Preprocessor getCxxpp();
   List<String> getCxxppflags();
+
+  Optional<Preprocessor> getCudapp();
+  List<String> getCudappflags();
+
+  Optional<Compiler> getCuda();
+  List<String> getCudaflags();
 
   Linker getLd();
   List<String> getLdflags();

@@ -243,7 +243,9 @@ abstract class AbstractCxxSourceRuleFactory {
             new CompilerDelegate(
                 getPathResolver(),
                 getCxxPlatform().getDebugPathSanitizer(),
-                getCompiler(source.getType()),
+                CxxSourceTypes.getCompiler(
+                    getCxxPlatform(),
+                    CxxSourceTypes.getPreprocessorOutputType(source.getType())),
                 computeCompilerFlags(source.getType(), source.getFlags())),
             getPreprocessOutputPath(target, source.getType(), name),
             source.getPath(),
@@ -322,35 +324,24 @@ abstract class AbstractCxxSourceRuleFactory {
     return false;
   }
 
-  // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
-  // compiler, and the C compiler for everything.
-  private Compiler getCompiler(CxxSource.Type type) {
-    if (type == CxxSource.Type.ASSEMBLER || type == AbstractCxxSource.Type.ASSEMBLER_WITH_CPP) {
-      return getCxxPlatform().getAs();
-    }
-    return CxxSourceTypes.needsCxxCompiler(type) ?
-        getCxxPlatform().getCxx() :
-        getCxxPlatform().getCc();
-  }
-
   private ImmutableList<String> getPlatformCompileFlags(CxxSource.Type type) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    // If we're dealing with a C source that can be compiled, add the platform C compiler flags.
+    // Add in the source-type specific platform compiler flags.
+    args.addAll(CxxSourceTypes.getPlatformCompilerFlags(getCxxPlatform(), type));
+
+    // These source types require assembling, so add in platform-specific assembler flags.
+    //
+    // TODO(andrewjcg): We shouldn't care about lower-level assembling.  If the user has assembler
+    // flags in mind which they want to propagate to other languages, they should pass them in via
+    // some other means (e.g. `.buckconfig`).
     if (type == CxxSource.Type.C_CPP_OUTPUT ||
-        type == CxxSource.Type.OBJC_CPP_OUTPUT) {
-      args.addAll(getCxxPlatform().getCflags());
+        type == CxxSource.Type.OBJC_CPP_OUTPUT ||
+        type == CxxSource.Type.CXX_CPP_OUTPUT ||
+        type == CxxSource.Type.OBJCXX_CPP_OUTPUT ||
+        type == CxxSource.Type.CUDA_CPP_OUTPUT) {
+      args.addAll(getCxxPlatform().getAsflags());
     }
-
-    // If we're dealing with a C++ source that can be compiled, add the platform C++ compiler
-    // flags.
-    if (type == CxxSource.Type.CXX_CPP_OUTPUT ||
-        type == CxxSource.Type.OBJCXX_CPP_OUTPUT) {
-      args.addAll(getCxxPlatform().getCxxflags());
-    }
-
-    // All source types require assembling, so add in platform-specific assembler flags.
-    args.addAll(getCxxPlatform().getAsflags());
 
     return args.build();
   }
@@ -362,7 +353,8 @@ abstract class AbstractCxxSourceRuleFactory {
     if (type == CxxSource.Type.C_CPP_OUTPUT ||
         type == CxxSource.Type.OBJC_CPP_OUTPUT ||
         type == CxxSource.Type.CXX_CPP_OUTPUT ||
-        type == CxxSource.Type.OBJCXX_CPP_OUTPUT) {
+        type == CxxSource.Type.OBJCXX_CPP_OUTPUT ||
+        type == CxxSource.Type.CUDA_CPP_OUTPUT) {
       args.addAll(getCompilerFlags());
     }
 
@@ -381,7 +373,7 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name);
-    Compiler compiler = getCompiler(source.getType());
+    Compiler compiler = CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType());
 
     // Build up the list of compiler flags.
     CxxToolFlags flags = CxxToolFlags.explicitBuilder()
@@ -521,7 +513,10 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name);
-    Compiler compiler = getCompiler(source.getType());
+    Compiler compiler =
+        CxxSourceTypes.getCompiler(
+            getCxxPlatform(),
+            CxxSourceTypes.getPreprocessorOutputType(source.getType()));
 
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
 

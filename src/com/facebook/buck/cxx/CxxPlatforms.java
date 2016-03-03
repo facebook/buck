@@ -97,6 +97,8 @@ public class CxxPlatforms {
         .setCpp(getTool(flavor, "cpp", config).transform(getPreprocessor(cpp.getClass())).or(cpp))
         .setCxxpp(
             getTool(flavor, "cxxpp", config).transform(getPreprocessor(cxxpp.getClass())).or(cxxpp))
+        .setCuda(getTool(flavor, "cuda", config).transform(getCompiler(cc.getClass())))
+        .setCudapp(getTool(flavor, "cudapp", config).transform(getPreprocessor(cpp.getClass())))
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
@@ -153,6 +155,14 @@ public class CxxPlatforms {
             getTool(flavor, "cxxpp", config)
                 .transform(getPreprocessor(defaultPlatform.getCxxpp().getClass()))
                 .or(defaultPlatform.getCxxpp()))
+        .setCuda(
+            getTool(flavor, "cuda", config)
+                .transform(getCompiler(defaultPlatform.getCc().getClass()))
+                .or(defaultPlatform.getCuda()))
+        .setCudapp(
+            getTool(flavor, "cudapp", config)
+                .transform(getPreprocessor(defaultPlatform.getCpp().getClass()))
+                .or(defaultPlatform.getCudapp()))
         .setLd(
             getTool(flavor, "ld", config)
                 .transform(getLinker(defaultPlatform.getLd().getClass(), config))
@@ -250,6 +260,8 @@ public class CxxPlatforms {
         .addAllCxxflags(compilerOnlyFlags)
         .addAllCppflags(config.getFlags("cppflags").or(DEFAULT_CPPFLAGS))
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
+        .addAllCudaflags(config.getFlags("cudaflags").or(ImmutableList.<String>of()))
+        .addAllCudappflags(config.getFlags("cudappflags").or(ImmutableList.<String>of()))
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));
