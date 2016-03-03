@@ -436,8 +436,6 @@ abstract class AbstractCxxSourceRuleFactory {
         .addAllPlatformFlags(getPicType().getFlags())
         .addAllPlatformFlags(CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), type))
         .addAllRuleFlags(preprocessorFlags.getUnchecked(type))
-        // Add custom compiler flags.
-        .addAllRuleFlags(getRuleCompileFlags(CxxSourceTypes.getPreprocessorOutputType(type)))
         // Add custom per-file flags.
         .addAllRuleFlags(sourceFlags)
         .build();
