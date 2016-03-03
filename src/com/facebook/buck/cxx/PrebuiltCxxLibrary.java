@@ -364,8 +364,8 @@ public class PrebuiltCxxLibrary
                 getNativeLinkableExportedDeps(cxxPlatform));
           }
           @Override
-          public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-            return getSoname(cxxPlatform);
+          public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+            return Optional.of(getSoname(cxxPlatform));
           }
           @Override
           public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)

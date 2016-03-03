@@ -381,7 +381,7 @@ public class CxxPythonExtensionDescriptionTest {
     assertThat(
         sharedNativeLinkTarget.getSharedNativeLinkTargetLibraryName(
             CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo("rule.so"));
+        Matchers.equalTo(Optional.<String>absent()));
   }
 
   @Test

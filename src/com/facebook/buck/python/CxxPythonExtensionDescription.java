@@ -367,8 +367,8 @@ public class CxxPythonExtensionDescription implements
           }
 
           @Override
-          public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-            return getExtensionName(params.getBuildTarget());
+          public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+            return Optional.absent();
           }
 
           @Override

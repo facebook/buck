@@ -19,7 +19,8 @@ package com.facebook.buck.python;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.OmnibusLibraries;
-import com.facebook.buck.cxx.SharedLibrary;
+import com.facebook.buck.cxx.OmnibusLibrary;
+import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Omnibus;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -224,20 +226,26 @@ public class PythonUtil {
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.
-      for (Map.Entry<BuildTarget, SharedLibrary> root : libraries.getRoots().entrySet()) {
+      for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
         CxxPythonExtension extension = includedExtensions.get(root.getKey());
         if (extension != null) {
           allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
         } else {
+          String soname =
+              Preconditions.checkNotNull(
+                  root.getValue().getSoname().orNull(),
+                  "%s: omnibus library for %s was built without soname",
+                  params.getBuildTarget(),
+                  root.getKey());
           allComponents.addNativeLibraries(
-              Paths.get(root.getValue().getSoname()),
+              Paths.get(soname),
               root.getValue().getPath(),
               root.getKey());
         }
       }
 
       // Add all remaining libraries as native libraries.
-      for (SharedLibrary library : libraries.getLibraries()) {
+      for (OmnibusLibrary library : libraries.getLibraries()) {
         allComponents.addNativeLibraries(
             Paths.get(library.getSoname()),
             library.getPath(),

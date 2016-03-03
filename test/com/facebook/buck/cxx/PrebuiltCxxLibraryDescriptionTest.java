@@ -806,7 +806,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         rule.getSharedNativeLinkTarget(CXX_PLATFORM).get()
             .getSharedNativeLinkTargetLibraryName(CXX_PLATFORM),
-        Matchers.equalTo("libsoname.so"));
+        Matchers.equalTo(Optional.of("libsoname.so")));
   }
 
   @Test

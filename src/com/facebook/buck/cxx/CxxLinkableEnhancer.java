@@ -311,19 +311,22 @@ public class CxxLinkableEnhancer {
       final SourcePathResolver resolver,
       BuildTarget target,
       Path output,
-      String soname,
+      Optional<String> soname,
       ImmutableList<? extends Arg> args) {
+    ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
+    linkArgsBuilder.add(new StringArg("-shared"));
+    if (soname.isPresent()) {
+      linkArgsBuilder.addAll(StringArg.from(cxxPlatform.getLd().soname(soname.get())));
+    }
+    linkArgsBuilder.addAll(args);
+    ImmutableList<Arg> linkArgs = linkArgsBuilder.build();
     return createCxxLinkableBuildRule(
         cxxPlatform,
         params,
         resolver,
         target,
         output,
-        ImmutableList.<Arg>builder()
-            .add(new StringArg("-shared"))
-            .addAll(StringArg.from(cxxPlatform.getLd().soname(soname)))
-            .addAll(args)
-            .build(),
+        linkArgs,
         Linker.LinkableDepType.SHARED,
         Optional.<Linker.CxxRuntimeType>absent());
   }

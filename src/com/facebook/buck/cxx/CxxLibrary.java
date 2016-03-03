@@ -296,11 +296,12 @@ public class CxxLibrary
   }
 
   @Override
-  public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-    return CxxDescriptionEnhancer.getSharedLibrarySoname(
-        soname,
-        getBuildTarget(),
-        cxxPlatform);
+  public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+    return Optional.of(
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname,
+            getBuildTarget(),
+            cxxPlatform));
   }
 
   @Override

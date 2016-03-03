@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.google.common.base.Optional;
 
 /**
  * Describes a target which can be linked into a shared library.
@@ -32,7 +33,7 @@ public interface SharedNativeLinkTarget extends HasBuildTarget {
   /**
    * @return the shared library name used when linking this target.
    */
-  String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform);
+  Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform);
 
   /**
    * @return the {@link NativeLinkableInput} used to link this target.

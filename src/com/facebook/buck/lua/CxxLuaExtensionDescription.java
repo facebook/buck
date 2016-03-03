@@ -273,8 +273,8 @@ public class CxxLuaExtensionDescription implements
       }
 
       @Override
-      public String getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-        return getExtensionName(params.getBuildTarget(), cxxPlatform);
+      public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
+        return Optional.absent();
       }
 
       @Override

@@ -1167,7 +1167,7 @@ public class CxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         rule.getSharedNativeLinkTargetLibraryName(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo("libsoname.so"));
+        Matchers.equalTo(Optional.of("libsoname.so")));
   }
 
   @Test
