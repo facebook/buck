@@ -131,7 +131,6 @@ public class GenruleIntegrationTest {
     workspace.runBuckCommand("clean").assertSuccess();
 
     assertThat(Files.isDirectory(workspace.resolve("buck-out/gen")), equalTo(false));
-
     // Retrieving the genrule output from the local cache should recreate the directory contents.
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
 

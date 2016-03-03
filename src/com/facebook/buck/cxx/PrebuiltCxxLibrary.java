@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 public class PrebuiltCxxLibrary
@@ -56,7 +55,7 @@ public class PrebuiltCxxLibrary
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final Iterable<? extends NativeLinkable> exportedDeps;
-  private final ImmutableList<Path> includeDirs;
+  private final ImmutableList<String> includeDirs;
   private final Optional<String> libDir;
   private final Optional<String> libName;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
@@ -78,7 +77,7 @@ public class PrebuiltCxxLibrary
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       Iterable<? extends NativeLinkable> exportedDeps,
-      ImmutableList<Path> includeDirs,
+      ImmutableList<String> includeDirs,
       Optional<String> libDir,
       Optional<String> libName,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
@@ -128,18 +127,20 @@ public class PrebuiltCxxLibrary
    */
   private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    Path sharedLibraryPath =
+    SourcePath sharedLibraryPath =
         PrebuiltCxxLibraryDescription.getSharedLibraryPath(
             getBuildTarget(),
             params.getCellRoots(),
+            getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
             libDir,
             libName);
 
     // If the shared library is prebuilt, just return a reference to it.
-    if (params.getProjectFilesystem().exists(sharedLibraryPath)) {
-      return new PathSourcePath(params.getProjectFilesystem(), sharedLibraryPath);
+    if (sharedLibraryPath instanceof BuildTargetSourcePath ||
+        params.getProjectFilesystem().exists(getResolver().getAbsolutePath(sharedLibraryPath))) {
+      return sharedLibraryPath;
     }
 
     // Otherwise, generate it's build rule.
@@ -153,31 +154,34 @@ public class PrebuiltCxxLibrary
   }
 
   /**
-   * @return the {@link Path} representing the actual static PIC library.
+   * @return the {@link Optional} containing a {@link SourcePath} representing the actual
+   * static PIC library.
    */
-  private Optional<Path> getStaticPicLibrary(CxxPlatform cxxPlatform) {
-    Path staticPicLibraryPath =
+  private Optional<SourcePath> getStaticPicLibrary(CxxPlatform cxxPlatform) {
+    SourcePath staticPicLibraryPath =
         PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
             getBuildTarget(),
             params.getCellRoots(),
+            params.getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
             libDir,
             libName);
-    if (params.getProjectFilesystem().exists(staticPicLibraryPath)) {
+    if (params.getProjectFilesystem().exists(getResolver().getAbsolutePath(staticPicLibraryPath))) {
       return Optional.of(staticPicLibraryPath);
     }
 
     // If a specific static-pic variant isn't available, then just use the static variant.
-    Path staticLibraryPath =
+    SourcePath staticLibraryPath =
         PrebuiltCxxLibraryDescription.getStaticLibraryPath(
             getBuildTarget(),
             params.getCellRoots(),
+            getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
             libDir,
             libName);
-    if (params.getProjectFilesystem().exists(staticLibraryPath)) {
+    if (params.getProjectFilesystem().exists(getResolver().getAbsolutePath(staticLibraryPath))) {
       return Optional.of(staticLibraryPath);
     }
 
@@ -186,7 +190,7 @@ public class PrebuiltCxxLibrary
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
+      final CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
@@ -204,8 +208,28 @@ public class PrebuiltCxxLibrary
         builder.putAllPreprocessorFlags(
             Preconditions.checkNotNull(exportedPreprocessorFlags.apply(cxxPlatform)));
         // Just pass the include dirs as system includes.
+
+        final Iterable<SourcePath> includePaths = Iterables.transform(
+            includeDirs,
+            new Function<String, SourcePath>() {
+              @Override
+              public SourcePath apply(String input) {
+                return PrebuiltCxxLibraryDescription.getApplicableSourcePath(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    params.getProjectFilesystem(),
+                    ruleResolver,
+                    cxxPlatform,
+                    input,
+                    Optional.<String>absent()
+                );
+              }
+            });
+
         builder.addAllSystemIncludeRoots(
-            Iterables.transform(includeDirs, getProjectFilesystem().getAbsolutifier()));
+            Iterables.transform(includePaths, getResolver().getAbsolutePathFunction()));
+        builder.addAllRules(Iterables.transform(
+            getResolver().filterBuildRuleInputs(includePaths), TO_TARGET));
         return builder.build();
       case PRIVATE:
         return builder.build();
@@ -262,6 +286,7 @@ public class PrebuiltCxxLibrary
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(
         StringArg.from(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform))));
+
     if (!headerOnly) {
       if (type == Linker.LinkableDepType.SHARED) {
         Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
@@ -279,12 +304,13 @@ public class PrebuiltCxxLibrary
         }
       } else {
         Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
-        Path staticLibraryPath =
+        SourcePath staticLibraryPath =
             type == Linker.LinkableDepType.STATIC_PIC ?
                 getStaticPicLibrary(cxxPlatform).get() :
                 PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                     getBuildTarget(),
                     params.getCellRoots(),
+                    params.getProjectFilesystem(),
                     ruleResolver,
                     cxxPlatform,
                     libDir,
@@ -292,7 +318,7 @@ public class PrebuiltCxxLibrary
         SourcePathArg staticLibrary =
             new SourcePathArg(
                 getResolver(),
-                new PathSourcePath(getProjectFilesystem(), staticLibraryPath));
+                staticLibraryPath);
         if (linkWhole) {
           Linker linker = cxxPlatform.getLd();
           linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary));
@@ -376,9 +402,7 @@ public class PrebuiltCxxLibrary
                     cxxPlatform.getLd().linkWhole(
                         new SourcePathArg(
                             getResolver(),
-                            new PathSourcePath(
-                                params.getProjectFilesystem(),
-                                getStaticPicLibrary(cxxPlatform).get()))))
+                            getStaticPicLibrary(cxxPlatform).get())))
                 .build();
           }
         });

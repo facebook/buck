@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -29,20 +30,19 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroFinder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
@@ -51,7 +51,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class PrebuiltCxxLibraryDescription implements
@@ -111,15 +111,14 @@ public class PrebuiltCxxLibraryDescription implements
   // Using the {@code MACRO_FINDER} above, return the given string with any `platform` or
   // `location` macros replaced with the name of the given platform or build rule location.
   private static String expandMacros(
+      MacroHandler handler,
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver ruleResolver,
-      final CxxPlatform cxxPlatform,
       String arg) {
     try {
-      MacroHandler macroHandler = getMacroHandler(cxxPlatform.getFlavor().toString());
       return MACRO_FINDER.replace(
-          macroHandler.getMacroReplacers(target, cellNames, ruleResolver),
+          handler.getMacroReplacers(target, cellNames, ruleResolver),
           arg);
     } catch (MacroException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
@@ -128,51 +127,67 @@ public class PrebuiltCxxLibraryDescription implements
 
   // Platform unlike most macro expanders needs access to the cxx build flavor.
   // Because of that it can't be like normal expanders. So just create a handler here.
-  private static MacroHandler getMacroHandler(String platformValue) {
+  private static MacroHandler getMacroHandler(final Optional<CxxPlatform> cxxPlatform) {
+    String flav = cxxPlatform.transform(new Function<CxxPlatform, String>() {
+      @Override
+      public String apply(CxxPlatform input) {
+        return input.getFlavor().toString();
+      }
+    }).or("");
     return new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "location", new LocationMacroExpander(),
-            "platform", new StringExpander(platformValue)));
+            "platform", new StringExpander(flav)));
   }
 
 
-  // Resolve the given optional arg, falling back to the given default if not present and
-  // expanding platform macros otherwise.
-  private static String getOptionalArg(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver ruleResolver,
-      CxxPlatform cxxPlatform,
-      Optional<String> arg,
-      String defaultValue) {
-    if (!arg.isPresent()) {
-      return defaultValue;
+  public static SourcePath getApplicableSourcePath(
+      final BuildTarget target,
+      final Function<Optional<String>, Path> cellRoots,
+      final ProjectFilesystem filesystem,
+      final BuildRuleResolver ruleResolver,
+      final CxxPlatform cxxPlatform,
+      final String basePathString,
+      final Optional<String> addedPathString) {
+    ImmutableList<BuildRule> deps;
+    MacroHandler handler = getMacroHandler(Optional.of(cxxPlatform));
+    try {
+      deps = handler.extractBuildTimeDeps(target, cellRoots, ruleResolver, basePathString);
+    } catch (MacroException e) {
+      deps = ImmutableList.of();
     }
-    return expandMacros(target, cellNames, ruleResolver, cxxPlatform, arg.get());
-  }
-
-  private static String getLibDir(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver ruleResolver,
-      CxxPlatform cxxPlatform,
-      Optional<String> libDir) {
-    return getOptionalArg(target, cellNames, ruleResolver, cxxPlatform, libDir, "lib");
-  }
-
-  private static String getLibName(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver ruleResolver,
-      CxxPlatform cxxPlatform,
-      Optional<String> libName) {
-    return getOptionalArg(
+    final Path libDirPath = Paths.get(expandMacros(
+        handler,
         target,
-        cellNames,
+        cellRoots,
         ruleResolver,
-        cxxPlatform,
-        libName,
-        target.getShortName());
+        basePathString));
+
+    // If there are no deps then this is just referencing a path that should already be there
+    // So just expand the macros and return a PathSourcePath
+    if (deps.isEmpty()) {
+      Path resultPath = libDirPath;
+      if (addedPathString.isPresent()) {
+        resultPath =
+            libDirPath.resolve(expandMacros(
+                handler,
+                target,
+                cellRoots,
+                ruleResolver,
+                addedPathString.get()));
+      }
+      resultPath = target.getBasePath().resolve(resultPath);
+      return new PathSourcePath(filesystem, resultPath);
+    }
+
+    // If we get here then this is referencing the output from a build rule.
+    // This always return a BuildTargetSourcePath
+    Path p = filesystem.resolve(libDirPath);
+    if (addedPathString.isPresent()) {
+      p = p.resolve(addedPathString.get());
+    }
+    p = filesystem.getRelativizer().apply(p);
+    return new BuildTargetSourcePath(deps.iterator().next().getBuildTarget(), p);
   }
 
   public static String getSoname(
@@ -182,37 +197,50 @@ public class PrebuiltCxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       Optional<String> soname,
       Optional<String> libName) {
-    return getOptionalArg(
+
+    String unexpanded = soname.or(String.format(
+        "lib%s.%s",
+        libName.or(target.getShortName()),
+        cxxPlatform.getSharedLibraryExtension()));
+    return expandMacros(
+        getMacroHandler(Optional.of(cxxPlatform)),
         target,
         cellNames,
         ruleResolver,
-        cxxPlatform,
-        soname,
-        String.format(
-            "lib%s.%s",
-            getLibName(target, cellNames, ruleResolver, cxxPlatform, libName),
-            cxxPlatform.getSharedLibraryExtension()));
+        unexpanded);
   }
 
-  private static Path getLibraryPath(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver ruleResolver,
-      CxxPlatform cxxPlatform,
-      Optional<String> libDir,
-      Optional<String> libName,
+  private static SourcePath getLibraryPath(
+      final BuildTarget target,
+      final Function<Optional<String>, Path> cellRoots,
+      final ProjectFilesystem filesystem,
+      final BuildRuleResolver ruleResolver,
+      final CxxPlatform cxxPlatform,
+      final Optional<String> libDir,
+      final Optional<String> libName,
       String suffix) {
-    return target.getBasePath()
-        .resolve(getLibDir(target, cellNames, ruleResolver, cxxPlatform, libDir))
-        .resolve(String.format(
-            "lib%s%s",
-            getLibName(target, cellNames, ruleResolver, cxxPlatform, libName),
-            suffix));
+
+    final String libDirString = libDir.or("lib");
+    final String fileNameString = String.format(
+        "lib%s%s",
+        libName.or(target.getShortName()),
+        suffix);
+
+    return getApplicableSourcePath(
+        target,
+        cellRoots,
+        filesystem,
+        ruleResolver,
+        cxxPlatform,
+        libDirString,
+        Optional.of(fileNameString)
+    );
   }
 
-  public static Path getSharedLibraryPath(
+  public static SourcePath getSharedLibraryPath(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
+      final ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       Optional<String> libDir,
@@ -220,6 +248,7 @@ public class PrebuiltCxxLibraryDescription implements
     return getLibraryPath(
         target,
         cellNames,
+        filesystem,
         ruleResolver,
         cxxPlatform,
         libDir,
@@ -227,24 +256,42 @@ public class PrebuiltCxxLibraryDescription implements
         String.format(".%s", cxxPlatform.getSharedLibraryExtension()));
   }
 
-  public static Path getStaticLibraryPath(
+  public static SourcePath getStaticLibraryPath(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
+      final ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       Optional<String> libDir,
       Optional<String> libName) {
-    return getLibraryPath(target, cellNames, ruleResolver, cxxPlatform, libDir, libName, ".a");
+    return getLibraryPath(
+        target,
+        cellNames,
+        filesystem,
+        ruleResolver,
+        cxxPlatform,
+        libDir,
+        libName,
+        ".a");
   }
 
-  public static Path getStaticPicLibraryPath(
+  public static SourcePath getStaticPicLibraryPath(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
+      final ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       Optional<String> libDir,
       Optional<String> libName) {
-    return getLibraryPath(target, cellNames, ruleResolver, cxxPlatform, libDir, libName, "_pic.a");
+    return getLibraryPath(
+        target,
+        cellNames,
+        filesystem,
+        ruleResolver,
+        cxxPlatform,
+        libDir,
+        libName,
+        "_pic.a");
   }
 
   /**
@@ -312,28 +359,21 @@ public class PrebuiltCxxLibraryDescription implements
         args.libName);
 
 
-    Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(
-            getMacroHandler(cxxPlatform.getFlavor().toString()),
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            ruleResolver);
-    final Optional<com.facebook.buck.rules.args.Arg> libDir =
-        args.libDir.transform(macroArgFunction);
-
     // Use the static PIC variant, if available.
-    Path staticLibraryPath =
+    SourcePath staticLibraryPath =
         getStaticPicLibraryPath(
             target,
             params.getCellRoots(),
+            params.getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
             args.libDir,
             args.libName);
-    if (!params.getProjectFilesystem().exists(staticLibraryPath)) {
+    if (!params.getProjectFilesystem().exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
       staticLibraryPath = getStaticLibraryPath(
           target,
           params.getCellRoots(),
+          params.getProjectFilesystem(),
           ruleResolver,
           cxxPlatform,
           args.libDir,
@@ -348,21 +388,20 @@ public class PrebuiltCxxLibraryDescription implements
 
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath = BuildTargets.getGenPath(sharedTarget, "%s").resolve(soname);
-
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params.appendExtraDeps(
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return ImmutableSortedSet.<BuildRule>naturalOrder()
-                    // Attach any extra dependencies found from macro expansion.
-                    .addAll(
-                        libDir.transform(com.facebook.buck.rules.args.Arg.getDepsFunction(
-                            pathResolver)).or(ImmutableList.<BuildRule>of()))
-                    .build();
-              }
-            }),
+            getBuildRules(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                ruleResolver,
+                Optional.presentInstances(ImmutableList.of(args.libDir))))
+            .appendExtraDeps(
+                getBuildRules(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    ruleResolver,
+                    args.includeDirs.or(ImmutableList.of("include")))),
         pathResolver,
         sharedTarget,
         Linker.LinkType.SHARED,
@@ -385,7 +424,7 @@ public class PrebuiltCxxLibraryDescription implements
                 cxxPlatform.getLd().linkWhole(
                     new SourcePathArg(
                         pathResolver,
-                        new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath))))
+                        staticLibraryPath)))
             .build());
   }
 
@@ -393,7 +432,7 @@ public class PrebuiltCxxLibraryDescription implements
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      final BuildRuleResolver ruleResolver,
       final A args) throws NoSuchBuildTargetException {
     if (args.includeDirs.get().size() > 0) {
       LOG.warn(
@@ -416,13 +455,13 @@ public class PrebuiltCxxLibraryDescription implements
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
             params,
-            resolver,
+            ruleResolver,
             platform.get().getValue(),
             args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
             params,
-            resolver,
+            ruleResolver,
             platform.get().getValue(),
             args);
       }
@@ -430,54 +469,26 @@ public class PrebuiltCxxLibraryDescription implements
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    final BuildTarget target = params.getBuildTarget();
-
-    // Resolve all the target-base-path-relative include paths to their full paths.
-    Function<String, Path> fullPathFn = new Function<String, Path>() {
-      @Override
-      public Path apply(String input) {
-        return target.getBasePath().resolve(input);
-      }
-    };
-    final ImmutableList<Path> includeDirs = FluentIterable
-        .from(args.includeDirs.or(ImmutableList.of("include")))
-        .transform(fullPathFn)
-        .toList();
-
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final String flav = platform.transform(new Function<Map.Entry<Flavor, CxxPlatform>, String>() {
-      @Override
-      public String apply(Map.Entry<Flavor, CxxPlatform> input) {
-        return input.getValue().getFlavor().toString();
-      }
-    }).or("");
-    Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(
-            getMacroHandler(flav),
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            resolver);
-    final Optional<com.facebook.buck.rules.args.Arg> libDir =
-        args.libDir.transform(macroArgFunction);
-
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     return new PrebuiltCxxLibrary(
         params.appendExtraDeps(
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return ImmutableSortedSet.<BuildRule>naturalOrder()
-                    // Attach any extra dependencies found from macro expansion.
-                    .addAll(libDir.transform(com.facebook.buck.rules.args.Arg.getDepsFunction(
-                        pathResolver)).or(ImmutableList.<BuildRule>of()))
-                    .build();
-              }
-            }),
-        resolver,
+            getBuildRules(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                ruleResolver,
+                Optional.presentInstances(ImmutableList.of(args.libDir))))
+        .appendExtraDeps(
+            getBuildRules(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                ruleResolver,
+                args.includeDirs.or(ImmutableList.of("include")))),
+        ruleResolver,
         pathResolver,
         FluentIterable.from(args.exportedDeps.get())
-            .transform(resolver.getRuleFunction())
+            .transform(ruleResolver.getRuleFunction())
             .filter(NativeLinkable.class),
-        includeDirs,
+        args.includeDirs.or(ImmutableList.of("include")),
         args.libDir,
         args.libName,
         new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
@@ -525,7 +536,6 @@ public class PrebuiltCxxLibraryDescription implements
         });
   }
 
-
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
@@ -536,7 +546,30 @@ public class PrebuiltCxxLibraryDescription implements
     if (constructorArg.libDir.isPresent()) {
       addDepsFromParam(buildTarget, cellRoots, constructorArg.libDir.get(), targets);
     }
+    if (constructorArg.includeDirs.isPresent()) {
+      for (String include : constructorArg.includeDirs.get()) {
+        addDepsFromParam(buildTarget, cellRoots, include, targets);
+      }
+    }
     return targets.build();
+  }
+
+  private ImmutableList<BuildRule> getBuildRules(
+      BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
+      BuildRuleResolver ruleResolver,
+      Iterable<String> paramValues) {
+    ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
+    MacroHandler macroHandler = getMacroHandler(Optional.<CxxPlatform>absent());
+    for (String p : paramValues) {
+      try {
+
+        builder.addAll(macroHandler.extractBuildTimeDeps(target, cellNames, ruleResolver, p));
+      } catch (MacroException e) {
+        throw new HumanReadableException(e, "%s : %s in \"%s\"", target, e.getMessage(), p);
+      }
+    }
+    return builder.build();
   }
 
   private void addDepsFromParam(
@@ -546,7 +579,7 @@ public class PrebuiltCxxLibraryDescription implements
       ImmutableSet.Builder<BuildTarget> targets) {
     try {
       // doesn't matter that the platform expander doesn't do anything.
-      MacroHandler macroHandler = getMacroHandler("");
+      MacroHandler macroHandler = getMacroHandler(Optional.<CxxPlatform>absent());
       // Then get the parse time deps.
       targets.addAll(macroHandler.extractParseTimeDeps(target, cellNames, paramValue));
     } catch (MacroException e) {

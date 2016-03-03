@@ -89,7 +89,8 @@ abstract class AbstractCxxSourceRuleFactory {
   @Value.Lazy
   protected ImmutableList<BuildRule> getPreprocessDeps() {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
-    for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
+    ImmutableList<CxxPreprocessorInput> inputs = getCxxPreprocessorInput();
+    for (CxxPreprocessorInput input : inputs) {
       // Depend on the rules that generate the sources and headers we're compiling.
       builder.addAll(
           getPathResolver().filterBuildRuleInputs(

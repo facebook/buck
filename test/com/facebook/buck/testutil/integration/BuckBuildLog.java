@@ -19,6 +19,7 @@ package com.facebook.buck.testutil.integration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -57,6 +58,12 @@ public class BuckBuildLog {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
   }
+
+  public void assertNotTargetBuiltLocally(String buildTargetRaw) {
+    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    assertNotEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
+  }
+
 
   public void assertTargetWasFetchedFromCache(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
