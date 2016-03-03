@@ -16,14 +16,15 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.Cell;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -32,7 +33,13 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -49,7 +56,10 @@ class ParserLeaseVendor<P extends AutoCloseable> implements AutoCloseable {
   private final Multimap<Cell, P> createdParsers;
   private final Map<Cell, Deque<P>> parkedParsers;
   private final Map<Cell, Deque<SettableFuture<P>>> parserRequests;
-  private final AtomicBoolean closed;
+  private final AtomicBoolean closing;
+  private final Set<ListenableFuture<?>> pendingLeases;
+
+  private static final Logger LOG = Logger.get(ParserLeaseVendor.class);
 
   /**
    * @param maxParsersPerCell maximum number of parsers to create for a single cell.
@@ -63,7 +73,8 @@ class ParserLeaseVendor<P extends AutoCloseable> implements AutoCloseable {
     this.createdParsers = ArrayListMultimap.create();
     this.parkedParsers = new HashMap<>();
     this.parserRequests = new HashMap<>();
-    this.closed = new AtomicBoolean(false);
+    this.closing = new AtomicBoolean(false);
+    this.pendingLeases = new HashSet<>();
   }
 
   /**
@@ -72,48 +83,56 @@ class ParserLeaseVendor<P extends AutoCloseable> implements AutoCloseable {
    * @param executorService where to apply the async function
    * @param <T> type of result
    * @return a {@link ListenableFuture} that will run the supplied AsyncFunction when a parser
-   *         is available.
+   *         is available. Never cancel this future, the code doesn't handle that case.
    */
   public <T> ListenableFuture<T> leaseParser(
       final Cell cell,
       final AsyncFunction<P, T> withParser,
       ListeningExecutorService executorService) {
-    Preconditions.checkState(!closed.get());
+    Preconditions.checkState(!closing.get());
 
     final ListenableFuture<P> obtainedParser = obtainParser(cell);
-    ListenableFuture<T> futureWork = Futures.transformAsync(
+    final ListenableFuture<T> futureWork = Futures.transformAsync(
         obtainedParser,
         new AsyncFunction<P, T>() {
           @Override
           public ListenableFuture<T> apply(P input) throws Exception {
+            if (closing.get()) {
+              return Futures.immediateCancelledFuture();
+            }
             return withParser.apply(input);
           }
         },
         executorService);
 
-    Futures.addCallback(
-        futureWork,
-        new FutureCallback<T>() {
-          @Override
-          public void onSuccess (T result){
-            onCompletion();
-          }
+    synchronized (pendingLeases) {
+      pendingLeases.add(futureWork);
+    }
 
+    futureWork.addListener(
+        new Runnable() {
           @Override
-          public void onFailure (Throwable t){
-            onCompletion();
+          public void run() {
+            try {
+              returnParser(
+                  cell,
+                  obtainedParser.get(0, TimeUnit.MILLISECONDS));
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+              LOG.error(e);
+              Throwables.propagate(e);
+            } finally {
+              synchronized (pendingLeases) {
+                pendingLeases.remove(futureWork);
+              }
+            }
           }
+        },
+        executorService);
 
-          private void onCompletion() {
-            returnParser(cell, Futures.getUnchecked(obtainedParser));
-          }
-        });
     return futureWork;
   }
 
   private synchronized ListenableFuture<P> obtainParser(Cell cell) {
-    Preconditions.checkState(!closed.get());
-
     Deque<P> parserQueue = parkedParsers.get(cell);
     if (parserQueue != null && !parserQueue.isEmpty()) {
       P parser = Preconditions.checkNotNull(parserQueue.pop());
@@ -134,12 +153,11 @@ class ParserLeaseVendor<P extends AutoCloseable> implements AutoCloseable {
   }
 
   private synchronized void returnParser(Cell cell, P parser) {
-    Preconditions.checkState(!closed.get());
-
     if (parserRequests.containsKey(cell)) {
       SettableFuture<P> nextRequest = parserRequests.get(cell).pollFirst();
       if (nextRequest != null) {
-        nextRequest.set(parser);
+        boolean wasSet = nextRequest.set(parser);
+        Preconditions.checkState(wasSet, "Parser requests can't be cancelled.");
         return;
       }
     }
@@ -162,8 +180,13 @@ class ParserLeaseVendor<P extends AutoCloseable> implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    Preconditions.checkState(!closed.get());
-    closed.set(true);
+    Preconditions.checkState(!closing.get());
+    closing.set(true);
+    ListenableFuture<List<Object>> closeFuture;
+    synchronized (pendingLeases) {
+      closeFuture = Futures.successfulAsList(pendingLeases);
+    }
+    closeFuture.get();
     for (Map.Entry<Cell, Deque<SettableFuture<P>>> cellDequeEntry :
         parserRequests.entrySet()) {
       Preconditions.checkState(

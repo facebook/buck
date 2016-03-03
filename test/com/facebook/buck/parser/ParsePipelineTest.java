@@ -230,11 +230,11 @@ public class ParsePipelineTest {
 
     @Override
     public void close() throws Exception {
+      parsePipeline.close();
       com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination(
           executorService,
           5,
           TimeUnit.SECONDS);
-      parsePipeline.close();
     }
   }
 

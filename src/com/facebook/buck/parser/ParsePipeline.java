@@ -214,6 +214,10 @@ public class ParsePipeline implements AutoCloseable {
           public ListenableFuture<List<TargetNode<?>>> apply(
               ImmutableList<Map<String, Object>> allRawNodes) throws BuildTargetException {
 
+            if (shuttingDown.get()) {
+              return Futures.immediateCancelledFuture();
+            }
+
             ImmutableSet.Builder<ListenableFuture<TargetNode<?>>> allNodes = ImmutableSet.builder();
             for (Map<String, Object> rawNode : allRawNodes) {
               UnflavoredBuildTarget unflavored =
@@ -469,6 +473,10 @@ public class ParsePipeline implements AutoCloseable {
           @Override
           public ListenableFuture<TargetNode<?>> apply(Map<String, Object> rawNode)
               throws BuildTargetException {
+            if (shuttingDown.get()) {
+              return Futures.immediateCancelledFuture();
+            }
+
             try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(
                 buckEventBus,
                 buildTarget)) {
@@ -502,6 +510,9 @@ public class ParsePipeline implements AutoCloseable {
           @Override
           public ListenableFuture<ImmutableList<Map<String, Object>>> apply(
               ProjectBuildFileParser parser) throws BuildFileParseException, InterruptedException {
+            if (shuttingDown.get()) {
+              return Futures.immediateCancelledFuture();
+            }
             ImmutableList<Map<String, Object>> rawNodes =
                 ImmutableList.copyOf(parser.getAllRulesAndMetaRules(buildFile));
             return Futures.immediateFuture(
@@ -565,28 +576,25 @@ public class ParsePipeline implements AutoCloseable {
     if (shuttingDown.get()) {
       return;
     }
-    ImmutableSet.Builder<ListenableFuture<?>> pendingFutures = ImmutableSet.builder();
 
+    ListenableFuture<List<Object>> closeFuture;
     synchronized (lock) {
       shuttingDown.set(true);
       // At this point external callers should not schedule more work, internally job creation
       // should also be impossible as we're in the synchronized block (and after we exit it all code
       // paths that do create jobs should early-out with a cancelled future).
-      // This means that it is sufficient to cancel/wait for jobs that had been scheduled up to this
+      // This means that it is sufficient to wait for jobs that had been scheduled up to this
       // point.
+      // Canceling futures here won't have the desired effect - the cancellation will propagate
+      // into the ParserLeaseVendor and mess up its internal state.
       Iterable<ListenableFuture<?>> futures = Iterables.concat(
           rawNodeJobsCache.values(),
           targetNodeJobsCache.values());
-      for (ListenableFuture<?> future : futures) {
-        future.cancel(false);
-        if (!future.isDone()) {
-          pendingFutures.add(future);
-        }
-      }
+      closeFuture = Futures.successfulAsList(futures);
     }
 
     try {
-      Futures.successfulAsList(pendingFutures.build()).get();
+      closeFuture.get();
     } catch (ExecutionException e) {
       LOG.info("Discarded exception when shutting down parse pipeline.", e);
     }
