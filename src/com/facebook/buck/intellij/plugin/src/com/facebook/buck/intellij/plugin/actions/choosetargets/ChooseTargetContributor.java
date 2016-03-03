@@ -97,7 +97,12 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
       }
       //if the file is a buck file  we parse it and add its target names to the list
       if (file.getName().equals("BUCK")) {
-        String target = "//" + currentText.substring(0, currentText.length() - 1) + ":";
+        int end = currentText.length() - 1;
+        // Handle if the BUCK file is the main directory of the project
+        if (currentText.isEmpty()) {
+          end = 0;
+        }
+        String target = "//" + currentText.substring(0, end) + ":";
 
         if (otherTargets.containsKey(target)) {
           names.addAll(otherTargets.get(target));
