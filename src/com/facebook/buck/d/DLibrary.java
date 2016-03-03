@@ -80,7 +80,7 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
+    return Linkage.STATIC;
   }
 
   @Override

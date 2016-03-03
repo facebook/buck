@@ -16,7 +16,6 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -33,7 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -70,15 +68,24 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
       BuildRuleResolver buildRuleResolver,
       A args) {
 
-    return createStaticLibraryBuildRule(
+    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+
+    if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
+      return createStaticLibraryBuildRule(
+          params,
+          buildRuleResolver,
+          pathResolver,
+          dBuckConfig,
+          cxxPlatform,
+          args.srcs,
+          /* compilerFlags */ ImmutableList.<String>of(),
+          CxxSourceRuleFactory.PicType.PDC);
+    }
+
+    return new DLibrary(
         params,
         buildRuleResolver,
-        new SourcePathResolver(buildRuleResolver),
-        dBuckConfig,
-        cxxPlatform,
-        args.srcs,
-        /* compilerFlags */ ImmutableList.<String>of(),
-        CxxSourceRuleFactory.PicType.PDC);
+        pathResolver);
   }
 
   /**
@@ -117,7 +124,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
             cxxPlatform.getFlavor(),
             pic);
 
-    Archive archiveRule = Archives.createArchiveRule(
+    return Archives.createArchiveRule(
         pathResolver,
         staticTarget,
         params.copyWithBuildTarget(
@@ -130,15 +137,6 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
         cxxPlatform.getRanlib(),
         staticLibraryPath,
         compiledSources);
-    ruleResolver.addToIndex(archiveRule);
-
-    return new DLibrary(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>of(archiveRule))),
-        ruleResolver,
-        pathResolver);
   }
 
   @SuppressFieldNotInitialized
