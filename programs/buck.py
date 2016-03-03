@@ -58,4 +58,6 @@ if __name__ == "__main__":
         print(str(e), file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
-        sys.exit(1)
+        # Most shells set exit code to 128 + <Signal Number>
+        # So, when catching SIGINT (2), we return 130
+        sys.exit(130)
