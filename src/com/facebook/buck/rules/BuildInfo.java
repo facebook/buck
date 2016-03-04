@@ -18,13 +18,15 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.nio.file.Path;
 
 /**
  * Shared utilities for {@link BuildInfoRecorder} and {@link OnDiskBuildInfo}.
  */
-class BuildInfo {
+@VisibleForTesting
+public class BuildInfo {
 
   /**
    * Key for {@link OnDiskBuildInfo} which lists the recorded items.
@@ -86,7 +88,8 @@ class BuildInfo {
    * target should be stored.
    * @return A path relative to the project root that includes a trailing slash.
    */
-  static Path getPathToMetadataDirectory(BuildTarget target) {
+  @VisibleForTesting
+  public static Path getPathToMetadataDirectory(BuildTarget target) {
     return BuildTargets.getScratchPath(target, ".%s/metadata/");
   }
 }

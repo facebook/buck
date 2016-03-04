@@ -493,12 +493,23 @@ public class ProjectWorkspace {
     return destPath;
   }
 
+  public Path getPath(Path pathRelativeToProjectRoot) {
+    return destPath.resolve(pathRelativeToProjectRoot);
+  }
+
   public Path getPath(String pathRelativeToProjectRoot) {
     return destPath.resolve(pathRelativeToProjectRoot);
   }
 
+  public String getFileContents(Path pathRelativeToProjectRoot) throws IOException {
+    return getFileContentsWithAbsolutePath(getPath(pathRelativeToProjectRoot));
+  }
+
   public String getFileContents(String pathRelativeToProjectRoot) throws IOException {
-    Path path = getPath(pathRelativeToProjectRoot);
+    return getFileContentsWithAbsolutePath(getPath(pathRelativeToProjectRoot));
+  }
+
+  private String getFileContentsWithAbsolutePath(Path path) throws IOException {
     String platformExt = null;
     switch (Platform.detect()) {
       case LINUX:

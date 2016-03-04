@@ -59,6 +59,7 @@ public class PackageStringAssets extends AbstractBuildRule
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
   @VisibleForTesting
   static final String STRING_ASSET_FILE_EXTENSION = ".fbstr";
+  public static final String STRING_ASSETS_DIR_FORMAT = "__strings_%s__";
 
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final AaptPackageResources aaptPackageResources;
@@ -177,6 +178,6 @@ public class PackageStringAssets extends AbstractBuildRule
   }
 
   private Path getPathToStringAssetsDir() {
-    return BuildTargets.getScratchPath(getBuildTarget(), "__strings_%s__");
+    return BuildTargets.getScratchPath(getBuildTarget(), STRING_ASSETS_DIR_FORMAT);
   }
 }

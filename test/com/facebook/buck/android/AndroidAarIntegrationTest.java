@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -50,9 +52,11 @@ public class AndroidAarIntegrationTest {
         "android_aar_build/caseA",
         tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:app").assertSuccess();
+    String target = "//:app";
+    workspace.runBuckBuild(target).assertSuccess();
 
-    Path aar = workspace.getPath("buck-out/gen/app.aar");
+    Path aar = workspace.getPath(
+        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -81,9 +85,12 @@ public class AndroidAarIntegrationTest {
         "android_aar_build/caseB",
         tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:app").assertSuccess();
+    String target = "//:app";
+    workspace.runBuckBuild(target).assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.aar"));
+    Path aar = workspace.getPath(
+        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+    ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");
@@ -107,9 +114,12 @@ public class AndroidAarIntegrationTest {
         "android_aar_native_deps/cxx_deps",
         tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:app").assertSuccess();
+    String target = "//:app";
+    workspace.runBuckBuild(target).assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.aar"));
+    Path aar = workspace.getPath(
+        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+    ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");
@@ -130,9 +140,12 @@ public class AndroidAarIntegrationTest {
         "android_aar_native_deps/ndk_deps",
         tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:app").assertSuccess();
+    String target = "//:app";
+    workspace.runBuckBuild(target).assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.aar"));
+    Path aar = workspace.getPath(
+        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+    ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");

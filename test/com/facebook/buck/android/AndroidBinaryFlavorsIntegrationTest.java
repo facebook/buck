@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -32,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class AndroidBinaryFlavorsIntegrationTest {
 
@@ -54,39 +56,35 @@ public class AndroidBinaryFlavorsIntegrationTest {
 
   @Test
   public void testPackageStringAssetsFlavorOutput() throws IOException {
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-output",
-        "//apps/sample:app_comp_str#package_string_assets");
-    String path =
-        "buck-out/bin/apps/sample/__strings_app_comp_str#package_string_assets__/";
+    String target = "//apps/sample:app_comp_str#package_string_assets";
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
+    Path path = BuildTargets.getScratchPath(
+        BuildTargetFactory.newInstance(target),
+        PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
     result.assertSuccess();
     assertThat(
         result.getStdout().trim().split(" ")[1],
-        equalTo(Paths.get(path).toString()));
+        equalTo(path.toString()));
   }
 
   @Test
   public void testPackageStringsOnlyFlavorOutput() throws IOException {
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-output",
-        "//apps/sample:app_str#package_string_assets");
-    String path =
-        "buck-out/bin/apps/sample/__strings_app_str#package_string_assets__/";
+    String target = "//apps/sample:app_str#package_string_assets";
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
+    Path path = BuildTargets.getScratchPath(
+        BuildTargetFactory.newInstance(target),
+        PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
     result.assertSuccess();
     assertThat(
         result.getStdout().trim().split(" ")[1],
-        equalTo(Paths.get(path).toString()));
+        equalTo(path.toString()));
   }
 
   @Test
   public void testPackageStringAssetsFlavorDoesNotExist() throws IOException {
     try {
-      workspace.runBuckCommand(
-          "targets",
-          "--show-output",
-          "//apps/sample:app#package_string_assets");
+      String target = "//apps/sample:app#package_string_assets";
+      workspace.runBuckCommand("targets", "--show-output", target);
       fail("The targets command should have thrown an exception");
     } catch (HumanReadableException e) {
       assertTrue(e.getHumanReadableErrorMessage().contains("flavor does not exist"));

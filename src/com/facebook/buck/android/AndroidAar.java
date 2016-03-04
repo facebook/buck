@@ -52,6 +52,7 @@ import java.nio.file.Path;
 public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
+  public static final String AAR_FORMAT = "%s.aar";
 
   private final Path pathToOutputFile;
   private final Path temp;
@@ -73,7 +74,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
       ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
-    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.aar");
+    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, AAR_FORMAT);
     this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
