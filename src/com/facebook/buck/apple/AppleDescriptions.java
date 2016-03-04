@@ -282,12 +282,11 @@ public class AppleDescriptions {
     output.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     output.exportedLinkerFlags = arg.exportedLinkerFlags;
-    output.exportedPlatformLinkerFlags = Optional.of(
-        PatternMatchedCollection.<ImmutableList<String>>of());
+    output.exportedPlatformLinkerFlags = arg.exportedPlatformLinkerFlags;
     output.soname = Optional.absent();
     output.forceStatic = Optional.of(false);
     output.linkWhole = arg.linkWhole;
-    output.supportedPlatformsRegex = Optional.absent();
+    output.supportedPlatformsRegex = arg.supportedPlatformsRegex;
     output.canBeAsset = arg.canBeAsset;
     output.exportedDeps = arg.exportedDeps;
   }

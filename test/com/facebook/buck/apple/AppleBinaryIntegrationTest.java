@@ -149,6 +149,20 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryPropagatesExportedPlatformLinkerFlags()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_library_dependency_builds_something", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult buildResult =
+      workspace.runBuckCommand("build", "//Apps/TestApp:BadTestApp");
+    buildResult.assertFailure();
+    String stderr = buildResult.getStderr();
+    assertTrue(stderr.contains("bad-flag"));
+  }
+
+  @Test
   public void testAppleBinaryHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 

@@ -4,3 +4,13 @@ apple_library(
   exported_headers = ['lib.h'],
   visibility = ['//Apps/...'],
 )
+
+apple_library(
+  name = 'BadTestLibrary',
+  srcs = ['lib.c'],
+  exported_headers = ['lib.h'],
+  visibility = ['//Apps/...'],
+  exported_platform_linker_flags = [
+    ('def.*', ['-Wl,--bad-flag']),
+  ],
+)
