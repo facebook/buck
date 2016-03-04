@@ -20,20 +20,25 @@ import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
+/**
+ * Build rule that generates an APK that can be installed with the install command.
+ *
+ * @see com.facebook.buck.cli.InstallCommand
+ */
 public interface InstallableApk extends BuildRule {
 
   /**
    * @return the path to the AndroidManifest.xml. Note that this file might be a symlink,
    *     and might not exist at all before this rule has been built.
    */
-  public Path getManifestPath();
+  Path getManifestPath();
 
   /**
    * @return The APK at this path is the final one that points to an APK that a user should
    *         install.
    */
-  public Path getApkPath();
+  Path getApkPath();
 
-  public Optional<ExopackageInfo> getExopackageInfo();
+  Optional<ExopackageInfo> getExopackageInfo();
 
 }

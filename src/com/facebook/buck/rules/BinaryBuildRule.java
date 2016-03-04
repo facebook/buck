@@ -16,6 +16,12 @@
 
 package com.facebook.buck.rules;
 
-public interface BinaryBuildRule {
+/**
+ * Build rules that can be executed on the command line.
+ */
+public interface BinaryBuildRule extends BuildRule {
+  /**
+   * Command to execute the output of this rule.
+   */
   Tool getExecutableCommand();
 }

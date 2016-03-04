@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 
@@ -24,7 +25,7 @@ import java.io.IOException;
 /**
  * Used to tag a rule that supports dependency-file input-based rule keys.
  */
-public interface SupportsDependencyFileRuleKey {
+public interface SupportsDependencyFileRuleKey extends BuildRule {
 
   boolean useDependencyFileRuleKeys();
 

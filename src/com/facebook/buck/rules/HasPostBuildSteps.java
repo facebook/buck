@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * An interface used by {@link BuildRule}s which perform operations after the build.
  */
-public interface HasPostBuildSteps {
+public interface HasPostBuildSteps extends BuildRule {
 
   /**
    * @return a list of {@link Step}s that run after the build regardless of whether this build rule

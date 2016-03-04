@@ -22,7 +22,7 @@ import com.facebook.buck.test.TestRunningOptions;
 /**
  * A interface describing {@link TestRule}s which support being run by an external test runner.
  */
-public interface ExternalTestRunnerRule {
+public interface ExternalTestRunnerRule extends TestRule {
   ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions);

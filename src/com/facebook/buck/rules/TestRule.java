@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * A {@link BuildRule} that is designed to run tests.
  */
-public interface TestRule extends HasBuildTarget {
+public interface TestRule extends HasBuildTarget, BuildRule {
 
   /**
    * Callbacks to invoke during the test run to report information

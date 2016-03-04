@@ -34,6 +34,6 @@ import com.google.common.collect.ImmutableSortedSet;
  * entirely clear yet, so expect how we model this and how the build engine uses this to change in
  * the future.
  */
-public interface HasRuntimeDeps {
+public interface HasRuntimeDeps extends BuildRule {
   ImmutableSortedSet<BuildRule> getRuntimeDeps();
 }

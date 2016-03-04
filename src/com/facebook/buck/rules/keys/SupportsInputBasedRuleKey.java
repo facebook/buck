@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.BuildRule;
+
 /**
  * Used to tag a rule that supports input-based rule keys.
  *
@@ -30,5 +32,5 @@ package com.facebook.buck.rules.keys;
  *
  * @see InputBasedRuleKeyBuilderFactory
  */
-public interface SupportsInputBasedRuleKey {
+public interface SupportsInputBasedRuleKey extends BuildRule {
 }
