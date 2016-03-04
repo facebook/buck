@@ -42,6 +42,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.immutables.value.Value;
 
@@ -111,7 +112,8 @@ class PerBuildState implements AutoCloseable {
         registerInputsUnderSymlinks(buildFile, node);
       }
     };
-    int numParsingThreads = new ParserConfig(rootCell.getBuckConfig()).getNumParsingThreads();
+    ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
+    int numParsingThreads = parserConfig.getNumParsingThreads();
     this.parserLeaseVendor = new ParserLeaseVendor<ProjectBuildFileParser>(
         numParsingThreads, // Max parsers to create per cell.
         new Function<Cell, ProjectBuildFileParser>() {
@@ -140,10 +142,12 @@ class PerBuildState implements AutoCloseable {
                 symlinkCheckers);
           }
         },
-        executorService,
+        parserConfig.getEnableParallelParsing() ?
+            executorService :
+            MoreExecutors.newDirectExecutorService(),
         eventBus,
         parserLeaseVendor,
-        speculativeParsing.value()
+        parserConfig.getEnableParallelParsing() && speculativeParsing.value()
     );
 
     register(rootCell);

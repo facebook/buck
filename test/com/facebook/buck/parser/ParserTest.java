@@ -176,7 +176,8 @@ public class ParserTest {
           "project",
           ImmutableMap.of(
               "temp_files", ".*\\.swp$",
-              "parallel_parsing", "true"));
+              "parallel_parsing", "true",
+              "parsing_threads", Integer.toString(threads)));
     } else {
       configSectionsBuilder.put("project", ImmutableMap.of("temp_files", ".*\\.swp$"));
     }
