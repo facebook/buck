@@ -23,12 +23,11 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -38,14 +37,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 public class HalideLibrary
     extends NoopBuildRule
@@ -53,10 +50,12 @@ public class HalideLibrary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final Map<
-      Pair<Flavor, HeaderVisibility>,
-      ImmutableMap<BuildTarget, CxxPreprocessorInput>> cxxPreprocessorInputCache =
-      Maps.newHashMap();
+
+  private final LoadingCache<
+          CxxPreprocessables.CxxPreprocessorInputCacheKey,
+          ImmutableMap<BuildTarget, CxxPreprocessorInput>
+        > transitiveCxxPreprocessorInputCache =
+      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   protected HalideLibrary(
       BuildRuleParams params,
@@ -65,6 +64,12 @@ public class HalideLibrary
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
+  }
+
+  @Override
+  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeps())
+        .filter(CxxPreprocessorDep.class);
   }
 
   @Override
@@ -92,22 +97,9 @@ public class HalideLibrary
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    Pair<Flavor, HeaderVisibility> key = new Pair<>(
-        cxxPlatform.getFlavor(),
-        headerVisibility);
-    ImmutableMap<BuildTarget, CxxPreprocessorInput> result =
-        cxxPreprocessorInputCache.get(key);
-    if (result == null) {
-      ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder =
-          ImmutableMap.builder();
-      builder.put(
-          getBuildTarget(),
-          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
-      result = builder.build();
-      cxxPreprocessorInputCache.put(key, result);
-    }
-    return result;
+      HeaderVisibility headerVisibility) {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(
+        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
 
   @Override

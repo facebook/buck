@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +45,7 @@ import java.nio.file.Path;
 public final class FakeCxxLibrary
     extends NoopBuildRule
     implements AbstractCxxLibrary, NativeTestable {
+
   private final BuildTarget publicHeaderTarget;
   private final BuildTarget publicHeaderSymlinkTreeTarget;
   private final Path publicHeaderSymlinkTreeRoot;
@@ -55,6 +57,12 @@ public final class FakeCxxLibrary
   private final Path sharedLibraryOutput;
   private final String sharedLibrarySoname;
   private final ImmutableSortedSet<BuildTarget> tests;
+
+  private final LoadingCache<
+          CxxPreprocessables.CxxPreprocessorInputCacheKey,
+          ImmutableMap<BuildTarget, CxxPreprocessorInput>
+        > transitiveCxxPreprocessorInputCache =
+      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public FakeCxxLibrary(
       BuildRuleParams params,
@@ -85,6 +93,12 @@ public final class FakeCxxLibrary
   }
 
   @Override
+  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeps())
+        .filter(CxxPreprocessorDep.class);
+  }
+
+  @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
@@ -107,19 +121,8 @@ public final class FakeCxxLibrary
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
-    builder.put(
-        getBuildTarget(),
-        getCxxPreprocessorInput(cxxPlatform, headerVisibility));
-    for (BuildRule dep : getDeps()) {
-      if (dep instanceof CxxPreprocessorDep) {
-        builder.putAll(
-            ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
-                cxxPlatform,
-                headerVisibility));
-      }
-    }
-    return builder.build();
+    return transitiveCxxPreprocessorInputCache.getUnchecked(
+        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
 
   @Override

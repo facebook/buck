@@ -40,6 +40,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,6 +65,12 @@ public class CxxPreprocessablesTest {
         CxxPreprocessorInput input) {
       super(params, resolver);
       this.input = Preconditions.checkNotNull(input);
+    }
+
+    @Override
+    public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+      return FluentIterable.from(getDeps())
+          .filter(CxxPreprocessorDep.class);
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
@@ -52,6 +53,11 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
+  }
+
+  @Override
+  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return ImmutableList.of();
   }
 
   @Override

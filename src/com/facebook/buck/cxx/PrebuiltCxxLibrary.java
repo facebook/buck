@@ -19,8 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -38,15 +36,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 public class PrebuiltCxxLibrary
     extends NoopBuildRule
@@ -69,8 +65,12 @@ public class PrebuiltCxxLibrary
   private final boolean linkWhole;
   private final boolean provided;
 
-  private final Map<Pair<Flavor, HeaderVisibility>, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      cxxPreprocessorInputCache = Maps.newHashMap();
+
+  private final LoadingCache<
+          CxxPreprocessables.CxxPreprocessorInputCacheKey,
+          ImmutableMap<BuildTarget, CxxPreprocessorInput>
+        > transitiveCxxPreprocessorInputCache =
+      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public PrebuiltCxxLibrary(
       BuildRuleParams params,
@@ -189,6 +189,12 @@ public class PrebuiltCxxLibrary
   }
 
   @Override
+  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeps())
+        .filter(CxxPreprocessorDep.class);
+  }
+
+  @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
@@ -245,25 +251,8 @@ public class PrebuiltCxxLibrary
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    Pair<Flavor, HeaderVisibility> key = new Pair<>(cxxPlatform.getFlavor(), headerVisibility);
-    ImmutableMap<BuildTarget, CxxPreprocessorInput> result = cxxPreprocessorInputCache.get(key);
-    if (result == null) {
-      Map<BuildTarget, CxxPreprocessorInput> builder = Maps.newLinkedHashMap();
-      builder.put(
-          getBuildTarget(),
-          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
-      for (BuildRule dep : getDeps()) {
-        if (dep instanceof CxxPreprocessorDep) {
-          builder.putAll(
-              ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
-                  cxxPlatform,
-                  headerVisibility));
-        }
-      }
-      result = ImmutableMap.copyOf(builder);
-      cxxPreprocessorInputCache.put(key, result);
-    }
-    return result;
+    return transitiveCxxPreprocessorInputCache.getUnchecked(
+        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
 
   @Override

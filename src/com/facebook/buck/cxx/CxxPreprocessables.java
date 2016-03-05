@@ -32,6 +32,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -39,9 +43,14 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 public class CxxPreprocessables {
 
@@ -229,6 +238,57 @@ public class CxxPreprocessables {
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
         .addAllFrameworks(frameworks)
         .build();
+  }
+
+  public static LoadingCache<
+        CxxPreprocessorInputCacheKey,
+        ImmutableMap<BuildTarget, CxxPreprocessorInput>
+      > getTransitiveCxxPreprocessorInputCache(final CxxPreprocessorDep preprocessorDep) {
+    return CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<
+                CxxPreprocessorInputCacheKey,
+                ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
+              @Override
+              public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
+                  @Nonnull CxxPreprocessorInputCacheKey key)
+                  throws Exception {
+                Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
+                builder.put(
+                    preprocessorDep.getBuildTarget(),
+                    preprocessorDep.getCxxPreprocessorInput(
+                        key.getPlatform(),
+                        key.getVisibility()));
+                for (CxxPreprocessorDep dep :
+                    preprocessorDep.getCxxPreprocessorDeps(key.getPlatform())) {
+                  builder.putAll(
+                      dep.getTransitiveCxxPreprocessorInput(
+                          key.getPlatform(),
+                          key.getVisibility()));
+                }
+                return ImmutableMap.copyOf(builder);
+              }
+            });
+  }
+
+  @Value.Immutable
+  public abstract static class CxxPreprocessorInputCacheKey
+      implements Comparable<CxxPreprocessorInputCacheKey> {
+
+    @Value.Parameter
+    public abstract CxxPlatform getPlatform();
+
+    @Value.Parameter
+    public abstract HeaderVisibility getVisibility();
+
+    @Override
+    public int compareTo(@Nonnull CxxPreprocessorInputCacheKey o) {
+      return ComparisonChain.start()
+          .compare(getPlatform().getFlavor(), o.getPlatform().getFlavor())
+          .compare(getVisibility(), o.getVisibility())
+          .result();
+    }
+
   }
 
 }
