@@ -37,6 +37,20 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
 
 {call python_common.base_module_arg /}
 
+{call buck.arg}
+  {param name: 'main_module' /}
+  {param default : 'None' /}
+  {param desc}
+  The main module used to run the tests.
+  This parameter is normally not needed, as Buck will provide a default main
+  module that runs all tests.  However, you can override this with your own
+  module to perform custom initialization or command line processing.  Your
+  custom module can import the standard Buck test main
+  as <code>__test_main__</code>, and can invoke it's normal main function
+  as <code>__test_main__.main(sys.argv)</code>.
+  {/param}
+{/call}
+
 {call python_common.platform_arg /}
 
 {call buck.arg}

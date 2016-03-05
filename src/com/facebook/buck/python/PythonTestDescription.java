@@ -237,6 +237,13 @@ public class PythonTestDescription implements
         testModules);
     resolver.addToIndex(testModulesBuildRule);
 
+    String mainModule;
+    if (args.mainModule.isPresent()) {
+      mainModule = args.mainModule.get();
+    } else {
+      mainModule = PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString());
+    }
+
     // Build up the list of everything going into the python test.
     PythonPackageComponents testComponents = PythonPackageComponents.of(
         ImmutableMap
@@ -283,7 +290,7 @@ public class PythonTestDescription implements
             pathResolver,
             pythonPlatform,
             cxxPlatform,
-            PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
+            mainModule,
             allComponents,
             args.buildArgs.or(ImmutableList.<String>of()),
             args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
@@ -343,6 +350,7 @@ public class PythonTestDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends PythonLibraryDescription.Arg implements HasSourceUnderTest {
+    public Optional<String> mainModule;
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
