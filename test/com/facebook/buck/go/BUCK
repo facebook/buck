@@ -29,6 +29,7 @@ java_test(
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//src/com/facebook/buck/go:go',
+    '//src/com/facebook/buck/io:io',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',

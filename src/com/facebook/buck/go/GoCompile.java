@@ -35,6 +35,7 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -56,8 +57,9 @@ public class GoCompile extends AbstractBuildRule {
   private final ImmutableList<String> assemblerFlags;
   @AddToRuleKey
   private final GoPlatform platform;
-  // TODO(mikekap): Make this part of the rule key.
+  // TODO(mikekap): Make these part of the rule key.
   private final ImmutableList<Path> assemblerIncludeDirs;
+  private final ImmutableMap<Path, Path> importPathMap;
 
   private final SymlinkTree symlinkTree;
   private final Path output;
@@ -67,6 +69,7 @@ public class GoCompile extends AbstractBuildRule {
       SourcePathResolver resolver,
       SymlinkTree symlinkTree,
       Path packageName,
+      ImmutableMap<Path, Path> importPathMap,
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> compilerFlags,
       Tool compiler,
@@ -76,6 +79,7 @@ public class GoCompile extends AbstractBuildRule {
       Tool packer,
       GoPlatform platform) {
     super(params, resolver);
+    this.importPathMap = importPathMap;
     this.srcs = srcs;
     this.symlinkTree = symlinkTree;
     this.packageName = packageName;
@@ -137,6 +141,7 @@ public class GoCompile extends AbstractBuildRule {
         compilerFlags,
         packageName,
         compileSrcs,
+        importPathMap,
         ImmutableList.of(symlinkTree.getRoot()),
         asmHeaderPath,
         allowExternalReferences,
