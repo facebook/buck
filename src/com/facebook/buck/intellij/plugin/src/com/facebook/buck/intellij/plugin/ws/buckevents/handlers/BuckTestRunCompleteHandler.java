@@ -18,17 +18,19 @@ package com.facebook.buck.intellij.plugin.ws.buckevents.handlers;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunCompleteConsumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-public class BuckRunCompleteHandler implements BuckEventHandler {
+public class BuckTestRunCompleteHandler implements BuckEventHandler {
   @Override
   public void handleEvent(
       String rawMessage,
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
       ObjectMapper objectMapper) throws IOException {
-
+    TestRunCompleteConsumer consumer = buckEventsConsumerFactory.getTestRunCompleteConsumer();
+    consumer.consumeTestRunComplete(event.getTimestamp());
   }
 }

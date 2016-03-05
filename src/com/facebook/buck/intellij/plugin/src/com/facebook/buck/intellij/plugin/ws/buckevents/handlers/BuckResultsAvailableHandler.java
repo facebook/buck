@@ -18,6 +18,8 @@ package com.facebook.buck.intellij.plugin.ws.buckevents.handlers;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestResultsAvailableConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResultsAvailable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -29,6 +31,12 @@ public class BuckResultsAvailableHandler implements BuckEventHandler {
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
       ObjectMapper objectMapper) throws IOException {
+    TestResultsAvailable testResultsAvailable =
+        objectMapper.readValue(rawMessage, TestResultsAvailable.class);
 
+    testResultsAvailable.getResults();
+    TestResultsAvailableConsumer consumer = buckEventsConsumerFactory
+        .getTestResultsAvailableConsumer();
+    consumer.consumeTestResultsAvailable(event.getTimestamp(), testResultsAvailable.getResults());
   }
 }

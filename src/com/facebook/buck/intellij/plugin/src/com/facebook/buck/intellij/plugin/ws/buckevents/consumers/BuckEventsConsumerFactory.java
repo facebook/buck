@@ -38,6 +38,18 @@ public class BuckEventsConsumerFactory {
         return mBus.syncPublisher(RulesParsingProgressUpdateConsumer.BUCK_PARSE_PROGRESS_UPDATE);
     }
 
+    public TestRunStartedConsumer getTestRunStartedConsumer() {
+        return mBus.syncPublisher(TestRunStartedConsumer.BUCK_TEST_RUN_STARTED);
+    }
+
+    public TestRunCompleteConsumer getTestRunCompleteConsumer() {
+        return mBus.syncPublisher(TestRunCompleteConsumer.BUCK_TEST_RUN_COMPLETE);
+    }
+
+    public TestResultsAvailableConsumer getTestResultsAvailableConsumer() {
+        return mBus.syncPublisher(TestResultsAvailableConsumer.BUCK_TEST_RESULTS_AVAILABLE);
+    }
+
     public BuckBuildStartConsumer getBuildStartConsumer() {
         return mBus.syncPublisher(BuckBuildStartConsumer.BUCK_BUILD_START);
     }

@@ -29,6 +29,12 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgre
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingProgressUpdateConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunStartedConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestResultsAvailableConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunCompleteConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestCaseSummary;
+import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResults;
+import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResultsSummary;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -37,12 +43,14 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 
 import javax.swing.tree.DefaultTreeModel;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class BuckEventsConsumer implements
         BuckBuildStartConsumer,
@@ -51,6 +59,10 @@ public class BuckEventsConsumer implements
         RulesParsingStartConsumer,
         RulesParsingEndConsumer,
         RulesParsingProgressUpdateConsumer,
+        TestRunStartedConsumer,
+        TestRunCompleteConsumer,
+        TestResultsAvailableConsumer,
+
         CompilerErrorConsumer {
 
     private Project mProject;
@@ -68,10 +80,16 @@ public class BuckEventsConsumer implements
     private long mMainBuildEndTimestamp = 0;
     private long mParseFilesStartTimestamp = 0;
     private long mParseFilesEndTimestamp = 0;
+    private long mTestingEndTimestamp = 0;
+    private long mTestingStartTimestamp = 0;
+    private List<TestResults> mTestResultsList =
+            Collections.synchronizedList(new LinkedList<TestResults>());
+
 
     BuckTreeNodeBuild mCurrentBuildRootElement;
     BuckTreeNodeDetail mBuildProgress;
     BuckTreeNodeDetail mParseProgress;
+    BuckTreeNodeDetail mTestResults;
 
     public void detach() {
         mConnection.disconnect();
@@ -92,6 +110,10 @@ public class BuckEventsConsumer implements
         mTarget = target;
         mCurrentBuildRootElement = new BuckTreeNodeBuild(mTarget);
 
+        mTestResults = new BuckTreeNodeDetail(
+                mCurrentBuildRootElement,
+                BuckTreeNodeDetail.DetailType.INFO,
+                "Running tests");
         mBuildProgress = new BuckTreeNodeDetail(
                 mCurrentBuildRootElement,
                 BuckTreeNodeDetail.DetailType.INFO,
@@ -119,8 +141,11 @@ public class BuckEventsConsumer implements
         mConnection.subscribe(RulesParsingProgressUpdateConsumer.BUCK_PARSE_PROGRESS_UPDATE, this);
 
         mConnection.subscribe(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER, this);
-    }
 
+        mConnection.subscribe(TestRunStartedConsumer.BUCK_TEST_RUN_STARTED, this);
+        mConnection.subscribe(TestRunCompleteConsumer.BUCK_TEST_RUN_COMPLETE, this);
+        mConnection.subscribe(TestResultsAvailableConsumer.BUCK_TEST_RESULTS_AVAILABLE, this);
+    }
     @Override
     public void consumeBuckBuildProgressUpdate(long timestamp,
                                               double progressValue) {
@@ -250,6 +275,9 @@ public class BuckEventsConsumer implements
     public void clearDisplay() {
         BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mParseProgress);
         BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mBuildProgress);
+        if (mTestResults != null) {
+            BuckEventsConsumer.this.mCurrentBuildRootElement.removeChild(mTestResults);
+        }
     }
 
     @Override
@@ -328,7 +356,6 @@ public class BuckEventsConsumer implements
             }
         });
 
-        mConnection.disconnect();
         log("Ending build\n");
     }
 
@@ -336,5 +363,78 @@ public class BuckEventsConsumer implements
     public void consumeBuildStart(long timestamp) {
         log("Starting build\n");
         mMainBuildStartTimestamp = timestamp;
+    }
+
+    public void showTestResults() {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                float duration = (mTestingEndTimestamp - mTestingStartTimestamp) / 1000;
+
+                StringBuilder message = new StringBuilder(
+                        "Testing ended, took " + duration + " seconds!\n");
+
+                for (TestResults testResults : mTestResultsList) {
+                    for (TestCaseSummary testCaseSummary : testResults.getTestCases()) {
+                        long time = testCaseSummary.getTotalTime();
+                        String formattedTime;
+
+                        if (time >= 1000) {
+                            formattedTime = (time / 1000 + time % 1000) + "s";
+                        } else {
+                            formattedTime = time + "ms";
+                        }
+                        if (testCaseSummary.isSuccess() == true) {
+                            message.append("PASS  " + formattedTime + "  " +
+                                    testCaseSummary.getTestResults().size() +
+                                    " passed  " + testCaseSummary.getTestCaseName() + "\n");
+                        } else {
+                            int failureCount = 0;
+                            StringBuilder failureMessage = new StringBuilder();
+                            for (TestResultsSummary testResultSummary :
+                                    testCaseSummary.getTestResults()) {
+                                if (!testResultSummary.isSuccess()) {
+                                    failureMessage.append(testResultSummary.getStacktrace() + "\n");
+                                    failureCount++;
+                                }
+                            }
+
+                            message.append("FAILED  " + formattedTime + "  " +
+                                    (testCaseSummary.getTestResults().size() - failureCount) +
+                                    " passed  " + failureCount + " failed  " +
+                                    testCaseSummary.getTestCaseName() + "\n");
+                            message.append(failureMessage);
+                        }
+                    }
+                }
+                BuckEventsConsumer.this.mTestResults.setDetail(message.toString());
+                BuckEventsConsumer.this.mTreeModel.reload();
+                mTestResultsList.clear();
+            }
+        });
+    }
+
+    @Override
+    public void consumeTestResultsAvailable(long timestamp, final TestResults testResults) {
+        mTestResultsList.add(testResults);
+    }
+
+    @Override
+    public void consumeTestRunComplete(long timestamp) {
+        mTestingEndTimestamp = timestamp;
+        showTestResults();
+    }
+
+    @Override
+    public void consumeTestRunStarted(long timestamp) {
+        mTestingStartTimestamp = timestamp;
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                mCurrentBuildRootElement.removeChild(mTestResults);
+                mCurrentBuildRootElement.addChild(mTestResults);
+                mTreeModel.reload();
+            }
+        });
     }
 }
