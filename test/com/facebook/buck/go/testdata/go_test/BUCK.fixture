@@ -48,6 +48,12 @@ go_test(
 )
 
 go_test(
+  name = 'test-with-resources',
+  srcs = ['test_with_resources.go'],
+  resources = ['testdata/input'],
+)
+
+go_test(
   name = 'test-spinning',
   srcs = ['test_spinning.go'],
   test_rule_timeout_ms = 500,

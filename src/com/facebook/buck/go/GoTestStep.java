@@ -42,6 +42,7 @@ import java.nio.file.Path;
 public class GoTestStep implements Step {
 
   private final ProjectFilesystem filesystem;
+  private final Path workingDirectory;
   private final ImmutableList<String> command;
   private final ImmutableMap<String, String> env;
   private final Path exitCode;
@@ -50,12 +51,14 @@ public class GoTestStep implements Step {
 
   public GoTestStep(
       ProjectFilesystem filesystem,
+      Path workingDirectory,
       ImmutableList<String> command,
       ImmutableMap<String, String> env,
       Path exitCode,
       Optional<Long> testRuleTimeoutMs,
       Path output) {
     this.filesystem = filesystem;
+    this.workingDirectory = workingDirectory;
     this.command = command;
     this.env = env;
     this.exitCode = exitCode;
@@ -74,6 +77,7 @@ public class GoTestStep implements Step {
     // so they get properly interleaved with the test start and end messages that we
     // use when we parse the test output.
     ProcessBuilder builder = new ProcessBuilder();
+    builder.directory(filesystem.resolve(workingDirectory).toFile());
     builder.command(command);
     builder.environment().putAll(env);
     builder.redirectOutput(filesystem.resolve(output).toFile());

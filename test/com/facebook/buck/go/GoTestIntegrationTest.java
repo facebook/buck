@@ -76,10 +76,17 @@ public class GoTestIntegrationTest {
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
   }
 
-    @Test
+  @Test
   public void testGoInternalTest() throws IOException {
     ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
         "test", "//:test-success-internal");
+    result1.assertSuccess();
+  }
+
+  @Test
+  public void testWithResources() throws IOException {
+    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
+        "test", "//:test-with-resources");
     result1.assertSuccess();
   }
 
