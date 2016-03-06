@@ -22,7 +22,7 @@
       .git, \
       .buckd, \
       build, \
-      bin, \
+      bin
 
     ; Common temp file patterns:
     ; .*\.swp$ (vim)
