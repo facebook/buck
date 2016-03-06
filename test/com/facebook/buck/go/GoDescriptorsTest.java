@@ -41,7 +41,9 @@ public class GoDescriptorsTest {
         .transform(new Function<Map.Entry<Path, Path>, Map.Entry<String, String>>() {
           @Override
           public Map.Entry<String, String> apply(Map.Entry<Path, Path> input) {
-            return Maps.immutableEntry(input.getKey().toString(), input.getValue().toString());
+            return Maps.immutableEntry(
+                MorePaths.pathWithUnixSeparators(input.getKey()),
+                MorePaths.pathWithUnixSeparators(input.getValue()));
           }
         }));
   }

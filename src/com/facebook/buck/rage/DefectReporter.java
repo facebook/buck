@@ -71,7 +71,7 @@ public class DefectReporter {
       ImmutableSet<Path> paths) throws IOException {
     for (Path logFile : paths) {
       Preconditions.checkArgument(!logFile.isAbsolute(), "Should be a relative Path.", logFile);
-      out.putNextEntry(new CustomZipEntry(logFile.toString()));
+      out.putNextEntry(new CustomZipEntry(logFile));
       try (InputStream input = filesystem.newFileInputStream(logFile)) {
         ByteStreams.copy(input, out);
       }

@@ -27,6 +27,8 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class CxxLuaExtensionDescriptionTest {
 
   @Test
@@ -40,8 +42,8 @@ public class CxxLuaExtensionDescriptionTest {
             new BuildTargetNodeToBuildRuleTransformer());
     CxxLuaExtension extension = (CxxLuaExtension) builder.build(resolver);
     assertThat(
-        extension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo("hello/world/rule.so"));
+        Paths.get(extension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.equalTo(Paths.get("hello/world/rule.so")));
   }
 
 }

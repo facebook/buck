@@ -23,6 +23,8 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
+
 public class LuaUtil {
 
   private LuaUtil() {}
@@ -61,7 +63,7 @@ public class LuaUtil {
 
   public static String getBaseModule(BuildTarget target, Optional<String> override) {
     return override.isPresent()
-        ? override.get().replace('.', '/')
+        ? override.get().replace('.', File.separatorChar)
         : target.getBasePath().toString();
   }
 

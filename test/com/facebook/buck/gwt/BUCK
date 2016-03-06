@@ -9,6 +9,7 @@ java_test(
   # on underpowered systems. Run it separately in serial at the end
   # of the test run.
   run_test_separately = True,
+  test_rule_timeout_ms = 180000,
   # Constraint the heap so it doesn't balloon and OOM.
   vm_args = [ '-Xmx256m' ],
 )

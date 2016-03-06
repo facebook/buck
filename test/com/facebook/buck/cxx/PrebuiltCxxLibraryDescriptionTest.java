@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -360,9 +361,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<String>absent());
 
     assertThat(
-        pathResolver.getAbsolutePath(staticLibraryPath).toString(),
-        Matchers.containsString(String.format(String.format("two/%s/libtarget.a", "lib")))
-        );
+        MorePaths.pathWithUnixSeparators(pathResolver.getAbsolutePath(staticLibraryPath)),
+        Matchers.containsString(String.format("two/%s/libtarget.a", "lib")));
   }
 
   @Test

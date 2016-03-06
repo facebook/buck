@@ -42,8 +42,10 @@
 !com.facebook.buck.cli.TargetsCommandIntegrationTest#testBothOutputAndRuleKey
 !com.facebook.buck.cli.TargetsCommandIntegrationTest#testJsonOutputWithShowOptions
 !com.facebook.buck.cli.TargetsCommandIntegrationTest#testOutputPath
+!com.facebook.buck.cli.WebServerBuckEventListenerTest
 !com.facebook.buck.crosscell.InterCellIntegrationTest#circularCellReferencesAreAllowed
 !com.facebook.buck.cxx.ArchiveStepIntegrationTest#thatGeneratedArchivesAreDeterministic
+!com.facebook.buck.cxx.CxxBinaryDescriptionTest#createBuildRule
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#binaryShouldLinkOwnRequiredLibraries
 !com.facebook.buck.cxx.CxxBinaryIntegrationTest
 !com.facebook.buck.cxx.CxxCompilationDatabaseIntegrationTest
@@ -52,6 +54,8 @@
 !com.facebook.buck.cxx.CxxDependencyFileIntegrationTest
 !com.facebook.buck.cxx.CxxErrorTransformerFactoryTest
 !com.facebook.buck.cxx.CxxGtestTestTest
+!com.facebook.buck.cxx.CxxLibraryDescriptionTest#createBuildRule
+!com.facebook.buck.cxx.CxxLibraryDescriptionTest#createCxxLibraryBuildRules
 !com.facebook.buck.cxx.CxxLibraryDescriptionTest#sharedLibraryShouldLinkOwnRequiredLibraries
 !com.facebook.buck.cxx.CxxLibraryIntegrationTest
 !com.facebook.buck.cxx.CxxLinkIntegrationTest
