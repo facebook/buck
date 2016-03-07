@@ -69,4 +69,18 @@ public class BuckEventsConsumerFactory {
     public BuckConsoleEventConsumer getConsoleEventConsumer() {
         return mBus.syncPublisher(BuckConsoleEventConsumer.BUCK_CONSOLE_EVENT);
     }
+    public BuckProjectGenerationFinishedConsumer getBuckProjectGenerationFinishedConsumer() {
+        return mBus.syncPublisher(
+            BuckProjectGenerationFinishedConsumer.PROJECT_GENERATION_FINISHED_CONSUMER);
+    }
+
+    public BuckProjectGenerationProgressConsumer getBuckProjectGenerationProgressConsumer() {
+        return mBus.syncPublisher(
+            BuckProjectGenerationProgressConsumer.PROJECT_GENERATION_PROGRESS_CONSUMER);
+    }
+
+    public BuckProjectGenerationStartedConsumer getBuckProjectGenerationStartedConsumer() {
+        return mBus.syncPublisher(
+            BuckProjectGenerationStartedConsumer.PROJECT_GENERATION_STARTED_CONSUMER);
+    }
 }

@@ -35,7 +35,9 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckInstallStart
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckParseFinishedHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckParseStartedHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckParsingProgressHandler;
+import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckProjectGenerationFinishedHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckProjectGenerationProgressHandler;
+import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckProjectGenerationStartedHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckResultsAvailableHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckTestRunCompleteHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckStepFinishedHandler;
@@ -59,8 +61,12 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(BuckEventExternalInterface.PARSE_FINISHED, new BuckParseFinishedHandler());
     put(BuckEventExternalInterface.PARSE_STARTED, new BuckParseStartedHandler());
     put(ProgressEventInterface.PARSING_PROGRESS_UPDATED, new BuckParsingProgressHandler());
+    put(BuckEventExternalInterface.PROJECT_GENERATION_FINISHED,
+        new BuckProjectGenerationFinishedHandler());
     put(ProgressEventInterface.PROJECT_GENERATION_PROGRESS_UPDATED,
         new BuckProjectGenerationProgressHandler());
+    put(BuckEventExternalInterface.PROJECT_GENERATION_STARTED,
+        new BuckProjectGenerationStartedHandler());
     put(IndividualTesEventFinishedExternalInterface.RESULTS_AVAILABLE,
         new BuckResultsAvailableHandler());
     put(TestRunFinishedEventInterface.RUN_COMPLETE, new BuckTestRunCompleteHandler());
