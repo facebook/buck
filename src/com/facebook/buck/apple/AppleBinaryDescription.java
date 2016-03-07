@@ -16,9 +16,11 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -49,6 +51,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -67,7 +70,9 @@ public class AppleBinaryDescription implements
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       APP_FLAVOR,
       CxxCompilationDatabase.COMPILATION_DATABASE,
-      CxxCompilationDatabase.UBER_COMPILATION_DATABASE);
+      CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
+      AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+      AppleDebugFormat.NONE.getFlavor());
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
@@ -80,16 +85,19 @@ public class AppleBinaryDescription implements
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
+  private final AppleDebugFormat defaultDebugFormat;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
       ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore) {
+      ProvisioningProfileStore provisioningProfileStore,
+      AppleDebugFormat defaultDebugFormat) {
     this.delegate = delegate;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
+    this.defaultDebugFormat = defaultDebugFormat;
   }
 
   @Override
@@ -117,7 +125,9 @@ public class AppleBinaryDescription implements
           new Predicate<ImmutableSortedSet<Flavor>>() {
             @Override
             public boolean apply(ImmutableSortedSet<Flavor> input) {
-              return delegate.hasFlavors(input);
+              Set<Flavor> flavors = Sets.newHashSet(input);
+              flavors.removeAll(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+              return delegate.hasFlavors(ImmutableSet.copyOf(flavors));
             }
           });
     } else {
@@ -143,6 +153,8 @@ public class AppleBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    Optional<AppleDebugFormat> flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN
+        .getValue(params.getBuildTarget());
     BuildTarget binaryBuildTarget = params.getBuildTarget().withoutFlavors(
         AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
 
@@ -151,6 +163,19 @@ public class AppleBinaryDescription implements
         params.copyWithBuildTarget(binaryBuildTarget),
         resolver,
         args);
+    if (flavoredDebugInfoFormat.isPresent() &&
+        (binaryBuildRule instanceof CxxBinary || binaryBuildRule instanceof FatBinary)) {
+      return AppleDescriptions.createAppleDebuggableBinary(
+          delegate.getCxxPlatforms(),
+          delegate.getDefaultCxxPlatform(),
+          platformFlavorsToAppleCxxPlatforms,
+          params.copyWithBuildTarget(binaryBuildTarget),
+          targetGraph,
+          resolver,
+          binaryBuildRule,
+          args.linkStyle.or(Linker.LinkableDepType.STATIC),
+          flavoredDebugInfoFormat.get());
+    }
     return binaryBuildRule;
   }
 
@@ -165,7 +190,15 @@ public class AppleBinaryDescription implements
           "No value specified for 'info_plist' attribute.",
           params.getBuildTarget().getUnflavoredBuildTarget());
     }
-
+    AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
+        .getValue(params.getBuildTarget())
+        .or(defaultDebugFormat);
+    if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
+      return resolver.requireRule(
+          BuildTarget.builder(params.getBuildTarget())
+              .addFlavors(flavoredDebugFormat.getFlavor())
+              .build());
+    }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       CxxPlatform cxxPlatform =
           delegate.getCxxPlatforms().getValue(params.getBuildTarget())
@@ -197,12 +230,14 @@ public class AppleBinaryDescription implements
         codeSignIdentityStore,
         provisioningProfileStore,
         binaryTarget,
+        args.linkStyle,
         Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP),
         Optional.<String>absent(),
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests());
+        args.getTests(),
+        flavoredDebugFormat);
   }
 
   private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(

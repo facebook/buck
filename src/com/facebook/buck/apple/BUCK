@@ -33,6 +33,9 @@ java_immutables_library(
     'rn-package.st',
     'fix_uuid.py',
   ],
+  deps = [
+    '//src/com/facebook/buck/android:packageable',
+  ],
   autodeps = True,
   visibility = [
     'PUBLIC'

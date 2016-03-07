@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -143,8 +142,7 @@ public class NativeLinkables {
     return result.build();
   }
 
-  @VisibleForTesting
-  protected static Linker.LinkableDepType getLinkStyle(
+  public static Linker.LinkableDepType getLinkStyle(
       NativeLinkable.Linkage preferredLinkage,
       Linker.LinkableDepType requestedLinkStyle) {
     Linker.LinkableDepType linkStyle;
