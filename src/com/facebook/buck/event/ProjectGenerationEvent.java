@@ -41,14 +41,14 @@ public abstract class ProjectGenerationEvent extends AbstractBuckEvent {
   public static class Started extends ProjectGenerationEvent {
     @Override
     public String getEventName() {
-      return "ProjectGenerationStarted";
+      return PROJECT_GENERATION_STARTED;
     }
   }
 
   public static class Finished extends ProjectGenerationEvent {
     @Override
     public String getEventName() {
-      return "ProjectGenerationFinished";
+      return PROJECT_GENERATION_FINISHED;
     }
   }
 

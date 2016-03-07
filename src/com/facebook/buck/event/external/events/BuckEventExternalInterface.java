@@ -40,7 +40,10 @@ public interface BuckEventExternalInterface {
   String PARSE_STARTED = "ParseStarted";
   // Sent when file parsing has finished
   String PARSE_FINISHED = "ParseFinished";
-
+  // Sent when project generation has started
+  String PROJECT_GENERATION_STARTED = "ProjectGenerationStarted";
+  // Sent when project generation has finished
+  String PROJECT_GENERATION_FINISHED = "ProjectGenerationFinished";
   /**
    * @return the time at which the event has been created, in milliseconds.
    */
