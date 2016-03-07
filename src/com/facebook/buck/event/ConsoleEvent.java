@@ -15,13 +15,15 @@
  */
 package com.facebook.buck.event;
 
+import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
+
 import java.util.logging.Level;
 
 /**
  * Event for messages.  Post ConsoleEvents to the event bus where you would normally use
  * {@code java.util.logging}.
  */
-public class ConsoleEvent extends AbstractBuckEvent {
+public class ConsoleEvent extends AbstractBuckEvent implements ConsoleEventExternalInterface {
 
   private final Level level;
   private final boolean containsAnsiEscapeCodes;
@@ -42,6 +44,7 @@ public class ConsoleEvent extends AbstractBuckEvent {
     return containsAnsiEscapeCodes;
   }
 
+  @Override
   public String getMessage() {
     return message;
   }
@@ -100,7 +103,7 @@ public class ConsoleEvent extends AbstractBuckEvent {
 
   @Override
   public String getEventName() {
-    return "ConsoleEvent";
+    return CONSOLE_EVENT;
   }
 
   @Override

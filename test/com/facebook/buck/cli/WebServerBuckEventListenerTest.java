@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.CompilerErrorEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.httpserver.WebServerBuckEventListener;
 import com.facebook.buck.model.BuildId;
@@ -234,6 +235,10 @@ public class WebServerBuckEventListenerTest {
 
     //Compiler error
     webServerBuckEventListener.compilerErrorEvent(anyObject(CompilerErrorEvent.class));
+    EasyMock.expectLastCall().times(1);
+
+    //Console event
+    webServerBuckEventListener.consoleEvent(anyObject(ConsoleEvent.class));
     EasyMock.expectLastCall().times(1);
 
     //Output trace

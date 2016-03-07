@@ -85,6 +85,18 @@ public class EventSerializationTest {
   }
 
   @Test
+  public void testConsoleEvent() throws IOException {
+    ConsoleEvent event = ConsoleEvent.severe("Something happened");
+    event.configure(timestamp, nanoTime, threadId, buildId);
+    String message = MAPPER.writeValueAsString(event);
+    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"type\":\"ConsoleEvent\",\"eventKey\":{\"value\":4242}," +
+        "\"level\": {\"name\":\"SEVERE\",\"resourceBundleName\":" +
+        "\"sun.util.logging.resources.logging\",\"localizedName\":\"SEVERE\"}," +
+        " \"message\":\"Something happened\"}", message);
+  }
+
+  @Test
   public void testProjectGenerationEventFinished() throws IOException {
     ProjectGenerationEvent.Finished event = ProjectGenerationEvent.finished();
     event.configure(timestamp, nanoTime, threadId, buildId);
