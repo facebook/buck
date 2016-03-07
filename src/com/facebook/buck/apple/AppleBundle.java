@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeTestable;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -308,6 +309,17 @@ public class AppleBundle
               getProjectFilesystem(),
               binaryOutputPath,
               bundleBinaryPath));
+
+      // Copy another copy of the watchkit stub
+      if (binary.get() instanceof WriteFile) {
+        final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
+        stepsBuilder.add(
+            new MkdirStep(getProjectFilesystem(), watchKitStubDir),
+            CopyStep.forFile(
+                getProjectFilesystem(),
+                binaryOutputPath,
+                watchKitStubDir.resolve("WK")));
+      }
     }
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());

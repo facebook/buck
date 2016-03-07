@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -39,7 +38,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -48,12 +46,6 @@ import java.util.Set;
 public class ApplePackageIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
-
-  private static boolean isDirEmpty(final Path directory) throws IOException {
-    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
-      return !dirStream.iterator().hasNext();
-    }
-  }
 
   @Test
   public void packageHasProperStructure() throws IOException, InterruptedException {
@@ -107,10 +99,8 @@ public class ApplePackageIntegrationTest {
         workspace.getPath("buck-out/gen/DemoAppPackage.ipa"),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-    assertTrue(Files.isExecutable(destination.resolve("WatchKitSupport2/WK")));
-    assertTrue(Files.isDirectory(destination.resolve("Symbols")));
-    assertTrue(isDirEmpty(destination.resolve("Symbols")));
-    assertFalse(Files.exists(destination.resolve("Payload/DemoApp.app/Watch/_WatchKitStub")));
+    assertTrue(Files.exists(destination.resolve(
+        "Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK")));
   }
 
   @Test
