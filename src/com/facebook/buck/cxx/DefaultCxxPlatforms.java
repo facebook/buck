@@ -55,42 +55,36 @@ public class DefaultCxxPlatforms {
   public static CxxPlatform build(
       Platform platform,
       CxxBuckConfig config) {
-    if (platform == Platform.MACOS) {
-      return CxxPlatforms.build(
-          FLAVOR,
-          config,
-          new DefaultCompiler(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
-          new DefaultPreprocessor(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
-          new ClangCompiler(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
-          new ClangCompiler(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
-          new ClangPreprocessor(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
-          new ClangPreprocessor(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
-          new DarwinLinker(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
-          ImmutableList.<String>of(),
-          new HashedFileTool(DEFAULT_STRIP),
-          new BsdArchiver(new HashedFileTool(DEFAULT_AR)),
-          new HashedFileTool(DEFAULT_RANLIB),
-          new HashedFileTool(DEFAULT_NM),
-          ImmutableList.<String>of(),
-          ImmutableList.<String>of(),
-          ImmutableList.<String>of(),
-          ImmutableList.<String>of(),
-          "dylib",
-          ".%s.dylib",
-          Optional.<DebugPathSanitizer>absent(),
-          ImmutableMap.<String, String>of());
-    }
-
     String sharedLibraryExtension;
     String sharedLibraryVersionedExtensionFormat;
+    Path defaultCFrontend;
+    Path defaultCxxFrontend;
+    Linker linker;
+    Archiver archiver;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
         sharedLibraryVersionedExtensionFormat = "so.%s";
+        defaultCFrontend = DEFAULT_C_FRONTEND;
+        defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
+        linker = new GnuLinker(new HashedFileTool(defaultCxxFrontend));
+        archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
+        break;
+      case MACOS:
+        sharedLibraryExtension = "dylib";
+        sharedLibraryVersionedExtensionFormat = ".%s.dylib";
+        defaultCFrontend = DEFAULT_OSX_C_FRONTEND;
+        defaultCxxFrontend = DEFAULT_OSX_CXX_FRONTEND;
+        linker = new DarwinLinker(new HashedFileTool(defaultCxxFrontend));
+        archiver = new BsdArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
         sharedLibraryVersionedExtensionFormat = "dll";
+        defaultCFrontend = DEFAULT_C_FRONTEND;
+        defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
+        linker = new GnuLinker(new HashedFileTool(defaultCxxFrontend));
+        archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       //$CASES-OMITTED$
       default:
@@ -100,16 +94,16 @@ public class DefaultCxxPlatforms {
     return CxxPlatforms.build(
         FLAVOR,
         config,
-        new DefaultCompiler(new HashedFileTool(DEFAULT_C_FRONTEND)),
-        new DefaultPreprocessor(new HashedFileTool(DEFAULT_C_FRONTEND)),
-        new DefaultCompiler(new HashedFileTool(DEFAULT_C_FRONTEND)),
-        new DefaultCompiler(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
-        new DefaultPreprocessor(new HashedFileTool(DEFAULT_C_FRONTEND)),
-        new DefaultPreprocessor(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
-        new GnuLinker(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
+        new DefaultCompiler(new HashedFileTool(defaultCFrontend)),
+        new DefaultPreprocessor(new HashedFileTool(defaultCFrontend)),
+        CxxPlatforms.getCompilerSupplier(defaultCFrontend),
+        CxxPlatforms.getCompilerSupplier(defaultCxxFrontend),
+        CxxPlatforms.getPreprocessorSupplier(defaultCFrontend),
+        CxxPlatforms.getPreprocessorSupplier(defaultCxxFrontend),
+        linker,
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_STRIP),
-        new GnuArchiver(new HashedFileTool(DEFAULT_AR)),
+        archiver,
         new HashedFileTool(DEFAULT_RANLIB),
         new HashedFileTool(DEFAULT_NM),
         ImmutableList.<String>of(),

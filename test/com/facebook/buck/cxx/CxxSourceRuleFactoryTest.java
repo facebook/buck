@@ -482,12 +482,6 @@ public class CxxSourceRuleFactoryTest {
   @RunWith(Parameterized.class)
   public static class CorrectFlagsAreUsedForCompileAndPreprocessBuildRules {
 
-    private static final SourcePath as = new FakeSourcePath("as");
-    private static final SourcePath cc = new FakeSourcePath("cc");
-    private static final SourcePath cpp = new FakeSourcePath("cpp");
-    private static final SourcePath cxx = new FakeSourcePath("cxx");
-    private static final SourcePath cxxpp = new FakeSourcePath("cxxpp");
-
     private static final ImmutableList<String> asflags = ImmutableList.of("-asflag", "-asflag");
     private static final ImmutableList<String> cflags = ImmutableList.of("-cflag", "-cflag");
     private static final ImmutableList<String> cxxflags = ImmutableList.of("-cxxflag", "-cxxflag");
@@ -568,9 +562,7 @@ public class CxxSourceRuleFactoryTest {
               ImmutableMap.of(
                   "cxx", ImmutableMap.<String, String>builder()
                       .put("asppflags", space.join(asppflags))
-                      .put("cpp", sourcePathResolver.deprecatedGetPath(cpp).toString())
                       .put("cppflags", space.join(cppflags))
-                      .put("cxxpp", sourcePathResolver.deprecatedGetPath(cxxpp).toString())
                       .put("cxxppflags", space.join(cxxppflags))
                       .build()))
           .setFilesystem(PROJECT_FILESYSTEM)
@@ -606,11 +598,8 @@ public class CxxSourceRuleFactoryTest {
           .setSections(
               ImmutableMap.of(
                   "cxx", ImmutableMap.<String, String>builder()
-                      .put("as", sourcePathResolver.deprecatedGetPath(as).toString())
                       .put("asflags", space.join(asflags))
-                      .put("cc", sourcePathResolver.deprecatedGetPath(cc).toString())
                       .put("cflags", space.join(cflags))
-                      .put("cxx", sourcePathResolver.deprecatedGetPath(cxx).toString())
                       .put("cxxflags", space.join(cxxflags))
                       .build()))
           .setFilesystem(PROJECT_FILESYSTEM)

@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
+import com.google.common.base.Suppliers;
 
 import java.nio.file.Paths;
 
@@ -31,10 +32,18 @@ public class CxxPlatformUtils {
           .setFlavor(ImmutableFlavor.of("platform"))
           .setAs(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
           .setAspp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
-          .setCc(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
-          .setCpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
-          .setCxx(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
-          .setCxxpp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
+          .setCcSupplier(
+              Suppliers.<Compiler>ofInstance(
+                  new DefaultCompiler(new HashedFileTool(Paths.get("tool")))))
+          .setCppSupplier(
+              Suppliers.<Preprocessor>ofInstance(
+                  new DefaultPreprocessor(new HashedFileTool(Paths.get("tool")))))
+          .setCxxSupplier(
+              Suppliers.<Compiler>ofInstance(
+                  new DefaultCompiler(new HashedFileTool(Paths.get("tool")))))
+          .setCxxppSupplier(
+              Suppliers.<Preprocessor>ofInstance(
+                  new DefaultPreprocessor(new HashedFileTool(Paths.get("tool")))))
           .setCuda(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
           .setCudapp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))

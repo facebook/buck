@@ -37,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -383,45 +384,49 @@ public class NdkCxxPlatforms {
                     compilerType.getCc(),
                     version,
                     executableFinder)))
-        .setCc(
-            compilerType.compilerFromTool(
-                getCTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    compilerType.getCc(),
-                    version,
-                    executableFinder)))
+        .setCcSupplier(
+            Suppliers.ofInstance(
+                compilerType.compilerFromTool(
+                    getCTool(
+                        ndkRoot,
+                        targetConfiguration,
+                        host,
+                        compilerType.getCc(),
+                        version,
+                        executableFinder))))
         .addAllCflags(getCflagsInternal(ndkRoot, targetConfiguration, host))
-        .setCpp(
-            compilerType.preprocessorFromTool(
-                getCTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    compilerType.getCc(),
-                    version,
-                    executableFinder)))
+        .setCppSupplier(
+            Suppliers.ofInstance(
+                compilerType.preprocessorFromTool(
+                    getCTool(
+                        ndkRoot,
+                        targetConfiguration,
+                        host,
+                        compilerType.getCc(),
+                        version,
+                        executableFinder))))
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration, host))
-        .setCxx(
-            compilerType.compilerFromTool(
-                getCTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    compilerType.getCxx(),
-                    version,
-                    executableFinder)))
+        .setCxxSupplier(
+            Suppliers.ofInstance(
+                compilerType.compilerFromTool(
+                    getCTool(
+                        ndkRoot,
+                        targetConfiguration,
+                        host,
+                        compilerType.getCxx(),
+                        version,
+                        executableFinder))))
         .addAllCxxflags(getCxxflagsInternal(ndkRoot, targetConfiguration, host))
-        .setCxxpp(
-            compilerType.preprocessorFromTool(
-                getCTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    compilerType.getCxx(),
-                    version,
-                    executableFinder)))
+        .setCxxppSupplier(
+            Suppliers.ofInstance(
+                compilerType.preprocessorFromTool(
+                    getCTool(
+                        ndkRoot,
+                        targetConfiguration,
+                        host,
+                        compilerType.getCxx(),
+                        version,
+                        executableFinder))))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration, host, cxxRuntime))
         .setLd(
             getCcLinkTool(
