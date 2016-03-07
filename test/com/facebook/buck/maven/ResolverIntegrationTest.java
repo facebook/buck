@@ -44,6 +44,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
@@ -65,17 +66,20 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class ResolverIntegrationTest {
 
   @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  public TemporaryFolder temp = new DebuggableTemporaryFolder();
 
   private static HttpdForTests httpd;
   private static ProjectBuildFileParser buildFileParser;
@@ -84,7 +88,6 @@ public class ResolverIntegrationTest {
   private Path thirdParty;
   private Path thirdPartyRelative;
   private Path localRepo;
-  private Resolver resolver;
 
   @BeforeClass
   public static void setUpFakeMavenRepo() throws Exception {
@@ -143,20 +146,39 @@ public class ResolverIntegrationTest {
     thirdPartyRelative = Paths.get("third-party").resolve("java");
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
     localRepo = temp.newFolder().toPath();
+  }
 
+  private ArtifactConfig newConfig() {
     ArtifactConfig config = new ArtifactConfig();
     config.buckRepoRoot = buckRepoRoot.toString();
     config.thirdParty = thirdPartyRelative.toString();
     config.mavenLocalRepo = localRepo.toString();
-    config.repositories.add(new ArtifactConfig.Repository(httpd.getUri("/").toString()));
+    return config;
+  }
 
-    resolver = new Resolver(config);
+  private void resolveWithArtifacts(String... artifacts)
+      throws URISyntaxException, IOException, RepositoryException, ExecutionException,
+      InterruptedException {
+    ArtifactConfig config = newConfig();
+    config.repositories.add(new ArtifactConfig.Repository(httpd.getUri("/").toString()));
+    config.artifacts.addAll(Arrays.asList(artifacts));
+    config.visibility.add("PUBLIC");
+    new Resolver(config).resolve(config.artifacts);
   }
 
   @Test
-  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnce()
-  throws IOException, RepositoryException {
-    resolver.resolve("com.example:A-depends-on-B-and-C:jar:1.0");
+  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnce() throws Exception {
+    resolveWithArtifacts("com.example:A-depends-on-B-and-C:jar:1.0");
+    Path groupDir = thirdParty.resolve("example");
+    assertTrue(Files.exists(groupDir));
+    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
+    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar")));
+  }
+
+  @Test
+  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnceViaPom() throws Exception {
+    resolveWithArtifacts(repo.resolve(
+        "com/example/A-depends-on-B-and-C/1.0/A-depends-on-B-and-C-1.0.pom").toString());
     Path groupDir = thirdParty.resolve("example");
     assertTrue(Files.exists(groupDir));
     assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
@@ -165,7 +187,7 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldSetUpAPrivateLibraryIfGivenAMavenCoordWithoutDeps() throws Exception {
-    resolver.resolve("com.example:no-deps:jar:1.0");
+    resolveWithArtifacts("com.example:no-deps:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
     assertTrue(Files.exists(groupDir));
@@ -190,8 +212,8 @@ public class ResolverIntegrationTest {
     assertTrue(rule.containsKey("sourceJar"));
     assertNull(rule.get("sourceJar"));
 
-    // Nothing depends on this, so it's not visible
-    assertEquals(ImmutableList.of(), rule.get("visibility"));
+    // It's a library that's requested on the CLI, so it gets full visibility.
+    assertEquals(ImmutableList.of("PUBLIC"), rule.get("visibility"));
 
     // And it doesn't depend on anything
     assertEquals(ImmutableList.of(), rule.get("deps"));
@@ -199,7 +221,7 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldIncludeSourceJarIfOneIsPresent() throws Exception {
-    resolver.resolve("com.example:with-sources:jar:1.0");
+    resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
     List<Map<String, Object>> rules = buildFileParser.getAll(groupDir.resolve("BUCK"));
@@ -210,7 +232,7 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldSetVisibilityOfTargetToGiveDependenciesAccess() throws Exception {
-    resolver.resolve("com.example:with-deps:jar:1.0");
+    resolveWithArtifacts("com.example:with-deps:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     Map<String, Object> withDeps =
@@ -228,7 +250,7 @@ public class ResolverIntegrationTest {
         visibility);
     assertEquals(ImmutableList.of(), noDeps.get("deps"));
 
-    assertEquals(ImmutableList.of(), withDeps.get("visibility"));
+    assertEquals(ImmutableList.of("PUBLIC"), withDeps.get("visibility"));
     @SuppressWarnings("unchecked")
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());
@@ -240,7 +262,7 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldOmitTargetsInTheSameBuildFileInVisibilityArguments() throws Exception {
-    resolver.resolve("com.example:deps-in-same-project:jar:1.0");
+    resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     List<Map<String, Object>> allTargets = buildFileParser.getAll(
@@ -275,7 +297,7 @@ public class ResolverIntegrationTest {
     Path repoOlderJar = groupDir.resolve("no-deps-1.0.jar");
     assertFalse(Files.exists(repoOlderJar));
 
-    resolver.resolve("com.example:no-deps:jar:1.0");
+    resolveWithArtifacts("com.example:no-deps:jar:1.0");
 
     assertTrue(Files.exists(groupDir));
 
@@ -298,7 +320,7 @@ public class ResolverIntegrationTest {
     Files.copy(sourceJar, existingNewestJar);
 
     Artifact artifact = new DefaultArtifact("com.example", "no-deps", "jar", "1.0");
-    Optional<Path> result = resolver.getNewerVersionFile(artifact, groupDir);
+    Optional<Path> result = new Resolver(newConfig()).getNewerVersionFile(artifact, groupDir);
 
     assertTrue(result.isPresent());
     assertThat(result.get(), equalTo(existingNewestJar));

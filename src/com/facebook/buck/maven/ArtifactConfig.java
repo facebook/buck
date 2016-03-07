@@ -51,7 +51,7 @@ public class ArtifactConfig {
     @Option(name = "-maven", usage = "Maven URI(s)")
     public List<String> repositoryURIs = new ArrayList<>();
 
-    @Option(name = "-visibility", usage = "Targets that can see the artifacts")
+    @Option(name = "-visibility", usage = "Targets that can see the artifacts. (PUBLIC is allowed)")
     public List<String> visibility = new ArrayList<>();
 
     @Option(name = "-json", usage = "JSON configuration file for artifacts, paths, and Maven repos")
@@ -77,7 +77,7 @@ public class ArtifactConfig {
 
   public List<String> artifacts = new ArrayList<>();
 
-  @JsonProperty(value = "repo")
+  @JsonProperty("repo")
   public String buckRepoRoot;
 
   @JsonProperty("third_party")
@@ -111,6 +111,9 @@ public class ArtifactConfig {
     System.out.println();
     System.out.println("Usage: java -jar resolver.jar [OPTIONS] -repo REPO artifact...");
     System.out.println();
+    System.out.println(
+        "Artifacts are of the form group:artifact[:extension[:classifier]]:version, " +
+            "or a .pom file");
     parser.printUsage(System.out);
     System.exit(0);
   }
