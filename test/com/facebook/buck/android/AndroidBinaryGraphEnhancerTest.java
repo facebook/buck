@@ -260,18 +260,18 @@ public class AndroidBinaryGraphEnhancerTest {
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
-    String flavor = "buildconfig_com_example_buck";
+    Flavor flavor = ImmutableFlavor.of("buildconfig_com_example_buck");
+    BuildTarget enhancedBuildConfigTarget = BuildTarget
+        .builder(apkTarget)
+        .addFlavors(flavor)
+        .build();
     assertEquals(
         "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary" +
             " created via graph enhancement.",
-        ImmutableSet.of(Paths.get(
-            "buck-out/gen/java/com/example/lib__apk#" + flavor + "__output/apk#" + flavor + ".jar")
-        ),
+        ImmutableSet.of(
+            BuildTargets.getGenPath(enhancedBuildConfigTarget, "lib__%s__output")
+                .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
         result.getClasspathEntriesToDex());
-    BuildTarget enhancedBuildConfigTarget = BuildTarget
-        .builder(apkTarget)
-        .addFlavors(ImmutableFlavor.of(flavor))
-        .build();
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
     AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =

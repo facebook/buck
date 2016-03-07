@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.BuckConstant.GEN_DIR;
-import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -32,6 +30,7 @@ import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -100,8 +99,7 @@ public class AndroidBinaryTest {
         binaryBuildTarget)
         .setOriginalDeps(originalDepsTargets)
         .setBuildTargetsToExcludeFromDex(
-            ImmutableSet.of(
-                BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo")))
+            ImmutableSet.of(libraryTwoRule.getBuildTarget()))
         .setManifest(new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setKeystore(keystoreRule.getBuildTarget())
         .build(ruleResolver);
@@ -120,12 +118,13 @@ public class AndroidBinaryTest {
         commands,
         buildableContext);
 
+    BuildTarget aaptPackageTarget = binaryBuildTarget
+        .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR);
+    Path proguardOutputDir =
+        BuildTargets.getGenPath(aaptPackageTarget, "__%s__proguard__/.proguard/");
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
-        GEN_PATH.resolve(
-            "java/src/com/facebook/base/__apk#aapt_package__proguard__/" +
-                ".proguard/configuration.txt"),
-        GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/" +
-                ".proguard/mapping.txt"));
+        proguardOutputDir.resolve("configuration.txt"),
+        proguardOutputDir.resolve("mapping.txt"));
 
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
 
@@ -138,22 +137,24 @@ public class AndroidBinaryTest {
         Optional.<Path>absent(),
         "1024M",
         Optional.<String>absent(),
-        GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/" +
-                "/.proguard/proguard.txt"),
+        proguardOutputDir.resolve("proguard.txt"),
         ImmutableSet.<Path>of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         Optional.<Integer>absent(),
         ImmutableMap.of(
-            GEN_PATH.resolve("java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
-            GEN_PATH.resolve(
-                "java/src/com/facebook/base/__apk#aapt_package__proguard__/.proguard/buck-out/" +
-                    "gen/java/src/com/facebook/base/lib__libraryOne__output/" +
-                    "libraryOne-obfuscated.jar")),
+            BuildTargets.getGenPath(libraryOneRule.getBuildTarget(), "lib__%s__output")
+                .resolve(libraryOneRule.getBuildTarget().getShortName() + ".jar"),
+            proguardOutputDir.resolve(
+                BuildTargets.getGenPath(libraryOneRule.getBuildTarget(), "lib__%s__output/")
+                    .resolve(
+                        libraryOne.getBuildTarget().getShortNameAndFlavorPostfix() +
+                            "-obfuscated.jar"))),
         ImmutableSet.of(
             libraryTwo.getBuildTarget().getUnflavoredBuildTarget().getCellPath().resolve(
-                GEN_PATH.resolve(
-                    "java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"))),
-        GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/.proguard"),
+                BuildTargets.getGenPath(libraryTwoRule.getBuildTarget(), "lib__%s__output")
+                    .resolve(
+                        libraryTwoRule.getBuildTarget().getShortNameAndFlavorPostfix() + ".jar"))),
+        proguardOutputDir,
         buildableContext,
         expectedSteps);
 
@@ -205,20 +206,26 @@ public class AndroidBinaryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     Keystore keystore = addKeystoreRule(ruleResolver);
 
+    BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
     AndroidBinary ruleInRootDirectory = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
-        .setKeystore(keystore.getBuildTarget())
-        .build(ruleResolver);
-    assertEquals(Paths.get(GEN_DIR + "/fb4a.apk"), ruleInRootDirectory.getApkPath());
-
-    AndroidBinary ruleInNonRootDirectory = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//java/com/example:fb4a"))
+        targetInRootDirectory)
         .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);
     assertEquals(
-        Paths.get(GEN_DIR + "/java/com/example/fb4a.apk"), ruleInNonRootDirectory.getApkPath());
+        BuildTargets.getGenPath(targetInRootDirectory, "%s.apk"),
+        ruleInRootDirectory.getApkPath());
+
+    BuildTarget targetInNonRootDirectory =
+        BuildTargetFactory.newInstance("//java/com/example:fb4a");
+    AndroidBinary ruleInNonRootDirectory = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+        targetInNonRootDirectory)
+        .setManifest(new FakeSourcePath("AndroidManifest.xml"))
+        .setKeystore(keystore.getBuildTarget())
+        .build(ruleResolver);
+    assertEquals(
+        BuildTargets.getGenPath(targetInNonRootDirectory, "%s.apk"),
+        ruleInNonRootDirectory.getApkPath());
   }
 
   @Test
@@ -226,20 +233,23 @@ public class AndroidBinaryTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
 
+    BuildTarget target = BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign");
     AndroidBinary rule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
+        target)
         .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
         .build(ruleResolver);
 
+    BuildTarget libBaseTarget =
+        BuildTargetFactory.newInstance("//first-party/orca/lib-base:lib-base");
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
-        SCRATCH_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes"));
+        BuildTargets.getScratchPath(libBaseTarget, "lib__%s__classes"));
     assertEquals(
-        GEN_PATH.resolve(
-            "__fbandroid_with_dash_debug_fbsign#aapt_package__proguard__/.proguard")
+        BuildTargets.getGenPath(
+            target.withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
+            "__%s__proguard__/.proguard")
             .resolve(
-                SCRATCH_PATH.resolve(
-                    "first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar")),
+                BuildTargets.getScratchPath(libBaseTarget, "lib__%s__classes-obfuscated.jar")),
         proguardDir);
   }
 

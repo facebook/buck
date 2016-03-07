@@ -62,7 +62,7 @@ public class AndroidBinaryGraphEnhancer {
   private static final Flavor DEX_FLAVOR = ImmutableFlavor.of("dex");
   private static final Flavor DEX_MERGE_FLAVOR = ImmutableFlavor.of("dex_merge");
   private static final Flavor RESOURCES_FILTER_FLAVOR = ImmutableFlavor.of("resources_filter");
-  private static final Flavor AAPT_PACKAGE_FLAVOR = ImmutableFlavor.of("aapt_package");
+  public static final Flavor AAPT_PACKAGE_FLAVOR = ImmutableFlavor.of("aapt_package");
   private static final Flavor CALCULATE_ABI_FLAVOR = ImmutableFlavor.of("calculate_exopackage_abi");
   public static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
       ImmutableFlavor.of("package_string_assets");
