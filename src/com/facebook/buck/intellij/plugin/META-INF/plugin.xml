@@ -124,7 +124,10 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckTestAction" id="buck.Test">
           <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
       </action>
-        <action class="com.facebook.buck.intellij.plugin.actions.BuckKillAction" id="buck.Kill">
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckProjectGenerationAction" id="buck.ProjectGeneration">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
+      </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckKillAction" id="buck.Kill">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
       </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
