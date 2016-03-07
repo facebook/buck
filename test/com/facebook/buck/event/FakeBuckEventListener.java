@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
@@ -26,10 +27,14 @@ public class FakeBuckEventListener {
 
   @Subscribe
   public void eventFired(BuckEvent event) {
-    events.add(event);
+    synchronized (events) {
+      events.add(event);
+    }
   }
 
   public List<BuckEvent> getEvents() {
-    return events;
+    synchronized (events) {
+      return ImmutableList.copyOf(events);
+    }
   }
 }

@@ -34,7 +34,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -82,7 +81,7 @@ class PerBuildState implements AutoCloseable {
    */
   private final Map<Path, Path> symlinkExistenceCache;
 
-  private ParserLeaseVendor<ProjectBuildFileParser> parserLeaseVendor;
+  private ProjectBuildFileParserPool projectBuildFileParserPool;
   private ParsePipeline parsePipeline;
 
   public PerBuildState(
@@ -114,7 +113,7 @@ class PerBuildState implements AutoCloseable {
     };
     ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
     int numParsingThreads = parserConfig.getNumParsingThreads();
-    this.parserLeaseVendor = new ParserLeaseVendor<ProjectBuildFileParser>(
+    this.projectBuildFileParserPool = new ProjectBuildFileParserPool(
         numParsingThreads, // Max parsers to create per cell.
         new Function<Cell, ProjectBuildFileParser>() {
           @Override
@@ -146,7 +145,7 @@ class PerBuildState implements AutoCloseable {
             executorService :
             MoreExecutors.newDirectExecutorService(),
         eventBus,
-        parserLeaseVendor,
+        projectBuildFileParserPool,
         parserConfig.getEnableParallelParsing() && speculativeParsing.value()
     );
 
@@ -281,13 +280,7 @@ class PerBuildState implements AutoCloseable {
     stdout.close();
     stderr.close();
     parsePipeline.close();
-    try {
-      parserLeaseVendor.close();
-    } catch (Exception e) {
-      Throwables.propagateIfInstanceOf(e, InterruptedException.class);
-      Throwables.propagateIfInstanceOf(e, BuildFileParseException.class);
-      Throwables.propagate(e);
-    }
+    projectBuildFileParserPool.close();
 
     LOG.debug(
         "Cleaning cache of build files with inputs under symlink %s",

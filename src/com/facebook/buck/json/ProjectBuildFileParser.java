@@ -160,6 +160,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.enableProfiling = enableProfiling;
   }
 
+  @VisibleForTesting
+  public boolean isClosed() {
+    return isClosed;
+  }
+
   private void ensureNotClosed() {
     Preconditions.checkState(!isClosed);
   }

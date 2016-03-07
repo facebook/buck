@@ -37,7 +37,10 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.hamcrest.Matchers;
@@ -48,7 +51,9 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ParsePipelineTest {
@@ -58,17 +63,61 @@ public class ParsePipelineTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
+  private <T> void waitForAll(Iterable<T> items, Predicate<T> predicate)
+      throws InterruptedException {
+    boolean allThere = true;
+    for (int i = 0; i < 50; ++i) {
+      if (FluentIterable.from(items).allMatch(predicate)) {
+        break;
+      }
+      Thread.sleep(100);
+    }
+    assertThat(allThere, Matchers.is(true));
+  }
+
   @Test
   public void speculativeDepsTraversal() throws Exception {
-    Fixture fixture = new Fixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    final Fixture fixture = new Fixture("pipeline_test");
+    final Cell cell = fixture.getCell();
     TargetNode<?> libTargetNode = fixture.getParsePipeline().getTargetNode(
         cell,
         BuildTargetFactory.newInstance(cell.getFilesystem(), "//:lib"));
+
+    waitForAll(
+        libTargetNode.getDeps(),
+        new Predicate<BuildTarget>() {
+          @Override
+          public boolean apply(BuildTarget dep) {
+            return fixture.getCache().lookupTargetNode(cell, dep) != null;
+          }
+        });
     fixture.close();
-    for (BuildTarget dep : libTargetNode.getDeps()) {
-      assertThat(fixture.getCache().lookupTargetNode(cell, dep), Matchers.notNullValue());
-    }
+  }
+
+  @Test
+  public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
+    final Fixture fixture = new Fixture("pipeline_test");
+    final Cell cell = fixture.getCell();
+    ImmutableSet<TargetNode<?>> libTargetNodes = fixture.getParsePipeline().getAllTargetNodes(
+        cell,
+        fixture.getCell().getFilesystem().resolve("BUCK"));
+    FluentIterable<BuildTarget> allDeps = FluentIterable.from(libTargetNodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<BuildTarget>>() {
+              @Override
+              public Iterable<BuildTarget> apply(TargetNode<?> input) {
+                return input.getDeps();
+              }
+            });
+    waitForAll(
+        allDeps,
+        new Predicate<BuildTarget>() {
+          @Override
+          public boolean apply(BuildTarget dep) {
+            return fixture.getCache().lookupTargetNode(cell, dep) != null;
+          }
+        });
+    fixture.close();
   }
 
   @Test
@@ -151,6 +200,15 @@ public class ParsePipelineTest {
     @Override
     public synchronized ImmutableList<Map<String, Object>> putRawNodesIfNotPresent(
         Cell cell, Path buildFile, ImmutableList<Map<String, Object>> rawNodes) {
+      rawNodes = FluentIterable.from(rawNodes)
+          .filter(
+              new Predicate<Map<String, Object>>() {
+                @Override
+                public boolean apply(Map<String, Object> input) {
+                  return input.containsKey("name");
+                }
+              })
+          .toList();
       if (!rawNodeMap.containsKey(buildFile)) {
         rawNodeMap.put(buildFile, rawNodes);
       }
@@ -164,9 +222,11 @@ public class ParsePipelineTest {
     private BuckEventBus eventBus;
     private TestConsole console;
     private ParsePipeline parsePipeline;
+    private ProjectBuildFileParserPool projectBuildFileParserPool;
     private Cell cell;
     private ParsePipelineCache cache;
     private ListeningExecutorService executorService;
+    private Set<ProjectBuildFileParser> projectBuildFileParsers;
 
     public Fixture(String scenario) throws Exception {
       this.workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -175,6 +235,9 @@ public class ParsePipelineTest {
           tmp);
       this.eventBus = BuckEventBusFactory.newInstance();
       this.console = new TestConsole();
+      this.executorService = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
+          MoreExecutors.newSingleThreadExecutor("test"));
+      this.projectBuildFileParsers = new HashSet<>();
       this.workspace.setUp();
 
       this.cell = this.workspace.asCell();
@@ -183,22 +246,26 @@ public class ParsePipelineTest {
       final ConstructorArgMarshaller constructorArgMarshaller =
           new ConstructorArgMarshaller(coercerFactory);
 
-      ParserLeaseVendor<ProjectBuildFileParser> vendorForTest = new ParserLeaseVendor<>(
+      projectBuildFileParserPool = new ProjectBuildFileParserPool(
           4, // max parsers
           new Function<Cell, ProjectBuildFileParser>() {
             @Override
             public ProjectBuildFileParser apply(Cell input) {
-              return input.createBuildFileParser(constructorArgMarshaller, console, eventBus);
+              ProjectBuildFileParser buildFileParser = input.createBuildFileParser(
+                  constructorArgMarshaller,
+                  console,
+                  eventBus);
+              synchronized (projectBuildFileParsers) {
+                projectBuildFileParsers.add(buildFileParser);
+              }
+              return buildFileParser;
             }
-          }
-      );
+          });
       final TargetNodeListener nodeListener = new TargetNodeListener() {
         @Override
         public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
         }
       };
-      this.executorService = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
-          MoreExecutors.newSingleThreadExecutor("test"));
       this.parsePipeline = new ParsePipeline(
           this.cache,
           new ParsePipeline.Delegate() {
@@ -212,7 +279,7 @@ public class ParsePipelineTest {
           },
           this.executorService,
           this.eventBus,
-          vendorForTest,
+          this.projectBuildFileParserPool,
           true);
     }
 
@@ -228,13 +295,37 @@ public class ParsePipelineTest {
       return cache;
     }
 
+    private void waitForParsersToClose() throws InterruptedException {
+      Iterable<ProjectBuildFileParser> parserSnapshot;
+      synchronized (projectBuildFileParsers) {
+        parserSnapshot = ImmutableSet.copyOf(projectBuildFileParsers);
+      }
+      waitForAll(
+          parserSnapshot,
+          new Predicate<ProjectBuildFileParser>() {
+            @Override
+            public boolean apply(ProjectBuildFileParser input) {
+              return input.isClosed();
+            }
+          }
+      );
+    }
+
     @Override
     public void close() throws Exception {
       parsePipeline.close();
-      com.google.common.util.concurrent.MoreExecutors.shutdownAndAwaitTermination(
-          executorService,
-          5,
-          TimeUnit.SECONDS);
+      projectBuildFileParserPool.close();
+      // We wait for the parsers to shut down gracefully, they do this on a separate threadpool.
+      waitForParsersToClose();
+      executorService.shutdown();
+      assertThat(
+          executorService.awaitTermination(5, TimeUnit.SECONDS),
+          Matchers.is(true));
+      synchronized (projectBuildFileParsers) {
+        for (ProjectBuildFileParser parser : projectBuildFileParsers) {
+          assertThat(parser.isClosed(), Matchers.is(true));
+        }
+      }
     }
   }
 
