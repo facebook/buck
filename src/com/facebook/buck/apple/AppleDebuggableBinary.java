@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -39,12 +38,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.shell.DefaultShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -55,7 +50,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +63,6 @@ public class AppleDebuggableBinary
     extends AbstractBuildRule
     implements HasPostBuildSteps, BuildRuleWithBinary {
 
-  private static final Logger LOG = Logger.get(AppleDebuggableBinary.class);
   public static final Predicate<TargetNode<?>> STATIC_LIBRARY_ONLY_PREDICATE =
       new Predicate<TargetNode<?>>() {
         @Override
@@ -116,7 +109,7 @@ public class AppleDebuggableBinary
   private final BuildRule binaryBuildRule;
 
   // The location of dSYM
-  private final Path output;
+  private final Path dsymOutput;
 
   @AddToRuleKey
   private final AppleDebugFormat appleDebugFormat;
@@ -128,14 +121,14 @@ public class AppleDebuggableBinary
       Tool dsymutil,
       Tool lldb,
       Tool strip,
-      Path output,
+      Path dsymOutput,
       AppleDebugFormat appleDebugFormat) {
     super(buildRuleParams, resolver);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
     this.strip = strip;
     this.binaryBuildRule = binaryBuildRule;
-    this.output = output;
+    this.dsymOutput = dsymOutput;
     this.appleDebugFormat = appleDebugFormat;
   }
 
@@ -179,6 +172,17 @@ public class AppleDebuggableBinary
     return false;
   }
 
+  /**
+   * Returns all dependencies that are required in order to produce debuggable binary.
+   * @param binary Binary that should be debuggable. All its static libs are required in order to
+   *               get all debug symbols.
+   * @param targetGraph Target graph required to find all build rules for static libs of the binary
+   * @param resolver Resolver required to find all build rules for static libs of the binary
+   * @param cxxPlatform cxxPlatform
+   * @param depType link style from Args
+   * @param appleDebugFormat controls whether debug info will be produced or not
+   * @return
+   */
   public static ImmutableSortedSet<BuildRule> getDeps(
       BuildRule binary,
       TargetGraph targetGraph,
@@ -248,7 +252,7 @@ public class AppleDebuggableBinary
       BuildableContext buildableContext) {
     List<Step> steps = new ArrayList<>();
     if (appleDebugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
-      buildableContext.recordArtifact(output);
+      buildableContext.recordArtifact(dsymOutput);
       steps.add(getGenerateDsymStep());
     }
     steps.add(getStripDebugSymbolsStep());
@@ -263,53 +267,16 @@ public class AppleDebuggableBinary
         dsymutil.getEnvironment(getResolver()),
         dsymutil.getCommandPrefix(getResolver()),
         binaryBuildRule.getPathToOutput(),
-        output);
+        dsymOutput);
   }
 
   private Step getStripDebugSymbolsStep() {
-    return new Step() {
-      @Override
-      public int execute(ExecutionContext context) throws IOException, InterruptedException {
-        Preconditions.checkNotNull(binaryBuildRule.getPathToOutput(),
-            "Binary build rule " + binaryBuildRule.toString() + " has no output path.");
-        // Don't strip binaries which are already code-signed.  Note: we need to use
-        // binaryOutputPath instead of binaryPath because codesign will evaluate the
-        // entire .app bundle, even if you pass it the direct path to the embedded binary.
-        if (!CodeSigning.hasValidSignature(
-            context.getProcessExecutor(),
-            binaryBuildRule.getPathToOutput())) {
-          return (new DefaultShellStep(
-              getProjectFilesystem().getRootPath(),
-              ImmutableList.<String>builder()
-                  .addAll(strip.getCommandPrefix(getResolver()))
-                  .add("-S")
-                  .add(getProjectFilesystem().resolve(binaryBuildRule.getPathToOutput()).toString())
-                  .build(),
-              strip.getEnvironment(getResolver())))
-              .execute(context);
-        } else {
-          LOG.info("Not stripping code-signed binary.");
-          return 0;
-        }
-      }
-
-      @Override
-      public String getShortName() {
-        return "strip binary";
-      }
-
-      @Override
-      public String getDescription(ExecutionContext context) {
-        return String.format(
-            "strip debug symbols from binary '%s'",
-            binaryBuildRule.getPathToOutput());
-      }
-    };
+    return new StripDebugSymbolsStep(binaryBuildRule, strip, getProjectFilesystem(), getResolver());
   }
 
   @Override
   public Path getPathToOutput() {
-    return output;
+    return dsymOutput;
   }
 
   @Override
@@ -319,38 +286,7 @@ public class AppleDebuggableBinary
       return ImmutableList.of();
     }
     return ImmutableList.<Step>of(
-        new Step() {
-          @Override
-          public int execute(ExecutionContext context) throws IOException, InterruptedException {
-            ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(getResolver());
-            ProcessExecutorParams params = ProcessExecutorParams
-                .builder()
-                .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
-                .build();
-            return context.getProcessExecutor().launchAndExecute(
-                params,
-                ImmutableSet.<ProcessExecutor.Option>of(),
-                Optional.of(
-                    String.format("target create %s\ntarget symbols add %s",
-                        binaryBuildRule.getPathToOutput(),
-                        output)),
-                Optional.<Long>absent(),
-                Optional.<Function<Process, Void>>absent()).getExitCode();
-          }
-
-          @Override
-          public String getShortName() {
-            return "register debug symbols";
-          }
-
-          @Override
-          public String getDescription(ExecutionContext context) {
-            return String.format(
-                "register debug symbols for binary '%s': '%s'",
-                binaryBuildRule.getPathToOutput(),
-                output);
-          }
-        });
+        new RegisterDebugSymbolsStep(binaryBuildRule, lldb, getResolver(), dsymOutput));
   }
 
   @Override
