@@ -40,6 +40,10 @@ public final class DependenciesOptimizer {
   }
 
   private static final String DEPENDENCIES_KEYWORD = "deps";
+  private static final String RESOURCES_KEYWORD = "resources";
+  private static final String TESTS_KEYWORD = "tests";
+  private static final String VISIBILITY_KEYWORD = "visibility";
+  private static final String PROVIDED_DEPS_KEYWORD = "provided_deps";
 
   public static void optimzeDeps(PsiFile file) {
     final PropertyVisitor visitor = new PropertyVisitor();
@@ -60,7 +64,12 @@ public final class DependenciesOptimizer {
     @Override
     public void visitProperty(BuckProperty property) {
       BuckPropertyLvalue lValue = property.getPropertyLvalue();
-      if (lValue == null || !lValue.getText().equals(DEPENDENCIES_KEYWORD)) {
+      if (lValue == null ||
+          (!lValue.getText().equals(DEPENDENCIES_KEYWORD) &&
+          !lValue.getText().equals(RESOURCES_KEYWORD) &&
+          !lValue.getText().equals(TESTS_KEYWORD) &&
+          !lValue.getText().equals(PROVIDED_DEPS_KEYWORD) &&
+          !lValue.getText().equals(VISIBILITY_KEYWORD))) {
         return;
       }
 
@@ -78,12 +87,58 @@ public final class DependenciesOptimizer {
     BuckArrayElements arrayElements = array.getArrayElements();
     PsiElement[] arrayValues = arrayElements.getChildren();
     Arrays.sort(arrayValues, new Comparator<PsiElement>() {
-          @Override
-          public int compare(PsiElement e1, PsiElement e2) {
-            return compareDependencyStrings(e1.getText(), e2.getText());
+      @Override
+      public int compare(PsiElement e1, PsiElement e2) {
+        // Split into target and path
+        String[] targetPathArray1 = e1.getText().split(":");
+        String path1 = "";
+        String target1;
+
+        if (targetPathArray1.length == 2) {
+          path1 = targetPathArray1[0];
+          target1 = targetPathArray1[1];
+        } else {
+          target1 = targetPathArray1[0];
+        }
+
+        // Split into target and path
+        String[] targetPathArray2 = e2.getText().split(":");
+        String path2 = "";
+        String target2;
+        if (targetPathArray2.length == 2) {
+          path2 = targetPathArray2[0];
+          target2 = targetPathArray2[1];
+        } else {
+          target2 = targetPathArray2[0];
+        }
+
+        // Split the paths into separate tokens
+        String[] splitPath1 = path1.split("/");
+        String[] splitPath2 = path2.split("/");
+
+        int maxChar = Math.min(splitPath1.length, splitPath2.length);
+        int result;
+        for (int i = 0; i < maxChar; i++) {
+          // compare the tokens
+          result = splitPath1[i].compareTo(splitPath2[i]);
+          // if they're different return
+          if (result != 0) {
+            return result;
           }
         }
-    );
+
+        // if all the tokens are similar up until the shortest of the strings
+        // put the shorter one upper
+        result = splitPath1.length - splitPath2.length;
+        if (result == 0) {
+          // if they have the same path then compare targets
+          return target1.compareTo(target2);
+        } else {
+          return result;
+        }
+      }
+    });
+
     PsiElement[] oldValues = new PsiElement[arrayValues.length];
     for (int i = 0; i < arrayValues.length; ++i) {
       oldValues[i] = arrayValues[i].copy();
@@ -92,26 +147,5 @@ public final class DependenciesOptimizer {
     for (int i = 0; i < arrayValues.length; ++i) {
       arrayElements.getChildren()[i].replace(oldValues[i]);
     }
-  }
-
-  /**
-   * Use our own method to compare 'deps' stings.
-   * 'deps' should be sorted with local references ':' preceding any cross-repo references '@'
-   * e.g :inner, //world:empty, //world/asia:jp, //world/europe:uk, @mars, @moon
-   */
-  private static int compareDependencyStrings(String baseString, String anotherString) {
-    for (int i = 0; i < Math.min(baseString.length(), anotherString.length()); ++i) {
-      char c1 = baseString.charAt(i);
-      char c2 = anotherString.charAt(i);
-      if (c1 != c2) {
-        // ':' should go first when compare ':' with '/' for Buck dependencies.
-        if ((c1 == ':' && c2 == '/') || (c1 == '/' && c2 == ':')) {
-          return c2 - c1;
-        } else {
-          return c1 - c2;
-        }
-      }
-    }
-    return baseString.length() - anotherString.length();
   }
 }
