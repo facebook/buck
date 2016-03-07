@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.plugin.ws.buckevents;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
+import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
 import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
 import com.facebook.buck.event.external.events.ProgressEventInterface;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
@@ -26,6 +27,7 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckBuildFinishe
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckBuildProgressHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckBuildStartedHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckCompilerErrorHandler;
+import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckConsoleEventHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckEventHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckIndividualTestAwaitingResultsHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.handlers.BuckInstallFinishedHandler;
@@ -49,6 +51,7 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(ProgressEventInterface.BUILD_PROGRESS_UPDATED, new BuckBuildProgressHandler());
     put(BuckEventExternalInterface.BUILD_STARTED, new BuckBuildStartedHandler());
     put(CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT, new BuckCompilerErrorHandler());
+    put(ConsoleEventExternalInterface.CONSOLE_EVENT, new BuckConsoleEventHandler());
     put(IndividualTesEventFinishedExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
         new BuckIndividualTestAwaitingResultsHandler());
     put(BuckEventExternalInterface.INSTALL_FINISHED, new BuckInstallFinishedHandler());
@@ -64,6 +67,5 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(StepEventExternalInterface.STEP_FINISHED, new BuckStepFinishedHandler());
     put(StepEventExternalInterface.STEP_STARTED, new BuckStepStartedHandler());
     put(BuckEventExternalInterface.TEST_RUN_STARTED, new BuckTestRunStartedHandler());
-
   }
 }

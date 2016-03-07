@@ -65,4 +65,8 @@ public class BuckEventsConsumerFactory {
     public CompilerErrorConsumer getCompilerErrorConsumer() {
         return mBus.syncPublisher(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER);
     }
+
+    public BuckConsoleEventConsumer getConsoleEventConsumer() {
+        return mBus.syncPublisher(BuckConsoleEventConsumer.BUCK_CONSOLE_EVENT);
+    }
 }

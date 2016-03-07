@@ -24,6 +24,7 @@ import com.facebook.buck.intellij.plugin.ui.utils.CompilerErrorItem;
 import com.facebook.buck.intellij.plugin.ui.utils.ErrorExtractor;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildStartConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckConsoleEventConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.CompilerErrorConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
@@ -62,8 +63,8 @@ public class BuckEventsConsumer implements
         TestRunStartedConsumer,
         TestRunCompleteConsumer,
         TestResultsAvailableConsumer,
-
-        CompilerErrorConsumer {
+        CompilerErrorConsumer,
+        BuckConsoleEventConsumer {
 
     private Project mProject;
     public BuckEventsConsumer(Project project) {
@@ -141,6 +142,7 @@ public class BuckEventsConsumer implements
         mConnection.subscribe(RulesParsingProgressUpdateConsumer.BUCK_PARSE_PROGRESS_UPDATE, this);
 
         mConnection.subscribe(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER, this);
+        mConnection.subscribe(BuckConsoleEventConsumer.BUCK_CONSOLE_EVENT, this);
 
         mConnection.subscribe(TestRunStartedConsumer.BUCK_TEST_RUN_STARTED, this);
         mConnection.subscribe(TestRunCompleteConsumer.BUCK_TEST_RUN_COMPLETE, this);
@@ -434,6 +436,22 @@ public class BuckEventsConsumer implements
                 mCurrentBuildRootElement.removeChild(mTestResults);
                 mCurrentBuildRootElement.addChild(mTestResults);
                 mTreeModel.reload();
+            }
+        });
+    }
+
+    @Override
+    public void consumeConsoleEvent(final String message) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                mCurrentBuildRootElement.addChild(
+                    new BuckTreeNodeDetail(
+                        mCurrentBuildRootElement,
+                        BuckTreeNodeDetail.DetailType.ERROR,
+                        message));
+
+                BuckEventsConsumer.this.mTreeModel.reload();
             }
         });
     }
