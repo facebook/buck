@@ -130,10 +130,20 @@ class SchemeGenerator {
       if (blueprintName == null) {
         blueprintName = target.getName();
       }
+      Path outputPath = outputDirectory.getParent();
+      String buildableReferencePath;
+      if(outputPath == null) {
+          //Root directory project
+          outputPath = outputDirectory;
+          buildableReferencePath = targetToProjectPathMap.get(target).toString();
+      } else {
+        buildableReferencePath = outputPath.relativize(
+            targetToProjectPathMap.get(target)
+        ).toString();
+      }
+
       XCScheme.BuildableReference buildableReference = new XCScheme.BuildableReference(
-          outputDirectory.getParent().relativize(
-              targetToProjectPathMap.get(target)
-          ).toString(),
+          buildableReferencePath,
           Preconditions.checkNotNull(target.getGlobalID()),
           target.getProductReference() != null
               ? target.getProductReference().getName()
