@@ -182,6 +182,23 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void generatingRootDirectoryProject() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "generating_root_directory_project",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//:bundle");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+
+  @Test
   public void generatingCombinedProjectWithTests() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
