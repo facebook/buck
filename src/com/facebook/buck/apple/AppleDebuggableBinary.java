@@ -181,7 +181,7 @@ public class AppleDebuggableBinary
    * @param cxxPlatform cxxPlatform
    * @param depType link style from Args
    * @param appleDebugFormat controls whether debug info will be produced or not
-   * @return
+   * @return All deps that the binary should depend on.
    */
   public static ImmutableSortedSet<BuildRule> getDeps(
       BuildRule binary,
