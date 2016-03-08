@@ -19,12 +19,10 @@ package com.facebook.buck.apple;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
-import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeTestable;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -44,7 +42,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
@@ -71,7 +68,7 @@ import java.util.Set;
  */
 public class AppleBundle
     extends AbstractBuildRule
-    implements NativeTestable, BuildRuleWithAppleBundle, BuildRuleWithBinary {
+    implements NativeTestable, BuildRuleWithAppleBundle {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
@@ -149,7 +146,6 @@ public class AppleBundle
   private final Path binaryPath;
   private final Path bundleBinaryPath;
   private final boolean hasBinary;
-  private AppleDebugFormat debugFormat;
 
   AppleBundle(
       BuildRuleParams params,
@@ -170,8 +166,7 @@ public class AppleBundle
       Optional<AppleAssetCatalog> assetCatalog,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat debugFormat) {
+      ProvisioningProfileStore provisioningProfileStore) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -215,7 +210,6 @@ public class AppleBundle
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.swiftStdlibTool = appleCxxPlatform.getSwiftStdlibTool();
-    this.debugFormat = debugFormat;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -300,7 +294,21 @@ public class AppleBundle
             getInfoPlistOverrideKeys(),
             PlistProcessStep.OutputFormat.BINARY));
 
-    appendCopyBinarySteps(stepsBuilder);
+    if (hasBinary) {
+      stepsBuilder.add(
+          new MkdirStep(
+              getProjectFilesystem(),
+              bundleRoot.resolve(this.destinations.getExecutablesPath())));
+
+      final Path binaryOutputPath = binary.get().getPathToOutput();
+      Preconditions.checkNotNull(binaryOutputPath);
+
+      stepsBuilder.add(
+          CopyStep.forFile(
+              getProjectFilesystem(),
+              binaryOutputPath,
+              bundleBinaryPath));
+    }
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (
@@ -460,72 +468,6 @@ public class AppleBundle
     buildableContext.recordArtifact(getPathToOutput());
 
     return stepsBuilder.build();
-  }
-
-  private void appendCopyBinarySteps(ImmutableList.Builder<Step> stepsBuilder) {
-    appendCopyBinaryStep(stepsBuilder);
-    appendCopyDsymStep(stepsBuilder);
-  }
-
-  private void appendCopyBinaryStep(ImmutableList.Builder<Step> stepsBuilder) {
-    if (hasBinary) {
-      stepsBuilder.add(
-          new MkdirStep(
-              getProjectFilesystem(),
-              bundleRoot.resolve(this.destinations.getExecutablesPath())));
-
-      final Path binaryOutputPath = binary.get().getPathToOutput();
-      Preconditions.checkNotNull(binaryOutputPath);
-
-      stepsBuilder.add(
-          CopyStep.forFile(
-              getProjectFilesystem(),
-              binaryOutputPath,
-              bundleBinaryPath));
-    }
-  }
-
-  private void appendCopyDsymStep(ImmutableList.Builder<Step> stepsBuilder) {
-    if (hasBinary && debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
-      BuildTarget binaryTarget = binary.get().getBuildTarget().withoutFlavors(
-          AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              AppleDescriptions.getDsymOutputPath(binaryTarget),
-              bundleRoot.getParent(),
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      appendDsymRenameStepToMatchBundleName(stepsBuilder, binaryTarget);
-    }
-  }
-
-  private void appendDsymRenameStepToMatchBundleName(
-      ImmutableList.Builder<Step> stepsBuilder,
-      BuildTarget binaryTarget) {
-    Preconditions.checkArgument(hasBinary && debugFormat == AppleDebugFormat.DWARF_AND_DSYM);
-    Preconditions.checkNotNull(binary.get().getPathToOutput(),
-        "Binary rule " + binary.get() + " has null output path.");
-
-    Path dsymSourcePath = bundleRoot.getParent().resolve(
-        AppleDescriptions.getDsymOutputPath(binaryTarget).getFileName());
-    Path dsymDestinationPath = bundleRoot.getParent().resolve(
-        bundleRoot.getFileName() + AppleDescriptions.DSYM_EXTENSION);
-
-    // rename dSYM bundle to match bundle name
-    stepsBuilder.add(
-        new MoveStep(
-            getProjectFilesystem(),
-            dsymSourcePath,
-            dsymDestinationPath));
-
-    // rename DWARF file inside dSYM bundle to match bundle name
-    stepsBuilder.add(
-      new MoveStep(
-          getProjectFilesystem(),
-          dsymDestinationPath.resolve("Contents/Resources/DWARF/" +
-              binary.get().getPathToOutput().getFileName()),
-          dsymDestinationPath.resolve("Contents/Resources/DWARF/" +
-              MorePaths.getNameWithoutExtension(bundleRoot))));
   }
 
   public void addStepsToCopyExtensionBundlesDependencies(
@@ -744,8 +686,11 @@ public class AppleBundle
     return this;
   }
 
-  @Override
-  public BuildRule getBinaryBuildRule() {
-    return binary.get();
+  public Path getBundleRoot() {
+    return bundleRoot;
+  }
+
+  public Path getBundleBinaryPath() {
+    return bundleBinaryPath;
   }
 }

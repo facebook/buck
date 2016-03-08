@@ -35,8 +35,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -101,11 +99,8 @@ public class AppleBinaryIntegrationTest {
     assertThat(Files.exists(getGenDir().resolve("Apps/TestApp/")), is(true));
     Path appPath =
         getGenDir().resolve(
-            "Apps/TestApp/TestApp#app,dwarf-and-dsym,no-include-frameworks/TestApp.app/");
+            "Apps/TestApp/TestApp#app,no-include-frameworks/TestApp.app/");
     assertThat(Files.exists(appPath.resolve("Info.plist")), is(true));
-    assertThat(Files.exists(getGenDir().resolve(
-        "Apps/TestApp/TestApp#app,dwarf-and-dsym,no-include-frameworks/TestApp.app.dSYM/")),
-        is(true));
     assertThat(
         workspace.runCommand("file", appPath.resolve("TestApp").toString())
             .getStdout()
@@ -294,25 +289,6 @@ public class AppleBinaryIntegrationTest {
         lipoVerifyResult.getStderr().or(""),
         0,
         lipoVerifyResult.getExitCode());
-  }
-
-  @Test
-  public void testAppleBinaryBuildsFatBinariesWithDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_application_bundle_no_debug", tmp);
-    workspace.setUp();
-    workspace.runBuckCommand(
-        "build",
-        "//:DemoAppBinary#dwarf-and-dsym,iphonesimulator-i386,iphonesimulator-x86_64")
-        .assertSuccess();
-    Path output = getGenDir()
-        .resolve("DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64.dSYM");
-    AppleDsymTestUtil
-        .checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
-            workspace,
-            output,
-            Optional.of(ImmutableList.of("i386", "x86_64")));
   }
 
   @Test

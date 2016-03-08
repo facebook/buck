@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -69,7 +68,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat defaultDebugFormat;
+  private final AppleDebugFormat defaultDebugInfoFormat;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -79,7 +78,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat) {
+      AppleDebugFormat defaultDebugInfoFormat) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -88,7 +87,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.defaultDebugFormat = defaultDebugFormat;
+    this.defaultDebugInfoFormat = defaultDebugInfoFormat;
   }
 
   @Override
@@ -125,13 +124,14 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
+    AppleDebugFormat flavoredDebugInfoFormat = AppleDebugFormat.FLAVOR_DOMAIN
         .getValue(params.getBuildTarget())
-        .or(defaultDebugFormat);
-    if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
+        .or(defaultDebugInfoFormat);
+    Flavor debugFormatFlavor = flavoredDebugInfoFormat.getFlavor();
+    if (!params.getBuildTarget().getFlavors().contains(debugFormatFlavor)) {
       return (BuildRuleWithAppleBundle) resolver.requireRule(
           BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(flavoredDebugFormat.getFlavor())
+              .addFlavors(debugFormatFlavor)
               .build());
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
@@ -140,7 +140,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
               .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
               .build());
     }
-    return AppleDescriptions.createAppleBundle(
+    AppleBundle appleBundle = AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         platformFlavorsToAppleCxxPlatforms,
@@ -150,14 +150,24 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         codeSignIdentityStore,
         provisioningProfileStore,
         args.binary,
-        Optional.<Linker.LinkableDepType>absent(),
         args.extension,
         args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests(),
-        flavoredDebugFormat);
+        args.getTests());
+    if (flavoredDebugInfoFormat.getFlavor() == AppleDebugFormat.NONE.getFlavor() ||
+        !appleBundle.getBinary().isPresent()) {
+      return appleBundle;
+    }
+    AppleDsym appleDsym = AppleDescriptions.createAppleDsym(
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        platformFlavorsToAppleCxxPlatforms,
+        params,
+        resolver,
+        appleBundle);
+    return AppleDescriptions.createAppleBundleWithDsym(appleBundle, appleDsym, params, resolver);
   }
 
   /**

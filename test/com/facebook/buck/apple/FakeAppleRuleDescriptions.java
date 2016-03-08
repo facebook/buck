@@ -163,8 +163,7 @@ public class FakeAppleRuleDescriptions {
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
-            ImmutableList.<ProvisioningProfileMetadata>of()),
-        AppleDebugFormat.NONE);
+            ImmutableList.<ProvisioningProfileMetadata>of()));
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -179,8 +178,7 @@ public class FakeAppleRuleDescriptions {
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
-            ImmutableList.<ProvisioningProfileMetadata>of()),
-        AppleDebugFormat.NONE);
+            ImmutableList.<ProvisioningProfileMetadata>of()));
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.
@@ -195,7 +193,7 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.<ProvisioningProfileMetadata>of()),
-          AppleDebugFormat.NONE);
+          AppleDebugFormat.DWARF_AND_DSYM);
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
