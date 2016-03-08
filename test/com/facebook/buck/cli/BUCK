@@ -208,4 +208,5 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/nailgun:nailgun',
   ],
+  test_rule_timeout_ms = 120000  # FilteredTestIntegrationTest is a bit slow.
 )
