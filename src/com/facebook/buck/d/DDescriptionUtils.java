@@ -77,12 +77,12 @@ abstract class DDescriptionUtils {
    */
   public static BuildTarget createDCompileBuildTarget(
       BuildTarget existingTarget,
-      SourcePath src,
+      String src,
       CxxPlatform cxxPlatform) {
     return createBuildTargetForFile(
         existingTarget,
         "compile-",
-        DCompileStep.getObjectNameForSourceName(src.toString()),
+        DCompileStep.getObjectNameForSourceName(src),
         cxxPlatform);
   }
 
@@ -212,8 +212,11 @@ abstract class DDescriptionUtils {
       DBuckConfig dBuckConfig) {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (SourcePath source : sources) {
-      BuildTarget compileTarget = createDCompileBuildTarget(
-          params.getBuildTarget(), source, cxxPlatform);
+      BuildTarget compileTarget =
+          createDCompileBuildTarget(
+              params.getBuildTarget(),
+              sourcePathResolver.getSourcePathName(params.getBuildTarget(), source),
+              cxxPlatform);
       requireBuildRule(
           params, buildRuleResolver, sourcePathResolver, source,
           compilerFlags, compileTarget, dBuckConfig);
@@ -221,4 +224,5 @@ abstract class DDescriptionUtils {
     }
     return sourcePaths.build();
   }
+
 }
