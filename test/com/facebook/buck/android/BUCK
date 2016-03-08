@@ -225,6 +225,7 @@ java_test(
     '//src/com/facebook/buck/zip:stream',
     '//src/com/facebook/buck/zip:unzip',
     '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/guava:guava',
