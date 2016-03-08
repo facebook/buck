@@ -61,17 +61,7 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.exported_linker_flags_arg /}
 
-{call buck.arg}
-  {param name : 'exported_platform_linker_flags' /}
-  {param default : '[]' /}
-  {param desc}
-  Platform specific linker flags. These should be specified as a list of pairs where the first
-  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
-  name is matched, and the second element is a list of flags to use when the target and all targets
-  that transitively depend on it are involved in a link operation if the platform matches the regex.
-  See <code>exported_linker_flags</code> for more information.
-  {/param}
-{/call}
+{call cxx_common.exported_platform_linker_flags_arg /}
 
 {call cxx_common.link_style /}
 
