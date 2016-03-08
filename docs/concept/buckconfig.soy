@@ -1963,65 +1963,71 @@ int run_starter(
   {/param}
 {/call}
 
-{call .section}{param title: 'tools' /}{/call}
-This section tells Buck how to find certain tools e.g. how the Java compilation
-occurs and how auxiliary tools are used e.g. the ProGuard class file optimizer
-which is used as part of the Android build process.
+{call buckconfig.section}
+  {param name: 'tools' /}
+  {param description}
+    This section tells Buck how to find certain tools e.g. how the Java compilation
+    occurs and how auxiliary tools are used e.g. the <a
+    href="http://proguard.sourceforge.net/">ProGuard</a> Java class file
+    optimizer which is used as part of the Android build process.
+  {/param}
+{/call}
 
-The <code>javac</code> option is a path to a program that acts like Java javac.
-When set, buck uses this program instead of the system Java compiler.
-<p>
-The <code>javac_jar</code> option is like <code>javac</code>, except that it points to a JAR
-containing a javac-like compiler.
-<p>
-When <code>javac_jar</code> is set, Buck loads the referenced compiler in-memory.
-When neither option is set, Buck defaults to using the system compiler
-in-memory.
-<p>The following section deals with configuration options for the
-<a href="http://proguard.sourceforge.net/"> ProGuard</a>  Java class file optimizer.
+{call buckconfig.entry}
+  {param section: 'tools' /}
+  {param name: 'javac' /}
+  {param description}
+    The <code>javac</code> option is a path to a program that acts like Java javac.
+    When set, buck uses this program instead of the system Java compiler.
+    When neither this nor {call buckconfig.tools_java_jar /} is set, Buck defaults
+    to using the system compiler in-memory.
+  {/param}
+{/call}
 
-<p>The <code>proguard</code> option specifies the location of the JAR file to be used
-to invoke ProGuard. This overrides the default ProGuard JAR file that would have been
-picked up from the Android SDK. Here is an example setting:
+{call buckconfig.entry}
+  {param section: 'tools' /}
+  {param name: 'javac_jar' /}
+  {param description}
+    When this option is set to a JAR file, Buck loads the referenced compiler in-memory.
+    When neither this nor {call buckconfig.tools_javac /} is set, Buck defaults
+    to using the system compiler in-memory.
+  {/param}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[tools]
-  proguard = proguard/proguard-fork.jar
-</pre>{/literal}
-</p>
-<p>The <code>proguard-max-heap-size</code> specifies how much memory is used when running proguard.
-Defaults to <code>1024M</code>. You may want to give ProGuard more memory to try and
-improve performance e.g.</p>
+{call buckconfig.entry}
+  {param section: 'tools' /}
+  {param name: 'proguard' /}
+  {param description}
+    This option specifies the location of the JAR file to be used
+    to invoke ProGuard. This overrides the default ProGuard JAR file that would have been
+    picked up from the Android SDK. Here is an example setting:
+  {/param}
+  {param example_value : 'proguard/proguard-fork.jar' /}
+{/call}
 
-{literal}<pre class="prettyprint lang-ini">
-[tools]
-  proguard-max-heap-size = 4096M
-</pre>{/literal}
+{call buckconfig.entry}
+  {param section: 'tools' /}
+  {param name: 'proguard-max-heap-size' /}
+  {param example_value: '4096M' /}
+  {param description}
+    This option specifies how much memory is used when running proguard.
+    Defaults to <code>1024M</code>. You may want to give ProGuard more memory to try and
+    improve performance.
+  {/param}
+{/call}
 
-
-<p>The <code>proguard-agentpath</code> option allows the specification of a Java profiling agent which
-is set with the <code>-agentpath</code> argument when the ProGuard jar file is executed.
-Typically this would be set in a <code>.buckconfig.local</code> configuration file for when you
-want to profile a build running on your local machine. For example, to profile using
-the <a href="https://www.yourkit.com/"> YourKit</a> profiler running on a Mac you might have
-a <code>.buckconfig.local</code> which
-looks similar to this:</p>
-
-{literal}<pre class="prettyprint lang-ini">
-[tools]
-  proguard-agentpath = /Applications/YourKit_Java_Profiler_2015_build_15084.app/Contents/Resources/bin/mac/libyjpagent.jnilib
-</pre>{/literal}
-
-<p>If you are profiling with <a href="https://www.ej-technologies.com/products/jprofiler/overview.html"> JProfiler </a>
-you might have a setting similar to this.</p>
-
-{literal}<pre class="prettyprint lang-ini">
-[tools]
-  proguard-agentpath = /Applications/JProfiler.app/Contents/Resources/app/bin/macos/libjprofilerti.jnilib
-</pre>{/literal}
-
-On Linux machines you should set the path to the location of the profiling agent that
-you want to use.
+{call buckconfig.entry}
+  {param section: 'tools' /}
+  {param name: 'proguard-agentpath' /}
+  {param example_value: '/Applications/YourKit_Java_Profiler_2015_build_15084.app/Contents/Resources/bin/mac/libyjpagent.jnilib' /}
+  {param description}
+    This option allows the specification of a Java profiling agent which
+    is set with the <code>-agentpath</code> argument when the ProGuard jar file is executed.
+    Typically this would be set in a <code>.buckconfig.local</code> configuration file for when you
+    want to profile a build running on your local machine.
+    Set this to the actual path of the installed agent on the machine where ProGuard will run.
+  {/param}
+{/call}
 
 {call buckconfig.section}
   {param name: 'ui' /}
