@@ -261,6 +261,8 @@ java_test(
   deps = [
     ':utils',
     ':testutil',
+    '//src/com/facebook/buck/model:model',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

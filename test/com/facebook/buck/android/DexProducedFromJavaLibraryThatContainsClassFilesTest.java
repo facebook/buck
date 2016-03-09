@@ -32,6 +32,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -81,18 +82,23 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
       }
     };
-    javaLibraryRule.setOutputFile("buck-out/gen/foo/bar.jar");
+    Path jarOutput = BuildTargets.getGenPath(javaLibraryRule.getBuildTarget(), "%s.jar");
+    javaLibraryRule.setOutputFile(jarOutput.toString());
 
     BuildContext context = createMock(BuildContext.class);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     replayAll();
 
-    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/home/user");
+    String rootPath = "/home/user";
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(rootPath);
+    Path dexOutput = BuildTargets.getGenPath(
+        javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
+        "%s.dex.jar");
     createFiles(
         filesystem,
-        "buck-out/gen/foo/bar#dex.dex.jar",
-        "buck-out/gen/foo/bar.jar");
+        dexOutput.toString(),
+        jarOutput.toString());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
@@ -118,15 +124,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     String expectedDxCommand = String.format(
         "%s --dex --no-optimize --force-jumbo --output %s %s",
         Paths.get("/usr/bin/dx"),
-        Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar"),
-        Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
+        Paths.get(rootPath).resolve(dexOutput),
+        Paths.get(rootPath).resolve(jarOutput));
     MoreAsserts.assertSteps("Generate bar.dex.jar.",
         ImmutableList.of(
-            String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar")),
-            String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
+            String.format("rm -f %s", Paths.get(rootPath).resolve(dexOutput)),
+            String.format("mkdir -p %s", Paths.get(rootPath).resolve(dexOutput).getParent()),
             "estimate_linear_alloc",
             "(cd /home/user && " + expectedDxCommand + ")",
-            "zip-scrub buck-out/gen/foo/bar#dex.dex.jar",
+            String.format("zip-scrub %s", dexOutput),
             "record_dx_success"),
         steps,
         executionContext);
@@ -189,10 +195,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     verifyAll();
     resetAll();
 
-    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))
-        .andReturn(Paths.get("/home/user/buck-out/gen/foo"));
-    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar.dex.jar")))
-        .andReturn(Paths.get("/home/user/buck-out/gen/foo/bar.dex.jar"));
+    Path dexOutput = BuildTargets.getGenPath(buildTarget, "%s.dex.jar");
+    expect(projectFilesystem.resolve(dexOutput.getParent()))
+        .andReturn(Paths.get("/home/user/").resolve(dexOutput.getParent()));
+    expect(projectFilesystem.resolve(dexOutput))
+        .andReturn(Paths.get("/home/user/").resolve(dexOutput));
     replayAll();
 
     ExecutionContext executionContext = TestExecutionContext
@@ -201,8 +208,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     MoreAsserts.assertSteps("Do not generate a .dex.jar file.",
         ImmutableList.of(
-          String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar.dex.jar")),
-          String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
+          String.format("rm -f %s", Paths.get("/home/user/").resolve(dexOutput)),
+          String.format("mkdir -p %s", Paths.get("/home/user/").resolve(dexOutput.getParent())),
           "record_empty_dx"),
         steps,
         executionContext);
@@ -240,7 +247,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
                     new BuildTargetNodeToBuildRuleTransformer())),
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutput());
-    assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());
+    assertEquals(
+        BuildTargets.getGenPath(buildTarget, "%s.dex.jar"),
+        preDexWithClasses.getPathToDex());
 
     verifyAll();
   }

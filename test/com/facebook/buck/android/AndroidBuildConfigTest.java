@@ -23,6 +23,7 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -36,7 +37,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -54,11 +54,14 @@ import java.util.List;
  */
 public class AndroidBuildConfigTest {
 
+  public static final BuildTarget BUILD_TARGET =
+      BuildTargetFactory.newInstance("//java/com/example:build_config");
+
   @Test
   public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
-        BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"),
+        BuildTargets.getGenPath(BUILD_TARGET, "__%s__/BuildConfig.java"),
         buildConfig.getPathToOutput());
   }
 
@@ -75,7 +78,7 @@ public class AndroidBuildConfigTest {
         /* javaPackage */ "com.example",
         /* useConstantExpressions */ false,
         /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
-        BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"));
+        BuildTargets.getGenPath(BUILD_TARGET, "__%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 
@@ -111,8 +114,7 @@ public class AndroidBuildConfigTest {
 
   private static AndroidBuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:build_config");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(BUILD_TARGET).build();
     return new AndroidBuildConfig(
         params,
         new SourcePathResolver(

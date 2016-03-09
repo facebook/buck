@@ -180,18 +180,17 @@ public class AndroidBinaryGraphEnhancerTest {
 
     assertEquals(dexMergeRule, preDexMergeRule);
 
-    Flavor dexFlavor = ImmutableFlavor.of("dex");
     BuildTarget javaDep1DexBuildTarget =
         BuildTarget.builder(javaDep1BuildTarget)
-            .addFlavors(dexFlavor)
+            .addFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR)
             .build();
     BuildTarget javaDep2DexBuildTarget =
         BuildTarget.builder(javaDep2BuildTarget)
-            .addFlavors(dexFlavor)
+            .addFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR)
             .build();
     BuildTarget javaLibDexBuildTarget =
         BuildTarget.builder(javaLibBuildTarget)
-            .addFlavors(dexFlavor)
+            .addFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR)
             .build();
     assertThat(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +

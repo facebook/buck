@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,7 +31,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,12 +44,15 @@ import java.util.List;
 
 public class AndroidManifestTest {
 
+  public static final String MANIFEST_TARGET = "//java/com/example:manifest";
+
   @Test
   public void testSimpleObserverMethods() {
     AndroidManifest androidManifest = createSimpleAndroidManifestRule();
 
     assertEquals(
-        BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml"),
+        BuildTargets.getGenPath(
+            BuildTargetFactory.newInstance(MANIFEST_TARGET), "AndroidManifest__%s__.xml"),
         androidManifest.getPathToOutput());
   }
 
@@ -69,7 +73,8 @@ public class AndroidManifestTest {
             filesystem,
             filesystem.resolve("java/com/example/AndroidManifestSkeleton.xml"),
             /* libraryManifestPaths */ ImmutableSet.<Path>of(),
-            BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml")),
+            BuildTargets.getGenPath(
+                BuildTargetFactory.newInstance(MANIFEST_TARGET), "AndroidManifest__%s__.xml")),
         generateManifestStep);
 
     EasyMock.verify(buildContext);
@@ -83,7 +88,7 @@ public class AndroidManifestTest {
   private AndroidManifest createSimpleAndroidManifestRule() {
     // First, create the AndroidManifest object.
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder("//java/com/example:manifest").build();
+        new FakeBuildRuleParamsBuilder(MANIFEST_TARGET).build();
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml");

@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -51,8 +53,11 @@ public class AndroidPrebuiltAarIntegrationTest {
 
   @Test
   public void testBuildAndroidPrebuiltAar() throws IOException {
-    workspace.runBuckBuild("//:app").assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.apk"));
+    String target = "//:app";
+    workspace.runBuckBuild(target).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("resources.arsc");
     zipInspector.assertFileExists("classes.dex");
@@ -76,12 +81,16 @@ public class AndroidPrebuiltAarIntegrationTest {
 
   @Test
   public void testPrebuiltRDotTxtContainsTransitiveDependencies() throws IOException {
-    workspace.runBuckBuild("//third-party/design-library:design-library").assertSuccess();
+    String target = "//third-party/design-library:design-library";
+    workspace.runBuckBuild(target).assertSuccess();
 
     String appCompatResource = "TextAppearance_AppCompat_Body2";
 
-    String rDotTxt = workspace.getFileContents("buck-out/bin/third-party/design-library/" +
-        "__unpack_design-library#aar_unzip__/R.txt");
+    String rDotTxt = workspace.getFileContents(
+        BuildTargets.getScratchPath(
+            BuildTargetFactory.newInstance(target)
+                .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
+            "__unpack_%s__/R.txt"));
     assertThat(
         "R.txt contains transitive dependencies",
         rDotTxt,

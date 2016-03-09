@@ -59,7 +59,7 @@ import java.util.Map;
 
 public class AndroidBinaryGraphEnhancer {
 
-  private static final Flavor DEX_FLAVOR = ImmutableFlavor.of("dex");
+  public static final Flavor DEX_FLAVOR = ImmutableFlavor.of("dex");
   private static final Flavor DEX_MERGE_FLAVOR = ImmutableFlavor.of("dex_merge");
   private static final Flavor RESOURCES_FILTER_FLAVOR = ImmutableFlavor.of("resources_filter");
   public static final Flavor AAPT_PACKAGE_FLAVOR = ImmutableFlavor.of("aapt_package");

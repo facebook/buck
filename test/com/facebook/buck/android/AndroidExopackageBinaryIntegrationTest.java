@@ -18,6 +18,9 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -87,7 +90,9 @@ public class AndroidExopackageBinaryIntegrationTest {
   public void testDexExopackageHasNoSecondary() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            "buck-out/gen/apps/multidex/app-dex-exo.apk"));
+            BuildTargets.getGenPath(
+                BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET),
+                "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
     zipInspector.assertFileDoesNotExist("classes2.dex");
@@ -97,9 +102,10 @@ public class AndroidExopackageBinaryIntegrationTest {
 
     // It would be better if we could call getExopackageInfo on the app rule.
     Path secondaryDir = workspace.resolve(
-        Paths.get(
-            "buck-out/bin/apps/multidex/_app-dex-exo#dex_merge_output" +
-                "/jarfiles/assets/secondary-program-dex-jars"));
+        BuildTargets.getScratchPath(
+            BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
+                .withFlavors(ImmutableFlavor.of("dex_merge_output")),
+            "_%s/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
       List<Path> files = Lists.newArrayList(stream);
@@ -138,7 +144,9 @@ public class AndroidExopackageBinaryIntegrationTest {
   public void testAllExopackageHasNeitherSecondaryNorNativeLibraries() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            "buck-out/gen/apps/multidex/app-dex-native-exo.apk"));
+            BuildTargets.getGenPath(
+                BuildTargetFactory.newInstance(DEX_AND_NATIVE_EXOPACKAGE_TARGET),
+                "%s.apk")));
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("classes2.dex");
@@ -285,7 +293,9 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector = new ZipInspector(
         workspace.getPath(
-            "buck-out/gen/apps/multidex/app-dex-exo.apk"));
+            BuildTargets.getGenPath(
+                BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET),
+                "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
     zipInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
   }

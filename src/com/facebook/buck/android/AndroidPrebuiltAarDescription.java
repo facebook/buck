@@ -58,7 +58,7 @@ public class AndroidPrebuiltAarDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("android_prebuilt_aar");
 
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
-  private static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
+  public static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
 
   private final JavacOptions javacOptions;
 

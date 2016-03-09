@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -235,7 +236,7 @@ public class ApkGenruleTest {
     ImmutableMap<String, String> environmentVariables = genruleCommand.getEnvironmentVariables(
         executionContext);
     assertEquals(new ImmutableMap.Builder<String, String>()
-        .put("APK", "/opt/src/buck/" + GEN_PATH.resolve("fb4a.apk").toString())
+        .put("APK", "/opt/src/buck/" + BuildTargets.getGenPath(apkTarget, "%s.apk").toString())
         .put("OUT", expectedApkOutput).build(),
         environmentVariables);
     assertEquals(
