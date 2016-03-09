@@ -78,7 +78,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -325,17 +324,30 @@ public class ParserTest {
   }
 
   @Test
-  @Ignore("Existing parser just says that's there's a problem parsing the file")
   public void shouldThrowAnExceptionIfMultipleTargetsAreDefinedWithTheSameName()
       throws IOException, BuildFileParseException, InterruptedException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Duplicate rule definition found (cake).");
+    thrown.expectMessage("Duplicate rule definition found.");
 
     Path buckFile = cellRoot.resolve("BUCK");
     Files.write(
         buckFile,
         ("export_file(name = 'cake', src = 'hello.txt')\n" +
         "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+  }
+
+  @Test
+  public void shouldThrowAnExceptionIfNameIsNone()
+      throws IOException, BuildFileParseException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("rules 'name' field must be a string.  Found None.");
+
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        ("genrule(name = None, out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
 
     parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
   }

@@ -416,7 +416,6 @@ public class ParsePipeline implements AutoCloseable {
           }
         }
     );
-
     if (speculativeDepsTraversal) {
       Futures.addCallback(
           targetNodeFuture,

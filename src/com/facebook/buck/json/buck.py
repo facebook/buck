@@ -141,6 +141,10 @@ def add_rule(rule, build_env):
         raise ValueError(
             'rules must contain the field \'name\'.  Found %s.' % rule)
     rule_name = rule['name']
+    if not isinstance(rule_name, basestring):
+        raise ValueError(
+            'rules \'name\' field must be a string.  Found %s.' % rule_name)
+
     if rule_name in build_env.rules:
         raise ValueError('Duplicate rule definition found.  Found %s and %s' %
                          (rule, build_env.rules[rule_name]))
