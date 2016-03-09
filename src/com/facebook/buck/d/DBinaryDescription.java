@@ -99,7 +99,8 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
         params.copyWithExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(nativeLinkable))),
         new SourcePathResolver(buildRuleResolver),
-        executableBuilder.build());
+        executableBuilder.build(),
+        nativeLinkable.getPathToOutput());
   }
 
   @SuppressFieldNotInitialized

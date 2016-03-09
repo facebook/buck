@@ -18,14 +18,16 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -38,6 +40,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -51,17 +54,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunnerRule {
+public class DTest extends AbstractBuildRule implements
+    ExternalTestRunnerRule,
+    HasRuntimeDeps,
+    TestRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<Label> labels;
   private ImmutableSet<BuildRule> sourceUnderTest;
-  private final Path testBinary;
+  private final BuildRule testBinaryBuildRule;
   private final Optional<Long> testRuleTimeoutMs;
 
   public DTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path testBinary,
+      BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
       Optional<Long> testRuleTimeoutMs,
@@ -71,7 +77,14 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
     this.labels = labels;
     this.sourceUnderTest = sourceUnderTest;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
-    this.testBinary = testBinary;
+    this.testBinaryBuildRule = testBinaryBuildRule;
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
   }
 
   @Override
@@ -80,7 +93,8 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
   }
 
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(testBinary).toString());
+    return ImmutableList.of(
+        projectFilesystem.resolve(getPathToOutput()).toString());
   }
 
   @Override
@@ -240,5 +254,17 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
         .setLabels(getLabels())
         .setContacts(getContacts())
         .build();
+  }
+
+  @Override
+  public Path getPathToOutput() {
+    return Preconditions.checkNotNull(testBinaryBuildRule.getPathToOutput());
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    // Return the actual executable as a runtime dependency.
+    // Without this, the file is not written when we get a cache hit.
+    return ImmutableSortedSet.of(testBinaryBuildRule);
   }
 }

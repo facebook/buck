@@ -88,7 +88,7 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
     return new DTest(
         params.appendExtraDeps(ImmutableList.of(binaryRule)),
         new SourcePathResolver(buildRuleResolver),
-        binaryRule.getPathToOutput(),
+        binaryRule,
         args.contacts.get(),
         args.labels.get(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
