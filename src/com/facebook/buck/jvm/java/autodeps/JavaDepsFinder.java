@@ -115,7 +115,7 @@ public class JavaDepsFinder {
               // findProviderForSymbolFromBuckConfig(). Note that this heuristic could be a bit
               // tighter.
               boolean appearsToBeJavaPackage = !originalKey.endsWith(".") &&
-                  CharMatcher.JAVA_UPPER_CASE.matchesNoneOf(originalKey);
+                  CharMatcher.javaUpperCase().matchesNoneOf(originalKey);
               String key = appearsToBeJavaPackage ? originalKey + "." : originalKey;
               BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(
                   entry.getValue().trim(),

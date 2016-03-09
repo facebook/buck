@@ -96,8 +96,8 @@ public class PythonRunTestsStep implements Step {
   private String getTestsToRunRegexFromListOutput(String listOutput) {
     ImmutableList.Builder<String> testsToRunPatternComponents = ImmutableList.builder();
 
-    for (String strTestCase : CharMatcher.WHITESPACE.trimFrom(listOutput).split("\n")) {
-      String[] testCase = CharMatcher.WHITESPACE.trimFrom(strTestCase).split("#", 2);
+    for (String strTestCase : CharMatcher.whitespace().trimFrom(listOutput).split("\n")) {
+      String[] testCase = CharMatcher.whitespace().trimFrom(strTestCase).split("#", 2);
       if (testCase.length != 2) {
         throw new RuntimeException(String.format(
             "Bad test case name from python runner: '%s'", strTestCase));

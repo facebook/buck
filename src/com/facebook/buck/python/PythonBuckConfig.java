@@ -265,9 +265,9 @@ public class PythonBuckConfig {
       Path pythonPath,
       ProcessExecutor.Result versionResult) {
     if (versionResult.getExitCode() == 0) {
-      String versionString = CharMatcher.WHITESPACE.trimFrom(
-          CharMatcher.WHITESPACE.trimFrom(versionResult.getStderr().get()) +
-          CharMatcher.WHITESPACE.trimFrom(versionResult.getStdout().get())
+      String versionString = CharMatcher.whitespace().trimFrom(
+          CharMatcher.whitespace().trimFrom(versionResult.getStderr().get()) +
+          CharMatcher.whitespace().trimFrom(versionResult.getStdout().get())
               .replaceAll("\u001B\\[[;\\d]*m", ""));
       Matcher matcher = PYTHON_VERSION_REGEX.matcher(versionString.split("\\r?\\n")[0]);
       if (!matcher.matches()) {

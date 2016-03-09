@@ -548,7 +548,7 @@ public class JavaFileParser {
 
           // If it does not start with an uppercase letter, it is probably because it is a property
           // lookup.
-          if (CharMatcher.JAVA_UPPER_CASE.matches(symbol.charAt(0))) {
+          if (CharMatcher.javaUpperCase().matches(symbol.charAt(0))) {
             addTypeFromDotDelimitedSequence(symbol);
           }
         }
@@ -742,7 +742,7 @@ public class JavaFileParser {
       String component = fullyQualifiedName.substring(startIndex, dotIndex);
       // In practice, if there is an uppercase character in the component, it should be the first
       // character, but we have found some exceptions, in practice.
-      if (CharMatcher.JAVA_UPPER_CASE.matchesAnyOf(component)) {
+      if (CharMatcher.javaUpperCase().matchesAnyOf(component)) {
         return component;
       } else {
         startIndex = dotIndex + 1;
@@ -763,7 +763,7 @@ public class JavaFileParser {
   }
 
   private static boolean startsWithUppercaseChar(String str) {
-    return CharMatcher.JAVA_UPPER_CASE.matches(str.charAt(0));
+    return CharMatcher.javaUpperCase().matches(str.charAt(0));
   }
 
   private static boolean looksLikeAType(String str) {
@@ -778,10 +778,10 @@ public class JavaFileParser {
           str);
 
       // Don't let it start with a digit?
-      if (!CharMatcher.JAVA_LETTER_OR_DIGIT.matchesAllOf(part)) {
+      if (!CharMatcher.javaLetterOrDigit().matchesAllOf(part)) {
         return false;
       } else if (!hasPartThatStartsWithUppercaseLetter) {
-        hasPartThatStartsWithUppercaseLetter = CharMatcher.JAVA_UPPER_CASE.matches(part.charAt(0));
+        hasPartThatStartsWithUppercaseLetter = CharMatcher.javaUpperCase().matches(part.charAt(0));
       }
     }
     return hasPartThatStartsWithUppercaseLetter;
