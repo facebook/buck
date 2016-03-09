@@ -41,6 +41,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.hamcrest.Matchers;
@@ -170,6 +171,77 @@ public class ParsePipelineTest {
       fixture.getParsePipeline().getTargetNode(
           cell,
           BuildTargetFactory.newInstance(cell.getFilesystem(), "//:base"));
+    }
+  }
+
+  @Test
+  public void exceptionOnMalformedRawNode() throws Exception {
+    try (Fixture fixture = new Fixture("pipeline_test")) {
+      Cell cell = fixture.getCell();
+      Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
+      fixture.getCache().putRawNodesIfNotPresent(
+          cell,
+          rootBuildFilePath,
+          ImmutableList.<Map<String, Object>>of(
+              ImmutableMap.of("name", (Object) "bar")));
+      expectedException.expect(IllegalStateException.class);
+      expectedException.expectMessage("malformed raw data");
+      fixture.getParsePipeline().getAllTargetNodes(
+          cell,
+          rootBuildFilePath);
+    }
+  }
+
+  @Test
+  public void exceptionOnSwappedRawNodesInGetAllTargetNodes() throws Exception {
+    try (Fixture fixture = new Fixture("pipeline_test")) {
+      Cell cell = fixture.getCell();
+      Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
+      Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
+      fixture.getParsePipeline().getAllTargetNodes(
+          cell,
+          rootBuildFilePath);
+      Optional<ImmutableList<Map<String, Object>>> rootRawNodes = fixture.getCache().lookupRawNodes(
+          cell,
+          rootBuildFilePath);
+      fixture.getCache().putRawNodesIfNotPresent(
+          cell,
+          aBuildFilePath,
+          rootRawNodes.get());
+      expectedException.expect(IllegalStateException.class);
+      expectedException.expectMessage(
+          "Raw data claims to come from [], but we tried rooting it at [a].");
+      fixture.getParsePipeline().getAllTargetNodes(
+          cell,
+          aBuildFilePath);
+    }
+  }
+
+  @Test
+  public void exceptionOnSwappedRawNodesInGetTargetNode() throws Exception {
+    // The difference between this test and exceptionOnSwappedRawNodesInGetAllTargetNodes is that
+    // the two methods follow different code paths to determine what the BuildTarget for the result
+    // should be and we want to test both of them.
+    try (Fixture fixture = new Fixture("pipeline_test")) {
+      Cell cell = fixture.getCell();
+      Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
+      Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
+      fixture.getParsePipeline().getAllTargetNodes(
+          cell,
+          rootBuildFilePath);
+      Optional<ImmutableList<Map<String, Object>>> rootRawNodes = fixture.getCache().lookupRawNodes(
+          cell,
+          rootBuildFilePath);
+      fixture.getCache().putRawNodesIfNotPresent(
+          cell,
+          aBuildFilePath,
+          rootRawNodes.get());
+      expectedException.expect(IllegalStateException.class);
+      expectedException.expectMessage(
+          "Raw data claims to come from [], but we tried rooting it at [a].");
+      fixture.getParsePipeline().getTargetNode(
+          cell,
+          BuildTargetFactory.newInstance(cell.getFilesystem(), "//a:lib"));
     }
   }
 

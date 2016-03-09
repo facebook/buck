@@ -53,6 +53,7 @@ import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -365,6 +366,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     // Because of the way that the parser works, we know this can never return null.
     Description<?> description = cell.getDescription(buildRuleType);
 
+    UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(
@@ -380,15 +382,29 @@ class DaemonicParserState implements ParsePipeline.Cache {
         LOG.warn(
             "Target %s (type %s) must implement the Flavored interface " +
                 "before we can check if it supports flavors: %s",
-            target.getUnflavoredBuildTarget(),
+            unflavoredBuildTarget,
             buildRuleType,
             target.getFlavors());
         throw new HumanReadableException(
             "Target %s (type %s) does not currently support flavors (tried %s)",
-            target.getUnflavoredBuildTarget(),
+            unflavoredBuildTarget,
             buildRuleType,
             target.getFlavors());
       }
+    }
+
+    UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
+        ParsePipeline.parseBuildTargetFromRawRule(
+            cell.getRoot(),
+            rawNode,
+            buildFile);
+    if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {
+      throw new IllegalStateException(
+          String.format(
+              "Inconsistent internal state, target from data: %s, expected: %s, raw data: %s",
+              unflavoredBuildTargetFromRawData,
+              unflavoredBuildTarget,
+              Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
     }
 
     Cell targetCell = cell.getCell(target);
@@ -455,20 +471,6 @@ class DaemonicParserState implements ParsePipeline.Cache {
     String type = (String) Preconditions.checkNotNull(
         map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return cell.getBuildRuleType(type);
-  }
-
-  /**
-   * @param map the map of values that define the rule.
-   * @return the build target defined by the rule.
-   */
-  private UnflavoredBuildTarget parseBuildTargetFromRawRule(
-      Path cellRoot,
-      Map<String, Object> map) {
-    String basePath = (String) Preconditions.checkNotNull(map.get("buck.base_path"));
-    String name = (String) Preconditions.checkNotNull(map.get("name"));
-    return UnflavoredBuildTarget.builder(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name)
-        .setCellPath(cellRoot)
-        .build();
   }
 
   public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
@@ -600,7 +602,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
         // Invalidate the target nodes first
         for (Map<String, Object> rawNode : rawNodes) {
-          UnflavoredBuildTarget target = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
+          UnflavoredBuildTarget target =
+              ParsePipeline.parseBuildTargetFromRawRule(cell.getRoot(), rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
           allTargetNodes.invalidateAll(targetsCornucopia.get(target));
           targetsCornucopia.removeAll(target);
