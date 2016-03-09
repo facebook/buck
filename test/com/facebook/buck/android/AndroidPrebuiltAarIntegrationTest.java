@@ -108,4 +108,9 @@ public class AndroidPrebuiltAarIntegrationTest {
         buildOutput,
         not(containsString("Cannot find resource")));
   }
+
+  @Test
+  public void testNoClassesDotJar() throws IOException {
+    workspace.runBuckBuild("//:app-no-classes-dot-jar").assertSuccess();
+  }
 }
