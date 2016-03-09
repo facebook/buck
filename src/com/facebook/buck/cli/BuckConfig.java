@@ -81,6 +81,8 @@ public class BuckConfig {
 
   private static final String ALIAS_SECTION_HEADER = "alias";
 
+  private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
+
   /**
    * This pattern is designed so that a fully-qualified build target cannot be a valid alias name
    * and vice-versa.
@@ -758,7 +760,94 @@ public class BuckConfig {
    * @return the number of threads Buck should use.
    */
   public int getNumThreads() {
-    return getNumThreads(Runtime.getRuntime().availableProcessors());
+    return getNumThreads(getDefaultMaximumNumberOfThreads());
+  }
+
+  private int getDefaultMaximumNumberOfThreads() {
+    return getDefaultMaximumNumberOfThreads(Runtime.getRuntime().availableProcessors());
+  }
+
+  @VisibleForTesting
+  int getDefaultMaximumNumberOfThreads(int detectedProcessorCount) {
+    double ratio = config
+                      .getFloat("build", "thread_core_ratio")
+                      .or(DEFAULT_THREAD_CORE_RATIO);
+    if (ratio <= 0.0F) {
+      throw new HumanReadableException(
+          "thread_core_ratio must be greater than zero (was " + ratio + ")");
+    }
+
+    int scaledValue = (int) Math.ceil(ratio * detectedProcessorCount);
+
+    int threadLimit = detectedProcessorCount;
+
+    Optional<Long> reservedCores = getNumberOfReservedCores();
+    if (reservedCores.isPresent()) {
+      threadLimit -= reservedCores.get();
+    }
+
+    if (scaledValue > threadLimit) {
+      scaledValue = threadLimit;
+    }
+
+    Optional<Long> minThreads = getThreadCoreRatioMinThreads();
+    if (minThreads.isPresent()) {
+      scaledValue = Math.max(scaledValue, minThreads.get().intValue());
+    }
+
+    Optional<Long> maxThreads = getThreadCoreRatioMaxThreads();
+    if (maxThreads.isPresent()) {
+      long maxThreadsValue = maxThreads.get();
+
+      if (minThreads.isPresent() && minThreads.get() > maxThreadsValue) {
+        throw new HumanReadableException(
+            "thread_core_ratio_max_cores must be larger than thread_core_ratio_min_cores"
+        );
+      }
+
+      if (maxThreadsValue > threadLimit) {
+        throw new HumanReadableException(
+            "thread_core_ratio_max_cores is larger than thread_core_ratio_reserved_cores allows"
+        );
+      }
+
+      scaledValue = Math.min(scaledValue, (int) maxThreadsValue);
+    }
+
+
+    if (scaledValue <= 0) {
+      throw new HumanReadableException(
+          "Configuration resulted in an invalid number of build threads (" +
+              scaledValue +
+              ").");
+    }
+
+    return scaledValue;
+  }
+
+  private Optional<Long> getNumberOfReservedCores() {
+    Optional<Long> reservedCores = config.getLong("build", "thread_core_ratio_reserved_cores");
+    if (reservedCores.isPresent() && reservedCores.get() < 0) {
+      throw new HumanReadableException("thread_core_ratio_reserved_cores must be larger than zero");
+    }
+    return reservedCores;
+  }
+
+  private Optional<Long> getThreadCoreRatioMaxThreads() {
+    Optional<Long> maxThreads = config.getLong("build", "thread_core_ratio_max_threads");
+    if (maxThreads.isPresent() && maxThreads.get() < 0) {
+      throw new HumanReadableException("thread_core_ratio_max_threads must be larger than zero");
+    }
+    return maxThreads;
+  }
+
+
+  private Optional<Long> getThreadCoreRatioMinThreads() {
+    Optional<Long> minThreads = config.getLong("build", "thread_core_ratio_min_threads");
+    if (minThreads.isPresent() && minThreads.get() <= 0) {
+      throw new HumanReadableException("thread_core_ratio_min_threads must be larger than zero");
+    }
+    return minThreads;
   }
 
   /**

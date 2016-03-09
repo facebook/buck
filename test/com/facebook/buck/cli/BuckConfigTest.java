@@ -432,6 +432,126 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testBuildThreadsRatioSanityCheck() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build", ImmutableMap.of("thread_core_ratio", "1")))
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(10));
+  }
+
+  @Test
+  public void testBuildThreadsRatioGreaterThanZero() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build", ImmutableMap.of("thread_core_ratio", "0.00001")))
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(1), Matchers.equalTo(1));
+  }
+
+  @Test
+  public void testBuildThreadsRatioRoundsUp() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build", ImmutableMap.of("thread_core_ratio", "0.3")))
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(4), Matchers.equalTo(2));
+  }
+
+  @Test
+  public void testNonZeroBuildThreadsRatio() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build", ImmutableMap.of("thread_core_ratio", "0.1")))
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(1), Matchers.equalTo(1));
+  }
+
+  @Test
+  public void testZeroBuildThreadsRatio() {
+    try {
+      BuckConfig buckConfig = FakeBuckConfig.builder()
+          .setSections(
+              ImmutableMap.of(
+                  "build", ImmutableMap.of("thread_core_ratio", "0")))
+          .build();
+      buckConfig.getDefaultMaximumNumberOfThreads(1);
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.startsWith("thread_core_ratio must be greater than zero"));
+    }
+  }
+
+  @Test
+  public void testLessThanZeroBuildThreadsRatio() {
+    try {
+      BuckConfig buckConfig = FakeBuckConfig.builder()
+          .setSections(
+              ImmutableMap.of(
+                  "build", ImmutableMap.of("thread_core_ratio", "-0.1")))
+          .build();
+      buckConfig.getDefaultMaximumNumberOfThreads(1);
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.startsWith("thread_core_ratio must be greater than zero"));
+    }
+  }
+
+  @Test
+  public void testBuildThreadsRatioWithReservedCores() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build",
+                ImmutableMap.of(
+                    "thread_core_ratio", "1",
+                    "thread_core_ratio_reserved_cores", "2"
+                )
+            )
+        )
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(8));
+  }
+
+  @Test
+  public void testCappedBuildThreadsRatio() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build",
+                ImmutableMap.of(
+                    "thread_core_ratio", "0.5",
+                    "thread_core_ratio_max_threads", "4"
+                )
+            )
+        )
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(4));
+  }
+
+  @Test
+  public void testFloorLimitedBuildThreadsRatio() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "build",
+                ImmutableMap.of(
+                    "thread_core_ratio", "0.25",
+                    "thread_core_ratio_min_threads", "6"
+                )
+            )
+        )
+        .build();
+    assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(6));
+  }
+
+  @Test
   public void testEqualsForDaemonRestart() {
     BuckConfig buckConfig = FakeBuckConfig.builder()
         .setSections(

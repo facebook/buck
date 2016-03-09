@@ -446,6 +446,51 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'build' /}
+  {param name: 'thread_core_ratio' /}
+  {param example_value: '0.75' /}
+  {param description}
+    Sets the maximum number of threads to use for building as a ratio of the number of available
+    cores (e.g. <code>0.75</code> on a 4 core machine would limit building
+    to 3 threads, or a value of <code>1.25</code> on the same machine would attempt to use 5
+    threads).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'thread_core_ratio_max_threads' /}
+  {param example_value: '10' /}
+  {param description}
+    The maximum number of threads to use when calculating the number of build threads from
+    thread_core_ratio. (e.g. a value of 2 on a 4 core machine would ensure that, at most, 2 threads
+    were used, and value of 10 on a 40 core machine would ensure that, at most, 10 threads were used).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'thread_core_ratio_min_threads' /}
+  {param example_value: '1' /}
+  {param description}
+    The minimum number of threads to use when calculating the number of build threads from
+    thread_core_ratio. (e.g. a value of 1 on a 4 core machine would ensure that, at least, 1 thread
+    was used, and value of 4 on a 40 core machine would ensure that, at least, 10 threads were used).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'thread_core_ratio_reserved_cores' /}
+  {param example_value: '1' /}
+  {param description}
+    Limit the maximum number of build threads to be the number of detected cores minus this value.
+    (e.g. a value of 1 on a 4 core machine would ensure that, at most, 3 cores were used, and a
+    value of 2 on a 40 core machine would ensure that, at most, 38 cores were used).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
   {param name: 'work_queue_execution_order' /}
   {param example_value: 'LIFO' /}
   {param description}
