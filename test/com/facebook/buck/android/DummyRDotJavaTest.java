@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -106,22 +107,39 @@ public class DummyRDotJavaTest {
         buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 7, steps.size());
 
-    String rDotJavaSrcFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__").toString();
-    String rDotJavaBinFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_bin__").toString();
-    String rDotJavaAbiFolder = Paths.get(
-        "buck-out/gen/java/base/__rule_dummyrdotjava_abi__").toString();
-    String genFolder = targetGenPath().toString();
+    String rDotJavaSrcFolder =
+        BuildTargets.getScratchPath(dummyRDotJava.getBuildTarget(), "__%s_rdotjava_src__")
+            .toString();
+    String rDotJavaBinFolder =
+        BuildTargets.getScratchPath(dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__")
+            .toString();
+    String rDotJavaAbiFolder =
+        BuildTargets.getGenPath(dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_abi__")
+            .toString();
+    String genFolder = Paths.get("buck-out/gen/java/base/").toString();
 
+    List<String> sortedSymbolsFiles = FluentIterable.from(ImmutableList.of(
+                (AndroidResource) resourceRule1,
+                (AndroidResource) resourceRule2))
+        .transform(Functions.toStringFunction())
+        .toList();
+    ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
+        Paths.get(rDotJavaSrcFolder).resolve("com/facebook/R.java"));
     List<String> expectedStepDescriptions = Lists.newArrayList(
         makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)),
-        mergeAndroidResourcesDescription(
-            ImmutableList.of(
-                (AndroidResource) resourceRule1,
-                (AndroidResource) resourceRule2)),
+        "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles),
         makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)),
         makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)),
-        makeDirectoryDescription(filesystem.resolve(genFolder)),
-        javacInMemoryDescription(rDotJavaBinFolder, pathResolver),
+        String.format("mkdir -p %s", filesystem.resolve(genFolder)),
+        RDotJava.createJavacStepForDummyRDotJavaFiles(
+            javaSourceFiles,
+            BuildTargets.getGenPath(dummyRDotJava.getBuildTarget(), "__%s__srcs"),
+            Paths.get(rDotJavaBinFolder),
+            ANDROID_JAVAC_OPTIONS,
+        /* buildTarget */ null,
+            pathResolver,
+            new FakeProjectFilesystem())
+            .getDescription(TestExecutionContext.newInstance()),
         String.format("calculate_abi %s", rDotJavaBinFolder));
 
     MoreAsserts.assertSteps(
@@ -151,43 +169,13 @@ public class DummyRDotJavaTest {
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         Optional.<String>absent());
-    assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
+    assertEquals(
+        BuildTargets.getScratchPath(dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
-  }
-
-  private static String makeDirectoryDescription(Path dirname) {
-    return String.format("mkdir -p %s", dirname);
-  }
-
-  private static Path targetGenPath() {
-    return Paths.get("buck-out/gen/java/base/");
   }
 
   private static String makeCleanDirDescription(Path dirname) {
     return String.format("rm -r -f %s && mkdir -p %s", dirname, dirname);
-  }
-
-  private static String javacInMemoryDescription(
-      String rDotJavaClassesFolder,
-      SourcePathResolver resolver) {
-    ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
-        Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
-    return RDotJava.createJavacStepForDummyRDotJavaFiles(
-        javaSourceFiles,
-        targetGenPath().resolve("__rule__srcs"),
-        Paths.get(rDotJavaClassesFolder),
-        ANDROID_JAVAC_OPTIONS,
-        /* buildTarget */ null,
-        resolver,
-        new FakeProjectFilesystem())
-        .getDescription(TestExecutionContext.newInstance());
-  }
-
-  private static String mergeAndroidResourcesDescription(List<AndroidResource> resourceRules) {
-    List<String> sortedSymbolsFiles = FluentIterable.from(resourceRules)
-        .transform(Functions.toStringFunction())
-        .toList();
-    return "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles);
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule, String sha1HashCode) {

@@ -33,13 +33,13 @@ import javax.annotation.Nullable;
 public interface DexWithClasses {
 
   /** @return path from the project root where the {@code .dex.jar} file can be found. */
-  public Path getPathToDexFile();
+  Path getPathToDexFile();
 
   /** @return the names of the {@code .class} files that went into the DEX file. */
-  public ImmutableSet<String> getClassNames();
+  ImmutableSet<String> getClassNames();
 
   /** @return a hash of the {@code .class} files that went into the DEX file.*/
-  public Sha1HashCode getClassesHash();
+  Sha1HashCode getClassesHash();
 
   /**
    * @return A value that estimates how much space the Dalvik code represented by this object will
@@ -47,9 +47,9 @@ public interface DexWithClasses {
    *     consistent with those used by {@link PreDexedFilesSorter} to determine how secondary DEX
    *     files should be packed.
    */
-  public int getSizeEstimate();
+  int getSizeEstimate();
 
-  public static Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES =
+  Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES =
       new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
     @Override
     @Nullable
@@ -87,7 +87,7 @@ public interface DexWithClasses {
     }
   };
 
-  public static Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
+  Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
       new Comparator<DexWithClasses>() {
         @Override
         public int compare(DexWithClasses o1, DexWithClasses o2) {
@@ -95,7 +95,7 @@ public interface DexWithClasses {
         }
       };
 
-  public static Function <DexWithClasses, Path> TO_PATH =
+  Function <DexWithClasses, Path> TO_PATH =
       new Function<DexWithClasses, Path>() {
         @Override
         public Path apply(DexWithClasses input) {

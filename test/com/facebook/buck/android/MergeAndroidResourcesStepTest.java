@@ -22,7 +22,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -30,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -98,8 +99,8 @@ public class MergeAndroidResourcesStepTest {
 
   @Test
   public void testGenerateRDotJavaForOneSymbolsFile() throws IOException {
-    String symbolsFile = BuckConstant.GEN_DIR +
-        "/android_res/com/facebook/http/__res_text_symbols__/R.txt";
+    BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
+    String symbolsFile = BuildTargets.getGenPath(target, "__%s_text_symbols__/R.txt").toString();
     String rDotJavaPackage = "com.facebook";
     final ImmutableList<String> outputTextSymbols = ImmutableList.<String>builder()
         .add("int id placeholder 0x7f020000")
@@ -127,7 +128,7 @@ public class MergeAndroidResourcesStepTest {
 
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(resolver)
-        .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
+        .setBuildTarget(target)
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
@@ -176,10 +177,8 @@ public class MergeAndroidResourcesStepTest {
 
   @Test
   public void testGenerateRDotJavaForCustomDrawables() throws IOException {
-    String symbolsFile =
-        BuckConstant.GEN_PATH
-            .resolve("android_res/com/facebook/http/__res_text_symbols__/R.txt")
-            .toString();
+    BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
+    String symbolsFile = BuildTargets.getGenPath(target, "__%s_text_symbols__/R.txt").toString();
     String rDotJavaPackage = "com.facebook";
     final ImmutableList<String> outputTextSymbols = ImmutableList.<String>builder()
         .add("int drawable android_drawable 0x7f010000")
@@ -199,7 +198,7 @@ public class MergeAndroidResourcesStepTest {
 
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(resolver)
-        .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
+        .setBuildTarget(target)
         .setRes(new FakeSourcePath("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
@@ -236,16 +235,18 @@ public class MergeAndroidResourcesStepTest {
 
   @Test
   public void testGenerateRDotJavaWithResourceUnionPackage() throws IOException {
+    BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
+    BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     entriesBuilder.add(
         new RDotTxtFile(
             "com.res1",
-            BuckConstant.GEN_DIR + "/__res1_text_symbols__/R.txt",
+            BuildTargets.getGenPath(res1Target, "__%s_text_symbols__/R.txt").toString(),
             ImmutableList.of("int id id1 0x7f020000")));
     entriesBuilder.add(
         new RDotTxtFile(
             "com.res2",
-            BuckConstant.GEN_DIR + "/__res2_text_symbols__/R.txt",
+            BuildTargets.getGenPath(res2Target, "__%s_text_symbols__/R.txt").toString(),
             ImmutableList.of("int id id2 0x7f020000")));
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
@@ -256,14 +257,14 @@ public class MergeAndroidResourcesStepTest {
 
     HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(resolver)
-        .setBuildTarget(BuildTargetFactory.newInstance("//:res1"))
+        .setBuildTarget(res1Target)
         .setRes(new FakeSourcePath("res1"))
         .setRDotJavaPackage("res1")
         .build();
 
     HasAndroidResourceDeps res2 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(resolver)
-        .setBuildTarget(BuildTargetFactory.newInstance("//:res2"))
+        .setBuildTarget(res2Target)
         .setRes(new FakeSourcePath("res2"))
         .setRDotJavaPackage("res2")
         .build();

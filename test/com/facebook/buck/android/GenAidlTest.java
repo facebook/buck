@@ -28,6 +28,7 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -40,7 +41,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 
 import org.junit.Test;
 
@@ -91,9 +91,7 @@ public class GenAidlTest {
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
     replay(androidPlatformTarget, executionContext);
 
-    Path outputDirectory = Paths.get(
-        BuckConstant.SCRATCH_DIR,
-        "/java/com/example/base/__IWhateverService.aidl");
+    Path outputDirectory = BuildTargets.getScratchPath(target, "__%s.aidl");
     MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
     assertEquals("gen_aidl() should make a directory at " + outputDirectory,
         outputDirectory,

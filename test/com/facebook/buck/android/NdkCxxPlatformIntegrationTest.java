@@ -25,6 +25,9 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -160,9 +163,12 @@ public class NdkCxxPlatformIntegrationTest {
   @Test
   public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
-    workspace.runBuckBuild(String.format("//:lib#android-%s,static", arch)).assertSuccess();
+    BuildTarget target =
+        BuildTargetFactory.newInstance(String.format("//:lib#android-%s,static", arch));
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib =
-        workspace.getPath(String.format("buck-out/gen/lib#android-%s,static/liblib.a", arch));
+        workspace.getPath(
+            BuildTargets.getGenPath(target, "%s/lib" + target.getShortName() + ".a"));
     String contents =
         MorePaths.asByteSource(lib)
             .asCharSource(Charsets.ISO_8859_1)
