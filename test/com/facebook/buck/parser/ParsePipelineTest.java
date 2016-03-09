@@ -65,9 +65,10 @@ public class ParsePipelineTest {
 
   private <T> void waitForAll(Iterable<T> items, Predicate<T> predicate)
       throws InterruptedException {
-    boolean allThere = true;
+    boolean allThere = false;
     for (int i = 0; i < 50; ++i) {
-      if (FluentIterable.from(items).allMatch(predicate)) {
+      allThere |= FluentIterable.from(items).allMatch(predicate);
+      if (allThere) {
         break;
       }
       Thread.sleep(100);
@@ -236,7 +237,7 @@ public class ParsePipelineTest {
       this.eventBus = BuckEventBusFactory.newInstance();
       this.console = new TestConsole();
       this.executorService = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
-          MoreExecutors.newSingleThreadExecutor("test"));
+          MoreExecutors.newMultiThreadExecutor("ParsePipelineTest", 4));
       this.projectBuildFileParsers = new HashSet<>();
       this.workspace.setUp();
 

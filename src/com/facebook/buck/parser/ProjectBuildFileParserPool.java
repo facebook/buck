@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.concurrent.GuardedBy;
+
 /**
  * Allows multiple concurrently executing futures to share a constrained number of parsers.
  *
@@ -56,11 +58,16 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   private static final Logger LOG = Logger.get(ProjectBuildFileParserPool.class);
 
   private final int maxParsersPerCell;
+  @GuardedBy("this")
   private final Function<Cell, ProjectBuildFileParser> parserFactory;
+  @GuardedBy("this")
   private final Multimap<Cell, ProjectBuildFileParser> createdParsers;
+  @GuardedBy("this")
   private final Map<Cell, Deque<ProjectBuildFileParser>> parkedParsers;
+  @GuardedBy("this")
   private final Map<Cell, Deque<SettableFuture<Void>>> parserRequests;
   private final AtomicBoolean closing;
+  @GuardedBy("this")
   private final Set<ListenableFuture<?>> pendingWork;
 
   /**
@@ -88,10 +95,10 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @return a {@link ListenableFuture} containing the result of the parsing. The future will be
    *         cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
-  public ListenableFuture<ImmutableList<Map<String, Object>>> getAllRulesAndMetaRules(
+  public synchronized ListenableFuture<ImmutableList<Map<String, Object>>> getAllRulesAndMetaRules(
       final Cell cell,
       final Path buildFile,
-      ListeningExecutorService executorService) {
+      final ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     final ListenableFuture<ImmutableList<Map<String, Object>>> futureWork = Futures.transformAsync(
@@ -114,20 +121,18 @@ class ProjectBuildFileParserPool implements AutoCloseable {
                 returnParser(cell, parser);
               }
             } else {
-              return Futures.transformAsync(parserRequest.getRight(), this);
+              return Futures.transformAsync(parserRequest.getRight(), this, executorService);
             }
           }
         },
         executorService);
 
-    synchronized (pendingWork) {
-      pendingWork.add(futureWork);
-    }
+    pendingWork.add(futureWork);
     futureWork.addListener(
         new Runnable() {
           @Override
           public void run() {
-            synchronized (pendingWork) {
+            synchronized (ProjectBuildFileParserPool.this) {
               pendingWork.remove(futureWork);
             }
           }
@@ -230,16 +235,14 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     Preconditions.checkState(!closing.get());
     closing.set(true);
 
-    synchronized (this) {
-      // Unblock all waiting requests.
-      for (Deque<SettableFuture<Void>> requestQueue : parserRequests.values()) {
-        for (SettableFuture<Void> request : requestQueue) {
-          request.set(null);
-        }
+    // Unblock all waiting requests.
+    for (Deque<SettableFuture<Void>> requestQueue : parserRequests.values()) {
+      for (SettableFuture<Void> request : requestQueue) {
+        request.set(null);
       }
     }
 
@@ -249,9 +252,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     // mark themselves as cancelled.
     // Therefore `closeFuture` should allow us to wait for any parsers that are in use.
     ListenableFuture<List<Object>> closeFuture;
-    synchronized (pendingWork) {
-      closeFuture = Futures.successfulAsList(pendingWork);
-    }
+    closeFuture = Futures.successfulAsList(pendingWork);
 
     // As silly as it seems this is the only reliable way to make sure we run the shutdown code.
     // Reusing an external executor means we run the risk of it being shut down before the cleanup
