@@ -104,7 +104,7 @@ public final class Escaper {
   private static final CharMatcher BASH_SPECIAL_CHARS =
       CharMatcher
           .anyOf("<>|!?*[]$\\(){}\"'`&;=")
-          .or(CharMatcher.WHITESPACE);
+          .or(CharMatcher.whitespace());
 
   /**
    * Bash quoting {@link com.google.common.base.Function Function} which can be passed to

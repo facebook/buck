@@ -134,7 +134,7 @@ public class TargetsCommandIntegrationTest {
 
   private String parseAndVerifyTargetAndHash(String target, String outputLine) {
     List<String> targetAndHash = Splitter.on(' ').splitToList(
-        CharMatcher.WHITESPACE.trimFrom(outputLine));
+        CharMatcher.whitespace().trimFrom(outputLine));
     assertEquals(2, targetAndHash.size());
     assertEquals(target, targetAndHash.get(0));
     assertFalse(targetAndHash.get(1).isEmpty());

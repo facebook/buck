@@ -215,7 +215,7 @@ public class GoBuckConfig {
                     /* timeOutMs */ Optional.<Long>absent(),
                     /* timeoutHandler */ Optional.<Function<Process, Void>>absent());
       if (goToolResult.getExitCode() == 0) {
-        return CharMatcher.WHITESPACE.trimFrom(goToolResult.getStdout().get());
+        return CharMatcher.whitespace().trimFrom(goToolResult.getStdout().get());
       } else {
         throw new HumanReadableException(goToolResult.getStderr().get());
       }

@@ -39,7 +39,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
   Function<String, String> ARGFILES_ESCAPER =
       Escaper.escaper(
           Escaper.Quoter.DOUBLE,
-          CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
+          CharMatcher.anyOf("#\"'").or(CharMatcher.whitespace()));
   String SRC_ZIP = ".src.zip";
   String SRC_JAR = "-sources.jar";
 
