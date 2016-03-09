@@ -1,0 +1,56 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.maven;
+
+
+import org.junit.Test;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+
+import static org.junit.Assert.assertEquals;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+
+import java.io.IOException;
+
+public class ArtifactConfigTest {
+
+  @Test
+  public void shouldMergeCmdLineArgsCorrectly() throws IOException, CmdLineException {
+
+    String jsonString =
+      "{\"repositories\": [{\"url\":\"https://example.com\"}]," +
+          "\"third_party\":\"tp0\"," +
+          "\"repo\":\"br\"," +
+          "\"artifacts\":[\"artifact1\"]}";
+
+    ArtifactConfig base = new ObjectMapper().readValue(jsonString, ArtifactConfig.class);
+
+
+    ArtifactConfig.CmdLineArgs args = new ArtifactConfig.CmdLineArgs();
+    CmdLineParser parser = new CmdLineParser(args);
+    parser.parseArgument("-third-party", "tp1", "-maven", "http://bar.co", "artifact2");
+
+    base.mergeCmdLineArgs(args);
+    assertEquals("tp1", base.thirdParty);
+    assertEquals(base.artifacts, Lists.newArrayList("artifact1", "artifact2"));
+    assertEquals("br", base.buckRepoRoot);
+    assertEquals("https://example.com", base.repositories.get(0).url);
+    assertEquals("http://bar.co", base.repositories.get(1).url);
+  }
+}

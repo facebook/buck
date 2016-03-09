@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY cb090970e1bbdc25f004994c7dfd35fcf64fe12f #@#
+#@# GENERATED FILE: DO NOT MODIFY c208a28c7d7a23c3c4c2b3bc7918fd6b43621fa5 #@#
 {
   "event" : [
     "//src/com/facebook/buck/event/external:external_lib",
@@ -13,7 +13,6 @@
     "//third-party/java/guava:guava",
     "//third-party/java/immutables:processor",
     "//third-party/java/jackson:jackson-annotations",
-    "//third-party/java/jackson:jackson-databind",
     "//third-party/java/jsr:jsr305"
   ]
 }
