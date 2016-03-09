@@ -16,6 +16,8 @@
 
 package com.facebook.buck.artifact_cache;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.BorrowablePath;
@@ -50,7 +52,8 @@ public class TwoLeveArtifactCacheDecoratorTest {
         inMemoryArtifactCache,
         new ProjectFilesystem(tmp.getRoot()),
         MoreExecutors.newDirectExecutorService(),
-        0L);
+        /* performTwoLevelStores */ true,
+        /* twoLevelThreshold */ 0L);
     LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
     assertThat(
@@ -77,5 +80,73 @@ public class TwoLeveArtifactCacheDecoratorTest {
         inMemoryArtifactCache.getArtifactCount(),
         Matchers.equalTo(3));
     twoLevelCache.close();
+  }
+
+  @Test
+  public void testMetadataIsNotShared() throws InterruptedException, IOException {
+    InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
+    TwoLevelArtifactCacheDecorator twoLevelCache = new TwoLevelArtifactCacheDecorator(
+        inMemoryArtifactCache,
+        new ProjectFilesystem(tmp.getRoot()),
+        MoreExecutors.newDirectExecutorService(),
+        /* performTwoLevelStores */ true,
+        /* twoLevelThreshold */ 0L);
+    LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
+
+    final String testMetadataKey = "testMetaKey";
+    twoLevelCache.store(
+        ImmutableSet.of(dummyRuleKey),
+        ImmutableMap.of(testMetadataKey, "value1"),
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
+    twoLevelCache.store(
+        ImmutableSet.of(dummyRuleKey2),
+        ImmutableMap.of(testMetadataKey, "value2"),
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
+
+    CacheResult fetch1 = twoLevelCache.fetch(dummyRuleKey, dummyFile);
+    CacheResult fetch2 = twoLevelCache.fetch(dummyRuleKey2, dummyFile);
+    // Content hashes should be the same
+    assertEquals(
+        fetch1.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY),
+        fetch2.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY));
+    // But the metadata shouldn't be shared
+    assertNotEquals(
+        fetch1.getMetadata().get(testMetadataKey),
+        fetch2.getMetadata().get(testMetadataKey));
+
+    twoLevelCache.close();
+  }
+
+  @Test
+  public void testCanRead2LStoresIfStoresDisabled() throws InterruptedException, IOException {
+    InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
+    TwoLevelArtifactCacheDecorator twoLevelCache = new TwoLevelArtifactCacheDecorator(
+        inMemoryArtifactCache,
+        new ProjectFilesystem(tmp.getRoot()),
+        MoreExecutors.newDirectExecutorService(),
+        /* performTwoLevelStores */ true,
+        /* twoLevelThreshold */ 0L);
+    LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
+
+    twoLevelCache.store(
+        ImmutableSet.of(dummyRuleKey),
+        ImmutableMap.<String, String>of(),
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
+    assertThat(
+        inMemoryArtifactCache.getArtifactCount(),
+        Matchers.equalTo(2));
+
+    TwoLevelArtifactCacheDecorator twoLevelCacheNoStore = new TwoLevelArtifactCacheDecorator(
+        inMemoryArtifactCache,
+        new ProjectFilesystem(tmp.getRoot()),
+        MoreExecutors.newDirectExecutorService(),
+        /* performTwoLevelStores */ false,
+        /* twoLevelThreshold */ 0L);
+    assertThat(
+        twoLevelCacheNoStore.fetch(dummyRuleKey, dummyFile).getType(),
+        Matchers.equalTo(CacheResultType.HIT));
+
+    twoLevelCache.close();
+    twoLevelCacheNoStore.close();
   }
 }

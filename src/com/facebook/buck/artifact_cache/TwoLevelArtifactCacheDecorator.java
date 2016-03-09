@@ -23,6 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -37,23 +38,27 @@ import java.nio.file.Path;
 
 public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
-  private static final String METADATA_KEY = "TWO_LEVEL_CACHE_CONTENT_HASH";
+  @VisibleForTesting
+  static final String METADATA_KEY = "TWO_LEVEL_CACHE_CONTENT_HASH";
   private static final Logger LOG = Logger.get(TwoLevelArtifactCacheDecorator.class);
 
   private final ArtifactCache delegate;
   private final ProjectFilesystem projectFilesystem;
   private final ListeningExecutorService listeningExecutorService;
   private final Path emptyFilePath;
+  private final boolean performTwoLevelStores;
   private final long twoLevelStoreThreshold;
 
   public TwoLevelArtifactCacheDecorator(
       ArtifactCache delegate,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService listeningExecutorService,
+      boolean performTwoLevelStores,
       long twoLevelThreshold) {
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
     this.listeningExecutorService = listeningExecutorService;
+    this.performTwoLevelStores = performTwoLevelStores;
     this.twoLevelStoreThreshold = twoLevelThreshold;
     try {
       projectFilesystem.mkdirs(BuckConstant.SCRATCH_PATH);
@@ -77,7 +82,13 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
         !fetchResult.getMetadata().containsKey(METADATA_KEY)) {
       return fetchResult;
     }
-    return delegate.fetch(new RuleKey(fetchResult.getMetadata().get(METADATA_KEY)), output);
+    CacheResult outputFileFetchResult = delegate.fetch(
+        new RuleKey(fetchResult.getMetadata().get(METADATA_KEY)),
+        output);
+    if (!outputFileFetchResult.getType().isSuccess()) {
+      return outputFileFetchResult;
+    }
+    return fetchResult;
   }
 
   @Override
@@ -99,6 +110,11 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
         });
   }
 
+  @VisibleForTesting
+  ArtifactCache getDelegate() {
+    return delegate;
+  }
+
   private ListenableFuture<Boolean> attemptTwoLevelStore(
       final ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
@@ -111,15 +127,15 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
           public ListenableFuture<Optional<String>> apply(Void input) throws Exception {
             long fileSize = projectFilesystem.getFileSize(output.getPath());
 
-            if (fileSize < twoLevelStoreThreshold) {
+            if (!performTwoLevelStores || fileSize < twoLevelStoreThreshold) {
               return Futures.immediateFuture(Optional.<String>absent());
             }
 
-            String hashCode = "2c00" + projectFilesystem.computeSha1(output.getPath());
+            String hashCode = projectFilesystem.computeSha1(output.getPath()) +  "2c00";
             return Futures.transform(
                 delegate.store(
                     ImmutableSet.of(new RuleKey(hashCode)),
-                    metadata,
+                    ImmutableMap.<String, String>of(),
                     output),
                 Functions.constant(Optional.of(hashCode)));
           }
@@ -131,15 +147,21 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
         contentHash,
         new AsyncFunction<Optional<String>, Boolean>() {
           @Override
-          public ListenableFuture<Boolean> apply(Optional<String> input) throws Exception {
-            if (!input.isPresent()) {
+          public ListenableFuture<Boolean> apply(Optional<String> contentHash) throws Exception {
+            if (!contentHash.isPresent()) {
               return Futures.immediateFuture(false);
             }
+
+            ImmutableMap<String, String> metadataWithCacheKey =
+                ImmutableMap.<String, String>builder()
+                    .putAll(metadata)
+                    .put(METADATA_KEY, contentHash.get())
+                    .build();
 
             return Futures.transform(
                 delegate.store(
                     ruleKeys,
-                    ImmutableMap.of(METADATA_KEY, input.get()),
+                    metadataWithCacheKey,
                     BorrowablePath.notBorrowablePath(emptyFilePath)),
                 Functions.constant(true));
           }

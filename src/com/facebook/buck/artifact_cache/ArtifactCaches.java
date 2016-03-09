@@ -164,13 +164,13 @@ public class ArtifactCaches {
       result = new MultiArtifactCache(artifactCaches);
     }
 
-    if (buckConfig.getTwoLevelCachingEnabled()) {
-      result = new TwoLevelArtifactCacheDecorator(
-          result,
-          projectFilesystem,
-          httpWriteExecutorService,
-          buckConfig.getTwoLevelCachingThreshold());
-    }
+    // Always support reading two-level cache stores (in case we performed any in the past).
+    result = new TwoLevelArtifactCacheDecorator(
+        result,
+        projectFilesystem,
+        httpWriteExecutorService,
+        buckConfig.getTwoLevelCachingEnabled(),
+        buckConfig.getTwoLevelCachingThreshold());
 
     return result;
   }

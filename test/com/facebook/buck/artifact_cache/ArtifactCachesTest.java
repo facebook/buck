@@ -42,7 +42,7 @@ public class ArtifactCachesTest {
         projectFilesystem,
         Optional.<String>absent(),
         MoreExecutors.newDirectExecutorService());
-    assertThat(artifactCache, Matchers.instanceOf(HttpArtifactCache.class));
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
   }
 
   @Test
@@ -59,7 +59,7 @@ public class ArtifactCachesTest {
         Optional.<String>absent(),
         MoreExecutors.newDirectExecutorService());
 
-    assertInnerDirCache(artifactCache);
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 
   @Test
@@ -75,7 +75,7 @@ public class ArtifactCachesTest {
         projectFilesystem,
         Optional.<String>absent(),
         MoreExecutors.newDirectExecutorService());
-    assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
   }
 
   @Test
@@ -92,14 +92,19 @@ public class ArtifactCachesTest {
         projectFilesystem,
         Optional.of("evilwifi"),
         MoreExecutors.newDirectExecutorService());
-    assertInnerDirCache(artifactCache);
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 
-  private static void assertInnerDirCache(ArtifactCache artifactCache) {
-    assertThat(artifactCache, Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
-    LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
-    assertThat(
-        cacheDecorator.getDelegate(),
-        Matchers.instanceOf(DirArtifactCache.class));
+  private static ArtifactCache stripDecorators(ArtifactCache artifactCache) {
+    if (artifactCache instanceof LoggingArtifactCacheDecorator) {
+      LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
+      return stripDecorators(cacheDecorator.getDelegate());
+    }
+    if (artifactCache instanceof TwoLevelArtifactCacheDecorator) {
+      TwoLevelArtifactCacheDecorator cacheDecorator =
+          (TwoLevelArtifactCacheDecorator) artifactCache;
+      return stripDecorators(cacheDecorator.getDelegate());
+    }
+    return artifactCache;
   }
 }
