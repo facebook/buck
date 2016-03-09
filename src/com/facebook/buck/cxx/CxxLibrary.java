@@ -126,6 +126,9 @@ public class CxxLibrary
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeps())
         .filter(CxxPreprocessorDep.class);
   }
@@ -157,12 +160,18 @@ public class CxxLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(exportedDeps)
         .filter(NativeLinkable.class);
   }
