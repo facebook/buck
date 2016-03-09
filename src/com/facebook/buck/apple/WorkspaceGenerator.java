@@ -229,7 +229,8 @@ public class WorkspaceGenerator {
             element.setAttribute(
                 "location",
                 "container:" +
-                    outputDirectory.normalize().relativize(fileRef.getPath()).toString());
+                    MorePaths.relativize(
+                        MorePaths.normalize(outputDirectory), fileRef.getPath()).toString());
             groups.peek().appendChild(element);
             return FileVisitResult.CONTINUE;
           }

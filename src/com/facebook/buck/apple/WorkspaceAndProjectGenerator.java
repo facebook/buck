@@ -173,7 +173,7 @@ public class WorkspaceAndProjectGenerator {
   }
 
   public Path generateWorkspaceAndDependentProjects(
-        Map<Path, ProjectGenerator> projectGenerators)
+      Map<Path, ProjectGenerator> projectGenerators)
       throws IOException {
     LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
@@ -301,7 +301,7 @@ public class WorkspaceAndProjectGenerator {
         if (generator == null) {
           LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
           String projectName;
-          if (projectDirectory.getNameCount() == 0) {
+          if (projectDirectory.getFileName().toString().equals("")) {
             // If we're generating a project in the root directory, use a generic name.
             projectName = "Project";
           } else {
@@ -465,11 +465,11 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<?>>
-        buildForTestNodesBuilder,
+          buildForTestNodesBuilder,
       ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsBuilder,
+          groupedTestsBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        ungroupedTestsBuilder) {
+          ungroupedTestsBuilder) {
     ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
         extraTestNodesBuilder = ImmutableSetMultimap.builder();
     addWorkspaceScheme(
@@ -519,7 +519,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        extraTestNodesBuilder) {
+          extraTestNodesBuilder) {
     LOG.debug("Adding scheme %s", schemeName);
     schemeConfigsBuilder.put(schemeName, schemeArguments);
     if (schemeArguments.srcTarget.isPresent()) {
@@ -561,7 +561,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        extraTestNodesBuilder) {
+          extraTestNodesBuilder) {
     for (Map.Entry<String, BuildTarget> extraSchemeEntry : extraSchemes.entrySet()) {
       BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
       Optional<TargetNode<?>> extraSchemeNode = projectGraph.getOptional(extraSchemeTarget);
@@ -742,9 +742,9 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap<String, Optional<TargetNode<?>>> schemeNameToSrcTargetNode,
       ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> extraTestNodes,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        selectedTestsBuilder,
+          selectedTestsBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<?>>
-        buildForTestNodesBuilder) {
+          buildForTestNodesBuilder) {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
       ImmutableSet<TargetNode<?>> targetNodes =
           ImmutableSet.copyOf(Optional.presentInstances(schemeNameToSrcTargetNode.get(schemeName)));
@@ -770,11 +770,11 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests,
       ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> selectedTests,
       ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsBuilder,
+          groupedTestsBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        ungroupedTestsBuilder) {
+          ungroupedTestsBuilder) {
     for (Map.Entry<String, TargetNode<AppleTestDescription.Arg>> testEntry :
-             selectedTests.entries()) {
+        selectedTests.entries()) {
       String schemeName = testEntry.getKey();
       TargetNode<AppleTestDescription.Arg> test = testEntry.getValue();
       if (groupableTests.contains(test)) {
@@ -802,7 +802,7 @@ public class WorkspaceAndProjectGenerator {
       Function<TargetNode<?>, Collection<PBXTarget>> targetNodeToPBXTargetTransformer,
       Function<BuildTarget, PBXTarget> buildTargetToPBXTargetTransformer) throws IOException {
     for (Map.Entry<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigEntry :
-             schemeConfigs.entrySet()) {
+        schemeConfigs.entrySet()) {
       String schemeName = schemeConfigEntry.getKey();
       boolean isMainScheme = schemeName.equals(workspaceName);
       XcodeWorkspaceConfigDescription.Arg schemeConfigArg = schemeConfigEntry.getValue();

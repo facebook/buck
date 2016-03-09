@@ -130,10 +130,18 @@ class SchemeGenerator {
       if (blueprintName == null) {
         blueprintName = target.getName();
       }
+      Path outputPath = outputDirectory.getParent();
+      String buildableReferencePath;
+      Path projectPath = Preconditions.checkNotNull(targetToProjectPathMap.get(target));
+      if (outputPath == null) {
+        //Root directory project
+        buildableReferencePath = projectPath.toString();
+      } else {
+        buildableReferencePath = outputPath.relativize(projectPath).toString();
+      }
+
       XCScheme.BuildableReference buildableReference = new XCScheme.BuildableReference(
-          outputDirectory.getParent().relativize(
-              targetToProjectPathMap.get(target)
-          ).toString(),
+          buildableReferencePath,
           Preconditions.checkNotNull(target.getGlobalID()),
           target.getProductReference() != null
               ? target.getProductReference().getName()
@@ -178,7 +186,7 @@ class SchemeGenerator {
 
     if (primaryTarget.isPresent()) {
       XCScheme.BuildableReference primaryBuildableReference =
-        buildTargetToBuildableReferenceMap.get(primaryTarget.get());
+          buildTargetToBuildableReferenceMap.get(primaryTarget.get());
       if (primaryBuildableReference != null) {
         launchAction = Optional.of(
             new XCScheme.LaunchAction(
@@ -227,11 +235,11 @@ class SchemeGenerator {
       XCScheme.BuildableReference buildableReference,
       EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor,
       XCScheme.BuildAction buildAction) {
-      XCScheme.BuildActionEntry entry = new XCScheme.BuildActionEntry(
-          buildableReference,
-          buildFor);
-      buildAction.addBuildAction(entry);
-    }
+    XCScheme.BuildActionEntry entry = new XCScheme.BuildActionEntry(
+        buildableReference,
+        buildFor);
+    buildAction.addBuildAction(entry);
+  }
 
 
   public static Element serializeBuildableReference(
