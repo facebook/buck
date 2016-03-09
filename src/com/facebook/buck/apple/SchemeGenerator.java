@@ -134,7 +134,6 @@ class SchemeGenerator {
       String buildableReferencePath;
       if(outputPath == null) {
           //Root directory project
-          outputPath = outputDirectory;
           buildableReferencePath = targetToProjectPathMap.get(target).toString();
       } else {
         buildableReferencePath = outputPath.relativize(
