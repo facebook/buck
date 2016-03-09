@@ -301,7 +301,7 @@ public class WorkspaceAndProjectGenerator {
         if (generator == null) {
           LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
           String projectName;
-          if (projectDirectory.getNameCount() == 0) {
+          if (projectDirectory.getFileName().toString().equals("")) {
             // If we're generating a project in the root directory, use a generic name.
             projectName = "Project";
           } else {
