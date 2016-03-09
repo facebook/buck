@@ -262,132 +262,177 @@ public class TargetsCommand extends AbstractCommand {
       throw new HumanReadableException("Cannot show rule key and target hash at the same time.");
     }
 
-    ImmutableMap<String, ShowOptions> showRulesResult =
-        ImmutableMap.of();
-
     try (CommandThreadManager pool = new CommandThreadManager(
         "Targets",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
-      if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
-        try {
-          showRulesResult = computeShowRules(params, pool.getExecutor());
-        } catch (NoSuchBuildTargetException e) {
-          throw new HumanReadableException(
-              "Error getting rules: %s",
-              e.getHumanReadableErrorMessage());
-        } catch (BuildTargetException | BuildFileParseException e) {
-          params.getBuckEventBus().post(ConsoleEvent.severe(
-              MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-          return 1;
-        }
+      return runWithExecutor(params, pool.getExecutor());
+    }
+  }
 
-        if (!getPrintJson()) {
-          printShowRules(showRulesResult, params);
-          return 0;
-        }
-      }
+  private int runWithExecutor(
+      CommandRunnerParams params,
+      ListeningExecutorService executor) throws IOException, InterruptedException {
+    ImmutableMap<String, ShowOptions> showRulesResult =
+        ImmutableMap.of();
 
-      // Verify the --type argument.
-      ImmutableSet<String> types = getTypes();
-      ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
-      for (String name : types) {
-        try {
-          buildRuleTypesBuilder.add(params.getCell().getBuildRuleType(name));
-        } catch (IllegalArgumentException e) {
-          params.getBuckEventBus().post(ConsoleEvent.severe(
-              "Invalid build rule type: " + name));
-          return 1;
-        }
-      }
-
-      // Parse the entire action graph, or (if targets are specified),
-      // only the specified targets and their dependencies..
-      //
-      // TODO(k21):
-      // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
-      // know which targets can refer to the specified targets or their dependencies in their
-      // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
-      // longer be necessary.
-      ImmutableSet<BuildTarget> matchingBuildTargets;
-      TargetGraph graph;
+    if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
       try {
-        if (getArguments().isEmpty() || isDetectTestChanges()) {
-          matchingBuildTargets = ImmutableSet.of();
-          graph = params.getParser()
-              .buildTargetGraphForTargetNodeSpecs(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  getEnableProfiling(),
-                  pool.getExecutor(),
-                  ImmutableList.of(
-                      TargetNodePredicateSpec.of(
-                          Predicates.<TargetNode<?>>alwaysTrue(),
-                          BuildFileSpec.fromRecursivePath(
-                              Paths.get(""))))).getSecond();
-        } else {
-          Pair<ImmutableSet<BuildTarget>, TargetGraph> results = params.getParser()
-              .buildTargetGraphForTargetNodeSpecs(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  getEnableProfiling(),
-                  pool.getExecutor(),
-                  parseArgumentsAsTargetNodeSpecs(
-                      params.getBuckConfig(),
-                      getArguments()));
-          matchingBuildTargets = results.getFirst();
-          graph = results.getSecond();
-        }
+        showRulesResult = computeShowRules(params, executor);
+      } catch (NoSuchBuildTargetException e) {
+        throw new HumanReadableException(
+            "Error getting rules: %s",
+            e.getHumanReadableErrorMessage());
       } catch (BuildTargetException | BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
-            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+                MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
       }
 
-      PathArguments.ReferencedFiles referencedFiles = getReferencedFiles(
-          params.getCell().getFilesystem().getRootPath());
-      SortedMap<String, TargetNode<?>> matchingNodes;
-      // If all of the referenced files are paths outside the project root, then print nothing.
-      if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
-          referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
-        matchingNodes = ImmutableSortedMap.of();
-      } else {
-        ImmutableSet<BuildRuleType> buildRuleTypes = buildRuleTypesBuilder.build();
-        ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
-
-        matchingNodes = getMatchingNodes(
-            graph,
-            referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
-                Optional.<ImmutableSet<Path>>absent() :
-                Optional.of(referencedFiles.relativePathsUnderProjectRoot),
-            matchingBuildTargets.isEmpty() ?
-                Optional.<ImmutableSet<BuildTarget>>absent() :
-                Optional.of(matchingBuildTargets),
-            buildRuleTypes.isEmpty() ?
-                Optional.<ImmutableSet<BuildRuleType>>absent() :
-                Optional.of(buildRuleTypes),
-            isDetectTestChanges(),
-            parserConfig.getBuildFileName());
+      if (!getPrintJson()) {
+        printShowRules(showRulesResult, params);
+        return 0;
       }
+    }
 
-      // Print out matching targets in alphabetical order.
-      if (getPrintJson()) {
-        try {
-          printJsonForTargets(params, pool.getExecutor(), matchingNodes, showRulesResult);
-        } catch (BuildFileParseException e) {
-          params.getBuckEventBus().post(ConsoleEvent.severe(
-              MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-          return 1;
-        }
-      } else if (isPrint0()) {
-        printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
-      } else {
-        for (String target : matchingNodes.keySet()) {
-          params.getConsole().getStdOut().println(target);
-        }
+    Optional<ImmutableSet<BuildRuleType>> buildRuleTypes = getBuildRuleTypesFromParams(params);
+    if (!buildRuleTypes.isPresent()) {
+      return 1;
+    }
+
+    // Parse the entire action graph, or (if targets are specified),
+    // only the specified targets and their dependencies..
+    //
+    // TODO(k21):
+    // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
+    // know which targets can refer to the specified targets or their dependencies in their
+    // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
+    // longer be necessary.
+    Optional<Pair<ImmutableSet<BuildTarget>, TargetGraph>> graphAndTargets =
+        buildTargetGraphAndTargets(params, executor);
+    if (!graphAndTargets.isPresent()) {
+      return 1;
+    }
+
+    SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
+        params,
+        graphAndTargets.get().getFirst(),
+        graphAndTargets.get().getSecond(),
+        buildRuleTypes);
+
+    return printResults(params, executor, matchingNodes, showRulesResult);
+  }
+
+  /**
+   * Print out matching targets in alphabetical order.
+   */
+  private int printResults(
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      SortedMap<String, TargetNode<?>> matchingNodes,
+      ImmutableMap<String, ShowOptions> showRulesResult) throws IOException, InterruptedException {
+    if (getPrintJson()) {
+      try {
+        printJsonForTargets(params, executor, matchingNodes, showRulesResult);
+      } catch (BuildFileParseException e) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+                MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return 1;
+      }
+    } else if (isPrint0()) {
+      printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
+    } else {
+      for (String target : matchingNodes.keySet()) {
+        params.getConsole().getStdOut().println(target);
       }
     }
     return 0;
+  }
+
+  private SortedMap<String, TargetNode<?>> getMatchingNodes(
+      CommandRunnerParams params,
+      ImmutableSet<BuildTarget> matchingBuildTargets,
+      TargetGraph graph,
+      Optional<ImmutableSet<BuildRuleType>> buildRuleTypes
+  ) throws IOException {
+    PathArguments.ReferencedFiles referencedFiles = getReferencedFiles(
+        params.getCell().getFilesystem().getRootPath());
+    SortedMap<String, TargetNode<?>> matchingNodes;
+    // If all of the referenced files are paths outside the project root, then print nothing.
+    if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
+        referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
+      matchingNodes = ImmutableSortedMap.of();
+    } else {
+      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+
+      matchingNodes = getMatchingNodes(
+          graph,
+          referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
+              Optional.<ImmutableSet<Path>>absent() :
+              Optional.of(referencedFiles.relativePathsUnderProjectRoot),
+          matchingBuildTargets.isEmpty() ?
+              Optional.<ImmutableSet<BuildTarget>>absent() :
+              Optional.of(matchingBuildTargets),
+          buildRuleTypes.get().isEmpty() ?
+              Optional.<ImmutableSet<BuildRuleType>>absent() :
+              buildRuleTypes,
+          isDetectTestChanges(),
+          parserConfig.getBuildFileName());
+    }
+    return matchingNodes;
+  }
+
+  private Optional<Pair<ImmutableSet<BuildTarget>, TargetGraph>> buildTargetGraphAndTargets(
+      CommandRunnerParams params,
+      ListeningExecutorService executor) throws IOException, InterruptedException {
+    try {
+      if (getArguments().isEmpty() || isDetectTestChanges()) {
+        return Optional.of(new Pair<>(
+            ImmutableSet.<BuildTarget>of(),
+            params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                params.getBuckEventBus(),
+                params.getCell(),
+                getEnableProfiling(),
+                executor,
+                ImmutableList.of(
+                    TargetNodePredicateSpec.of(
+                        Predicates.<TargetNode<?>>alwaysTrue(),
+                        BuildFileSpec.fromRecursivePath(
+                            Paths.get(""))))).getSecond()));
+      } else {
+        return Optional.of(
+            params.getParser()
+                .buildTargetGraphForTargetNodeSpecs(
+                    params.getBuckEventBus(),
+                    params.getCell(),
+                    getEnableProfiling(),
+                    executor,
+                    parseArgumentsAsTargetNodeSpecs(
+                        params.getBuckConfig(),
+                        getArguments())));
+      }
+    } catch (BuildTargetException | BuildFileParseException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+              MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return Optional.absent();
+    }
+  }
+
+  private Optional<ImmutableSet<BuildRuleType>> getBuildRuleTypesFromParams(
+      CommandRunnerParams params) {
+    ImmutableSet<String> types = getTypes();
+    ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
+    for (String name : types) {
+      try {
+        buildRuleTypesBuilder.add(params.getCell().getBuildRuleType(name));
+      } catch (IllegalArgumentException e) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+                "Invalid build rule type: " + name));
+        return Optional.absent();
+      }
+    }
+    return Optional.of(buildRuleTypesBuilder.build());
   }
 
   private void printShowRules(
