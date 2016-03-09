@@ -67,7 +67,6 @@ public class AetherUtil {
     return builder.build();
   }
 
-
   public static ServiceLocator initServiceLocator() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
     locator.setErrorHandler(

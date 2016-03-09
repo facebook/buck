@@ -100,7 +100,6 @@ public class ArtifactConfig {
     return this;
   }
 
-
   private static void usage(CmdLineParser parser) {
     System.out.println("Import Maven JARs as Buck build rules.");
     System.out.println();
@@ -137,8 +136,6 @@ public class ArtifactConfig {
     }
 
     artifactConfig.mergeCmdLineArgs(parsedArgs);
-
-
 
     return artifactConfig;
   }
