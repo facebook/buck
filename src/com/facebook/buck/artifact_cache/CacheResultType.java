@@ -27,6 +27,9 @@ public enum CacheResultType {
     /** An error occurred when fetching artifact from cache*/
     ERROR(/* success */ false),
 
+    /** The rule was uncachable */
+    IGNORED(/* success */ false),
+
     /** Artifact cache not queried because the local cache key was unchanged. */
     LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
 
@@ -38,7 +41,10 @@ public enum CacheResultType {
         this.success = success;
     }
 
-    public boolean isSuccess() {
+  /**
+   * Whether the artifact was successfully fetched.
+   */
+  public boolean isSuccess() {
         return success;
     }
 }

@@ -34,6 +34,12 @@ abstract class AbstractCacheResult {
           Optional.<String>absent(),
           Optional.<String>absent(),
           Optional.<ImmutableMap<String, String>>absent());
+  private static final CacheResult IGNORED_RESULT =
+      CacheResult.of(
+          CacheResultType.IGNORED,
+          Optional.<String>absent(),
+          Optional.<String>absent(),
+          Optional.<ImmutableMap<String, String>>absent());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
           CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
@@ -99,6 +105,10 @@ abstract class AbstractCacheResult {
 
   public static CacheResult miss() {
     return MISS_RESULT;
+  }
+
+  public static CacheResult ignored() {
+    return IGNORED_RESULT;
   }
 
   public static CacheResult localKeyUnchangedHit() {

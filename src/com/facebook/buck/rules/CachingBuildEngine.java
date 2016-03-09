@@ -661,6 +661,9 @@ public class CachingBuildEngine implements BuildEngine {
               }
 
               private void uploadToCache(BuildRuleSuccessType success) {
+                if (!isCachable(rule)) {
+                  return;
+                }
 
                 // Collect up all the rule keys we have index the artifact in the cache with.
                 Set<RuleKey> ruleKeys = Sets.newHashSet();
@@ -966,6 +969,9 @@ public class CachingBuildEngine implements BuildEngine {
       ArtifactCache artifactCache,
       ProjectFilesystem filesystem,
       BuildContext buildContext) throws InterruptedException {
+    if (!isCachable(rule)) {
+      return CacheResult.ignored();
+    }
 
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
@@ -1134,6 +1140,7 @@ public class CachingBuildEngine implements BuildEngine {
   private boolean useManifestCaching(BuildRule rule) {
     return depFiles == DepFiles.CACHE &&
         rule instanceof SupportsDependencyFileRuleKey &&
+        isCachable(rule) &&
         ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
   }
 
@@ -1329,6 +1336,10 @@ public class CachingBuildEngine implements BuildEngine {
         // TODO(shs96c): This should be shared between all tests, not one per cell
         rule.getProjectFilesystem(),
         context);
+  }
+
+  private static boolean isCachable(BuildRule rule) {
+    return !(rule instanceof UncachableBuildRule);
   }
 
   /**

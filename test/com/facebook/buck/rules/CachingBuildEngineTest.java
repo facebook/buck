@@ -2241,6 +2241,67 @@ public class CachingBuildEngineTest {
     }
   }
 
+  public static class UncachableRuleTests extends CommonFixture {
+    @Test
+    public void uncachableRulesDoNotTouchTheCache() throws Exception {
+      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(target)
+              .setProjectFilesystem(filesystem)
+              .build();
+      BuildRule rule = new UncachableRule(
+          params,
+          pathResolver,
+          ImmutableList.<Step>of(),
+          Paths.get("foo.out"));
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              MoreExecutors.newDirectExecutorService(),
+              fileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              pathResolver,
+              Functions.constant(
+                  new CachingBuildEngine.RuleKeyFactories(
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+      BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+      assertEquals(
+          BuildRuleSuccessType.BUILT_LOCALLY,
+          result.getSuccess());
+      assertEquals(
+          "Should not attempt to fetch from cache",
+          CacheResultType.IGNORED,
+          result.getCacheResult().getType());
+      assertEquals("should not have written to the cache", 0, cache.getArtifactCount());
+    }
+
+    private static class UncachableRule extends RuleWithSteps
+        implements UncachableBuildRule, SupportsDependencyFileRuleKey {
+      public UncachableRule(
+          BuildRuleParams buildRuleParams,
+          SourcePathResolver resolver,
+          ImmutableList<Step> steps,
+          Path output) {
+        super(buildRuleParams, resolver, steps, output);
+      }
+
+      @Override
+      public boolean useDependencyFileRuleKeys() {
+        return true;
+      }
+
+      @Override
+      public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+        return ImmutableList.of();
+      }
+    }
+  }
+
 
   // TODO(bolinfest): Test that when the success files match, nothing is built and nothing is
   // written back to the cache.

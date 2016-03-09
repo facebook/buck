@@ -634,13 +634,20 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
       CacheResult cacheResult = finished.getCacheResult();
+      switch (cacheResult.getType()) {
+        case MISS:
+          cacheMisses.incrementAndGet();
+          break;
+        case ERROR:
+          cacheErrors.incrementAndGet();
+          break;
+        case HIT:
+        case IGNORED:
+        case LOCAL_KEY_UNCHANGED_HIT:
+          break;
+      }
       if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
         updated.incrementAndGet();
-        if (cacheResult.getType() == CacheResultType.MISS) {
-          cacheMisses.incrementAndGet();
-        } else if (cacheResult.getType() == CacheResultType.ERROR) {
-          cacheErrors.incrementAndGet();
-        }
       }
     }
   }
