@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
  * and {@link ActionGraph} ({@link TargetNode} and {@link BuildRule} respectively) mirroring the
  * behavior seen when running the actual parser as closely as possible.
  */
-public abstract class AbstractNodeBuilder<A extends AbstractDescriptionArg> {
+public abstract class AbstractNodeBuilder<A> {
   protected final Description<A> description;
   protected final BuildRuleFactoryParams factoryParams;
   protected final BuildTarget target;

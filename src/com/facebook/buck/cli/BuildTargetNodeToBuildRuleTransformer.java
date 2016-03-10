@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,7 +34,7 @@ import com.google.common.base.Suppliers;
 public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
   @Override
-  public <T extends AbstractDescriptionArg> BuildRule transform(
+  public <T> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
       TargetNode<T> targetNode)

@@ -38,7 +38,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
@@ -415,7 +414,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
             cell.getFilesystem(),
             cell.getBuildFileName()),
         targetCell.isEnforcingBuckPackageBoundaries());
-    AbstractDescriptionArg constructorArg = description.createUnpopulatedConstructorArg();
+    Object constructorArg = description.createUnpopulatedConstructorArg();
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns =

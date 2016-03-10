@@ -70,7 +70,7 @@ public class AppleResourcesTest {
         .createBuilder(BuildTargetFactory.newInstance("//foo:lib"))
         .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
         .build();
-    ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.of(
+    ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.<TargetNode<?>>of(
         resourceNode,
         libNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
@@ -107,7 +107,7 @@ public class AppleResourcesTest {
         .createBuilder(BuildTargetFactory.newInstance("//bar:lib"))
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget, barResourceTarget)))
         .build();
-    ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.of(
+    ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.<TargetNode<?>>of(
         fooResourceNode,
         fooLibNode,
         barResourceNode,

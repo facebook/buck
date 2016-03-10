@@ -42,8 +42,7 @@ import java.nio.file.Path;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public class TargetNode<T extends AbstractDescriptionArg>
-    implements Comparable<TargetNode<?>>, HasBuildTarget {
+public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
   private final HashCode rawInputsHashCode;
   private final TypeCoercerFactory typeCoercerFactory;
@@ -188,7 +187,7 @@ public class TargetNode<T extends AbstractDescriptionArg>
    * Type safe checked cast of the constructor arg.
    */
   @SuppressWarnings("unchecked")
-  public <U extends AbstractDescriptionArg> Optional<TargetNode<U>> castArg(Class<U> cls) {
+  public <U> Optional<TargetNode<U>> castArg(Class<U> cls) {
     if (cls.isInstance(constructorArg)) {
       return Optional.of((TargetNode<U>) this);
     } else {

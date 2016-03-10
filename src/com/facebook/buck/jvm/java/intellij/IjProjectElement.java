@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 
@@ -33,7 +32,7 @@ public interface IjProjectElement {
   /**
    * @return set of targets this element corresponds to in the IntelliJ project.
    */
-  ImmutableSet<TargetNode<? extends AbstractDescriptionArg>> getTargets();
+  ImmutableSet<TargetNode<?>> getTargets();
 
   void addAsDependency(IjModuleGraph.DependencyType dependencyType,
       IjDependencyListBuilder dependencyListBuilder);

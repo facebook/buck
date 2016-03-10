@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -252,7 +251,7 @@ public class IjModuleFactory {
    *
    * @param <T> TargetNode type.
    */
-  private interface IjModuleRule<T extends AbstractDescriptionArg> {
+  private interface IjModuleRule<T> {
     BuildRuleType getType();
     void apply(TargetNode<T> targetNode, ModuleBuildContext context);
   }
@@ -294,7 +293,7 @@ public class IjModuleFactory {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public IjModule createModule(
       Path moduleBasePath,
-      ImmutableSet<TargetNode<? extends AbstractDescriptionArg>> targetNodes) {
+      ImmutableSet<TargetNode<?>> targetNodes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
 
@@ -304,7 +303,7 @@ public class IjModuleFactory {
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
-    for (TargetNode<? extends AbstractDescriptionArg> targetNode : targetNodes) {
+    for (TargetNode<?> targetNode : targetNodes) {
       IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(targetNode.getType()));
 
       rule.apply((TargetNode) targetNode, context);

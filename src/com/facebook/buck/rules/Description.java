@@ -29,7 +29,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
-public interface Description<T extends AbstractDescriptionArg> {
+public interface Description<T> {
 
   /**
    * @return The {@link BuildRuleType} being described.
@@ -47,7 +47,6 @@ public interface Description<T extends AbstractDescriptionArg> {
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the
    * {@link com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the
    * {@link Flavor} to create.
-   *
    *
    * @param resolver For querying for build rules by their targets.
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.

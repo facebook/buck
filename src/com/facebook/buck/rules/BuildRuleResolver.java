@@ -63,7 +63,7 @@ public class BuildRuleResolver {
               }
 
               @SuppressWarnings("unchecked")
-              private <T extends AbstractDescriptionArg, U> Optional<U> load(
+              private <T, U> Optional<U> load(
                   TargetNode<T> node,
                   Class<U> metadataClass) throws NoSuchBuildTargetException {
                 T arg = node.getConstructorArg();
@@ -71,7 +71,7 @@ public class BuildRuleResolver {
                   return Optional.of(metadataClass.cast(arg));
                 }
 
-                Description<T> description = node.getDescription();
+                Description<?> description = node.getDescription();
                 if (!(description instanceof MetadataProvidingDescription)) {
                   return Optional.absent();
                 }

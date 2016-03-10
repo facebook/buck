@@ -32,11 +32,11 @@ import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -107,7 +107,7 @@ public class ResolverIntegrationTest {
         buckConfig,
         new ExecutableFinder());
 
-    ImmutableSet<Description<?>> descriptions = ImmutableSet.of(
+    ImmutableSet<Description<?>> descriptions = ImmutableSet.<Description<?>>of(
         new RemoteFileDescription(new ExplodingDownloader()),
         new PrebuiltJarDescription());
 
