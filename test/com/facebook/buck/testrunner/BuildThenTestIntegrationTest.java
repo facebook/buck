@@ -77,4 +77,19 @@ public class BuildThenTestIntegrationTest {
     testResult.assertSuccess("Passing test should exit with 0.");
   }
 
+  /**
+   * Test should not be run because the base class is abstract. If the test attempts to run,
+   * it will throw a java.lang.InstantiationException.
+   */
+  @Test
+  public void testRunningTestInAbstractClass() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "build_then_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult testResult = workspace.runBuckCommand("test", "//:abstractclass");
+    testResult.assertSuccess("Abstract class with test methods should exit with 0.");
+  }
+
+
 }
