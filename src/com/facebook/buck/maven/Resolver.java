@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -105,24 +104,6 @@ public class Resolver {
     ImmutableList.Builder<RemoteRepository> builder = ImmutableList.builder();
     for (ArtifactConfig.Repository repo : config.repositories) {
       builder.add(AetherUtil.toRemoteRepository(repo));
-    }
-    this.repos = builder.build();
-
-    this.locator = AetherUtil.initServiceLocator();
-  }
-
-  public Resolver(
-      Path buckRepoRoot,
-      Path relativeThirdParty,
-      Path localRepoPath,
-      String... repoUrls) {
-    this.buckRepoRoot = buckRepoRoot;
-    this.buckThirdPartyRelativePath = relativeThirdParty;
-    this.localRepo = new LocalRepository(localRepoPath.toFile());
-
-    ImmutableList.Builder<RemoteRepository> builder = ImmutableList.builder();
-    for (int i = 0; i < repoUrls.length; i++) {
-      builder.add(AetherUtil.toRemoteRepository(repoUrls[i]));
     }
     this.repos = builder.build();
 

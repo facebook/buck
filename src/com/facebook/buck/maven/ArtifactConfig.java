@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
-import org.eclipse.aether.artifact.Artifact;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -37,25 +36,25 @@ public class ArtifactConfig {
 
   @VisibleForTesting
   static class CmdLineArgs {
-    @Argument(usage="One or more artifacts to resolve", metaVar="artifact")
+    @Argument(usage = "One or more artifacts to resolve", metaVar = "artifact")
     public List<String> artifacts = new ArrayList<>();
 
-    @Option(name="-repo", usage="Root of your repository")
+    @Option(name = "-repo", usage = "Root of your repository")
     public String buckRepoRoot;
 
-    @Option(name="-third-party", usage="Directory to place dependencies in")
+    @Option(name = "-third-party", usage = "Directory to place dependencies in")
     public String thirdParty = "third-party";
 
-    @Option(name="-local-maven", usage="Local Maven repository")
+    @Option(name = "-local-maven", usage = "Local Maven repository")
     public String mavenLocalRepo;
 
-    @Option(name="-maven", usage="Maven URI(s)")
+    @Option(name = "-maven", usage = "Maven URI(s)")
     public List<String> repositoryURIs = new ArrayList<>();
 
-    @Option(name="-json", usage="JSON configuration file for artifacts, paths and maven repos")
+    @Option(name = "-json", usage = "JSON configuration file for artifacts, paths and maven repos")
     public String artifactConfigJson;
 
-    @Option(name="-help", help = true)
+    @Option(name = "-help", help = true)
     public boolean showHelp;
   }
 

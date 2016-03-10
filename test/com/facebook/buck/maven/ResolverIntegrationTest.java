@@ -139,11 +139,14 @@ public class ResolverIntegrationTest {
     thirdPartyRelative = Paths.get("third-party").resolve("java");
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
     localRepo = temp.newFolder().toPath();
-    resolver = new Resolver(
-        buckRepoRoot,
-        thirdPartyRelative,
-        localRepo,
-        httpd.getUri("/").toString());
+
+    ArtifactConfig config = new ArtifactConfig();
+    config.buckRepoRoot = buckRepoRoot.toString();
+    config.thirdParty = thirdPartyRelative.toString();
+    config.mavenLocalRepo = localRepo.toString();
+    config.repositories.add(new ArtifactConfig.Repository(httpd.getUri("/").toString()));
+
+    resolver = new Resolver(config);;
   }
 
   @Test
