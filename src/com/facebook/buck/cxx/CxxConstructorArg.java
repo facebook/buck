@@ -41,6 +41,7 @@ public class CxxConstructorArg extends AbstractDescriptionArg implements HasTest
   public Optional<PatternMatchedCollection<SourceList>> platformHeaders;
   public Optional<SourcePath> prefixHeader;
   public Optional<ImmutableList<String>> compilerFlags;
+  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags;
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags;
   public Optional<ImmutableList<String>> preprocessorFlags;
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags;

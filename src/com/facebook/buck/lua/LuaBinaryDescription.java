@@ -71,6 +71,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -229,7 +230,7 @@ public class LuaBinaryDescription implements
                         .build())
                 .addAll(getTransitiveCxxPreprocessorInput(cxxPlatform, nativeStarterDeps))
                 .build(),
-            ImmutableList.<String>of(),
+            ImmutableMultimap.<CxxSource.Type, String>of(),
             Optional.<SourcePath>absent(),
             cxxBuckConfig.getPreprocessMode(),
             ImmutableMap.of(

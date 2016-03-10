@@ -344,6 +344,8 @@ public class CxxLibraryDescription implements
     arg.compilerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformCompilerFlags =
         Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
+    arg.langCompilerFlags =
+        Optional.of(ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     arg.exportedPlatformPreprocessorFlags =
         Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());

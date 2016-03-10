@@ -567,6 +567,7 @@ public class CxxDescriptionEnhancer {
         args.frameworks,
         args.libraries,
         args.compilerFlags,
+        args.langCompilerFlags,
         args.platformCompilerFlags,
         args.prefixHeader,
         args.linkerFlags,
@@ -588,6 +589,7 @@ public class CxxDescriptionEnhancer {
       Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
       Optional<ImmutableSortedSet<FrameworkPath>> libraries,
       Optional<ImmutableList<String>> compilerFlags,
+      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<ImmutableList<String>> linkerFlags,
@@ -633,9 +635,10 @@ public class CxxDescriptionEnhancer {
             sourcePathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            CxxFlags.getFlags(
+            CxxFlags.getLanguageFlags(
                 compilerFlags,
                 platformCompilerFlags,
+                langCompilerFlags,
                 cxxPlatform),
             prefixHeader,
             preprocessMode,
@@ -886,9 +889,10 @@ public class CxxDescriptionEnhancer {
         sourcePathResolver,
         cxxPlatform,
         cxxPreprocessorInputFromDependencies,
-        CxxFlags.getFlags(
+        CxxFlags.getLanguageFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
+            args.langCompilerFlags,
             cxxPlatform),
         args.prefixHeader,
         preprocessMode,

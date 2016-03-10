@@ -112,6 +112,7 @@ public class HalideLibraryDescription
       ImmutableSortedSet<SourceWithFlags> halideSources,
       Optional<ImmutableList<String>> compilerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
+      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags,
       Optional<ImmutableList<String>> linkerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
       throws NoSuchBuildTargetException {
@@ -149,6 +150,7 @@ public class HalideLibraryDescription
             frameworks,
             libraries,
             compilerFlags,
+            langCompilerFlags,
             platformCompilerFlags,
             prefixHeader,
             linkerFlags,
@@ -247,6 +249,7 @@ public class HalideLibraryDescription
           args.srcs.get(),
           args.compilerFlags,
           args.platformCompilerFlags,
+          args.langCompilerFlags,
           args.linkerFlags,
           args.platformLinkerFlags);
     } else if (

@@ -46,6 +46,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -80,7 +81,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @Value.Parameter
   public abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
   @Value.Parameter
-  public abstract ImmutableList<String> getCompilerFlags();
+  public abstract ImmutableMultimap<CxxSource.Type, String> getCompilerFlags();
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
   @Value.Parameter
@@ -347,18 +348,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   private ImmutableList<String> getRuleCompileFlags(CxxSource.Type type) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
-
-    // Add in explicit additional compiler flags, if we're compiling.
-    if (type == CxxSource.Type.C_CPP_OUTPUT ||
-        type == CxxSource.Type.OBJC_CPP_OUTPUT ||
-        type == CxxSource.Type.CXX_CPP_OUTPUT ||
-        type == CxxSource.Type.OBJCXX_CPP_OUTPUT ||
-        type == CxxSource.Type.CUDA_CPP_OUTPUT) {
-      args.addAll(getCompilerFlags());
-    }
-
-    return args.build();
+    return ImmutableList.copyOf(getCompilerFlags().get(type));
   }
 
   /**
@@ -667,7 +657,7 @@ abstract class AbstractCxxSourceRuleFactory {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
-      ImmutableList<String> compilerFlags,
+      ImmutableMultimap<CxxSource.Type, String> compilerFlags,
       Optional<SourcePath> prefixHeader,
       CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources,

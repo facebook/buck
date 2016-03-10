@@ -223,6 +223,7 @@ public class AppleDescriptions {
     output.prefixHeader = arg.prefixHeader;
     output.compilerFlags = arg.compilerFlags;
     output.platformCompilerFlags = arg.platformCompilerFlags;
+    output.langCompilerFlags = arg.langCompilerFlags;
     output.preprocessorFlags = arg.preprocessorFlags;
     output.platformPreprocessorFlags = arg.platformPreprocessorFlags;
     output.langPreprocessorFlags = arg.langPreprocessorFlags;

@@ -157,9 +157,10 @@ public class CxxLuaExtensionDescription implements
             pathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            CxxFlags.getFlags(
+            CxxFlags.getLanguageFlags(
                 args.compilerFlags,
                 args.platformCompilerFlags,
+                args.langCompilerFlags,
                 cxxPlatform),
             args.prefixHeader,
             cxxBuckConfig.getPreprocessMode(),

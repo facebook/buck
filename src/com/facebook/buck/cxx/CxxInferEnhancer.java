@@ -33,6 +33,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -175,9 +176,10 @@ public final class CxxInferEnhancer {
               CxxSourceRuleFactory.PicType.PDC,
               inferTools,
               preprocessorInputs,
-              CxxFlags.getFlags(
+              CxxFlags.getLanguageFlags(
                   args.compilerFlags,
                   args.platformCompilerFlags,
+                  args.langCompilerFlags,
                   cxxPlatform),
               args.prefixHeader,
               sourceFilter),
@@ -279,7 +281,7 @@ public final class CxxInferEnhancer {
       CxxSourceRuleFactory.PicType picType,
       CxxInferTools inferTools,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputs,
-      ImmutableList<String> compilerFlags,
+      ImmutableMultimap<CxxSource.Type, String> compilerFlags,
       Optional<SourcePath> prefixHeader,
       CxxInferSourceFilter sourceFilter) {
 

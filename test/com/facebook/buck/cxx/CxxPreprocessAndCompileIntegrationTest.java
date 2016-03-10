@@ -579,6 +579,11 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
   }
 
+  @Test
+  public void langCompilerFlags() throws IOException {
+    workspace.runBuckBuild("//:lang_compiler_flags#default,static").assertSuccess();
+  }
+
   private BuildTarget getPreprocessTarget(
       CxxPlatform cxxPlatform,
       BuildTarget target,

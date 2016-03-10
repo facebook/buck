@@ -86,3 +86,18 @@ cxx_library(
     ':simple.s',
   ],
 )
+
+cxx_library(
+  name = 'lang_compiler_flags',
+  # Take advantage of the fact that Buck always applies compilation flags
+  # to preprocessing.  That way we can define macros to test flags are being
+  # set.
+  lang_compiler_flags = {
+    'c_cpp_output': ['-DBLAH_C'],
+    'cxx_cpp_output': ['-DBLAH_CXX'],
+  },
+  srcs = [
+    'lang_compiler_flags.c',
+    'lang_compiler_flags.cc',
+  ],
+)

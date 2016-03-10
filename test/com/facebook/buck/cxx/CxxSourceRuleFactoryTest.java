@@ -40,9 +40,11 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -612,7 +614,12 @@ public class CxxSourceRuleFactoryTest {
           .setResolver(buildRuleResolver)
           .setPathResolver(sourcePathResolver)
           .setCxxPlatform(platform)
-          .setCompilerFlags(explicitCompilerFlags)
+          .setCompilerFlags(
+              CxxFlags.getLanguageFlags(
+                  Optional.of(expectedCompilerFlags),
+                  Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
+                  Optional.<ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>>>absent(),
+                  platform))
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();
 
