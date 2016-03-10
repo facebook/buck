@@ -131,6 +131,9 @@ public class AndroidResource extends AbstractBuildRule
   @AddToRuleKey
   private final boolean hasWhitelistedStrings;
 
+  @AddToRuleKey
+  private final boolean resourceUnion;
+
   private final ImmutableSortedSet<BuildRule> deps;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -171,7 +174,8 @@ public class AndroidResource extends AbstractBuildRule
       Optional<SourcePath> additionalAssetsKey,
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
-      boolean hasWhitelistedStrings) {
+      boolean hasWhitelistedStrings,
+      boolean resourceUnion) {
     super(
         buildRuleParams.appendExtraDeps(
             Suppliers.compose(resolver.filterBuildRuleInputsFunction(), symbolFilesFromDeps)),
@@ -192,6 +196,7 @@ public class AndroidResource extends AbstractBuildRule
     this.manifestFile = manifestFile;
     this.symbolsOfDeps = symbolFilesFromDeps;
     this.hasWhitelistedStrings = hasWhitelistedStrings;
+    this.resourceUnion = resourceUnion;
 
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     if (res == null) {
@@ -254,6 +259,36 @@ public class AndroidResource extends AbstractBuildRule
         assetsSrcs,
         additionalAssetsKey,
         manifestFile,
+        hasWhitelistedStrings,
+        false);
+  }
+
+  public AndroidResource(
+      final BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      final ImmutableSortedSet<BuildRule> deps,
+      @Nullable final SourcePath res,
+      ImmutableSortedSet<? extends SourcePath> resSrcs,
+      Optional<SourcePath> additionalResKey,
+      @Nullable String rDotJavaPackageArgument,
+      @Nullable SourcePath assets,
+      ImmutableSortedSet<? extends SourcePath> assetsSrcs,
+      Optional<SourcePath> additionalAssetsKey,
+      @Nullable SourcePath manifestFile,
+      boolean hasWhitelistedStrings,
+      boolean resourceUnion) {
+    this(
+        buildRuleParams,
+        resolver,
+        deps,
+        res,
+        resSrcs,
+        additionalResKey,
+        rDotJavaPackageArgument,
+        assets,
+        assetsSrcs,
+        additionalAssetsKey,
+        manifestFile,
         new Supplier<ImmutableSortedSet<? extends SourcePath>>() {
           @Override
           public ImmutableSortedSet<? extends SourcePath> get() {
@@ -264,7 +299,8 @@ public class AndroidResource extends AbstractBuildRule
                 .toSortedSet(Ordering.natural());
           }
         },
-        hasWhitelistedStrings);
+        hasWhitelistedStrings,
+        resourceUnion);
   }
 
   @Override
@@ -332,7 +368,8 @@ public class AndroidResource extends AbstractBuildRule
             getProjectFilesystem(),
             Preconditions.checkNotNull(res),
             Preconditions.checkNotNull(pathToTextSymbolsFile),
-            pathsToSymbolsOfDeps));
+            pathsToSymbolsOfDeps,
+            resourceUnion));
 
     buildableContext.recordArtifact(Preconditions.checkNotNull(pathToTextSymbolsFile));
 

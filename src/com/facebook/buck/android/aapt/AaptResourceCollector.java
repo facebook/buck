@@ -49,37 +49,29 @@ public class AaptResourceCollector {
   public void addIntResourceIfNotPresent(RType rType, String name) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      String idValue = String.format("0x%08x", getEnumerator(rType).next());
-      addResource(rType, IdType.INT, name, idValue);
+      addResource(rType, IdType.INT, name, getNextIdValue(rType));
     }
   }
 
   public void addCustomDrawableResourceIfNotPresent(RType rType, String name) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name, true);
     if (!resources.contains(entry)) {
-      String idValue = String.format(
-          "0x%08x %s",
-          getEnumerator(rType).next(),
-          RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
-      addCustomResource(rType, IdType.INT, name, idValue);
+      addCustomResource(rType, IdType.INT, name, getNextCustomIdValue(rType));
     }
   }
 
   public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
-    // Robolectric expects the array to be populated with the right number of values, irrespective
-    // of what the values are.
-    ImmutableList.Builder<String> values = ImmutableList.builder();
-    for (int id = 0; id < numValues; id++) {
-      values.add(String.format("0x%x", getEnumerator(rType).next()));
-    }
-    String idValue = String.format(
-        "{ %s }",
-        Joiner.on(",").join(values.build()));
-    addResource(rType, IdType.INT_ARRAY, name, idValue);
+    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues));
   }
 
   public void addResource(RType rType, IdType idType, String name, String idValue) {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue));
+  }
+
+  public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
+    if (!resources.contains(rDotTxtEntry)) {
+      resources.add(rDotTxtEntry.copyWithNewIdValue(getNextIdValue(rDotTxtEntry)));
+    }
   }
 
   public void addCustomResource(RType rType, IdType idType, String name, String idValue) {
@@ -95,6 +87,44 @@ public class AaptResourceCollector {
       enumerators.put(rType, new ResourceIdEnumerator(currentTypeId++));
     }
     return checkNotNull(enumerators.get(rType));
+  }
+
+  String getNextIdValue(RDotTxtEntry rDotTxtEntry) {
+      if (rDotTxtEntry.idType == IdType.INT_ARRAY) {
+        return getNextArrayIdValue(rDotTxtEntry.type, rDotTxtEntry.getNumArrayValues());
+      } else if (rDotTxtEntry.type == RType.STYLEABLE) {
+        // styleable int entries are just incremented ints that receive a value when created as
+        // siblings of a style (non unique within R.txt)
+        return rDotTxtEntry.idValue;
+      } else if (rDotTxtEntry.custom) {
+        return getNextCustomIdValue(rDotTxtEntry.type);
+      } else {
+        return getNextIdValue(rDotTxtEntry.type);
+      }
+  }
+
+  String getNextIdValue(RType rType) {
+    return String.format("0x%08x", getEnumerator(rType).next());
+  }
+
+  String getNextCustomIdValue(RType rType) {
+    return String.format(
+        "0x%08x %s",
+        getEnumerator(rType).next(),
+        RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
+  }
+
+  String getNextArrayIdValue(RType rType, int numValues) {
+    // Robolectric expects the array to be populated with the right number of values, irrespective
+    // of what the values are.
+    ImmutableList.Builder<String> values = ImmutableList.builder();
+    for (int id = 0; id < numValues; id++) {
+      values.add(String.format("0x%x", getEnumerator(rType).next()));
+    }
+
+    return String.format(
+        "{ %s }",
+        Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR).join(values.build()));
   }
 
   private static class ResourceIdEnumerator {
