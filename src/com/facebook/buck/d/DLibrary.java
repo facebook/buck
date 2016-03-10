@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -92,10 +91,7 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
   }
 
   public DIncludes getIncludes() throws NoSuchBuildTargetException {
-    buildRuleResolver.requireRule(
-        BuildTarget.builder(getBuildTarget())
-            .addFlavors(DDescriptionUtils.SOURCE_LINK_TREE)
-            .build());
+    buildRuleResolver.requireRule(getBuildTarget().withFlavors(DDescriptionUtils.SOURCE_LINK_TREE));
     return includes;
   }
 

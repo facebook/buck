@@ -36,7 +36,6 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -83,21 +82,16 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
           args.srcs);
     }
 
-    BuildTarget baseTarget =
-        params.getBuildTarget()
-            .withoutFlavors(
-                ImmutableSet.of(
-                    cxxPlatform.getFlavor(),
-                    CxxDescriptionEnhancer.STATIC_FLAVOR,
-                    DDescriptionUtils.SOURCE_LINK_TREE));
+    BuildTarget sourceTreeTarget =
+        params.getBuildTarget().withFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
-            .setLinkTree(
-                new BuildTargetSourcePath(DDescriptionUtils.getSymlinkTreeTarget(baseTarget)))
+            .setLinkTree(new BuildTargetSourcePath(sourceTreeTarget))
             .setSources(args.srcs.getPaths())
             .build();
 
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
+      buildRuleResolver.requireRule(sourceTreeTarget);
       return createStaticLibraryBuildRule(
           params,
           buildRuleResolver,
