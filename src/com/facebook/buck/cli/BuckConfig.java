@@ -95,7 +95,10 @@ public class BuckConfig {
   private static final String DEFAULT_MAX_TRACES = "25";
 
   private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART =
-      ImmutableMap.of("build", ImmutableSet.of("threads", "load_limit")
+      ImmutableMap.of(
+          "build", ImmutableSet.of("threads", "load_limit"),
+          "client", ImmutableSet.of("id"),
+          "project", ImmutableSet.of("ide_prompt")
   );
 
   private static final Function<String, URI> TO_URI = new Function<String, URI>() {
@@ -936,17 +939,19 @@ public class BuckConfig {
       // If none of this section's entries are ignored, then add it as-is.
       ImmutableMap<String, String> fields = sectionEnt.getValue();
       ImmutableSet<String> ignoredFieldNames =
-          IGNORE_FIELDS_FOR_DAEMON_RESTART.get(sectionEnt.getKey());
+          IGNORE_FIELDS_FOR_DAEMON_RESTART.get(sectionName);
       if (Sets.intersection(fields.keySet(), ignoredFieldNames).isEmpty()) {
         filtered.put(sectionEnt);
         continue;
       }
 
       // Otherwise, filter out the ignored fields.
-      filtered.put(
-          sectionName,
-          ImmutableMap.copyOf(
-              Maps.filterKeys(fields, Predicates.not(Predicates.in(ignoredFieldNames)))));
+      ImmutableMap<String, String> remainingKeys = ImmutableMap.copyOf(
+          Maps.filterKeys(fields, Predicates.not(Predicates.in(ignoredFieldNames))));
+
+      if (!remainingKeys.isEmpty()) {
+        filtered.put(sectionName, remainingKeys);
+      }
     }
 
     return filtered.build();
