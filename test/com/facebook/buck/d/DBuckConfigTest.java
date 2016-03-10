@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -47,12 +48,19 @@ public class DBuckConfigTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
+  private File makeFakeExecutable(File directory, String baseName) throws IOException {
+    File dmd = new File(
+        directory,
+        baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
+    dmd.createNewFile();
+    dmd.setExecutable(true);
+    return dmd;
+  }
+
   @Test
   public void testCompilerInPath() throws IOException {
     File yooserBeen = tmp.newFolder("yooser", "been");
-    File dmd = new File(yooserBeen, "dmd");
-    dmd.createNewFile();
-    dmd.setExecutable(true);
+    File dmd = makeFakeExecutable(yooserBeen, "dmd");
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of(
               "PATH", yooserBeen.getCanonicalPath()))
@@ -65,9 +73,7 @@ public class DBuckConfigTest {
   public void testCompilerNotInPath() throws IOException {
     File yooserBeen = tmp.newFolder("yooser", "been");
     String userBean = tmp.newFolder("user", "bean").getCanonicalPath();
-    File dmd = new File(yooserBeen, "dmd");
-    dmd.createNewFile();
-    dmd.setExecutable(true);
+    makeFakeExecutable(yooserBeen, "dmd");
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of("PATH", userBean))
       .build();
@@ -99,12 +105,8 @@ public class DBuckConfigTest {
   @Test
   public void testCompilerOverridden() throws IOException {
     File yooserBeen = tmp.newFolder("yooser", "been");
-    File dmd = new File(yooserBeen, "dmd");
-    dmd.createNewFile();
-    dmd.setExecutable(true);
-    File ldc = new File(yooserBeen, "ldc");
-    ldc.createNewFile();
-    ldc.setExecutable(true);
+    makeFakeExecutable(yooserBeen, "dmd");
+    File ldc = makeFakeExecutable(yooserBeen, "ldc");
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of(
               "PATH", yooserBeen.getCanonicalPath()))
@@ -133,9 +135,7 @@ public class DBuckConfigTest {
   public void testDLinkerFlagsOverridden() throws IOException {
     File yooserBin = tmp.newFolder("yooser", "bin");
     File yooserLib = tmp.newFolder("yooser", "lib");
-    File dmd = new File(yooserBin, "dmd");
-    dmd.createNewFile();
-    dmd.setExecutable(true);
+    makeFakeExecutable(yooserBin, "dmd");
     File phobos2So = new File(yooserLib, "libphobos2.so");
     phobos2So.createNewFile();
     BuckConfig delegate = FakeBuckConfig.builder()
@@ -156,9 +156,7 @@ public class DBuckConfigTest {
   public void testDRuntimeNearCompiler() throws IOException {
     File yooserBin = tmp.newFolder("yooser", "bin");
     File yooserLib = tmp.newFolder("yooser", "lib");
-    File dmd = new File(yooserBin, "dmd");
-    dmd.createNewFile();
-    dmd.setExecutable(true);
+    makeFakeExecutable(yooserBin, "dmd");
     File phobos2So = new File(yooserLib, "libphobos2.so");
     phobos2So.createNewFile();
     BuckConfig delegate = FakeBuckConfig.builder()

@@ -989,12 +989,7 @@ public class ProjectFilesystem {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
         boolean isDirectory = isDirectory(path);
-
-        String entryName = path.toString();
-        if (isDirectory) {
-          entryName += "/";
-        }
-        CustomZipEntry entry = new CustomZipEntry(entryName);
+        CustomZipEntry entry = new CustomZipEntry(path, isDirectory);
 
         // We want deterministic ZIPs, so avoid mtimes.
         entry.setFakeTime();
@@ -1011,7 +1006,7 @@ public class ProjectFilesystem {
       }
 
       for (Map.Entry<Path, String> fileContentsEntry : additionalFileContents.entrySet()) {
-        CustomZipEntry entry = new CustomZipEntry(fileContentsEntry.getKey().toString());
+        CustomZipEntry entry = new CustomZipEntry(fileContentsEntry.getKey());
         // We want deterministic ZIPs, so avoid mtimes.
         entry.setFakeTime();
         zip.putNextEntry(entry);

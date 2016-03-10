@@ -387,8 +387,8 @@ public class CachingBuildEngineTest {
 
       // Simulate successfully fetching the output file from the ArtifactCache.
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
-      Map<String, String> desiredZipEntries = ImmutableMap.of(
-          "buck-out/gen/src/com/facebook/orca/orca.jar",
+      Map<Path, String> desiredZipEntries = ImmutableMap.of(
+          Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
           "Imagine this is the contents of a valid JAR file.");
       expect(
           artifactCache.fetch(
@@ -468,8 +468,8 @@ public class CachingBuildEngineTest {
 
       // Simulate successfully fetching the output file from the ArtifactCache.
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
-      Map<String, String> desiredZipEntries = ImmutableMap.of(
-          "buck-out/gen/src/com/facebook/orca/orca.jar",
+      Map<Path, String> desiredZipEntries = ImmutableMap.of(
+          Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
           "Imagine this is the contents of a valid JAR file.");
       expect(
           artifactCache.fetch(
@@ -1253,7 +1253,7 @@ public class CachingBuildEngineTest {
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY, result.getSuccess());
 
-      // Verify the actual rule key was updated on disk.
+      // Verify the input-based and actual rule keys were updated on disk.
       OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
@@ -1290,9 +1290,9 @@ public class CachingBuildEngineTest {
           artifact,
           ImmutableMap.of(
               BuildInfo.getPathToMetadataDirectory(target)
-                  .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
+                  .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS),
               MAPPER.writeValueAsString(ImmutableList.of(rule.getPathToOutput().toString())),
-              rule.getPathToOutput().toString(),
+              rule.getPathToOutput(),
               "stuff"));
       cache.store(
           ImmutableSet.of(inputRuleKey),
@@ -1452,7 +1452,7 @@ public class CachingBuildEngineTest {
       ZipInspector inspector = new ZipInspector(fetchedArtifact);
       inspector.assertFileContents(
           BuildInfo.getPathToMetadataDirectory(target)
-              .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE).toString(),
+              .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
           MAPPER.writeValueAsString(ImmutableList.of(input.toString())));
     }
 
@@ -2083,9 +2083,9 @@ public class CachingBuildEngineTest {
           artifact,
           ImmutableMap.of(
               BuildInfo.getPathToMetadataDirectory(target)
-                  .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
+                  .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS),
               MAPPER.writeValueAsString(ImmutableList.of(output.toString())),
-              output.toString(),
+              output,
               "stuff"));
       cache.store(
           ImmutableSet.of(artifactKey),
@@ -2431,9 +2431,9 @@ public class CachingBuildEngineTest {
    */
   private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
 
-    private final Map<String, String> desiredEntries;
+    private final Map<Path, String> desiredEntries;
 
-    public FakeArtifactCacheThatWritesAZipFile(Map<String, String> desiredEntries) {
+    public FakeArtifactCacheThatWritesAZipFile(Map<Path, String> desiredEntries) {
       this.desiredEntries = desiredEntries;
     }
 
@@ -2573,10 +2573,10 @@ public class CachingBuildEngineTest {
 
   }
 
-  private static void writeEntriesToZip(Path file, ImmutableMap<String, String> entries)
+  private static void writeEntriesToZip(Path file, ImmutableMap<Path, String> entries)
       throws IOException {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(file)) {
-      for (Map.Entry<String, String> mapEntry : entries.entrySet()) {
+      for (Map.Entry<Path, String> mapEntry : entries.entrySet()) {
         CustomZipEntry entry = new CustomZipEntry(mapEntry.getKey());
         // We want deterministic ZIPs, so avoid mtimes. -1 is timzeone independent, 0 is not.
         entry.setTime(ZipConstants.getFakeTime());

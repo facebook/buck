@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
@@ -72,6 +73,10 @@ public class ZipInspector {
           CharStreams.toString(new InputStreamReader(zipFile.getInputStream(entry))),
           Matchers.equalTo(expected));
     }
+  }
+
+  public void assertFileContents(Path pathRelativeToRoot, String expected) throws IOException {
+    assertFileContents(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
   }
 
   public ImmutableSet<String> getZipFileEntries() {

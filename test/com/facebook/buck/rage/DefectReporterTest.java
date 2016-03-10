@@ -76,7 +76,7 @@ public class DefectReporterTest {
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportLocalLocation().get());
     ZipInspector inspector = new ZipInspector(reportPath);
-    inspector.assertFileContents(fileToBeIncluded.toString(), fileToBeIncludedContent);
+    inspector.assertFileContents(fileToBeIncluded, fileToBeIncludedContent);
   }
 
   @Test
