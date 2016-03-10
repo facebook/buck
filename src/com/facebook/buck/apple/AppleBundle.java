@@ -296,30 +296,7 @@ public class AppleBundle
             PlistProcessStep.OutputFormat.BINARY));
 
     if (hasBinary) {
-      stepsBuilder.add(
-          new MkdirStep(
-              getProjectFilesystem(),
-              bundleRoot.resolve(this.destinations.getExecutablesPath())));
-
-      final Path binaryOutputPath = binary.get().getPathToOutput();
-      Preconditions.checkNotNull(binaryOutputPath);
-
-      stepsBuilder.add(
-          CopyStep.forFile(
-              getProjectFilesystem(),
-              binaryOutputPath,
-              bundleBinaryPath));
-
-      // Copy another copy of the watchkit stub
-      if (binary.get() instanceof WriteFile) {
-        final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
-        stepsBuilder.add(
-            new MkdirStep(getProjectFilesystem(), watchKitStubDir),
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                binaryOutputPath,
-                watchKitStubDir.resolve("WK")));
-      }
+      appendCopyBinarySteps(stepsBuilder);
     }
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
@@ -480,6 +457,44 @@ public class AppleBundle
     buildableContext.recordArtifact(getPathToOutput());
 
     return stepsBuilder.build();
+  }
+
+  private void appendCopyBinarySteps(ImmutableList.Builder<Step> stepsBuilder) {
+    Preconditions.checkArgument(hasBinary);
+
+    final Path binaryOutputPath = binary.get().getPathToOutput();
+    Preconditions.checkNotNull(binaryOutputPath);
+
+    copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
+    copyAnotherCopyOfWatchKitStub(stepsBuilder, binaryOutputPath);
+  }
+
+  private void copyBinaryIntoBundle(
+      ImmutableList.Builder<Step> stepsBuilder,
+      Path binaryOutputPath) {
+    stepsBuilder.add(
+        new MkdirStep(
+            getProjectFilesystem(),
+            bundleRoot.resolve(this.destinations.getExecutablesPath())));
+    stepsBuilder.add(
+        CopyStep.forFile(
+            getProjectFilesystem(),
+            binaryOutputPath,
+            bundleBinaryPath));
+  }
+
+  private void copyAnotherCopyOfWatchKitStub(
+      ImmutableList.Builder<Step> stepsBuilder,
+      Path binaryOutputPath) {
+    if (binary.get() instanceof WriteFile) {
+      final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
+      stepsBuilder.add(
+          new MkdirStep(getProjectFilesystem(), watchKitStubDir),
+          CopyStep.forFile(
+              getProjectFilesystem(),
+              binaryOutputPath,
+              watchKitStubDir.resolve("WK")));
+    }
   }
 
   public void addStepsToCopyExtensionBundlesDependencies(
