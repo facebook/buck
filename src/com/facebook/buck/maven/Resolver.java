@@ -29,6 +29,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.common.io.Resources;
@@ -70,9 +71,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -95,11 +100,13 @@ public class Resolver {
   private final ImmutableList<RemoteRepository> repos;
   private final ServiceLocator locator;
   private final VersionScheme versionScheme = new GenericVersionScheme();
+  private final List<String> visibility;
 
   public Resolver(ArtifactConfig config) {
     this.buckRepoRoot = Paths.get(config.buckRepoRoot);
     this.buckThirdPartyRelativePath = Paths.get(config.thirdParty);
     this.localRepo = new LocalRepository(Paths.get(config.mavenLocalRepo).toFile());
+    this.visibility = config.visibility;
 
     ImmutableList.Builder<RemoteRepository> builder = ImmutableList.builder();
     for (ArtifactConfig.Repository repo : config.repositories) {
@@ -113,6 +120,11 @@ public class Resolver {
   public void resolve(String... mavenCoords) throws RepositoryException, IOException {
     RepositorySystem repoSys = locator.getService(RepositorySystem.class);
     RepositorySystemSession session = newSession(repoSys);
+
+    Set<String> specifiedArtifacts = new HashSet<>();
+    for (String coords : mavenCoords) {
+      specifiedArtifacts.add(coords);
+    }
 
     ImmutableMap<String, Artifact> knownDeps = getRunTimeTransitiveDeps(
         repoSys,
@@ -130,7 +142,9 @@ public class Resolver {
     Map<Path, SortedSet<Prebuilt>> buckFiles = new HashMap<>();
 
     for (Artifact artifact : graph.getNodes()) {
-      downloadArtifact(artifact, repoSys, session, buckFiles, graph);
+      List<String> extraVisibility = specifiedArtifacts.contains(artifact.toString()) ?
+        this.visibility : ImmutableList.<String>of();
+      downloadArtifact(artifact, repoSys, session, buckFiles, graph, extraVisibility);
     }
 
     createBuckFiles(buckFiles);
@@ -141,7 +155,8 @@ public class Resolver {
       RepositorySystem repoSys,
       RepositorySystemSession session,
       Map<Path, SortedSet<Prebuilt>> buckFiles,
-      MutableDirectedGraph<Artifact> graph)
+      MutableDirectedGraph<Artifact> graph,
+      List<String> extraVisibility)
       throws IOException, ArtifactResolutionException, InvalidVersionSpecificationException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
@@ -174,6 +189,10 @@ public class Resolver {
       if (!groupName.equals(projectName)) {
         library.addVisibility(buckThirdPartyRelativePath, artifact);
       }
+    }
+
+    for (String rule : extraVisibility) {
+      library.addVisibility(rule);
     }
   }
 
@@ -398,8 +417,8 @@ public class Resolver {
     collectRequest.setRequestContext(JavaScopes.RUNTIME);
     collectRequest.setRepositories(repos);
 
-    for (String coord : mavenCoords) {
-      DefaultArtifact artifact = new DefaultArtifact(coord);
+    for (String coords : mavenCoords) {
+      Artifact artifact = new DefaultArtifact(coords);
       collectRequest.addDependency(new Dependency(artifact, JavaScopes.RUNTIME));
     }
 

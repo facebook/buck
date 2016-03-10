@@ -51,6 +51,9 @@ public class ArtifactConfig {
     @Option(name = "-maven", usage = "Maven URI(s)")
     public List<String> repositoryURIs = new ArrayList<>();
 
+    @Option(name = "-visibility", usage = "Targets that can see the artifacts")
+    public List<String> visibility = new ArrayList<>();
+
     @Option(name = "-json", usage = "JSON configuration file for artifacts, paths and maven repos")
     public String artifactConfigJson;
 
@@ -84,6 +87,8 @@ public class ArtifactConfig {
   public String mavenLocalRepo =
       Paths.get(System.getProperty("user.home"), ".m2", "repository").toAbsolutePath().toString();
 
+  public List<String> visibility = new ArrayList();
+
   public ArtifactConfig mergeCmdLineArgs(CmdLineArgs args) {
     buckRepoRoot = MoreObjects.firstNonNull(args.buckRepoRoot, buckRepoRoot);
 
@@ -91,6 +96,8 @@ public class ArtifactConfig {
     thirdParty = MoreObjects.firstNonNull(args.thirdParty, thirdParty);
 
     artifacts.addAll(args.artifacts);
+
+    visibility.addAll(args.visibility);
 
     for (String url : args.repositoryURIs) {
       repositories.add(new Repository(url));

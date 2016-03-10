@@ -37,6 +37,7 @@ public class ArtifactConfigTest {
       "{\"repositories\": [{\"url\":\"https://example.com\"}]," +
           "\"third_party\":\"tp0\"," +
           "\"repo\":\"br\"," +
+          "\"visibility\":[\"r1\"]," +
           "\"artifacts\":[\"artifact1\"]}";
 
     ArtifactConfig base = new ObjectMapper().readValue(jsonString, ArtifactConfig.class);
@@ -44,11 +45,13 @@ public class ArtifactConfigTest {
 
     ArtifactConfig.CmdLineArgs args = new ArtifactConfig.CmdLineArgs();
     CmdLineParser parser = new CmdLineParser(args);
-    parser.parseArgument("-third-party", "tp1", "-maven", "http://bar.co", "artifact2");
+    parser.parseArgument(
+        "-third-party", "tp1", "-maven", "http://bar.co", "artifact2", "-visibility", "r2");
 
     base.mergeCmdLineArgs(args);
     assertEquals("tp1", base.thirdParty);
     assertEquals(base.artifacts, Lists.newArrayList("artifact1", "artifact2"));
+    assertEquals(base.visibility, Lists.newArrayList("r1", "r2"));
     assertEquals("br", base.buckRepoRoot);
     assertEquals("https://example.com", base.repositories.get(0).url);
     assertEquals("http://bar.co", base.repositories.get(1).url);
