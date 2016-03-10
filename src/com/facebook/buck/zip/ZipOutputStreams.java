@@ -75,8 +75,13 @@ public class ZipOutputStreams {
    * @param mode How to handle duplicate entries.
    */
   public static CustomZipOutputStream newOutputStream(OutputStream out, HandleDuplicates mode) {
-    Clock clock = new DefaultClock();
+    return newOutputStream(out, mode, new DefaultClock());
+  }
 
+  public static CustomZipOutputStream newOutputStream(
+      OutputStream out,
+      HandleDuplicates mode,
+      Clock clock) {
     switch (mode) {
       case APPEND_TO_ZIP:
       case THROW_EXCEPTION:
@@ -84,10 +89,8 @@ public class ZipOutputStreams {
             clock,
             out,
             mode == HandleDuplicates.THROW_EXCEPTION);
-
       case OVERWRITE_EXISTING:
         return new OverwritingZipOutputStream(clock, out);
-
       default:
         throw new HumanReadableException(
             "Unable to determine which zip output mode to use: %s", mode);

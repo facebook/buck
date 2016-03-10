@@ -38,6 +38,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -55,8 +57,10 @@ import com.google.common.io.Files;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -222,8 +226,16 @@ public class PrebuiltJarSymbolsFinderTest {
   private PrebuiltJarSymbolsFinder createFinderForFileWithEntries(
       String jarFileName,
       Iterable<String> entries) throws IOException {
+    Clock clock = new FakeClock(1);
     File jarFile = tmp.newFile(jarFileName);
-    try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(jarFile.toPath())) {
+    try (
+        OutputStream stream = new BufferedOutputStream(
+            java.nio.file.Files.newOutputStream(jarFile.toPath()));
+        CustomZipOutputStream out =
+             ZipOutputStreams.newOutputStream(
+                 stream,
+                 ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION,
+                 clock)) {
       for (String entry : entries) {
         out.putNextEntry(new ZipEntry(entry));
       }
