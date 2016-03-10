@@ -314,10 +314,12 @@ def run_tests_for_diff(args, revisions_to_test, test_index, last_result):
     try:
         log('== Checking new revision for problems with absolute paths ==')
         result = build_all_targets(args, cwd, 'new', 'readonly')
-        if (len(result.cache_results.keys()) != 1 or
-                'DIR_HIT' not in result.cache_results):
-            # Remove DIR_HITs to make error message cleaner
-            result.cache_results.pop('DIR_HIT', None)
+        suspect_keys = [
+            x
+            for x in result.cache_results.keys()
+            if x not in ['DIR_HIT', 'IGNORED']
+        ]
+        if suspect_keys:
             log('Building at revision %s with the new buck version '
                 'was unable to reuse the cache from a previous run.  '
                 'This suggests one of the rule keys contains an '
