@@ -33,17 +33,27 @@ public class AppleDsymTestUtil {
   public static void checkDsymFileHasDebugSymbolForMain(
       ProjectWorkspace workspace,
       Path dwarfPath) throws IOException, InterruptedException {
-    checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(workspace,
+    checkDsymFileHasDebugSymbol("main", workspace, dwarfPath);
+  }
+
+  public static void checkDsymFileHasDebugSymbol(
+      String symbolName,
+      ProjectWorkspace workspace,
+      Path dwarfPath) throws IOException, InterruptedException {
+    checkDsymFileHasDebugSymbolForConcreteArchitectures(
+        symbolName,
+        workspace,
         dwarfPath,
         Optional.<ImmutableList<String>>absent());
   }
 
-  public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
+  public static void checkDsymFileHasDebugSymbolForConcreteArchitectures(
+      String symbolName,
       ProjectWorkspace workspace,
       Path dwarfPath,
       Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
-    String dwarfdumpMainStdout =
-        workspace.runCommand("dwarfdump", "-n", "main", dwarfPath.toString()).getStdout().or("");
+    String dwarfdumpMainStdout = workspace
+        .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString()).getStdout().or("");
 
     int expectedMatchCount = 1;
     if (architectures.isPresent()) {
