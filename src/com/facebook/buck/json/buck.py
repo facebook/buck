@@ -421,23 +421,6 @@ def get_base_path(build_env=None):
     return build_env.base_path
 
 
-@provide_for_build
-def add_deps(name, deps=[], build_env=None):
-    assert build_env.type == BuildContextType.BUILD_FILE, (
-        "Cannot use `add_deps()` at the top-level of an included file.")
-
-    if name not in build_env.rules:
-        raise ValueError(
-            'Invoked \'add_deps\' on non-existent rule %s.' % name)
-
-    rule = build_env.rules[name]
-    if 'deps' not in rule:
-        raise ValueError(
-            'Invoked \'add_deps\' on rule %s that has no \'deps\' field'
-            % name)
-    rule['deps'] = rule['deps'] + deps
-
-
 GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
 
 class BuildFileProcessor(object):

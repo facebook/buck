@@ -1205,45 +1205,6 @@ public class ParserTest {
   }
 
   @Test
-  public void testGeneratedDeps() throws Exception {
-    // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
-    tempDir.newFolder("java", "com", "facebook", "generateddeps");
-
-    Path testGeneratedDepsBuckFile = tempDir.newFile("java/com/facebook/generateddeps/BUCK");
-    Files.write(
-        testGeneratedDepsBuckFile,
-        ("java_library(name = 'foo')\n" +
-            "java_library(name = 'bar')\n" +
-            "add_deps(name = 'foo', deps = [':bar'])\n").getBytes(UTF_8));
-
-    BuildTarget fooTarget = BuildTarget.builder(
-        tempDir.getRoot().toRealPath(),
-        "//java/com/facebook/generateddeps",
-        "foo").build();
-
-    BuildTarget barTarget = BuildTarget.builder(
-        tempDir.getRoot().toRealPath(),
-        "//java/com/facebook/generateddeps",
-        "bar").build();
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
-
-    TargetGraph targetGraph = parser.buildTargetGraph(
-        eventBus,
-        cell,
-        false,
-        executorService,
-        buildTargets);
-    BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
-
-    BuildRule fooRule = resolver.requireRule(fooTarget);
-    assertNotNull(fooRule);
-    BuildRule barRule = resolver.requireRule(barTarget);
-    assertNotNull(barRule);
-
-    assertEquals(ImmutableSet.of(barRule), fooRule.getDeps());
-  }
-
-  @Test
   public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     filterAllTargetsInProject(
