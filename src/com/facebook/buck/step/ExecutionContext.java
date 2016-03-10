@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.shell.WorkerProcess;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
@@ -44,6 +45,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
@@ -127,6 +130,9 @@ public abstract class ExecutionContext implements Closeable {
     return executorService;
   }
 
+  @Value.Parameter
+  public abstract ConcurrentMap<String, WorkerProcess> getWorkerProcesses();
+
   /**
    * @return A clone of this {@link ExecutionContext} with {@code stdout} and {@code stderr}
    *    redirected to the provided {@link PrintStream}s.
@@ -189,6 +195,13 @@ public abstract class ExecutionContext implements Closeable {
   @Override
   public void close() throws IOException {
     getClassLoaderCache().close();
+    try {
+      for (WorkerProcess process : getWorkerProcesses().values()) {
+        process.close();
+      }
+    } finally {
+      getWorkerProcesses().clear();
+    }
   }
 
   public BuildId getBuildId() {
@@ -219,6 +232,7 @@ public abstract class ExecutionContext implements Closeable {
     private Optional<AdbOptions> adbOptions = Optional.absent();
     private Optional<TargetDeviceOptions> targetDeviceOptions = Optional.absent();
     private Map<ExecutorPool, ListeningExecutorService> executors;
+    private ConcurrentMap<String, WorkerProcess> workerProcesses = new ConcurrentHashMap<>();
 
     private Builder() {}
 
@@ -241,7 +255,8 @@ public abstract class ExecutionContext implements Closeable {
           Preconditions.checkNotNull(concurrencyLimit),
           adbOptions,
           targetDeviceOptions,
-          executors);
+          executors,
+          workerProcesses);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -260,6 +275,7 @@ public abstract class ExecutionContext implements Closeable {
       setConcurrencyLimit(executionContext.getConcurrencyLimit());
       setAdbOptions(executionContext.getAdbOptions());
       setTargetDeviceOptions(executionContext.getTargetDeviceOptions());
+      setWorkerProcesses(executionContext.getWorkerProcesses());
       return this;
     }
 
@@ -362,5 +378,10 @@ public abstract class ExecutionContext implements Closeable {
       return this;
     }
 
+    public Builder setWorkerProcesses(
+        ConcurrentMap<String, WorkerProcess> workerProcesses) {
+      this.workerProcesses = workerProcesses;
+      return this;
+    }
   }
 }

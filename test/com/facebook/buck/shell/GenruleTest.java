@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -219,6 +221,107 @@ public class GenruleTest {
             "-c",
             "python convert_to_katana.py AndroidManifest.xml > $OUT"),
         genruleCommand.getShellCommand(executionContext));
+  }
+
+  private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(
+      BuildRuleResolver resolver) throws NoSuchBuildTargetException {
+    /*
+     * Produces a GenruleBuilder that when built produces a Genrule that uses a $(worker) macro
+     * that corresponds to:
+     *
+     * genrule(
+     *   name = 'genrule_with_worker',
+     *   srcs = [],
+     *   cmd = '$(worker :worker_rule) abc',
+     *   out = 'output.txt',
+     * )
+     *
+     * worker_tool(
+     *   name = 'worker_rule',
+     *   exe = ':my_exe',
+     * )
+     *
+     * sh_binary(
+     *   name = 'my_exe',
+     *   main = 'bin/exe',
+     * );
+     */
+    BuildRule shBinaryRule = new ShBinaryBuilder(
+        BuildTargetFactory.newInstance("//:my_exe"))
+        .setMain(new FakeSourcePath("bin/exe"))
+        .build(resolver);
+
+    WorkerToolBuilder
+        .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
+        .setExe(shBinaryRule.getBuildTarget())
+        .build(resolver);
+
+    return GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
+        .setCmd("$(worker :worker_rule) abc")
+        .setOut("output.txt");
+  }
+
+  @Test
+  public void testGenruleWithWorkerMacroUsesSpecialShellStep() throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
+
+    List<Step> steps = genrule.getBuildSteps(
+        null, // BuildContext is unused because there are no deps
+        new FakeBuildableContext());
+
+    ExecutionContext executionContext = newEmptyExecutionContext(Platform.LINUX);
+
+    assertEquals(5, steps.size());
+    Step fifthStep = steps.get(4);
+    assertTrue(fifthStep instanceof WorkerShellStep);
+    WorkerShellStep workerShellStep = (WorkerShellStep) fifthStep;
+    assertThat(workerShellStep.getShortName(), Matchers.equalTo("worker"));
+    assertThat(
+        workerShellStep.getEnvironmentVariables(executionContext),
+        Matchers.hasEntry(
+            "OUT",
+            new FakeProjectFilesystem()
+                .resolve(GEN_DIR + "/genrule_with_worker/output.txt")
+                .toString()));
+  }
+
+  @Test
+  public void testIsWorkerGenruleReturnsTrue() throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
+    assertTrue(((Genrule) genrule).isWorkerGenrule());
+  }
+
+  @Test
+  public void testIsWorkerGenruleReturnsFalse() throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule genrule = GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_no_worker"))
+        .setCmd("echo hello >> $OUT")
+        .setOut("output.txt")
+        .build(ruleResolver, filesystem);
+    assertFalse(((Genrule) genrule).isWorkerGenrule());
+  }
+
+  @Test
+  public void testConstructingGenruleWithBadWorkerMacroThrows() throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    GenruleBuilder genruleBuilder = createGenruleBuilderThatUsesWorkerMacro(ruleResolver);
+    try {
+      genruleBuilder.setBash("no worker macro here").build(ruleResolver);
+    } catch (HumanReadableException e) {
+      assertEquals(
+          String.format(
+              "You cannot use a worker macro in one of the cmd, bash, or " +
+                  "cmd_exe properties and not in the others for genrule //:genrule_with_worker."),
+          e.getHumanReadableErrorMessage());
+    }
   }
 
   @Test

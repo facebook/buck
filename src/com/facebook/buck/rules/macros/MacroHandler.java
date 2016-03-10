@@ -75,7 +75,7 @@ public class MacroHandler {
     return builder.build();
   }
 
-  private MacroExpander getExpander(String name) throws MacroException {
+  public MacroExpander getExpander(String name) throws MacroException {
     MacroExpander expander = expanders.get(name);
     if (expander == null) {
       throw new MacroException(String.format("no such macro \"%s\"", name));
@@ -127,7 +127,7 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    for (MacroMatchResult matchResult : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+    for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
       deps.addAll(
           getExpander(matchResult.getMacroType()).extractBuildTimeDeps(
               target,
@@ -149,7 +149,7 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    for (MacroMatchResult matchResult : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+    for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
       targets.addAll(
           getExpander(matchResult.getMacroType()).extractParseTimeDeps(
               target,
@@ -171,7 +171,7 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    for (MacroMatchResult matchResult : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+    for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
       targets.add(
           getExpander(matchResult.getMacroType()).extractRuleKeyAppendables(
               target,
@@ -183,4 +183,17 @@ public class MacroHandler {
     return targets.build();
   }
 
+  public boolean containsWorkerMacro(String blob) throws MacroException {
+    boolean result = false;
+    for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
+      if (getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander) {
+        result = true;
+      }
+    }
+    return result;
+  }
+
+  public ImmutableList<MacroMatchResult> getMacroMatchResults(String blob) throws MacroException {
+    return MACRO_FINDER.findAll(expanders.keySet(), blob);
+  }
 }

@@ -1,0 +1,37 @@
+sh_binary(
+  name = 'external_tool',
+  main = 'external_tool.sh',
+)
+
+worker_tool(
+  name = 'worker1',
+  args = '--num-jobs 2',
+  exe = ':external_tool',
+)
+
+worker_tool(
+  name = 'worker2',
+  args = '--num-jobs 1',
+  exe = ':external_tool',
+)
+
+genrule(
+  name = 'test1',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :worker1) $OUT',
+)
+
+genrule(
+  name = 'test2',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :worker1) $OUT',
+)
+
+genrule(
+  name = 'test3',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :worker2) $OUT',
+)

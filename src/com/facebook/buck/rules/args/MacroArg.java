@@ -135,6 +135,13 @@ public class MacroArg extends Arg {
     return new Function<String, Arg>() {
       @Override
       public MacroArg apply(String unexpanded) {
+        try {
+          if (expander.containsWorkerMacro(unexpanded)) {
+            return new WorkerMacroArg(expander, target, cellNames, resolver, unexpanded);
+          }
+        } catch (MacroException e) {
+          throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+        }
         return new MacroArg(expander, target, cellNames, resolver, unexpanded);
       }
     };

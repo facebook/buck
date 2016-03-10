@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.WorkerMacroArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
@@ -130,6 +131,7 @@ public class Genrule extends AbstractBuildRule
   private final Path pathToSrcDirectory;
   private final Path absolutePathToSrcDirectory;
   private final ImmutableSortedSet<BuildTarget> tests;
+  private final Boolean isWorkerGenrule;
 
   protected Genrule(
       BuildRuleParams params,
@@ -171,6 +173,7 @@ public class Genrule extends AbstractBuildRule
         target.getBasePathWithSlash(),
         String.format("%s__srcs", target.getShortNameAndFlavorPostfix()));
     this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
+    this.isWorkerGenrule = this.isWorkerGenrule();
   }
 
   /** @return the absolute path to the output file */
@@ -280,6 +283,26 @@ public class Genrule extends AbstractBuildRule
             });
   }
 
+  @VisibleForTesting
+  public boolean isWorkerGenrule() {
+    Arg cmdArg = this.cmd.orNull();
+    Arg bashArg = this.bash.orNull();
+    Arg cmdExeArg = this.cmdExe.orNull();
+    if ((cmdArg instanceof WorkerMacroArg) ||
+        (bashArg instanceof WorkerMacroArg) ||
+        (cmdExeArg instanceof WorkerMacroArg)) {
+      if ((cmdArg != null && !(cmdArg instanceof WorkerMacroArg)) ||
+          (bashArg != null && !(bashArg instanceof WorkerMacroArg)) ||
+          (cmdExeArg != null && !(cmdExeArg instanceof WorkerMacroArg))) {
+        throw new HumanReadableException("You cannot use a worker macro in one of the cmd, bash, " +
+            "or cmd_exe properties and not in the others for genrule %s.",
+            getBuildTarget().getFullyQualifiedName());
+      }
+      return true;
+    }
+    return false;
+  }
+
   public AbstractGenruleStep createGenruleStep() {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -299,6 +322,38 @@ public class Genrule extends AbstractBuildRule
         Genrule.this.addEnvironmentVariables(context, environmentVariablesBuilder);
       }
     };
+  }
+
+  public WorkerShellStep createWorkerShellStep() {
+    return new WorkerShellStep(
+        getProjectFilesystem(),
+        absolutePathToTmpDirectory,
+        absolutePathToSrcDirectory,
+        convertToWorkerJobParams(cmd),
+        convertToWorkerJobParams(bash),
+        convertToWorkerJobParams(cmdExe)) {
+      @Override
+      protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+        ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
+        Genrule.this.addEnvironmentVariables(context, envVarBuilder);
+        return envVarBuilder.build();
+      }
+    };
+  }
+
+  private static Optional<WorkerJobParams> convertToWorkerJobParams(Optional<Arg> arg) {
+    return arg
+        .transform(
+            new Function<Arg, WorkerJobParams>() {
+              @Override
+              public WorkerJobParams apply(Arg arg) {
+                WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg;
+                return WorkerJobParams.of(
+                    workerMacroArg.getStartupCommand(),
+                    workerMacroArg.getStartupArgs(),
+                    workerMacroArg.getJobArgs());
+              }
+            });
   }
 
   @Override
@@ -329,7 +384,11 @@ public class Genrule extends AbstractBuildRule
     addSymlinkCommands(commands);
 
     // Create a shell command that corresponds to this.cmd.
-    commands.add(createGenruleStep());
+    if (this.isWorkerGenrule) {
+      commands.add(createWorkerShellStep());
+    } else {
+      commands.add(createGenruleStep());
+    }
 
     buildableContext.recordArtifact(pathToOutFile);
     return commands.build();

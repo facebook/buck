@@ -133,6 +133,7 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestDescription;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.thrift.ThriftBuckConfig;
 import com.facebook.buck.thrift.ThriftCxxEnhancer;
 import com.facebook.buck.thrift.ThriftJavaEnhancer;
@@ -668,6 +669,7 @@ public class KnownBuildRuleTypes {
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.ASYNCIO))));
+    builder.register(new WorkerToolDescription());
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
     builder.register(new XcodeWorkspaceConfigDescription());

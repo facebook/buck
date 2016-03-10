@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 6385c5928e2678ed2ac7d15cf79eaa7fe3ade35d #@#
+#@# GENERATED FILE: DO NOT MODIFY 99c7b30deffad8d33b9be09c8ed8d417affc6308 #@#
 {
   "args" : [
     "//src/com/facebook/buck/model:model",
     "//src/com/facebook/buck/rules:build_rule",
     "//src/com/facebook/buck/rules/macros:macros",
+    "//src/com/facebook/buck/shell:worker",
     "//src/com/facebook/buck/util:exceptions",
     "//third-party/java/guava:guava"
   ]

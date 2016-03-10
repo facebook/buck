@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2f2a25f7aa07c954e787e4c44827aa1bb071224d #@#
+#@# GENERATED FILE: DO NOT MODIFY 4ba221e50bd9d915803e1fd065e4481469869480 #@#
 {
   "build_event" : [
     "//src/com/facebook/buck/event:event",
@@ -123,6 +123,7 @@
     "//src/com/facebook/buck/rules:rules",
     "//src/com/facebook/buck/rust:rust",
     "//src/com/facebook/buck/shell:rules",
+    "//src/com/facebook/buck/shell:worker",
     "//src/com/facebook/buck/swift:rules",
     "//src/com/facebook/buck/thrift:rules",
     "//src/com/facebook/buck/timing:timing",

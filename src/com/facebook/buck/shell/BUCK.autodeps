@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 157c81c4734c6fd1882f0a8fdc84a2393a15e068 #@#
+#@# GENERATED FILE: DO NOT MODIFY dd09822c1d07e7b9e10d67609c35974a00639a54 #@#
 {
   "rules" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -12,6 +12,7 @@
     "//src/com/facebook/buck/rules/keys:keys",
     "//src/com/facebook/buck/rules/macros:macros",
     "//src/com/facebook/buck/shell:steps",
+    "//src/com/facebook/buck/shell:worker",
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/step/fs:fs",
     "//src/com/facebook/buck/test:test",
@@ -37,6 +38,34 @@
     "//src/com/facebook/buck/util/environment:platform",
     "//third-party/java/guava:guava",
     "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jsr:jsr305"
+  ],
+  "worker" : [
+    "//src/com/facebook/buck/event:event",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/parser:rule_pattern",
+    "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/rules:rules",
+    "//src/com/facebook/buck/shell:worker_process",
+    "//src/com/facebook/buck/step:step",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util/environment:platform",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
+    "//third-party/java/infer-annotations:infer-annotations"
+  ],
+  "worker_process" : [
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/log:api",
+    "//src/com/facebook/buck/util:exceptions",
+    "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util/immutables:immutables",
+    "//third-party/java/gson:gson",
+    "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
     "//third-party/java/jsr:jsr305"
   ]
 }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 015ffe71dd63aa4ba02fe669ca84a43a46240d14 #@#
+#@# GENERATED FILE: DO NOT MODIFY a910857a5b47dc0e8fad658df01029f88f9eed1a #@#
 {
   "macros" : [
     "//src/com/facebook/buck/io:io",
@@ -6,6 +6,7 @@
     "//src/com/facebook/buck/model:model",
     "//src/com/facebook/buck/parser:rule_pattern",
     "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/shell:worker",
     "//src/com/facebook/buck/util:escaper",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util/environment:platform",

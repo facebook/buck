@@ -31,6 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -55,6 +56,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       ImmutableMap.<String, MacroExpander>builder()
           .put("classpath", new ClasspathMacroExpander())
           .put("exe", new ExecutableMacroExpander())
+          .put("worker", new WorkerMacroExpander())
           .put("location", new LocationMacroExpander())
           .build());
 

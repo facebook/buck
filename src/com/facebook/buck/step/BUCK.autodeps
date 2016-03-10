@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 763924eff48757362d408010d038ba175bae7e18 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9c692ef1a166293f0cafdd31868a3e5acc80a4ba #@#
 {
   "step" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -9,6 +9,7 @@
     "//src/com/facebook/buck/log:api",
     "//src/com/facebook/buck/model:build_id",
     "//src/com/facebook/buck/model:model",
+    "//src/com/facebook/buck/shell:worker_process",
     "//src/com/facebook/buck/util:io",
     "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util/concurrent:concurrent",

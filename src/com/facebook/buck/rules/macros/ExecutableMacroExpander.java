@@ -36,7 +36,7 @@ import java.nio.file.Path;
  */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander {
 
-  private Tool getTool(BuildRule rule) throws MacroException {
+  protected Tool getTool(BuildRule rule) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
       throw new MacroException(
           String.format(

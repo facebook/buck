@@ -39,6 +39,44 @@ java_library(
   ],
 )
 
+java_immutables_library(
+  name = 'worker',
+  srcs = [
+    'WorkerShellStep.java',
+    'WorkerTool.java',
+    'WorkerToolDescription.java',
+  ],
+  immutable_srcs = [
+    'AbstractWorkerJobParams.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/shell:shell',
+  ],
+  autodeps = True,
+  exported_deps = [
+    # WorkerTool extends com.facebook.buck.rules.NoopBuildRule.
+    '//src/com/facebook/buck/rules:rules',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_immutables_library(
+  name = 'worker_process',
+  srcs = [
+    'WorkerProcess.java',
+    'WorkerProcessProtocol.java',
+    'WorkerProcessProtocolZero.java',
+  ],
+  immutable_srcs = [
+    'AbstractWorkerJobResult.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/shell:shell',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
 export_file(
   name = 'sh_binary_template',
   visibility = [

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
@@ -99,4 +100,19 @@ public class MacroHandlerTest {
     assertTrue(expanded, expanded.startsWith("Hello @"));
   }
 
+  @Test
+  public void testContainsWorkerMacroReturnsTrue() throws MacroException {
+    MacroHandler handler = new MacroHandler(
+        ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
+    assertTrue(handler.containsWorkerMacro("$(worker :rule)"));
+  }
+
+  @Test
+  public void testContainsWorkerMacroReturnsFalse() throws MacroException {
+    MacroHandler handler =
+        new MacroHandler(ImmutableMap.<String, MacroExpander>of(
+            "worker", new WorkerMacroExpander(),
+            "exe", new ExecutableMacroExpander()));
+    assertFalse(handler.containsWorkerMacro("$(exe :rule) not a worker macro in sight"));
+  }
 }

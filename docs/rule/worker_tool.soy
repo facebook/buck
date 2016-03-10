@@ -1,0 +1,220 @@
+{namespace buck.worker_tool}
+
+/***/
+{template .soyweb}
+{call buck.page}
+  {param title: 'worker_tool()' /}
+  {param prettify: true /}
+  {param description}
+    A rule that can be used to tell Buck that multiple invocations of an external tool should be
+    multiplexed to a shared instance of that tool.
+  {/param}
+  {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  <p>
+    Some external tools have high startup costs. To amortize that cost over the whole build
+    rather than paying for it in each rule invocation, the <code>worker_tool()</code> rule
+    can be used in conjunction with {call buck.genrule /}.
+    Buck will start the external tool once and then reuse it by communicating to it
+    over <code>stdin</code> and <code>stdout</code> using a simple JSON protocol.
+  </p>
+  <p>
+    A <code>worker_tool</code> rule can be referenced in the <code>cmd</code> parameter of
+    a <code>genrule</code> by using a macro:
+    <br/>
+    <code>$(worker /&#x2Fpath/to:target)</code>
+  </p>
+
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+    The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'exe' /}
+  {param desc}
+    A {call buck.build_target /} for a rule that outputs
+    an executable, such as an <code>sh_binary</code>. Buck will only run this executable
+    once per build.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'args' /}
+  {param default: 'None' /}
+  {param desc}
+    A string of args that will be passed to the executable represented by <code>exe</code> on
+    initial startup.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+worker_tool(
+  name = 'ExternalToolWorker',
+  exe = ':ExternalTool',
+  args = '--arg1 --arg2'
+)
+
+sh_binary(
+  name = 'ExternalTool',
+  main = 'external_tool.sh',
+)
+
+genrule(
+  name = 'TransformA',
+  out = 'OutputA.txt',
+  cmd = '$(worker :ExternalToolWorker) argA',
+)
+
+genrule(
+  name = 'TransformB',
+  out = 'OutputB.txt',
+  cmd = '$(worker :ExternalToolWorker) argB',
+)
+
+genrule(
+  name = 'TransformC',
+  out = 'OutputC.txt',
+  cmd = '$(worker :ExternalToolWorker) argC',
+)</pre>{/literal}
+
+<p>
+  When doing a <code>buck build</code> on all three of the above <code>genrules</code>, Buck
+  will first create the worker process by invoking:
+  </br>
+  <code>./external_tool.sh --arg1 --arg2</code>
+  </br>
+  Buck will then communicate with this process using JSON over <code>stdin</code>,
+  starting with a handshake:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+[
+  {
+    id: 0,
+    type: 'handshake',
+    protocol_version: '0',
+    capabilities: []
+  }
+</pre>{/literal}
+
+<p>
+  Buck will then wait for the tool to reply on <code>stdout</code>:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+[
+  {
+    id: 0,
+    type: 'handshake',
+    protocol_version: '0',
+    capabilities: []
+  }
+</pre>{/literal}
+
+<p>
+  Then, when building the first <code>genrule</code>, Buck will write to <code>stdin</code>:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+  ,{
+    id: 1,
+    type: 'command',
+    args_path: '/tmp/1.args',
+    stdout_path: '/tmp/1.out',
+    stderr_path: '/tmp/1.err',
+  }
+</pre>{/literal}
+
+<p>
+  The file <code>/tmp/1.args</code> would contain <code>argA</code>. The tool should
+  then perform the necessary work for this job and then write the job's output to the files
+  supplied by Buck. Once the job is done, the tool should reply to Buck on <code>stdout</code> with:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+  ,{
+    id: 1,
+    type: 'result',
+    exit_code: 0
+  }
+</pre>{/literal}
+
+<p>
+  Once Buck hears back from the first genrule's job, it will submit the second genrule's job in the
+  same fashion and await the response. When the build is all finished Buck will close the JSON by
+  writing to <code>stdin</code>:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+]
+</pre>{/literal}
+
+<p>
+  which signals to the tool that it should close itself after replying on <code>stdout</code>:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+]
+</pre>{/literal}
+
+<p>
+  In this example, Buck is guaranteed to invoke
+  </br>
+  <code>./external_tool.sh --arg1 --arg2</code>
+  </br>
+  just once during the build. The three jobs corresponding to the three genrules are submitted
+  synchronously to the single worker process.
+</p>
+
+<p>
+  Note that the <code>id</code> values in the messages are not necessarily increasing or sequential,
+  but they have to match between the request message and the response message of a given job as
+  well as in the initial handshake.
+</p>
+
+<p>
+  If the tool receives a message type it cannot interpret it should answer with:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+{
+  id: &ltn&gt,
+  type: 'error',
+  exit_code: 1
+}
+</pre>{/literal}
+
+<p>
+  If the tool receives a message type it can interpret, but the other attributes of the
+  message are in an inconsistent state, it should answer with:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+{
+  id: &ltn&gt,
+  type: 'error',
+  exit_code: 2
+}
+</pre>{/literal}
+
+{/param}
+
+{/call}
+
+{/param}
+{/call}
+{/template}
