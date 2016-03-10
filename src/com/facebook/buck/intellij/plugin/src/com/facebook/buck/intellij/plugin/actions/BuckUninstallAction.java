@@ -19,6 +19,8 @@ package com.facebook.buck.intellij.plugin.actions;
 import com.facebook.buck.intellij.plugin.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
+import com.facebook.buck.intellij.plugin.config.BuckModule;
+import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
@@ -52,10 +54,16 @@ public class BuckUninstallAction extends BuckBaseAction {
       return;
     }
 
+    // Initiate a buck uninstall
+    BuckEventsConsumer buckEventsConsumer = new BuckEventsConsumer(e.getProject());
+    BuckModule mod = e.getProject().getComponent(BuckModule.class);
+    mod.attach(buckEventsConsumer, target);
+
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
-        BuckCommand.UNINSTALL);
+        BuckCommand.UNINSTALL,
+        buckEventsConsumer);
     handler.command().addParameter(target);
     buildManager.runBuckCommand(handler, ACTION_TITLE);
   }
