@@ -10,6 +10,7 @@ java_library(
   ],
   autodeps = True,
   visibility = [
+    '//src/com/facebook/buck/apple:generators',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/parser:parser',
     '//test/...',

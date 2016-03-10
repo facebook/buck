@@ -10,6 +10,13 @@ PLATFORM_SRCS = [
   'ApplePlatforms.java',
   'FatBinaryInfos.java',
 ]
+GENERATOR_SRCS = [
+  'CxxPlatformXcodeConfigGenerator.java',
+  'ProjectGenerator.java',
+  'SchemeGenerator.java',
+  'WorkspaceAndProjectGenerator.java',
+  'WorkspaceGenerator.java',
+]
 java_immutables_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
@@ -19,8 +26,21 @@ java_immutables_library(
 )
 
 java_immutables_library(
+  name = 'generators',
+  srcs = GENERATOR_SRCS,
+  tests = [
+    '//test/com/facebook/buck/apple:apple',
+    '//test/com/facebook/buck/apple:apple_test_integration',
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC'
+  ],
+)
+
+java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java',], excludes=PLATFORM_SRCS),
+  srcs = glob(['*.java',], excludes=PLATFORM_SRCS+GENERATOR_SRCS),
   tests = [
     '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/apple:apple_test_integration',

@@ -32,6 +32,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -65,7 +66,7 @@ import java.util.Set;
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
-  private final ProjectFilesystem projectFilesystem;
+  private final Cell rootCell;
   private final TargetGraph projectGraph;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
@@ -94,7 +95,7 @@ public class WorkspaceAndProjectGenerator {
   private final CxxBuckConfig cxxBuckConfig;
 
   public WorkspaceAndProjectGenerator(
-      ProjectFilesystem projectFilesystem,
+      Cell cell,
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescription.Arg workspaceArguments,
       BuildTarget workspaceBuildTarget,
@@ -113,7 +114,7 @@ public class WorkspaceAndProjectGenerator {
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig) {
-    this.projectFilesystem = projectFilesystem;
+    this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
@@ -191,7 +192,7 @@ public class WorkspaceAndProjectGenerator {
     }
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
-        projectFilesystem,
+        rootCell.getFilesystem(),
         combinedProject ? "project" : workspaceName,
         outputDirectory);
 
@@ -248,7 +249,7 @@ public class WorkspaceAndProjectGenerator {
       ProjectGenerator generator = new ProjectGenerator(
           projectGraph,
           targetsInRequiredProjects,
-          projectFilesystem,
+          rootCell.getFilesystem(),
           outputDirectory.getParent(),
           workspaceName,
           buildFileName,
@@ -281,75 +282,91 @@ public class WorkspaceAndProjectGenerator {
         targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
       }
     } else {
-      ImmutableMultimap.Builder<Path, BuildTarget> projectDirectoryToBuildTargetsBuilder =
+      ImmutableMultimap.Builder<Cell, BuildTarget> projectCellToBuildTargetsBuilder =
           ImmutableMultimap.builder();
       for (TargetNode<?> targetNode : projectGraph.getNodes()) {
         BuildTarget buildTarget = targetNode.getBuildTarget();
-        projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
+        projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget), buildTarget);
       }
-      ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
+      ImmutableMultimap<Cell, BuildTarget> projectCellToBuildTargets =
+          projectCellToBuildTargetsBuilder.build();
+      for (Cell projectCell : projectCellToBuildTargets.keySet()) {
+        ImmutableMultimap.Builder<Path, BuildTarget> projectDirectoryToBuildTargetsBuilder =
+            ImmutableMultimap.builder();
+        final ImmutableSet<BuildTarget> cellRules =
+            ImmutableSet.copyOf(projectCellToBuildTargets.get(projectCell));
+        for (BuildTarget buildTarget : cellRules) {
+          projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
+        }
+        ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
-      for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
-        final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
-            projectGraph,
-            ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
-        if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
-          continue;
-        }
-
-        ProjectGenerator generator = projectGenerators.get(projectDirectory);
-        if (generator == null) {
-          LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
-          String projectName;
-          if (projectDirectory.getFileName().toString().equals("")) {
-            // If we're generating a project in the root directory, use a generic name.
-            projectName = "Project";
-          } else {
-            // Otherwise, name the project the same thing as the directory we're in.
-            projectName = projectDirectory.getFileName().toString();
-          }
-          generator = new ProjectGenerator(
+        ProjectFilesystem targetFilesystem = projectCell.getFilesystem();
+        Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
+        for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
+          final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
               projectGraph,
-              rules,
-              projectFilesystem,
-              projectDirectory,
-              projectName,
-              buildFileName,
-              projectGeneratorOptions,
-              Optionals.bind(
-                  targetToBuildWithBuck,
-                  new Function<BuildTarget, Optional<BuildTarget>>() {
-                    @Override
-                    public Optional<BuildTarget> apply(BuildTarget input) {
-                      return rules.contains(input)
-                          ? Optional.of(input)
-                          : Optional.<BuildTarget>absent();
-                    }
-                  }),
-              buildWithBuckFlags,
-              executableFinder,
-              environment,
-              cxxPlatforms,
-              defaultCxxPlatform,
-              sourcePathResolverForNode,
-              buckEventBus,
-              attemptToDetermineBestCxxPlatform,
-              halideBuckConfig,
-              cxxBuckConfig)
-              .setTestsToGenerateAsStaticLibraries(groupableTests);
+              ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
+          if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
+            continue;
+          }
 
-          generator.createXcodeProjects();
-          requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
-          projectGenerators.put(projectDirectory, generator);
-        } else {
-          LOG.debug("Already generated project for target %s, skipping", projectDirectory);
-        }
+          ProjectGenerator generator = projectGenerators.get(projectDirectory);
+          if (generator == null) {
+            LOG.debug(
+                "Generating project for directory %s with targets %s",
+                projectDirectory,
+                rules);
+            String projectName;
+            if (projectDirectory.getFileName().toString().equals("")) {
+              // If we're generating a project in the root directory, use a generic name.
+              projectName = "Project";
+            } else {
+              // Otherwise, name the project the same thing as the directory we're in.
+              projectName = projectDirectory.getFileName().toString();
+            }
+            generator = new ProjectGenerator(
+                projectGraph,
+                rules,
+                targetFilesystem,
+                projectDirectory,
+                projectName,
+                buildFileName,
+                projectGeneratorOptions,
+                Optionals.bind(
+                    targetToBuildWithBuck,
+                    new Function<BuildTarget, Optional<BuildTarget>>() {
+                      @Override
+                      public Optional<BuildTarget> apply(BuildTarget input) {
+                        return rules.contains(input)
+                            ? Optional.of(input)
+                            : Optional.<BuildTarget>absent();
+                      }
+                    }),
+                buildWithBuckFlags,
+                executableFinder,
+                environment,
+                cxxPlatforms,
+                defaultCxxPlatform,
+                sourcePathResolverForNode,
+                buckEventBus,
+                attemptToDetermineBestCxxPlatform,
+                halideBuckConfig,
+                cxxBuckConfig)
+                .setTestsToGenerateAsStaticLibraries(groupableTests);
 
-        workspaceGenerator.addFilePath(generator.getProjectPath());
+            generator.createXcodeProjects();
+            requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
+            projectGenerators.put(projectDirectory, generator);
+          } else {
+            LOG.debug("Already generated project for target %s, skipping", projectDirectory);
+          }
 
-        buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
-        for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
-          targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+          workspaceGenerator.addFilePath(relativeTargetCell.resolve(generator.getProjectPath()));
+
+          buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
+          for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
+            targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+          }
         }
       }
 
@@ -357,7 +374,7 @@ public class WorkspaceAndProjectGenerator {
         ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
-            projectFilesystem,
+            rootCell.getFilesystem(),
             BuildTargets.getGenPath(workspaceBuildTarget, "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,
@@ -832,7 +849,7 @@ public class WorkspaceAndProjectGenerator {
             targetToBuildWithBuck);
         String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
         runnablePath = Optional.of(
-            projectFilesystem.resolve(
+            rootCell.getFilesystem().resolve(
                 ProjectGenerator.getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName)
             ).toString());
       } else {
@@ -846,7 +863,7 @@ public class WorkspaceAndProjectGenerator {
         remoteRunnablePath = Optional.absent();
       }
       SchemeGenerator schemeGenerator = new SchemeGenerator(
-          projectFilesystem,
+          rootCell.getFilesystem(),
           schemeConfigArg.srcTarget.transform(buildTargetToPBXTargetTransformer),
           orderedBuildTargets,
           orderedBuildTestTargets,

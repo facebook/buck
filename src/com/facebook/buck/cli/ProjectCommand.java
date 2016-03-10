@@ -821,7 +821,7 @@ public class ProjectCommand extends BuildCommand {
       CxxPlatform defaultCxxPlatform = params.getCell().getKnownBuildRuleTypes().
           getDefaultCxxPlatforms();
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-          params.getCell().getFilesystem(),
+          params.getCell(),
           targetGraphAndTargets.getTargetGraph(),
           workspaceArgs,
           inputTarget,

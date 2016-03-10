@@ -112,10 +112,25 @@ public class InterCellIntegrationTest {
         "inter-cell/export-file/primary",
         "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
-    primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
+    ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "//:cxxbinary");
+    result.assertSuccess();
+  }
 
-    // Everything is as it should be.
-    // Otherwise a HumanReadableException would be thrown
+  @Test
+  public void shouldBeAbleToUseProjectCommandXCell() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckCommand("project", "//:cxxbinary");
+
+    result.assertSuccess();
   }
 
   @Test

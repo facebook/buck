@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 139cb8ae6d9845bdc64585f67cae0efcca9c11a1 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8364d3cc40ca57ef1035952429650e61c698ff1e #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
     "//src/com/facebook/buck/android:helpers",
     "//src/com/facebook/buck/android:rules",
     "//src/com/facebook/buck/android:utils",
+    "//src/com/facebook/buck/apple:generators",
     "//src/com/facebook/buck/apple:platform",
     "//src/com/facebook/buck/apple:rules",
     "//src/com/facebook/buck/apple/device:device",
