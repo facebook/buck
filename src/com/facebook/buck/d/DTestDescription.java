@@ -24,11 +24,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -66,24 +69,43 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
 
     BuildTarget target = params.getBuildTarget();
 
+    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+
+    SymlinkTree sourceTree =
+        buildRuleResolver.addToIndex(
+            DDescriptionUtils.createSourceSymlinkTree(
+                DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
+                params,
+                pathResolver,
+                args.srcs));
+
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.
-    BuildTarget binaryTarget = DDescriptionUtils.createBuildTargetForFile(
-        target,
-        "build-",
-        target.getFullyQualifiedName(),
-        cxxPlatform);
-    BuildRule binaryRule = DDescriptionUtils.createNativeLinkable(
-        params.copyWithBuildTarget(binaryTarget),
-        args.srcs,
-        ImmutableList.of("-unittest"),
-        buildRuleResolver,
-        cxxPlatform,
-        dBuckConfig);
+    BuildTarget binaryTarget =
+        DDescriptionUtils.createBuildTargetForFile(
+            target,
+            "build-",
+            target.getFullyQualifiedName(),
+            cxxPlatform);
+
+    ImmutableList<SourcePath> sources = args.srcs.getPaths();
+    BuildRule binaryRule =
+        DDescriptionUtils.createNativeLinkable(
+            params.copyWithBuildTarget(binaryTarget),
+            buildRuleResolver,
+            cxxPlatform,
+            dBuckConfig,
+            ImmutableList.of("-unittest"),
+            sources,
+            DIncludes.builder()
+                .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
+                .addAllSources(sources)
+                .build());
 
     return new DTest(
         params.appendExtraDeps(ImmutableList.of(binaryRule)),
@@ -98,7 +120,7 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<SourcePath> srcs;
+    public SourceList srcs;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;

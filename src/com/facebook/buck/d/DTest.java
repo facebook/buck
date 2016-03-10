@@ -267,4 +267,5 @@ public class DTest extends AbstractBuildRule implements
     // Without this, the file is not written when we get a cache hit.
     return ImmutableSortedSet.of(testBinaryBuildRule);
   }
+
 }

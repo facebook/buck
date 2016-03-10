@@ -32,8 +32,10 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -71,18 +73,37 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
+
+    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+
+    SymlinkTree sourceTree =
+        buildRuleResolver.addToIndex(
+            DDescriptionUtils.createSourceSymlinkTree(
+                DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
+                params,
+                pathResolver,
+                args.srcs));
 
     // Create a rule that actually builds the binary, and add that
     // rule to the index.
-    CxxLink nativeLinkable = DDescriptionUtils.createNativeLinkable(
-        params.copyWithBuildTarget(
-            BuildTarget.builder().from(params.getBuildTarget()).addFlavors(BINARY_FLAVOR).build()),
-        args.srcs,
-        /* compilerFlags */ ImmutableList.<String>of(),
-        buildRuleResolver,
-        cxxPlatform,
-        dBuckConfig);
+    ImmutableList<SourcePath> sources = args.srcs.getPaths();
+    CxxLink nativeLinkable =
+        DDescriptionUtils.createNativeLinkable(
+            params.copyWithBuildTarget(
+                BuildTarget.builder(params.getBuildTarget())
+                    .addFlavors(BINARY_FLAVOR)
+                    .build()),
+            buildRuleResolver,
+            cxxPlatform,
+            dBuckConfig,
+            /* compilerFlags */ ImmutableList.<String>of(),
+            sources,
+            DIncludes.builder()
+                .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
+                .addAllSources(args.srcs.getPaths())
+                .build());
     buildRuleResolver.addToIndex(nativeLinkable);
 
     // Create a Tool for the executable.
@@ -105,7 +126,8 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<SourcePath> srcs;
+    public SourceList srcs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
+
 }

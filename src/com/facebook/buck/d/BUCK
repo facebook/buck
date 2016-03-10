@@ -1,4 +1,4 @@
-java_library(
+java_immutables_library(
   name = 'd',
   srcs = [
     'DBinary.java',
@@ -12,6 +12,9 @@ java_library(
     'DTest.java',
     'DTestDescription.java',
     'DTestStep.java',
+  ],
+  immutable_srcs = [
+    'AbstractDIncludes.java',
   ],
   autodeps = True,
   visibility=['PUBLIC'],

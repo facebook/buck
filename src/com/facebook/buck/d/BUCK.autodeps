@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY e60e533607917b3eb1be3368d452429a1f86a557 #@#
+#@# GENERATED FILE: DO NOT MODIFY ed7803138ce8523ef50b9f6611cc85bbf720c7c0 #@#
 {
   "d" : [
     "//src/com/facebook/buck/cli:config",
     "//src/com/facebook/buck/cxx:platform",
     "//src/com/facebook/buck/cxx:rules",
+    "//src/com/facebook/buck/graph:graph",
     "//src/com/facebook/buck/io:io",
     "//src/com/facebook/buck/log:api",
     "//src/com/facebook/buck/model:model",
@@ -20,8 +21,11 @@
     "//src/com/facebook/buck/test/result/type:type",
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util/environment:platform",
+    "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
+    "//third-party/java/immutables:processor",
     "//third-party/java/infer-annotations:infer-annotations"
   ]
 }

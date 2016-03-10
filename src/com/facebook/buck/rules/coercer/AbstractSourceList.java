@@ -16,10 +16,14 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -80,6 +84,39 @@ abstract class AbstractSourceList {
       default:
         throw new IllegalStateException("unexpected type: " + getType());
     }
+  }
+
+  public ImmutableMap<String, SourcePath> toNameMap(
+      BuildTarget buildTarget,
+      SourcePathResolver pathResolver,
+      String parameterName) {
+    ImmutableMap.Builder<String, SourcePath> sources = ImmutableMap.builder();
+    switch (getType()) {
+      case NAMED:
+        sources.putAll(getNamedSources().get());
+        break;
+      case UNNAMED:
+        sources.putAll(
+            pathResolver.getSourcePathNames(
+                buildTarget,
+                parameterName,
+                getUnnamedSources().get()));
+        break;
+    }
+    return sources.build();
+  }
+
+  public ImmutableList<SourcePath> getPaths() {
+    ImmutableList.Builder<SourcePath> sources = ImmutableList.builder();
+    switch (getType()) {
+      case NAMED:
+        sources.addAll(getNamedSources().get().values());
+        break;
+      case UNNAMED:
+        sources.addAll(getUnnamedSources().get());
+        break;
+    }
+    return sources.build();
   }
 
 }

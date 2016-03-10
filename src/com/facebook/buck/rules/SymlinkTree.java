@@ -38,8 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 public class SymlinkTree
     extends AbstractBuildRule
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
@@ -181,9 +179,8 @@ public class SymlinkTree
   // Since we produce a directory tree of symlinks, rather than a single file, return
   // null here.
   @Override
-  @Nullable
   public Path getPathToOutput() {
-    return null;
+    return root;
   }
 
   // We generate the symlinks using post-build steps to avoid the cache because:

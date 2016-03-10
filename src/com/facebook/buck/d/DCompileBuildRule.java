@@ -18,6 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -26,7 +27,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,64 +38,64 @@ import java.nio.file.Path;
  * A build rule for invoking the D compiler.
  */
 public class DCompileBuildRule extends AbstractBuildRule {
-  private Tool compiler;
-  private ImmutableList<String> compilerFlags;
-  private Path outputPath;
-  private SourcePathResolver sourcePathResolver;
-  private ImmutableSortedSet<SourcePath> sources;
+
+  @AddToRuleKey
+  private final Tool compiler;
+
+  @AddToRuleKey
+  private final ImmutableList<String> compilerFlags;
+
+  @AddToRuleKey
+  private final ImmutableSortedSet<SourcePath> sources;
+
+  @AddToRuleKey
+  private final ImmutableList<DIncludes> includes;
 
   public DCompileBuildRule(
-      BuildRuleParams params,
-      SourcePathResolver sourcePathResolver,
-      ImmutableSortedSet<SourcePath> sources,
-      ImmutableList<String> compilerFlags,
-      Tool compiler) {
-    this(
-        params,
-        sourcePathResolver,
-        sources,
-        compilerFlags,
-        compiler,
-        BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()));
-  }
-
-  public DCompileBuildRule(
-      BuildRuleParams params,
-      SourcePathResolver sourcePathResolver,
-      ImmutableSortedSet<SourcePath> sources,
-      ImmutableList<String> compilerFlags,
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
       Tool compiler,
-      Path outputPath) {
-    super(params, sourcePathResolver);
+      ImmutableList<String> compilerFlags,
+      ImmutableSortedSet<SourcePath> sources,
+      ImmutableList<DIncludes> includes) {
+    super(buildRuleParams, resolver);
     this.compiler = compiler;
     this.compilerFlags = compilerFlags;
-    this.outputPath = outputPath;
-    this.sourcePathResolver = sourcePathResolver;
     this.sources = sources;
+    this.includes = includes;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputPath.getParent()));
+    steps.add(
+        new MkdirStep(
+            getProjectFilesystem(),
+            Preconditions.checkNotNull(getPathToOutput()).getParent()));
+
+    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
+    flagsBuilder.addAll(compilerFlags);
+    for (DIncludes include : includes) {
+      flagsBuilder.add("-I" + getResolver().getAbsolutePath(include.getLinkTree()));
+    }
+    ImmutableList<String> flags = flagsBuilder.build();
+
     steps.add(
         new DCompileStep(
             getProjectFilesystem().getRootPath(),
             compiler.getEnvironment(getResolver()),
             compiler.getCommandPrefix(getResolver()),
-            compilerFlags,
-            outputPath,
-            sourcePathResolver.deprecatedAllPaths(sources)));
+            flags,
+            getPathToOutput(),
+            getResolver().getAllAbsolutePaths(sources)));
     return steps.build();
   }
 
   @Override
   public Path getPathToOutput() {
-    return outputPath;
+    return BuildTargets.getGenPath(getBuildTarget(), "%s/" + getBuildTarget().getShortName());
   }
 
   @Override
