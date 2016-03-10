@@ -33,9 +33,12 @@ import java.util.Map;
 
 public class GoDescriptorsTest {
   private ImmutableMap<String, String> getPackageImportMap(
+      Iterable<String> globalVendorPath,
       String basePackage, Iterable<String> packages) {
     return ImmutableMap.copyOf(FluentIterable.from(
         GoDescriptors.getPackageImportMap(
+            ImmutableList.<Path>copyOf(
+              FluentIterable.from(globalVendorPath).transform(MorePaths.TO_PATH)),
             Paths.get(basePackage),
             FluentIterable.from(packages).transform(MorePaths.TO_PATH)).entrySet())
         .transform(new Function<Map.Entry<Path, Path>, Map.Entry<String, String>>() {
@@ -52,6 +55,7 @@ public class GoDescriptorsTest {
   public void testImportMapEmpty() {
     assertThat(
         getPackageImportMap(
+            ImmutableList.of(""),
             "foo/bar/baz",
             ImmutableList.of(
                 "foo/bar",
@@ -65,6 +69,7 @@ public class GoDescriptorsTest {
   public void testImportMapRoot() {
     assertThat(
         getPackageImportMap(
+            ImmutableList.of(""),
             "foo/bar/baz",
             ImmutableList.of(
                 "foo/bar",
@@ -80,6 +85,7 @@ public class GoDescriptorsTest {
   public void testImportMapNonRoot() {
     assertThat(
         getPackageImportMap(
+            ImmutableList.of(""),
             "foo/bar/baz",
             ImmutableList.of(
                 "foo/bar",
@@ -95,15 +101,32 @@ public class GoDescriptorsTest {
   public void testImportMapLongestWins() {
     assertThat(
         getPackageImportMap(
+            ImmutableList.of("qux"),
             "foo/bar/baz",
             ImmutableList.of(
                 "foo/bar",
                 "bar",
                 "foo/bar/baz/waffle",
+                "qux/hello/world",
                 "vendor/hello/world",
                 "foo/bar/vendor/hello/world"
             )),
         Matchers.equalTo(ImmutableMap.of(
             "hello/world", "foo/bar/vendor/hello/world")));
+  }
+
+  @Test
+  public void testImportMapGlobal() {
+    assertThat(
+        getPackageImportMap(
+            ImmutableList.of("qux"),
+            "foo/bar/baz",
+            ImmutableList.of(
+                "foo/bar",
+                "bar",
+                "qux/hello/world"
+            )),
+        Matchers.equalTo(ImmutableMap.of(
+            "hello/world", "qux/hello/world")));
   }
 }

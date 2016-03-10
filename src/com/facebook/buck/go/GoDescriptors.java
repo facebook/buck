@@ -136,13 +136,15 @@ abstract class GoDescriptors {
         pathResolver,
         symlinkTree,
         packageName,
-        getPackageImportMap(packageName, FluentIterable.from(linkables).transformAndConcat(
-            new Function<GoLinkable, ImmutableSet<Path>>() {
-              @Override
-              public ImmutableSet<Path> apply(GoLinkable input) {
-                return input.getGoLinkInput().keySet();
-              }
-            })),
+        getPackageImportMap(goBuckConfig.getVendorPaths(),
+            params.getBuildTarget().getBasePath(),
+            FluentIterable.from(linkables).transformAndConcat(
+              new Function<GoLinkable, ImmutableSet<Path>>() {
+                @Override
+                public ImmutableSet<Path> apply(GoLinkable input) {
+                  return input.getGoLinkInput().keySet();
+                }
+              })),
         ImmutableSet.copyOf(srcs),
         ImmutableList.copyOf(compilerFlags),
         goBuckConfig.getCompiler(),
@@ -155,15 +157,20 @@ abstract class GoDescriptors {
 
   @VisibleForTesting
   static ImmutableMap<Path, Path> getPackageImportMap(
-      Path basePackageName, Iterable<Path> packageNameIter) {
+      ImmutableList<Path> globalVendorPaths,
+      Path basePackagePath, Iterable<Path> packageNameIter) {
     Map<Path, Path> importMapBuilder = Maps.newHashMap();
     ImmutableSortedSet<Path> packageNames = ImmutableSortedSet.copyOf(packageNameIter);
 
+    ImmutableList.Builder<Path> vendorPathsBuilder = ImmutableList.builder();
+    vendorPathsBuilder.addAll(globalVendorPaths);
     Path prefix = Paths.get("");
-    for (Path component : FluentIterable.of(new Path[]{Paths.get("")}).append(basePackageName)) {
+    for (Path component : FluentIterable.of(new Path[]{Paths.get("")}).append(basePackagePath)) {
       prefix = prefix.resolve(component);
+      vendorPathsBuilder.add(prefix.resolve("vendor"));
+    }
 
-      Path vendorPrefix = prefix.resolve("vendor");
+    for (Path vendorPrefix: vendorPathsBuilder.build()) {
       for (Path vendoredPackage : packageNames.tailSet(vendorPrefix)) {
         if (!vendoredPackage.startsWith(vendorPrefix)) {
           break;

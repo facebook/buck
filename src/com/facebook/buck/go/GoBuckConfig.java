@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -36,6 +37,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -147,6 +149,18 @@ public class GoBuckConfig {
   Path getDefaultPackageName(BuildTarget target) {
     Path prefix = Paths.get(delegate.getValue(SECTION, "prefix").or(""));
     return prefix.resolve(target.getBasePath());
+  }
+
+  ImmutableList<Path> getVendorPaths() {
+    Optional<ImmutableList<String>> vendorPaths =
+        delegate.getOptionalListWithoutComments(SECTION, "vendor_path", ':');
+
+    if (vendorPaths.isPresent()) {
+      return FluentIterable
+          .from(vendorPaths.get())
+          .transform(MorePaths.TO_PATH).toList();
+    }
+    return ImmutableList.of();
   }
 
   Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {

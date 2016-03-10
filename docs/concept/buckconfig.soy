@@ -1200,6 +1200,20 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'vendor_path' /}
+  {param example_value: 'third-party/go' /}
+  {param description}
+    A list of colon (:) separated list of directories to include for including in the importmap for
+    Go dependencies.  Packages in these directories are allowed to be imported given just the
+    relative path to the package.  This is similar to how 'vendor' directories work.
+
+    e.g you can use <code>import golang.org/x/net</code> for a package that lives in
+    <code><vendor_path>/golang.org/x/net</code>.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'groovy' /}
   {param description}
