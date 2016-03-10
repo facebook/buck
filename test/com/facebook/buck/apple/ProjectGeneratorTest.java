@@ -83,12 +83,14 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
@@ -148,6 +150,7 @@ public class ProjectGeneratorTest {
   private static final Flavor DEFAULT_FLAVOR = ImmutableFlavor.of("default");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
+  private Cell projectCell;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
@@ -157,10 +160,13 @@ public class ProjectGeneratorTest {
   private Path rootPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     clock = new SettableFakeClock(0, 0);
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
-    projectFilesystem = fakeProjectFilesystem;
+    projectCell = (new TestCellBuilder())
+      .setFilesystem(fakeProjectFilesystem)
+      .build();
+    projectFilesystem = projectCell.getFilesystem();
     rootPath = projectFilesystem.getRootPath();
 
     // Add files and directories used to test resources.
@@ -934,16 +940,7 @@ public class ProjectGeneratorTest {
 
   private void assertThatHeaderSymlinkTreeContains(Path root, ImmutableMap<String, String> content)
       throws IOException {
-    for (Map.Entry<String, String> entry : content.entrySet()) {
-      Path link = root.resolve(Paths.get(entry.getKey()));
-      Path target = Paths.get(entry.getValue()).toAbsolutePath();
-      assertTrue(projectFilesystem.isSymLink(link));
-      assertEquals(
-          target,
-          projectFilesystem.readSymLink(link));
-    }
-
-    // Check the tree's header map.
+    // Read the tree's header map.
     byte[] headerMapBytes;
     try (InputStream headerMapInputStream =
              projectFilesystem.newFileInputStream(root.resolve(".tree.hmap"))) {
@@ -952,10 +949,22 @@ public class ProjectGeneratorTest {
     HeaderMap headerMap = HeaderMap.deserialize(headerMapBytes);
     assertNotNull(headerMap);
     assertThat(headerMap.getNumEntries(), equalTo(content.size()));
-    for (String key : content.keySet()) {
+    for (Map.Entry<String, String> entry : content.entrySet()) {
+      String key = entry.getKey();
+      Path link = root.resolve(Paths.get(key));
+      Path target = Paths.get(entry.getValue()).toAbsolutePath();
+      // Check the filesystem symlink
+      assertTrue(projectFilesystem.isSymLink(link));
+      assertEquals(
+          target,
+          projectFilesystem.readSymLink(link));
+
+      // Check the header map
       assertThat(
           headerMap.lookup(key),
-          equalTo(BuckConstant.BUCK_OUTPUT_PATH.relativize(root).resolve(key).toString()));
+          equalTo(Paths.get("../../")
+                      .resolve(projectCell.getRoot().getFileName())
+                      .resolve(link).toString()));
     }
   }
 
@@ -3280,7 +3289,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
         ImmutableSet.<BuildTarget>of(),
-        projectFilesystem,
+        projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -3484,7 +3493,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
-        projectFilesystem,
+        projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -3572,7 +3581,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
-        projectFilesystem,
+        projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -3640,7 +3649,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
-        projectFilesystem,
+        projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -4176,7 +4185,7 @@ public class ProjectGeneratorTest {
     return new ProjectGenerator(
         targetGraph,
         initialBuildTargets,
-        projectFilesystem,
+        projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",

@@ -67,6 +67,7 @@ import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -213,6 +214,7 @@ public class ProjectGenerator {
 
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
+  private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
   private final Path outputDirectory;
   private final String projectName;
@@ -262,7 +264,7 @@ public class ProjectGenerator {
   public ProjectGenerator(
       TargetGraph targetGraph,
       Set<BuildTarget> initialTargets,
-      ProjectFilesystem projectFilesystem,
+      Cell cell,
       Path outputDirectory,
       String projectName,
       String buildFileName,
@@ -287,7 +289,8 @@ public class ProjectGenerator {
 
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
-    this.projectFilesystem = projectFilesystem;
+    this.projectCell = cell;
+    this.projectFilesystem = cell.getFilesystem();
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
     this.buildFileName = buildFileName;
@@ -1696,8 +1699,9 @@ public class ProjectGenerator {
       for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
         headerMapBuilder.add(
             entry.getKey().toString(),
-            BuckConstant.BUCK_OUTPUT_PATH
-                .relativize(headerSymlinkTreeRoot)
+            Paths.get("../../")
+                .resolve(projectCell.getRoot().getFileName())
+                .resolve(headerSymlinkTreeRoot)
                 .resolve(entry.getKey()));
       }
       projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
@@ -1950,7 +1954,10 @@ public class ProjectGenerator {
     Path treeRoot = AppleDescriptions.getPathToHeaderSymlinkTree(
         targetNode,
         headerVisibility);
-    return pathRelativizer.outputDirToRootRelative(treeRoot);
+    Path cellRoot = MorePaths.relativize(
+        projectFilesystem.getRootPath(),
+        targetNode.getBuildTarget().getCellPath());
+    return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {

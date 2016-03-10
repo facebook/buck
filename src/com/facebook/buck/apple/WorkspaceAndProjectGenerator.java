@@ -23,7 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+// import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -249,7 +249,7 @@ public class WorkspaceAndProjectGenerator {
       ProjectGenerator generator = new ProjectGenerator(
           projectGraph,
           targetsInRequiredProjects,
-          rootCell.getFilesystem(),
+          rootCell,
           outputDirectory.getParent(),
           workspaceName,
           buildFileName,
@@ -300,7 +300,6 @@ public class WorkspaceAndProjectGenerator {
         }
         ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
-        ProjectFilesystem targetFilesystem = projectCell.getFilesystem();
         Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
         for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
           final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
@@ -327,7 +326,7 @@ public class WorkspaceAndProjectGenerator {
             generator = new ProjectGenerator(
                 projectGraph,
                 rules,
-                targetFilesystem,
+                projectCell,
                 projectDirectory,
                 projectName,
                 buildFileName,
@@ -374,7 +373,7 @@ public class WorkspaceAndProjectGenerator {
         ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
-            rootCell.getFilesystem(),
+            rootCell,
             BuildTargets.getGenPath(workspaceBuildTarget, "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,
