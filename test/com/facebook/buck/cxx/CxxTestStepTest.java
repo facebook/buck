@@ -121,7 +121,7 @@ public class CxxTestStepTest {
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
-            ImmutableList.of("sleep", "1"),
+            ImmutableList.of("sleep", "10"),
             ImmutableMap.<String, String>of(),
             exitCode,
             output,
