@@ -836,7 +836,7 @@ public class CxxDescriptionEnhancer {
       CxxLibraryDescription.Arg hasExportedArgs = (CxxLibraryDescription.Arg) args;
       exportedPreprocessorFlags = CxxFlags.getLanguageFlags(
           hasExportedArgs.exportedPreprocessorFlags,
-          hasExportedArgs.exportedPlatformLinkerFlags,
+          hasExportedArgs.exportedPlatformPreprocessorFlags,
           hasExportedArgs.exportedLangPreprocessorFlags,
           cxxPlatform);
       exportedHeaders = CxxDescriptionEnhancer.parseExportedHeaders(
