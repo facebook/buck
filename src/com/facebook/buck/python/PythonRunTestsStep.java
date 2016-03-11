@@ -90,7 +90,9 @@ public class PythonRunTestsStep implements Step {
     String testsToRunRegex = getTestsToRunRegexFromListOutput(listStep.getStdout());
 
     return getShellStepWithArgs(
-        "-o", resultsOutputPath.toString(), "-r", testsToRunRegex).execute(context);
+        "--hide-output",
+        "-o", resultsOutputPath.toString(),
+        "-r", testsToRunRegex).execute(context);
   }
 
   private String getTestsToRunRegexFromListOutput(String listOutput) {

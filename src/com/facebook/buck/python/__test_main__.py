@@ -14,7 +14,9 @@ any of its code to help implement your main module.
 from __future__ import print_function
 
 import contextlib
+import fnmatch
 import json
+import logging
 import optparse
 import os
 import re
@@ -22,6 +24,15 @@ import sys
 import time
 import traceback
 import unittest
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+try:
+    import coverage
+except ImportError:
+    coverage = None
 
 
 class TestStatus(object):
@@ -32,6 +43,40 @@ class TestStatus(object):
     EXPECTED_FAILURE = 'SUCCESS'
     UNEXPECTED_SUCCESS = 'FAILURE'
     SKIPPED = 'ASSUMPTION_VIOLATION'
+
+
+class CoverageToggleImportFinder(object):
+    """
+    Some modules (especially auto-generated thrift modules) are extremely
+    expensive to trace on import. This hook turns coverage (and hence tracing)
+    off when importing a module we're not interested in. It's possible to miss
+    coverage if code from a module of interest is called when importing a
+    different module, but this should seldom happen.
+
+    This is only used if --coverage-include is passed, hence it doesn't affect
+    needed_coverage targets
+    """
+    def __init__(self, patterns, cov):
+        self.patterns = patterns
+        self.cov = cov
+
+    def find_module(self, fullname, path=None):
+        _, _, basename = fullname.rpartition('.')
+        try:
+            fd, pypath, _ = imp.find_module(basename, path)
+        except:
+            return None
+
+        if hasattr(fd, 'close'):
+            fd.close()
+        parts = pypath.split('#binary,link-tree/')
+        if len(parts) == 2:
+            pypath = parts[1]
+        if any(fnmatch.fnmatch(pypath, p) for p in self.patterns):
+            self.cov.start()
+        else:
+            self.cov.stop()
+        return None
 
 
 class TeeStream(object):
@@ -52,9 +97,14 @@ class TeeStream(object):
 
 
 class CallbackStream(object):
-
-    def __init__(self, callback):
+    def __init__(self, callback, bytes_callback=None, fileno=None):
         self._callback = callback
+        self._fileno = fileno
+
+        # For python 3.x compatibility, self.buffer should look like an
+        # io.BufferedIOBase object.
+        if bytes_callback is not None:
+            self.buffer = CallbackStream(bytes_callback, fileno=fileno)
 
     def write(self, data):
         self._callback(data)
@@ -65,29 +115,40 @@ class CallbackStream(object):
     def isatty(self):
         return False
 
+    def fileno(self):
+        return self._fileno
 
-class FbJsonTestResult(unittest._TextTestResult):
+
+class BuckTestResult(unittest._TextTestResult):
     """
     Our own TestResult class that outputs data in a format that can be easily
-    parsed by fbmake's test runner.
+    parsed by buck's test runner.
     """
 
-    def __init__(self, stream, descriptions, verbosity, suite):
-        super(FbJsonTestResult, self).__init__(stream, descriptions, verbosity)
+    def __init__(self, stream, descriptions, verbosity, show_output,
+                 main_program, suite):
+        super(BuckTestResult, self).__init__(stream, descriptions, verbosity)
+        self._main_program = main_program
         self._suite = suite
         self._results = []
         self._current_test = None
         self._saved_stdout = sys.stdout
         self._saved_stderr = sys.stderr
+        self._show_output = show_output
 
     def getResults(self):
         return self._results
 
     def startTest(self, test):
-        super(FbJsonTestResult, self).startTest(test)
+        super(BuckTestResult, self).startTest(test)
 
-        sys.stdout = CallbackStream(self.addStdout)
-        sys.stderr = CallbackStream(self.addStderr)
+        # Pass in the real stdout and stderr filenos.  We can't really do much
+        # here to intercept callers who directly operate on these fileno
+        # objects.
+        sys.stdout = CallbackStream(self.addStdout, self.addStdoutBytes,
+                                    fileno=sys.stdout.fileno())
+        sys.stderr = CallbackStream(self.addStderr, self.addStderrBytes,
+                                    fileno=sys.stderr.fileno())
 
         self._current_test = test
         self._test_start_time = time.time()
@@ -119,7 +180,7 @@ class FbJsonTestResult(unittest._TextTestResult):
         sys.stdout = self._saved_stdout
         sys.stderr = self._saved_stderr
 
-        super(FbJsonTestResult, self).stopTest(test)
+        super(BuckTestResult, self).stopTest(test)
 
         # If a failure occured during module/class setup, then this "test" may
         # actually be a `_ErrorHolder`, which doesn't contain explicit info
@@ -144,6 +205,13 @@ class FbJsonTestResult(unittest._TextTestResult):
         })
 
         self._current_test = None
+
+    def stopTestRun(self):
+        cov = self._main_program.get_coverage()
+        if cov:
+            self._results.append({
+                'coverage': cov,
+            })
 
     @contextlib.contextmanager
     def _withTest(self, test):
@@ -180,48 +248,66 @@ class FbJsonTestResult(unittest._TextTestResult):
             ''.join(traceback.format_tb(tb)))
 
     def addSuccess(self, test):
-        super(FbJsonTestResult, self).addSuccess(test)
+        super(BuckTestResult, self).addSuccess(test)
         self.setStatus(test, TestStatus.PASSED)
 
     def addError(self, test, err):
-        super(FbJsonTestResult, self).addError(test, err)
+        super(BuckTestResult, self).addError(test, err)
         self.setException(test, TestStatus.ABORTED, err)
 
     def addFailure(self, test, err):
-        super(FbJsonTestResult, self).addFailure(test, err)
+        super(BuckTestResult, self).addFailure(test, err)
         self.setException(test, TestStatus.FAILED, err)
 
     def addSkip(self, test, reason):
-        super(FbJsonTestResult, self).addSkip(test, reason)
+        super(BuckTestResult, self).addSkip(test, reason)
         self.setStatus(test, TestStatus.SKIPPED, 'Skipped: %s' % (reason,))
 
     def addExpectedFailure(self, test, err):
-        super(FbJsonTestResult, self).addExpectedFailure(test, err)
+        super(BuckTestResult, self).addExpectedFailure(test, err)
         self.setException(test, TestStatus.EXPECTED_FAILURE, err)
 
     def addUnexpectedSuccess(self, test):
-        super(FbJsonTestResult, self).addUnexpectedSuccess(test)
+        super(BuckTestResult, self).addUnexpectedSuccess(test)
         self.setStatus(test, TestStatus.UNEXPECTED_SUCCESS,
                        'Unexpected success')
 
     def addStdout(self, val):
         self._stdout += val
+        if self._show_output:
+            self._saved_stdout.write(val)
+            self._saved_stdout.flush()
+
+    def addStdoutBytes(self, val):
+        string = val.decode('utf-8', errors='backslashreplace')
+        self.addStdout(string)
 
     def addStderr(self, val):
         self._stderr += val
+        if self._show_output:
+            self._saved_stderr.write(val)
+            self._saved_stderr.flush()
+
+    def addStderrBytes(self, val):
+        string = val.decode('utf-8', errors='backslashreplace')
+        self.addStderr(string)
 
 
-class FbJsonTestRunner(unittest.TextTestRunner):
+class BuckTestRunner(unittest.TextTestRunner):
 
-    def __init__(self, suite, **kwargs):
-        super(FbJsonTestRunner, self).__init__(**kwargs)
+    def __init__(self, main_program, suite, show_output=True, **kwargs):
+        super(BuckTestRunner, self).__init__(**kwargs)
+        self.show_output = show_output
+        self._main_program = main_program
         self._suite = suite
 
     def _makeResult(self):
-        return FbJsonTestResult(
+        return BuckTestResult(
             self.stream,
             self.descriptions,
             self.verbosity,
+            self.show_output,
+            self._main_program,
             self._suite)
 
 
@@ -235,11 +321,29 @@ def _format_test_name(test_class, attrname):
         attrname)
 
 
+class StderrLogHandler(logging.StreamHandler):
+    '''
+    This class is very similar to logging.StreamHandler, except that it
+    always uses the current sys.stderr object.
+
+    StreamHandler caches the current sys.stderr object when it is constructed.
+    This makes it behave poorly in unit tests, which may replace sys.stderr
+    with a StringIO buffer during tests.  The StreamHandler will continue using
+    the old sys.stderr object instead of the desired StringIO buffer.
+    '''
+    def __init__(self):
+        logging.Handler.__init__(self)
+
+    @property
+    def stream(self):
+        return sys.stderr
+
+
 class RegexTestLoader(unittest.TestLoader):
 
     def __init__(self, regex=None):
-        super(unittest.TestLoader, self).__init__()
         self.regex = regex
+        super(RegexTestLoader, self).__init__()
 
     def getTestCaseNames(self, testCaseClass):
         """
@@ -248,10 +352,13 @@ class RegexTestLoader(unittest.TestLoader):
 
         testFnNames = super(RegexTestLoader, self).getTestCaseNames(
             testCaseClass)
+        if self.regex is None:
+            return testFnNames
+        robj = re.compile(self.regex)
         matched = []
         for attrname in testFnNames:
             fullname = _format_test_name(testCaseClass, attrname)
-            if self.regex is None or re.search(self.regex, fullname):
+            if robj.search(fullname):
                 matched.append(attrname)
         return matched
 
@@ -307,6 +414,7 @@ class MainProgram(object):
     def __init__(self, argv):
         self.init_option_parser()
         self.parse_options(argv)
+        self.setup_logging()
 
     def init_option_parser(self):
         usage = '%prog [options] [TEST] ...'
@@ -314,8 +422,16 @@ class MainProgram(object):
         self.option_parser = op
 
         op.add_option(
+            '--hide-output',
+            dest='show_output', action='store_false', default=True,
+            help='Suppress data that tests print to stdout/stderr, and only '
+            'show it if the test fails.')
+        op.add_option(
             '-o', '--output',
             help='Write results to a file in a JSON format to be read by Buck')
+        op.add_option(
+            '-f', '--failfast', action='store_true', default=False,
+            help='Stop after the first failure')
         op.add_option(
             '-l', '--list-tests', action='store_true', dest='list',
             default=False, help='List tests and exit')
@@ -324,15 +440,31 @@ class MainProgram(object):
             choices=['buck', 'python'], default='python',
             help='List tests format')
         op.add_option(
+            '-r', '--regex', default=None,
+            help='Regex to apply to tests, to only run those tests')
+        op.add_option(
+            '--collect-coverage',
+            action='store_true', default=False,
+            help='Collect test coverage information')
+        op.add_option(
+            '--coverage-include',
+            default='*',
+            help='File globs to include in converage (split by ",")')
+        op.add_option(
+            '--coverage-omit',
+            default='',
+            help='File globs to omit from converage (split by ",")')
+        op.add_option(
+            '--logger',
+            action='append', metavar='<category>=<level>', default=[],
+            help='Configure log levels for specific logger categories')
+        op.add_option(
             '-q', '--quiet', action='count', default=0,
             help='Decrease the verbosity (may be specified multiple times)')
         op.add_option(
             '-v', '--verbosity',
             action='count', default=self.DEFAULT_VERBOSITY,
             help='Increase the verbosity (may be specified multiple times)')
-        op.add_option(
-            '-r', '--regex', default=None,
-            help='Regex to apply to tests, to only run those tests')
         op.add_option(
             '-?', '--help', action='help',
             help='Show this help message and exit')
@@ -341,16 +473,62 @@ class MainProgram(object):
         self.options, self.test_args = self.option_parser.parse_args(argv[1:])
         self.options.verbosity -= self.options.quiet
 
+        if self.options.collect_coverage and coverage is None:
+            self.option_parser.error('coverage module is not available')
+
+    def setup_logging(self):
+        # Configure the root logger to log at INFO level.
+        # This is similar to logging.basicConfig(), but uses our
+        # StderrLogHandler instead of a StreamHandler.
+        fmt = logging.Formatter('%(pathname)s:%(lineno)s: %(message)s')
+        log_handler = StderrLogHandler()
+        log_handler.setFormatter(fmt)
+        root_logger = logging.getLogger()
+        root_logger.addHandler(log_handler)
+        root_logger.setLevel(logging.INFO)
+
+        level_names = {
+            'debug': logging.DEBUG,
+            'info': logging.INFO,
+            'warn': logging.WARNING,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+            'critical': logging.CRITICAL,
+            'fatal': logging.FATAL,
+        }
+
+        for value in self.options.logger:
+            parts = value.rsplit('=', 1)
+            if len(parts) != 2:
+                self.option_parser.error('--logger argument must be of the '
+                                         'form <name>=<level>: %s' % value)
+            name = parts[0]
+            level_name = parts[1].lower()
+            level = level_names.get(level_name)
+            if level is None:
+                self.option_parser.error('invalid log level %r for log '
+                                         'category %s' % (parts[1], name))
+            logging.getLogger(name).setLevel(level)
+
     def create_loader(self):
         import __test_modules__
         return Loader(__test_modules__.TEST_MODULES, self.options.regex)
 
     def load_tests(self):
         loader = self.create_loader()
+        if self.options.collect_coverage:
+            self.start_coverage()
+            patterns = self.options.coverage_include.split(',')
+            if patterns and '*' not in patterns:
+                sys.meta_path.append(
+                    CoverageToggleImportFinder(patterns, self.cov))
         if self.test_args:
-            return loader.load_args(self.test_args)
+            suite = loader.load_args(self.test_args)
         else:
-            return loader.load_all()
+            suite = loader.load_all()
+        if self.options.collect_coverage:
+            self.cov.start()
+        return suite
 
     def get_tests(self, test_suite):
         tests = []
@@ -394,10 +572,70 @@ class MainProgram(object):
             unittest.installHandler()
 
         # Run the tests
-        runner = FbJsonTestRunner(test_suite, verbosity=self.options.verbosity)
+        runner = BuckTestRunner(self, test_suite,
+                                verbosity=self.options.verbosity,
+                                show_output=self.options.show_output)
         result = runner.run(test_suite)
 
+        if self.options.collect_coverage and self.options.show_output:
+            self.cov.stop()
+            if self.cov.html_report:
+                self.cov.html_report()
+            else:
+                self.cov.report(file=sys.stdout)
+
         return result
+
+    def start_coverage(self):
+        if not self.options.collect_coverage:
+            return
+
+        self.cov = coverage.coverage(
+            include=self.options.coverage_include.split(','),
+            omit=self.options.coverage_omit.split(','))
+        self.cov.erase()
+        self.cov.start()
+
+    def get_coverage(self):
+        result = {}
+        if not self.options.collect_coverage:
+            return result
+
+        self.cov.stop()
+
+        try:
+            f = StringIO()
+            self.cov.report(file=f)
+            lines = f.getvalue().split('\n')
+        except coverage.misc.CoverageException:
+            # Nothing was covered. That's fine by us
+            lines = range(5)
+
+        for line in lines[2:-3]:
+            r = line.split()[0]
+            analysis = self.cov.analysis2(r)
+            covString = self.convert_to_diff_cov_str(analysis)
+            if covString:
+                result[r] = covString
+
+        return result
+
+    def convert_to_diff_cov_str(self, analysis):
+        # Info on the format of analysis:
+        # http://nedbatchelder.com/code/coverage/api.html
+        if not analysis:
+            return None
+        numLines = max(analysis[1][-1] if len(analysis[1]) else 0,
+                       analysis[2][-1] if len(analysis[2]) else 0,
+                       analysis[3][-1] if len(analysis[3]) else 0)
+        lines = ['N'] * numLines
+        for l in analysis[1]:
+            lines[l - 1] = 'C'
+        for l in analysis[2]:
+            lines[l - 1] = 'X'
+        for l in analysis[3]:
+            lines[l - 1] = 'U'
+        return ''.join(lines)
 
 
 def main(argv):
