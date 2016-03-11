@@ -487,6 +487,48 @@ public class ParserTest {
   }
 
   @Test
+  public void pathInvalidationWorksAfterOverflow() throws Exception {
+    // Call filterAllTargetsInProject to populate the cache.
+    filterAllTargetsInProject(
+        parser,
+        cell,
+        Predicates.<TargetNode<?>>alwaysTrue(),
+        eventBus,
+        executorService);
+
+    // Send overflow event.
+    parser.onFileSystemChange(WatchEventsForTests.createOverflowEvent());
+
+    // Call filterAllTargetsInProject to request cached rules.
+    filterAllTargetsInProject(
+        parser,
+        cell,
+        Predicates.<TargetNode<?>>alwaysTrue(),
+        eventBus,
+        executorService);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, counter.calls);
+
+    // Send a "file added" event.
+    parser.onFileSystemChange(
+        createPathEvent(
+            Paths.get("java/com/facebook/Something.java"),
+            StandardWatchEventKinds.ENTRY_CREATE));
+
+    // Call filterAllTargetsInProject to request cached rules.
+    filterAllTargetsInProject(
+        parser,
+        cell,
+        Predicates.<TargetNode<?>>alwaysTrue(),
+        eventBus,
+        executorService);
+
+    // Test that the third parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 3, counter.calls);
+  }
+
+  @Test
   public void whenEnvironmentChangesThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     BuckConfig config = FakeBuckConfig.builder()

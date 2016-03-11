@@ -488,6 +488,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
     Path path = (Path) event.context();
 
+    Preconditions.checkState(
+        allTargetNodes.isEmpty() || !knownCells.isEmpty(),
+        "There are cached target nodes but no known cells. Cache invalidation will not work.");
+
     for (Cell cell : knownCells) {
       try {
         // We only care about creation and deletion events because modified should result in a rule
@@ -528,6 +532,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
   }
 
   public void invalidatePath(Path path) throws InterruptedException {
+    Preconditions.checkState(
+        allTargetNodes.isEmpty() || !knownCells.isEmpty(),
+        "There are cached target nodes but no known cells. Cache invalidation will not work.");
+
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
     for (Cell cell : knownCells) {
@@ -719,6 +727,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
           cacheInvalidatedByDefaultIncludesChangeCounter.inc();
         }
       }
+      knownCells.clear();
       knownCells.add(cell);
     }
   }
@@ -747,10 +756,6 @@ class DaemonicParserState implements ParsePipeline.Cache {
         invalidated = true;
       }
       buildFileConfigs.clear();
-      if (!knownCells.isEmpty()) {
-        invalidated = true;
-      }
-      knownCells.clear();
 
       if (invalidated) {
         LOG.debug("Cache data invalidated.");
