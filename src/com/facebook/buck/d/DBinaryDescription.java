@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -88,7 +87,6 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
 
     // Create a rule that actually builds the binary, and add that
     // rule to the index.
-    ImmutableList<SourcePath> sources = args.srcs.getPaths();
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
             params.copyWithBuildTarget(
@@ -99,7 +97,7 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
             cxxPlatform,
             dBuckConfig,
             /* compilerFlags */ ImmutableList.<String>of(),
-            sources,
+            args.srcs,
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())

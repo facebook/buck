@@ -99,7 +99,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
           cxxPlatform,
           dBuckConfig,
           /* compilerFlags */ ImmutableList.<String>of(),
-          args.srcs.getPaths(),
+          args.srcs,
           dIncludes,
           CxxSourceRuleFactory.PicType.PDC);
     }
@@ -121,7 +121,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
-      Iterable<SourcePath> sources,
+      SourceList sources,
       DIncludes dIncludes,
       CxxSourceRuleFactory.PicType pic)
       throws NoSuchBuildTargetException {

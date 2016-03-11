@@ -120,7 +120,7 @@ abstract class DDescriptionUtils {
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
-      Iterable<SourcePath> sources,
+      SourceList sources,
       DIncludes includes)
       throws NoSuchBuildTargetException {
 
@@ -227,6 +227,7 @@ abstract class DDescriptionUtils {
       SourcePathResolver sourcePathResolver,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
+      String name,
       SourcePath src,
       DIncludes includes)
       throws NoSuchBuildTargetException {
@@ -263,6 +264,7 @@ abstract class DDescriptionUtils {
                   .addAll(dBuckConfig.getBaseCompilerFlags())
                   .addAll(compilerFlags)
                   .build(),
+              name,
               ImmutableSortedSet.of(src),
               ImmutableList.copyOf(transitiveIncludes.values())));
     }
@@ -287,15 +289,16 @@ abstract class DDescriptionUtils {
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
-      Iterable<SourcePath> sources,
+      SourceList sources,
       DIncludes includes)
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
-    for (SourcePath source : sources) {
+    for (Map.Entry<String, SourcePath> source :
+         sources.toNameMap(baseParams.getBuildTarget(), sourcePathResolver, "srcs").entrySet()) {
       BuildTarget compileTarget =
           createDCompileBuildTarget(
               baseParams.getBuildTarget(),
-              sourcePathResolver.getSourcePathName(baseParams.getBuildTarget(), source),
+              source.getKey(),
               cxxPlatform);
       requireBuildRule(
           compileTarget,
@@ -304,7 +307,8 @@ abstract class DDescriptionUtils {
           sourcePathResolver,
           dBuckConfig,
           compilerFlags,
-          source,
+          source.getKey(),
+          source.getValue(),
           includes);
       sourcePaths.add(new BuildTargetSourcePath(compileTarget));
     }

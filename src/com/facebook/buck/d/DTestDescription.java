@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -93,7 +92,6 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
             target.getFullyQualifiedName(),
             cxxPlatform);
 
-    ImmutableList<SourcePath> sources = args.srcs.getPaths();
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
             params.copyWithBuildTarget(binaryTarget),
@@ -101,10 +99,10 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
             cxxPlatform,
             dBuckConfig,
             ImmutableList.of("-unittest"),
-            sources,
+            args.srcs,
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
-                .addAllSources(sources)
+                .addAllSources(args.srcs.getPaths())
                 .build());
 
     return new DTest(

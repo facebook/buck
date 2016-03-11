@@ -46,6 +46,9 @@ public class DCompileBuildRule extends AbstractBuildRule {
   private final ImmutableList<String> compilerFlags;
 
   @AddToRuleKey
+  private final String name;
+
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
 
   @AddToRuleKey
@@ -56,11 +59,13 @@ public class DCompileBuildRule extends AbstractBuildRule {
       SourcePathResolver resolver,
       Tool compiler,
       ImmutableList<String> compilerFlags,
+      String name,
       ImmutableSortedSet<SourcePath> sources,
       ImmutableList<DIncludes> includes) {
     super(buildRuleParams, resolver);
     this.compiler = compiler;
     this.compilerFlags = compilerFlags;
+    this.name = name;
     this.sources = sources;
     this.includes = includes;
   }
@@ -69,6 +74,8 @@ public class DCompileBuildRule extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    buildableContext.recordArtifact(getPathToOutput());
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(
         new MkdirStep(
@@ -95,7 +102,7 @@ public class DCompileBuildRule extends AbstractBuildRule {
 
   @Override
   public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s/" + getBuildTarget().getShortName());
+    return BuildTargets.getGenPath(getBuildTarget(), "%s/" + name + ".o");
   }
 
   @Override
