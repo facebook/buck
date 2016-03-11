@@ -21,6 +21,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -57,29 +61,41 @@ public class ApplePackageIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
 
-    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+    BuildTarget appTarget =
+        BuildTargetFactory.newInstance("//:DemoApp#no-debug,no-include-frameworks");
+    workspace.runBuckCommand(
+        "build",
+        appTarget.getUnflavoredBuildTarget().getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoApp#no-debug,no-include-frameworks");
+    workspace.getBuildLog().assertTargetBuiltLocally(appTarget.getFullyQualifiedName());
 
     workspace.runBuckCommand("clean").assertSuccess();
 
-    workspace.runBuckCommand("build", "//:DemoAppPackage").assertSuccess();
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetWasFetchedFromCache(
-        "//:DemoApp#no-debug,no-include-frameworks");
-    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
 
     Path templateDir = TestDataHelper.getTestDataScenario(
         this,
         "simple_application_bundle_no_debug");
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath("buck-out/gen/DemoAppPackage.ipa"));
+        workspace.getPath(BuildTargets.getGenPath(packageTarget, "%s.ipa")));
     zipInspector.assertFileExists(("Payload/DemoApp.app/DemoApp"));
-    zipInspector.assertFileContents("Payload/DemoApp.app/PkgInfo", new String(Files.readAllBytes(
-            templateDir.resolve(
-                "buck-out/gen/DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks" +
-                    "/DemoApp.app/PkgInfo.expected")),
+    zipInspector.assertFileContents(
+        "Payload/DemoApp.app/PkgInfo",
+        new String(
+            Files.readAllBytes(
+                templateDir.resolve(
+                    BuildTargets
+                        .getGenPath(
+                            BuildTarget.builder(appTarget)
+                                .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
+                                .build(),
+                            "%s")
+                        .resolve("DemoApp.app/PkgInfo.expected"))),
             UTF_8));
   }
 
@@ -92,15 +108,18 @@ public class ApplePackageIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoAppPackage").assertSuccess();
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Path destination = workspace.getDestPath();
     Unzip.extractZipFile(
-        workspace.getPath("buck-out/gen/DemoAppPackage.ipa"),
+        workspace.getPath(BuildTargets.getGenPath(packageTarget, "%s.ipa")),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-    assertTrue(Files.exists(destination.resolve(
-        "Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK")));
+    assertTrue(
+        Files.exists(
+            destination.resolve(
+                "Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK")));
   }
 
   @Test
@@ -112,14 +131,12 @@ public class ApplePackageIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand(
-        "build",
-        "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64")
-        .assertSuccess();
+    BuildTarget packageTarget = BuildTargetFactory.newInstance(
+        "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64");
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Unzip.extractZipFile(
-        workspace.getPath(
-            "buck-out/gen/DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64.ipa"),
+        workspace.getPath(BuildTargets.getGenPath(packageTarget, "%s.ipa")),
         workspace.getDestPath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
