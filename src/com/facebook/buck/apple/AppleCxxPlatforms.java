@@ -25,8 +25,9 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxToolProvider;
-import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.DefaultLinkerProvider;
+import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.cxx.VersionedTool;
@@ -283,7 +284,9 @@ public class AppleCxxPlatforms {
         cxx,
         cpp,
         cxxpp,
-        new DarwinLinker(clangXxPath),
+        new DefaultLinkerProvider(
+            LinkerProvider.Type.DARWIN,
+            new ConstantToolProvider(clangXxPath)),
         ImmutableList.<String>builder()
             .addAll(cflags)
             .addAll(ldflags)

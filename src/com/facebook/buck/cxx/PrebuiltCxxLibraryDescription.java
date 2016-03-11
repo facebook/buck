@@ -403,6 +403,7 @@ public class PrebuiltCxxLibraryDescription implements
                     params.getCellRoots(),
                     ruleResolver,
                     args.includeDirs.or(ImmutableList.of("include")))),
+        ruleResolver,
         pathResolver,
         sharedTarget,
         Linker.LinkType.SHARED,
@@ -422,7 +423,7 @@ public class PrebuiltCxxLibraryDescription implements
                         args.exportedPlatformLinkerFlags,
                         cxxPlatform)))
             .addAllArgs(
-                cxxPlatform.getLd().linkWhole(
+                cxxPlatform.getLd().resolve(ruleResolver).linkWhole(
                     new SourcePathArg(
                         pathResolver,
                         staticLibraryPath)))

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -31,6 +32,8 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -162,6 +165,9 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void nativeLibsEnvVarIsPreserved() throws IOException {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+
     assumeThat(
         "TODO(8667197): Native libs currently don't work on El Capitan",
         Platform.detect(),
@@ -171,6 +177,7 @@ public class PythonBinaryIntegrationTest {
         DefaultCxxPlatforms
             .build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
             .getLd()
+            .resolve(resolver)
             .searchPathEnvVar();
     String originalNativeLibsEnvVar = "something";
     workspace.writeContentsToPath(

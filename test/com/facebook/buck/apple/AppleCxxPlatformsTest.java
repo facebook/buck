@@ -808,6 +808,7 @@ AppleSdkPaths appleSdkPaths =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               entry.getValue().getCxxPlatform(),
               new FakeBuildRuleParamsBuilder(target).build(),
+              resolver,
               pathResolver,
               target,
               Linker.LinkType.EXECUTABLE,

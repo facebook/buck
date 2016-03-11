@@ -165,6 +165,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        resolver,
         new SourcePathResolver(resolver),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -192,9 +193,9 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Create an `Archive` rule using build params with an existing dependency,
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
@@ -211,6 +212,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        ruleResolver,
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
@@ -262,6 +264,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        resolver,
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
@@ -282,20 +285,21 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void createCxxLinkableBuildRuleExecutableVsShared() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     String soname = "soname";
     ImmutableList<String> sonameArgs =
-        ImmutableList.copyOf(CXX_PLATFORM.getLd().soname(soname));
+        ImmutableList.copyOf(CXX_PLATFORM.getLd().resolve(ruleResolver).soname(soname));
 
     // Construct a CxxLink object which links as an executable.
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        ruleResolver,
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
@@ -316,6 +320,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        ruleResolver,
         pathResolver,
         target,
         Linker.LinkType.SHARED,
@@ -336,6 +341,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        ruleResolver,
         pathResolver,
         target,
         Linker.LinkType.SHARED,
@@ -356,6 +362,8 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void createCxxLinkableBuildRuleStaticVsSharedDeps() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
@@ -382,6 +390,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        ruleResolver,
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
@@ -405,6 +414,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        ruleResolver,
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
@@ -439,15 +449,16 @@ public class CxxLinkableEnhancerTest {
             .putAllRuntimeLdflags(runtimes.asMultimap())
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               cxxPlatform,
               params,
+              ruleResolver,
               pathResolver,
               target,
               Linker.LinkType.SHARED,
@@ -519,6 +530,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        resolver,
         new SourcePathResolver(resolver),
         target,
         Linker.LinkType.MACH_O_BUNDLE,
@@ -554,6 +566,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink bundleLoaderRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         bundleLoaderParams,
+        resolver,
         new SourcePathResolver(resolver),
         bundleLoaderTarget,
         Linker.LinkType.EXECUTABLE,
@@ -576,6 +589,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink bundleRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         bundleParams,
+        resolver,
         new SourcePathResolver(resolver),
         bundleTarget,
         Linker.LinkType.MACH_O_BUNDLE,

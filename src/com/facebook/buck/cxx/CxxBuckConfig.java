@@ -22,6 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
@@ -153,34 +154,6 @@ public class CxxBuckConfig {
   }
 
   /*
-   * Constructs the appropriate Linker for the specified platform.
-   */
-  public Optional<Linker> getLinker(Tool ld) {
-    Optional<Platform> linkerPlatform = delegate
-        .getEnum(cxxSection, "linker_platform", Platform.class);
-    if (!linkerPlatform.isPresent()) {
-      return Optional.absent();
-    }
-    Linker result;
-    switch (linkerPlatform.get()) {
-      case MACOS:
-        result = new DarwinLinker(ld);
-        break;
-      case LINUX:
-      case WINDOWS:
-        result = new GnuLinker(ld);
-        break;
-      case UNKNOWN:
-        result = new UnknownLinker(ld);
-        break;
-      default:
-        throw new RuntimeException(
-            "Invalid platform for linker. Must be one of {MACOS, LINUX, WINDOWS, UNKNOWN}");
-    }
-    return Optional.of(result);
-  }
-
-  /*
    * Constructs the appropriate Archiver for the specified platform.
    */
   public Optional<Archiver> getArchiver(Tool ar) {
@@ -290,6 +263,22 @@ public class CxxBuckConfig {
       String field,
       CxxToolProvider.Type defaultType) {
     return getCompilerProvider(flavor, field, Optional.of(defaultType));
+  }
+
+  public Optional<LinkerProvider> getLinkerProvider(
+      Flavor flavor,
+      String field,
+      LinkerProvider.Type defaultType) {
+    Optional<ToolProvider> toolProvider =
+        delegate.getToolProvider(cxxSection, flavor.toString() + '_' + field)
+            .or(delegate.getToolProvider(cxxSection, field));
+    if (!toolProvider.isPresent()) {
+      return Optional.absent();
+    }
+    Optional<LinkerProvider.Type> type =
+        delegate.getEnum(cxxSection, "linker_platform", LinkerProvider.Type.class);
+    return Optional.<LinkerProvider>of(
+        new DefaultLinkerProvider(type.or(defaultType), toolProvider.get()));
   }
 
   @Value.Immutable

@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
@@ -26,6 +27,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -67,7 +69,10 @@ public class CxxPlatformsTest {
           .setCpp(preprocessor)
           .setCxx(compiler)
           .setCxxpp(preprocessor)
-          .setLd(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
+          .setLd(
+              new DefaultLinkerProvider(
+                  LinkerProvider.Type.GNU,
+                  new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
           .setStrip(new HashedFileTool(Paths.get("borland")))
           .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
@@ -134,11 +139,11 @@ public class CxxPlatformsTest {
         not(hasItem("-Wtest")));
   }
 
-  public Linker getPlatformLinker(Platform linkerPlatform) {
+  public LinkerProvider getPlatformLinker(LinkerProvider.Type linkerType) {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of(
             "ld", Paths.get("fake_path").toString(),
-            "linker_platform", linkerPlatform.name()));
+            "linker_platform", linkerType.name()));
 
     CxxBuckConfig buckConfig = new CxxBuckConfig(
         FakeBuckConfig.builder()
@@ -153,13 +158,13 @@ public class CxxPlatformsTest {
   @Test
   public void linkerOverriddenByConfig() {
     assertThat("MACOS linker was not a DarwinLinker instance",
-        getPlatformLinker(Platform.MACOS), instanceOf(DarwinLinker.class));
+        getPlatformLinker(LinkerProvider.Type.DARWIN).getType(), is(LinkerProvider.Type.DARWIN));
     assertThat("LINUX linker was not a GnuLinker instance",
-        getPlatformLinker(Platform.LINUX), instanceOf(GnuLinker.class));
+        getPlatformLinker(LinkerProvider.Type.GNU).getType(), is(LinkerProvider.Type.GNU));
     assertThat("WINDOWS linker was not a GnuLinker instance",
-        getPlatformLinker(Platform.WINDOWS), instanceOf(GnuLinker.class));
+        getPlatformLinker(LinkerProvider.Type.WINDOWS).getType(), is(LinkerProvider.Type.WINDOWS));
     assertThat("UNKNOWN linker was not a UnknownLinker instance",
-        getPlatformLinker(Platform.UNKNOWN), instanceOf(UnknownLinker.class));
+        getPlatformLinker(LinkerProvider.Type.UNKNOWN).getType(), is(LinkerProvider.Type.UNKNOWN));
   }
 
   @Test

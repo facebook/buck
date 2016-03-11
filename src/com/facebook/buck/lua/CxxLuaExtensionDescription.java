@@ -196,6 +196,7 @@ public class CxxLuaExtensionDescription implements
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        ruleResolver,
         pathResolver,
         getExtensionTarget(
             params.getBuildTarget(),

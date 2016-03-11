@@ -20,9 +20,11 @@ import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.cxx.VersionedTool;
@@ -406,14 +408,17 @@ public class NdkCxxPlatforms {
         .setCxxpp(cxxpp)
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration, host, cxxRuntime))
         .setLd(
-            getCcLinkTool(
-                ndkRoot,
-                targetConfiguration,
-                host,
-                cxxRuntime,
-                compilerType.getCxx(),
-                version,
-                executableFinder))
+            new DefaultLinkerProvider(
+                LinkerProvider.Type.GNU,
+                new ConstantToolProvider(
+                    getCcLinkTool(
+                        ndkRoot,
+                        targetConfiguration,
+                        host,
+                        cxxRuntime,
+                        compilerType.getCxx(),
+                        version,
+                        executableFinder))))
         .addAllLdflags(
             targetConfiguration.getLinkerFlags(compilerType))
         // Default linker flags added by the NDK

@@ -247,6 +247,7 @@ public class LuaBinaryDescription implements
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxPlatform,
             baseParams,
+            ruleResolver,
             pathResolver,
             target,
             Linker.LinkType.EXECUTABLE,
@@ -265,7 +266,7 @@ public class LuaBinaryDescription implements
                                 "-rpath",
                                 String.format(
                                     "%s/%s",
-                                    cxxPlatform.getLd().origin(),
+                                    cxxPlatform.getLd().resolve(ruleResolver).origin(),
                                     relativeNativeLibsDir.get().toString()))) :
                         ImmutableList.<com.facebook.buck.rules.args.Arg>of())
                 .addAllArgs(SourcePathArg.from(pathResolver, objects.values()))

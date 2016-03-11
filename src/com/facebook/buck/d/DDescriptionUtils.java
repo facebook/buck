@@ -143,6 +143,7 @@ abstract class DDescriptionUtils {
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        buildRuleResolver,
         sourcePathResolver,
         buildTarget,
         Linker.LinkType.EXECUTABLE,

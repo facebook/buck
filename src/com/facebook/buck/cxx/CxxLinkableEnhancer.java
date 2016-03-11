@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -62,6 +63,7 @@ public class CxxLinkableEnhancer {
   public static CxxLink createCxxLinkableBuildRule(
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
       BuildTarget target,
       Path output,
@@ -69,7 +71,7 @@ public class CxxLinkableEnhancer {
       Linker.LinkableDepType depType,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
 
-    final Linker linker = cxxPlatform.getLd();
+    final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -124,6 +126,7 @@ public class CxxLinkableEnhancer {
   public static CxxLink createCxxLinkableBuildRule(
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
       BuildTarget target,
       Linker.LinkType linkType,
@@ -173,7 +176,8 @@ public class CxxLinkableEnhancer {
       }
     }
     if (soname.isPresent()) {
-      argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().soname(soname.get())));
+      argsBuilder.addAll(
+          StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).soname(soname.get())));
     }
 
     // Add all arguments from our dependencies.
@@ -198,6 +202,7 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        ruleResolver,
         resolver,
         target,
         output,
@@ -308,6 +313,7 @@ public class CxxLinkableEnhancer {
   public static CxxLink createCxxLinkableSharedBuildRule(
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
       BuildTarget target,
       Path output,
@@ -316,13 +322,15 @@ public class CxxLinkableEnhancer {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
     linkArgsBuilder.add(new StringArg("-shared"));
     if (soname.isPresent()) {
-      linkArgsBuilder.addAll(StringArg.from(cxxPlatform.getLd().soname(soname.get())));
+      linkArgsBuilder.addAll(
+          StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).soname(soname.get())));
     }
     linkArgsBuilder.addAll(args);
     ImmutableList<Arg> linkArgs = linkArgsBuilder.build();
     return createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        ruleResolver,
         resolver,
         target,
         output,

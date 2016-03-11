@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.google.common.base.Optional;
 
@@ -62,7 +63,10 @@ public class CxxPlatformUtils {
               new PreprocessorProvider(
                   Paths.get("tool"),
                   Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
+          .setLd(
+              new DefaultLinkerProvider(
+                  LinkerProvider.Type.GNU,
+                  new ConstantToolProvider(new HashedFileTool(Paths.get("tool")))))
           .setStrip(new HashedFileTool(Paths.get("tool")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))
           .setRanlib(new HashedFileTool(Paths.get("ranlib")))

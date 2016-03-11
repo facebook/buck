@@ -196,7 +196,7 @@ public class CxxLibrary
         Arg library =
             new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
         if (linkWhole) {
-          Linker linker = cxxPlatform.getLd();
+          Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
           linkerArgsBuilder.addAll(linker.linkWhole(library));
         } else {
           linkerArgsBuilder.add(library);

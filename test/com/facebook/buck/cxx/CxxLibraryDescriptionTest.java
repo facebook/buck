@@ -373,7 +373,7 @@ public class CxxLibraryDescriptionTest {
             resolver,
             filesystem,
             targetGraph);
-    Linker linker = cxxPlatform.getLd();
+    Linker linker = cxxPlatform.getLd().resolve(resolver);
     ImmutableList<String> sonameArgs = ImmutableList.copyOf(linker.soname(soname));
     assertThat(
         Arg.stringify(rule.getArgs()),
@@ -388,14 +388,6 @@ public class CxxLibraryDescriptionTest {
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
 
-    // Lookup the link whole flags.
-    Linker linker = cxxPlatform.getLd();
-    ImmutableList<String> linkWholeFlags =
-        FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
-            .transformAndConcat(Arg.stringListFunction())
-            .filter(Predicates.not(Predicates.equalTo("sentinel")))
-            .toList();
-
     // First, create a cxx library without using link whole.
     CxxLibraryBuilder normalBuilder = new CxxLibraryBuilder(target);
     TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
@@ -409,6 +401,14 @@ public class CxxLibraryDescriptionTest {
             resolver,
             filesystem,
             normalGraph);
+
+    // Lookup the link whole flags.
+    Linker linker = cxxPlatform.getLd().resolve(resolver);
+    ImmutableList<String> linkWholeFlags =
+        FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
+            .transformAndConcat(Arg.stringListFunction())
+            .filter(Predicates.not(Predicates.equalTo("sentinel")))
+            .toList();
 
     // Verify that the linker args contains the link whole flags.
     NativeLinkableInput input =

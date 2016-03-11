@@ -203,7 +203,9 @@ public class CxxPythonExtensionDescription implements
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
     argsBuilder.addAll(
         StringArg.from(
-            Linkers.iXlinker("-rpath", String.format("%s/", cxxPlatform.getLd().libOrigin()))));
+            Linkers.iXlinker(
+                "-rpath",
+                String.format("%s/", cxxPlatform.getLd().resolve(ruleResolver).libOrigin()))));
 
     // Add object files into the args.
     argsBuilder.addAll(SourcePathArg.from(pathResolver, picObjects.values()));
@@ -253,6 +255,7 @@ public class CxxPythonExtensionDescription implements
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        ruleResolver,
         pathResolver,
         getExtensionTarget(
             params.getBuildTarget(),

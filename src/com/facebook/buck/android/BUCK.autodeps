@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 4e488748701c20b80615ab7227eb42f13b9bc0c5 #@#
+#@# GENERATED FILE: DO NOT MODIFY 73b66465247797cb5e12ac66bfbb1d70aa3d380b #@#
 {
   "exceptions" : [
     "//src/com/facebook/buck/util:exceptions",
@@ -100,6 +100,7 @@
     "//src/com/facebook/buck/android:split_dex",
     "//src/com/facebook/buck/android:utils",
     "//src/com/facebook/buck/cxx:platform",
+    "//src/com/facebook/buck/cxx:rules",
     "//src/com/facebook/buck/dalvik:dalvik",
     "//src/com/facebook/buck/dalvik/firstorder:firstorder",
     "//src/com/facebook/buck/event:event",

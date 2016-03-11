@@ -21,6 +21,7 @@ PLATFORM_SRCS = [
   'GnuArchiver.java',
   'GnuLinker.java',
   'Linker.java',
+  'LinkerProvider.java',
   'Linkers.java',
   'NativeLinkable.java',
   'NativeLinkables.java',

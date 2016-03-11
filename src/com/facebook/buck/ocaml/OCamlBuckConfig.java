@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
@@ -95,7 +95,7 @@ public class OCamlBuckConfig {
     return cxxPlatform.getLdflags();
   }
 
-  public Linker getLinker() {
+  public LinkerProvider getLinker() {
     return cxxPlatform.getLd();
   }
 

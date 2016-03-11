@@ -68,7 +68,7 @@ public class CxxPlatforms {
       CompilerProvider cxx,
       PreprocessorProvider cpp,
       PreprocessorProvider cxxpp,
-      Linker ld,
+      LinkerProvider ld,
       Iterable<String> ldFlags,
       Tool strip,
       Archiver ar,
@@ -99,7 +99,7 @@ public class CxxPlatforms {
         .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(cxxpp))
         .setCuda(config.getCompilerProvider(flavor, "cuda"))
         .setCudapp(config.getPreprocessorProvider(flavor, "cudapp"))
-        .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
+        .setLd(config.getLinkerProvider(flavor, "ld", ld.getType()).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
         .setRanlib(getTool(flavor, "ranlib", config).or(ranlib))
@@ -144,8 +144,7 @@ public class CxxPlatforms {
         .setCuda(config.getCompilerProvider(flavor, "cuda").or(defaultPlatform.getCuda()))
         .setCudapp(config.getPreprocessorProvider(flavor, "cudapp").or(defaultPlatform.getCudapp()))
         .setLd(
-            getTool(flavor, "ld", config)
-                .transform(getLinker(defaultPlatform.getLd().getClass(), config))
+            config.getLinkerProvider(flavor, "ld", defaultPlatform.getLd().getType())
                 .or(defaultPlatform.getLd()))
         .setAr(getTool(flavor, "ar", config)
                 .transform(getArchiver(defaultPlatform.getAr().getClass(), config))
@@ -174,20 +173,6 @@ public class CxxPlatforms {
         try {
           return config.getArchiver(input)
               .or(arClass.getConstructor(Tool.class).newInstance(input));
-        } catch (ReflectiveOperationException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
-  }
-
-  private static Function<Tool, Linker> getLinker(final Class<? extends Linker> ldClass,
-      final CxxBuckConfig config) {
-    return new Function<Tool, Linker>() {
-      @Override
-      public Linker apply(Tool input) {
-        try {
-          return config.getLinker(input).or(ldClass.getConstructor(Tool.class).newInstance(input));
         } catch (ReflectiveOperationException e) {
           throw new RuntimeException(e);
         }
@@ -283,6 +268,7 @@ public class CxxPlatforms {
     if (cxxPlatform.getCuda().isPresent()) {
       deps.addAll(cxxPlatform.getCuda().get().getParseTimeDeps());
     }
+    deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
     return deps.build();
   }
 

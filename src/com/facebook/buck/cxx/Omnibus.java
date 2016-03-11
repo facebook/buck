@@ -234,6 +234,7 @@ public class Omnibus {
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
             cxxPlatform,
             params,
+            ruleResolver,
             pathResolver,
             dummyOmnibusTarget,
             BuildTargets.getGenPath(dummyOmnibusTarget, "%s").resolve(omnibusSoname),
@@ -262,10 +263,12 @@ public class Omnibus {
 
     // Since the dummy omnibus library doesn't actually contain any symbols, make sure the linker
     // won't drop its runtime reference to it.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().getNoAsNeededSharedLibsFlags()));
+    argsBuilder.addAll(
+        StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).getNoAsNeededSharedLibsFlags()));
 
     // Since we're linking against a dummy libomnibus, ignore undefined symbols.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getLd().getIgnoreUndefinedSymbolsFlags()));
+    argsBuilder.addAll(
+        StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).getIgnoreUndefinedSymbolsFlags()));
 
     // Add the args for the root link target first.
     NativeLinkableInput input = root.getSharedNativeLinkTargetInput(cxxPlatform);
@@ -330,6 +333,7 @@ public class Omnibus {
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
             cxxPlatform,
             params,
+            ruleResolver,
             pathResolver,
             rootTarget,
             BuildTargets.getGenPath(rootTarget, "%s")
@@ -361,7 +365,7 @@ public class Omnibus {
                     .addFlavors(ImmutableFlavor.of("omnibus-undefined-symbols-file"))
                     .build(),
                 linkerInputs);
-    return cxxPlatform.getLd()
+    return cxxPlatform.getLd().resolve(ruleResolver)
         .createUndefinedSymbolsLinkerArgs(
             params,
             ruleResolver,
@@ -463,6 +467,7 @@ public class Omnibus {
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
             cxxPlatform,
             params,
+            ruleResolver,
             pathResolver,
             omnibusTarget,
             BuildTargets.getGenPath(omnibusTarget, "%s").resolve(omnibusSoname),

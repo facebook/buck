@@ -309,7 +309,7 @@ public class PrebuiltCxxLibrary
                 getResolver(),
                 staticLibraryPath);
         if (linkWhole) {
-          Linker linker = cxxPlatform.getLd();
+          Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
           linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary));
         } else {
           linkerArgsBuilder.add(staticLibrary);
@@ -388,7 +388,7 @@ public class PrebuiltCxxLibrary
             return NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from(exportedLinkerFlags.apply(cxxPlatform)))
                 .addAllArgs(
-                    cxxPlatform.getLd().linkWhole(
+                    cxxPlatform.getLd().resolve(ruleResolver).linkWhole(
                         new SourcePathArg(
                             getResolver(),
                             getStaticPicLibrary(cxxPlatform).get())))

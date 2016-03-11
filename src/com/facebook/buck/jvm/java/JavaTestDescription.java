@@ -99,6 +99,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
         params,
         args.useCxxLibraries,
+        resolver,
         pathResolver,
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
@@ -212,6 +213,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public CxxLibraryEnhancement(
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
+        BuildRuleResolver resolver,
         SourcePathResolver pathResolver,
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       if (useCxxLibraries.or(false)) {
@@ -226,8 +228,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             // the test results cache.
             .addAll(pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
             .build());
-        nativeLibsEnvironment = ImmutableMap.of(
-            cxxPlatform.getLd().searchPathEnvVar(), nativeLibsSymlinkTree.getRoot().toString());
+        nativeLibsEnvironment =
+            ImmutableMap.of(
+                cxxPlatform.getLd().resolve(resolver).searchPathEnvVar(),
+                nativeLibsSymlinkTree.getRoot().toString());
       } else {
         updatedParams = params;
         nativeLibsEnvironment = ImmutableMap.of();

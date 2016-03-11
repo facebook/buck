@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -59,7 +60,7 @@ public class DefaultCxxPlatforms {
     String sharedLibraryVersionedExtensionFormat;
     Path defaultCFrontend;
     Path defaultCxxFrontend;
-    Linker linker;
+    LinkerProvider.Type linkerType;
     Archiver archiver;
     switch (platform) {
       case LINUX:
@@ -67,7 +68,7 @@ public class DefaultCxxPlatforms {
         sharedLibraryVersionedExtensionFormat = "so.%s";
         defaultCFrontend = DEFAULT_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
-        linker = new GnuLinker(new HashedFileTool(defaultCxxFrontend));
+        linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       case MACOS:
@@ -75,7 +76,7 @@ public class DefaultCxxPlatforms {
         sharedLibraryVersionedExtensionFormat = ".%s.dylib";
         defaultCFrontend = DEFAULT_OSX_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_OSX_CXX_FRONTEND;
-        linker = new DarwinLinker(new HashedFileTool(defaultCxxFrontend));
+        linkerType = LinkerProvider.Type.DARWIN;
         archiver = new BsdArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       case WINDOWS:
@@ -83,7 +84,7 @@ public class DefaultCxxPlatforms {
         sharedLibraryVersionedExtensionFormat = "dll";
         defaultCFrontend = DEFAULT_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
-        linker = new GnuLinker(new HashedFileTool(defaultCxxFrontend));
+        linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       //$CASES-OMITTED$
@@ -129,7 +130,9 @@ public class DefaultCxxPlatforms {
         cxx,
         cpp,
         cxxpp,
-        linker,
+        new DefaultLinkerProvider(
+            linkerType,
+            new ConstantToolProvider(new HashedFileTool(defaultCxxFrontend))),
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_STRIP),
         archiver,

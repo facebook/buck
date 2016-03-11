@@ -688,7 +688,7 @@ public class CxxDescriptionEnhancer {
                   "-rpath",
                   String.format(
                       "%s/%s",
-                      cxxPlatform.getLd().origin(),
+                      cxxPlatform.getLd().resolve(resolver).origin(),
                       absLinkOut.getParent().relativize(sharedLibraries.getRoot()).toString()))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
@@ -706,6 +706,7 @@ public class CxxDescriptionEnhancer {
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxPlatform,
             params,
+            resolver,
             sourcePathResolver,
             createCxxLinkTarget(params.getBuildTarget()),
             Linker.LinkType.EXECUTABLE,

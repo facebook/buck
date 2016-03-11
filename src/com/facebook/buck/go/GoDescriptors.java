@@ -185,7 +185,7 @@ abstract class GoDescriptors {
 
   static GoBinary createGoBinaryRule(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
@@ -227,12 +227,13 @@ abstract class GoDescriptors {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(symlinkTree, library)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        platform.getCxxPlatform().transform(new Function<CxxPlatform, Linker>() {
-          @Override
-          public Linker apply(CxxPlatform input) {
-            return input.getLd();
-          }
-        }),
+        platform.getCxxPlatform().transform(
+            new Function<CxxPlatform, Linker>() {
+              @Override
+              public Linker apply(CxxPlatform input) {
+                return input.getLd().resolve(resolver);
+              }
+            }),
         symlinkTree,
         library,
         goBuckConfig.getLinker(),

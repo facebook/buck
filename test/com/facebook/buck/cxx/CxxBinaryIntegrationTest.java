@@ -1315,6 +1315,15 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void shBinaryAsLinker() throws IOException {
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "step_test", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("-c", "cxx.ld=//:cxx", "//:binary_with_unused_header").assertSuccess();
+  }
+
+  @Test
   public void buildBinaryUsingStaticPicLinkStyle() throws IOException {
     assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

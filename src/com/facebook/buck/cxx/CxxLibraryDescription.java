@@ -298,6 +298,7 @@ public class CxxLibraryDescription implements
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        ruleResolver,
         pathResolver,
         sharedTarget,
         linkType,

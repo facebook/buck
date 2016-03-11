@@ -83,16 +83,16 @@ public class CxxGtestTestTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     CxxGtestTest test = new CxxGtestTest(
         new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build(),
         pathResolver,
         new CxxLink(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
             pathResolver,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd(),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
             Paths.get("output"),
             ImmutableList.<Arg>of()),
         new CommandTool.Builder()
