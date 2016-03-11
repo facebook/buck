@@ -49,7 +49,7 @@ public class QueryTargetAccessor {
     try {
       final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
       Field field = node.getConstructorArg().getClass().getField(attribute);
-      ParamInfo<T> info = new ParamInfo<>(typeCoercerFactory, field);
+      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
       info.traverse(
           new ParamInfo.Traversal() {
             @Override
@@ -83,7 +83,7 @@ public class QueryTargetAccessor {
     try {
       final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
       Field field = node.getConstructorArg().getClass().getField(attribute);
-      ParamInfo<T> info = new ParamInfo<>(typeCoercerFactory, field);
+      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
       info.traverse(
           new ParamInfo.Traversal() {
             @Override

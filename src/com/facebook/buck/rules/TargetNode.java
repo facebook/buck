@@ -81,7 +81,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
-      ParamInfo<T> info = new ParamInfo<>(typeCoercerFactory, field);
+      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
       if (info.isDep() && info.isInput() &&
           info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForConstructorArg(extraDeps, paths, info, constructorArg);
@@ -198,7 +198,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   private void detectBuildTargetsAndPathsForConstructorArg(
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
-      ParamInfo<T> info,
+      ParamInfo info,
       T constructorArg) throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 

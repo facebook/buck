@@ -47,7 +47,7 @@ import java.util.concurrent.ExecutionException;
 public class ConstructorArgMarshaller {
 
   private final TypeCoercerFactory typeCoercerFactory;
-  private final Cache<Class<?>, ImmutableSet<ParamInfo<?>>> coercedTypes;
+  private final Cache<Class<?>, ImmutableSet<ParamInfo>> coercedTypes;
 
   /**
    * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
@@ -90,7 +90,7 @@ public class ConstructorArgMarshaller {
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
       Map<String, ?> instance) throws ConstructorArgMarshalException, NoSuchBuildTargetException {
-    for (ParamInfo<?> info : getAllParamInfo(dto)) {
+    for (ParamInfo info : getAllParamInfo(dto)) {
       try {
         info.setFromParams(cellRoots, filesystem, params, dto, instance);
       } catch (ParamInfoException e) {
@@ -114,7 +114,7 @@ public class ConstructorArgMarshaller {
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto) throws ConstructorArgMarshalException {
-    for (ParamInfo<?> info : getAllParamInfo(dto)) {
+    for (ParamInfo info : getAllParamInfo(dto)) {
       if (info.isOptional()) {
         try {
           info.set(cellRoots, filesystem, params.target.getBasePath(), dto, null);
@@ -125,9 +125,8 @@ public class ConstructorArgMarshaller {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private <T> void populateDeclaredDeps(
-      ParamInfo<T> paramInfo,
+  private void populateDeclaredDeps(
+      ParamInfo paramInfo,
       final ImmutableSet.Builder<BuildTarget> declaredDeps,
       Object dto) {
 
@@ -142,7 +141,7 @@ public class ConstructorArgMarshaller {
               declaredDeps.add((BuildTarget) object);
             }
           },
-          (T) dto);
+          dto);
 
     }
   }
@@ -166,19 +165,19 @@ public class ConstructorArgMarshaller {
     }
   }
 
-  ImmutableSet<ParamInfo<?>> getAllParamInfo(Object dto) {
+  ImmutableSet<ParamInfo> getAllParamInfo(Object dto) {
     final Class<?> argClass = dto.getClass();
     try {
-      return coercedTypes.get(argClass, new Callable<ImmutableSet<ParamInfo<?>>>() {
+      return coercedTypes.get(argClass, new Callable<ImmutableSet<ParamInfo>>() {
             @Override
-            public ImmutableSet<ParamInfo<?>> call() {
-              ImmutableSet.Builder<ParamInfo<?>> allInfo = ImmutableSet.builder();
+            public ImmutableSet<ParamInfo> call() {
+              ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
 
               for (Field field : argClass.getFields()) {
                 if (Modifier.isFinal(field.getModifiers())) {
                   continue;
                 }
-                allInfo.add(new ParamInfo<>(typeCoercerFactory, field));
+                allInfo.add(new ParamInfo(typeCoercerFactory, field));
               }
 
               return allInfo.build();

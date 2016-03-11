@@ -33,10 +33,8 @@ import javax.annotation.Nullable;
 
 /**
  * Represents a single field that can be represented in buck build files.
- *
- * @param <T> the class that this ParamInfo operates on.
  */
-public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
+public class ParamInfo implements Comparable<ParamInfo> {
 
   private final TypeCoercer<?> typeCoercer;
 
@@ -98,12 +96,12 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
    *
    * @see TypeCoercer#traverse(Object, TypeCoercer.Traversal)
    */
-  public void traverse(Traversal traversal, T dto) {
+  public void traverse(Traversal traversal, Object dto) {
     traverseHelper(typeCoercer, traversal, dto);
   }
 
   @SuppressWarnings("unchecked")
-  private <U> void traverseHelper(TypeCoercer<U> typeCoercer, Traversal traversal, T dto) {
+  private <U> void traverseHelper(TypeCoercer<U> typeCoercer, Traversal traversal, Object dto) {
     U object;
     try {
       if (isOptional) {
@@ -192,7 +190,7 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
    * Only valid when comparing {@link ParamInfo} instances from the same description.
    */
   @Override
-  public int compareTo(ParamInfo<T> that) {
+  public int compareTo(ParamInfo that) {
     if (this == that) {
       return 0;
     }
@@ -211,7 +209,7 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
       return false;
     }
 
-    ParamInfo<?> that = (ParamInfo<?>) obj;
+    ParamInfo that = (ParamInfo) obj;
     return name.equals(that.getName());
   }
 
