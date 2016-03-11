@@ -719,7 +719,6 @@ public class TargetsCommand extends AbstractCommand {
       throw new HumanReadableException("Must specify at least one build target.");
     }
 
-    Map<String, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
     ImmutableSet<BuildTarget> matchingBuildTargets;
     TargetGraph targetGraph;
       Pair<ImmutableSet<BuildTarget>, TargetGraph> res = params.getParser()
@@ -734,14 +733,15 @@ public class TargetsCommand extends AbstractCommand {
       matchingBuildTargets = res.getFirst();
       targetGraph = res.getSecond();
 
-      if (isShowTargetHash()) {
-        computeShowTargetHash(
-            params,
-            executor,
-            matchingBuildTargets,
-            targetGraph,
-            showOptionBuilderMap);
-      }
+    Map<String, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
+    if (isShowTargetHash()) {
+      computeShowTargetHash(
+          params,
+          executor,
+          matchingBuildTargets,
+          targetGraph,
+          showOptionBuilderMap);
+    }
 
     // We only need the action graph if we're showing the output or the keys, and the
     // RuleKeyBuilderFactory if we're showing the keys.
@@ -799,14 +799,12 @@ public class TargetsCommand extends AbstractCommand {
     return Optional.fromNullable(outputPath);
   }
 
-  private void computeShowTargetHash(
+  private Pair<Iterable<BuildTarget>, TargetGraph> computeTargetsAndGraphToShowTargetHash(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       ImmutableSet<BuildTarget> matchingBuildTargets,
-      TargetGraph targetGraph,
-      Map<String, ShowOptions.Builder> showRulesResult)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    LOG.debug("Getting target hash for %s", matchingBuildTargets);
+      TargetGraph targetGraph
+  ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     Iterable<BuildTarget> matchingBuildTargetsWithTests;
     final TargetGraph targetGraphWithTests;
@@ -831,23 +829,43 @@ public class TargetsCommand extends AbstractCommand {
       matchingBuildTargetsWithTests = matchingBuildTargets;
       targetGraphWithTests = targetGraph;
     }
+    return new Pair<>(matchingBuildTargetsWithTests, targetGraphWithTests);
+  }
 
+  private FileHashLoader createOrGetFileHashLoader(CommandRunnerParams params) throws IOException {
     TargetHashFileMode targetHashFileMode = getTargetHashFileMode();
-    FileHashLoader fileHashLoader = null;
     switch (targetHashFileMode) {
       case PATHS_AND_CONTENTS:
-        fileHashLoader = params.getFileHashCache();
-        break;
+        return params.getFileHashCache();
       case PATHS_ONLY:
-        fileHashLoader = new FilePathHashLoader(
+        return new FilePathHashLoader(
             params.getCell().getRoot(),
             getTargetHashModifiedPaths());
-        break;
     }
-    if (fileHashLoader == null) {
-      throw new IllegalStateException(
-          "Invalid value for target hash file mode: " + targetHashFileMode);
-    }
+    throw new IllegalStateException(
+        "Invalid value for target hash file mode: " + targetHashFileMode);
+  }
+
+  private void computeShowTargetHash(
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      ImmutableSet<BuildTarget> matchingBuildTargets,
+      TargetGraph targetGraph,
+      Map<String, ShowOptions.Builder> showRulesResult)
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    LOG.debug("Getting target hash for %s", matchingBuildTargets);
+
+    Pair<Iterable<BuildTarget>, TargetGraph> targetsAndGraph =
+        computeTargetsAndGraphToShowTargetHash(
+            params,
+            executor,
+            matchingBuildTargets,
+            targetGraph);
+
+    Iterable<BuildTarget> matchingBuildTargetsWithTests = targetsAndGraph.getFirst();
+    TargetGraph targetGraphWithTests = targetsAndGraph.getSecond();
+
+    FileHashLoader fileHashLoader = createOrGetFileHashLoader(params);
 
     // Hash each target's rule description and contents of any files.
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
@@ -861,42 +879,49 @@ public class TargetsCommand extends AbstractCommand {
     // we can re-walk the graph for each target passed in to the command,
     // hashing the target, its deps, the tests, and their deps.
     for (BuildTarget target : matchingBuildTargets) {
-      TargetNode<?> targetNode = targetGraphWithTests.get(target);
-      ImmutableSet<TargetNode<?>> dependencyClosure =
-          getDependencyClosure(targetGraphWithTests, targetNode);
-
-      Hasher hasher = Hashing.sha1().newHasher();
-      ImmutableSortedSet.Builder<TargetNode<?>> nodesWithDepsAndTests =
-          ImmutableSortedSet.naturalOrder();
-      // Add the target and its deps.
-      nodesWithDepsAndTests.addAll(dependencyClosure);
-
-      if (isDetectTestChanges()) {
-        // Add the tests and their deps.
-        nodesWithDepsAndTests.addAll(FluentIterable
-                .from(dependencyClosure)
-                .transformAndConcat(
-                    new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
-                      @Override
-                      public Iterable<TargetNode<?>> apply(TargetNode<?> node) {
-                        return targetGraphWithTests.getAll(
-                            TargetNodes.getTestTargetsForNode(node));
-                      }
-                    }));
-      }
-
-      LOG.debug("Hashing target %s with dependent nodes %s", target, nodesWithDepsAndTests.build());
-      for (TargetNode<?> nodeToHash : nodesWithDepsAndTests.build()) {
-        HashCode dependencyHash = buildTargetHashes.get(
-            nodeToHash.getBuildTarget());
-        Preconditions.checkNotNull(dependencyHash, "Couldn't get hash for node: %s", nodeToHash);
-        hasher.putBytes(dependencyHash.asBytes());
-      }
-      ShowOptions.Builder showOptionsBuilder = getShowOptionBuilder(showRulesResult, target);
-      String hash = hasher.hash().toString();
-      showOptionsBuilder.setTargetHash(hash);
-
+      processTargetHash(targetGraphWithTests, target, buildTargetHashes, showRulesResult);
     }
+  }
+
+  private void processTargetHash(
+      final TargetGraph targetGraphWithTests,
+      BuildTarget target,
+      ImmutableMap<BuildTarget, HashCode> buildTargetHashes,
+      Map<String, ShowOptions.Builder> showRulesResult) {
+    TargetNode<?> targetNode = targetGraphWithTests.get(target);
+    ImmutableSet<TargetNode<?>> dependencyClosure =
+        getDependencyClosure(targetGraphWithTests, targetNode);
+
+    Hasher hasher = Hashing.sha1().newHasher();
+    ImmutableSortedSet.Builder<TargetNode<?>> nodesWithDepsAndTests =
+        ImmutableSortedSet.naturalOrder();
+    // Add the target and its deps.
+    nodesWithDepsAndTests.addAll(dependencyClosure);
+
+    if (isDetectTestChanges()) {
+      // Add the tests and their deps.
+      nodesWithDepsAndTests.addAll(FluentIterable
+          .from(dependencyClosure)
+          .transformAndConcat(
+              new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
+                @Override
+                public Iterable<TargetNode<?>> apply(TargetNode<?> node) {
+                  return targetGraphWithTests.getAll(
+                      TargetNodes.getTestTargetsForNode(node));
+                }
+              }));
+    }
+
+    LOG.debug("Hashing target %s with dependent nodes %s", target, nodesWithDepsAndTests.build());
+    for (TargetNode<?> nodeToHash : nodesWithDepsAndTests.build()) {
+      HashCode dependencyHash = buildTargetHashes.get(
+          nodeToHash.getBuildTarget());
+      Preconditions.checkNotNull(dependencyHash, "Couldn't get hash for node: %s", nodeToHash);
+      hasher.putBytes(dependencyHash.asBytes());
+    }
+    ShowOptions.Builder showOptionsBuilder = getShowOptionBuilder(showRulesResult, target);
+    String hash = hasher.hash().toString();
+    showOptionsBuilder.setTargetHash(hash);
   }
 
   private ImmutableSet<TargetNode<?>> getDependencyClosure(
