@@ -246,7 +246,8 @@ abstract class AbstractCxxSourceRuleFactory {
                 getCxxPlatform().getDebugPathSanitizer(),
                 CxxSourceTypes.getCompiler(
                     getCxxPlatform(),
-                    CxxSourceTypes.getPreprocessorOutputType(source.getType())),
+                    CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+                    .resolve(getResolver()),
                 computeCompilerFlags(source.getType(), source.getFlags())),
             getPreprocessOutputPath(target, source.getType(), name),
             source.getPath(),
@@ -363,7 +364,9 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name);
-    Compiler compiler = CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType());
+    Compiler compiler =
+        CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
+            .resolve(getResolver());
 
     // Build up the list of compiler flags.
     CxxToolFlags flags = CxxToolFlags.explicitBuilder()
@@ -506,7 +509,8 @@ abstract class AbstractCxxSourceRuleFactory {
     Compiler compiler =
         CxxSourceTypes.getCompiler(
             getCxxPlatform(),
-            CxxSourceTypes.getPreprocessorOutputType(source.getType()));
+            CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+                .resolve(getResolver());
 
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
 
@@ -712,7 +716,8 @@ abstract class AbstractCxxSourceRuleFactory {
           getPathResolver(),
           getCxxPlatform().getDebugPathSanitizer(),
           getParams().getProjectFilesystem().getRootPath(),
-          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType()),
+          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
+              .resolve(getResolver()),
           PreprocessorFlags.of(
               getPrefixHeader(),
               computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),

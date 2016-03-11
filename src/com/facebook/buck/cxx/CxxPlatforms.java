@@ -17,36 +17,22 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class CxxPlatforms {
 
@@ -62,46 +48,6 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
-  private static final Pattern CLANG_VERSION_PATTERN =
-      Pattern.compile(
-          "\\s*(" + // Ignore leading whitespace.
-              "clang version [.0-9]*(\\s*\\(.*\\))?" + // Format used by opensource Clang.
-              "|" +
-              "Apple LLVM version [.0-9]*\\s*\\(clang-[.0-9]*\\)" + // Format used by Apple's clang.
-              ")\\s*"); // Ignore trailing whitespace.
-
-  private static final Function<Tool, Preprocessor> GET_DEFAULT_PREPROCESSOR =
-      new Function<Tool, Preprocessor>() {
-        @Override
-        public Preprocessor apply(Tool input) {
-          return new DefaultPreprocessor(input);
-        }
-      };
-
-  private static final Function<Tool, Compiler> GET_DEFAULT_COMPILER =
-      new Function<Tool, Compiler>() {
-        @Override
-        public Compiler apply(Tool input) {
-          return new DefaultCompiler(input);
-        }
-      };
-
-  private static final Function<Path, Supplier<Compiler>> GET_COMPILER_SUPPLIER =
-      new Function<Path, Supplier<Compiler>>() {
-        @Override
-        public Supplier<Compiler> apply(Path input) {
-          return getCompilerSupplier(input);
-        }
-      };
-
-  private static final Function<Path, Supplier<Preprocessor>> GET_PREPROCESSOR_SUPPLIER =
-      new Function<Path, Supplier<Preprocessor>>() {
-        @Override
-        public Supplier<Preprocessor> apply(Path input) {
-          return getPreprocessorSupplier(input);
-        }
-      };
-
   @VisibleForTesting
   static final DebugPathSanitizer DEFAULT_DEBUG_PATH_SANITIZER =
       new DebugPathSanitizer(
@@ -110,19 +56,18 @@ public class CxxPlatforms {
           Paths.get("."),
           ImmutableBiMap.<Path, Path>of());
 
-
   // Utility class, do not instantiate.
   private CxxPlatforms() { }
 
   public static CxxPlatform build(
       Flavor flavor,
       CxxBuckConfig config,
-      Compiler as,
-      Preprocessor aspp,
-      Supplier<Compiler> ccSupplier,
-      Supplier<Compiler> cxxSupplier,
-      Supplier<Preprocessor> cppSupplier,
-      Supplier<Preprocessor> cxxppSupplier,
+      CompilerProvider as,
+      PreprocessorProvider aspp,
+      CompilerProvider cc,
+      CompilerProvider cxx,
+      PreprocessorProvider cpp,
+      PreprocessorProvider cxxpp,
       Linker ld,
       Iterable<String> ldFlags,
       Tool strip,
@@ -142,32 +87,18 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        .setAs(
-            getTool(flavor, "as", config)
-                .transform(GET_DEFAULT_COMPILER)
-                .or(as))
+        // Always use `DEFAULT` for the assemblers (unless an explicit override is set in the
+        // .buckconfig), as we pass special flags when we detect clang which causes unused flag
+        // warnings with assembling.
+        .setAs(config.getCompilerProvider(flavor, "as", CxxToolProvider.Type.DEFAULT).or(as))
         .setAspp(
-            getTool(flavor, "aspp", config)
-                .transform(GET_DEFAULT_PREPROCESSOR)
-                .or(aspp))
-        .setCcSupplier(
-            getToolPath(flavor, "cc", config)
-                .transform(GET_COMPILER_SUPPLIER)
-                .or(ccSupplier))
-        .setCxxSupplier(
-            getToolPath(flavor, "cxx", config)
-                .transform(GET_COMPILER_SUPPLIER)
-                .or(cxxSupplier))
-        .setCppSupplier(
-            getToolPath(flavor, "cpp", config)
-                .transform(GET_PREPROCESSOR_SUPPLIER)
-                .or(cppSupplier))
-        .setCxxppSupplier(
-            getToolPath(flavor, "cxxpp", config)
-                .transform(GET_PREPROCESSOR_SUPPLIER)
-                .or(cxxppSupplier))
-        .setCuda(getTool(flavor, "cuda", config).transform(GET_DEFAULT_COMPILER))
-        .setCudapp(getTool(flavor, "cudapp", config).transform(GET_DEFAULT_PREPROCESSOR))
+            config.getPreprocessorProvider(flavor, "aspp", CxxToolProvider.Type.DEFAULT).or(aspp))
+        .setCc(config.getCompilerProvider(flavor, "cc").or(cc))
+        .setCxx(config.getCompilerProvider(flavor, "cxx").or(cxx))
+        .setCpp(config.getPreprocessorProvider(flavor, "cpp").or(cpp))
+        .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(cxxpp))
+        .setCuda(config.getCompilerProvider(flavor, "cuda"))
+        .setCudapp(config.getPreprocessorProvider(flavor, "cudapp"))
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
@@ -201,37 +132,17 @@ public class CxxPlatforms {
     builder
         .setFlavor(flavor)
         .setAs(
-            getTool(flavor, "as", config)
-                .transform(GET_DEFAULT_COMPILER)
+            config.getCompilerProvider(flavor, "as", CxxToolProvider.Type.DEFAULT)
                 .or(defaultPlatform.getAs()))
         .setAspp(
-            getTool(flavor, "aspp", config)
-                .transform(GET_DEFAULT_PREPROCESSOR)
+            config.getPreprocessorProvider(flavor, "aspp", CxxToolProvider.Type.DEFAULT)
                 .or(defaultPlatform.getAspp()))
-        .setCcSupplier(
-            getToolPath(flavor, "cc", config)
-                .transform(GET_COMPILER_SUPPLIER)
-                .or(defaultPlatform.getCcSupplier()))
-        .setCxxSupplier(
-            getToolPath(flavor, "cxx", config)
-                .transform(GET_COMPILER_SUPPLIER)
-                .or(defaultPlatform.getCxxSupplier()))
-        .setCppSupplier(
-            getToolPath(flavor, "cpp", config)
-                .transform(GET_PREPROCESSOR_SUPPLIER)
-                .or(defaultPlatform.getCppSupplier()))
-        .setCxxppSupplier(
-            getToolPath(flavor, "cxxpp", config)
-                .transform(GET_PREPROCESSOR_SUPPLIER)
-                .or(defaultPlatform.getCxxppSupplier()))
-        .setCuda(
-            getTool(flavor, "cuda", config)
-                .transform(GET_DEFAULT_COMPILER)
-                .or(defaultPlatform.getCuda()))
-        .setCudapp(
-            getTool(flavor, "cudapp", config)
-                .transform(GET_DEFAULT_PREPROCESSOR)
-                .or(defaultPlatform.getCudapp()))
+        .setCc(config.getCompilerProvider(flavor, "cc").or(defaultPlatform.getCc()))
+        .setCxx(config.getCompilerProvider(flavor, "cxx").or(defaultPlatform.getCxx()))
+        .setCpp(config.getPreprocessorProvider(flavor, "cpp").or(defaultPlatform.getCpp()))
+        .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(defaultPlatform.getCxxpp()))
+        .setCuda(config.getCompilerProvider(flavor, "cuda").or(defaultPlatform.getCuda()))
+        .setCudapp(config.getPreprocessorProvider(flavor, "cudapp").or(defaultPlatform.getCudapp()))
         .setLd(
             getTool(flavor, "ld", config)
                 .transform(getLinker(defaultPlatform.getLd().getClass(), config))
@@ -253,85 +164,6 @@ public class CxxPlatforms {
     }
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
-  }
-
-  static Supplier<Compiler> getCompilerSupplier(final Path path) {
-    return Suppliers.memoize(
-        new Supplier<Compiler>() {
-          @Override
-          public Compiler get() {
-            Tool tool = new HashedFileTool(path);
-            if (isExecutableAtPathClang(path)) {
-              return new ClangCompiler(tool);
-            } else {
-              return new DefaultCompiler(tool);
-            }
-          }
-        });
-  }
-
-  static Supplier<Preprocessor> getPreprocessorSupplier(final Path path) {
-    return Suppliers.memoize(
-        new Supplier<Preprocessor>() {
-          @Override
-          public Preprocessor get() {
-            Tool tool = new HashedFileTool(path);
-            if (isExecutableAtPathClang(path)) {
-              return new ClangPreprocessor(tool);
-            } else {
-              return new DefaultPreprocessor(tool);
-            }
-          }
-        });
-  }
-
-  private static boolean isExecutableAtPathClang(Path path) {
-    ImmutableList<String> command = ImmutableList.of(path.toString(), "--version");
-    ProcessExecutorParams params = ProcessExecutorParams.builder().setCommand(command).build();
-    ProcessExecutor.Result result;
-    try (
-        PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
-        PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
-      ProcessExecutor processExecutor = new ProcessExecutor(
-          new Console(
-              Verbosity.SILENT,
-              stdout,
-              stderr,
-              Ansi.withoutTty()));
-      result = processExecutor.launchAndExecute(
-          params,
-          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-          Optional.<String>absent(),
-          Optional.<Long>absent(),
-          Optional.<Function<Process, Void>>absent());
-    } catch (InterruptedException | IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    if (result.getExitCode() != 0) {
-      String message = String.format(
-          "%s exited with unexpected return code %s",
-          command,
-          result.getExitCode());
-      LOG.error(message);
-      throw new RuntimeException(message);
-    }
-
-    String stdout = result.getStdout().or("");
-    Iterable<String> lines = Splitter.on(CharMatcher.anyOf("\r\n")).split(stdout);
-    LOG.debug("Output of %s: %s", command, lines);
-    return isVersionOfClang(lines);
-  }
-
-  @VisibleForTesting
-  static boolean isVersionOfClang(Iterable<String> lines) {
-    for (String line : lines) {
-      Matcher matcher = CLANG_VERSION_PATTERN.matcher(line);
-      if (matcher.matches()) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,
@@ -435,6 +267,31 @@ public class CxxPlatforms {
     return getToolPath(flavor, name, config)
         .transform(HashedFileTool.FROM_PATH)
         .transform(Functions.<Tool>identity());
+  }
+
+  public static Iterable<BuildTarget> getParseTimeDeps(CxxPlatform cxxPlatform) {
+    ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
+    deps.addAll(cxxPlatform.getAspp().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getAs().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getCpp().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getCc().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getCxxpp().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getCxx().getParseTimeDeps());
+    if (cxxPlatform.getCudapp().isPresent()) {
+      deps.addAll(cxxPlatform.getCudapp().get().getParseTimeDeps());
+    }
+    if (cxxPlatform.getCuda().isPresent()) {
+      deps.addAll(cxxPlatform.getCuda().get().getParseTimeDeps());
+    }
+    return deps.build();
+  }
+
+  public static Iterable<BuildTarget> getParseTimeDeps(Iterable<CxxPlatform> cxxPlatforms) {
+    ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
+    for (CxxPlatform cxxPlatform : cxxPlatforms) {
+      deps.addAll(getParseTimeDeps(cxxPlatform));
+    }
+    return deps.build();
   }
 
 }

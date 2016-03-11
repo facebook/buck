@@ -20,12 +20,17 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -208,6 +213,120 @@ public class CxxBuckConfig {
    */
   public long getMaximumTestOutputSize() {
     return delegate.getLong(cxxSection, "max_test_output_size").or(DEFAULT_MAX_TEST_OUTPUT_SIZE);
+  }
+
+  private Optional<CxxToolProviderParams> getCxxToolProviderParams(
+      String field,
+      Optional<CxxToolProvider.Type> defaultType) {
+    Optional<String> value = delegate.getValue(cxxSection, field);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    String source = String.format("[%s] %s", cxxSection, field);
+    Optional<BuildTarget> target = delegate.getMaybeBuildTarget(cxxSection, field);
+    Optional<CxxToolProvider.Type> type =
+        delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class)
+            .or(defaultType);
+    if (target.isPresent()) {
+      return Optional.of(
+          CxxToolProviderParams.builder()
+              .setSource(source)
+              .setBuildTarget(target.get())
+              .setType(type.or(CxxToolProvider.Type.DEFAULT))
+              .build());
+    } else {
+      return Optional.of(
+          CxxToolProviderParams.builder()
+              .setSource(source)
+              .setPath(delegate.getRequiredPath(cxxSection, field))
+              .setType(type)
+              .build());
+    }
+  }
+
+  private Optional<PreprocessorProvider> getPreprocessorProvider(
+      Flavor flavor,
+      String field,
+      Optional<CxxToolProvider.Type> defaultType) {
+    Optional<CxxToolProviderParams> params =
+        getCxxToolProviderParams(flavor.toString() + '_' + field, defaultType)
+            .or(getCxxToolProviderParams(field, defaultType));
+    if (!params.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of(params.get().getPreprocessorProvider());
+  }
+
+  public Optional<PreprocessorProvider> getPreprocessorProvider(Flavor flavor, String field) {
+    return getPreprocessorProvider(flavor, field, Optional.<CxxToolProvider.Type>absent());
+  }
+
+  public Optional<PreprocessorProvider> getPreprocessorProvider(
+      Flavor flavor,
+      String field,
+      CxxToolProvider.Type defaultType) {
+    return getPreprocessorProvider(flavor, field, Optional.of(defaultType));
+  }
+
+  private Optional<CompilerProvider> getCompilerProvider(
+      Flavor flavor,
+      String field,
+      Optional<CxxToolProvider.Type> defaultType) {
+    Optional<CxxToolProviderParams> params =
+        getCxxToolProviderParams(flavor.toString() + '_' + field, defaultType)
+            .or(getCxxToolProviderParams(field, defaultType));
+    if (!params.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of(params.get().getCompilerProvider());
+  }
+
+  public Optional<CompilerProvider> getCompilerProvider(Flavor flavor, String field) {
+    return getCompilerProvider(flavor, field, Optional.<CxxToolProvider.Type>absent());
+  }
+
+  public Optional<CompilerProvider> getCompilerProvider(
+      Flavor flavor,
+      String field,
+      CxxToolProvider.Type defaultType) {
+    return getCompilerProvider(flavor, field, Optional.of(defaultType));
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractCxxToolProviderParams {
+
+    public abstract String getSource();
+    public abstract Optional<BuildTarget> getBuildTarget();
+    public abstract Optional<Path> getPath();
+    public abstract Optional<CxxToolProvider.Type> getType();
+
+    @Value.Check
+    protected void check() {
+      Preconditions.checkState(getBuildTarget().isPresent() || getPath().isPresent());
+      Preconditions.checkState(!getBuildTarget().isPresent() || getType().isPresent());
+    }
+
+    public PreprocessorProvider getPreprocessorProvider() {
+      if (getBuildTarget().isPresent()) {
+        return new PreprocessorProvider(
+            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
+            getType().get());
+      } else {
+        return new PreprocessorProvider(getPath().get(), getType());
+      }
+    }
+
+    public CompilerProvider getCompilerProvider() {
+      if (getBuildTarget().isPresent()) {
+        return new CompilerProvider(
+            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
+            getType().get());
+      } else {
+        return new CompilerProvider(getPath().get(), getType());
+      }
+    }
+
   }
 
 }

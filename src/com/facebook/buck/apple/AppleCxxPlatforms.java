@@ -20,21 +20,19 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.BsdArchiver;
-import com.facebook.buck.cxx.ClangCompiler;
-import com.facebook.buck.cxx.ClangPreprocessor;
-import com.facebook.buck.cxx.Compiler;
+import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
-import com.facebook.buck.cxx.DefaultCompiler;
-import com.facebook.buck.cxx.DefaultPreprocessor;
 import com.facebook.buck.cxx.Linkers;
-import com.facebook.buck.cxx.Preprocessor;
+import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -42,7 +40,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -143,7 +140,7 @@ public class AppleCxxPlatforms {
 
     Tool ranlib = new VersionedTool(
         getToolPath("ranlib", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of("-s"),
+        ImmutableList.of("-s"),
         "apple-ranlib",
         version);
 
@@ -247,15 +244,45 @@ public class AppleCxxPlatforms {
       buildVersion = Optional.absent();
     }
 
+    // Always use `DEFAULT` for the assemblers (unless an explicit override is set in the
+    // .buckconfig), as we pass special flags when we detect clang which causes unused flag
+    // warnings with assembling.
+    PreprocessorProvider aspp =
+        new PreprocessorProvider(
+            new ConstantToolProvider(clangPath),
+            CxxToolProvider.Type.DEFAULT);
+    CompilerProvider as =
+        new CompilerProvider(
+            new ConstantToolProvider(clangPath),
+            CxxToolProvider.Type.DEFAULT);
+
+    PreprocessorProvider cpp =
+        new PreprocessorProvider(
+            new ConstantToolProvider(clangPath),
+            CxxToolProvider.Type.CLANG);
+    CompilerProvider cc =
+        new CompilerProvider(
+            new ConstantToolProvider(clangPath),
+            CxxToolProvider.Type.CLANG);
+    PreprocessorProvider cxxpp =
+        new PreprocessorProvider(
+            new ConstantToolProvider(clangXxPath),
+            CxxToolProvider.Type.CLANG);
+    CompilerProvider cxx =
+        new CompilerProvider(
+            new ConstantToolProvider(clangXxPath),
+            CxxToolProvider.Type.CLANG);
+
+
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
         config,
-        new DefaultCompiler(clangPath),
-        new DefaultPreprocessor(clangPath),
-        Suppliers.<Compiler>ofInstance(new ClangCompiler(clangPath)),
-        Suppliers.<Compiler>ofInstance(new ClangCompiler(clangXxPath)),
-        Suppliers.<Preprocessor>ofInstance(new ClangPreprocessor(clangPath)),
-        Suppliers.<Preprocessor>ofInstance(new ClangPreprocessor(clangXxPath)),
+        as,
+        aspp,
+        cc,
+        cxx,
+        cpp,
+        cxxpp,
         new DarwinLinker(clangXxPath),
         ImmutableList.<String>builder()
             .addAll(cflags)

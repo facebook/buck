@@ -93,6 +93,10 @@ public class LuaBinaryIntegrationTest {
     lua = luaOptional.get();
 
     // Try to detect if a Lua devel package is available, which is needed to C/C++ support.
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new BuildTargetNodeToBuildRuleTransformer());
     CxxPlatform cxxPlatform =
         DefaultCxxPlatforms.build(
             Platform.detect(),
@@ -101,11 +105,8 @@ public class LuaBinaryIntegrationTest {
     builder.command(
         ImmutableList.<String>builder()
             .addAll(
-                cxxPlatform.getCc().getCommandPrefix(
-                    new SourcePathResolver(
-                        new BuildRuleResolver(
-                            TargetGraph.EMPTY,
-                            new BuildTargetNodeToBuildRuleTransformer()))))
+                cxxPlatform.getCc().resolve(resolver)
+                    .getCommandPrefix(new SourcePathResolver(resolver)))
             .add("-includelua.h", "-E", "-")
             .build());
     builder.redirectInput(ProcessBuilder.Redirect.PIPE);

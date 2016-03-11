@@ -56,10 +56,11 @@ public class CxxCompileStepIntegrationTest {
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
-    ImmutableList<String> compiler = platform.getCc().getCommandPrefix(resolver);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ImmutableList<String> compiler =
+        platform.getCc().resolve(resolver).getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");

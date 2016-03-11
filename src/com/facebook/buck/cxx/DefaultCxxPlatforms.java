@@ -91,15 +91,44 @@ public class DefaultCxxPlatforms {
         throw new RuntimeException(String.format("Unsupported platform: %s", platform));
     }
 
+    // Always use `DEFAULT` for the assemblers (unless an explicit override is set in the
+    // .buckconfig), as we pass special flags when we detect clang which causes unused flag
+    // warnings with assembling.
+    PreprocessorProvider aspp =
+        new PreprocessorProvider(
+            defaultCFrontend,
+            Optional.of(CxxToolProvider.Type.DEFAULT));
+    CompilerProvider as =
+        new CompilerProvider(
+            defaultCFrontend,
+            Optional.of(CxxToolProvider.Type.DEFAULT));
+
+    PreprocessorProvider cpp =
+        new PreprocessorProvider(
+            defaultCFrontend,
+            Optional.<CxxToolProvider.Type>absent());
+    CompilerProvider cc =
+        new CompilerProvider(
+            defaultCFrontend,
+            Optional.<CxxToolProvider.Type>absent());
+    PreprocessorProvider cxxpp =
+        new PreprocessorProvider(
+            defaultCxxFrontend,
+            Optional.<CxxToolProvider.Type>absent());
+    CompilerProvider cxx =
+        new CompilerProvider(
+            defaultCxxFrontend,
+            Optional.<CxxToolProvider.Type>absent());
+
     return CxxPlatforms.build(
         FLAVOR,
         config,
-        new DefaultCompiler(new HashedFileTool(defaultCFrontend)),
-        new DefaultPreprocessor(new HashedFileTool(defaultCFrontend)),
-        CxxPlatforms.getCompilerSupplier(defaultCFrontend),
-        CxxPlatforms.getCompilerSupplier(defaultCxxFrontend),
-        CxxPlatforms.getPreprocessorSupplier(defaultCFrontend),
-        CxxPlatforms.getPreprocessorSupplier(defaultCxxFrontend),
+        as,
+        aspp,
+        cc,
+        cxx,
+        cpp,
+        cxxpp,
         linker,
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_STRIP),

@@ -237,6 +237,13 @@ public class CxxTestDescription implements
 
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
+    // Get any parse time deps from the C/C++ platforms.
+    deps.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            cxxPlatforms
+                .getValue(buildTarget.getFlavors())
+                .or(defaultCxxPlatform)));
+
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()

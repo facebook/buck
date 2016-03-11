@@ -77,6 +77,7 @@ public class CxxBinaryDescription implements
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
+        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
@@ -214,6 +215,13 @@ public class CxxBinaryDescription implements
       Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+
+    // Get any parse time deps from the C/C++ platforms.
+    deps.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            cxxPlatforms
+                .getValue(buildTarget.getFlavors())
+                .or(defaultCxxPlatform)));
 
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()

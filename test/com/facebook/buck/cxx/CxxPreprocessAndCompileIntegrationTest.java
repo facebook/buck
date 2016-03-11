@@ -584,6 +584,21 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.runBuckBuild("//:lang_compiler_flags#default,static").assertSuccess();
   }
 
+  @Test
+  public void binaryBuildRuleTools() throws IOException {
+    workspace.runBuckBuild(
+        "-c", "cxx.cc=//:cc",
+        "-c", "cxx.cc_type=default",
+        "-c", "cxx.cpp=//:cc",
+        "-c", "cxx.cpp_type=default",
+        "-c", "cxx.cxx=//:cxx",
+        "-c", "cxx.cxx_type=default",
+        "-c", "cxx.cxxpp=//:cxx",
+        "-c", "cxx.cxxpp_type=default",
+        "//:simple#default,static")
+        .assertSuccess();
+  }
+
   private BuildTarget getPreprocessTarget(
       CxxPlatform cxxPlatform,
       BuildTarget target,

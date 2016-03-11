@@ -304,6 +304,7 @@ public class PrebuiltCxxLibraryDescription implements
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
+        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
         parseExportedHeaders(params, resolver, cxxPlatform, args),

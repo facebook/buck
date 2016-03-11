@@ -98,6 +98,7 @@ public class CxxDescriptionEnhancer {
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildRuleParams params,
+      BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
@@ -114,7 +115,8 @@ public class CxxDescriptionEnhancer {
             cxxPlatform.getFlavor(),
             headerVisibility);
     Optional<Path> headerMapLocation = Optional.absent();
-    if (cxxPlatform.getCpp().supportsHeaderMaps() && cxxPlatform.getCxxpp().supportsHeaderMaps()) {
+    if (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
+        cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps()) {
       headerMapLocation =
           Optional.of(
               getHeaderMapPath(
@@ -154,6 +156,7 @@ public class CxxDescriptionEnhancer {
 
     HeaderSymlinkTree symlinkTree = createHeaderSymlinkTree(
         params,
+        ruleResolver,
         pathResolver,
         cxxPlatform,
         headers,

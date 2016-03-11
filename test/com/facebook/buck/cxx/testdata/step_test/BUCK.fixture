@@ -101,3 +101,13 @@ cxx_library(
     'lang_compiler_flags.cc',
   ],
 )
+
+sh_binary(
+  name = 'cc',
+  main = 'cc.sh',
+)
+
+sh_binary(
+  name = 'cxx',
+  main = 'cxx.sh',
+)

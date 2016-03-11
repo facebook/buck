@@ -226,6 +226,7 @@ public class HalideLibraryDescription
           new BuildTargetSourcePath(compileTarget, outputPath));
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           params,
+          resolver,
           new SourcePathResolver(resolver),
           cxxPlatform,
           headersBuilder.build(),

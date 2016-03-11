@@ -56,8 +56,8 @@ public class CxxSourceTypes {
   /**
    * @return the appropriate {@link com.facebook.buck.rules.Tool} representing the preprocessor.
    */
-  public static Preprocessor getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
-    Preprocessor preprocessor;
+  public static PreprocessorProvider getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
+    PreprocessorProvider preprocessor;
 
     switch (type) {
       case ASSEMBLER_WITH_CPP:
@@ -161,8 +161,8 @@ public class CxxSourceTypes {
   /**
    * @return the appropriate compiler for the given language type.
    */
-  public static Compiler getCompiler(CxxPlatform cxxPlatform, CxxSource.Type type) {
-    Compiler compiler;
+  public static CompilerProvider getCompiler(CxxPlatform cxxPlatform, CxxSource.Type type) {
+    CompilerProvider compiler;
 
     switch (type) {
       case ASSEMBLER:

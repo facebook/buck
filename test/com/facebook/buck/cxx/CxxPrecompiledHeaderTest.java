@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,15 +40,6 @@ import org.junit.Test;
 import java.nio.file.Paths;
 
 public class CxxPrecompiledHeaderTest {
-  private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
-      new CxxBuckConfig(FakeBuckConfig.builder().build()));
-  private static final Preprocessor PREPROCESSOR_SUPPORTING_PCH =
-      new DefaultPreprocessor(DEFAULT_PLATFORM.getCpp()) {
-        @Override
-        public boolean supportsPrecompiledHeaders() {
-          return true;
-        }
-      };
 
   @Test
   public void generatesPchAsPostBuildStep() {
@@ -57,6 +47,13 @@ public class CxxPrecompiledHeaderTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    Preprocessor preprocessorSupportingPch =
+        new DefaultPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(resolver)) {
+          @Override
+          public boolean supportsPrecompiledHeaders() {
+            return true;
+          }
+        };
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
         params,
@@ -66,9 +63,11 @@ public class CxxPrecompiledHeaderTest {
             sourcePathResolver,
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
             Paths.get("./"),
-            PREPROCESSOR_SUPPORTING_PCH,
+            preprocessorSupportingPch,
             PreprocessorFlags.builder().build(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(DEFAULT_PLATFORM, sourcePathResolver),
+            CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                sourcePathResolver),
             ImmutableList.<CxxHeaders>of()),
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
@@ -87,4 +86,5 @@ public class CxxPrecompiledHeaderTest {
         step.getCommand(),
         hasItem(CxxSource.Type.C.getPrecompiledHeaderLanguage().get()));
   }
+
 }

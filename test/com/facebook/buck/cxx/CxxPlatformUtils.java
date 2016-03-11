@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
-import com.google.common.base.Suppliers;
+import com.google.common.base.Optional;
 
 import java.nio.file.Paths;
 
@@ -30,22 +30,38 @@ public class CxxPlatformUtils {
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("platform"))
-          .setAs(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
-          .setAspp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
-          .setCcSupplier(
-              Suppliers.<Compiler>ofInstance(
-                  new DefaultCompiler(new HashedFileTool(Paths.get("tool")))))
-          .setCppSupplier(
-              Suppliers.<Preprocessor>ofInstance(
-                  new DefaultPreprocessor(new HashedFileTool(Paths.get("tool")))))
-          .setCxxSupplier(
-              Suppliers.<Compiler>ofInstance(
-                  new DefaultCompiler(new HashedFileTool(Paths.get("tool")))))
-          .setCxxppSupplier(
-              Suppliers.<Preprocessor>ofInstance(
-                  new DefaultPreprocessor(new HashedFileTool(Paths.get("tool")))))
-          .setCuda(new DefaultCompiler(new HashedFileTool(Paths.get("tool"))))
-          .setCudapp(new DefaultPreprocessor(new HashedFileTool(Paths.get("tool"))))
+          .setAs(
+              new CompilerProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setAspp(
+              new PreprocessorProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setCc(
+              new CompilerProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setCpp(
+              new PreprocessorProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setCxx(
+              new CompilerProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setCxxpp(
+              new PreprocessorProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setCuda(
+              new CompilerProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setCudapp(
+              new PreprocessorProvider(
+                  Paths.get("tool"),
+                  Optional.of(CxxToolProvider.Type.DEFAULT)))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
           .setStrip(new HashedFileTool(Paths.get("tool")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))

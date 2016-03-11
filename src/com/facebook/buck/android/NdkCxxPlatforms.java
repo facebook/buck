@@ -16,20 +16,23 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DebugPathSanitizer;
-import com.facebook.buck.cxx.DefaultCompiler;
-import com.facebook.buck.cxx.DefaultPreprocessor;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,7 +40,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -362,71 +364,46 @@ public class NdkCxxPlatforms {
         ndkRoot,
         Paths.get(ANDROID_NDK_ROOT));
 
+    CxxToolProvider.Type type =
+        compilerType == NdkCxxPlatformCompiler.Type.CLANG ?
+            CxxToolProvider.Type.CLANG :
+            CxxToolProvider.Type.DEFAULT;
+    ToolProvider ccTool =
+        new ConstantToolProvider(
+            getCTool(
+                ndkRoot,
+                targetConfiguration,
+                host,
+                compilerType.getCc(),
+                version,
+                executableFinder));
+    ToolProvider cxxTool =
+        new ConstantToolProvider(
+            getCTool(
+                ndkRoot,
+                targetConfiguration,
+                host,
+                compilerType.getCxx(),
+                version,
+                executableFinder));
+    CompilerProvider cc = new CompilerProvider(ccTool, type);
+    PreprocessorProvider cpp = new PreprocessorProvider(ccTool, type);
+    CompilerProvider cxx = new CompilerProvider(cxxTool, type);
+    PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type);
+
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     cxxPlatformBuilder
         .setFlavor(flavor)
-        .setAs(
-            new DefaultCompiler(
-                getCTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    compilerType.getCc(),
-                    version,
-                    executableFinder)))
+        .setAs(cc)
         .addAllAsflags(getAsflags(ndkRoot, targetConfiguration, host))
-        .setAspp(
-            new DefaultPreprocessor(
-                getCTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    compilerType.getCc(),
-                    version,
-                    executableFinder)))
-        .setCcSupplier(
-            Suppliers.ofInstance(
-                compilerType.compilerFromTool(
-                    getCTool(
-                        ndkRoot,
-                        targetConfiguration,
-                        host,
-                        compilerType.getCc(),
-                        version,
-                        executableFinder))))
+        .setAspp(cpp)
+        .setCc(cc)
         .addAllCflags(getCflagsInternal(ndkRoot, targetConfiguration, host))
-        .setCppSupplier(
-            Suppliers.ofInstance(
-                compilerType.preprocessorFromTool(
-                    getCTool(
-                        ndkRoot,
-                        targetConfiguration,
-                        host,
-                        compilerType.getCc(),
-                        version,
-                        executableFinder))))
+        .setCpp(cpp)
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration, host))
-        .setCxxSupplier(
-            Suppliers.ofInstance(
-                compilerType.compilerFromTool(
-                    getCTool(
-                        ndkRoot,
-                        targetConfiguration,
-                        host,
-                        compilerType.getCxx(),
-                        version,
-                        executableFinder))))
+        .setCxx(cxx)
         .addAllCxxflags(getCxxflagsInternal(ndkRoot, targetConfiguration, host))
-        .setCxxppSupplier(
-            Suppliers.ofInstance(
-                compilerType.preprocessorFromTool(
-                    getCTool(
-                        ndkRoot,
-                        targetConfiguration,
-                        host,
-                        compilerType.getCxx(),
-                        version,
-                        executableFinder))))
+        .setCxxpp(cxxpp)
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration, host, cxxRuntime))
         .setLd(
             getCcLinkTool(

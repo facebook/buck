@@ -133,9 +133,9 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     assertEquals(
         ImmutableList.of("usr/bin/actool"),
@@ -166,10 +166,10 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getFlavor());
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
-        cxxPlatform.getCc().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertThat(
         ImmutableList.<String>builder()
-            .addAll(cxxPlatform.getCc().getCommandPrefix(resolver))
+            .addAll(cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
         hasConsecutiveItems(
@@ -191,7 +191,7 @@ public class AppleCxxPlatformsTest {
             "-Wl,8.0"));
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
-        cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar")
             .toString(),
@@ -248,9 +248,9 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     assertEquals(
         ImmutableList.of("usr/bin/actool"),
@@ -274,10 +274,10 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getFlavor());
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
-        cxxPlatform.getCc().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertThat(
         ImmutableList.<String>builder()
-            .addAll(cxxPlatform.getCc().getCommandPrefix(resolver))
+            .addAll(cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
         hasConsecutiveItems(
@@ -296,7 +296,7 @@ public class AppleCxxPlatformsTest {
             "-Wl,2.0"));
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
-        cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/ar")
             .toString(),

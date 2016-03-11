@@ -73,9 +73,11 @@ public class CxxLibraryDescriptionTest {
 
   private static Path getHeaderSymlinkTreeIncludePath(
       BuildTarget target,
+      BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
-    if (cxxPlatform.getCpp().supportsHeaderMaps() && cxxPlatform.getCxxpp().supportsHeaderMaps()) {
+    if (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
+        cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps()) {
       return BuckConstant.BUCK_OUTPUT_PATH;
     } else {
       return CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
@@ -87,9 +89,11 @@ public class CxxLibraryDescriptionTest {
 
   private static ImmutableSet<Path> getHeaderMaps(
       BuildTarget target,
+      BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
-    if (cxxPlatform.getCpp().supportsHeaderMaps() && cxxPlatform.getCxxpp().supportsHeaderMaps()) {
+    if (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
+        cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps()) {
       return ImmutableSet.of(
           CxxDescriptionEnhancer.getHeaderMapPath(
               target,
@@ -203,11 +207,13 @@ public class CxxLibraryDescriptionTest {
             .addIncludeRoots(
                 getHeaderSymlinkTreeIncludePath(
                     target,
+                    resolver,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC))
             .addAllHeaderMaps(
                 getHeaderMaps(
                     target,
+                    resolver,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC))
             .addFrameworks(
@@ -244,11 +250,13 @@ public class CxxLibraryDescriptionTest {
             .addIncludeRoots(
                 getHeaderSymlinkTreeIncludePath(
                     target,
+                    resolver,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE))
             .addAllHeaderMaps(
                 getHeaderMaps(
                     target,
+                    resolver,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE))
             .addFrameworks(
@@ -539,11 +547,13 @@ public class CxxLibraryDescriptionTest {
             .addIncludeRoots(
                 getHeaderSymlinkTreeIncludePath(
                     target,
+                    resolver,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC))
             .addAllHeaderMaps(
                 getHeaderMaps(
                     target,
+                    resolver,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC))
             .addFrameworks(

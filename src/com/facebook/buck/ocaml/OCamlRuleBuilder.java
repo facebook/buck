@@ -298,8 +298,8 @@ public class OCamlRuleBuilder {
         compileParams,
         pathResolver,
         ocamlContext,
-        ocamlBuckConfig.getCCompiler(),
-        ocamlBuckConfig.getCxxCompiler(),
+        ocamlBuckConfig.getCCompiler().resolve(resolver),
+        ocamlBuckConfig.getCxxCompiler().resolve(resolver),
         bytecodeOnly);
     resolver.addToIndex(ocamlLibraryBuild);
 
@@ -449,8 +449,8 @@ public class OCamlRuleBuilder {
         ocamlContext,
         mlInput,
         cInput,
-        ocamlBuckConfig.getCCompiler(),
-        ocamlBuckConfig.getCxxCompiler(),
+        ocamlBuckConfig.getCCompiler().resolve(resolver),
+        ocamlBuckConfig.getCxxCompiler().resolve(resolver),
         bytecodeOnly);
 
     OCamlGeneratedBuildRules result = generator.generate();
