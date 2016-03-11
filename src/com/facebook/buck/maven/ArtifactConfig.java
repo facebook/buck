@@ -87,7 +87,7 @@ public class ArtifactConfig {
   public String mavenLocalRepo =
       Paths.get(System.getProperty("user.home"), ".m2", "repository").toAbsolutePath().toString();
 
-  public List<String> visibility = new ArrayList();
+  public List<String> visibility = new ArrayList<>();
 
   public ArtifactConfig mergeCmdLineArgs(CmdLineArgs args) {
     buckRepoRoot = MoreObjects.firstNonNull(args.buckRepoRoot, buckRepoRoot);
