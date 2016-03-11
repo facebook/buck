@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -40,7 +42,11 @@ public class PreDexMergeIntegrationTest {
   private static final String PRIMARY_SOURCE_FILE = "java/com/sample/app/MyApplication.java";
   private static final String SECONDARY_SOURCE_FILE = "java/com/sample/lib/Sample.java";
   private static final String PRIMARY_HASH_PATH =
-      "buck-out/bin/apps/multidex/.java-only#dex_merge/metadata/primary_dex_hash";
+      BuildTargets.getScratchPath(
+          BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)
+              .withFlavors(AndroidBinaryGraphEnhancer.DEX_MERGE_FLAVOR),
+          ".%s/metadata/primary_dex_hash")
+          .toString();
 
   @Before
   public void setUp() throws IOException {
