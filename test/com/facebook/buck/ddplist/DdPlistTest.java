@@ -38,10 +38,10 @@ public class DdPlistTest {
   }
 
   @Test
-  public void testASCIIWriting() throws Exception {
+  public void testXMLWriting() throws Exception {
     InputStream in = getClass().getResourceAsStream("test-files/test1.plist");
     NSDictionary x = (NSDictionary) PropertyListParser.parse(in);
-    PropertyListParser.saveAsASCII(x, outputFile);
+    PropertyListParser.saveAsXML(x, outputFile);
     NSDictionary y = (NSDictionary) PropertyListParser.parse(outputFile);
     assertEquals(x, y);
   }
