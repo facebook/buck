@@ -57,14 +57,8 @@ public class CodeSigning {
         /* timeOutMs */ Optional.<Long>absent(),
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
 
-    if (result.getExitCode() != 0) {
-      return false;
-    }
-
-    if (result.getStderr().isPresent()) {
-      return result.getStderr().get().contains(": satisfies its Designated Requirement");
-    } else {
-      return false;
-    }
+    return result.getExitCode() == 0 &&
+        result.getStderr().isPresent() &&
+        result.getStderr().get().contains(": satisfies its Designated Requirement");
   }
 }
