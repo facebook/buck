@@ -92,7 +92,12 @@ public class InputBasedRuleKeyBuilderFactory
       public RuleKey build() {
         Result result = buildResult();
         for (BuildRule usedDep : result.getDeps()) {
-          Preconditions.checkState(rule.getDeps().contains(usedDep));
+          Preconditions.checkState(
+              rule.getDeps().contains(usedDep),
+              "%s: %s not in deps (%s)",
+              rule.getBuildTarget(),
+              usedDep.getBuildTarget(),
+              rule.getDeps());
         }
         return result.getRuleKey();
       }

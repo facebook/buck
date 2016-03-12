@@ -29,6 +29,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -41,6 +42,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.shell.ShBinary;
+import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -387,6 +390,60 @@ public class CxxSourceRuleFactoryTest {
 
       assertEquals(objcCompile.getBuildTarget(), objcCompile2.getBuildTarget());
     }
+
+    @Test
+    public void createPreprocessBuildRulePropagatesToolDeps() throws Exception {
+      BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+      ShBinary cxxpp =
+          (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxxpp"))
+              .setMain(new FakeSourcePath("blah"))
+              .build(resolver);
+
+      CxxPlatform cxxPlatform =
+          CXX_PLATFORM.withCxxpp(
+              new PreprocessorProvider(
+                  new BinaryBuildRuleToolProvider(cxxpp.getBuildTarget(), ""),
+                  CxxToolProvider.Type.DEFAULT));
+
+      CxxSourceRuleFactory cxxSourceRuleFactory =
+          CxxSourceRuleFactory.builder()
+              .setParams(params)
+              .setResolver(resolver)
+              .setPathResolver(pathResolver)
+              .setCxxPlatform(cxxPlatform)
+              .addCxxPreprocessorInput(CxxPreprocessorInput.EMPTY)
+              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .build();
+
+      String name = "foo/bar.cpp";
+      SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+      CxxSource cxxSource = CxxSource.of(
+          CxxSource.Type.CXX,
+          input,
+          ImmutableList.<String>of());
+
+      BuildRule cxxPreprocess =
+          cxxSourceRuleFactory.requirePreprocessBuildRule(
+              name,
+              cxxSource);
+      assertThat(
+          cxxPreprocess.getDeps(),
+          Matchers.hasItem(cxxpp));
+      cxxPreprocess =
+          cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
+              name,
+              cxxSource,
+              CxxPreprocessMode.SEPARATE);
+      assertThat(
+          cxxPreprocess.getDeps(),
+          Matchers.hasItem(cxxpp));
+    }
+
   }
 
   @RunWith(Parameterized.class)

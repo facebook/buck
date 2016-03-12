@@ -521,7 +521,11 @@ abstract class AbstractCxxSourceRuleFactory {
         getParams().copyWithChanges(
             target,
             // compiler handles both preprocessing and compiling
-            new DepsBuilder().addPreprocessDeps().add(compiler).add(source),
+            new DepsBuilder()
+                .addPreprocessDeps()
+                .add(preprocessorDelegate.getPreprocessor())
+                .add(compiler)
+                .add(source),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         getPathResolver(),
         preprocessorDelegate,
