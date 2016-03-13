@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -54,7 +54,7 @@ public class ArtifactConfig {
     @Option(name = "-visibility", usage = "Targets that can see the artifacts")
     public List<String> visibility = new ArrayList<>();
 
-    @Option(name = "-json", usage = "JSON configuration file for artifacts, paths and maven repos")
+    @Option(name = "-json", usage = "JSON configuration file for artifacts, paths, and Maven repos")
     public String artifactConfigJson;
 
     @Option(name = "-help", help = true)
