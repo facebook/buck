@@ -37,6 +37,7 @@ import org.junit.runners.model.RunnerBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -115,10 +116,12 @@ public final class JUnitRunner extends BaseRunner {
       final Class<?> testClass = Class.forName(className);
       Ignore ignore = testClass.getAnnotation(Ignore.class);
       boolean isTestClassIgnored = (ignore != null || !isTestClass(testClass));
+      boolean isTestClassAbstract = Modifier.isAbstract(testClass.getModifiers());
 
       List<TestResult> results;
-      if (isTestClassIgnored) {
-        // Test case has @Ignore annotation, so do nothing.
+      if (isTestClassIgnored || isTestClassAbstract) {
+        // Test case has @Ignore annotation, or is abstract and cannot be instantiated,
+        // so do nothing.
         results = Collections.emptyList();
       } else {
         results = new ArrayList<>();
