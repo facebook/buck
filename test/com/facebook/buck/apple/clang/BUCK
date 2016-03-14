@@ -1,11 +1,5 @@
 java_test(
   name = 'headermap',
   srcs = glob(['*.java']),
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/junit:junit',
-    '//third-party/java/hamcrest:hamcrest',
-    '//src/com/facebook/buck/apple/clang:headermap',
-  ]
+  autodeps = True,
 )

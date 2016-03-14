@@ -61,9 +61,12 @@ java_library(
   name = 'javac-env',
   srcs = [ 'JavaCompilationConstants.java', ],
   deps = [
-    '//src/com/facebook/buck/jvm/java:support',
     '//src/com/facebook/buck/rules:build_rule',
     '//third-party/java/guava:guava',
+  ],
+  exported_deps = [
+    # Exports JavacOptions constants.
+    '//src/com/facebook/buck/jvm/java:support',
   ],
   visibility = [
     '//test/...',

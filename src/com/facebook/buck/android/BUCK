@@ -122,8 +122,18 @@ java_immutables_library(
   ],
   autodeps = True,
   exported_deps = [
-    ':packageable', # AndroidLibrary implements AndroidPackageable.
+    # AndroidLibrary implements AndroidPackageable.
+    ':packageable',
     '//src/com/facebook/buck/rules:rules',
+
+    # AndroidLibraryDescription extends JavaLibraryDescription.
+    '//src/com/facebook/buck/jvm/java:rules',
+
+    # RDotJava exports a method that returns a JavacStep.
+    '//src/com/facebook/buck/jvm/java:steps',
+
+    # ApkGenruleDescription extends AbstractGenruleDescription.
+    '//src/com/facebook/buck/shell:rules',
   ],
   visibility = ['PUBLIC'],
 )

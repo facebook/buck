@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 9fe5652d7b12594ac0a460dd331307fa3194870c #@#
+{
+  "xcode" : [
+    "//src/com/facebook/buck/apple/xcode:xcode",
+    "//src/com/facebook/buck/util:exceptions",
+    "//test/com/facebook/buck/testutil/integration:integration",
+    "//third-party/java/dd-plist:dd-plist",
+    "//third-party/java/guava:guava",
+    "//third-party/java/hamcrest:java-hamcrest",
+    "//third-party/java/junit:junit"
+  ]
+}

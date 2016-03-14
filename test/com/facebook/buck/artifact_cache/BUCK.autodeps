@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 85f83a7b59df19e1f74c6171ac73cbe2d75d84b1 #@#
+{
+  "testutil" : [
+    "//src/com/facebook/buck/artifact_cache:artifact_cache",
+    "//src/com/facebook/buck/artifact_cache:impl",
+    "//src/com/facebook/buck/io:io",
+    "//src/com/facebook/buck/rules:rule_key",
+    "//test/com/facebook/buck/testutil/integration:integration",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jsr:jsr305"
+  ]
+}

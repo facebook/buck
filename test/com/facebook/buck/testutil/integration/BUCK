@@ -17,7 +17,6 @@ java_library(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/timing:timing',
@@ -38,6 +37,11 @@ java_library(
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
     '//third-party/java/nailgun:nailgun',
+  ],
+  exported_deps = [
+    # ProjectWorkspace exposes Cell.
+    '//src/com/facebook/buck/rules:types',
+    '//third-party/java/junit:junit',
   ],
   visibility = [
     '//test/...',

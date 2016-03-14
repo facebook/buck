@@ -10,7 +10,6 @@ java_library(
   name = 'FakeBuckConfig',
   srcs = FAKE_BUCK_CONFIG_SRCS,
   deps = [
-    '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
@@ -25,6 +24,9 @@ java_library(
     '//third-party/java/jsr:jsr305',
   ],
   exported_deps = [
+    # Methods of BuckConfig should also be available.
+    '//src/com/facebook/buck/cli:config',
+
     # Clients of `new FakeBuckConfig(ImmutableMap)` also need to have
     # com.facebook.buck.util.environment.Platform on their classpath in order to compile.
     '//src/com/facebook/buck/util/environment:platform',

@@ -9,6 +9,10 @@ java_library(
     '//test/com/facebook/buck/rules:rules',
   ],
   autodeps = True,
+  exported_deps = [
+    # Cell exports ProjectFilesystem via a getter.
+    '//src/com/facebook/buck/io:io',
+  ],
   visibility = [
     '//src/com/facebook/buck/apple:generators',
     '//src/com/facebook/buck/cli:cli',

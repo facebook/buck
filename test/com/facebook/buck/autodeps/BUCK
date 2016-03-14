@@ -1,16 +1,5 @@
 java_test(
   name = 'autodeps',
   srcs = glob(['*Test.java']),
-  deps = [
-    '//src/com/facebook/buck/autodeps:autodeps',
-    '//src/com/facebook/buck/autodeps:model',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:object_mapper',
-    '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jackson:jackson',
-    '//third-party/java/junit:junit',
-  ],
+  autodeps = True,
 )

@@ -25,13 +25,16 @@ java_library(
     '//src/com/facebook/buck/util:tristate',
     '//src/com/facebook/buck/util/cache:cache',
     '//src/com/facebook/buck/zip:stream',
-    '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jimfs:jimfs',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
     '//third-party/java/okio:okio',
+  ],
+  exported_deps = [
+    # FakeProjectFilesystem exports a constructor that takes a Clock.
+    '//test/com/facebook/buck/timing:testutil',
   ],
   visibility = [
     '//test/...',

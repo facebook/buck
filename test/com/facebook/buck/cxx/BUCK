@@ -5,7 +5,6 @@ java_library(
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
@@ -24,6 +23,10 @@ java_library(
     '//third-party/java/immutables:processor',
     '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',
+  ],
+  exported_deps = [
+    # CxxPlatformUtils exports an instance of CxxPlatform.
+    '//src/com/facebook/buck/cxx:platform',
   ],
   visibility = [
     '//test/...',

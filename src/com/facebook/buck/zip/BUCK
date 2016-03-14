@@ -25,6 +25,10 @@ java_library(
   tests = [
     '//test/com/facebook/buck/zip:zip',
   ],
+  exported_deps = [
+    # Exports method that returns an ImmutableList.
+    '//third-party/java/guava:guava',
+  ],
   autodeps = True,
   visibility = [ 'PUBLIC' ],
 )
