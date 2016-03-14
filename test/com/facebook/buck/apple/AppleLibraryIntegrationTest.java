@@ -28,11 +28,11 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
@@ -41,6 +41,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AppleLibraryIntegrationTest {
 
@@ -54,12 +55,13 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        "//Libraries/TestLibrary:TestLibrary#static,default");
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
   }
 
   @Test
@@ -70,12 +72,14 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
   }
 
   @Test
@@ -87,12 +91,14 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#watchsimulator-i386,static");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#watchsimulator-i386,static");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
   }
 
   @Test
@@ -104,12 +110,14 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#static,macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#static,macosx-x86_64");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
   }
 
   @Test
@@ -128,12 +136,8 @@ public class AppleLibraryIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRootPath().toRealPath();
-
-    Path inputPath = projectRoot.resolve(
-        buildTarget.getBasePath());
-    Path outputPath = projectRoot.resolve(
-        BuildTargets.getGenPath(buildTarget, "%s"));
+    Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(buildTarget, "%s")).toRealPath();
 
     assertIsSymbolicLink(
         outputPath.resolve("PrivateHeader.h"),
@@ -155,16 +159,21 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path frameworkPath = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
-        .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
-                "TestLibrary.framework");
+    Path frameworkPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
     Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
@@ -183,16 +192,21 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path frameworkPath = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
-        .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
-                "TestLibrary.framework");
+    Path frameworkPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
     assertThat(Files.exists(frameworksPath), is(true));
@@ -220,16 +234,21 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path frameworkPath = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
-        .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,include-frameworks,macosx-x86_64/" +
-                "TestLibrary.framework");
+    Path frameworkPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
     assertThat(Files.exists(frameworksPath), is(true));
@@ -247,16 +266,15 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-include-frameworks");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-include-frameworks");
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path frameworkPath = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
-        .resolve(
-            "Libraries/TestLibrary/TestLibrary#framework,macosx-x86_64,no-include-frameworks/" +
-                "TestLibrary.framework");
+    Path frameworkPath = workspace.getPath(BuildTargets.getGenPath(target, "%s")
+        .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
     Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
@@ -284,12 +302,8 @@ public class AppleLibraryIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRootPath().toRealPath();
-
-    Path inputPath = projectRoot.resolve(
-        buildTarget.getBasePath());
-    Path outputPath = projectRoot.resolve(
-        BuildTargets.getGenPath(buildTarget, "%s"));
+    Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(buildTarget, "%s")).toRealPath();
 
     assertIsSymbolicLink(
         outputPath.resolve("TestLibrary/PublicHeader.h"),
@@ -303,34 +317,34 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_is_hermetic", tmp);
     workspace.setUp();
 
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
     ProjectWorkspace.ProcessResult first = workspace.runBuckCommand(
         workspace.getPath("first"),
         "build",
-        "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
+        target.getFullyQualifiedName());
     first.assertSuccess();
 
     ProjectWorkspace.ProcessResult second = workspace.runBuckCommand(
         workspace.getPath("second"),
         "build",
-        "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
+        target.getFullyQualifiedName());
     second.assertSuccess();
 
+    Path objectPath = BuildTargets
+        .getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("compile-" + sanitize("TestClass.m.o")),
+                ImmutableFlavor.of("iphonesimulator-x86_64")),
+            "%s")
+        .resolve("TestClass.m.o");
     MoreAsserts.assertContentsEqual(
-        workspace.getPath(
-            "first/buck-out/gen/Libraries/TestLibrary/" +
-                "TestLibrary#compile-" + sanitize("TestClass.m.o") + ",iphonesimulator-x86_64/" +
-                "TestClass.m.o"),
-        workspace.getPath(
-            "second/buck-out/gen/Libraries/TestLibrary/" +
-                "TestLibrary#compile-" + sanitize("TestClass.m.o") + ",iphonesimulator-x86_64/" +
-                "TestClass.m.o"));
+        workspace.getPath(Paths.get("first").resolve(objectPath)),
+        workspace.getPath(Paths.get("second").resolve(objectPath)));
+    Path libraryPath = BuildTargets.getGenPath(target, "%s").resolve("libTestLibrary.a");
     MoreAsserts.assertContentsEqual(
-        workspace.getPath(
-            "first/buck-out/gen/Libraries/TestLibrary/" +
-                "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a"),
-        workspace.getPath(
-            "second/buck-out/gen/Libraries/TestLibrary/" +
-                "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a"));
+        workspace.getPath(Paths.get("first").resolve(libraryPath)),
+        workspace.getPath(Paths.get("second").resolve(libraryPath)));
   }
 
   private static void assertIsSymbolicLink(
