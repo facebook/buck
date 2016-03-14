@@ -402,19 +402,32 @@ public class CxxBinaryIntegrationTest {
     String loggedDeps = workspace.getFileContents(
         "buck-out/gen/foo/infer-binary_with_chain_deps#infer/infer-deps.txt");
 
+    String sanitizedChainDepOne = sanitize("chain_dep_one.c.o");
+    String sanitizedTopChain = sanitize("top_chain.c.o");
+    String sanitizedChainDepTwo = sanitize("chain_dep_two.c.o");
+
     String expectedOutput =
         "//foo:binary_with_chain_deps#infer-analyze\t" +
+            "[infer-analyze]\t" +
             "buck-out/gen/foo/infer-analysis-binary_with_chain_deps#infer-analyze\n" +
-        "//foo:chain_dep_one#default,infer-analyze\t" +
+            "//foo:binary_with_chain_deps#default,infer-capture-" + sanitizedTopChain + "\t" +
+            "[default, infer-capture-" + sanitizedTopChain + "]\t" +
+            "buck-out/gen/foo/infer-out-binary_with_chain_deps#default,infer-capture-" +
+            sanitizedTopChain + "\n" +
+            "//foo:chain_dep_one#default,infer-analyze\t" +
+            "[default, infer-analyze]\t" +
             "buck-out/gen/foo/infer-analysis-chain_dep_one#default,infer-analyze\n" +
-        "//foo:chain_dep_one#default,infer-capture-" + sanitize("chain_dep_one.c.o") + "\t" +
+            "//foo:chain_dep_one#default,infer-capture-" + sanitizedChainDepOne + "\t" +
+            "[default, infer-capture-" + sanitizedChainDepOne + "]\t" +
             "buck-out/gen/foo/infer-out-chain_dep_one#default,infer-capture-" +
-            sanitize("chain_dep_one.c.o") + "\n" +
-        "//foo:chain_dep_two#default,infer-analyze\t" +
+            sanitizedChainDepOne + "\n" +
+            "//foo:chain_dep_two#default,infer-analyze\t" +
+            "[default, infer-analyze]\t" +
             "buck-out/gen/foo/infer-analysis-chain_dep_two#default,infer-analyze\n" +
-        "//foo:chain_dep_two#default,infer-capture-" + sanitize("chain_dep_two.c.o") + "\t" +
+            "//foo:chain_dep_two#default,infer-capture-" + sanitizedChainDepTwo + "\t" +
+            "[default, infer-capture-" + sanitizedChainDepTwo + "]\t" +
             "buck-out/gen/foo/infer-out-chain_dep_two#default,infer-capture-" +
-            sanitize("chain_dep_two.c.o") + "\n";
+            sanitizedChainDepTwo + "\n";
 
     assertEquals(expectedOutput, loggedDeps);
   }

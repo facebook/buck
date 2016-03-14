@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
@@ -33,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -92,51 +90,15 @@ public class CxxInferComputeReport extends AbstractBuildRule {
                 reportOutput,
                 "infer-merge-reports",
                 "Merge Infer Reports"))
-        .add(new CollectAndLogInferDependenciesStep())
+        .add(new CxxCollectAndLogInferDependenciesStep(
+                analysisToReport,
+                projectFilesystem,
+                depsOutput))
         .build();
   }
 
   @Override
   public Path getPathToOutput() {
     return reportOutput;
-  }
-
-  private final class CollectAndLogInferDependenciesStep implements Step {
-
-    private static final String SPLIT_TOKEN = "\t";
-
-    @Override
-    public int execute(ExecutionContext context) throws IOException, InterruptedException {
-      ImmutableList.Builder<String> pathsBuilder = ImmutableList.builder();
-      pathsBuilder.add(
-          analysisToReport.getBuildTarget() + SPLIT_TOKEN + analysisToReport.getResultsDir());
-      for (CxxInferAnalyze analyzeRule : analysisToReport.getTransitiveAnalyzeRules()) {
-        pathsBuilder.add(analyzeRule.getBuildTarget() + SPLIT_TOKEN + analyzeRule.getResultsDir());
-        pathsBuilder.addAll(
-            FluentIterable.from(analyzeRule.getCaptureRules()).transform(
-                new Function<CxxInferCapture, String>() {
-                  @Override
-                  public String apply(CxxInferCapture captureRule) {
-                    return
-                        captureRule.getBuildTarget() + SPLIT_TOKEN + captureRule.getPathToOutput();
-                  }
-                }
-            ).toList());
-      }
-
-      projectFilesystem.writeLinesToPath(pathsBuilder.build(), depsOutput);
-
-      return 0;
-    }
-
-    @Override
-    public String getShortName() {
-      return "infer-log-deps";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return "Log Infer's dependencies used for the analysis";
-    }
   }
 }
