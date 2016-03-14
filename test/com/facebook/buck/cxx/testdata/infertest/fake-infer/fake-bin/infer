@@ -8,6 +8,14 @@ function get_infer_argument {
     echo "$2"
 }
 
+# Get the last argument (e.g. to understand if it's analysis or capture, or version)
+INPUT_ARGUMENTS=($@)
+LAST_ARG=$(echo ${INPUT_ARGUMENTS[${#INPUT_ARGUMENTS[@]} - 1]})
+
+# Check whether --version is given, then return a version on stderr and exit
+[ "$LAST_ARG" == "--version" ] \
+    && { echo -e "Infer version 0.12345\nabcdef" > /dev/stderr; exit 0; }
+
 # Check that the given results folder exists
 OUT="$(get_infer_argument "--out" "$@")"
 [ -d "$OUT" ] || { echo "No results dir passed"; exit 1; }
@@ -19,10 +27,6 @@ INPUT_PROJECT_ROOT="$(get_infer_argument "--project_root" "$@")"
 PROJECT_ROOT=$(cd "$INPUT_PROJECT_ROOT" && pwd)
 [ "$PROJECT_ROOT" == "$PWD" ] \
     || { echo "Infer is launched from a path that doesn't match with project_root"; exit 1; }
-
-# Get the last argument so we can understand if it's analysis or capture
-INPUT_ARGUMENTS=($@)
-LAST_ARG=$(echo ${INPUT_ARGUMENTS[${#INPUT_ARGUMENTS[@]} - 1]})
 
 case $LAST_ARG in
     analyze)

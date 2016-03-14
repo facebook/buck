@@ -46,6 +46,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -57,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 public class CxxBinaryIntegrationTest {
 
@@ -130,6 +133,120 @@ public class CxxBinaryIntegrationTest {
       } else {
         buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
       }
+    }
+  }
+
+  @Test
+  public void testInferCxxBinaryDepsInvalidateCacheWhenVersionChanges() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+    workspace.enableDirCache(); // enable the cache
+
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
+    final String inputBuildTargetName = inputBuildTarget.withFlavors(
+        CxxInferEnhancer.InferFlavors.INFER.get()).getFullyQualifiedName();
+
+    /*
+     * Build the given target and check that it succeeds.
+     */
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    /*
+     * Check that building after clean will use the cache
+     */
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    for (BuildTarget buildTarget : buildLog.getAllTargets()) {
+      buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+    }
+
+    /*
+     * Check that if the version of infer changes, then all the infer-related targets are
+     * recomputed
+     */
+    workspace.resetBuildLogFile();
+    workspace.replaceFileContents("fake-infer/fake-bin/infer", "0.12345", "9.9999");
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+    buildLog = workspace.getBuildLog();
+
+
+    String sourceName = "src_with_deps.c";
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        inputBuildTarget,
+        cxxPlatform);
+
+    BuildTarget topCaptureBuildTarget =
+        cxxSourceRuleFactory.createInferCaptureBuildTarget(sourceName);
+
+    BuildTarget topInferAnalysisTarget =
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+
+    BuildTarget topInferReportTarget = inputBuildTarget.withFlavors(
+        CxxInferEnhancer.InferFlavors.INFER.get());
+
+    BuildTarget depOneBuildTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:dep_one");
+    String depOneSourceName = "dep_one.c";
+    CxxSourceRuleFactory depOneSourceRuleFactory =
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), depOneBuildTarget, cxxPlatform);
+
+    BuildTarget depOneCaptureBuildTarget =
+        depOneSourceRuleFactory.createInferCaptureBuildTarget(depOneSourceName);
+
+    BuildTarget depOneInferAnalysisTarget =
+        depOneCaptureBuildTarget.withFlavors(
+            cxxPlatform.getFlavor(),
+            CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+
+    BuildTarget depTwoBuildTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:dep_two");
+    CxxSourceRuleFactory depTwoSourceRuleFactory =
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), depTwoBuildTarget, cxxPlatform);
+
+    BuildTarget depTwoCaptureBuildTarget =
+        depTwoSourceRuleFactory.createInferCaptureBuildTarget("dep_two.c");
+
+    BuildTarget depTwoInferAnalysisTarget =
+        depTwoCaptureBuildTarget.withFlavors(
+            cxxPlatform.getFlavor(),
+            CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+
+    ImmutableSet<String> locallyBuiltTargets = ImmutableSet.of(
+        topCaptureBuildTarget.toString(),
+        topInferAnalysisTarget.toString(),
+        topInferReportTarget.toString(),
+        depOneCaptureBuildTarget.toString(),
+        depOneInferAnalysisTarget.toString(),
+        depTwoCaptureBuildTarget.toString(),
+        depTwoInferAnalysisTarget.toString());
+
+    // check that infer-related targets are getting rebuilt
+    for (String t : locallyBuiltTargets) {
+      buildLog.assertTargetBuiltLocally(t);
+    }
+
+    Set <String> builtFromCacheTargets = Sets.newHashSet(
+        Iterables.transform(
+            buildLog.getAllTargets(), new Function<BuildTarget, String>() {
+              @Override
+              public String apply(BuildTarget input) {
+                return input.toString();
+              }
+            })
+    );
+    builtFromCacheTargets.removeAll(locallyBuiltTargets);
+
+    // check that all the other targets are fetched from the cache
+    for (String t : builtFromCacheTargets) {
+      buildLog.assertTargetWasFetchedFromCache(t);
     }
   }
 

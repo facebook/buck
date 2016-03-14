@@ -449,7 +449,7 @@ abstract class AbstractCxxSourceRuleFactory {
   public CxxInferCapture requireInferCaptureBuildRule(
       String name,
       CxxSource source,
-      CxxInferTools inferTools) {
+      InferBuckConfig inferConfig) {
     BuildTarget target = createInferCaptureBuildTarget(name);
 
     Optional<CxxInferCapture> existingRule = getResolver().getRuleOptionalWithType(
@@ -458,14 +458,14 @@ abstract class AbstractCxxSourceRuleFactory {
       return existingRule.get();
     }
 
-    return createInferCaptureBuildRule(target, name, source, inferTools);
+    return createInferCaptureBuildRule(target, name, source, inferConfig);
   }
 
   public CxxInferCapture createInferCaptureBuildRule(
       BuildTarget target,
       String name,
       CxxSource source,
-      CxxInferTools inferTools) {
+      InferBuckConfig inferConfig) {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     LOG.verbose("Creating preprocessed InferCapture build rule %s for %s", target, source);
@@ -489,7 +489,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getFrameworks(),
         CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
         getPrefixHeader(),
-        inferTools,
+        inferConfig,
         getCxxPlatform().getDebugPathSanitizer());
     getResolver().addToIndex(result);
     return result;
@@ -567,7 +567,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
-      CxxInferTools inferTools,
+      InferBuckConfig inferConfig,
       CxxInferSourceFilter sourceFilter) {
 
     ImmutableSet.Builder<CxxInferCapture> objects = ImmutableSet.builder();
@@ -587,7 +587,7 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxInferCapture rule = requireInferCaptureBuildRule(
           name,
           source,
-          inferTools);
+          inferConfig);
       objects.add(rule);
     }
 

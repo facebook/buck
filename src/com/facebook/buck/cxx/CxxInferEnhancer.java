@@ -112,9 +112,9 @@ public final class CxxInferEnhancer {
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      CxxInferTools inferTools,
-      CxxInferSourceFilter sourceFilter,
-      CxxConstructorArg args) throws NoSuchBuildTargetException {
+      CxxConstructorArg args,
+      InferBuckConfig inferConfig,
+      CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
 
     BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
 
@@ -131,9 +131,9 @@ public final class CxxInferEnhancer {
         resolver,
         pathResolver,
         cxxPlatform,
-        inferTools,
-        sourceFilter,
-        args);
+        args,
+        inferConfig,
+        sourceFilter);
     return createInferReportRule(
         paramsWithInferFlavor,
         resolver,
@@ -146,9 +146,9 @@ public final class CxxInferEnhancer {
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      CxxInferTools inferTools,
-      CxxInferSourceFilter sourceFilter,
-      CxxConstructorArg args) throws NoSuchBuildTargetException {
+      CxxConstructorArg args,
+      InferBuckConfig inferConfig,
+      CxxInferSourceFilter sourceFilter) throws NoSuchBuildTargetException {
 
     BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
 
@@ -172,7 +172,7 @@ public final class CxxInferEnhancer {
         resolver,
         cxxPlatform,
         sources,
-        inferTools,
+        inferConfig,
         sourceFilter,
         args);
 
@@ -188,7 +188,7 @@ public final class CxxInferEnhancer {
         paramsWithInferAnalyzeFlavor,
         resolver,
         pathResolver,
-        inferTools,
+        inferConfig,
         cxxInferCaptureAndAnalyzeRules);
   }
 
@@ -276,7 +276,7 @@ public final class CxxInferEnhancer {
       final BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> sources,
-      CxxInferTools inferTools,
+      InferBuckConfig inferBuckConfig,
       CxxInferSourceFilter sourceFilter,
       CxxConstructorArg args) throws NoSuchBuildTargetException {
 
@@ -335,7 +335,7 @@ public final class CxxInferEnhancer {
         CxxSourceRuleFactory.PicType.PDC);
     return factory.requireInferCaptureBuildRules(
         sources,
-        inferTools,
+        inferBuckConfig,
         sourceFilter);
   }
 
@@ -343,7 +343,7 @@ public final class CxxInferEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
-      CxxInferTools inferTools,
+      InferBuckConfig inferConfig,
       CxxInferCaptureAndAnalyzeRules captureAnalyzeRules) {
     return resolver.addToIndex(
         new CxxInferAnalyze(
@@ -356,7 +356,7 @@ public final class CxxInferEnhancer {
                         .build()),
                 params.getExtraDeps()),
             pathResolver,
-            inferTools,
+            inferConfig,
             captureAnalyzeRules));
   }
 

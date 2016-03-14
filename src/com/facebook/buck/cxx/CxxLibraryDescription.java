@@ -575,9 +575,9 @@ public class CxxLibraryDescription implements
           resolver,
           new SourcePathResolver(resolver),
           platform.or(defaultCxxPlatform),
-          new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
+          args,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig));
     } else if (params.getBuildTarget().getFlavors()
         .contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
@@ -585,9 +585,9 @@ public class CxxLibraryDescription implements
           resolver,
           new SourcePathResolver(resolver),
           platform.or(defaultCxxPlatform),
-          new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
+          args,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig));
     } else if (type.isPresent() && platform.isPresent()) {
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.

@@ -24,8 +24,8 @@ public class CxxInferSourceFilter {
 
   private final Optional<Pattern> blacklistRegex;
 
-  CxxInferSourceFilter(InferBuckConfig config) {
-    Optional<String> rawFilterRegex = config.getValue("blacklist_regex");
+  CxxInferSourceFilter(InferBuckConfig inferConfig) {
+    Optional<String> rawFilterRegex = inferConfig.getBlacklistRegex();
 
     blacklistRegex = rawFilterRegex.isPresent() ?
         Optional.of(Pattern.compile(rawFilterRegex.get())) : Optional.<Pattern>absent();

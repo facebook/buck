@@ -36,6 +36,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -47,7 +48,7 @@ import java.nio.file.Path;
 public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppendable {
 
   @AddToRuleKey
-  private final CxxInferTools inferTools;
+  private final InferBuckConfig inferConfig;
   private final CxxToolFlags preprocessorFlags;
   private final CxxToolFlags compilerFlags;
   @AddToRuleKey
@@ -82,7 +83,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
       ImmutableSet<FrameworkPath> frameworkRoots,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SourcePath> prefixHeader,
-      CxxInferTools inferTools,
+      InferBuckConfig inferConfig,
       DebugPathSanitizer sanitizer) {
     super(buildRuleParams, pathResolver);
     this.preprocessorFlags = preprocessorFlags;
@@ -96,7 +97,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     this.frameworkRoots = frameworkRoots;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.prefixHeader = prefixHeader;
-    this.inferTools = inferTools;
+    this.inferConfig = inferConfig;
     this.resultsDir = BuildTargets.getGenPath(this.getBuildTarget(), "infer-out-%s");
     this.sanitizer = sanitizer;
   }
@@ -137,7 +138,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     // TODO(martinoluca): Add support for extra arguments (and add them to the rulekey)
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     return commandBuilder
-        .addAll(this.inferTools.topLevel.getCommandPrefix(getResolver()))
+        .add(this.inferConfig.getInferTopLevel().toString())
         .add("-a", "capture")
         .add("--project_root", getProjectFilesystem().getRootPath().toString())
         .add("--out", resultsDir.toString())
@@ -162,10 +163,11 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), resultsDir))
         .add(new MkdirStep(getProjectFilesystem(), output.getParent()))
-        .add(new DefaultShellStep(
+        .add(
+            new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
                 frontendCommand,
-                inferTools.topLevel.getEnvironment(getResolver())))
+                ImmutableMap.<String, String>of()))
         .build();
   }
 

@@ -35,6 +35,7 @@ import com.facebook.buck.step.fs.SymCopyStep;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -52,12 +53,12 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private final Path specsPathList;
 
   @AddToRuleKey
-  private final CxxInferTools inferTools;
+  private final InferBuckConfig inferConfig;
 
   CxxInferAnalyze(
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
-      CxxInferTools inferTools,
+      InferBuckConfig inferConfig,
       CxxInferCaptureAndAnalyzeRules captureAndAnalyzeRules) {
     super(buildRuleParams, pathResolver);
     this.captureAndAnalyzeRules = captureAndAnalyzeRules;
@@ -67,7 +68,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     this.reportFile = this.resultsDir.resolve("report.json");
     this.specsDir = this.resultsDir.resolve("specs");
     this.specsPathList = this.resultsDir.resolve("specs_path_list.txt");
-    this.inferTools = inferTools;
+    this.inferConfig = inferConfig;
   }
 
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
@@ -101,7 +102,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private ImmutableList<String> getAnalyzeCommand() {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder
-        .addAll(inferTools.topLevel.getCommandPrefix(getResolver()))
+        .add(inferConfig.getInferTopLevel().toString())
         .add("--project_root", getProjectFilesystem().getRootPath().toString())
         .add("--out", resultsDir.toString())
         .add("--specs-dir-list-file", specsPathList.toString());
@@ -157,7 +158,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
                 getAnalyzeCommand(),
-                inferTools.topLevel.getEnvironment(getResolver())))
+                ImmutableMap.<String, String>of()))
         .build();
   }
 

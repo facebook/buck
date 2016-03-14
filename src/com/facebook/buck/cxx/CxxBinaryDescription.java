@@ -159,9 +159,9 @@ public class CxxBinaryDescription implements
           resolver,
           pathResolver,
           cxxPlatform,
-          new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
+          args,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig));
     }
 
     if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
@@ -170,9 +170,9 @@ public class CxxBinaryDescription implements
           resolver,
           pathResolver,
           cxxPlatform,
-          new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
+          args,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig));
     }
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
