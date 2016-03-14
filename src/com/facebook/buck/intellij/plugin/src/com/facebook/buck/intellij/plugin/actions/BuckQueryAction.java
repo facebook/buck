@@ -28,26 +28,24 @@ import com.intellij.openapi.project.Project;
  * Run buck targets command.
  */
 public class BuckQueryAction {
-    public static final String ACTION_TITLE = "Run buck query";
+  public static final String ACTION_TITLE = "Run buck query";
 
-    private BuckQueryAction() {
-    }
+  private BuckQueryAction() {
+  }
 
-    public static void execute(final Project project, final String target) {
-        ApplicationManager.getApplication().invokeLater(
-                new Runnable() {
-                    public void run() {
-                        BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
+  public static void execute(final Project project, final String target) {
+    ApplicationManager.getApplication().invokeLater(
+        new Runnable() {
+          public void run() {
+            BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
 
-                        BuckCommandHandler handler = new BuckQueryCommandHandler(
-                                project,
-                                project.getBaseDir(),
-                                BuckCommand.QUERY);
-                        handler.command().addParameter("--json");
-                        handler.command().addParameter(target);
-
-                        buildManager.runBuckCommand(handler, ACTION_TITLE);
-                    }
-                });
+            BuckCommandHandler handler = new BuckQueryCommandHandler(
+                project,
+                project.getBaseDir(),
+                BuckCommand.QUERY);
+            handler.command().addParameter(target);
+            buildManager.runBuckCommand(handler, ACTION_TITLE);
+          }
+        });
     }
 }

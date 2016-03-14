@@ -92,6 +92,9 @@ public abstract class BuckCommandHandler {
     workingDirectory = directory;
     commandLine.withWorkDirectory(workingDirectory);
     commandLine.addParameter(command.name());
+    for (String parameter : command.getParameters()) {
+      commandLine.addParameter(parameter);
+    }
   }
 
   /**
