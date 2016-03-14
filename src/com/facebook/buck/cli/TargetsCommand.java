@@ -34,14 +34,12 @@ import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -95,8 +93,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
-
-import javax.annotation.Nullable;
 
 public class TargetsCommand extends AbstractCommand {
 
@@ -239,25 +235,8 @@ public class TargetsCommand extends AbstractCommand {
         .toSet();
   }
 
-  /** @return the name of the build target identified by the specified alias or {@code null}. */
-  @Nullable
-  public String getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
-    return buckConfig.getBuildTargetForAliasAsString(alias);
-  }
-
-  /** @return the build target identified by the specified full path or {@code null}. */
-  public BuildTarget getBuildTargetForFullyQualifiedTarget(BuckConfig buckConfig, String target)
-      throws NoSuchBuildTargetException {
-    return buckConfig.getBuildTargetForFullyQualifiedTarget(target);
-  }
-
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    // Exit early if --resolve-alias is passed in: no need to parse any build files.
-    if (isResolveAlias()) {
-      return doResolveAlias(params);
-    }
-
     if (isShowRuleKey() && isShowTargetHash()) {
       throw new HumanReadableException("Cannot show rule key and target hash at the same time.");
     }
@@ -266,7 +245,18 @@ public class TargetsCommand extends AbstractCommand {
         "Targets",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
-      return runWithExecutor(params, pool.getExecutor());
+      ListeningExecutorService executor = pool.getExecutor();
+
+      // Exit early if --resolve-alias is passed in: no need to parse any build files.
+      if (isResolveAlias()) {
+        return ResolveAliasHelper.resolveAlias(
+            params,
+            executor,
+            getEnableProfiling(),
+            getArguments());
+      }
+
+      return runWithExecutor(params, executor);
     }
   }
 
@@ -672,39 +662,6 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /**
-   * Assumes each argument passed to this command is an alias defined in .buckconfig,
-   * or a fully qualified (non-alias) target to be verified by checking the build files.
-   * Prints the build target that each alias maps to on its own line to standard out.
-   */
-  private int doResolveAlias(CommandRunnerParams params) throws IOException, InterruptedException {
-    List<String> resolvedAliases = Lists.newArrayList();
-    for (String alias : getArguments()) {
-      String buildTarget;
-      if (alias.startsWith("//")) {
-        buildTarget = validateBuildTargetForFullyQualifiedTarget(
-            params,
-            alias,
-            params.getParser());
-        if (buildTarget == null) {
-          throw new HumanReadableException("%s is not a valid target.", alias);
-        }
-      } else {
-        buildTarget = getBuildTargetForAlias(params.getBuckConfig(), alias);
-        if (buildTarget == null) {
-          throw new HumanReadableException("%s is not an alias.", alias);
-        }
-      }
-      resolvedAliases.add(buildTarget);
-    }
-
-    for (String resolvedAlias : resolvedAliases) {
-      params.getConsole().getStdOut().println(resolvedAlias);
-    }
-
-    return 0;
-  }
-
-  /**
    * Assumes at least one target is specified.  Computes each of the
    * specified targets, followed by the rule key, output path, and/or
    * target hash, depending on what flags are passed in.
@@ -938,56 +895,6 @@ public class TargetsCommand extends AbstractCommand {
       }
     }.start();
     return closure.build();
-  }
-
-  /**
-   * Verify that the given target is a valid full-qualified (non-alias) target.
-   */
-  @Nullable
-  @VisibleForTesting
-  String validateBuildTargetForFullyQualifiedTarget(
-      CommandRunnerParams params,
-      String target,
-      Parser parser) throws IOException, InterruptedException {
-    BuildTarget buildTarget;
-    try {
-      buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
-    } catch (NoSuchBuildTargetException e) {
-      return null;
-    }
-
-    Cell owningCell = params.getCell().getCell(buildTarget);
-    Path buildFile = null;
-    try {
-      buildFile = owningCell.getAbsolutePathToBuildFile(buildTarget);
-    } catch (Cell.MissingBuildFileException e) {
-      return null;
-    }
-
-    // Get all valid targets in our target directory by reading the build file.
-    ImmutableSet<TargetNode<?>> targetNodes;
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Targets",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      targetNodes = parser.getAllTargetNodes(
-          params.getBuckEventBus(),
-          owningCell,
-          getEnableProfiling(),
-          pool.getExecutor(),
-          buildFile);
-    } catch (BuildFileParseException e) {
-      // TODO(jasta): this doesn't smell right!
-      return null;
-    }
-
-    // Check that the given target is a valid target.
-    for (TargetNode<?> candidate : targetNodes) {
-      if (candidate.getBuildTarget().equals(buildTarget)) {
-        return buildTarget.getFullyQualifiedName();
-      }
-    }
-    return null;
   }
 
   private static class DirectOwnerPredicate implements Predicate<TargetNode<?>> {
