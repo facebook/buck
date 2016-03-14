@@ -44,6 +44,7 @@ public class BuckQueryCommandHandler extends BuckCommandHandler {
 
     @Override
     protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
+        super.notifyLines(outputType, lines, lineBuilder);
         if (outputType == ProcessOutputTypes.STDOUT) {
             List<String> targetList = new LinkedList<String>();
             while (lines.hasNext()) {

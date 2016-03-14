@@ -16,19 +16,18 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
+import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.intellij.execution.filters.HyperlinkInfo;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.OpenSourceUtil;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,12 +74,16 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
   public BuckBuildCommandHandler(
       final Project project,
       final VirtualFile root,
-      final BuckCommand command) {
-    super(project, VfsUtil.virtualToIoFile(root), command);
+      final BuckCommand command,
+      final BuckEventsConsumer buckEventsConsumer) {
+    super(project, VfsUtil.virtualToIoFile(root), command, buckEventsConsumer);
   }
 
-  @Override
-  protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
+  public BuckBuildCommandHandler(
+      final Project project,
+      final VirtualFile root,
+      final BuckCommand command) {
+    super(project, VfsUtil.virtualToIoFile(root), command);
   }
 
   @Override

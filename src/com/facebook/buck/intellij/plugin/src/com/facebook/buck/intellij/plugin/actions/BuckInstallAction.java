@@ -71,7 +71,8 @@ public class BuckInstallAction extends BuckBaseAction {
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
-        BuckCommand.INSTALL);
+        BuckCommand.INSTALL,
+        buckEventsConsumer);
     if (state.customizedInstallSetting) {
       // Split the whole command line into different parameters.
       String commands = state.customizedInstallSettingCommand;

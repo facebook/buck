@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.plugin.build;
 
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
@@ -50,6 +51,7 @@ public abstract class BuckCommandHandler {
   private final File workingDirectory;
   private final GeneralCommandLine commandLine;
   private final Object processStateLock = new Object();
+  private BuckEventsConsumer buckEventsConsumer;
 
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private Process process;
@@ -74,9 +76,9 @@ public abstract class BuckCommandHandler {
   private final StringBuilder stderrLine = new StringBuilder();
 
   /**
-   * @param project   a project
-   * @param directory a process directory
-   * @param command   a command to execute (if empty string, the parameter is ignored)
+   * @param project            a project
+   * @param directory          a process directory
+   * @param command            a command to execute (if empty string, the parameter is ignored)
    */
   public BuckCommandHandler(
       Project project,
@@ -95,6 +97,21 @@ public abstract class BuckCommandHandler {
     for (String parameter : command.getParameters()) {
       commandLine.addParameter(parameter);
     }
+  }
+
+  /**
+   * @param project            a project
+   * @param directory          a process directory
+   * @param command            a command to execute (if empty string, the parameter is ignored)
+   * @param buckEventsConsumer the buck events consume
+   */
+  public BuckCommandHandler(
+      Project project,
+      File directory,
+      BuckCommand command,
+      BuckEventsConsumer buckEventsConsumer) {
+    this(project, directory, command);
+    this.buckEventsConsumer = buckEventsConsumer;
   }
 
   /**
@@ -288,10 +305,18 @@ public abstract class BuckCommandHandler {
    * @param lines       line iterator
    * @param lineBuilder a line builder
    */
-  protected abstract void notifyLines(
+  protected void notifyLines(
       final Key outputType,
       final Iterator<String> lines,
-      final StringBuilder lineBuilder);
+      final StringBuilder lineBuilder) {
+    if (outputType == ProcessOutputTypes.STDERR && buckEventsConsumer != null) {
+      StringBuilder stderr = new StringBuilder();
+      while (lines.hasNext()) {
+        stderr.append(lines.next());
+      }
+      buckEventsConsumer.consumeConsoleEvent(stderr.toString());
+    }
+  }
 
   protected abstract boolean beforeCommand();
 

@@ -62,7 +62,8 @@ public class BuckUninstallAction extends BuckBaseAction {
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
-        BuckCommand.UNINSTALL);
+        BuckCommand.UNINSTALL,
+        buckEventsConsumer);
     handler.command().addParameter(target);
     buildManager.runBuckCommand(handler, ACTION_TITLE);
   }

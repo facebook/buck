@@ -56,14 +56,15 @@ public class BuckTestAction extends BuckBaseAction {
     }
 
     // Initiate a buck test
-    BuckEventsConsumer bu = new BuckEventsConsumer(e.getProject());
+    BuckEventsConsumer buckEventsConsumer = new BuckEventsConsumer(e.getProject());
     BuckModule mod = e.getProject().getComponent(BuckModule.class);
-    mod.attach(bu, target);
+    mod.attach(buckEventsConsumer, target);
 
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
-        BuckCommand.TEST);
+        BuckCommand.TEST,
+        buckEventsConsumer);
     handler.command().addParameter(target);
     buildManager.runBuckCommand(handler, ACTION_TITLE);
   }

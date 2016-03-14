@@ -20,11 +20,8 @@ import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-
-import java.util.Iterator;
 
 public class BuckKillCommandHandler extends BuckCommandHandler {
 
@@ -33,13 +30,6 @@ public class BuckKillCommandHandler extends BuckCommandHandler {
       final VirtualFile root,
       final BuckCommand command) {
     super(project, VfsUtil.virtualToIoFile(root), command);
-  }
-
-  @Override
-  protected void notifyLines(
-      Key outputType,
-      Iterator<String> lines,
-      StringBuilder lineBuilder) {
   }
 
   @Override
