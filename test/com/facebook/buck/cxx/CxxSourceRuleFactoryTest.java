@@ -403,12 +403,21 @@ public class CxxSourceRuleFactoryTest {
           (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxxpp"))
               .setMain(new FakeSourcePath("blah"))
               .build(resolver);
+      ShBinary cxx =
+          (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+              .setMain(new FakeSourcePath("blah"))
+              .build(resolver);
 
       CxxPlatform cxxPlatform =
-          CXX_PLATFORM.withCxxpp(
-              new PreprocessorProvider(
-                  new BinaryBuildRuleToolProvider(cxxpp.getBuildTarget(), ""),
-                  CxxToolProvider.Type.DEFAULT));
+          CXX_PLATFORM
+              .withCxxpp(
+                  new PreprocessorProvider(
+                      new BinaryBuildRuleToolProvider(cxxpp.getBuildTarget(), ""),
+                      CxxToolProvider.Type.DEFAULT))
+              .withCxx(
+                  new CompilerProvider(
+                      new BinaryBuildRuleToolProvider(cxx.getBuildTarget(), ""),
+                      CxxToolProvider.Type.DEFAULT));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
@@ -433,7 +442,7 @@ public class CxxSourceRuleFactoryTest {
               cxxSource);
       assertThat(
           cxxPreprocess.getDeps(),
-          Matchers.hasItem(cxxpp));
+          Matchers.<BuildRule>hasItems(cxx, cxxpp));
       cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               name,
@@ -441,7 +450,7 @@ public class CxxSourceRuleFactoryTest {
               CxxPreprocessMode.SEPARATE);
       assertThat(
           cxxPreprocess.getDeps(),
-          Matchers.hasItem(cxxpp));
+          Matchers.<BuildRule>hasItems(cxx, cxxpp));
     }
 
   }

@@ -228,6 +228,11 @@ abstract class AbstractCxxSourceRuleFactory {
     BuildTarget target = createPreprocessBuildTarget(name, source.getType());
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegates.getUnchecked(
         PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags()));
+    Compiler compiler =
+        CxxSourceTypes.getCompiler(
+            getCxxPlatform(),
+            CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+                .resolve(getResolver());
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
@@ -237,6 +242,11 @@ abstract class AbstractCxxSourceRuleFactory {
                 new DepsBuilder()
                     .addPreprocessDeps()
                     .add(preprocessorDelegate.getPreprocessor())
+                    // We shouldn't really need to depend on the compiler for preprocess-only rules,
+                    // but the `CxxPreprocessAndCompile` class adds the entire `CompilerDelegate` to
+                    // the rule key, which means the input-based rule key factory expects to be
+                    // included in the dep list.
+                    .add(compiler)
                     .add(source),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             getPathResolver(),
@@ -244,10 +254,7 @@ abstract class AbstractCxxSourceRuleFactory {
             new CompilerDelegate(
                 getPathResolver(),
                 getCxxPlatform().getDebugPathSanitizer(),
-                CxxSourceTypes.getCompiler(
-                    getCxxPlatform(),
-                    CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                    .resolve(getResolver()),
+                compiler,
                 computeCompilerFlags(source.getType(), source.getFlags())),
             getPreprocessOutputPath(target, source.getType(), name),
             source.getPath(),
