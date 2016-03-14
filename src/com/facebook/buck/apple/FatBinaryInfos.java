@@ -119,8 +119,9 @@ public class FatBinaryInfos {
     return thinTargetsBuilder.build();
   }
 
-  private static final ImmutableSet<Flavor> FORBIDDEN_BUILD_ACTIONS = ImmutableSet.of(
-      CxxInferEnhancer.INFER,
-      CxxInferEnhancer.INFER_ANALYZE,
-      CxxCompilationDatabase.COMPILATION_DATABASE);
+  private static final ImmutableSet<Flavor> FORBIDDEN_BUILD_ACTIONS =
+      ImmutableSet.<Flavor>builder()
+          .addAll(CxxInferEnhancer.InferFlavors.getAll())
+          .add(CxxCompilationDatabase.COMPILATION_DATABASE).build();
+
 }

@@ -312,7 +312,9 @@ abstract class AbstractCxxSourceRuleFactory {
         .builder(getParams().getBuildTarget())
         .addAllFlavors(getParams().getBuildTarget().getFlavors())
         .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(ImmutableFlavor.of(String.format("infer-capture-%s", outputName)))
+        .addFlavors(ImmutableFlavor.of(String.format("%s-%s",
+                    CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get().toString(),
+                    outputName)))
         .build();
   }
 
@@ -563,7 +565,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return createPreprocessAndCompileBuildRule(name, source, strategy);
   }
 
-  public ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(
+  public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
       CxxInferTools inferTools,
       CxxInferSourceFilter sourceFilter) {

@@ -126,8 +126,8 @@ public class CxxLibraryDescription implements
     return cxxPlatforms.containsAnyOf(flavors) ||
         flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE) ||
         flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE) ||
-        flavors.contains(CxxInferEnhancer.INFER) ||
-        flavors.contains(CxxInferEnhancer.INFER_ANALYZE);
+        flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get()) ||
+        flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
 
   }
 
@@ -568,24 +568,26 @@ public class CxxLibraryDescription implements
               params :
               params.withFlavor(defaultCxxPlatform.getFlavor()),
           resolver);
-    } else if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
+    } else if (params.getBuildTarget().getFlavors()
+        .contains(CxxInferEnhancer.InferFlavors.INFER.get())) {
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           new SourcePathResolver(resolver),
           platform.or(defaultCxxPlatform),
-          args,
           new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig));
-    } else if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER_ANALYZE)) {
+          new CxxInferSourceFilter(inferBuckConfig),
+          args);
+    } else if (params.getBuildTarget().getFlavors()
+        .contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           new SourcePathResolver(resolver),
           platform.or(defaultCxxPlatform),
-          args,
           new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig));
+          new CxxInferSourceFilter(inferBuckConfig),
+          args);
     } else if (type.isPresent() && platform.isPresent()) {
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.

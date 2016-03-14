@@ -120,10 +120,11 @@ public class FatBinaryTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
-    Iterable<Flavor> forbiddenFlavors = ImmutableList.of(
-        CxxInferEnhancer.INFER,
-        CxxInferEnhancer.INFER_ANALYZE,
-        CxxCompilationDatabase.COMPILATION_DATABASE);
+    Iterable<Flavor> forbiddenFlavors = ImmutableList.<Flavor>builder()
+        .addAll(CxxInferEnhancer.InferFlavors.getAll())
+        .add(CxxCompilationDatabase.COMPILATION_DATABASE)
+        .build();
+
     for (Flavor flavor : forbiddenFlavors) {
       try {
         AppleBinaryBuilder

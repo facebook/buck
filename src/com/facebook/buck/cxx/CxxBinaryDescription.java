@@ -153,26 +153,26 @@ public class CxxBinaryDescription implements
           resolver);
     }
 
-    if (flavors.contains(CxxInferEnhancer.INFER)) {
+    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get())) {
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           pathResolver,
           cxxPlatform,
-          args,
           new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig));
+          new CxxInferSourceFilter(inferBuckConfig),
+          args);
     }
 
-    if (flavors.contains(CxxInferEnhancer.INFER_ANALYZE)) {
+    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
           params,
           resolver,
           pathResolver,
           cxxPlatform,
-          args,
           new CxxInferTools(inferBuckConfig),
-          new CxxInferSourceFilter(inferBuckConfig));
+          new CxxInferSourceFilter(inferBuckConfig),
+          args);
     }
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
@@ -259,8 +259,8 @@ public class CxxBinaryDescription implements
             CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
             CxxCompilationDatabase.COMPILATION_DATABASE,
             CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
-            CxxInferEnhancer.INFER,
-            CxxInferEnhancer.INFER_ANALYZE));
+            CxxInferEnhancer.InferFlavors.INFER.get(),
+            CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()));
 
     return flavors.isEmpty();
   }
