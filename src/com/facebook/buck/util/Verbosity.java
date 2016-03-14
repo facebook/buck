@@ -52,6 +52,10 @@ public enum Verbosity {
   ALL,
   ;
 
+  public boolean isSilent() {
+    return this.ordinal() <= SILENT.ordinal();
+  }
+
   public boolean shouldPrintStandardInformation() {
     return this.ordinal() >= STANDARD_INFORMATION.ordinal();
   }

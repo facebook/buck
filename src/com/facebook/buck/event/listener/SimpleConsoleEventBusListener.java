@@ -37,6 +37,7 @@ import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Locale;
+import java.util.logging.Level;
 
 /**
  * Implementation of {@code AbstractConsoleEventBusListener} for terminals that don't support ansi.
@@ -69,8 +70,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void parseFinished(ParseEvent.Finished finished) {
     super.parseFinished(finished);
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    this.parseTime.set(logEventPair("PARSING BUCK FILES",
+    this.parseTime.set(logEventPair(
+        "PARSING BUCK FILES",
         /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         0L,
@@ -79,14 +84,19 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         getEstimatedProgressOfProcessingBuckFiles(),
         lines));
     printLines(lines);
+
   }
 
   @Override
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     super.buildFinished(finished);
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    logEventPair("BUILDING",
+    logEventPair(
+        "BUILDING",
         /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         parseTime.get(),
@@ -107,8 +117,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void installFinished(InstallEvent.Finished finished) {
     super.installFinished(finished);
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    logEventPair("INSTALLING",
+    logEventPair(
+        "INSTALLING",
         /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         0L,
@@ -121,6 +135,11 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
+    if (console.getVerbosity().isSilent() &&
+        !event.getLevel().equals(Level.WARNING) &&
+        !event.getLevel().equals(Level.SEVERE)) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     formatConsoleEvent(event, lines);
     printLines(lines);
@@ -128,18 +147,26 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void testRunStarted(TestRunEvent.Started event) {
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    testFormatter.runStarted(lines,
+    testFormatter.runStarted(
+        lines,
         event.isRunAllTests(),
         event.getTestSelectorList(),
         event.shouldExplainTestSelectorList(),
         event.getTargetNames(),
         TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
     printLines(lines);
+
   }
 
   @Subscribe
   public void testRunCompleted(TestRunEvent.Finished event) {
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     ImmutableList<TestStatusMessage> testStatusMessages;
     synchronized (testStatusMessageBuilder) {
@@ -151,6 +178,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void testResultsAvailable(IndividualTestEvent.Finished event) {
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     testFormatter.reportResult(lines, event.getResults());
     printLines(lines);
@@ -160,29 +190,34 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
-    if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
-      String line = String.format(
-          locale,
-          "BUILT %s",
-          finished.getBuildRule().getFullyQualifiedName());
-      if (ruleCount.isPresent()) {
-        line += String.format(
-            locale,
-            " (%d/%d JOBS)",
-            numRulesCompleted.get(),
-            ruleCount.get());
-      }
-      console.getStdErr().println(line);
+    if (finished.getStatus() != BuildRuleStatus.SUCCESS ||
+        console.getVerbosity().isSilent()) {
+      return;
     }
+    String line = String.format(
+        locale,
+        "BUILT %s",
+        finished.getBuildRule().getFullyQualifiedName());
+    if (ruleCount.isPresent()) {
+      line += String.format(
+          locale,
+          " (%d/%d JOBS)",
+          numRulesCompleted.get(),
+          ruleCount.get());
+    }
+    console.getStdErr().println(line);
   }
 
   @Override
   @Subscribe
   public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
     super.onHttpArtifactCacheShutdownEvent(event);
-
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    logEventPair("HTTP CACHE UPLOAD",
+    logEventPair(
+        "HTTP CACHE UPLOAD",
         renderHttpUploads(),
         clock.currentTimeMillis(),
         0L,
@@ -197,6 +232,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void testStatusMessageStarted(TestStatusMessageEvent.Started started) {
     synchronized (testStatusMessageBuilder) {
+      if (console.getVerbosity().isSilent()) {
+        return;
+      }
       testStatusMessageBuilder.add(started.getTestStatusMessage());
     }
   }
@@ -204,6 +242,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void testStatusMessageFinished(TestStatusMessageEvent.Finished finished) {
     synchronized (testStatusMessageBuilder) {
+      if (console.getVerbosity().isSilent()) {
+        return;
+      }
       testStatusMessageBuilder.add(finished.getTestStatusMessage());
     }
   }
