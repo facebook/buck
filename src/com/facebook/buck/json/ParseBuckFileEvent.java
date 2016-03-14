@@ -48,8 +48,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
     return new Started(buckFilePath);
   }
 
-  public static Finished finished(Started started, List<Map<String, Object>> rules) {
-    return new Finished(started, rules);
+  public static Finished finished(
+      Started started,
+      List<Map<String, Object>> rules,
+      String profile) {
+    return new Finished(started, rules, profile);
   }
 
   public static class Started extends ParseBuckFileEvent {
@@ -65,10 +68,12 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
 
   public static class Finished extends ParseBuckFileEvent {
     private final List<Map<String, Object>> rules;
+    private final String profile;
 
-    protected Finished(Started started, List<Map<String, Object>> rules) {
+    protected Finished(Started started, List<Map<String, Object>> rules, String profile) {
       super(started.getEventKey(), started.getBuckFilePath());
       this.rules = rules;
+      this.profile = profile;
     }
 
     @Override
@@ -82,6 +87,10 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
 
     public List<Map<String, Object>> getRules() {
       return rules;
+    }
+
+    public String getProfile() {
+      return profile;
     }
 
     @Override

@@ -407,7 +407,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             "path",
             finished.getBuckFilePath().toString(),
             "num_rules",
-            Integer.toString(finished.getNumRules())),
+            Integer.toString(finished.getNumRules()),
+            "python_profile",
+            finished.getProfile()),
         finished);
   }
 

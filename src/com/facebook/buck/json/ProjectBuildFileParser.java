@@ -32,13 +32,12 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
-import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -50,12 +49,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 
+import org.immutables.value.Value;
+
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -112,7 +111,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private boolean isClosed;
 
   private boolean enableProfiling;
-  @Nullable private NamedTemporaryFile profileOutputFile;
   @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
   @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
@@ -241,15 +239,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // produced.
     argBuilder.add("-u");
 
-    if (enableProfiling) {
-      profileOutputFile = new NamedTemporaryFile("buck-py-profile", ".pstats");
-      argBuilder.add("-m");
-      argBuilder.add("cProfile");
-      argBuilder.add("-o");
-      argBuilder.add(profileOutputFile.get().toString());
-    }
-
     argBuilder.add(getPathToBuckPy(options.getDescriptions()).toString());
+
+    if (enableProfiling) {
+      argBuilder.add("--profile");
+    }
 
     if (options.getAllowEmptyGlobs()) {
       argBuilder.add("--allow_empty_globs");
@@ -337,9 +331,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkNotNull(buckPyProcess);
 
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
-    int numRules = 0;
     buckEventBus.post(parseBuckFileStarted);
-    List<Map<String, Object>> result = null;
+
+    List<Map<String, Object>> values = null;
+    String profile = "";
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
       String buildFileString = buildFile.toString();
       LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
@@ -348,48 +343,56 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdinWriter.flush();
 
       LOG.debug("Parsing output of process %s...", buckPyProcess);
+      Object deserializedValue;
       try {
-        Object deserializedValue = bserDeserializer.deserializeBserValue(
+        deserializedValue = bserDeserializer.deserializeBserValue(
             buckPyProcess.getInputStream());
-        result = handleDeserializedValue(buildFile, deserializedValue, buckEventBus);
       } catch (BserDeserializer.BserEofException e) {
         LOG.warn(e, "Parser exited while decoding BSER data");
         throw new IOException("Parser exited unexpectedly", e);
       }
-      LOG.verbose("Got rules: %s", result);
-      numRules = result.size();
-      LOG.debug("Parsed %d rules from process", numRules);
-      return result;
+      BuildFilePythonResult resultObject = handleDeserializedValue(deserializedValue);
+      handleDiagnostics(buildFile, resultObject.getDiagnostics(), buckEventBus);
+      values = resultObject.getValues();
+      LOG.verbose("Got rules: %s", values);
+      LOG.debug("Parsed %d rules from process", values.size());
+      profile = resultObject.getProfile();
+      return values;
     } finally {
-      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, result));
+      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, values, profile));
     }
   }
 
   @SuppressWarnings("unchecked")
-  private static List<Map<String, Object>> handleDeserializedValue(
-      Path buildFile,
-      Object deserializedValue,
-      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
+  private static BuildFilePythonResult handleDeserializedValue(Object deserializedValue)
+      throws IOException {
     if (!(deserializedValue instanceof Map<?, ?>)) {
       throw new IOException(
           String.format("Invalid parser output (expected map, got %s)", deserializedValue));
     }
     Map<String, Object> decodedResult = (Map<String, Object>) deserializedValue;
-    Object diagnostics = decodedResult.get("diagnostics");
-    if (diagnostics != null) {
-      if (!(diagnostics instanceof List<?>)) {
-        throw new IOException(
-            String.format("Invalid parser diagnostics (expected list, got %s)", diagnostics));
-      }
-      List<Map<String, String>> diagnosticsList = (List<Map<String, String>>) diagnostics;
-      handleDiagnostics(buildFile, diagnosticsList, buckEventBus);
+    List<Map<String, Object>> values;
+    try {
+      values = (List<Map<String, Object>>) decodedResult.get("values");
+    } catch (ClassCastException e) {
+      throw new IOException("Invalid parser values", e);
     }
-    Object values = decodedResult.get("values");
-    if (!(values instanceof List<?>)) {
-      throw new IOException(
-          String.format("Invalid parser values (expected list, got %s)", values));
+    List<Map<String, String>> diagnostics;
+    try {
+      diagnostics = (List<Map<String, String>>) decodedResult.get("diagnostics");
+    } catch (ClassCastException e) {
+      throw new IOException("Invalid parser diagnostics", e);
     }
-    return (List<Map<String, Object>>) values;
+    String profile;
+    try {
+      profile = (String) decodedResult.get("profile");
+    } catch (ClassCastException e) {
+      throw new IOException("Invalid parser profile", e);
+    }
+    return BuildFilePythonResult.of(
+        values,
+        diagnostics == null ? ImmutableList.<Map<String, String>>of() : diagnostics,
+        profile == null ? "" : profile);
   }
 
   private static void handleDiagnostics(
@@ -468,10 +471,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
           stderrConsumerTerminationFuture = null;
         }
 
-        if (enableProfiling && profileOutputFile != null) {
-          parseProfileOutput(profileOutputFile.get());
-        }
-
         LOG.debug("Waiting for process %s to exit...", buckPyProcess);
         int exitCode = processExecutor.waitForLaunchedProcess(buckPyProcess);
         if (exitCode != 0) {
@@ -499,35 +498,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 Preconditions.checkNotNull(projectBuildFileParseEventStarted)));
       }
       isClosed = true;
-    }
-  }
-
-  private static void parseProfileOutput(Path profileOutput) throws InterruptedException {
-    try {
-      LOG.debug("Parsing output of profiler: %s", profileOutput);
-      ProcessBuilder processBuilder = new ProcessBuilder(
-          "python", "-m", "pstats", profileOutput.toString());
-      Process process = processBuilder.start();
-      LOG.debug("Started process: %s", processBuilder.command());
-      try (OutputStreamWriter stdin =
-               new OutputStreamWriter(process.getOutputStream(), Charsets.UTF_8);
-           BufferedWriter stdinWriter = new BufferedWriter(stdin);
-           InputStreamReader stdout =
-               new InputStreamReader(process.getInputStream(), Charsets.UTF_8);
-           BufferedReader stdoutReader = new BufferedReader(stdout)) {
-        stdinWriter.write("sort cumulative\nstats 25\n");
-        stdinWriter.flush();
-        stdinWriter.close();
-        LOG.debug("Reading process output...");
-        String line;
-        while ((line = stdoutReader.readLine()) != null) {
-          LOG.debug("buck.py profile: %s", line);
-        }
-        LOG.debug("Done reading process output.");
-      }
-      process.waitFor();
-    } catch (IOException e) {
-      LOG.error(e, "Couldn't read profile output file %s", profileOutput);
     }
   }
 
@@ -588,4 +558,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
     LOG.debug("Created temporary buck.py instance at %s.", normalizedBuckDotPyPath);
   }
 
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractBuildFilePythonResult {
+    List<Map<String, Object>> getValues();
+    List<Map<String, String>> getDiagnostics();
+    String getProfile();
+  }
 }
