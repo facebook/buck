@@ -74,6 +74,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * "//third_party/java/guava/".
    */
   @Value.Derived
+  @Value.Auxiliary
   public String getBaseNameWithSlash() {
     return getBaseNameWithSlash(getBaseName());
   }
@@ -94,6 +95,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * appended to a file path.
    */
   @Value.Derived
+  @Value.Auxiliary
   public Path getBasePath() {
     return getCellPath().getFileSystem().getPath(
         getBaseName().substring(BUILD_TARGET_PREFIX.length()));
@@ -105,6 +107,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    *     string
    */
   @Value.Derived
+  @Value.Auxiliary
   public String getBasePathWithSlash() {
     String basePath = MorePaths.pathWithUnixSeparators(getBasePath());
     return basePath.isEmpty() ? "" : basePath + "/";
@@ -118,6 +121,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * "//third_party/java/guava:guava-latest".
    */
   @Value.Derived
+  @Value.Auxiliary
   public String getFullyQualifiedName() {
     return (getCell().isPresent() ? "@" + getCell().get() : "") +
         getBaseName() + ":" + getShortName();
@@ -161,5 +165,4 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
         .compare(getShortName(), o.getShortName())
         .result();
   }
-
 }
