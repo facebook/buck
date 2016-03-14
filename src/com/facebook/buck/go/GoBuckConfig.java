@@ -36,7 +36,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -234,7 +233,7 @@ public class GoBuckConfig {
         throw new HumanReadableException(goToolResult.getStderr().get());
       }
     } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     } catch (IOException e) {
       throw new HumanReadableException(
           e,

@@ -41,7 +41,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -209,7 +208,7 @@ public class GnuLinker implements Linker {
                               getResolver().getAbsolutePath(path),
                               Charsets.UTF_8));
                     } catch (IOException e) {
-                      throw Throwables.propagate(e);
+                      throw new RuntimeException(e);
                     }
                   }
                   List<String> lines = new ArrayList<>();

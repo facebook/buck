@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 import org.objectweb.asm.ClassReader;
@@ -58,7 +57,7 @@ class ClassNodeListSupplier implements Supplier<ImmutableList<ClassNode>> {
       try (JarFile jarFile = new JarFile(jarPath.toFile())) {
         loadClassNodes(jarFile, builder);
       } catch (IOException e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
 

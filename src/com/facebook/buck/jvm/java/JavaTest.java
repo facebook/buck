@@ -56,7 +56,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -593,7 +592,7 @@ public class JavaTest
         traversal.traverse();
       } catch (IOException e) {
         // There's nothing sane to do here. The jar file really should exist.
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
 
       return testClassNames.build();

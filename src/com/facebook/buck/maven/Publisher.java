@@ -25,7 +25,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
-import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -63,7 +62,7 @@ public class Publisher {
     try {
       MAVEN_CENTRAL = new URL(MAVEN_CENTRAL_URL);
     } catch (MalformedURLException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
   private static final Logger LOG = Logger.get(Publisher.class);
@@ -148,7 +147,7 @@ public class Publisher {
         File pom = Pom.generatePomFile(publishable).toFile();
         deployResultBuilder.add(publish(coords, ImmutableList.of(mainItem, pom)));
       } catch (IOException e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
     return deployResultBuilder.build();

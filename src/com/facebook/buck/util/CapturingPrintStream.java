@@ -16,8 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Throwables;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -40,7 +38,7 @@ public class CapturingPrintStream extends PrintStream {
     try {
       return byteArrayOutputStream.toString(charset.name()).replace("\r\n", "\n");
     } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

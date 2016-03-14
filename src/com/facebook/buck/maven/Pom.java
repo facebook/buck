@@ -25,7 +25,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -128,7 +127,7 @@ public class Pom {
 
         return Preconditions.checkNotNull(modelBuildingResult.getRawModel());
       } catch (ModelBuildingException e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     } else {
       Model model = new Model();

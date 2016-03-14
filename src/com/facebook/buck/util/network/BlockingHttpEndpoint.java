@@ -19,7 +19,6 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -88,7 +87,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
               connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
               return send(connection, content);
             } catch (IOException e) {
-              throw Throwables.propagate(e);
+              throw new RuntimeException(e);
             }
           }
         });

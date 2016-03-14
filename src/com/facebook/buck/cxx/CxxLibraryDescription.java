@@ -51,7 +51,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -745,7 +744,7 @@ public class CxxLibraryDescription implements
                   args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
                   preprocessMode);
             } catch (NoSuchBuildTargetException e) {
-              throw Throwables.propagate(e);
+              throw new RuntimeException(e);
             }
           }
         },

@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
 import org.kohsuke.args4j.spi.SubCommand;
@@ -54,7 +53,7 @@ public abstract class AbstractContainerCommand implements Command {
           .getDeclaredField(getSubcommandsFieldName())
           .getAnnotation(SubCommands.class);
     } catch (NoSuchFieldException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
     int lengthOfLongestCommand = 0;
     for (SubCommand subCommand : subCommands.value()) {
@@ -69,7 +68,7 @@ public abstract class AbstractContainerCommand implements Command {
       try {
         command = (Command) subCommand.impl().newInstance();
       } catch (IllegalAccessException | InstantiationException e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
       String name = subCommand.name().toLowerCase();
       stream.printf(

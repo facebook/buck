@@ -16,11 +16,11 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.ClassParser;
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.IllegalAnnotationError;
 import org.kohsuke.args4j.Option;
@@ -78,8 +78,8 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
           Object fieldValue = f.getType().newInstance();
           Setters.create(f, bean).addValue(fieldValue);
           parseAdditionalOptions(classParser, fieldValue, visited);
-        } catch (Exception e) {
-          throw Throwables.propagate(e);
+        } catch (CmdLineException | IllegalAccessException | InstantiationException e) {
+          throw new RuntimeException(e);
         }
       }
     }

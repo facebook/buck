@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
@@ -67,7 +66,7 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
       LOG.setLevel(LEVEL);
 
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

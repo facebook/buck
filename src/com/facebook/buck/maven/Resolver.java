@@ -25,7 +25,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -232,7 +231,7 @@ public class Resolver {
     try {
       artifactToDownloadVersion = versionScheme.parseVersion(artifactToDownload.getVersion());
     } catch (InvalidVersionSpecificationException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     final Pattern versionExtractor = Pattern.compile(
@@ -252,7 +251,7 @@ public class Resolver {
               try {
                 return versionScheme.parseVersion(matcher.group(1));
               } catch (InvalidVersionSpecificationException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
               }
             } else {
               return null;

@@ -22,7 +22,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -280,7 +279,7 @@ public class MorePaths {
       // If the file doesn't exist, we need to create it.
       return true;
     } catch (NoSuchAlgorithmException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

@@ -146,7 +146,7 @@ public class BuildRuleResolver {
           new Pair<BuildTarget, Class<?>>(target, metadataClass));
     } catch (ExecutionException e) {
       Throwables.propagateIfInstanceOf(e.getCause(), NoSuchBuildTargetException.class);
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

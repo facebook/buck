@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -138,7 +137,7 @@ public class InputBasedRuleKeyBuilderFactory
               pathResolver.getAbsolutePath(sourcePath),
               pathResolver.getRelativePath(sourcePath));
         } catch (IOException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
       inputs.add(Collections.singleton(sourcePath));

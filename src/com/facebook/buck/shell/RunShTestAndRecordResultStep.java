@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -171,7 +170,7 @@ public class RunShTestAndRecordResultStep implements Step {
     try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
       mapper.writeValue(outputStream, summary);
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     // Even though the test may have failed, this command executed successfully, so its exit code

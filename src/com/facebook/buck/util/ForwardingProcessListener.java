@@ -16,8 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Throwables;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
@@ -45,7 +43,7 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
     try {
       stdout.write(buffer);
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -54,7 +52,7 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
     try {
       stderr.write(buffer);
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

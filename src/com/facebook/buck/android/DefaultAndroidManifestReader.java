@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import org.w3c.dom.Document;
@@ -93,7 +92,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       versionCodeExpression = xPath.compile(XPATH_VERSION_CODE);
       instrumentationTestRunnerExpression = xPath.compile(XPATH_INSTRUMENTATION_TEST_RUNNER);
     } catch (XPathExpressionException | SAXException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -110,7 +109,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       return activities;
 
     } catch (XPathExpressionException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -119,7 +118,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
     try {
       return (String) packageExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -128,7 +127,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
     try {
       return (String) versionCodeExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -137,7 +136,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
     try {
       return (String) instrumentationTestRunnerExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

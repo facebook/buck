@@ -36,6 +36,7 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -44,6 +45,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 
 @XmlRootElement(name = "fatjar")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -74,7 +76,8 @@ public class FatJar {
   /**
    * @return the {@link FatJar} object deserialized from the resource name via {@code loader}.
    */
-  public static FatJar load(ClassLoader loader) throws Exception {
+  public static FatJar load(ClassLoader loader)
+      throws XMLStreamException, JAXBException, IOException {
     InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
     try {
       BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
@@ -96,7 +99,7 @@ public class FatJar {
   /**
    * Serialize this instance as XML to {@code outputStream}.
    */
-  public void store(OutputStream outputStream) throws Exception {
+  public void store(OutputStream outputStream) throws JAXBException {
     JAXBContext context = JAXBContext.newInstance(FatJar.class);
     JAXBElement<FatJar> element = new JAXBElement<FatJar>(new QName("fatjar"), FatJar.class, this);
     Marshaller marshaller = context.createMarshaller();

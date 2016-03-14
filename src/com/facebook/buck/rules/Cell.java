@@ -225,10 +225,7 @@ public class Cell {
         }
       });
     } catch (ExecutionException | UncheckedExecutionException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof HumanReadableException) {
-        throw (HumanReadableException) cause;
-      }
+      Throwables.propagateIfInstanceOf(e.getCause(), HumanReadableException.class);
       throw Throwables.propagate(e);
     }
   }
