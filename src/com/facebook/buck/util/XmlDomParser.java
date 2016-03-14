@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -42,7 +43,7 @@ public class XmlDomParser {
   }
 
   public static Document parse(String xmlContents) throws IOException, SAXException {
-    return parse(new ByteArrayInputStream(xmlContents.getBytes()));
+    return parse(new ByteArrayInputStream(xmlContents.getBytes(StandardCharsets.UTF_8)));
   }
 
   public static Document parse(InputStream stream) throws IOException, SAXException {

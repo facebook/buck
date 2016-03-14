@@ -204,7 +204,7 @@ public class ProjectFilesystemTest {
   @Test
   public void testWriteBytesToPath() throws IOException {
     String content = "Hello, World!";
-    byte[] bytes = content.getBytes();
+    byte[] bytes = content.getBytes(UTF_8);
     filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
     assertEquals(
         content,
@@ -213,7 +213,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testCopyToPath() throws IOException {
-    InputStream inputStream = new ByteArrayInputStream("Hello, world!".getBytes());
+    InputStream inputStream = new ByteArrayInputStream("Hello, world!".getBytes(UTF_8));
     filesystem.copyToPath(inputStream, Paths.get("bytes.txt"));
 
     assertEquals(
@@ -224,10 +224,10 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testCopyToPathWithOptions() throws IOException {
-    InputStream inputStream = new ByteArrayInputStream("hello!".getBytes());
+    InputStream inputStream = new ByteArrayInputStream("hello!".getBytes(UTF_8));
     filesystem.copyToPath(inputStream, Paths.get("replace_me.txt"));
 
-    inputStream = new ByteArrayInputStream("hello again!".getBytes());
+    inputStream = new ByteArrayInputStream("hello again!".getBytes(UTF_8));
     filesystem.copyToPath(
         inputStream,
         Paths.get("replace_me.txt"),

@@ -34,6 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -85,7 +86,7 @@ public class ProgressEstimatorTest {
         .build();
     String contents = MAPPER.writeValueAsString(storageContents);
     Files.createDirectories(storagePath.getParent());
-    Files.write(storagePath, contents.getBytes());
+    Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
     // path is 2 levels up folder
     ProgressEstimator estimator = new ProgressEstimator(
@@ -114,7 +115,7 @@ public class ProgressEstimatorTest {
         .build();
     String contents = MAPPER.writeValueAsString(storageContents);
     Files.createDirectories(storagePath.getParent());
-    Files.write(storagePath, contents.getBytes());
+    Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
     // path is 2 levels up folder
     ProgressEstimator estimator = new ProgressEstimator(
@@ -155,7 +156,7 @@ public class ProgressEstimatorTest {
         .build();
     String contents = MAPPER.writeValueAsString(storageContents);
     Files.createDirectories(storagePath.getParent());
-    Files.write(storagePath, contents.getBytes());
+    Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
     // path is 2 levels up folder
     ProgressEstimator estimator = new ProgressEstimator(
@@ -184,7 +185,7 @@ public class ProgressEstimatorTest {
         .build();
     String contents = MAPPER.writeValueAsString(storageContents);
     Files.createDirectories(storagePath.getParent());
-    Files.write(storagePath, contents.getBytes());
+    Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
     // path is 2 levels up folder
     ProgressEstimator estimator = new ProgressEstimator(

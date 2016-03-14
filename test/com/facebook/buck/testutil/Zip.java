@@ -28,6 +28,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -83,7 +84,7 @@ public class Zip implements AutoCloseable {
   }
 
   public void add(String fileName, String contents) throws IOException {
-    add(fileName, contents.getBytes());
+    add(fileName, contents.getBytes(StandardCharsets.UTF_8));
   }
 
   public void addDir(String dirName) throws IOException {

@@ -236,7 +236,7 @@ class RelinkerRule extends AbstractBuildRule {
 
     Files.write(
         absolutify(getRelativeVersionFilePath()),
-        versionScript.getBytes(),
+        versionScript.getBytes(Charsets.UTF_8),
         StandardOpenOption.CREATE);
   }
 

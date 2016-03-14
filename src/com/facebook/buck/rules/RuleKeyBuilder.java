@@ -36,6 +36,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.primitives.Primitives;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -82,7 +83,7 @@ public class RuleKeyBuilder {
       if (logElms != null) {
         logElms.add(String.format("key(%s):", key));
       }
-      hasher.putBytes(key.getBytes());
+      hasher.putBytes(key.getBytes(StandardCharsets.UTF_8));
       hasher.putByte(SEPARATOR);
     }
 
@@ -95,7 +96,7 @@ public class RuleKeyBuilder {
     // And now we need to figure out what this thing is.
     Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
     if (buildRule.isPresent()) {
-      feed(sourcePath.toString().getBytes());
+      feed(sourcePath.toString().getBytes(StandardCharsets.UTF_8));
       return setSingleValue(buildRule.get());
     } else {
       // The original version of this expected the path to be relative, however, sometimes the
@@ -130,7 +131,7 @@ public class RuleKeyBuilder {
       logElms.add(String.format("path(%s):", pathForKey));
     }
 
-    feed(pathForKey.getBytes());
+    feed(pathForKey.getBytes(StandardCharsets.UTF_8));
     return this;
   }
 
@@ -211,13 +212,13 @@ public class RuleKeyBuilder {
               key,
               val);
         }
-        feed("{".getBytes());
+        feed("{".getBytes(StandardCharsets.UTF_8));
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
           setReflectively(key, entry.getKey());
-          feed(" -> ".getBytes());
+          feed(" -> ".getBytes(StandardCharsets.UTF_8));
           setReflectively(key, entry.getValue());
         }
-        return feed("}".getBytes());
+        return feed("}".getBytes(StandardCharsets.UTF_8));
       }
 
       if (val instanceof Supplier) {
@@ -259,8 +260,8 @@ public class RuleKeyBuilder {
       logElms.add(String.format("path(%s:%s):", addToKey, sha1));
     }
 
-    feed(addToKey.toString().getBytes());
-    feed(sha1.toString().getBytes());
+    feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
+    feed(sha1.toString().getBytes(StandardCharsets.UTF_8));
     return this;
   }
 
@@ -272,9 +273,9 @@ public class RuleKeyBuilder {
       if (logElms != null) {
         logElms.add(String.format("boolean(\"%s\"):", (boolean) val ? "true" : "false"));
       }
-      feed(((boolean) val ? "t" : "f").getBytes());
+      feed(((boolean) val ? "t" : "f").getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Enum) {
-      feed(String.valueOf(val).getBytes());
+      feed(String.valueOf(val).getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Number) {
       if (logElms != null) {
         logElms.add(String.format("number(%s):", val));
@@ -300,24 +301,25 @@ public class RuleKeyBuilder {
       if (logElms != null) {
         logElms.add(String.format("string(\"%s\"):", val));
       }
-      feed(((String) val).getBytes());
+      feed(((String) val).getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof BuildRule) {                       // Buck types
       return setBuildRule((BuildRule) val);
     } else if (val instanceof BuildRuleType) {
       if (logElms != null) {
         logElms.add(String.format("ruleKeyType(%s):", val));
       }
-      feed(val.toString().getBytes());
+      feed(val.toString().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof RuleKey) {
       if (logElms != null) {
         logElms.add(String.format("ruleKey(sha1=%s):", val));
       }
-      feed(val.toString().getBytes());
+      feed(val.toString().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof BuildTarget || val instanceof UnflavoredBuildTarget) {
       if (logElms != null) {
         logElms.add(String.format("target(%s):", val));
       }
-      feed(((HasBuildTarget) val).getBuildTarget().getFullyQualifiedName().getBytes());
+      feed(((HasBuildTarget) val).getBuildTarget().getFullyQualifiedName().getBytes(
+               StandardCharsets.UTF_8));
     } else if (val instanceof Either) {
       Either<?, ?> either = (Either<?, ?>) val;
       if (either.isLeft()) {
@@ -335,16 +337,16 @@ public class RuleKeyBuilder {
       if (logElms != null) {
         logElms.add(String.format("sourceroot(%s):", val));
       }
-      feed(((SourceRoot) val).getName().getBytes());
+      feed(((SourceRoot) val).getName().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof SourceWithFlags) {
       SourceWithFlags source = (SourceWithFlags) val;
       setSingleValue(source.getSourcePath());
-      feed("[".getBytes());
+      feed("[".getBytes(StandardCharsets.UTF_8));
       for (String flag : source.getFlags()) {
-        feed(flag.getBytes());
-        feed(",".getBytes());
+        feed(flag.getBytes(StandardCharsets.UTF_8));
+        feed(",".getBytes(StandardCharsets.UTF_8));
       }
-      feed("]".getBytes());
+      feed("]".getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Sha1HashCode) {
       setSingleValue(((Sha1HashCode) val).getHash());
     } else if (val instanceof byte[]) {

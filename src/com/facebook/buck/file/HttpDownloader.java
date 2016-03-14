@@ -30,6 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
@@ -75,7 +76,8 @@ public class HttpDownloader implements Downloader {
         if ("https".equals(uri.getScheme()) && connection instanceof HttpsURLConnection) {
           PasswordAuthentication p = authentication.get();
           String authStr = p.getUserName() + ":" + new String(p.getPassword());
-          String authEncoded = BaseEncoding.base64().encode(authStr.getBytes());
+          String authEncoded = BaseEncoding.base64().encode(
+              authStr.getBytes(StandardCharsets.UTF_8));
           connection.addRequestProperty("Authorization", "Basic " + authEncoded);
         } else {
           LOG.info("Refusing to send basic authentication over plain http.");

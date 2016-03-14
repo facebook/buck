@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public class WriteFile extends AbstractBuildRule {
@@ -47,7 +48,12 @@ public class WriteFile extends AbstractBuildRule {
       String fileContents,
       Path output,
       boolean executable) {
-    this(buildRuleParams, resolver, fileContents.getBytes(), output, executable);
+    this(
+        buildRuleParams,
+        resolver,
+        fileContents.getBytes(StandardCharsets.UTF_8),
+        output,
+        executable);
   }
 
   public WriteFile(

@@ -43,6 +43,7 @@ import com.sun.jna.ptr.IntByReference;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -117,7 +118,7 @@ class UnixDomainSocketLibrary {
      * using the default encoding of the platform.
      */
     public SockaddrUn(String path) throws IOException {
-      byte[] pathBytes = path.getBytes();
+      byte[] pathBytes = path.getBytes(StandardCharsets.UTF_8);
       if (pathBytes.length > sunPath.length - 1) {
         throw new IOException(
             "Cannot fit name [" + path + "] in maximum unix domain socket length");

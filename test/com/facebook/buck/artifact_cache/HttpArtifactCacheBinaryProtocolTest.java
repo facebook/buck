@@ -85,7 +85,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
-                return new ByteArrayInputStream(data.getBytes());
+                return new ByteArrayInputStream(data.getBytes(Charsets.UTF_8));
               }
             }
         );
@@ -103,7 +103,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     assertThat(responseReadResult.getRuleKeys(), Matchers.containsInAnyOrder(ruleKey, ruleKey2));
     assertThat(responseReadResult.getMetadata(), Matchers.equalTo(metadata));
-    assertThat(fetchResponsePayload.toByteArray(), Matchers.equalTo(data.getBytes()));
+    assertThat(fetchResponsePayload.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
   }
 
   @Test
@@ -136,7 +136,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
           inputStream,
           outputStream);
       assertThat(result.getRuleKeys(), Matchers.contains(ruleKey));
-      assertThat(outputStream.toByteArray(), Matchers.equalTo(data.getBytes()));
+      assertThat(outputStream.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
       assertThat(result.getActualHashCode(), Matchers.equalTo(HashCode.fromString("d73076be")));
       assertThat(result.getExpectedHashCode(), Matchers.equalTo(HashCode.fromString("d73076be")));
       assertThat(result.getMetadata(), Matchers.anEmptyMap());
@@ -201,7 +201,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
-                return new ByteArrayInputStream(data.getBytes());
+                return new ByteArrayInputStream(data.getBytes(Charsets.UTF_8));
               }
             });
 
@@ -215,7 +215,9 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     assertThat(readStoreRequest.getRuleKeys(), Matchers.containsInAnyOrder(ruleKey, ruleKey2));
     assertThat(readStoreRequest.getMetadata(), Matchers.equalTo(metadata));
-    assertThat(storeRequestPayloadStream.toByteArray(), Matchers.equalTo(data.getBytes()));
+    assertThat(
+        storeRequestPayloadStream.toByteArray(),
+        Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
   }
 
   @Test
@@ -234,7 +236,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
-                return new ByteArrayInputStream("datadata".getBytes());
+                return new ByteArrayInputStream("datadata".getBytes(Charsets.UTF_8));
               }
             });
 

@@ -45,6 +45,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -456,7 +457,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
               stream.writeByte(Integer.parseInt(value));
               break;
             case 't':
-              stream.write(value.getBytes());
+              stream.write(value.getBytes(StandardCharsets.UTF_8));
               break;
             default:
               throw new RuntimeException("Unexpected data type in .fbstr file: " + dataType);

@@ -42,6 +42,7 @@ import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -77,7 +78,7 @@ public class AdbHelperTest {
           IShellOutputReceiver receiver,
           long timeout,
           TimeUnit timeoutUnit) {
-        byte[] outputBytes = output.getBytes();
+        byte[] outputBytes = output.getBytes(StandardCharsets.UTF_8);
         receiver.addOutput(outputBytes, 0, outputBytes.length);
         receiver.flush();
       }

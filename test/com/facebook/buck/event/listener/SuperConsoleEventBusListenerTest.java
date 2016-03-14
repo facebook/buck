@@ -96,6 +96,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1949,7 +1950,7 @@ public class SuperConsoleEventBusListenerTest {
         .build();
     String contents = new Gson().toJson(storageContents);
     Files.createDirectories(storagePath.getParent());
-    Files.write(storagePath, contents.getBytes());
+    Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
