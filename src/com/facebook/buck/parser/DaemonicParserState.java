@@ -255,7 +255,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
   @Override
   @SuppressWarnings("unchecked")
-  public ImmutableList<Map<String, Object>> putRawNodesIfNotPresent(
+  public ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
       final Cell cell,
       final Path buildFile,
       final ImmutableList<Map<String, Object>> rawNodes) {

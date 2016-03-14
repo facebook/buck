@@ -40,8 +40,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.hamcrest.Matchers;
@@ -56,6 +56,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 
 public class ParsePipelineTest {
   @Rule
@@ -179,7 +180,7 @@ public class ParsePipelineTest {
     try (Fixture fixture = new Fixture("pipeline_test")) {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
-      fixture.getCache().putRawNodesIfNotPresent(
+      fixture.getCache().putRawNodesIfNotPresentAndStripMetaEntries(
           cell,
           rootBuildFilePath,
           ImmutableList.<Map<String, Object>>of(
@@ -204,7 +205,7 @@ public class ParsePipelineTest {
       Optional<ImmutableList<Map<String, Object>>> rootRawNodes = fixture.getCache().lookupRawNodes(
           cell,
           rootBuildFilePath);
-      fixture.getCache().putRawNodesIfNotPresent(
+      fixture.getCache().putRawNodesIfNotPresentAndStripMetaEntries(
           cell,
           aBuildFilePath,
           rootRawNodes.get());
@@ -232,7 +233,7 @@ public class ParsePipelineTest {
       Optional<ImmutableList<Map<String, Object>>> rootRawNodes = fixture.getCache().lookupRawNodes(
           cell,
           rootBuildFilePath);
-      fixture.getCache().putRawNodesIfNotPresent(
+      fixture.getCache().putRawNodesIfNotPresentAndStripMetaEntries(
           cell,
           aBuildFilePath,
           rootRawNodes.get());
@@ -271,8 +272,12 @@ public class ParsePipelineTest {
     }
 
     @Override
-    public synchronized ImmutableList<Map<String, Object>> putRawNodesIfNotPresent(
-        Cell cell, Path buildFile, ImmutableList<Map<String, Object>> rawNodes) {
+    public synchronized ImmutableList<Map<String, Object>>
+    putRawNodesIfNotPresentAndStripMetaEntries(
+        Cell cell,
+        Path buildFile,
+        ImmutableList<Map<String, Object>> rawNodes) {
+      // Strip meta entries.
       rawNodes = FluentIterable.from(rawNodes)
           .filter(
               new Predicate<Map<String, Object>>() {

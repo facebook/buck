@@ -2009,7 +2009,8 @@ public class ParserTest {
                 BuildFileSpec.fromRecursivePath(Paths.get("bar"))),
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),
-                BuildFileSpec.fromRecursivePath(Paths.get("foo")))));
+                BuildFileSpec.fromRecursivePath(Paths.get("foo")))),
+        SpeculativeParsing.of(true));
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

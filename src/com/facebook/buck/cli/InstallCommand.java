@@ -39,6 +39,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -58,6 +59,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -289,12 +291,16 @@ public class InstallCommand extends BuildCommand {
             params.getBuckConfig(),
             getArguments()).get(index);
 
-        BuildTarget target = params.getParser().resolveTargetSpec(
-            params.getBuckEventBus(),
-            params.getCell(),
-            getEnableProfiling(),
-            executor,
-            spec).iterator().next();
+        BuildTarget target =
+            FluentIterable.from(
+                params.getParser().resolveTargetSpecs(
+                    params.getBuckEventBus(),
+                    params.getCell(),
+                    getEnableProfiling(),
+                    executor,
+                    ImmutableList.of(spec),
+                    SpeculativeParsing.of(false)))
+            .first().get();
 
         TargetNode<?> node = params.getParser().getTargetNode(
             params.getBuckEventBus(),

@@ -20,6 +20,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
@@ -100,12 +101,13 @@ public class TargetPatternEvaluator {
       ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Set<BuildTarget> buildTargets = params.getParser()
-        .resolveTargetSpec(
+        .resolveTargetSpecs(
             params.getBuckEventBus(),
             params.getCell(),
             enableProfiling,
             executor,
-            targetNodeSpecParser.parse(params.getCell().getCellRoots(), pattern));
+            ImmutableSet.of(targetNodeSpecParser.parse(params.getCell().getCellRoots(), pattern)),
+            SpeculativeParsing.of(false));
     // Sorting to have predictable results across different java libraries implementations.
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     for (BuildTarget target : buildTargets) {

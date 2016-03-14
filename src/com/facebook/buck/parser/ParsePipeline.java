@@ -419,6 +419,50 @@ public class ParsePipeline implements AutoCloseable {
           }
         }
     );
+
+    return targetNodeFuture;
+  }
+
+  /**
+   * Creates a {@link TargetNode} and de-dupes it against the cache.
+   *
+   * @param cell the {@link Cell} that the build file belongs to.
+   * @param buildTarget name of the node we're looking for.
+   * @param buildFile build file the rawNode comes from.
+   * @param rawNode raw node to create the TargetNode out of.
+   * @return future.
+   */
+  private ListenableFuture<TargetNode<?>> computeTargetNode(
+      final Cell cell,
+      final BuildTarget buildTarget,
+      final Path buildFile,
+      ListenableFuture<Map<String, Object>> rawNode) {
+
+    ListenableFuture<TargetNode<?>> targetNodeFuture = Futures.transformAsync(
+        rawNode,
+        new AsyncFunction<Map<String, Object>, TargetNode<?>>() {
+          @Override
+          public ListenableFuture<TargetNode<?>> apply(Map<String, Object> rawNode)
+              throws BuildTargetException {
+            if (shuttingDown.get()) {
+              return Futures.immediateCancelledFuture();
+            }
+
+            try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(
+                buckEventBus,
+                buildTarget)) {
+              TargetNode<?> targetNode = delegate.createTargetNode(
+                  cell,
+                  buildFile,
+                  buildTarget,
+                  rawNode);
+              return Futures.<TargetNode<?>>immediateFuture(
+                  cache.putTargetNodeIfNotPresent(cell, buildTarget, targetNode));
+            }
+          }
+        },
+        executorService);
+
     if (speculativeDepsTraversal) {
       Futures.addCallback(
           targetNodeFuture,
@@ -453,47 +497,6 @@ public class ParsePipeline implements AutoCloseable {
   }
 
   /**
-   * Creates a {@link TargetNode} and de-dupes it against the cache.
-   *
-   * @param cell the {@link Cell} that the build file belongs to.
-   * @param buildTarget name of the node we're looking for.
-   * @param buildFile build file the rawNode comes from.
-   * @param rawNode raw node to create the TargetNode out of.
-   * @return future.
-   */
-  private ListenableFuture<TargetNode<?>> computeTargetNode(
-      final Cell cell,
-      final BuildTarget buildTarget,
-      final Path buildFile,
-      ListenableFuture<Map<String, Object>> rawNode) {
-
-    return Futures.transformAsync(
-        rawNode,
-        new AsyncFunction<Map<String, Object>, TargetNode<?>>() {
-          @Override
-          public ListenableFuture<TargetNode<?>> apply(Map<String, Object> rawNode)
-              throws BuildTargetException {
-            if (shuttingDown.get()) {
-              return Futures.immediateCancelledFuture();
-            }
-
-            try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(
-                buckEventBus,
-                buildTarget)) {
-              TargetNode<?> targetNode = delegate.createTargetNode(
-                  cell,
-                  buildFile,
-                  buildTarget,
-                  rawNode);
-              return Futures.<TargetNode<?>>immediateFuture(
-                  cache.putTargetNodeIfNotPresent(cell, buildTarget, targetNode));
-            }
-          }
-        },
-        executorService);
-  }
-
-  /**
    * Invokes the parser to get the raw node description.
    *
    * @param cell the {@link Cell} that the build file belongs to.
@@ -515,7 +518,7 @@ public class ParsePipeline implements AutoCloseable {
               return Futures.immediateCancelledFuture();
             }
             return Futures.immediateFuture(
-                cache.putRawNodesIfNotPresent(cell, buildFile, rawNodes));
+                cache.putRawNodesIfNotPresentAndStripMetaEntries(cell, buildFile, rawNodes));
           }
         },
         executorService);
@@ -642,13 +645,16 @@ public class ParsePipeline implements AutoCloseable {
         Path buildFile);
 
     /**
-     * Insert item into the cache if it was not already there.
+     * Insert item into the cache if it was not already there. The cache will also strip any
+     * meta entries from the raw nodes (these are intended for the cache as they contain information
+     * about what other files to invalidate entries on).
+     *
      * @param cell cell
      * @param buildFile build file
      * @param rawNodes nodes to insert
      * @return previous nodes for the file if the cache contained it, new ones otherwise.
      */
-    ImmutableList<Map<String, Object>> putRawNodesIfNotPresent(
+    ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
         Cell cell,
         Path buildFile,
         ImmutableList<Map<String, Object>> rawNodes);
