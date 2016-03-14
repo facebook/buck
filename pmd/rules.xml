@@ -142,4 +142,23 @@ interface Bar {
       ]]>
     </example>
   </rule>
+  <!-- Blacklist docs: http://liveramp.com/engineering/using-pmd-to-blacklist-unsafe-methods/ -->
+  <rule name="BlacklistedDefaultCharsetMethods"
+        message="These APIs implicitly use the system default Charset. Use explicit ones instead."
+        class="com.liveramp.pmd_extensions.BlacklistMethods">
+    <description>
+      We blacklist (disallow) use of APIs which implicitly use the system default Charset.
+      Instead, use APIs which explicitly take a Charset argument.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <!-- The syntax here is a comma-separated list of pairs in the format:
+           package.Class:method:num-args;suggested-alternative
+           ...
+      -->
+          <property name="BlacklistMethods.BlacklistedMethods" value="
+            java.lang.String:getBytes:0;String.getBytes(Charset)
+          "/>
+    </properties>
+  </rule>
 </ruleset>
