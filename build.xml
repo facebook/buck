@@ -780,6 +780,7 @@
 
   <path id="pmd-classpath">
     <fileset dir="${basedir}/pmd" includes="*.jar" />
+    <pathelement location="${third-party.dir}/java/guava/guava-19.0.jar" />
   </path>
 
   <!--
