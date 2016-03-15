@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CxxBinaryTest {
+public class CxxUnstrippedBinaryTest {
 
   @Test
   public void getExecutableCommandUsesAbsolutePath() throws IOException {
@@ -58,9 +58,9 @@ public class CxxBinaryTest {
                 bin,
                 ImmutableList.<Arg>of()));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target").build();
-    CxxBinary binary =
+    CxxUnstrippedBinary binary =
         ruleResolver.addToIndex(
-            new CxxBinary(
+            new CxxUnstrippedBinary(
                 params,
                 ruleResolver,
                 pathResolver,

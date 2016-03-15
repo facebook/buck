@@ -124,8 +124,8 @@ public class CxxBinaryDescriptionTest {
     genHeaderBuilder.build(resolver, projectFilesystem, targetGraph);
     genSourceBuilder.build(resolver, projectFilesystem, targetGraph);
     depBuilder.build(resolver, projectFilesystem, targetGraph);
-    CxxBinary binRule =
-        (CxxBinary) cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
+    CxxUnstrippedBinary binRule =
+        (CxxUnstrippedBinary) cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
 
     CxxLink rule = binRule.getRule();
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
@@ -242,10 +242,11 @@ public class CxxBinaryDescriptionTest {
             new BuildTargetNodeToBuildRuleTransformer());
     BuildRule leafCxxBinary = leafCxxBinaryBuilder.build(resolver, filesystem);
     cxxLibraryBuilder.build(resolver, filesystem);
-    CxxBinary topLevelCxxBinary = (CxxBinary) topLevelCxxBinaryBuilder.build(resolver, filesystem);
+    CxxUnstrippedBinary topLevelCxxUnstrippedBinary =
+        (CxxUnstrippedBinary) topLevelCxxBinaryBuilder.build(resolver, filesystem);
 
     assertThat(
-        BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary),
+        BuildRules.getTransitiveRuntimeDeps(topLevelCxxUnstrippedBinary),
         Matchers.hasItem(leafCxxBinary));
   }
 
@@ -263,7 +264,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    CxxLink binary = ((CxxUnstrippedBinary) builder.build(resolver)).getRule();
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
@@ -293,7 +294,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    CxxLink binary = ((CxxUnstrippedBinary) builder.build(resolver)).getRule();
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
@@ -321,7 +322,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    CxxLink binary = ((CxxUnstrippedBinary) builder.build(resolver)).getRule();
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.not(
@@ -353,7 +354,8 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
-    CxxBinary binary = (CxxBinary) binaryBuilder.build(resolver, filesystem, targetGraph);
+    CxxUnstrippedBinary binary =
+        (CxxUnstrippedBinary) binaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         Arg.stringify(binary.getRule().getArgs()),
         Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
