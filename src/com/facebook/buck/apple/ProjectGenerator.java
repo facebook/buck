@@ -47,7 +47,9 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideCompile;
 import com.facebook.buck.halide.HalideLibraryDescription;
@@ -412,7 +414,11 @@ public class ProjectGenerator {
   public void createXcodeProjects() throws IOException {
     LOG.debug("Creating projects for targets %s", initialTargets);
 
-    try {
+    try (
+        SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
+            buckEventBus,
+            PerfEventId.of("xcode_project_generation"),
+            ImmutableMap.<String, Object>of("Path", getProjectPath()))) {
       for (TargetNode<?> targetNode : targetGraph.getNodes()) {
         if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
           LOG.debug("Including rule %s in project", targetNode);
