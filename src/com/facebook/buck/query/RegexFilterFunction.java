@@ -56,7 +56,6 @@ abstract class RegexFilterFunction implements QueryFunction {
     }
 
     Set<T> targets = getExpressionToEval(args).eval(env, executor);
-    env.buildTransitiveClosure(targets, Integer.MAX_VALUE, executor);
     Set<T> result = new LinkedHashSet<>();
     for (T target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
