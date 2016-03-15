@@ -64,7 +64,6 @@ public class CxxBinaryTest {
                 params,
                 ruleResolver,
                 pathResolver,
-                bin,
                 cxxLink,
                 new CommandTool.Builder()
                     .addArg(

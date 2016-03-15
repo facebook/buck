@@ -42,7 +42,6 @@ public class CxxBinary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final Path output;
   private final CxxLink rule;
   private final Tool executable;
   private final ImmutableSortedSet<BuildTarget> tests;
@@ -52,7 +51,6 @@ public class CxxBinary
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver resolver,
-      Path output,
       CxxLink rule,
       Tool executable,
       Iterable<FrameworkPath> frameworks,
@@ -60,7 +58,6 @@ public class CxxBinary
     super(params, resolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
-    this.output = output;
     this.rule = rule;
     this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
@@ -80,7 +77,7 @@ public class CxxBinary
 
   @Override
   public Path getPathToOutput() {
-    return output;
+    return rule.getPathToOutput();
   }
 
   public CxxLink getRule() {

@@ -207,7 +207,6 @@ public class CxxBinaryDescription implements
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         resolver,
         pathResolver,
-        cxxLinkAndCompileRules.cxxLink.getOutput(),
         cxxLinkAndCompileRules.cxxLink,
         cxxLinkAndCompileRules.executable,
         args.frameworks.get(),

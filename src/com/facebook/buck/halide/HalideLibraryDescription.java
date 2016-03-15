@@ -161,7 +161,6 @@ public class HalideLibraryDescription
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         ruleResolver,
         pathResolver,
-        cxxLinkAndCompileRules.cxxLink.getOutput(),
         cxxLinkAndCompileRules.cxxLink,
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.<FrameworkPath>of(),
