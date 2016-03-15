@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -24,15 +25,20 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class OCamlBinaryDescription implements
-  Description<OCamlBinaryDescription.Arg> {
+    Description<OCamlBinaryDescription.Arg>,
+    ImplicitDepsInferringDescription<OCamlBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("ocaml_binary");
 
@@ -78,6 +84,14 @@ public class OCamlBinaryDescription implements
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    return CxxPlatforms.getParseTimeDeps(ocamlBuckConfig.getCxxPlatform());
   }
 
   @SuppressFieldNotInitialized
