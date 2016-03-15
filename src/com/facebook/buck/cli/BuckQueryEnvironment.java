@@ -139,7 +139,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
           enableProfiling,
           executor,
           ((QueryBuildTarget) target).getBuildTarget());
-    } catch (BuildTargetException | BuildFileParseException | IOException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       throw new QueryException("Error getting target node for %s\n%s", target, e.getMessage());
     } finally {
       if (executor != null) {

@@ -117,7 +117,7 @@ public class Parser {
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      Path buildFile) throws InterruptedException, IOException, BuildFileParseException {
+      Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(
         buildFile.isAbsolute(),
         "Build file should be referred to using an absolute path: %s",
@@ -146,7 +146,7 @@ public class Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       BuildTarget target)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws BuildFileParseException, BuildTargetException {
     try (
         PerBuildState state =
             new PerBuildState(
@@ -158,8 +158,6 @@ public class Parser {
                 enableProfiling,
                 SpeculativeParsing.of(false))) {
       return state.getTargetNode(target);
-    } catch (RuntimeException e) {
-      throw e;
     }
   }
 
@@ -258,8 +256,7 @@ public class Parser {
           new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
 
             @Override
-            protected Iterator<BuildTarget> findChildren(BuildTarget target)
-                throws IOException, InterruptedException {
+            protected Iterator<BuildTarget> findChildren(BuildTarget target) {
               TargetNode<?> node;
               try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, target)) {
                 try {
@@ -295,8 +292,7 @@ public class Parser {
             }
 
             @Override
-            protected void onNodeExplored(BuildTarget target)
-                throws IOException, InterruptedException {
+            protected void onNodeExplored(BuildTarget target) {
               try {
                 TargetNode<?> targetNode = state.getTargetNode(target);
 

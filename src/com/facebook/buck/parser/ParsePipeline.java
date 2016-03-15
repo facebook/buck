@@ -121,11 +121,10 @@ public class ParsePipeline implements AutoCloseable {
    * @param buildFile absolute path to the file to process.
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
-   * @throws InterruptedException thread was interrupted.
    */
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(
       final Cell cell,
-      final Path buildFile) throws BuildFileParseException, InterruptedException {
+      final Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
@@ -144,12 +143,11 @@ public class ParsePipeline implements AutoCloseable {
    * @return the node
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
-   * @throws InterruptedException thread was interrupted.
    */
   public final TargetNode<?> getTargetNode(
       final Cell cell,
       final BuildTarget buildTarget
-  ) throws BuildFileParseException, BuildTargetException, InterruptedException {
+  ) throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 
     Optional<TargetNode<?>> cachedNode = cache.lookupTargetNode(cell, buildTarget);
@@ -172,11 +170,10 @@ public class ParsePipeline implements AutoCloseable {
    * @param buildFile absolute path to the file to process.
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
-   * @throws InterruptedException thread was interrupted.
    */
   public ImmutableList<Map<String, Object>> getRawNodes(
       final Cell cell,
-      final Path buildFile) throws BuildFileParseException, InterruptedException {
+      final Path buildFile) throws BuildFileParseException {
     Preconditions.checkArgument(buildFile.isAbsolute());
     Preconditions.checkState(!shuttingDown.get());
 
@@ -590,7 +587,7 @@ public class ParsePipeline implements AutoCloseable {
   }
 
   @Override
-  public void close() throws InterruptedException {
+  public void close() {
     if (shuttingDown.get()) {
       return;
     }

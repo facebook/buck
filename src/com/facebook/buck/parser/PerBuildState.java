@@ -153,7 +153,7 @@ class PerBuildState implements AutoCloseable {
   }
 
   public TargetNode<?> getTargetNode(BuildTarget target)
-      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+      throws BuildFileParseException, BuildTargetException {
     Cell owningCell = getCell(target);
     target = target.withoutCell();
 
@@ -161,7 +161,7 @@ class PerBuildState implements AutoCloseable {
   }
 
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
-      throws InterruptedException, IOException, BuildFileParseException {
+      throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     return parsePipeline.getAllTargetNodes(cell, buildFile);
@@ -276,7 +276,7 @@ class PerBuildState implements AutoCloseable {
   }
 
   @Override
-  public void close() throws InterruptedException, BuildFileParseException {
+  public void close() throws BuildFileParseException {
     stdout.close();
     stderr.close();
     parsePipeline.close();

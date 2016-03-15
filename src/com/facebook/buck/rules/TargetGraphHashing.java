@@ -69,7 +69,7 @@ public class TargetGraphHashing {
           buildTargetHashes);
       traversal.traverse(targetGraph.getAll(roots));
       return ImmutableMap.copyOf(buildTargetHashes);
-    } catch (CycleException | InterruptedException e) {
+    } catch (CycleException e) {
       throw new RuntimeException(e);
     }
   }

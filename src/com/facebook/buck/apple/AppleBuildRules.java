@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -125,7 +124,7 @@ public final class AppleBuildRules {
     AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>>() {
           @Override
-          protected Iterator<TargetNode<?>> findChildren(TargetNode<?> node) throws IOException {
+          protected Iterator<TargetNode<?>> findChildren(TargetNode<?> node) {
             if (!isXcodeTargetBuildRuleType(node.getType())) {
               return Collections.emptyIterator();
             }
@@ -229,8 +228,7 @@ public final class AppleBuildRules {
         };
     try {
       traversal.traverse(ImmutableList.of(targetNode));
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException |
-        InterruptedException e) {
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
       throw new RuntimeException(e);
     }

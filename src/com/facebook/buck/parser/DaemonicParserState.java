@@ -531,7 +531,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     invalidatePath(path);
   }
 
-  public void invalidatePath(Path path) throws InterruptedException {
+  public void invalidatePath(Path path) {
     Preconditions.checkState(
         allTargetNodes.isEmpty() || !knownCells.isEmpty(),
         "There are cached target nodes but no known cells. Cache invalidation will not work.");
