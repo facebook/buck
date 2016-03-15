@@ -42,6 +42,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
@@ -362,7 +363,8 @@ public class ProjectBuildFileParserTest {
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .build(),
-            new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
+            new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
+                ObjectMappers.newDefaultInstance())),
             ImmutableMap.<String, String>of(),
             ImmutableMap.<String, ImmutableMap<String, String>>of(),
             buckEventBus,

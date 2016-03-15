@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -63,7 +64,8 @@ public class ConstructorArgMarshallerTest {
   @Before
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
-    marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance()));
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     filesystem = new FakeProjectFilesystem();

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -95,6 +96,8 @@ public class AaptPackageResources extends AbstractBuildRule
   private final boolean shouldBuildStringSourceMap;
   @AddToRuleKey
   private final boolean skipCrunchPngs;
+  @AddToRuleKey
+  private final ManifestEntries manifestEntries;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   AaptPackageResources(
@@ -109,7 +112,8 @@ public class AaptPackageResources extends AbstractBuildRule
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap,
-      boolean skipCrunchPngs) {
+      boolean skipCrunchPngs,
+      ManifestEntries manifestEntries) {
     super(params, resolver);
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
@@ -121,6 +125,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
+    this.manifestEntries = manifestEntries;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -234,7 +239,8 @@ public class AaptPackageResources extends AbstractBuildRule
              * for faster build times, so it would be nice to figure out a way to leverage it in
              * debug mode that never results in distorted images.
              */
-            !skipCrunchPngs /* && packageType.isCrunchPngFiles() */));
+            !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
+            manifestEntries));
 
     // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it
     // always exists.

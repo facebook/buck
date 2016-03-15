@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +60,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class TypeCoercerTest {
-  private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+  private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+      ObjectMappers.newDefaultInstance());
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Function<Optional<String>, Path> cellRoots;
 

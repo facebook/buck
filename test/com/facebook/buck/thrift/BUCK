@@ -38,6 +38,7 @@ java_test(
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:object_mapper',
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/android:utils',
     '//test/com/facebook/buck/cli:FakeBuckConfig',

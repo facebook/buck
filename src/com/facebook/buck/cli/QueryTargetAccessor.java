@@ -29,6 +29,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,7 +39,8 @@ import java.nio.file.Path;
 
 public class QueryTargetAccessor {
 
-  private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+  private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+      ObjectMappers.newDefaultInstance());
 
   private QueryTargetAccessor() { }
 

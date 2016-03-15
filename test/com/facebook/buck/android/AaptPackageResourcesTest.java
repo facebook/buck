@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +75,8 @@ public class AaptPackageResourcesTest {
             DEFAULT_JAVAC_OPTIONS,
             /* rDotJavaNeedsDexing */ false,
             /* shouldBuildStringSourceMap */ false,
-            /* skipCrunchPngs */ false);
+            /* skipCrunchPngs */ false,
+            /* manifestEntries */ ManifestEntries.empty());
 
     FakeOnDiskBuildInfo onDiskBuildInfo =
         new FakeOnDiskBuildInfo()

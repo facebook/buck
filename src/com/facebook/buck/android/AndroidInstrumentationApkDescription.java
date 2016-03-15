@@ -141,7 +141,8 @@ public class AndroidInstrumentationApkDescription
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         nativePlatforms,
         AndroidBinary.RelinkerMode.DISABLED,
-        dxExecutorService);
+        dxExecutorService,
+        apkUnderTest.getManifestEntries());
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

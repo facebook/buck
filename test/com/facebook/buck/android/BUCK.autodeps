@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 50204237138222bca4ec125fa2f84bed55f510d8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7a77c15ef12a76d38fdddbc21f99a834f863b432 #@#
 {
   "aar-integration" : [
     "//src/com/facebook/buck/android:rules",
@@ -77,6 +77,7 @@
     "//src/com/facebook/buck/io:io",
     "//src/com/facebook/buck/model:model",
     "//src/com/facebook/buck/rules:build_rule",
+    "//src/com/facebook/buck/rules/coercer:coercer",
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/util:io",
     "//src/com/facebook/buck/util:util",

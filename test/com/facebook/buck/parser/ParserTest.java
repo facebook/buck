@@ -57,6 +57,7 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -190,7 +191,8 @@ public class ParserTest {
         .setBuckConfig(config)
         .build();
 
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
     parser = new Parser(
         new ParserConfig(cell.getBuckConfig()),
         typeCoercerFactory,
@@ -1382,7 +1384,8 @@ public class ParserTest {
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
     parser = new Parser(
         new ParserConfig(cell.getBuckConfig()),
         typeCoercerFactory,
@@ -1500,7 +1503,8 @@ public class ParserTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
     parser = new Parser(
         new ParserConfig(cell.getBuckConfig()),
         typeCoercerFactory,

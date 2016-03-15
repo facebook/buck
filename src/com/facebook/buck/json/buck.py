@@ -425,6 +425,33 @@ def get_base_path(build_env=None):
     return build_env.base_path
 
 
+def flatten_list_of_dicts(list_of_dicts):
+    """Flatten the given list of dictionaries by merging l[1:] onto
+    l[0], one at a time. Key/Value pairs which appear in later list entries
+    will override those that appear in earlier entries
+
+    :param list_of_dicts: the list of dict objects to flatten.
+    :return: a single dict containing the flattened list
+    """
+    return_value = {}
+    for d in list_of_dicts:
+        for k, v in d.iteritems():
+            return_value[k] = v
+    return return_value
+
+
+@provide_for_build
+def flatten_dicts(*args, **_):
+    """Flatten the given list of dictionaries by merging args[1:] onto
+    args[0], one at a time.
+
+    :param *args: the list of dict objects to flatten.
+    :param **_: ignore the build_env kwarg
+    :return: a single dict containing the flattened list
+    """
+    return flatten_list_of_dicts(args)
+
+
 GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
 
 

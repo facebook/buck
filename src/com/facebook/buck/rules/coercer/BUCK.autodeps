@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY feeeaf9b5498b3aaf7e83b01ef56808ae1f492ad #@#
+#@# GENERATED FILE: DO NOT MODIFY 63cf62352fafb6e5603803dc3884b3570499e60a #@#
 {
   "coercer" : [
     "//src/com/facebook/buck/apple/xcode:xcode",
@@ -10,7 +10,8 @@
     "//src/com/facebook/buck/util:exceptions",
     "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor"
+    "//third-party/java/immutables:processor",
+    "//third-party/java/jackson:jackson-databind"
   ],
   "types" : [
     "//src/com/facebook/buck/io:io",

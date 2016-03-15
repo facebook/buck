@@ -24,6 +24,9 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -50,8 +53,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
+  private final ObjectMapper jacksonObjectMapper;
 
-  public DefaultTypeCoercerFactory() {
+  public DefaultTypeCoercerFactory(ObjectMapper mapper) {
+    // Cached instance for any type coercers that utilize Jackson
+    jacksonObjectMapper = mapper.copy()
+        .setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES)
+        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
     TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
@@ -108,6 +117,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
         new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
         new LogLevelTypeCoercer(),
+        new ManifestEntriesTypeCoercer(jacksonObjectMapper),
         patternTypeCoercer,
     };
   }

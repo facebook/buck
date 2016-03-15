@@ -53,6 +53,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
@@ -135,7 +136,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         AndroidBinary.RelinkerMode.DISABLED,
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        /* manifestEntries */ ManifestEntries.empty());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -153,7 +155,8 @@ public class AndroidBinaryGraphEnhancerTest {
         ANDROID_JAVAC_OPTIONS,
         false,
         false,
-        /* skipCrunchPngs */ false);
+        /* skipCrunchPngs */ false,
+        /* manifestEntries */ ManifestEntries.empty());
     ruleResolver.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection = new AndroidPackageableCollector(
@@ -254,7 +257,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         AndroidBinary.RelinkerMode.DISABLED,
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        /* manifestEntries */ ManifestEntries.empty());
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -375,7 +379,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         AndroidBinary.RelinkerMode.DISABLED,
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        /* manifestEntries */ ManifestEntries.empty());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -420,7 +425,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         AndroidBinary.RelinkerMode.DISABLED,
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        /* manifestEntries */ ManifestEntries.empty());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -492,7 +498,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         AndroidBinary.RelinkerMode.DISABLED,
-        MoreExecutors.newDirectExecutorService());
+        MoreExecutors.newDirectExecutorService(),
+        /* manifestEntries */ ManifestEntries.empty());
     graphEnhancer.createAdditionalBuildables();
 
 

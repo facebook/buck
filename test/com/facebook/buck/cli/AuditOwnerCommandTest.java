@@ -116,7 +116,7 @@ public class AuditOwnerCommandTest {
           Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
           description,
           arg,
-          new DefaultTypeCoercerFactory(),
+          new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of(),

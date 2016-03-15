@@ -134,6 +134,49 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name : 'manifest_entries' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Insert values into the packaged <code>AndroidManifest.xml</code> file.
+
+  Valid values are <code>min_sdk_version</code>, <code>target_sdk_version</code>,
+  <code>version_code</code>, <code>version_name</code>, and <code>debug_mode</code>. Example:
+
+  {literal}<pre class="prettyprint lang-py">
+  android_binary(
+    # ... other args ...
+    manifest_entries = {
+        'version_code': 12,
+        'version_name': '2.0',
+        'min_sdk_version': 16,
+        'target_sdk_version': 23,
+        'debug_mode': True,
+    }
+  )
+  </pre>{/literal}
+
+  This is equivalent to specifying
+
+  {literal}<pre class="prettyprint lang-js">
+  android {
+      defaultConfig {
+        versionCode 12
+        versionName "2.0"
+        minSdkVersion 16
+        targetSdkVersion 23
+      }
+  }
+  </pre>{/literal}
+
+  in gradle and building the debug <code>BuildType</code>.
+
+  This is especially useful when combined with
+  the <a href="{ROOT}function/flatten_dicts.html"><code>flatten_dicts</code></a> function. This will
+  allow you to share a default config amongst your rules, and override values as necessary.
+  {/param}
+{/call}
+
 {call android_common.deps_apk_arg /}
 
 {call buck.arg}

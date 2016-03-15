@@ -120,7 +120,8 @@ public class AuditRulesCommand extends AbstractCommand {
               params.getCell().getAllDescriptions())
             .build());
     try (ProjectBuildFileParser parser = factory.createParser(
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
+        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
+            params.getObjectMapper())),
         params.getConsole(),
         params.getEnvironment(),
         params.getBuckEventBus())) {

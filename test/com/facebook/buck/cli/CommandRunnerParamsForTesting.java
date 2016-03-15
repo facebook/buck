@@ -82,7 +82,8 @@ public class CommandRunnerParamsForTesting {
       ObjectMapper objectMapper,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
     return new CommandRunnerParams(
         console,
         new ByteArrayInputStream("".getBytes("UTF-8")),

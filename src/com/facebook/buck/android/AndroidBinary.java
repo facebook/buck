@@ -43,6 +43,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
@@ -216,6 +217,8 @@ public class AndroidBinary
   private final Optional<Boolean> packageAssetLibraries;
   @AddToRuleKey
   private final Optional<Boolean> compressAssetLibraries;
+  @AddToRuleKey
+  private final ManifestEntries manifestEntries;
 
   AndroidBinary(
       BuildRuleParams params,
@@ -244,7 +247,8 @@ public class AndroidBinary
       Optional<Integer> xzCompressionLevel,
       ListeningExecutorService dxExecutorService,
       Optional<Boolean> packageAssetLibraries,
-      Optional<Boolean> compressAssetLibraries) {
+      Optional<Boolean> compressAssetLibraries,
+      ManifestEntries manifestEntries) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -272,6 +276,7 @@ public class AndroidBinary
     this.xzCompressionLevel = xzCompressionLevel;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
+    this.manifestEntries = manifestEntries;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
@@ -336,6 +341,8 @@ public class AndroidBinary
   }
 
   public Optional<Boolean> getPackageAssetLibraries() { return packageAssetLibraries; }
+
+  public ManifestEntries getManifestEntries() { return manifestEntries; }
 
   @VisibleForTesting
   AndroidGraphEnhancementResult getEnhancementResult() {

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5b9d858ecebb022cbcaee77b2e6ea9c227ab9325 #@#
+#@# GENERATED FILE: DO NOT MODIFY 086596c467eae5fba306761e9e39afec36d3eb45 #@#
 {
   "apple" : [
     "//src/com/facebook/buck/apple:generators",
@@ -82,6 +82,7 @@
     "//src/com/facebook/buck/rules/coercer:coercer",
     "//src/com/facebook/buck/rules/coercer:types",
     "//src/com/facebook/buck/util:io",
+    "//src/com/facebook/buck/util:object_mapper",
     "//src/com/facebook/buck/util:util",
     "//src/com/facebook/buck/util/environment:platform",
     "//test/com/facebook/buck/cli:FakeBuckConfig",

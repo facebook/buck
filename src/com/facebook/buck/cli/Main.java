@@ -260,7 +260,7 @@ public final class Main {
                   ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
-      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
           new ParserConfig(cell.getBuckConfig()),
           typeCoercerFactory,
@@ -946,7 +946,7 @@ public final class Main {
         }
 
         if (parser == null) {
-          TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+          TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
           parser = new Parser(
               new ParserConfig(rootCell.getBuckConfig()),
               typeCoercerFactory,

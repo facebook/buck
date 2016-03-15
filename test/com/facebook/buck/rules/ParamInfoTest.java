@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
 
 import org.junit.Test;
@@ -34,7 +35,8 @@ import java.nio.file.Paths;
 public class ParamInfoTest {
 
   private Path testPath = Paths.get("path");
-  private TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+  private TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+      ObjectMappers.newDefaultInstance());
 
   @Test
   public void shouldReportWildcardsWithUpperBoundsAsUpperBound() throws NoSuchFieldException {

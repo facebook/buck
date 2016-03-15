@@ -44,6 +44,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -240,7 +241,8 @@ public class JvmLibraryArgInterpreterTest {
             BuildTargetFactory.newInstance("//example:target"));
 
     try {
-      new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()).populate(
+      new ConstructorArgMarshaller(
+          new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())).populate(
           createCellRoots(factoryParams.getProjectFilesystem()),
           factoryParams.getProjectFilesystem(),
           factoryParams,

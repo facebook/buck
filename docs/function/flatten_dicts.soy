@@ -1,0 +1,59 @@
+{namespace buck.flatten_dicts}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'flatten_dicts()' /}
+    {param prettify: true /}
+    {param description}
+      The flatten_dicts() function is used to merge a list of maps together.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'FROZEN' /}
+{param overview}
+The <code>flatten_dicts()</code> function is used to merge a list of dicts together. It is
+useful for sharing a set of defaults across different build rules while allowing for customization.
+
+You will probably want to use it in conjunction with <code>include_defs()</code> in order to
+easily share configurations between your BUCK files.
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  The function takes a varargs of dictionaries, with the lowest-priority dictionary first.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+default_config = {
+  'a': 'bar',
+  'b': false,
+}
+
+flatten_dicts(
+  default_config,
+  dict(a='foo', c=[])
+)
+# Outputs
+# {
+#   'a': 'foo',
+#   'b': false,
+#   'c': [],
+# }
+</pre>{/literal}
+
+Values in dictionaries which appear later in the list have priority over values which appear
+earlier.
+{/param}
+
+{/call} // buck.rule
+    {/param} // content
+  {/call}
+{/template}

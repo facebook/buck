@@ -45,6 +45,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -203,7 +204,8 @@ public class AndroidBinaryDescription
         Optional.<Integer>absent(),
         nativePlatforms,
         args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
-        dxExecutorService);
+        dxExecutorService,
+        args.manifestEntries.get());
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
@@ -266,7 +268,8 @@ public class AndroidBinaryDescription
         args.xzCompressionLevel,
         dxExecutorService,
         args.packageAssetLibraries,
-        args.compressAssetLibraries);
+        args.compressAssetLibraries,
+        args.manifestEntries.or(ManifestEntries.empty()));
   }
 
   private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {
@@ -368,6 +371,7 @@ public class AndroidBinaryDescription
     public Optional<Boolean> packageAssetLibraries;
     public Optional<Boolean> compressAssetLibraries;
     public Optional<Boolean> enableRelinker;
+    public Optional<ManifestEntries> manifestEntries;
 
     /** This will never be absent after this Arg is populated. */
     public Optional<BuildConfigFields> buildConfigValues;

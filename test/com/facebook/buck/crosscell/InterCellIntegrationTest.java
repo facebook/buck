@@ -45,6 +45,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -289,7 +290,8 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
-    TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
+    TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
         new ParserConfig(cells.getFirst().asCell().getBuckConfig()),
         coercerFactory,

@@ -55,6 +55,7 @@ java_library(
     '//src/com/facebook/buck/util/environment:env-filter',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/util:object_mapper',
     '//test/com/facebook/buck/android:utils',
     '//test/com/facebook/buck/artifact_cache:testutil',
     '//test/com/facebook/buck/cli:FakeBuckConfig',

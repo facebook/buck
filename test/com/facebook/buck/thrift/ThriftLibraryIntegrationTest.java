@@ -50,6 +50,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -93,7 +94,8 @@ public class ThriftLibraryIntegrationTest {
             "cpp_reflection_library = //thrift:fake")
         .build();
 
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
         new ParserConfig(config),
         typeCoercerFactory,

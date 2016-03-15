@@ -37,6 +37,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -93,7 +94,8 @@ public class MissingSymbolsHandler {
         projectFilesystem,
         srcRootsFinder,
         javacOptions,
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
+        new ConstructorArgMarshaller(
+            new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())),
         projectBuildFileParserFactory,
         config,
         buckEventBus,
