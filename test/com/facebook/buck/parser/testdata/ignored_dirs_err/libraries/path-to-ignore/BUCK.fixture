@@ -1,0 +1,4 @@
+java_library(
+  name = 'ignored-lib',
+  srcs = glob(['*.java'], excludes = ['*Test.java']),
+)

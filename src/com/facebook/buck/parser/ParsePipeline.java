@@ -448,6 +448,15 @@ public class ParsePipeline implements AutoCloseable {
             try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(
                 buckEventBus,
                 buildTarget)) {
+
+              Path pathToCheck = buildTarget.getBasePath();
+              if (cell.getFilesystem().isIgnored(pathToCheck)) {
+                throw new HumanReadableException(
+                    "Content of '%s' cannot be built because" +
+                        " it is defined in an ignored directory.",
+                    pathToCheck);
+              }
+
               TargetNode<?> targetNode = delegate.createTargetNode(
                   cell,
                   buildFile,

@@ -66,6 +66,21 @@ public class ParsePipelineTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
+  @Test
+  public void testIgnoredDirsErr() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "ignored_dirs_err",
+        tmp);
+    workspace.setUp();
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        " cannot be built because it is defined in an ignored directory.");
+    // enforce creation of targetNode's
+    workspace.runBuckBuild("//libraries/path-to-ignore:ignored-lib");
+  }
+
   private <T> void waitForAll(Iterable<T> items, Predicate<T> predicate)
       throws InterruptedException {
     boolean allThere = false;
