@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 
 /**
  * The handler for buck commands with text outputs.
@@ -52,6 +53,7 @@ public abstract class BuckCommandHandler {
   private final GeneralCommandLine commandLine;
   private final Object processStateLock = new Object();
   private BuckEventsConsumer buckEventsConsumer;
+  private static final Pattern CHARACTER_DIGITS_PATTERN = Pattern.compile("(?s).*[A-Z0-9a-z]+.*");
 
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private Process process;
@@ -312,9 +314,15 @@ public abstract class BuckCommandHandler {
     if (outputType == ProcessOutputTypes.STDERR && buckEventsConsumer != null) {
       StringBuilder stderr = new StringBuilder();
       while (lines.hasNext()) {
-        stderr.append(lines.next());
+        String line = lines.next();
+        // Check if the line has at least one character or digit
+        if (CHARACTER_DIGITS_PATTERN.matcher(line).matches()) {
+          stderr.append(line);
+        }
       }
-      buckEventsConsumer.consumeConsoleEvent(stderr.toString());
+      if (stderr.length() != 0) {
+        buckEventsConsumer.consumeConsoleEvent(stderr.toString());
+      }
     }
   }
 
