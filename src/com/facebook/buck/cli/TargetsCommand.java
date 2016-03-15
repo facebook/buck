@@ -677,17 +677,17 @@ public class TargetsCommand extends AbstractCommand {
 
     ImmutableSet<BuildTarget> matchingBuildTargets;
     TargetGraph targetGraph;
-      Pair<ImmutableSet<BuildTarget>, TargetGraph> res = params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableProfiling(),
-              executor,
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  getArguments()));
-      matchingBuildTargets = res.getFirst();
-      targetGraph = res.getSecond();
+    Pair<ImmutableSet<BuildTarget>, TargetGraph> res = params.getParser()
+        .buildTargetGraphForTargetNodeSpecs(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableProfiling(),
+            executor,
+            parseArgumentsAsTargetNodeSpecs(
+                params.getBuckConfig(),
+                getArguments()));
+    matchingBuildTargets = res.getFirst();
+    targetGraph = res.getSecond();
 
     Map<String, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
     if (isShowTargetHash()) {

@@ -1051,8 +1051,7 @@ public class ProjectCommand extends BuildCommand {
 
   public static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
       ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    ImmutableSet<TargetNode<?>> targetNodes =
-        TargetGraphAndTargets.checkAndGetTargetNodes(buildTargets, projectGraph);
+    Iterable<TargetNode<?>> targetNodes = projectGraph.getAll(buildTargets);
     ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
     for (TargetNode<?> node : targetNodes) {
       BuildRuleType type = node.getType();

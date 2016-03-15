@@ -63,7 +63,7 @@ public class TargetGraphAndTargets {
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph,
       boolean shouldIncludeDependenciesTests) {
-    ImmutableSet<TargetNode<?>> projectRoots = checkAndGetTargetNodes(buildTargets, projectGraph);
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
     if (shouldIncludeDependenciesTests) {
       return getExplicitTestTargets(projectGraph.getSubgraph(projectRoots).getNodes());
     }
@@ -88,16 +88,6 @@ public class TargetGraphAndTargets {
         .toSet();
   }
 
-  public static ImmutableSet<TargetNode<?>> checkAndGetTargetNodes(
-      ImmutableSet<BuildTarget> buildTargets,
-      TargetGraph projectGraph) {
-    ImmutableSet.Builder<TargetNode<?>> targetNodesBuilder = ImmutableSet.builder();
-    for (BuildTarget target : buildTargets) {
-      targetNodesBuilder.add(projectGraph.get(target));
-    }
-    return targetNodesBuilder.build();
-  }
-
   public static TargetGraphAndTargets create(
       final ImmutableSet<BuildTarget> graphRoots,
       final ImmutableSet<BuildTarget> graphRootsWithoutWorkspaces,
@@ -108,7 +98,7 @@ public class TargetGraphAndTargets {
       ImmutableSet<BuildTarget> explicitTests) {
     // Get the roots of the main graph. This contains all the targets in the project slice, or all
     // the valid project roots if a project slice is not specified.
-    ImmutableSet<TargetNode<?>> projectRoots = checkAndGetTargetNodes(graphRoots, projectGraph);
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(graphRoots);
 
     // Optionally get the roots of the test graph. This contains all the tests that cover the roots
     // of the main graph or their dependencies.
