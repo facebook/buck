@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.io.DefaultDirectoryTraverser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -29,11 +30,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -44,7 +47,9 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class JavaBinaryDescription implements Description<JavaBinaryDescription.Args> {
+public class JavaBinaryDescription implements
+    Description<JavaBinaryDescription.Args>,
+    ImplicitDepsInferringDescription<JavaBinaryDescription.Args> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("java_binary");
 
@@ -126,6 +131,14 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     }
 
     return rule;
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Args constructorArg) {
+    return CxxPlatforms.getParseTimeDeps(cxxPlatform);
   }
 
   @SuppressFieldNotInitialized

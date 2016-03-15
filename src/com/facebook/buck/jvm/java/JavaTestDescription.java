@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -38,6 +40,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +52,9 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.logging.Level;
 
-public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
+public class JavaTestDescription implements
+    Description<JavaTestDescription.Arg>,
+    ImplicitDepsInferringDescription<JavaTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("java_test");
 
@@ -179,6 +184,18 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       sourceUnderTest.add(rule);
     }
     return sourceUnderTest.build();
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+    if (constructorArg.useCxxLibraries.or(false)) {
+      deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    }
+    return deps.build();
   }
 
   @SuppressFieldNotInitialized
