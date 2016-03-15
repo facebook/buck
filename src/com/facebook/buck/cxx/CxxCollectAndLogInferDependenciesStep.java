@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -31,17 +32,42 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
 
   private static final String SPLIT_TOKEN = "\t";
 
-  private CxxInferAnalyze analysisRule;
+  private Optional<CxxInferAnalyze> analysisRule;
+  private Optional<CxxInferCaptureTransitive> captureOnlyRule;
   private ProjectFilesystem projectFilesystem;
   private Path outputFile;
 
-  CxxCollectAndLogInferDependenciesStep(
-      CxxInferAnalyze analysisRule,
+  private CxxCollectAndLogInferDependenciesStep(
+      Optional<CxxInferAnalyze> analysisRule,
+      Optional<CxxInferCaptureTransitive> captureOnlyRule,
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
     this.analysisRule = analysisRule;
+    this.captureOnlyRule = captureOnlyRule;
     this.projectFilesystem = projectFilesystem;
     this.outputFile = outputFile;
+  }
+
+  public static CxxCollectAndLogInferDependenciesStep fromAnalyzeRule(
+      CxxInferAnalyze analyzeRule,
+      ProjectFilesystem projectFilesystem,
+      Path outputFile) {
+    return new CxxCollectAndLogInferDependenciesStep(
+        Optional.of(analyzeRule),
+        Optional.<CxxInferCaptureTransitive>absent(),
+        projectFilesystem,
+        outputFile);
+  }
+
+  public static CxxCollectAndLogInferDependenciesStep fromCaptureOnlyRule(
+      CxxInferCaptureTransitive captureOnlyRule,
+      ProjectFilesystem projectFilesystem,
+      Path outputFile) {
+    return new CxxCollectAndLogInferDependenciesStep(
+        Optional.<CxxInferAnalyze>absent(),
+        Optional.of(captureOnlyRule),
+        projectFilesystem,
+        outputFile);
   }
 
   private String computeOutput(
@@ -56,6 +82,14 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
 
   private String processCaptureRule(CxxInferCapture captureRule) {
     return computeOutput(captureRule.getBuildTarget(), captureRule.getPathToOutput());
+  }
+
+  private ImmutableList<String> processCaptureOnlyRule(CxxInferCaptureTransitive captureOnlyRule) {
+    ImmutableList.Builder<String> outputBuilder = ImmutableList.builder();
+    for (CxxInferCapture captureRule : captureOnlyRule.getCaptureRules()) {
+      outputBuilder.add(processCaptureRule(captureRule));
+    }
+    return outputBuilder.build();
   }
 
   private void processAnalysisRuleHelper(
@@ -85,7 +119,13 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
     ImmutableList<String> output;
-    output = processAnalysisRule(analysisRule);
+    if (analysisRule.isPresent()) {
+      output = processAnalysisRule(analysisRule.get());
+    } else if (captureOnlyRule.isPresent()) {
+      output = processCaptureOnlyRule(captureOnlyRule.get());
+    } else {
+      throw new IllegalStateException("Expected non-empty analysis or capture rules in input");
+    }
     projectFilesystem.writeLinesToPath(output, outputFile);
     return 0;
   }

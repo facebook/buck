@@ -117,7 +117,18 @@ public class CxxLibraryIntegrationTest {
         this,
         tmp,
         Optional.<String>absent());
-    workspace.runBuckBuild("//foo:dep_one").assertSuccess();
+    workspace.runBuckBuild("//foo:dep_one#infer").assertSuccess();
   }
+
+  @Test
+  public void runInferCaptureOnLibraryWithHeadersOnly() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+    workspace.runBuckBuild("//foo:headers_only_lib#infer-capture-all").assertSuccess();
+  }
+
 
 }

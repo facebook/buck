@@ -68,3 +68,54 @@ cxx_library(
         'chain_dep_two.h'
     ],
 )
+
+cxx_binary(
+    name='binary_with_diamond_deps',
+    srcs=[
+            'src_with_deps.c',
+        ],
+    deps=[
+        ':diamond_dep_one',
+        ':diamond_dep_two',
+    ],
+)
+
+cxx_library(
+    name='diamond_dep_one',
+    srcs=[
+        'dep_one.c',
+    ],
+    exported_headers=[
+        'dep_one.h'
+    ],
+    deps=[
+        ':simple_lib',
+    ],
+)
+
+cxx_library(
+    name='diamond_dep_two',
+    srcs=[
+        'dep_two.c',
+    ],
+    exported_headers=[
+        'dep_two.h'
+    ],
+    deps=[
+        ':simple_lib',
+    ],
+)
+
+cxx_library(
+    name='simple_lib',
+    srcs=[
+        'simple.cpp',
+    ],
+)
+
+cxx_library(
+    name='headers_only_lib',
+    exported_headers=[
+        'dep_one.h',
+    ],
+)

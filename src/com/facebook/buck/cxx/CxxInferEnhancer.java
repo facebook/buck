@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -36,8 +37,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 public final class CxxInferEnhancer {
 
@@ -46,7 +49,8 @@ public final class CxxInferEnhancer {
   public enum InferFlavors {
     INFER(ImmutableFlavor.of("infer")),
     INFER_ANALYZE(ImmutableFlavor.of("infer-analyze")),
-    INFER_CAPTURE(ImmutableFlavor.of("infer-capture"));
+    INFER_CAPTURE(ImmutableFlavor.of("infer-capture")),
+    INFER_CAPTURE_ALL(ImmutableFlavor.of("infer-capture-all"));
 
     private final ImmutableFlavor flavor;
     InferFlavors(ImmutableFlavor flavor) {
@@ -105,6 +109,77 @@ public final class CxxInferEnhancer {
         new SourcePathResolver(ruleResolver),
         cxxPlatform,
         args);
+  }
+
+  public static BuildRule requireAllTransitiveCaptureBuildRules(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
+      InferBuckConfig inferBuckConfig,
+      CxxInferSourceFilter sourceFilter,
+      CxxConstructorArg args) throws NoSuchBuildTargetException {
+    CxxSourceSet sources = collectSourcesOverDependencies(
+        params.getBuildTarget(),
+        ruleResolver,
+        cxxPlatform,
+        args);
+
+    BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
+
+    ImmutableSet<CxxInferCapture> captureRules = requireInferCaptureBuildRules(
+        cleanParams,
+        ruleResolver,
+        cxxPlatform,
+        sources.toSourcesMap(),
+        inferBuckConfig,
+        sourceFilter,
+        args);
+
+    return ruleResolver.addToIndex(
+        new CxxInferCaptureTransitive(
+            params.copyWithChanges(
+                params.getBuildTarget(),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(captureRules)
+                        .build()),
+                params.getExtraDeps()),
+            new SourcePathResolver(ruleResolver),
+            captureRules));
+  }
+
+  public static CxxSourceSet collectSourcesOverDependencies(
+      BuildTarget buildTarget,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
+      CxxConstructorArg args) throws NoSuchBuildTargetException {
+    Preconditions.checkState(
+        buildTarget.getFlavors().contains(InferFlavors.INFER_CAPTURE_ALL.get()));
+
+    CxxSourceSet.Builder sourcesBuilder = CxxSourceSet.builder();
+    for (BuildTarget dep : args.deps.get()) {
+      BuildTarget newTarget = BuildTarget.builder(dep)
+          .addFlavors(InferFlavors.INFER_CAPTURE_ALL.get())
+          .build();
+      Optional<CxxSourceSet> sources = ruleResolver.requireMetadata(newTarget, CxxSourceSet.class);
+      Preconditions.checkState(
+          sources.isPresent(),
+          "Expected a valid set of sources for:\n%s",
+          Joiner.on(", ").join(newTarget.getFlavors()));
+      sourcesBuilder.addAllSourcesSet(sources.get().getSourcesSet());
+    }
+
+    Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
+    flavors.removeAll(InferFlavors.getAll());
+    BuildTarget cleanTarget = BuildTarget.builder(buildTarget).setFlavors(flavors).build();
+    sourcesBuilder.addAllSourcesSet(
+        collectSources(
+            cleanTarget,
+            ruleResolver,
+            cxxPlatform,
+            args
+        ).entrySet());
+    return sourcesBuilder.build();
   }
 
   public static CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(

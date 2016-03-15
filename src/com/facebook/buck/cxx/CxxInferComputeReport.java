@@ -90,7 +90,8 @@ public class CxxInferComputeReport extends AbstractBuildRule {
                 reportOutput,
                 "infer-merge-reports",
                 "Merge Infer Reports"))
-        .add(new CxxCollectAndLogInferDependenciesStep(
+        .add(
+            CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
                 analysisToReport,
                 projectFilesystem,
                 depsOutput))

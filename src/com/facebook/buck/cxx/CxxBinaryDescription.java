@@ -175,6 +175,16 @@ public class CxxBinaryDescription implements
           new CxxInferSourceFilter(inferBuckConfig));
     }
 
+    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
+      return CxxInferEnhancer.requireAllTransitiveCaptureBuildRules(
+          params,
+          resolver,
+          cxxPlatform,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig),
+          args);
+    }
+
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             params,
@@ -260,7 +270,8 @@ public class CxxBinaryDescription implements
             CxxCompilationDatabase.COMPILATION_DATABASE,
             CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
             CxxInferEnhancer.InferFlavors.INFER.get(),
-            CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()));
+            CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get(),
+            CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get()));
 
     return flavors.isEmpty();
   }
@@ -279,6 +290,26 @@ public class CxxBinaryDescription implements
       BuildRuleResolver resolver,
       A args,
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
+
+    if (buildTarget.getFlavors().contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
+      CxxPlatform cxxPlatform = cxxPlatforms
+          .getValue(buildTarget.getFlavors())
+          .or(defaultCxxPlatform);
+      return Optional.of(
+          CxxInferEnhancer.collectSourcesOverDependencies(
+              buildTarget,
+              resolver,
+              cxxPlatform,
+              args))
+          .transform(
+              new Function<CxxSourceSet, U>() {
+                @Override
+                public U apply(CxxSourceSet input) {
+                  return metadataClass.cast(input);
+                }
+              });
+    }
+
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.absent();

@@ -527,24 +527,136 @@ public class CxxBinaryIntegrationTest {
         "//foo:binary_with_chain_deps#infer-analyze\t" +
             "[infer-analyze]\t" +
             "buck-out/gen/foo/infer-analysis-binary_with_chain_deps#infer-analyze\n" +
-            "//foo:binary_with_chain_deps#default,infer-capture-" + sanitizedTopChain + "\t" +
+        "//foo:binary_with_chain_deps#default,infer-capture-" + sanitizedTopChain + "\t" +
             "[default, infer-capture-" + sanitizedTopChain + "]\t" +
             "buck-out/gen/foo/infer-out-binary_with_chain_deps#default,infer-capture-" +
             sanitizedTopChain + "\n" +
-            "//foo:chain_dep_one#default,infer-analyze\t" +
+        "//foo:chain_dep_one#default,infer-analyze\t" +
             "[default, infer-analyze]\t" +
             "buck-out/gen/foo/infer-analysis-chain_dep_one#default,infer-analyze\n" +
-            "//foo:chain_dep_one#default,infer-capture-" + sanitizedChainDepOne + "\t" +
+        "//foo:chain_dep_one#default,infer-capture-" + sanitizedChainDepOne + "\t" +
             "[default, infer-capture-" + sanitizedChainDepOne + "]\t" +
             "buck-out/gen/foo/infer-out-chain_dep_one#default,infer-capture-" +
             sanitizedChainDepOne + "\n" +
-            "//foo:chain_dep_two#default,infer-analyze\t" +
+        "//foo:chain_dep_two#default,infer-analyze\t" +
             "[default, infer-analyze]\t" +
             "buck-out/gen/foo/infer-analysis-chain_dep_two#default,infer-analyze\n" +
-            "//foo:chain_dep_two#default,infer-capture-" + sanitizedChainDepTwo + "\t" +
+        "//foo:chain_dep_two#default,infer-capture-" + sanitizedChainDepTwo + "\t" +
             "[default, infer-capture-" + sanitizedChainDepTwo + "]\t" +
             "buck-out/gen/foo/infer-out-chain_dep_two#default,infer-capture-" +
             sanitizedChainDepTwo + "\n";
+
+    assertEquals(expectedOutput, loggedDeps);
+  }
+
+  @Test
+  public void testInferCxxBinaryWithDiamondDepsHasRuntimeDepsOfAllCaptureRulesWhenCacheHits(
+  ) throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+    workspace.enableDirCache(); // enable the cache
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps");
+    String inputBuildTargetName = inputBuildTarget
+        .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())
+        .getFullyQualifiedName();
+
+    /*
+     * Build the given target and check that it succeeds.
+     */
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    /*
+     * Check that building after clean will use the cache
+     */
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    for (BuildTarget buildTarget : buildLog.getAllTargets()) {
+      buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+    }
+
+    /*
+    * Check that runtime deps have been fetched from cache as well
+    */
+    assertTrue(
+        "This file was expected to exist because it's declared as runtime dep",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+                sanitize("simple.cpp.o") +
+                "/captured/simple.cpp_captured/simple.cpp.cfg").toFile().exists());
+    assertTrue(
+        "This file was expected to exist because it's declared as runtime dep",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+                sanitize("dep_one.c.o") +
+                "/captured/dep_one.c_captured/dep_one.c.cfg").toFile().exists());
+    assertTrue(
+        "This file was expected to exist because it's declared as runtime dep",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+                sanitize("dep_two.c.o") +
+                "/captured/dep_two.c_captured/dep_two.c.cfg").toFile().exists());
+    assertTrue(
+        "This file was expected to exist because it's declared as runtime dep",
+        workspace.getPath(
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+                sanitize("src_with_deps.c.o") +
+                "/captured/src_with_deps.c_captured/src_with_deps.c.cfg").toFile().exists());
+  }
+
+  @Test
+  public void testInferCxxBinaryWithDiamondDepsEmitsAllTransitiveCaptureRulesOnce(
+  ) throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps");
+    String inputBuildTargetName = inputBuildTarget
+        .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())
+        .getFullyQualifiedName();
+
+    // Build the given target and check that it succeeds.
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    assertTrue(
+        workspace.getPath(
+            "buck-out/gen/foo/infer-binary_with_diamond_deps#infer-capture-all/infer-deps.txt")
+            .toFile().exists());
+
+    String loggedDeps = workspace.getFileContents(
+        "buck-out/gen/foo/infer-binary_with_diamond_deps#infer-capture-all/infer-deps.txt");
+
+    String sanitizedSimpleCpp = sanitize("simple.cpp.o");
+    String sanitizedDepOne = sanitize("dep_one.c.o");
+    String sanitizedDepTwo = sanitize("dep_two.c.o");
+    String sanitizedSrcWithDeps = sanitize("src_with_deps.c.o");
+
+    String expectedOutput =
+        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSimpleCpp + "\t" +
+            "[default, infer-capture-" + sanitizedSimpleCpp + "]\t" +
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+            sanitizedSimpleCpp + "\n" +
+        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedDepOne + "\t" +
+            "[default, infer-capture-" + sanitizedDepOne + "]\t" +
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+            sanitizedDepOne + "\n" +
+        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedDepTwo + "\t" +
+            "[default, infer-capture-" + sanitizedDepTwo + "]\t" +
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+            sanitizedDepTwo + "\n" +
+        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps + "\t" +
+            "[default, infer-capture-" + sanitizedSrcWithDeps + "]\t" +
+            "buck-out/gen/foo/infer-out-binary_with_diamond_deps#default,infer-capture-" +
+            sanitizedSrcWithDeps + "\n";
 
     assertEquals(expectedOutput, loggedDeps);
   }

@@ -126,7 +126,8 @@ public class CxxLibraryDescription implements
         flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE) ||
         flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE) ||
         flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get()) ||
-        flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+        flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()) ||
+        flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get());
 
   }
 
@@ -587,6 +588,15 @@ public class CxxLibraryDescription implements
           args,
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig));
+    } else if (params.getBuildTarget().getFlavors()
+        .contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
+      return CxxInferEnhancer.requireAllTransitiveCaptureBuildRules(
+          params,
+          resolver,
+          platform.or(defaultCxxPlatform),
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig),
+          args);
     } else if (type.isPresent() && platform.isPresent()) {
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.
@@ -810,6 +820,22 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       A args,
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
+    if (buildTarget.getFlavors().contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
+      return Optional.of(
+          CxxInferEnhancer.collectSourcesOverDependencies(
+              buildTarget,
+              resolver,
+              cxxPlatforms.getValue(buildTarget).or(defaultCxxPlatform),
+              args))
+          .transform(
+              new Function<CxxSourceSet, U>() {
+                @Override
+                public U apply(CxxSourceSet input) {
+                  return metadataClass.cast(input);
+                }
+              });
+    }
+
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.absent();
