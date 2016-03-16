@@ -25,6 +25,10 @@ GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
+# While waiting for the daemon to terminate, print a message at most
+# every DAEMON_BUSY_MESSAGE_SECONDS seconds.
+DAEMON_BUSY_MESSAGE_SECONDS = 1.0
+
 # Describes a resource used by this driver.
 #  - name: logical name of the resources
 #  - executable: whether the resource should/needs execute permissions
@@ -164,17 +168,25 @@ class BuckTool(object):
             if use_buckd and self._is_buckd_running() and \
                     os.path.exists(buck_socket_path):
                 with Tracing('buck', args={'command': sys.argv[1:]}):
-                    with NailgunConnection('local:.buckd/sock', cwd=self._buck_project.root) as c:
-                        exit_code = c.send_command(
-                            'com.facebook.buck.cli.Main',
-                            sys.argv[1:],
-                            env=env,
-                            cwd=self._buck_project.root)
-                        if exit_code == 2:
-                            print('Daemon is busy, please wait',
-                                  'or run "buck kill" to terminate it.',
-                                  file=sys.stderr)
-                        return exit_code
+                    exit_code = 2
+                    last_diagnostic_time = 0
+                    while exit_code == 2:
+                        with NailgunConnection('local:.buckd/sock',
+                                               cwd=self._buck_project.root) as c:
+                            exit_code = c.send_command(
+                                'com.facebook.buck.cli.Main',
+                                sys.argv[1:],
+                                env=env,
+                                cwd=self._buck_project.root)
+                            if exit_code == 2:
+                                now = time.time()
+                                if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
+                                    print('Daemon is busy, waiting for it to exit...',
+                                          file=sys.stderr)
+                                    last_diagnostic_time = now
+                                time.sleep(0.1)
+                    return exit_code
+
 
             command = ["buck"]
             extra_default_options = [
