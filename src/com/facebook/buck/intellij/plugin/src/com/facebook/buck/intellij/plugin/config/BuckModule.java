@@ -37,6 +37,7 @@ public final class BuckModule implements ProjectComponent {
     private BuckClient mClient = new BuckClient();
     private BuckEventsHandler mEventHandler;
     private BuckEventsConsumer mBu;
+    private boolean mConnecting = false;
     private static final Logger LOG = Logger.getInstance(BuckModule.class);
 
     public BuckModule(final Project project) {
@@ -100,6 +101,10 @@ public final class BuckModule implements ProjectComponent {
         disconnect();
     }
 
+    public boolean isConnecting() {
+        return mConnecting;
+    }
+
     public boolean isConnected() {
         return mClient.isConnected();
     }
@@ -123,6 +128,7 @@ public final class BuckModule implements ProjectComponent {
     }
 
     public void connect() {
+        mConnecting = true;
         ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
             @Override
             public void run() {
@@ -148,12 +154,16 @@ public final class BuckModule implements ProjectComponent {
                         }
                     } catch (NumberFormatException e) {
                         LOG.error(e);
+                        mConnecting = false;
                     } catch (ExecutionException e) {
                         LOG.error(e);
+                        mConnecting = false;
                     } catch (IOException e) {
                         LOG.error(e);
+                        mConnecting = false;
                     }
                 }
+                mConnecting = false;
             }
         });
     }

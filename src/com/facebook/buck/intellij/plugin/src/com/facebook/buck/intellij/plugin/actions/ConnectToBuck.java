@@ -36,6 +36,7 @@ public class ConnectToBuck  extends DumbAwareAction {
         if (project != null) {
             BuckModule mod = project.getComponent(BuckModule.class);
             e.getPresentation().setVisible(!mod.isConnected());
+            e.getPresentation().setEnabled(!mod.isConnecting());
         } else {
             e.getPresentation().setVisible(false);
         }
