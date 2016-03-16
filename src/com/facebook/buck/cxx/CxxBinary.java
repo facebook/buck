@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class CxxUnstrippedBinary
+public class CxxBinary
     extends AbstractBuildRule
     implements BinaryBuildRule, NativeTestable, HasRuntimeDeps {
 
@@ -47,7 +47,7 @@ public class CxxUnstrippedBinary
   private final ImmutableSortedSet<BuildTarget> tests;
   private final ImmutableSortedSet<FrameworkPath> frameworks;
 
-  public CxxUnstrippedBinary(
+  public CxxBinary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver resolver,

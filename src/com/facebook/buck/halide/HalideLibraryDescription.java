@@ -17,7 +17,7 @@
 package com.facebook.buck.halide;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxUnstrippedBinary;
+import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
@@ -104,7 +104,7 @@ public class HalideLibraryDescription
     return target.withFlavors(HALIDE_COMPILER_FLAVOR);
   }
 
-  private CxxUnstrippedBinary createHalideCompiler(
+  private CxxBinary createHalideCompiler(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -157,7 +157,7 @@ public class HalideLibraryDescription
             platformLinkerFlags,
             cxxRuntimeType);
 
-    CxxUnstrippedBinary cxxUnstrippedBinary = new CxxUnstrippedBinary(
+    CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         ruleResolver,
         pathResolver,
@@ -165,8 +165,8 @@ public class HalideLibraryDescription
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.<FrameworkPath>of(),
         ImmutableSortedSet.<BuildTarget>of());
-    ruleResolver.addToIndex(cxxUnstrippedBinary);
-    return cxxUnstrippedBinary;
+    ruleResolver.addToIndex(cxxBinary);
+    return cxxBinary;
   }
 
   private BuildRule createHalideStaticLibrary(
@@ -195,7 +195,7 @@ public class HalideLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform platform) throws NoSuchBuildTargetException {
-    CxxUnstrippedBinary halideCompiler = (CxxUnstrippedBinary) resolver.requireRule(
+    CxxBinary halideCompiler = (CxxBinary) resolver.requireRule(
         params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
     return new HalideCompile(
         params.copyWithExtraDeps(

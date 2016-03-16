@@ -193,17 +193,17 @@ public class CxxBinaryDescription implements
             args,
             preprocessMode);
 
-    // Return a CxxUnstrippedBinary rule as our representative in the action graph, rather than
-    // the CxxLink rule above for a couple reasons:
-    //  1) CxxUnstrippedBinary extends BinaryBuildRule whereas CxxLink does not, so the former
-    //     can be used as executables for genrules.
+    // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
+    // rule above for a couple reasons:
+    //  1) CxxBinary extends BinaryBuildRule whereas CxxLink does not, so the former can be used
+    //     as executables for genrules.
     //  2) In some cases, users add dependencies from some rules onto other binary rules, typically
     //     if the binary is executed by some test or library code at test time.  These target graph
     //     deps should *not* become build time dependencies on the CxxLink step, otherwise we'd
     //     have to wait for the dependency binary to link before we could link the dependent binary.
     //     By using another BuildRule, we can keep the original target graph dependency tree while
     //     preventing it from affecting link parallelism.
-    return new CxxUnstrippedBinary(
+    return new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         resolver,
         pathResolver,
