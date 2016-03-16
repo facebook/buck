@@ -33,6 +33,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -88,9 +91,12 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.enableDirCache();
 
     // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:no_srcs");
+    BuildTarget target = BuildTargetFactory.newInstance("//:no_srcs");
+    ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
-    Path outputFile = workspace.getPath("buck-out/gen/lib__no_srcs__output/no_srcs.jar");
+    Path outputPath =
+        BuildTargets.getGenPath(target, "lib__%s__output/" + target.getShortName() + ".jar");
+    Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(bolinfest): When we produce byte-for-byte identical JAR files across builds, do:
     //
@@ -130,12 +136,12 @@ public class DefaultJavaLibraryIntegrationTest {
             .toSortedList(Ordering.natural())
             .get(0);
     FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);
-    Path outputInZip = zipFs.getPath("/buck-out/gen/lib__no_srcs__output/no_srcs.jar");
+    Path outputInZip = zipFs.getPath("/" + outputPath.toString());
     Files.write(outputInZip, "Hello world!".getBytes(), WRITE);
     zipFs.close();
 
     // Run `buck build` again.
-    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:no_srcs");
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult2.assertSuccess("Successful build should exit with 0.");
     assertTrue(Files.isRegularFile(outputFile));
     assertEquals(
@@ -146,7 +152,8 @@ public class DefaultJavaLibraryIntegrationTest {
     // Run `buck clean` followed by `buck build` yet again, but this time, specify `--no-cache`.
     ProcessResult cleanResult2 = workspace.runBuckCommand("clean");
     cleanResult2.assertSuccess("Successful clean should exit with 0.");
-    ProcessResult buildResult3 = workspace.runBuckCommand("build", "--no-cache", "//:no_srcs");
+    ProcessResult buildResult3 =
+        workspace.runBuckCommand("build", "--no-cache", target.getFullyQualifiedName());
     buildResult3.assertSuccess();
     assertNotEquals(
         "The contents of the file should no longer be pulled from the corrupted build cache.",
@@ -237,11 +244,12 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.setUp();
 
     // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckBuild("//:empty_directory_entries");
+    BuildTarget target = BuildTargetFactory.newInstance("//:empty_directory_entries");
+    ProcessResult buildResult = workspace.runBuckBuild(target.getFullyQualifiedName());
     buildResult.assertSuccess();
 
     Path outputFile = workspace.getPath(
-        "buck-out/gen/lib__empty_directory_entries__output/empty_directory_entries.jar");
+        BuildTargets.getGenPath(target, "lib__%s__output/" + target.getShortName() + ".jar"));
     assertTrue(Files.exists(outputFile));
 
     ImmutableSet.Builder<String> jarContents = ImmutableSet.builder();
@@ -269,45 +277,57 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.setUp();
 
     // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:biz");
+    BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
+    BuildTarget utilTarget = BuildTargetFactory.newInstance("//:util");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    String utilRuleKey = getContents("buck-out/bin/.util/metadata/RULE_KEY");
-    String utilAbiRuleKey = getContents("buck-out/bin/.util/metadata/INPUT_BASED_RULE_KEY");
+    Path utilRuleKeyPath = BuildTargets.getScratchPath(utilTarget, ".%s/metadata/RULE_KEY");
+    String utilRuleKey = getContents(utilRuleKeyPath);
+    Path utilAbiRuleKeyPath =
+        BuildTargets.getScratchPath(utilTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+    String utilAbiRuleKey = getContents(utilAbiRuleKeyPath);
 
-    String bizRuleKey = getContents("buck-out/bin/.biz/metadata/RULE_KEY");
-    String bizAbiRuleKey = getContents("buck-out/bin/.biz/metadata/INPUT_BASED_RULE_KEY");
+    Path bizRuleKeyPath = BuildTargets.getScratchPath(bizTarget, ".%s/metadata/RULE_KEY");
+    String bizRuleKey = getContents(bizRuleKeyPath);
+    Path bizAbiRuleKeyPath =
+        BuildTargets.getScratchPath(bizTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+    String bizAbiRuleKey = getContents(bizAbiRuleKeyPath);
 
-    long utilJarSize = Files.size(workspace.getPath("buck-out/gen/lib__util__output/util.jar"));
-    FileTime bizJarLastModified = Files.getLastModifiedTime(
-        workspace.getPath("buck-out/gen/lib__biz__output/biz.jar"));
+    Path utilOutputPath = BuildTargets.getGenPath(
+        utilTarget,
+        "lib__%s__output/" + utilTarget.getShortName() + ".jar");
+    long utilJarSize = Files.size(workspace.getPath(utilOutputPath));
+    Path bizOutputPath = BuildTargets.getGenPath(
+        bizTarget,
+        "lib__%s__output/" + bizTarget.getShortName() + ".jar");
+    FileTime bizJarLastModified = Files.getLastModifiedTime(workspace.getPath(bizOutputPath));
 
     // TODO(bolinfest): Run uber-biz.jar and verify it prints "Hello World!\n".
 
     // Edit Util.java in a way that does not affect its ABI.
-    String originalUtilJava = getContents("Util.java");
-    String replacementContents = originalUtilJava.replace("Hello World", "Hola Mundo");
-    Files.write(workspace.getPath("Util.java"), replacementContents.getBytes(UTF_8));
+    workspace.replaceFileContents("Util.java", "Hello World", "Hola Mundo");
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:biz");
     buildResult2.assertSuccess("Successful build should exit with 0.");
 
-    assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY"))));
+    assertThat(utilRuleKey, not(equalTo(getContents(utilRuleKeyPath))));
     assertThat(utilAbiRuleKey,
-        not(equalTo(getContents("buck-out/bin/.util/metadata/INPUT_BASED_RULE_KEY"))));
+        not(equalTo(getContents(utilAbiRuleKeyPath))));
 
-    assertThat(bizRuleKey, not(equalTo(getContents("buck-out/bin/.biz/metadata/RULE_KEY"))));
-    assertEquals(bizAbiRuleKey, getContents("buck-out/bin/.biz/metadata/INPUT_BASED_RULE_KEY"));
+    assertThat(bizRuleKey, not(equalTo(getContents(bizRuleKeyPath))));
+    assertEquals(bizAbiRuleKey, getContents(bizAbiRuleKeyPath));
 
     assertThat(
         "util.jar should have been rewritten, so its file size should have changed.",
         utilJarSize,
-        not(equalTo(Files.size(workspace.getPath("buck-out/gen/lib__util__output/util.jar")))));
+        not(equalTo(Files.size(workspace.getPath(utilOutputPath)))));
     assertEquals(
         "biz.jar should not have been rewritten, so its last-modified time should be the same.",
         bizJarLastModified,
-        Files.getLastModifiedTime(workspace.getPath("buck-out/gen/lib__biz__output/biz.jar")));
+        Files.getLastModifiedTime(workspace.getPath(bizOutputPath)));
 
     // TODO(bolinfest): Run uber-biz.jar and verify it prints "Hola Mundo!\n".
 
@@ -350,10 +370,18 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.setUp();
 
     // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:binary", "//:binary_2");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
+    BuildTarget binary2Target = BuildTargetFactory.newInstance("//:binary_2");
+    ProcessResult buildResult = workspace.runBuckCommand(
+        "build",
+        binaryTarget.getFullyQualifiedName(),
+        binary2Target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    for (String filename : new String[]{"buck-out/gen/binary.jar", "buck-out/gen/binary_2.jar"}) {
+    for (Path filename :
+        new Path[]{
+            BuildTargets.getGenPath(binaryTarget, "%s.jar"),
+            BuildTargets.getGenPath(binary2Target, "%s.jar")}) {
       Path file = workspace.getPath(filename);
       try (Zip zip = new Zip(file, /* for writing? */ false)) {
         Set<String> allNames = zip.getFileNames();
@@ -410,11 +438,12 @@ public class DefaultJavaLibraryIntegrationTest {
         tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckBuild("//:a");
+    BuildTarget target = BuildTargetFactory.newInstance("//:a");
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath("buck-out/bin/lib__a__classes");
+    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
     assertTrue(Files.exists(classesDir));
     assertTrue(Files.isDirectory(classesDir));
     ArrayList<String> classFiles = new ArrayList<>();
@@ -436,18 +465,19 @@ public class DefaultJavaLibraryIntegrationTest {
         tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckBuild("//:a");
+    BuildTarget target = BuildTargetFactory.newInstance("//:a");
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath("buck-out/bin/lib__a__classes");
+    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
         "There should be no class files in disk",
         ImmutableList.copyOf(classesDir.toFile().listFiles()), hasSize(0));
 
-    Path jarPath = workspace.getPath("buck-out/gen/lib__a__output/a.jar");
+    Path jarPath = workspace.getPath(BuildTargets.getGenPath(target, "lib__%s__output/a.jar"));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
     assertThat(zip.getNextEntry().getName(), is("A.class"));
@@ -458,7 +488,7 @@ public class DefaultJavaLibraryIntegrationTest {
   /**
    * Asserts that the specified file exists and returns its contents.
    */
-  private String getContents(String relativePathToFile) throws IOException {
+  private String getContents(Path relativePathToFile) throws IOException {
     Path file = workspace.getPath(relativePathToFile);
     assertTrue(relativePathToFile + " should exist and be an ordinary file.", Files.exists(file));
     String content = Strings.nullToEmpty(new String(Files.readAllBytes(file), UTF_8)).trim();

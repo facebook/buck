@@ -2,12 +2,14 @@ java_test(
   name = 'js',
   srcs = glob(['*Test.java']),
   deps = [
+    '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/android:testutil',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
-    '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )
 

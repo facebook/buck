@@ -17,6 +17,9 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,9 +54,10 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testApkContainsJSAssetAndDrawables() throws IOException {
-    workspace.runBuckBuild("//apps/sample:app").assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath("buck-out/gen/apps/sample/app.apk"));
+        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
     zipInspector.assertFileExists("res/drawable-hdpi-v4/image.png");
@@ -62,9 +66,10 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testApkContainsJSAssetAndDrawablesForUnbundle() throws IOException {
-    workspace.runBuckBuild("//apps/sample:app-unbundle").assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-unbundle");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath("buck-out/gen/apps/sample/app-unbundle.apk"));
+        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileExists("assets/js/helpers.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
@@ -75,9 +80,10 @@ public class AndroidReactNativeLibraryIntegrationTest {
   @Test
   public void testAaptPackageDependsOnReactNativeBundle() throws IOException {
     workspace.enableDirCache();
-    workspace.runBuckBuild("//apps/sample:app-without-rn-res").assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-without-rn-res");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath("buck-out/gen/apps/sample/app-without-rn-res.apk"));
+        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
 
     workspace.runBuckCommand("clean");
@@ -86,9 +92,9 @@ public class AndroidReactNativeLibraryIntegrationTest {
         "#REPLACE_ME_WITH_ANOTHER_RES",
         "'//res/com/sample/unused:unused'");
 
-    workspace.runBuckBuild("//apps/sample:app-without-rn-res").assertSuccess();
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     zipInspector = new ZipInspector(
-        workspace.getPath("buck-out/gen/apps/sample/app-without-rn-res.apk"));
+        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
   }
 

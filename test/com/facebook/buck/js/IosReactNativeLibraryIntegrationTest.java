@@ -20,6 +20,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -46,10 +48,6 @@ public class IosReactNativeLibraryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
   }
 
-  private Path createPath(String first, String... more) {
-    return tmpFolder.getRootPath().getFileSystem().getPath(first, more);
-  }
-
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
@@ -61,10 +59,11 @@ public class IosReactNativeLibraryIntegrationTest {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify(
-        createPath(
-            "buck-out",
-            "gen",
-            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+                    "%s")));
   }
 
   @Test
@@ -72,10 +71,11 @@ public class IosReactNativeLibraryIntegrationTest {
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
 
     workspace.verify(
-        createPath(
-            "buck-out",
-            "gen",
-            "DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"));
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+                "%s")));
   }
 
   @Test
@@ -85,9 +85,10 @@ public class IosReactNativeLibraryIntegrationTest {
         .assertSuccess();
 
     Path appDir = workspace.getPath(
-        "buck-out/gen/" +
-            "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks,rn_no_bundle/" +
-            "DemoApp.app");
+        BuildTargets.getGenPath(
+            BuildTargetFactory.newInstance(
+                "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+            "%s/DemoApp.app"));
     assertTrue(Files.isDirectory(appDir));
 
     Path bundle = appDir.resolve("Apps/DemoApp/DemoApp.bundle");

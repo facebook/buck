@@ -18,6 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -48,11 +51,14 @@ public class CleanClasspathIntegrationTest {
     workspace.setUp();
 
     // Build //:example so that content is written to buck-out/gen/.
-    ProcessResult processResult1 = workspace.runBuckCommand("build", "//:example");
+    BuildTarget target = BuildTargetFactory.newInstance("//:example");
+    ProcessResult processResult1 =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
     processResult1.assertSuccess();
     assertTrue(
         "example.jar should be written. This should not be on the classpath on the next build.",
-        Files.isRegularFile(workspace.getPath("buck-out/gen/lib__example__output/example.jar")));
+        Files.isRegularFile(
+            workspace.getPath(BuildTargets.getGenPath(target, "lib__%s__output/example.jar"))));
 
     // Overwrite the existing BUCK file, redefining the java_library rule to exclude Bar.java from
     // its srcs.
@@ -66,7 +72,8 @@ public class CleanClasspathIntegrationTest {
 
     // Rebuilding //:example should fail even though Bar.class is in
     // buck-out/gen/lib__example__output/example.jar.
-    ProcessResult processResult2 = workspace.runBuckCommand("build", "//:example");
+    ProcessResult processResult2 =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
     processResult2.assertFailure("Build should fail because Foo.java depends on Bar.java.");
   }
 }
