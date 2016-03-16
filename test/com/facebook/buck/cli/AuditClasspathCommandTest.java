@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
@@ -27,6 +26,7 @@ import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
@@ -150,10 +150,16 @@ public class AuditClasspathCommandTest {
     Path root = javaLibraryTarget.getUnflavoredBuildTarget().getCellPath();
     SortedSet<String> expectedPaths = Sets.newTreeSet(
         Arrays.asList(
-            root.resolve(GEN_DIR +
-                "/lib__test-android-library__output/test-android-library.jar").toString(),
-            root.resolve(GEN_DIR +
-                "/lib__test-java-library__output/test-java-library.jar").toString()));
+            root.resolve(
+                BuildTargets
+                    .getGenPath(androidLibraryTarget, "lib__%s__output")
+                    .resolve(androidLibraryTarget.getShortName() + ".jar"))
+                .toString(),
+            root.resolve(
+                BuildTargets
+                    .getGenPath(javaLibraryTarget, "lib__%s__output")
+                    .resolve(javaLibraryTarget.getShortName() + ".jar"))
+                .toString()));
     String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
 
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
@@ -180,8 +186,12 @@ public class AuditClasspathCommandTest {
             androidLibraryTarget,
             testJavaTarget));
 
-    expectedPaths.add(root.resolve(GEN_DIR +
-        "/lib__project-tests__output/project-tests.jar").toString());
+    expectedPaths.add(
+        root.resolve(
+            BuildTargets
+                .getGenPath(testJavaTarget, "lib__%s__output")
+                .resolve(testJavaTarget.getShortName() + ".jar"))
+            .toString());
     expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
@@ -231,11 +241,17 @@ public class AuditClasspathCommandTest {
     Path root = javaTarget.getCellPath();
     String expected = String.format(EXPECTED_JSON,
         root.resolve(
-            "buck-out/gen/lib__test-java-library__output/test-java-library.jar"),
+            BuildTargets
+                .getGenPath(javaTarget, "lib__%s__output")
+                .resolve(javaTarget.getShortName() + ".jar")),
         root.resolve(
-            "buck-out/gen/lib__test-android-library__output/test-android-library.jar"),
+            BuildTargets
+                .getGenPath(androidTarget, "lib__%s__output")
+                .resolve(androidTarget.getShortName() + ".jar")),
         root.resolve(
-            "buck-out/gen/lib__test-java-library__output/test-java-library.jar"));
+            BuildTargets
+                .getGenPath(javaTarget, "lib__%s__output")
+                .resolve(javaTarget.getShortName() + ".jar")));
     assertEquals(expected, console.getTextWrittenToStdOut());
 
     assertEquals("", console.getTextWrittenToStdErr());

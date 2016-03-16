@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -97,8 +99,9 @@ public class CxxLibraryIntegrationTest {
     assertTrue(
         Files.isRegularFile(
             workspace.getPath(
-                "buck-out/gen/subdir/" +
-                    "library#default,shared/libsubdir_library.so")));
+                BuildTargets.getGenPath(
+                    BuildTargetFactory.newInstance("//subdir:library#default,shared"),
+                    "%s/libsubdir_library.so"))));
     result.assertSuccess();
   }
 

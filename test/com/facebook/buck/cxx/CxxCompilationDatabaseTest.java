@@ -22,6 +22,7 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -208,7 +209,7 @@ public class CxxCompilationDatabaseTest {
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
-        Paths.get("buck-out/gen/foo/__baz#compilation-database.json"),
+        BuildTargets.getGenPath(testBuildTarget, "__%s.json"),
         compilationDatabase.getPathToOutput());
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;

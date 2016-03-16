@@ -20,6 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -73,36 +77,34 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void binaryWithDependenciesCompilationDatabase() throws IOException {
-    Path compilationDatabase = workspace.buildAndReturnOutput(
-        "//:binary_with_dep#compilation-database");
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_dep#compilation-database");
+    Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
 
     Path rootPath = tmp.getRootPath();
     assertEquals(
-        Paths.get(
-            "buck-out/gen/__binary_with_dep#compilation-database.json"),
+        BuildTargets.getGenPath(target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
 
-    String binaryHeaderSymlinkTreeFolder =
-        String.format(
-            "buck-out/gen/binary_with_dep#default,%s",
-            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
-    String binaryExportedHeaderSymlinkTreeFoler =
-        String.format(
-            "buck-out/gen/library_with_header#default,%s",
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
-
+    Path binaryHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
     assertTrue(Files.exists(rootPath.resolve(binaryHeaderSymlinkTreeFolder)));
-    assertTrue(Files.exists(rootPath.resolve(binaryExportedHeaderSymlinkTreeFoler)));
 
-    String libraryExportedHeaderSymlinkTreeFoler =
-        String.format(
-            "buck-out/gen/library_with_header#default,%s",
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:library_with_header");
+    Path libraryExportedHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            libraryTarget.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
 
     // Verify that symlink folders for headers are created and header file is linked.
-    assertTrue(Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFoler)));
+    assertTrue(Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder)));
     assertTrue(
-        Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFoler + "/bar.h")));
+        Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder + "/bar.h")));
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -115,7 +117,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-I")
             .add(headerSymlinkTreeIncludePath(binaryHeaderSymlinkTreeFolder))
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(binaryExportedHeaderSymlinkTreeFoler))
+            .add(headerSymlinkTreeIncludePath(libraryExportedHeaderSymlinkTreeFolder))
             .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
@@ -123,8 +125,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-c")
             .add("-o")
             .add(
-                "buck-out/gen/binary_with_dep#compile-" + sanitize("foo.cpp.o") +
-                    ",default/foo.cpp.o")
+                BuildTargets
+                    .getGenPath(
+                        target.withFlavors(
+                            ImmutableFlavor.of("default"),
+                            ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o"))),
+                        "%s/foo.cpp.o")
+                    .toString())
             .add(rootPath.resolve(Paths.get("foo.cpp")).toRealPath().toString())
             .build());
   }
@@ -134,26 +141,30 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
-    Path compilationDatabase = workspace.buildAndReturnOutput(
-        "//:library_with_header#default,compilation-database");
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
+    Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRootPath();
     assertEquals(
-        Paths.get(
-            "buck-out/gen/__library_with_header#compilation-database,default.json"),
+        BuildTargets.getGenPath(target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
 
-    String headerSymlinkTreeFolder =
-        String.format(
-            "buck-out/gen/library_with_header#default,%s",
-            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
-    String exportedHeaderSymlinkTreeFoler =
-        String.format(
-            "buck-out/gen/library_with_header#default,%s",
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+    Path headerSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
+    Path exportedHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
 
     // Verify that symlink folders for headers are created.
     assertTrue(Files.exists(rootPath.resolve(headerSymlinkTreeFolder)));
-    assertTrue(Files.exists(rootPath.resolve(exportedHeaderSymlinkTreeFoler)));
+    assertTrue(Files.exists(rootPath.resolve(exportedHeaderSymlinkTreeFolder)));
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -168,7 +179,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-I")
             .add(headerSymlinkTreeIncludePath(headerSymlinkTreeFolder))
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(exportedHeaderSymlinkTreeFoler))
+            .add(headerSymlinkTreeIncludePath(exportedHeaderSymlinkTreeFolder))
             .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
@@ -176,8 +187,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-c")
             .add("-o")
             .add(
-                "buck-out/gen/library_with_header#compile-pic-" + sanitize("bar.cpp.o") +
-                    ",default/bar.cpp.o")
+                BuildTargets
+                    .getGenPath(
+                        target.withFlavors(
+                            ImmutableFlavor.of("default"),
+                            ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o"))),
+                        "%s/bar.cpp.o")
+                    .toString())
             .add(rootPath.resolve(Paths.get("bar.cpp")).toRealPath().toString())
             .build());
   }
@@ -187,22 +203,25 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
-    Path compilationDatabase = workspace.buildAndReturnOutput(
-        "//:test#default,compilation-database");
+    BuildTarget target = BuildTargetFactory.newInstance("//:test#default,compilation-database");
+    Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRootPath();
     assertEquals(
-        Paths.get(
-            "buck-out/gen/__test#compilation-database,default.json"),
+        BuildTargets.getGenPath(target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
 
-    String binaryHeaderSymlinkTreeFolder =
-        String.format(
-            "buck-out/gen/test#default,%s",
-            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
-    String binaryExportedHeaderSymlinkTreeFolder =
-        String.format(
-            "buck-out/gen/test#default,%s",
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+    Path binaryHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
+    Path binaryExportedHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -224,12 +243,19 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("c++")
             .add("-c")
             .add("-o")
-            .add("buck-out/gen/test#compile-pic-" + sanitize("test.cpp.o") + ",default/test.cpp.o")
+            .add(
+                BuildTargets
+                    .getGenPath(
+                        target.withFlavors(
+                            ImmutableFlavor.of("default"),
+                            ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
+                        "%s/test.cpp.o")
+                    .toString())
             .add(rootPath.resolve(Paths.get("test.cpp")).toRealPath().toString())
             .build());
   }
 
-  private String headerSymlinkTreeIncludePath(String headerSymlinkTreePath) throws IOException {
+  private String headerSymlinkTreeIncludePath(Path headerSymlinkTreePath) throws IOException {
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
       return String.format("%s.hmap", headerSymlinkTreePath);
     } else {

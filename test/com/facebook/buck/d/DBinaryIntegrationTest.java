@@ -18,6 +18,8 @@ package com.facebook.buck.d;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -45,7 +47,12 @@ public class DBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/test#binary/test").toString());
+        workspace
+            .resolve(
+                BuildTargets.getGenPath(
+                    BuildTargetFactory.newInstance("//:test#binary"),
+                    "%s/test"))
+            .toString());
     assertEquals(0, result.getExitCode());
     assertEquals("1 + 1 = 2\n100 + 1 = 5\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
@@ -65,7 +72,12 @@ public class DBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy#binary/xyzzy").toString());
+        workspace
+            .resolve(
+                BuildTargets.getGenPath(
+                    BuildTargetFactory.newInstance("//:xyzzy#binary"),
+                    "%s/xyzzy"))
+            .toString());
     assertEquals(0, result.getExitCode());
     assertEquals("Nothing happens.\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());

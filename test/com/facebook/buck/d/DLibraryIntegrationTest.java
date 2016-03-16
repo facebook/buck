@@ -18,6 +18,8 @@ package com.facebook.buck.d;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -46,7 +48,12 @@ public class DLibraryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/greet#binary/greet").toString());
+        workspace
+            .resolve(
+                BuildTargets.getGenPath(
+                    BuildTargetFactory.newInstance("//:greet#binary"),
+                    "%s/greet"))
+            .toString());
     assertEquals(0, result.getExitCode());
     assertEquals("Hello, world!\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());

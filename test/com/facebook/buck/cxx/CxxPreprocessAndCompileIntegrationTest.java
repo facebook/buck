@@ -25,6 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -89,8 +90,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
-    workspace.runBuckBuild("//:simple#default,static").assertSuccess();
-    Path lib = workspace.getPath("buck-out/gen/simple#default,static/libsimple.a");
+    BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    Path lib = workspace.getPath(BuildTargets.getGenPath(target, "%s/libsimple.a"));
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
@@ -100,9 +102,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
-    workspace.runBuckBuild("//:simple_assembly#default,static").assertSuccess();
-    Path lib =
-        workspace.getPath("buck-out/gen/simple_assembly#default,static/libsimple_assembly.a");
+    BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    Path lib = workspace.getPath(BuildTargets.getGenPath(target, "%s/libsimple_assembly.a"));
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
@@ -123,17 +125,19 @@ public class CxxPreprocessAndCompileIntegrationTest {
     // the symlinked directory, even though it's not the right project root.
     Map<String, String> envCopy = Maps.newHashMap(System.getenv());
     envCopy.put("PWD", symlinkedRoot.toString());
-    workspace.runBuckCommandWithEnvironmentAndContext(
-        tmp.getRootPath(),
-        Optional.<NGContext>absent(),
-        Optional.<BuckEventListener>absent(),
-        Optional.of(ImmutableMap.copyOf(envCopy)),
-        "build",
-        "//:simple#default,static")
-            .assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
+    workspace
+        .runBuckCommandWithEnvironmentAndContext(
+            tmp.getRootPath(),
+            Optional.<NGContext>absent(),
+            Optional.<BuckEventListener>absent(),
+            Optional.of(ImmutableMap.copyOf(envCopy)),
+            "build",
+            target.getFullyQualifiedName())
+        .assertSuccess();
 
     // Verify that we still sanitized this path correctly.
-    Path lib = workspace.getPath("buck-out/gen/simple#default,static/libsimple.a");
+    Path lib = workspace.getPath(BuildTargets.getGenPath(target, "%s/libsimple.a"));
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
