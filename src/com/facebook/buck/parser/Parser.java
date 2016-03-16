@@ -21,7 +21,8 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
@@ -250,80 +251,65 @@ public class Parser {
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
+    GraphTraversable<BuildTarget> traversable = new GraphTraversable<BuildTarget>() {
+      @Override
+      public Iterator<BuildTarget> findChildren(BuildTarget target) {
+        TargetNode<?> node;
+        try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, target)) {
+          try {
+            node = state.getTargetNode(target);
+          } catch (BuildFileParseException | BuildTargetException e) {
+            throw new RuntimeException(e);
+          }
+        }
+
+        Set<BuildTarget> deps = Sets.newHashSet();
+        for (BuildTarget dep : node.getDeps()) {
+          TargetNode<?> depTargetNode;
+          try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, dep)) {
+            try {
+              depTargetNode = state.getTargetNode(dep);
+            } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
+              throw new HumanReadableException(
+                  e,
+                  "Couldn't get dependency '%s' of target '%s':\n%s",
+                  dep,
+                  target,
+                  e.getMessage());
+            }
+          }
+          depTargetNode.checkVisibility(target);
+          deps.add(dep);
+        }
+        return deps.iterator();
+      }
+    };
+
+    AcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
+        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+
     TargetGraph targetGraph = null;
     try {
-      final AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
-          new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
+      for (BuildTarget target : traversal.traverse(toExplore)) {
+        TargetNode<?> targetNode = state.getTargetNode(target);
 
-            @Override
-            protected Iterator<BuildTarget> findChildren(BuildTarget target) {
-              TargetNode<?> node;
-              try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, target)) {
-                try {
-                  node = state.getTargetNode(target);
-                } catch (BuildFileParseException | BuildTargetException e) {
-                  throw new RuntimeException(e);
-                }
-              }
-
-              Set<BuildTarget> deps = Sets.newHashSet();
-              for (BuildTarget dep : node.getDeps()) {
-                TargetNode<?> depTargetNode;
-                try (SimplePerfEvent.Scope scope =
-                         getTargetNodeEventScope(eventBus, dep)) {
-                  try {
-                    depTargetNode = state.getTargetNode(dep);
-                  } catch (
-                      BuildFileParseException |
-                          BuildTargetException |
-                          HumanReadableException e) {
-                    throw new HumanReadableException(
-                        e,
-                        "Couldn't get dependency '%s' of target '%s':\n%s",
-                        dep,
-                        target,
-                        e.getMessage());
-                  }
-                }
-                depTargetNode.checkVisibility(target);
-                deps.add(dep);
-              }
-              return deps.iterator();
-            }
-
-            @Override
-            protected void onNodeExplored(BuildTarget target) {
-              try {
-                TargetNode<?> targetNode = state.getTargetNode(target);
-
-                Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
-                graph.addNode(targetNode);
-                MoreMaps.putCheckEquals(index, target, targetNode);
-                if (target.isFlavored()) {
-                  BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
-                  MoreMaps.putCheckEquals(
-                      index,
-                      unflavoredTarget,
-                      state.getTargetNode(unflavoredTarget));
-                }
-                for (BuildTarget dep : targetNode.getDeps()) {
-                  graph.addEdge(targetNode, state.getTargetNode(dep));
-                }
-              } catch (BuildFileParseException | BuildTargetException e) {
-                throw new RuntimeException(e);
-              }
-            }
-
-            @Override
-            protected void onTraversalComplete(Iterable<BuildTarget> nodesInExplorationOrder) {
-
-            }
-          };
-
-      traversal.traverse(toExplore);
+        Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
+        graph.addNode(targetNode);
+        MoreMaps.putCheckEquals(index, target, targetNode);
+        if (target.isFlavored()) {
+          BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+          MoreMaps.putCheckEquals(
+              index,
+              unflavoredTarget,
+              state.getTargetNode(unflavoredTarget));
+        }
+        for (BuildTarget dep : targetNode.getDeps()) {
+          graph.addEdge(targetNode, state.getTargetNode(dep));
+        }
+      }
       targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
       return targetGraph;
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());
     } catch (RuntimeException e) {
       throw propagateRuntimeCause(e);

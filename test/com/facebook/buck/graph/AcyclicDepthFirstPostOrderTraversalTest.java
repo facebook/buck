@@ -18,7 +18,7 @@ package com.facebook.buck.graph;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
@@ -30,12 +30,10 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 /**
- * Unit test for {@link AbstractAcyclicDepthFirstPostOrderTraversal}.
+ * Unit test for {@link AcyclicDepthFirstPostOrderTraversal}.
  */
-public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
+public class AcyclicDepthFirstPostOrderTraversalTest {
 
   /**
    * Verifies that a traversal of a well-formed DAG proceeds as expected.
@@ -64,7 +62,6 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
     dfs.traverse(ImmutableList.of("A"));
     ImmutableList<String> expectedExploredNodes = ImmutableList.of("F", "D", "E", "B", "C", "A");
     assertEquals(expectedExploredNodes, dfs.exploredNodes);
-    assertEquals(expectedExploredNodes, dfs.paramToNodesInExplorationOrder);
     assertEquals(expectedExploredNodes.size(), dfs.numFindChildrenCalls);
   }
 
@@ -92,7 +89,7 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
     graph.put("D", "F");
     graph.put("E", "F");
     graph.put("F", "C");
-    AbstractAcyclicDepthFirstPostOrderTraversal<String> dfs = new TestDagDepthFirstSearch(graph);
+    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
 
     try {
       dfs.traverse(ImmutableList.of("A"));
@@ -109,7 +106,7 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
   public void testTrivialCycle() throws IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "A");
-    AbstractAcyclicDepthFirstPostOrderTraversal<String> dfs = new TestDagDepthFirstSearch(graph);
+    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
 
     try {
       dfs.traverse(ImmutableList.of("A"));
@@ -175,34 +172,31 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
     assertEquals(ImmutableList.of("C", "D", "E", "B", "A"), dfs.exploredNodes);
   }
 
-  private static class TestDagDepthFirstSearch extends
-      AbstractAcyclicDepthFirstPostOrderTraversal<String> {
+  private static class TestDagDepthFirstSearch {
 
     private final Multimap<String, String> graph;
     private final List<String> exploredNodes = Lists.newArrayList();
-    @Nullable
-    private ImmutableList<String> paramToNodesInExplorationOrder;
     private int numFindChildrenCalls;
 
-    private TestDagDepthFirstSearch(Multimap<String, String> graph) {
+    public TestDagDepthFirstSearch(Multimap<String, String> graph) {
       this.graph = graph;
       this.numFindChildrenCalls = 0;
     }
 
-    @Override
-    protected Iterator<String> findChildren(String node) {
-      ++numFindChildrenCalls;
-      return graph.get(node).iterator();
-    }
-
-    @Override
-    protected void onNodeExplored(String node) {
-      exploredNodes.add(node);
-    }
-
-    @Override
-    protected void onTraversalComplete(Iterable<String> nodesInExplorationOrder) {
-      paramToNodesInExplorationOrder = ImmutableList.copyOf(nodesInExplorationOrder);
+    public void traverse(Iterable<String> initial)
+        throws AcyclicDepthFirstPostOrderTraversal.CycleException {
+      AcyclicDepthFirstPostOrderTraversal<String> traversal =
+          new AcyclicDepthFirstPostOrderTraversal<>(
+              new GraphTraversable<String>() {
+                @Override
+                public Iterator<String> findChildren(String node) {
+                  ++numFindChildrenCalls;
+                  return graph.get(node).iterator();
+                }
+              });
+      for (String node : traversal.traverse(initial)) {
+        exploredNodes.add(node);
+      }
     }
   }
 }
