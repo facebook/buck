@@ -317,7 +317,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
   }
 
-  private static Path getOutputJarDirPath(BuildTarget target) {
+  public static Path getOutputJarDirPath(BuildTarget target) {
     return BuildTargets.getGenPath(target, "lib__%s__output");
   }
 
@@ -337,7 +337,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * @return directory path relative to the project root where .class files will be generated.
    *     The return value does not end with a slash.
    */
-  private static Path getClassesDir(BuildTarget target) {
+  public static Path getClassesDir(BuildTarget target) {
     return BuildTargets.getScratchPath(target, "lib__%s__classes");
   }
 
