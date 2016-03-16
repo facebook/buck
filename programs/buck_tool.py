@@ -6,7 +6,6 @@ import platform
 import re
 import shlex
 import signal
-import signal
 import subprocess
 import sys
 import tempfile
@@ -228,6 +227,8 @@ class BuckTool(object):
                 # statistics; doing it once every five seconds is much
                 # saner for a long-lived daemon.
                 "-XX:PerfDataSamplingInterval=5000",
+                # Do not touch most signals
+                "-Xrs",
                 # Likewise, waking up once per second just in case
                 # there's some rebalancing to be done is silly.
                 "-XX:+UnlockDiagnosticVMOptions",
@@ -245,7 +246,7 @@ class BuckTool(object):
 
             command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-            command.append("com.martiansoftware.nailgun.NGServer")
+            command.append("com.facebook.buck.cli.Main$DaemonBootstrap")
             command.append("local:.buckd/sock")
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
@@ -257,16 +258,11 @@ class BuckTool(object):
                 # Close any open file descriptors to further separate buckd from its
                 # invoking context (e.g. otherwise we'd hang when running things like
                 # `ssh localhost buck clean`).
-
-                # N.B. preexec_func is POSIX-only, and any reasonable
-                # POSIX system has a /dev/null
-                os.setpgrp()
                 dev_null_fd = os.open("/dev/null", os.O_RDWR)
                 os.dup2(dev_null_fd, 0)
                 os.dup2(dev_null_fd, 1)
                 os.dup2(dev_null_fd, 2)
                 os.close(dev_null_fd)
-
             buck_socket_path = self._buck_project.get_buckd_socket_path()
 
             # Make sure the Unix domain socket doesn't exist before this call.

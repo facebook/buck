@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8364d3cc40ca57ef1035952429650e61c698ff1e #@#
+#@# GENERATED FILE: DO NOT MODIFY 769289df1726de34e66de26bbdb98daaea737092 #@#
 {
   "cli" : [
     "//src/com/facebook/buck/android:exceptions",
@@ -95,6 +95,7 @@
     "//third-party/java/infer-annotations:infer-annotations",
     "//third-party/java/jackson:jackson-core",
     "//third-party/java/jackson:jackson-databind",
+    "//third-party/java/jna:jna",
     "//third-party/java/jsr:jsr305",
     "//third-party/java/nailgun:nailgun"
   ],

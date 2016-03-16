@@ -37,6 +37,7 @@ import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -110,7 +111,7 @@ public class LuaBinaryIntegrationTest {
             .add("-includelua.h", "-E", "-")
             .build());
     builder.redirectInput(ProcessBuilder.Redirect.PIPE);
-    Process process = builder.start();
+    Process process = BgProcessKiller.startProcess(builder);
     process.getOutputStream().close();
     int exitCode = process.waitFor();
     luaDevel = exitCode == 0;

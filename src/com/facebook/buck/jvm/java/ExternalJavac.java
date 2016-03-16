@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -213,7 +214,8 @@ public class ExternalJavac implements Javac {
     // Run the command
     int exitCode = -1;
     try {
-      ProcessExecutor.Result result = context.getProcessExecutor().execute(processBuilder.start());
+      Process p = BgProcessKiller.startProcess(processBuilder);
+      ProcessExecutor.Result result = context.getProcessExecutor().execute(p);
       exitCode = result.getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());

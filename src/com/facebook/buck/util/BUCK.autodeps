@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b1b4f3d6c6e7835c44b68c06a4283333b68c8daa #@#
+#@# GENERATED FILE: DO NOT MODIFY bc1349dd3cd5c072ab75c20a7f4f8e8fdf48b67a #@#
 {
   "constants" : [
     "//third-party/java/guava:guava",
@@ -19,6 +19,7 @@
     "//src/com/facebook/buck/util/immutables:immutables",
     "//third-party/java/guava:guava",
     "//third-party/java/immutables:processor",
+    "//third-party/java/jna:jna",
     "//third-party/java/jsr:jsr305",
     "//third-party/java/nuprocess:nuprocess"
   ],

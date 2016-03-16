@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.facebook.buck.util.BgProcessKiller;
+
 public class Symbols {
   public ImmutableSet<String> undefined;
   public ImmutableSet<String> global;
@@ -74,9 +76,10 @@ public class Symbols {
         .add(lib.toString())
         .build();
 
-    Process p = new ProcessBuilder(args)
-        .redirectError(ProcessBuilder.Redirect.INHERIT)
-        .start();
+    Process p =
+        BgProcessKiller.startProcess(
+            new ProcessBuilder(args)
+            .redirectError(ProcessBuilder.Redirect.INHERIT));
     BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
     String line;
 

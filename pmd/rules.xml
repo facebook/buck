@@ -161,4 +161,24 @@ interface Bar {
           "/>
     </properties>
   </rule>
+  <rule name="BlacklistedDefaultProcessMethod"
+        message="All subprocess creation should go through BgProcessKiller."
+        class="com.liveramp.pmd_extensions.BlacklistMethods">
+    <description>
+      We use a process-group-wide signal to kill all our subprocesses
+      on demand; we need to synchronize this kill operation with
+      process creation to ensure that no process gets created with
+      SIG_IGN for SIGHUP.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <!-- The syntax here is a comma-separated list of pairs in the format:
+           package.Class:method:num-args;suggested-alternative
+           ...
+      -->
+          <property name="BlacklistMethods.BlacklistedMethods" value="
+            java.lang.ProcessBuilder:start:0;BgProcessKiller.startProcess(ProcessBuilder),com.zaxxer.nuprocess.NuProcessBuilder:start:0;BgProcessKiller.startProcess(NuProcessBuilder)
+          "/>
+    </properties>
+  </rule>
 </ruleset>

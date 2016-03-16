@@ -48,6 +48,8 @@ IO_SRCS = [
   'Ansi.java',
   'AnsiEnvironmentChecking.java',
   'BestCompressionGZIPOutputStream.java',
+  'BgProcessKiller.java',
+  'Libc.java',
   'Console.java',
   'CapturingPrintStream.java',
   'DirtyPrintStreamDecorator.java',
@@ -70,10 +72,10 @@ java_immutables_library(
   srcs = IO_SRCS,
   immutable_srcs = IO_IMMUTABLES,
   tests = [
-    '//test/com/facebook/buck/util:util',
   ],
   autodeps = True,
   exported_deps = [
+    '//third-party/java/nuprocess:nuprocess',
     # ProcessExecutor.Result exposes Optional.
     '//third-party/java/guava:guava',
   ],

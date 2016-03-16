@@ -34,7 +34,9 @@ public class ThriftWatcher {
   public static boolean isThriftAvailable() throws InterruptedException {
     try {
       LOG.debug("Checking if Thrift is available..");
-      InputStream output = new ProcessBuilder("thrift", "-version").start().getInputStream();
+      InputStream output =
+          BgProcessKiller.startProcess(new ProcessBuilder("thrift", "-version"))
+              .getInputStream();
       byte[] bytes = new byte[7];
       output.read(bytes);
       boolean available = (new String(bytes)).equals("Thrift ");

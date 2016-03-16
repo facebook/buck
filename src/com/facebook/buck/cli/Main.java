@@ -74,6 +74,7 @@ import com.facebook.buck.timing.NanosAdjustedClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
+import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultPropertyFinder;
@@ -82,6 +83,7 @@ import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PkillProcessManager;
+import com.facebook.buck.util.Libc;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
@@ -121,6 +123,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ServiceManager;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
+import com.martiansoftware.nailgun.NGServer;
 
 import org.kohsuke.args4j.CmdLineException;
 
@@ -154,6 +157,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
+
+import com.sun.jna.LastErrorException;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 
 public final class Main {
 
@@ -197,6 +205,7 @@ public final class Main {
   private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
+  private static Optional<NGContext> commandSemaphoreNgClient = Optional.absent();
 
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
@@ -215,6 +224,8 @@ public final class Main {
       ImmutableSet.of("*.pbxproj", "*.xcscheme", "*.xcworkspacedata");
 
   private static final Logger LOG = Logger.get(Main.class);
+
+  private static boolean isSessionLeader;
 
   private static final HangMonitor.AutoStartInstance HANG_MONITOR =
       new HangMonitor.AutoStartInstance(
@@ -347,6 +358,11 @@ public final class Main {
       context.addClientListener(new NGClientListener() {
         @Override
         public void clientDisconnected() throws InterruptedException {
+          if (isSessionLeader && commandSemaphoreNgClient.orNull() == context) {
+            LOG.info("killing background processes on client disconnection");
+            // Process no longer wants work done on its behalf.
+            BgProcessKiller.killBgProcesses();
+          }
 
           // Synchronize on parser object so that the main command processing thread is not
           // interrupted mid way through a Parser cache update by the Thread.interrupt() call
@@ -357,6 +373,7 @@ public final class Main {
             LOG.info("Client disconnected.");
             // Client should no longer be connected, but printing helps detect false disconnections.
             context.err.println("Client disconnected.");
+
             throw new InterruptedException("Client disconnected.");
           }
         }
@@ -678,370 +695,391 @@ public final class Main {
       if (!commandSemaphoreAcquired) {
         return BUSY_EXIT_CODE;
       }
-      Optional<String> currentVersion =
-          filesystem.readFileIfItExists(BuckConstant.CURRENT_VERSION_FILE);
-      if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
-        // Migrate any version-dependent directories (which might be
-        // huge) to a trash directory so we can delete it
-        // asynchronously after the command is done.
-        moveToTrash(
-            filesystem,
-            console,
-            buildId,
-            BuckConstant.ANNOTATION_PATH,
-            BuckConstant.GEN_PATH,
-            BuckConstant.SCRATCH_PATH,
-            BuckConstant.RES_PATH);
-        shouldCleanUpTrash = true;
-        filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
-        filesystem.writeContentsToPath(BuckVersion.getVersion(), BuckConstant.CURRENT_VERSION_FILE);
-      }
     }
 
-    PropertyFinder propertyFinder = new DefaultPropertyFinder(
-        filesystem,
-        clientEnvironment);
-    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
-    AndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem,
-            androidBuckConfig.getBuildToolsVersion(),
-            androidBuckConfig.getNdkVersion(),
-            propertyFinder);
+    try {
 
-    ProcessExecutor processExecutor = new ProcessExecutor(console);
-
-    Optional<Path> testTempDirOverride = getTestTempDirOverride(
-        buckConfig,
-        clientEnvironment,
-        "buck-" + buildId.toString());
-    if (testTempDirOverride.isPresent()) {
-      // We'll create this directory a little later using TempDirectoryCreator.
-      LOG.debug("Using test temp dir override %s", testTempDirOverride.get());
-    }
-
-    Clock clock;
-    if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
-      long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
-      LOG.verbose("Using nanos epoch: %d", nanosEpoch);
-      clock = new NanosAdjustedClock(nanosEpoch);
-    } else {
-      clock = new DefaultClock();
-    }
-
-    ParserConfig parserConfig = new ParserConfig(buckConfig);
-    try (Watchman watchman =
-           buildWatchman(context, parserConfig, projectRoot, clientEnvironment, console, clock)) {
-      final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
-
-      if (!isDaemon && shouldCleanUpTrash) {
-        // Clean up the trash on a background thread if this was a
-        // non-buckd read-write command. (We don't bother waiting
-        // for it to complete; the thread is a daemon thread which
-        // will just be terminated at shutdown time.)
-        TRASH_CLEANER.startCleaningDirectory();
+      if (commandSemaphoreAcquired) {
+        commandSemaphoreNgClient = context;
       }
 
-      KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
-          processExecutor,
-          androidDirectoryResolver,
-          testTempDirOverride);
+      if (!command.isReadOnly()) {
 
-      Cell rootCell = Cell.createCell(
+        Optional<String> currentVersion =
+            filesystem.readFileIfItExists(BuckConstant.CURRENT_VERSION_FILE);
+        if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
+          // Migrate any version-dependent directories (which might be
+          // huge) to a trash directory so we can delete it
+          // asynchronously after the command is done.
+          moveToTrash(
+              filesystem,
+              console,
+              buildId,
+              BuckConstant.ANNOTATION_PATH,
+              BuckConstant.GEN_PATH,
+              BuckConstant.SCRATCH_PATH,
+              BuckConstant.RES_PATH);
+          shouldCleanUpTrash = true;
+          filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
+          filesystem.writeContentsToPath(
+              BuckVersion.getVersion(),
+              BuckConstant.CURRENT_VERSION_FILE);
+        }
+      }
+
+      PropertyFinder propertyFinder = new DefaultPropertyFinder(
           filesystem,
-          console,
-          watchman,
+          clientEnvironment);
+      AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
+      AndroidDirectoryResolver androidDirectoryResolver =
+          new DefaultAndroidDirectoryResolver(
+              filesystem,
+              androidBuckConfig.getBuildToolsVersion(),
+              androidBuckConfig.getNdkVersion(),
+              propertyFinder);
+
+      ProcessExecutor processExecutor = new ProcessExecutor(console);
+
+      Optional<Path> testTempDirOverride = getTestTempDirOverride(
           buckConfig,
-          factory,
-          androidDirectoryResolver,
-          clock);
-
-      int exitCode;
-      ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
-      ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
           clientEnvironment,
-          // TODO(bhamiltoncx): Thread through properties from client environment.
-          System.getProperties());
+          "buck-" + buildId.toString());
+      if (testTempDirOverride.isPresent()) {
+        // We'll create this directory a little later using TempDirectoryCreator.
+        LOG.debug("Using test temp dir override %s", testTempDirOverride.get());
+      }
 
-      ProjectFileHashCache cellHashCache;
-      ProjectFileHashCache buckOutHashCache;
-      if (isDaemon) {
-        cellHashCache = getFileHashCacheFromDaemon(rootCell);
-        buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell);
+      Clock clock;
+      if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
+        long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
+        LOG.verbose("Using nanos epoch: %d", nanosEpoch);
+        clock = new NanosAdjustedClock(nanosEpoch);
       } else {
-        cellHashCache = new DefaultFileHashCache(rootCell.getFilesystem());
-        buckOutHashCache =
-            new DefaultFileHashCache(
-                new ProjectFilesystem(
-                    rootCell.getFilesystem().getRootPath(),
-                    Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
-                    ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
+        clock = new DefaultClock();
       }
 
-      // Build up the hash cache, which is a collection of the stateful cell cache and some per-run
-      // caches.
+      ParserConfig parserConfig = new ParserConfig(buckConfig);
+      try (Watchman watchman =
+          buildWatchman(context, parserConfig, projectRoot, clientEnvironment, console, clock)) {
+        final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
 
-      ImmutableList.Builder<FileHashCache> allCaches = ImmutableList.builder();
-      allCaches.add(cellHashCache);
-      allCaches.add(buckOutHashCache);
-      // A cache which caches hashes of cell-relative paths which may have been ignore by
-      // the main cell cache, and only serves to prevent rehashing the same file multiple
-      // times in a single run.
-      allCaches.add(new DefaultFileHashCache(
-          new ProjectFilesystem(rootCell.getFilesystem().getRootPath())));
-
-      for (Path root : FileSystems.getDefault().getRootDirectories()) {
-        if (!root.toFile().exists()) {
-          // On Windows, it is possible that the system will have a
-          // drive for something that does not exist such as a floppy
-          // disk or SD card.  The drive exists, but it does not
-          // contain anything useful, so Buck should not consider it
-          // as a cacheable location.
-          continue;
-        }
-        // A cache which caches hashes of absolute paths which my be accessed by certain
-        // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
-        // multiple times in a single run.
-        allCaches.add(new DefaultFileHashCache(new ProjectFilesystem(root)));
-      }
-
-      FileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
-
-      Optional<WebServer> webServer = getWebServerIfDaemon(
-          context,
-          rootCell);
-
-      TestConfig testConfig = new TestConfig(buckConfig);
-      ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
-
-      ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
-      ListeningExecutorService httpWriteExecutorService =
-          getHttpWriteExecutorService(cacheBuckConfig);
-      VersionControlStatsGenerator vcStatsGenerator = null;
-
-      // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
-      // when connecting. For now, we'll use the default from the server environment.
-      Locale locale = Locale.getDefault();
-
-      // create a cached thread pool for cpu intensive tasks
-      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
-      executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
-              Executors.newCachedThreadPool()));
-
-      // The order of resources in the try-with-resources block is important: the BuckEventBus must
-      // be the last resource, so that it is closed first and can deliver its queued events to the
-      // other resources before they are closed.
-      try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
-               new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
-           ConsoleHandlerRedirector consoleHandlerRedirector =
-               new ConsoleHandlerRedirector(
-                   buildId.toString(),
-                   console.getStdErr(),
-                   Optional.<OutputStream>of(stdErr));
-           AbstractConsoleEventBusListener consoleListener =
-               createConsoleEventListener(
-                   clock,
-                   new SuperConsoleConfig(buckConfig),
-                   console,
-                   testConfig.getResultSummaryVerbosity(),
-                   executionEnvironment,
-                   webServer,
-                   locale,
-                   BuckConstant.LOG_PATH.resolve("test.log"));
-           TempDirectoryCreator tempDirectoryCreator =
-               new TempDirectoryCreator(testTempDirOverride);
-           AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
-           BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-           // NOTE: This will only run during the lifetime of the process and will flush on close.
-           CounterRegistry counterRegistry = new CounterRegistryImpl(
-               MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
-               buildEventBus,
-               buckConfig.getCountersFirstFlushIntervalMillis(),
-               buckConfig.getCountersFlushIntervalMillis())) {
-
-        buildEventBus.register(HANG_MONITOR.getHangMonitor());
-
-        ArtifactCache artifactCache = asyncCloseable.closeAsync(
-            ArtifactCaches.newInstance(
-                cacheBuckConfig,
-                buildEventBus,
-                filesystem,
-                executionEnvironment.getWifiSsid(),
-                httpWriteExecutorService));
-
-        ProgressEstimator progressEstimator = new ProgressEstimator(
-            filesystem.getRootPath(),
-            buildEventBus,
-            objectMapper);
-        consoleListener.setProgressEstimator(progressEstimator);
-
-        BuildEnvironmentDescription buildEnvironmentDescription = getBuildEnvironmentDescription(
-            executionEnvironment,
-            buckConfig);
-
-        eventListeners = addEventListeners(
-            buildEventBus,
-            rootCell.getFilesystem(),
-            buildId,
-            rootCell.getBuckConfig(),
-            webServer,
-            clock,
-            buildEnvironmentDescription,
-            console,
-            consoleListener,
-            rootCell.getKnownBuildRuleTypes(),
-            clientEnvironment,
-            counterRegistry);
-
-        VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
-
-        if (!command.isReadOnly() && vcBuckConfig.shouldGenerateStatistics()) {
-          vcStatsGenerator = new VersionControlStatsGenerator(
-              diskIoExecutorService,
-              new DefaultVersionControlCmdLineInterfaceFactory(
-                  rootCell.getFilesystem().getRootPath(),
-                  new PrintStreamProcessExecutorFactory(),
-                  vcBuckConfig),
-              buildEventBus
-          );
-
-          vcStatsGenerator.generateStatsAsync();
-        }
-
-        ImmutableList<String> remainingArgs = args.length > 1
-            ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
-            : ImmutableList.<String>of();
-
-        CommandEvent.Started startedEvent = CommandEvent.started(
-            args.length > 0 ? args[0] : "",
-            remainingArgs,
-            isDaemon);
-        buildEventBus.post(startedEvent);
-
-        // Create or get Parser and invalidate cached command parameters.
-        Parser parser = null;
-
-        if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
-          try {
-            Daemon daemon = getDaemon(rootCell, objectMapper);
-            WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
-               watchman.getWatchRoot().or(canonicalRootPath.toString()),
-               daemon.getFileEventBus(),
-               filesystem.getIgnorePaths(),
-               DEFAULT_IGNORE_GLOBS,
-               watchman,
-               daemon.getWatchmanQueryUUID());
-           parser = getParserFromDaemon(
-                context,
-                rootCell,
-                startedEvent,
-                buildEventBus,
-                watchmanWatcher);
-          } catch (WatchmanWatcherException | IOException e) {
-            buildEventBus.post(
-                ConsoleEvent.warning(
-                    "Watchman threw an exception while parsing file changes.\n%s",
-                    e.getMessage()));
-          }
-        }
-
-        if (parser == null) {
-          TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
-          parser = new Parser(
-              new ParserConfig(rootCell.getBuckConfig()),
-              typeCoercerFactory,
-              new ConstructorArgMarshaller(typeCoercerFactory));
-        }
-
-        // Because the Parser is potentially constructed before the CounterRegistry,
-        // we need to manually register its counters after it's created.
-        //
-        // The counters will be unregistered once the counter registry is closed.
-        counterRegistry.registerCounters(parser.getCounters());
-
-        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
-
-        Optional<ProcessManager> processManager;
-        if (platform == Platform.WINDOWS) {
-          processManager = Optional.absent();
-        } else {
-          processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
-        }
-        Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-            createAndroidPlatformTargetSupplier(
-                androidDirectoryResolver,
-                androidBuckConfig,
-                buildEventBus);
-
-        // At this point, we have parsed options but haven't started
-        // running the command yet.  This is a good opportunity to
-        // augment the event bus with our serialize-to-file
-        // event-listener.
-        if (command.subcommand instanceof AbstractCommand) {
-          AbstractCommand subcommand = (AbstractCommand) command.subcommand;
-          Optional<Path> eventsOutputPath = subcommand.getEventsOutputPath();
-          if (eventsOutputPath.isPresent()) {
-            BuckEventListener listener =
-                new FileSerializationEventBusListener(eventsOutputPath.get(), objectMapper);
-            buildEventBus.register(listener);
-          }
-        }
-
-        exitCode = command.run(
-            new CommandRunnerParams(
-                console,
-                stdIn,
-                rootCell,
-                androidPlatformTargetSupplier,
-                artifactCache,
-                buildEventBus,
-                parser,
-                platform,
-                clientEnvironment,
-                rootCell.getBuckConfig().createDefaultJavaPackageFinder(),
-                objectMapper,
-                clock,
-                processManager,
-                webServer,
-                buckConfig,
-                fileHashCache,
-                executors,
-                buildEnvironmentDescription));
-        // Wait for HTTP writes to complete.
-        closeHttpExecutorService(
-            cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
-        buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
-      } catch (Throwable t) {
-        LOG.debug(t, "Failing build on exception.");
-        closeHttpExecutorService(
-            cacheBuckConfig, Optional.<BuckEventBus>absent(), httpWriteExecutorService);
-        closeDiskIoExecutorService(diskIoExecutorService);
-        flushEventListeners(console, buildId, eventListeners);
-        throw t;
-      } finally {
-        if (commandSemaphoreAcquired) {
-          commandSemaphore.release(); // Allow another command to execute while outputting traces.
-        }
-        if (isDaemon && shouldCleanUpTrash) {
-          // Clean up the trash in the background if this was a buckd
-          // read-write command. (We don't bother waiting for it to
-          // complete; the cleaner will ensure subsequent cleans are
-          // serialized with this one.)
+        if (!isDaemon && shouldCleanUpTrash) {
+          // Clean up the trash on a background thread if this was a
+          // non-buckd read-write command. (We don't bother waiting
+          // for it to complete; the thread is a daemon thread which
+          // will just be terminated at shutdown time.)
           TRASH_CLEANER.startCleaningDirectory();
         }
-        // shut down the cached thread pools
-        for (ExecutionContext.ExecutorPool p: executors.keySet()) {
-          closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
-        }
-      }
-      if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
-        context.get().in.close(); // Avoid client exit triggering client disconnection handling.
-        context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
-      }
 
-      closeDiskIoExecutorService(diskIoExecutorService);
-      flushEventListeners(console, buildId, eventListeners);
-      return exitCode;
+        KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
+            processExecutor,
+            androidDirectoryResolver,
+            testTempDirOverride);
+
+        Cell rootCell = Cell.createCell(
+            filesystem,
+            console,
+            watchman,
+            buckConfig,
+            factory,
+            androidDirectoryResolver,
+            clock);
+
+        int exitCode;
+        ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
+        ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
+            clientEnvironment,
+            // TODO(bhamiltoncx): Thread through properties from client environment.
+            System.getProperties());
+
+        ProjectFileHashCache cellHashCache;
+        ProjectFileHashCache buckOutHashCache;
+        if (isDaemon) {
+          cellHashCache = getFileHashCacheFromDaemon(rootCell);
+          buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell);
+        } else {
+          cellHashCache = new DefaultFileHashCache(rootCell.getFilesystem());
+          buckOutHashCache =
+              new DefaultFileHashCache(
+                  new ProjectFilesystem(
+                      rootCell.getFilesystem().getRootPath(),
+                      Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                      ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
+        }
+
+        // Build up the hash cache, which is a collection of the stateful cell cache and some
+        // per-run caches.
+
+        ImmutableList.Builder<FileHashCache> allCaches = ImmutableList.builder();
+        allCaches.add(cellHashCache);
+        allCaches.add(buckOutHashCache);
+        // A cache which caches hashes of cell-relative paths which may have been ignore by
+        // the main cell cache, and only serves to prevent rehashing the same file multiple
+        // times in a single run.
+        allCaches.add(new DefaultFileHashCache(
+                new ProjectFilesystem(rootCell.getFilesystem().getRootPath())));
+
+        for (Path root : FileSystems.getDefault().getRootDirectories()) {
+          if (!root.toFile().exists()) {
+            // On Windows, it is possible that the system will have a
+            // drive for something that does not exist such as a floppy
+            // disk or SD card.  The drive exists, but it does not
+            // contain anything useful, so Buck should not consider it
+            // as a cacheable location.
+            continue;
+          }
+          // A cache which caches hashes of absolute paths which my be accessed by certain
+          // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
+          // multiple times in a single run.
+          allCaches.add(new DefaultFileHashCache(new ProjectFilesystem(root)));
+        }
+
+        FileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
+
+        Optional<WebServer> webServer = getWebServerIfDaemon(
+            context,
+            rootCell);
+
+        TestConfig testConfig = new TestConfig(buckConfig);
+        ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
+
+        ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
+        ListeningExecutorService httpWriteExecutorService =
+            getHttpWriteExecutorService(cacheBuckConfig);
+        VersionControlStatsGenerator vcStatsGenerator = null;
+
+        // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
+        // when connecting. For now, we'll use the default from the server environment.
+        Locale locale = Locale.getDefault();
+
+        // create a cached thread pool for cpu intensive tasks
+        Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
+        executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
+                Executors.newCachedThreadPool()));
+
+        // The order of resources in the try-with-resources block is important: the BuckEventBus
+        // must be the last resource, so that it is closed first and can deliver its queued events
+        // to the other resources before they are closed.
+        try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
+            new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
+            ConsoleHandlerRedirector consoleHandlerRedirector =
+            new ConsoleHandlerRedirector(
+                buildId.toString(),
+                console.getStdErr(),
+                Optional.<OutputStream>of(stdErr));
+            AbstractConsoleEventBusListener consoleListener =
+            createConsoleEventListener(
+                clock,
+                new SuperConsoleConfig(buckConfig),
+                console,
+                testConfig.getResultSummaryVerbosity(),
+                executionEnvironment,
+                webServer,
+                locale,
+                BuckConstant.LOG_PATH.resolve("test.log"));
+            TempDirectoryCreator tempDirectoryCreator =
+            new TempDirectoryCreator(testTempDirOverride);
+            AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
+            BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+            // NOTE: This will only run during the lifetime of the process and will flush on close.
+            CounterRegistry counterRegistry = new CounterRegistryImpl(
+                MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
+                buildEventBus,
+                buckConfig.getCountersFirstFlushIntervalMillis(),
+                buckConfig.getCountersFlushIntervalMillis())) {
+
+          buildEventBus.register(HANG_MONITOR.getHangMonitor());
+
+          ArtifactCache artifactCache = asyncCloseable.closeAsync(
+              ArtifactCaches.newInstance(
+                  cacheBuckConfig,
+                  buildEventBus,
+                  filesystem,
+                  executionEnvironment.getWifiSsid(),
+                  httpWriteExecutorService));
+
+          ProgressEstimator progressEstimator = new ProgressEstimator(
+              filesystem.getRootPath(),
+              buildEventBus,
+              objectMapper);
+          consoleListener.setProgressEstimator(progressEstimator);
+
+          BuildEnvironmentDescription buildEnvironmentDescription =
+              getBuildEnvironmentDescription(
+                  executionEnvironment,
+                  buckConfig);
+
+          eventListeners = addEventListeners(
+              buildEventBus,
+              rootCell.getFilesystem(),
+              buildId,
+              rootCell.getBuckConfig(),
+              webServer,
+              clock,
+              buildEnvironmentDescription,
+              console,
+              consoleListener,
+              rootCell.getKnownBuildRuleTypes(),
+              clientEnvironment,
+              counterRegistry);
+
+          VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
+
+          if (!command.isReadOnly() && vcBuckConfig.shouldGenerateStatistics()) {
+            vcStatsGenerator = new VersionControlStatsGenerator(
+                diskIoExecutorService,
+                new DefaultVersionControlCmdLineInterfaceFactory(
+                    rootCell.getFilesystem().getRootPath(),
+                    new PrintStreamProcessExecutorFactory(),
+                    vcBuckConfig),
+                buildEventBus
+            );
+
+            vcStatsGenerator.generateStatsAsync();
+          }
+
+          ImmutableList<String> remainingArgs = args.length > 1
+              ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
+              : ImmutableList.<String>of();
+
+          CommandEvent.Started startedEvent = CommandEvent.started(
+              args.length > 0 ? args[0] : "",
+              remainingArgs,
+              isDaemon);
+          buildEventBus.post(startedEvent);
+
+          // Create or get Parser and invalidate cached command parameters.
+          Parser parser = null;
+
+          if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
+            try {
+              Daemon daemon = getDaemon(rootCell, objectMapper);
+              WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
+                  watchman.getWatchRoot().or(canonicalRootPath.toString()),
+                  daemon.getFileEventBus(),
+                  filesystem.getIgnorePaths(),
+                  DEFAULT_IGNORE_GLOBS,
+                  watchman,
+                  daemon.getWatchmanQueryUUID());
+              parser = getParserFromDaemon(
+                  context,
+                  rootCell,
+                  startedEvent,
+                  buildEventBus,
+                  watchmanWatcher);
+            } catch (WatchmanWatcherException | IOException e) {
+              buildEventBus.post(
+                  ConsoleEvent.warning(
+                      "Watchman threw an exception while parsing file changes.\n%s",
+                      e.getMessage()));
+            }
+          }
+
+          if (parser == null) {
+            TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
+            parser = new Parser(
+                new ParserConfig(rootCell.getBuckConfig()),
+                typeCoercerFactory,
+                new ConstructorArgMarshaller(typeCoercerFactory));
+          }
+
+          // Because the Parser is potentially constructed before the CounterRegistry,
+          // we need to manually register its counters after it's created.
+          //
+          // The counters will be unregistered once the counter registry is closed.
+          counterRegistry.registerCounters(parser.getCounters());
+
+          JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
+
+          Optional<ProcessManager> processManager;
+          if (platform == Platform.WINDOWS) {
+            processManager = Optional.absent();
+          } else {
+            processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
+          }
+          Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
+              createAndroidPlatformTargetSupplier(
+                  androidDirectoryResolver,
+                  androidBuckConfig,
+                  buildEventBus);
+
+          // At this point, we have parsed options but haven't started
+          // running the command yet.  This is a good opportunity to
+          // augment the event bus with our serialize-to-file
+          // event-listener.
+          if (command.subcommand instanceof AbstractCommand) {
+            AbstractCommand subcommand = (AbstractCommand) command.subcommand;
+            Optional<Path> eventsOutputPath = subcommand.getEventsOutputPath();
+            if (eventsOutputPath.isPresent()) {
+              BuckEventListener listener =
+                  new FileSerializationEventBusListener(eventsOutputPath.get(), objectMapper);
+              buildEventBus.register(listener);
+            }
+          }
+
+          exitCode = command.run(
+              new CommandRunnerParams(
+                  console,
+                  stdIn,
+                  rootCell,
+                  androidPlatformTargetSupplier,
+                  artifactCache,
+                  buildEventBus,
+                  parser,
+                  platform,
+                  clientEnvironment,
+                  rootCell.getBuckConfig().createDefaultJavaPackageFinder(),
+                  objectMapper,
+                  clock,
+                  processManager,
+                  webServer,
+                  buckConfig,
+                  fileHashCache,
+                  executors,
+                  buildEnvironmentDescription));
+          // Wait for HTTP writes to complete.
+          closeHttpExecutorService(
+              cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
+          buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
+        } catch (Throwable t) {
+          LOG.debug(t, "Failing build on exception.");
+          closeHttpExecutorService(
+              cacheBuckConfig, Optional.<BuckEventBus>absent(), httpWriteExecutorService);
+          closeDiskIoExecutorService(diskIoExecutorService);
+          flushEventListeners(console, buildId, eventListeners);
+          throw t;
+        } finally {
+          if (commandSemaphoreAcquired) {
+            commandSemaphoreNgClient = Optional.absent();
+            commandSemaphore.release(); // Allow another command to execute while outputting traces.
+            commandSemaphoreAcquired = false;
+          }
+          if (isDaemon && shouldCleanUpTrash) {
+            // Clean up the trash in the background if this was a buckd
+            // read-write command. (We don't bother waiting for it to
+            // complete; the cleaner will ensure subsequent cleans are
+            // serialized with this one.)
+            TRASH_CLEANER.startCleaningDirectory();
+          }
+          // shut down the cached thread pools
+          for (ExecutionContext.ExecutorPool p: executors.keySet()) {
+            closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+          }
+        }
+        if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
+          context.get().in.close(); // Avoid client exit triggering client disconnection handling.
+          context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
+        }
+
+        closeDiskIoExecutorService(diskIoExecutorService);
+        flushEventListeners(console, buildId, eventListeners);
+        return exitCode;
+      }
+    } finally {
+      if (commandSemaphoreAcquired) {
+        commandSemaphoreNgClient = Optional.absent();
+        commandSemaphore.release();
+      }
     }
   }
 
@@ -1528,6 +1566,90 @@ public final class Main {
 
   public static void main(String[] args) {
     new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.<NGContext>absent());
+  }
+
+  private static void markFdCloseOnExec(int fd) {
+    int fdFlags;
+    fdFlags = Libc.INSTANCE.fcntl(fd, Libc.Constants.rFGETFD);
+    if (fdFlags == -1) {
+      throw new LastErrorException(Native.getLastError());
+    }
+    fdFlags |= Libc.Constants.rFDCLOEXEC;
+    if (Libc.INSTANCE.fcntl(fd, Libc.Constants.rFSETFD, fdFlags) == -1) {
+      throw new LastErrorException(Native.getLastError());
+    }
+  }
+
+  private static void daemonizeIfPossible() {
+    String osName = System.getProperty("os.name");
+    Libc.OpenPtyLibrary openPtyLibrary;
+    if ("Linux".equals(osName)) {
+      Libc.Constants.rTIOCSCTTY = Libc.Constants.LINUX_TIOCSCTTY;
+      Libc.Constants.rFDCLOEXEC = Libc.Constants.LINUX_FD_CLOEXEC;
+      Libc.Constants.rFGETFD = Libc.Constants.LINUX_F_GETFD;
+      Libc.Constants.rFSETFD = Libc.Constants.LINUX_F_SETFD;
+      openPtyLibrary = (Libc.OpenPtyLibrary)
+          Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
+    } else if ("OS X".equals(osName)) {
+      Libc.Constants.rTIOCSCTTY = Libc.Constants.DARWIN_TIOCSCTTY;
+      Libc.Constants.rFDCLOEXEC = Libc.Constants.DARWIN_FD_CLOEXEC;
+      Libc.Constants.rFGETFD = Libc.Constants.DARWIN_F_GETFD;
+      Libc.Constants.rFSETFD = Libc.Constants.DARWIN_F_SETFD;
+      openPtyLibrary = (Libc.OpenPtyLibrary)
+          Native.loadLibrary(
+              com.sun.jna.Platform.C_LIBRARY_NAME,
+              Libc.OpenPtyLibrary.class);
+    } else {
+      LOG.info("not enabling process killing on nailgun exit: unknown OS %s", osName);
+      return;
+    }
+
+    // Making ourselves a session leader with setsid disconnects us from our controlling terminal
+    int ret = Libc.INSTANCE.setsid();
+    if (ret < 0) {
+      LOG.warn(
+          "cannot enable background process killing: %s",
+          Native.getLastError());
+      return;
+    }
+
+    LOG.info("enabling background process killing for buckd");
+
+    IntByReference master = new IntByReference();
+    IntByReference slave = new IntByReference();
+
+    openPtyLibrary.openpty(master, slave, Pointer.NULL, Pointer.NULL, Pointer.NULL);
+
+    // Deliberately leak the file descriptors for the lifetime of this process; NuProcess can
+    // sometimes leak file descriptors to children, so make sure these FDs are marked close-on-exec.
+    markFdCloseOnExec(master.getValue());
+    markFdCloseOnExec(slave.getValue());
+
+    // Make the pty our controlling terminal; works because we disconnected above with setsid.
+    Libc.INSTANCE.ioctl(
+        slave.getValue(),
+        Pointer.createConstant(Libc.Constants.rTIOCSCTTY),
+        0);
+
+    LOG.info("enabled background process killing for buckd");
+    isSessionLeader = true;
+
+  }
+
+  public static final class DaemonBootstrap {
+    public static void main(String[] args) throws Exception {
+      try {
+        daemonizeIfPossible();
+        if (isSessionLeader) {
+          BgProcessKiller.init();
+          LOG.info("initialized bg session killer");
+        }
+      } catch (Throwable ex) {
+        System.err.println(String.format("buckd: fatal error %s", ex));
+        System.exit(1);
+      }
+      NGServer.main(args);
+    }
   }
 
   /**

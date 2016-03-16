@@ -254,7 +254,7 @@ public class ListeningProcessExecutor {
       processBuilder.setCwd(params.getDirectory().get().toPath());
     }
 
-    NuProcess process = processBuilder.start();
+    NuProcess process = BgProcessKiller.startProcess(processBuilder);
     if (process == null) {
       throw new IOException(String.format("Could not start process with params %s", params));
     }

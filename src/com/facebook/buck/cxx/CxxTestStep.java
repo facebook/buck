@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Function;
@@ -80,7 +81,7 @@ public class CxxTestStep implements Step {
 
     Process process;
     try {
-      process = builder.start();
+      process = BgProcessKiller.startProcess(builder);
     } catch (IOException e) {
       context.logError(e, "Error starting command %s", command);
       return 1;

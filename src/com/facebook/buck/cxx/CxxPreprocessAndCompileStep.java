@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.facebook.buck.util.ManagedRunnable;
@@ -246,23 +247,26 @@ public class CxxPreprocessAndCompileStep implements Step {
           preprocessBuilder.directory(),
           getDescription(context));
 
-      preprocess = preprocessBuilder.start();
-      compile = compileBuilder.start();
+      preprocess = BgProcessKiller.startProcess(preprocessBuilder);
+      compile = BgProcessKiller.startProcess(compileBuilder);
 
       errorProcessorPreprocess = errorStreamTransformerFactory.createTransformerThread(
           context,
           preprocess.getErrorStream(),
           preprocessError);
-      errorProcessorPreprocess.start();
+
+        errorProcessorPreprocess.start();
 
       errorProcessorCompile = errorStreamTransformerFactory.createTransformerThread(
           context,
           compile.getErrorStream(),
           compileError);
+
       errorProcessorCompile.start();
 
       lineDirectiveMunger = createPreprocessorOutputTransformerFactory()
           .createTransformerThread(context, preprocess.getInputStream(), compile.getOutputStream());
+
       lineDirectiveMunger.start();
 
       int compileStatus = compile.waitFor();
@@ -342,7 +346,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         getDescription(context));
 
     // Start the process.
-    Process process = builder.start();
+    Process process = BgProcessKiller.startProcess(builder);
 
     // We buffer error messages in memory, as these are typically small.
     ByteArrayOutputStream error = new ByteArrayOutputStream();
