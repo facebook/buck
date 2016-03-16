@@ -30,18 +30,24 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
+import java.nio.file.Path;
+
+public class DBinaryDescription implements
+    Description<DBinaryDescription.Arg>,
+    ImplicitDepsInferringDescription<DBinaryDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
 
@@ -120,6 +126,14 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
         new SourcePathResolver(buildRuleResolver),
         executableBuilder.build(),
         nativeLinkable.getPathToOutput());
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    return cxxPlatform.getLd().getParseTimeDeps();
   }
 
   @SuppressFieldNotInitialized

@@ -26,17 +26,23 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class DTestDescription implements Description<DTestDescription.Arg> {
+import java.nio.file.Path;
+
+public class DTestDescription implements
+    Description<DTestDescription.Arg>,
+    ImplicitDepsInferringDescription<DTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("d_test");
 
@@ -114,6 +120,14 @@ public class DTestDescription implements Description<DTestDescription.Arg> {
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         buildRuleResolver.getAllRules(
             args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())));
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    return cxxPlatform.getLd().getParseTimeDeps();
   }
 
   @SuppressFieldNotInitialized

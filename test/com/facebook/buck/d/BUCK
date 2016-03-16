@@ -1,103 +1,14 @@
-java_test(
-  name='d_buck_config',
-  srcs=[
-    'DBuckConfigTest.java',
-  ],
-  deps=[
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/d:d',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:exceptions',
-    '//test/com/facebook/buck/cli:FakeBuckConfig',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
-
-java_test(
-  name='d_binary_integration',
-  srcs=[
-    'DBinaryIntegrationTest.java',
-  ],
-  deps=[
-    ':assumptions',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/d:d',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
-    '//test/com/facebook/buck/cli:FakeBuckConfig',
-    '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
-
-java_test(
-  name='d_library_integration',
-  srcs=[
-    'DLibraryIntegrationTest.java',
-  ],
-  deps=[
-    ':assumptions',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/d:d',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
-    '//test/com/facebook/buck/cli:FakeBuckConfig',
-    '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
-
-java_test(
-  name='d_test_integration',
-  srcs=[
-    'DTestIntegrationTest.java',
-  ],
-  deps=[
-    ':assumptions',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/d:d',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
-    '//test/com/facebook/buck/cli:FakeBuckConfig',
-    '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
-
 java_library(
-  name='assumptions',
-  srcs=[
-    'Assumptions.java'
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes=['*Test.java']),
+  autodeps = True,
+  exported_deps = [
+    '//test/com/facebook/buck/rules:testutil',
   ],
-  deps=[
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/d:d',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:exceptions',
-    '//test/com/facebook/buck/cli:FakeBuckConfig',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
+)
+
+java_test(
+  name = 'd',
+  srcs = glob(['*Test.java']),
+  autodeps = True,
 )
