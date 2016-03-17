@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -61,7 +62,7 @@ public class CxxBinaryTest {
     CxxBinary binary =
         ruleResolver.addToIndex(
             new CxxBinary(
-                params,
+                params.appendExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
                 ruleResolver,
                 pathResolver,
                 cxxLink,

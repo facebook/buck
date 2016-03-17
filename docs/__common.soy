@@ -446,6 +446,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
  * @param args HTML documentation for each arg for the rule.
  *     Should be created using multiple applications of the {buck.arg}
  *     template.
+ * @param? flavors HTML documentation for each flavor supported by the rule.
+ *     Should be created using multiple applications of the {buck.arg}
+ *     template.
  * @param? examples HTML documentation that shows examples of the build
  *     rule in action.
  * @param? furtherexp Further explanation; HTML shown after arguments and
@@ -468,6 +471,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {call buck.visibility_arg /}
   {call buck.licenses_arg /}
 </ul>
+
+{if $flavors}
+  <h2>Flavors</h2>
+  {$flavors|noAutoescape}
+{/if}
 
 {if $examples}
   <h2>Examples</h2>

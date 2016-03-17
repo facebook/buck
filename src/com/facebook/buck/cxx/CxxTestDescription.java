@@ -86,9 +86,18 @@ public class CxxTestDescription implements
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
-      final BuildRuleParams params,
+      BuildRuleParams inputParams,
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
+    Optional<CxxStrip.StripStyle> flavoredStripStyle =
+        CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
+    final BuildRuleParams params;
+    if (flavoredStripStyle.isPresent()) {
+      params = inputParams.withoutFlavor(flavoredStripStyle.get().getFlavor());
+    } else {
+      params = inputParams;
+    }
+
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -110,12 +119,14 @@ public class CxxTestDescription implements
             resolver,
             cxxPlatform,
             args,
-            cxxBuckConfig.getPreprocessMode());
+            cxxBuckConfig.getPreprocessMode(),
+            flavoredStripStyle);
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
+    testParams = CxxStrip.restoreStripStyleFlavorInParams(testParams, flavoredStripStyle);
 
     // Supplier which expands macros in the passed in test environment.
     Supplier<ImmutableMap<String, String>> testEnv =
@@ -156,7 +167,9 @@ public class CxxTestDescription implements
             // It's not uncommon for users to add dependencies onto other binaries that they run
             // during the test, so make sure to add them as runtime deps.
             deps.addAll(
-                Sets.difference(params.getDeps(), cxxLinkAndCompileRules.cxxLink.getDeps()));
+                Sets.difference(
+                    params.getDeps(),
+                    cxxLinkAndCompileRules.getBinaryRule().getDeps()));
 
             // Add any build-time from any macros embedded in the `env` or `args` parameter.
             for (String part :
@@ -191,7 +204,7 @@ public class CxxTestDescription implements
         test = new CxxGtestTest(
             testParams,
             pathResolver,
-            cxxLinkAndCompileRules.cxxLink,
+            cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
@@ -208,7 +221,7 @@ public class CxxTestDescription implements
         test = new CxxBoostTest(
             testParams,
             pathResolver,
-            cxxLinkAndCompileRules.cxxLink,
+            cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
@@ -298,6 +311,10 @@ public class CxxTestDescription implements
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      return true;
+    }
+
+    if (CxxStrip.StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return true;
     }
 

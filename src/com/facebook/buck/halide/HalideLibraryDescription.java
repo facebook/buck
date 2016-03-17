@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
@@ -87,7 +88,8 @@ public class HalideLibraryDescription
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return cxxPlatforms.containsAnyOf(flavors) ||
         flavors.contains(HALIDE_COMPILE_FLAVOR) ||
-        flavors.contains(HALIDE_COMPILER_FLAVOR);
+        flavors.contains(HALIDE_COMPILER_FLAVOR) ||
+        CxxStrip.StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
   }
 
   @Override
@@ -116,6 +118,13 @@ public class HalideLibraryDescription
       Optional<ImmutableList<String>> linkerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
       throws NoSuchBuildTargetException {
+
+    Optional<CxxStrip.StripStyle> flavoredStripStyle =
+        CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    if (flavoredStripStyle.isPresent()) {
+      params = params.withoutFlavor(flavoredStripStyle.get().getFlavor());
+    }
+
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
         params.getBuildTarget(),
         pathResolver,
@@ -143,6 +152,7 @@ public class HalideLibraryDescription
             srcs,
             /* headers */ ImmutableMap.<Path, SourcePath>of(),
             preprocessMode,
+            flavoredStripStyle,
             Linker.LinkableDepType.STATIC,
             preprocessorFlags,
             platformPreprocessorFlags,
@@ -157,11 +167,12 @@ public class HalideLibraryDescription
             platformLinkerFlags,
             cxxRuntimeType);
 
+    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         ruleResolver,
         pathResolver,
-        cxxLinkAndCompileRules.cxxLink,
+        cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.<FrameworkPath>of(),
         ImmutableSortedSet.<BuildTarget>of());

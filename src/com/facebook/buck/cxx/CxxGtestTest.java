@@ -56,6 +56,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
 
@@ -63,14 +65,14 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
   private static final String NOTRUN = "notrun";
 
-  private final CxxLink binary;
+  private final BuildRule binary;
   private final Tool executable;
   private final long maxTestOutputSize;
 
   public CxxGtestTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      CxxLink binary,
+      BuildRule binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
@@ -98,6 +100,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     this.maxTestOutputSize = maxTestOutputSize;
   }
 
+  @Nullable
   @Override
   public Path getPathToOutput() {
     return binary.getPathToOutput();

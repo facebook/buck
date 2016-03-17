@@ -1657,4 +1657,101 @@ public class CxxBinaryIntegrationTest {
         .assertSuccess();
   }
 
+  @Test
+  public void testStrippedBinaryProducesBothUnstrippedAndStrippedOutputs()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    BuildTarget unstrippedTarget = BuildTargetFactory.newInstance("//:test");
+    BuildTarget strippedTarget = unstrippedTarget.withFlavors(
+        CxxStrip.StripStyle.DEBUGGING_SYMBOLS.getFlavor());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "header_namespace", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand(
+        "build",
+        "--config", "cxx.cxxflags=-g",
+        strippedTarget.getFullyQualifiedName()).assertSuccess();
+
+    Path strippedPath = workspace.getPath(BuildTargets.getGenPath(
+        BuildTarget.builder(strippedTarget)
+            .addFlavors(CxxStrip.RULE_FLAVOR)
+            .build(),
+        "%s"));
+    Path unstrippedPath = workspace.getPath(BuildTargets.getGenPath(unstrippedTarget, "%s"));
+
+    String strippedOut = workspace.runCommand("dsymutil", "-s", strippedPath.toString())
+        .getStdout().or("");
+    String unstrippedOut = workspace.runCommand("dsymutil", "-s", unstrippedPath.toString())
+        .getStdout().or("");
+
+    assertThat(strippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
+    assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
+
+    assertThat(strippedOut, Matchers.not(Matchers.containsStringIgnoringCase("test.cpp")));
+    assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("test.cpp"));
+  }
+
+  @Test
+  public void testStrippedBinaryCanBeFetchedFromCacheAlone()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    BuildTarget strippedTarget = BuildTargetFactory.newInstance("//:test")
+        .withFlavors(CxxStrip.StripStyle.DEBUGGING_SYMBOLS.getFlavor());
+    BuildTarget unstrippedTarget = strippedTarget.withoutFlavors(
+        CxxStrip.StripStyle.FLAVOR_DOMAIN.getFlavors());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "header_namespace", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    workspace.runBuckCommand(
+        "build",
+        "--config", "cxx.cxxflags=-g",
+        strippedTarget.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand(
+        "build",
+        "--config", "cxx.cxxflags=-g",
+        strippedTarget.getFullyQualifiedName()).assertSuccess();
+
+    Path strippedPath = workspace.getPath(BuildTargets.getGenPath(
+        BuildTarget.builder(strippedTarget)
+            .addFlavors(CxxStrip.RULE_FLAVOR)
+            .build(),
+        "%s"));
+    Path unstrippedPath = workspace.getPath(BuildTargets.getGenPath(unstrippedTarget, "%s"));
+
+    assertThat(Files.exists(strippedPath), Matchers.equalTo(true));
+    assertThat(Files.exists(unstrippedPath), Matchers.equalTo(false));
+  }
+
+  @Test
+  public void testStrippedBinaryOutputDiffersFromUnstripped()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    BuildTarget unstrippedTarget = BuildTargetFactory.newInstance("//:test");
+    BuildTarget strippedTarget = unstrippedTarget.withFlavors(
+        CxxStrip.StripStyle.DEBUGGING_SYMBOLS.getFlavor());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "header_namespace", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult strippedResult = workspace.runBuckCommand(
+        "targets", "--show-output", strippedTarget.getFullyQualifiedName());
+    strippedResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult unstrippedResult = workspace.runBuckCommand(
+        "targets", "--show-output", unstrippedTarget.getFullyQualifiedName());
+    unstrippedResult.assertSuccess();
+
+    String strippedOutput = strippedResult.getStdout().split(" ")[1];
+    String unstrippedOutput = unstrippedResult.getStdout().split(" ")[1];
+    assertThat(strippedOutput, Matchers.not(Matchers.equalTo(unstrippedOutput)));
+  }
+
 }

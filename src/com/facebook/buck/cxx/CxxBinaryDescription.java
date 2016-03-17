@@ -93,12 +93,20 @@ public class CxxBinaryDescription implements
     return new Arg();
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+
+    // We explicitly remove strip flavor from params to make sure rule
+    // has the same output regardless if we will strip or not.
+    Optional<CxxStrip.StripStyle> flavoredStripStyle =
+        CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    params = params.copyWithBuildTarget(
+        params.getBuildTarget().withoutFlavors(CxxStrip.StripStyle.FLAVOR_DOMAIN.getFlavors()));
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -137,7 +145,8 @@ public class CxxBinaryDescription implements
               resolver,
               cxxPlatform,
               args,
-              preprocessMode);
+              preprocessMode,
+              flavoredStripStyle);
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           pathResolver,
@@ -202,7 +211,8 @@ public class CxxBinaryDescription implements
             resolver,
             cxxPlatform,
             args,
-            preprocessMode);
+            preprocessMode,
+            flavoredStripStyle);
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
     // rule above for a couple reasons:
@@ -214,11 +224,13 @@ public class CxxBinaryDescription implements
     //     have to wait for the dependency binary to link before we could link the dependent binary.
     //     By using another BuildRule, we can keep the original target graph dependency tree while
     //     preventing it from affecting link parallelism.
+
+    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     return new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         resolver,
         pathResolver,
-        cxxLinkAndCompileRules.cxxLink,
+        cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         args.frameworks.get(),
         args.tests.get());
@@ -281,7 +293,10 @@ public class CxxBinaryDescription implements
             CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
             CxxInferEnhancer.InferFlavors.INFER.get(),
             CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get(),
-            CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get()));
+            CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get(),
+            CxxStrip.StripStyle.ALL_SYMBOLS.getFlavor(),
+            CxxStrip.StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
+            CxxStrip.StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
 
     return flavors.isEmpty();
   }

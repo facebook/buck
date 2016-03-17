@@ -16,20 +16,33 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class CxxLinkAndCompileRules {
-  public final CxxLink cxxLink;
+  private final CxxLink cxxLink;
+  private final Optional<CxxStrip> cxxStrip;
   final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
   public final Tool executable;
 
   CxxLinkAndCompileRules(
       CxxLink cxxLink,
+      Optional<CxxStrip> cxxStrip,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
       Tool executable) {
     this.cxxLink = cxxLink;
+    this.cxxStrip = cxxStrip;
     this.compileRules = compileRules;
     this.executable = executable;
+  }
+
+  public BuildRule getBinaryRule() {
+    if (cxxStrip.isPresent()) {
+      return cxxStrip.get();
+    } else {
+      return cxxLink;
+    }
   }
 }

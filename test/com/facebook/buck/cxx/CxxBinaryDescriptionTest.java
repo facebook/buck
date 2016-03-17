@@ -127,7 +127,8 @@ public class CxxBinaryDescriptionTest {
     CxxBinary binRule =
         (CxxBinary) cxxBinaryBuilder.build(resolver, projectFilesystem, targetGraph);
 
-    CxxLink rule = binRule.getRule();
+    assertThat(binRule.getLinkRule(), Matchers.instanceOf(CxxLink.class));
+    CxxLink rule = (CxxLink) binRule.getLinkRule();
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
         .setParams(cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem))
         .setResolver(resolver)
@@ -263,9 +264,10 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
+    assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(
         binary.getDeps(),
@@ -293,9 +295,10 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
+    assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(
         binary.getDeps(),
@@ -321,9 +324,10 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         builder.findImplicitDeps(),
         Matchers.hasItem(dep.getBuildTarget()));
-    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    BuildRule binary = ((CxxBinary) builder.build(resolver)).getLinkRule();
+    assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(binary.getArgs()),
+        Arg.stringify(((CxxLink) binary).getArgs()),
         Matchers.not(
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
@@ -354,8 +358,37 @@ public class CxxBinaryDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
     CxxBinary binary = (CxxBinary) binaryBuilder.build(resolver, filesystem, targetGraph);
+    assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(binary.getRule().getArgs()),
+        Arg.stringify(((CxxLink) binary.getLinkRule()).getArgs()),
         Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
+  }
+
+  @Test
+  public void testBinaryWithStripFlavorHasStripLinkRuleWithCorrectStripStyle() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(
+            BuildTargetFactory
+                .newInstance("//:foo")
+                .withFlavors(
+                    platform.getFlavor(),
+                    ImmutableFlavor.of("shared"),
+                    CxxStrip.StripStyle.ALL_SYMBOLS.getFlavor()));
+    binaryBuilder
+        .setSrcs(
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    BuildRule resultRule = binaryBuilder.build(resolver, filesystem, targetGraph);
+    assertThat(resultRule, Matchers.instanceOf(CxxBinary.class));
+    assertThat(((CxxBinary) resultRule).getLinkRule(), Matchers.instanceOf(CxxStrip.class));
+
+    CxxStrip strip = (CxxStrip) ((CxxBinary) resultRule).getLinkRule();
+    assertThat(strip.getStripStyle(), Matchers.equalTo(CxxStrip.StripStyle.ALL_SYMBOLS));
   }
 }

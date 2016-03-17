@@ -56,6 +56,29 @@ and link against their static archives (which are *not* built using {sp}
 
 {/param} // close args
 
+{param flavors}
+  {call buck.arg}
+    {param name : '#strip-debug' /}
+    {param desc}
+    If appended to the target name, it will strip debugging symbols, but saving local and global symbols. 
+    {/param}
+  {/call}
+  {call buck.arg}
+    {param name : '#strip-non-global' /}
+    {param desc}
+    If appended to the target name, it will strip non-global symbols, but keeping external symbols. 
+    This is preferred for dynamic shared libraries.
+    {/param}
+  {/call}
+  {call buck.arg}
+    {param name : '#strip-all' /}
+    {param desc}
+    If appended to the target name, it will completely strip the binary, removing the symbol table and relocation information.
+    This is preferred for executable files.
+    {/param}
+  {/call}
+{/param} // close flavors
+
 {param examples}
 {literal}<pre class="prettyprint lang-py">
 # A rule that builds a C/C++ native executable from a single .cpp file
@@ -82,6 +105,12 @@ cxx_library(
     'util.h',
   ],
 )
+
+# To build without stripping:
+buck build :echo
+
+# To build with stripping debug symbols only:
+buck build :echo#strip-debug
 </pre>{/literal}
 {/param}
 

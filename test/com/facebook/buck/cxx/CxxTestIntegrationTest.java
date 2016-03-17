@@ -19,11 +19,15 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -58,8 +62,8 @@ public class CxxTestIntegrationTest {
     assertThat(stderr, Matchers.containsString("Timed out after 250 ms running test command"));
   }
 
-  @Test
-  public void spinningTestTimesOutWithPerRuleTimeout() throws IOException {
+  private void runAndAssertSpinningTestTimesOutWithPerRuleTimeout(
+      ImmutableSet<Flavor> targetFlavors) throws IOException {
     assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -67,9 +71,25 @@ public class CxxTestIntegrationTest {
         temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
+    BuildTarget target = BuildTargetFactory.newInstance("//:spinning");
+    target = target.withFlavors(targetFlavors);
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test",
+        target.getFullyQualifiedName());
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 100 ms running test command"));
+  }
+
+  @Test
+  public void testSpinningTestTimesOutWithPerRuleTimeout() throws IOException {
+    runAndAssertSpinningTestTimesOutWithPerRuleTimeout(ImmutableSet.<Flavor>of());
+  }
+
+  @Test
+  public void testTestsWithStrippingBehaveSimilarToUnstripped() throws IOException {
+    runAndAssertSpinningTestTimesOutWithPerRuleTimeout(
+        ImmutableSet.of(CxxStrip.StripStyle.ALL_SYMBOLS.getFlavor()));
   }
 }

@@ -543,7 +543,8 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      CxxPreprocessMode preprocessMode) throws NoSuchBuildTargetException {
+      CxxPreprocessMode preprocessMode,
+      Optional<CxxStrip.StripStyle> stripStyle) throws NoSuchBuildTargetException {
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(
@@ -563,6 +564,7 @@ public class CxxDescriptionEnhancer {
         srcs,
         headers,
         preprocessMode,
+        stripStyle,
         args.linkStyle.or(Linker.LinkableDepType.STATIC),
         args.preprocessorFlags,
         args.platformPreprocessorFlags,
@@ -585,6 +587,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
       CxxPreprocessMode preprocessMode,
+      Optional<CxxStrip.StripStyle> stripStyle,
       Linker.LinkableDepType linkStyle,
       Optional<ImmutableList<String>> preprocessorFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags,
@@ -725,14 +728,52 @@ public class CxxDescriptionEnhancer {
                 .build());
     resolver.addToIndex(cxxLink);
 
+    BuildRule binaryRuleForExecutable;
+    Optional<CxxStrip> cxxStrip = Optional.absent();
+    if (stripStyle.isPresent()) {
+      CxxStrip stripRule =
+          createCxxStripRule(params, cxxPlatform, stripStyle, sourcePathResolver, cxxLink);
+      cxxStrip = Optional.of(stripRule);
+      resolver.addToIndex(stripRule);
+      binaryRuleForExecutable = stripRule;
+    } else {
+      binaryRuleForExecutable = cxxLink;
+    }
+
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.
     executableBuilder.addArg(
-        new SourcePathArg(sourcePathResolver, new BuildTargetSourcePath(cxxLink.getBuildTarget())));
+        new SourcePathArg(
+            sourcePathResolver,
+            new BuildTargetSourcePath(binaryRuleForExecutable.getBuildTarget())));
 
     return new CxxLinkAndCompileRules(
         cxxLink,
+        cxxStrip,
         ImmutableSortedSet.copyOf(objects.keySet()),
         executableBuilder.build());
+  }
+
+  private static CxxStrip createCxxStripRule(
+      BuildRuleParams params,
+      CxxPlatform cxxPlatform,
+      Optional<CxxStrip.StripStyle> stripStyle,
+      SourcePathResolver sourcePathResolver,
+      CxxLink cxxLink) {
+    BuildRuleParams stripRuleParams = params
+        .copyWithChanges(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(stripStyle.get().getFlavor())
+                .addFlavors(CxxStrip.RULE_FLAVOR)
+                .build(),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(cxxLink)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+    return new CxxStrip(
+        stripRuleParams,
+        sourcePathResolver,
+        stripStyle.get(),
+        new BuildTargetSourcePath(cxxLink.getBuildTarget()),
+        cxxPlatform.getStrip(),
+        CxxDescriptionEnhancer.getLinkOutputPath(stripRuleParams.getBuildTarget()));
   }
 
   /**

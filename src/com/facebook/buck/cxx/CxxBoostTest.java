@@ -55,6 +55,8 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
 
@@ -67,13 +69,13 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
-  private final CxxLink binary;
+  private final BuildRule binary;
   private final Tool executable;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      CxxLink binary,
+      BuildRule binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
@@ -99,6 +101,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     this.executable = executable;
   }
 
+  @Nullable
   @Override
   public Path getPathToOutput() {
     return binary.getPathToOutput();
