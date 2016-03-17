@@ -46,12 +46,13 @@
 
   <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}" />
 
-  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
-  <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
+  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.1.14.jar" />
   <property name="immutables.gensrc.test.dir" value="${build.dir}/immutables-tests" />
 
   <property name="manual.gensrc.dir" value="${basedir}/src-gen" />
   <property name="manual.gensrc.classes.dir" value="${build.dir}/src-gen/classes" />
+
+  <property name="ecj.gensrc.dir" value="${build.dir}/ecj-gen" />
 
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
@@ -104,7 +105,7 @@
     <include name="guice/guice-multibindings-3.0.jar" />
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
-    <include name="immutables/value-2.0.21.jar" />
+    <include name="immutables/value-2.1.14.jar" />
     <include name="infer-annotations/infer-annotations-1.5.jar" />
     <include name="nuprocess/nuprocess-1.0.5-SNAPSHOT.jar" />
     <include name="jacoco/org.jacoco.core-0.7.5.201505241946.jar" />
@@ -156,14 +157,8 @@
   <path id="classpath">
     <path refid="classpath-no-src" />
     <pathelement location="${src.dir}" />
-    <pathelement location="${immutables.gensrc.dir}" />
+    <pathelement location="${ecj.gensrc.dir}" />
     <pathelement location="${manual.gensrc.dir}" />
-  </path>
-
-  <path id="classpath-generate-immutables">
-    <fileset refid="buck.jars" />
-    <fileset refid="third-party.jars" />
-    <pathelement location="${aosp.classes.dir}" />
   </path>
 
   <path id="classpath-compile-manual-gen-src">
@@ -305,40 +300,6 @@
     <pathelement location="${manual.gensrc.dir}" />
   </path>
 
-  <!-- The set of Immutables value type source files which have not
-       yet been run through the javac annotation processor. -->
-  <fileset dir="${src.dir}" id="immutables-srcs">
-    <!-- Speed up the build by only running javac on files containing Immutables. -->
-    <contains text="org.immutables" />
-    <exclude name="com/facebook/buck/android/support/**" />
-    <exclude name="com/facebook/buck/cli/quickstart/**" />
-    <exclude name="com/facebook/buck/testrunner/**" />
-    <!-- Only run javac on immutables files which have changed since the last build. -->
-    <modified>
-      <param name="cache.cachefile" value="${build.dir}/immutables.modified.properties" />
-    </modified>
-  </fileset>
-
-  <target name="check-immutables">
-    <!--
-      javac rules don't support filesets, but they do support comma-separated lists of
-      sources in the includes parameter.
-
-      However, if the includes parameter is empty, the javac rule will build everything,
-      which we don't want. So we have to skip the generate-immutables step entirely
-      in that case.
-
-      This sets ${immutables-srcs-flattened} to a comma-separated list of files to build,
-      then sets ${generate-immutables-needed} to true iff that variable is non-empty.
-    -->
-    <pathconvert property="immutables-srcs-flattened" pathsep="," refid="immutables-srcs">
-      <map from="${src.dir}/" to=""/>
-    </pathconvert>
-    <condition property="generate-immutables-needed">
-      <length string="${immutables-srcs-flattened}" when="greater" length="0" />
-    </condition>
-  </target>
-
   <target name="compile-aosp" depends="checkversion">
     <mkdir dir="${aosp.classes.dir}" />
     <ecj srcdir="${aosp.src.dir}" destdir="${aosp.classes.dir}">
@@ -347,21 +308,6 @@
         <compilerarg value="-err:-null" />
       </ecj-params>
     </ecj>
-  </target>
-
-  <target name="generate-immutables" depends="compile-aosp, check-immutables" if="${generate-immutables-needed}">
-    <mkdir dir="${immutables.gensrc.dir}" />
-    <javac srcdir="${src.dir}:${manual.gensrc.dir}:${immutables.gensrc.dir}"
-           classpathref="classpath-generate-immutables"
-           includeAntRuntime="no"
-           includes="${immutables-srcs-flattened}">
-      <compilerarg value="-Werror" />
-      <compilerarg value="-processorpath" />
-      <compilerarg value="${immutables-value-standalone.jar}" />
-      <compilerarg value="-proc:only" />
-      <compilerarg value="-s" />
-      <compilerarg value="${immutables.gensrc.dir}" />
-    </javac>
   </target>
 
   <macrodef name="ecj" description="Compile Java using the ecj compiler with strict checks.">
@@ -409,9 +355,12 @@
         <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
-          <pathelement location="${eclipse.dir}/org.eclipse.jdt.core_3.10.2.v20150120-1634.jar" />
-          <pathelement location="${eclipse.dir}/jdtCompilerAdapter.jar" />
+          <pathelement location="${eclipse.dir}/ecj-4.5.1.jar" />
         </compilerclasspath>
+        <compilerarg value="-processorpath" />
+        <compilerarg value="${immutables-value-standalone.jar}" />
+        <compilerarg value="-s" />
+        <compilerarg value="${ecj.gensrc.dir}" />
         <ecj-params />
       </javac>
     </sequential>
@@ -432,12 +381,14 @@
   </target>
 
   <target name="compile"
-          depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
+          depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
     <!-- Copy in scripts we need at run time when using an unpacked buck -->
     <copy file="src/com/facebook/buck/json/buck.py" todir="${classes.dir}/com/facebook/buck/json"/>
+
+    <mkdir dir="${ecj.gensrc.dir}" />
 
     <ecj>
       <javac-params>
@@ -461,7 +412,7 @@
             <filename name="${javac-tracing.src.dir}/**" />
           </not>
         </or>
-        <src path="${immutables.gensrc.dir}" />
+        <src path="${ecj.gensrc.dir}" />
       </javac-params>
     </ecj>
   </target>
@@ -579,7 +530,7 @@
     <pathelement location="${testclasses.dir}" />
     <pathelement location="${test.dir}" />
     <pathelement location="${testrunner.classes.dir}" />
-    <pathelement location="${immutables.gensrc.dir}" />
+    <pathelement location="${ecj.gensrc.dir}" />
     <pathelement location="${immutables.gensrc.test.dir}" />
   </path>
 
@@ -639,7 +590,6 @@
           depends="compile, generate-test-immutables"
           >
     <mkdir dir="${testclasses.dir}" />
-    <mkdir dir="${immutables.gensrc.dir}" />
     <ecj srcdir="${test.dir}"
          destdir="${testclasses.dir}"
          classpathref="tests.compile.classpath"
@@ -906,7 +856,7 @@
   -->
   <target name="eclipse-project"
           description="Generates files for Eclipse project"
-          depends="clean, generate-immutables, generate-test-immutables"
+          depends="clean, generate-test-immutables"
           />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
@@ -932,7 +882,7 @@
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
           <exclude name="com/facebook/buck/intellij/plugin/**" />
         </fileset>
-        <fileset dir="${immutables.gensrc.dir}" />
+        <fileset dir="${ecj.gensrc.dir}" />
         <link href="http://docs.oracle.com/javase/7/docs/api/"
               offline="true"
               packagelistloc="third-party/java/javase" />
