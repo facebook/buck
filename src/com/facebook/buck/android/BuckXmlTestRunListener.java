@@ -23,14 +23,7 @@ import java.io.IOException;
 
 public class BuckXmlTestRunListener extends XmlTestRunListener {
 
-  private final String deviceSerialNumber;
-  protected static final String TEST_RESULT_FILE_SUFFIX = ".xml";
-  protected static final String TEST_RESULT_FILE_PREFIX = "test_result_";
-
-  public BuckXmlTestRunListener(String deviceSerialNumber) {
-    super();
-    this.deviceSerialNumber = deviceSerialNumber;
-  }
+  protected static final String TEST_RESULT_FILE = "test_result.xml";
 
   @Override
   /**
@@ -43,9 +36,7 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
    * @throws IOException
    */
   protected File getResultFile(File reportDir) throws IOException {
-    File reportFile = new File(
-        reportDir,
-        TEST_RESULT_FILE_PREFIX + deviceSerialNumber + TEST_RESULT_FILE_SUFFIX);
+    File reportFile = new File(reportDir, TEST_RESULT_FILE);
     return reportFile;
   }
 

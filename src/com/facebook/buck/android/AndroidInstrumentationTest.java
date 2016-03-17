@@ -37,15 +37,15 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -106,6 +106,13 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestRule.TestReportingCallback testReportingCallback) {
+    Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
+
+    if (executionContext.getAdbOptions().get().isMultiInstallModeEnabled()) {
+      throw new HumanReadableException(
+          "Running android instrumentation tests with multiple devices is not supported.");
+    }
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
@@ -125,26 +132,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext context) {
-    List<IDevice> devices;
-    AdbHelper adbHelper = AdbHelper.get(context, true);
-    try {
-      devices = adbHelper.getDevices(true);
-    } catch (InterruptedException e) {
-      devices = Lists.newArrayList();
-    }
-    // It might happen that a new device is attached when re-running the tests,
-    // in which case we want to re-run the tests with the new device included.
-    for (IDevice device : devices) {
-      Path testResultPath = getProjectFilesystem().resolve(
-          getPathToTestOutputDirectory().resolve(
-              BuckXmlTestRunListener.TEST_RESULT_FILE_PREFIX +
-                  device.getSerialNumber() +
-                  BuckXmlTestRunListener.TEST_RESULT_FILE_SUFFIX));
-      if (!testResultPath.toFile().exists()) {
-        return false;
-      }
-    }
-    return true;
+    Path testResultPath = getProjectFilesystem().resolve(
+        getPathToTestOutputDirectory().resolve(
+            BuckXmlTestRunListener.TEST_RESULT_FILE));
+    return testResultPath.toFile().exists();
   }
 
   @Override
@@ -178,23 +169,19 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       @Override
       public TestResults call() throws Exception {
         final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        List<IDevice> devices;
+        IDevice device;
         AdbHelper adbHelper = AdbHelper.get(context, true);
         try {
-          devices = adbHelper.getDevices(true);
+          device = adbHelper.getSingleDevice();
         } catch (InterruptedException e) {
-          devices = Lists.newArrayList();
+          device = null;
         }
-        if (devices.isEmpty()) {
+        if (device == null) {
           summaries.add(getTestClassAssumedSummary());
-        }
-
-        for (IDevice device : devices) {
+        } else {
           Path testResultPath = getProjectFilesystem().resolve(
               getPathToTestOutputDirectory().resolve(
-                  BuckXmlTestRunListener.TEST_RESULT_FILE_PREFIX +
-                      device.getSerialNumber() +
-                      BuckXmlTestRunListener.TEST_RESULT_FILE_SUFFIX));
+                  BuckXmlTestRunListener.TEST_RESULT_FILE));
           summaries.add(
               XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
         }

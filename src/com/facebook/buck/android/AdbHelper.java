@@ -277,6 +277,14 @@ public class AdbHelper {
     return devices;
   }
 
+  public IDevice getSingleDevice() throws InterruptedException {
+    List<IDevice> devices = getDevices(true);
+    if (devices.isEmpty()) {
+      throw new HumanReadableException("Expecting one android device/emulator to be attached.");
+    }
+    return devices.get(0);
+  }
+
   /**
    * Execute an {@link AdbCallable} for all matching devices. This functions performs device
    * filtering based on three possible arguments:

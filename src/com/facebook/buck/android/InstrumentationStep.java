@@ -56,16 +56,16 @@ public class InstrumentationStep implements Step {
 
     try {
       AdbHelper adbHelper = AdbHelper.get(context, true);
-      for (IDevice device : adbHelper.getDevices(true)) {
-        RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-            packageName,
-            testRunner,
-            device);
 
-        BuckXmlTestRunListener listener = new BuckXmlTestRunListener(device.getSerialNumber());
-        listener.setReportDir(directoryForTestResults.toFile());
-        runner.run(listener);
-      }
+      IDevice device = adbHelper.getSingleDevice();
+      RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
+          packageName,
+          testRunner,
+          device);
+
+      BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
+      listener.setReportDir(directoryForTestResults.toFile());
+      runner.run(listener);
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
