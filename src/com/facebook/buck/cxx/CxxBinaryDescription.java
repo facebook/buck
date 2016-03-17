@@ -185,6 +185,17 @@ public class CxxBinaryDescription implements
           args);
     }
 
+    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ONLY.get())) {
+      return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
+          params,
+          resolver,
+          pathResolver,
+          cxxPlatform,
+          args,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig));
+    }
+
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             params,
@@ -289,26 +300,6 @@ public class CxxBinaryDescription implements
       BuildRuleResolver resolver,
       A args,
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
-
-    if (buildTarget.getFlavors().contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
-      CxxPlatform cxxPlatform = cxxPlatforms
-          .getValue(buildTarget.getFlavors())
-          .or(defaultCxxPlatform);
-      return Optional.of(
-          CxxInferEnhancer.collectSourcesOverDependencies(
-              buildTarget,
-              resolver,
-              cxxPlatform,
-              args))
-          .transform(
-              new Function<CxxSourceSet, U>() {
-                @Override
-                public U apply(CxxSourceSet input) {
-                  return metadataClass.cast(input);
-                }
-              });
-    }
-
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.absent();

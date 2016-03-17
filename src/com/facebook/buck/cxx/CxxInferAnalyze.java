@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.CxxInferEnhancer.CxxInferCaptureAndAnalyzeRules;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -45,7 +44,8 @@ import java.nio.file.Path;
 
 public class CxxInferAnalyze extends AbstractBuildRule {
 
-  private CxxInferCaptureAndAnalyzeRules captureAndAnalyzeRules;
+  private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze>
+      captureAndAnalyzeRules;
 
   private final Path resultsDir;
   private final Path reportFile;
@@ -59,7 +59,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       InferBuckConfig inferConfig,
-      CxxInferCaptureAndAnalyzeRules captureAndAnalyzeRules) {
+      CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules) {
     super(buildRuleParams, pathResolver);
     this.captureAndAnalyzeRules = captureAndAnalyzeRules;
     this.resultsDir = BuildTargets.getGenPath(
@@ -72,7 +72,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   }
 
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
-    return FluentIterable.from(captureAndAnalyzeRules.allAnalyzeRules)
+    return FluentIterable.from(captureAndAnalyzeRules.aggregatingRules)
         .transform(
             new Function<CxxInferAnalyze, SourcePath>() {
               @Override
@@ -96,7 +96,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   }
 
   public ImmutableSet<CxxInferAnalyze> getTransitiveAnalyzeRules() {
-    return captureAndAnalyzeRules.allAnalyzeRules;
+    return captureAndAnalyzeRules.aggregatingRules;
   }
 
   private ImmutableList<String> getAnalyzeCommand() {

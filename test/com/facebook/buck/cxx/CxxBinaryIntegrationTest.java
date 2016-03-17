@@ -601,7 +601,7 @@ public class CxxBinaryIntegrationTest {
                 BuildTargets
                     .getGenPath(
                         BuildTargetFactory.newInstance(
-                            "//foo:binary_with_diamond_deps#default,infer-capture-" +
+                            "//foo:simple_lib#default,infer-capture-" +
                                 sanitize("simple.cpp.o")),
                         "infer-out-%s")
                     .resolve("captured/simple.cpp_captured/simple.cpp.cfg"))));
@@ -612,7 +612,7 @@ public class CxxBinaryIntegrationTest {
                 BuildTargets
                     .getGenPath(
                         BuildTargetFactory.newInstance(
-                            "//foo:binary_with_diamond_deps#default,infer-capture-" +
+                            "//foo:diamond_dep_one#default,infer-capture-" +
                                 sanitize("dep_one.c.o")),
                         "infer-out-%s")
                     .resolve("captured/dep_one.c_captured/dep_one.c.cfg"))));
@@ -623,7 +623,7 @@ public class CxxBinaryIntegrationTest {
                 BuildTargets
                     .getGenPath(
                         BuildTargetFactory.newInstance(
-                            "//foo:binary_with_diamond_deps#default,infer-capture-" +
+                            "//foo:diamond_dep_two#default,infer-capture-" +
                                 sanitize("dep_two.c.o")),
                         "infer-out-%s")
                     .resolve("captured/dep_two.c_captured/dep_two.c.cfg"))));
@@ -669,28 +669,29 @@ public class CxxBinaryIntegrationTest {
     String sanitizedDepTwo = sanitize("dep_two.c.o");
     String sanitizedSrcWithDeps = sanitize("src_with_deps.c.o");
     BuildTarget simpleCppTarget = BuildTargetFactory.newInstance(
-        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSimpleCpp);
+        "//foo:simple_lib#default,infer-capture-" + sanitizedSimpleCpp);
     BuildTarget depOneTarget = BuildTargetFactory.newInstance(
-        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedDepOne);
+        "//foo:diamond_dep_one#default,infer-capture-" + sanitizedDepOne);
     BuildTarget depTwoTarget = BuildTargetFactory.newInstance(
-        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedDepTwo);
+        "//foo:diamond_dep_two#default,infer-capture-" + sanitizedDepTwo);
     BuildTarget srcWithDepsTarget = BuildTargetFactory.newInstance(
         "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps);
 
+
     String expectedOutput = Joiner.on('\n').join(
         ImmutableList.of(
-            simpleCppTarget.getFullyQualifiedName() + "\t" +
-                "[default, infer-capture-" + sanitizedSimpleCpp + "]\t" +
-                BuildTargets.getGenPath(simpleCppTarget, "infer-out-%s"),
+            srcWithDepsTarget.getFullyQualifiedName() + "\t" +
+                "[default, infer-capture-" + sanitizedSrcWithDeps + "]\t" +
+                BuildTargets.getGenPath(srcWithDepsTarget, "infer-out-%s"),
             depOneTarget.getFullyQualifiedName() + "\t" +
                 "[default, infer-capture-" + sanitizedDepOne + "]\t" +
                 BuildTargets.getGenPath(depOneTarget, "infer-out-%s"),
             depTwoTarget.getFullyQualifiedName() + "\t" +
                 "[default, infer-capture-" + sanitizedDepTwo + "]\t" +
                 BuildTargets.getGenPath(depTwoTarget, "infer-out-%s"),
-            srcWithDepsTarget.getFullyQualifiedName() + "\t" +
-                "[default, infer-capture-" + sanitizedSrcWithDeps + "]\t" +
-                BuildTargets.getGenPath(srcWithDepsTarget, "infer-out-%s")));
+            simpleCppTarget.getFullyQualifiedName() + "\t" +
+                "[default, infer-capture-" + sanitizedSimpleCpp + "]\t" +
+                BuildTargets.getGenPath(simpleCppTarget, "infer-out-%s")));
 
     assertEquals(expectedOutput + "\n", loggedDeps);
   }

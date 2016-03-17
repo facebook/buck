@@ -597,6 +597,16 @@ public class CxxLibraryDescription implements
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig),
           args);
+    } else if (params.getBuildTarget().getFlavors()
+        .contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ONLY.get())) {
+      return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
+          params,
+          resolver,
+          new SourcePathResolver(resolver),
+          platform.or(defaultCxxPlatform),
+          args,
+          inferBuckConfig,
+          new CxxInferSourceFilter(inferBuckConfig));
     } else if (type.isPresent() && platform.isPresent()) {
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.
@@ -820,22 +830,6 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       A args,
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
-    if (buildTarget.getFlavors().contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
-      return Optional.of(
-          CxxInferEnhancer.collectSourcesOverDependencies(
-              buildTarget,
-              resolver,
-              cxxPlatforms.getValue(buildTarget).or(defaultCxxPlatform),
-              args))
-          .transform(
-              new Function<CxxSourceSet, U>() {
-                @Override
-                public U apply(CxxSourceSet input) {
-                  return metadataClass.cast(input);
-                }
-              });
-    }
-
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.absent();
