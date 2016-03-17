@@ -22,8 +22,8 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -80,10 +80,10 @@ public class CxxFlags {
         .toList();
   }
 
-  private static ImmutableMultimap<CxxSource.Type, String> toLanguageFlags(
+  private static ImmutableListMultimap<CxxSource.Type, String> toLanguageFlags(
       ImmutableList<String> flags) {
 
-    ImmutableMultimap.Builder<CxxSource.Type, String> result = ImmutableMultimap.builder();
+    ImmutableListMultimap.Builder<CxxSource.Type, String> result = ImmutableListMultimap.builder();
 
     for (CxxSource.Type type : CxxSource.Type.values()) {
       result.putAll(type, flags);
@@ -92,13 +92,14 @@ public class CxxFlags {
     return result.build();
   }
 
-  public static ImmutableMultimap<CxxSource.Type, String> getLanguageFlags(
+  public static ImmutableListMultimap<CxxSource.Type, String> getLanguageFlags(
       Optional<ImmutableList<String>> flags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
       Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> languageFlags,
       CxxPlatform platform) {
 
-    ImmutableMultimap.Builder<CxxSource.Type, String> langFlags = ImmutableMultimap.builder();
+    ImmutableListMultimap.Builder<CxxSource.Type, String> langFlags =
+        ImmutableListMultimap.builder();
 
     langFlags.putAll(toLanguageFlags(getFlags(flags, platformFlags, platform)));
 
