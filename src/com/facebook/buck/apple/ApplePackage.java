@@ -16,10 +16,12 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -28,10 +30,12 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteSource;
 
 import java.nio.file.Path;
 
@@ -70,6 +74,8 @@ public class ApplePackage extends AbstractBuildRule {
     // Recursively copy the .app directory into the Payload folder
     Path bundleOutputPath = bundle.getPathToOutput();
 
+    appendAdditionalAppleWatchSteps(commands);
+
     commands.add(CopyStep.forDirectory(
             getProjectFilesystem(),
             bundleOutputPath,
@@ -90,6 +96,35 @@ public class ApplePackage extends AbstractBuildRule {
     buildableContext.recordArtifact(getPathToOutput());
 
     return commands.build();
+  }
+
+  private void appendAdditionalAppleWatchSteps(ImmutableList.Builder<Step> commands) {
+    // For .ipas with WatchOS2 support, Apple apparently requires the following for App Store
+    // submissions:
+    // 1. Have a empty "Symbols" directory on the top level.
+    // 2. Copy the unmodified WatchKit stub binary for WatchOS2 apps to WatchKitSupport2/WK
+    // We can't use the copy of the binary in the bundle because that has already been re-signed
+    // with our own identity.
+    for (BuildRule rule : bundle.getDeps()) {
+      if (rule instanceof BuildRuleWithAppleBundle) {
+        AppleBundle appleBundle = ((BuildRuleWithAppleBundle) rule).getAppleBundle();
+        if (appleBundle.getBinary().isPresent() &&
+            appleBundle.getPlatformName().startsWith("watch")) {
+          BuildRule binary = appleBundle.getBinary().get();
+          if (binary instanceof WriteFile) {
+            commands.add(new MkdirStep(getProjectFilesystem(), temp.resolve("Symbols")));
+            Path watchKitSupportDir = temp.resolve("WatchKitSupport2");
+            commands.add(new MkdirStep(getProjectFilesystem(), watchKitSupportDir));
+            commands.add(new WriteFileStep(
+                getProjectFilesystem(),
+                ByteSource.wrap(((WriteFile) binary).getFileContents()),
+                watchKitSupportDir.resolve("WK"),
+                true /* executable */
+            ));
+          }
+        }
+      }
+    }
   }
 
   @Override
