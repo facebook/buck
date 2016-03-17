@@ -180,7 +180,7 @@ class BuckTool(object):
                             if exit_code == 2:
                                 now = time.time()
                                 if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
-                                    print('Daemon is busy, waiting for it to exit...',
+                                    print('Daemon is busy, waiting for it to become free...',
                                           file=sys.stderr)
                                     last_diagnostic_time = now
                                 time.sleep(0.1)
