@@ -595,9 +595,9 @@ public class ProjectGenerator {
         'f');
 
     Optional<String> productName = getProductNameForTargetNode(targetNode);
-    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
-    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
-    Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get(), binaryName);
+    String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
+    Path bundleDestination = getScratchPathForAppBundle(targetNode.getBuildTarget(), binaryName);
+    Path dsymDestination = getScratchPathForDsymBundle(targetNode.getBuildTarget(), binaryName);
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
     Path fixUUIDScriptPath = getFixUUIDScriptPath(projectFilesystem);
@@ -608,7 +608,7 @@ public class ProjectGenerator {
       template.add("buck_flavor", "");
     }
     template.add("path_to_buck", getPathToBuck(executableFinder, environment));
-    template.add("buck_target", targetToBuildWithBuck.get().getFullyQualifiedName());
+    template.add("buck_target", targetNode.getBuildTarget().getFullyQualifiedName());
     template.add("root_path", projectFilesystem.getRootPath());
 
     template.add("comp_dir", compDir);
@@ -634,8 +634,8 @@ public class ProjectGenerator {
     }
 
     Optional<String> productName = getProductNameForTargetNode(targetNode);
-    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
-    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
+    String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
+    Path bundleDestination = getScratchPathForAppBundle(targetNode.getBuildTarget(), binaryName);
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
 
     template.add("root_path", projectFilesystem.getRootPath());
