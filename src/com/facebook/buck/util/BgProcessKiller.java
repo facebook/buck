@@ -29,26 +29,71 @@ import java.io.IOException;
 public class BgProcessKiller {
 
   private static boolean initialized;
+  private static boolean armed;
 
   public static void init() {
     NativeLibrary libcLibrary = NativeLibrary.getInstance(Platform.C_LIBRARY_NAME);
+
+    // We kill subprocesses by sending SIGHUP to our process group; we want our subprocesses to die
+    // on SIGHUP while we ourselves stay around.  We can't just set SIGHUP to SIG_IGN, because
+    // subprocesses would inherit the SIG_IGN signal disposition and be immune to the SIGHUP we
+    // direct toward the process group.  We need _some_ signal handler that does nothing --- i.e.,
+    // acts like SIG_IGN --- but that doesn't kill its host process.  When we spawn a subprocess,
+    // the kernel replaces any signal handler that is not SIG_IGN with SIG_DFL, automatically
+    // creating the signal handler configuration we want.
+    //
+    // getpid might seem like a strange choice of signal handler, but consider the following:
+    //
+    //   1) on all supported ABIs, calling a function that returns int as if it returned void is
+    //      harmless --- the return value is stuffed into a register (for example, EAX on x86
+    //      32-bit) that the caller ignores (EAX is caller-saved),
+    //
+    //   2) on all supported ABIs, calling a function with extra arguments is safe --- the callee
+    //      ignores the extra arguments, which are passed either in caller-saved registers or in
+    //      stack locations that the caller [1] cleans up upon return,
+    //
+    //   3) getpid is void(*)(int); signal handlers are void(*)(int), and
+    //
+    //   4) getpid is async-signal-safe according to POSIX.
+    //
+    // Therefore, it is safe to set getpid _as_ a signal handler.  It does nothing, exactly as we
+    // want, and gets reset to SIG_DFL in subprocesses.  If we were a C program, we'd just define a
+    // no-op function of the correct signature to use as a handler, but we're using JNA, and while
+    // JNA does have the ability to C function pointer to a Java function, it cannot create an
+    // async-signal-safe C function, since calls into Java are inherently signal-unsafe.
+    //
+    // [1] Win32 32-bit x86 stdcall is an exception to this general rule --- because the callee
+    //      cleans up its stack --- but we don't run this code on Windows.
+    //
     Libc.INSTANCE.signal(Libc.Constants.SIGHUP, libcLibrary.getFunction("getpid"));
     initialized = true;
   }
 
+  public static synchronized void disarm() {
+    armed = false;
+  }
+
   public static synchronized void killBgProcesses() {
     if (initialized) {
+      armed = true;
       Libc.INSTANCE.kill(0 /* my process group */, Libc.Constants.SIGHUP);
     }
   }
 
   private BgProcessKiller() {}
 
+  private static void checkArmedStatus() throws IOException {
+    if (armed) {
+      throw new IOException("process creation blocked due to pending nailgun exit");
+    }
+  }
+
   /**
    * Use this method instead of {@link ProcessBuilder#start} in order to properly synchronize with
    * signal handling.
    */
   public static synchronized Process startProcess(ProcessBuilder pb) throws IOException {
+    checkArmedStatus();
     return pb.start();
   }
 
@@ -56,7 +101,8 @@ public class BgProcessKiller {
    * Use this method instead of {@link NuProcessBuilder#start} in order to properly synchronize with
    * signal handling.
    */
-  public static synchronized NuProcess startProcess(NuProcessBuilder pb) {
+  public static synchronized NuProcess startProcess(NuProcessBuilder pb) throws IOException {
+    checkArmedStatus();
     return pb.start();
   }
 }

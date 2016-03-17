@@ -205,7 +205,7 @@ public final class Main {
   private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
-  private static Optional<NGContext> commandSemaphoreNgClient = Optional.absent();
+  private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.absent();
 
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
@@ -1051,6 +1051,7 @@ public final class Main {
         } finally {
           if (commandSemaphoreAcquired) {
             commandSemaphoreNgClient = Optional.absent();
+            BgProcessKiller.disarm();
             commandSemaphore.release(); // Allow another command to execute while outputting traces.
             commandSemaphoreAcquired = false;
           }
@@ -1078,6 +1079,7 @@ public final class Main {
     } finally {
       if (commandSemaphoreAcquired) {
         commandSemaphoreNgClient = Optional.absent();
+        BgProcessKiller.disarm();
         commandSemaphore.release();
       }
     }
