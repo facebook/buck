@@ -20,6 +20,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -319,7 +320,7 @@ public class MorePaths {
   }
 
 
-  public static String stripPathPrefixAndExtension (Path fileName, String prefix) {
+  public static String stripPathPrefixAndExtension(Path fileName, String prefix) {
     String nameWithoutExtension = getNameWithoutExtension(fileName);
 
     if (!nameWithoutExtension.startsWith(prefix) ||
@@ -334,6 +335,18 @@ public class MorePaths {
     return nameWithoutExtension.substring(
         prefix.length(),
         nameWithoutExtension.length());
+  }
+
+  public static Optional<Path> stripPrefix(Path p, Path prefix) {
+    if (prefix.getNameCount() > p.getNameCount()) {
+      return Optional.absent();
+    }
+    for (int i = 0; i < prefix.getNameCount(); ++i) {
+      if (!prefix.getName(i).equals(p.getName(i))) {
+        return Optional.absent();
+      }
+    }
+    return Optional.of(p.subpath(prefix.getNameCount(), p.getNameCount()));
   }
 
   public static Function<String, Path> toPathFn(final FileSystem fileSystem) {

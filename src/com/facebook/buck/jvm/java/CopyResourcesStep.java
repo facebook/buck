@@ -19,6 +19,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -27,9 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,22 +37,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class CopyResourcesStep implements Step {
-
-  /**
-   * This matches the Path for a BuildTargetSourcePath and returns the path without the
-   * "buck-out/XXX/" component as the first capturing group.
-   */
-  private static final Pattern GENERATED_FILE_PATTERN = Pattern.compile(
-      "^(?:" +
-          Joiner.on('|').join(
-              BuckConstant.ANNOTATION_DIR,
-              BuckConstant.SCRATCH_DIR,
-              BuckConstant.GEN_DIR
-          ) + ")/(.*)");
 
   private final ProjectFilesystem filesystem;
   private final SourcePathResolver resolver;
@@ -118,21 +103,33 @@ public class CopyResourcesStep implements Step {
       Optional<BuildRule> underlyingRule = resolver.getRule(rawResource);
       Path relativePathToResource = resolver.getRelativePath(rawResource);
 
-      String resource = null;
+      String resource;
 
-      if (underlyingRule.orNull() instanceof HasOutputName) {
-        resource = MorePaths.pathWithUnixSeparators(
-            underlyingRule.get().getBuildTarget().getBasePath().resolve(
-                ((HasOutputName) underlyingRule.get()).getOutputName()));
-      }
-      if (resource == null) {
+      if (underlyingRule.isPresent()) {
+        BuildTarget underlyingTarget = underlyingRule.get().getBuildTarget();
+        if (underlyingRule.get() instanceof HasOutputName) {
+          resource = MorePaths.pathWithUnixSeparators(
+              underlyingTarget.getBasePath().resolve(
+                  ((HasOutputName) underlyingRule.get()).getOutputName()));
+        } else {
+          Path genOutputParent =
+              BuildTargets.getGenPath(underlyingTarget, "%s").getParent();
+          Path scratchOutputParent =
+              BuildTargets.getScratchPath(underlyingTarget, "%s").getParent();
+          Optional<Path> outputPath =
+              MorePaths.stripPrefix(relativePathToResource, genOutputParent)
+                  .or(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
+          Preconditions.checkState(
+              outputPath.isPresent(),
+              "%s is used as a resource but does not output to a default output directory",
+              underlyingTarget.getFullyQualifiedName());
+          resource = MorePaths.pathWithUnixSeparators(
+              underlyingTarget.getBasePath().resolve(outputPath.get()));
+        }
+      } else {
         resource = MorePaths.pathWithUnixSeparators(relativePathToResource);
       }
 
-      Matcher matcher;
-      if ((matcher = GENERATED_FILE_PATTERN.matcher(resource)).matches()) {
-        resource = matcher.group(1);
-      }
       Path javaPackageAsPath = javaPackageFinder.findJavaPackageFolder(Paths.get(resource));
 
       Path relativeSymlinkPath;
