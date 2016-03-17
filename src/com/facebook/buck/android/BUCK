@@ -40,6 +40,7 @@ java_immutables_library(
 
 RULES_IMMUTABLES = [
   'AbstractAndroidGraphEnhancementResult.java',
+  'AbstractAndroidInstrumentationTestJVMArgs.java',
 ]
 RULES_SRCS = [
   'AaptPackageResources.java',
@@ -135,7 +136,21 @@ java_immutables_library(
     # ApkGenruleDescription extends AbstractGenruleDescription.
     '//src/com/facebook/buck/shell:rules',
   ],
+  resources = [
+    ':ddmlib.jar',
+    ':kxml2.jar',
+  ],
   visibility = ['PUBLIC'],
+)
+
+export_file(
+  name = 'ddmlib.jar',
+  src = '//third-party/java/ddmlib:ddmlib',
+)
+
+export_file(
+  name = 'kxml2.jar',
+  src = '//third-party/java/kxml2:kxml2',
 )
 
 SPLIT_DEX_SRCS = [
@@ -160,7 +175,6 @@ java_library(
 
 HELPERS_SRCS = [
   'AdbHelper.java',
-  'BuckXmlTestRunListener.java',
   'ExopackageInstaller.java',
 ]
 

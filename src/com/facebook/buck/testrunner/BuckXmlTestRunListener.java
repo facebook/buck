@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.testrunner;
 
 import com.android.ddmlib.testrunner.XmlTestRunListener;
 

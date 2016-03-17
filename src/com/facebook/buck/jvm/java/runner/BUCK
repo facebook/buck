@@ -3,6 +3,7 @@ java_library(
   srcs = glob(['*.java']),
   autodeps = False, # DO NOT ADD ANY DEPS.
   visibility = [
+    '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/jvm/java:steps',
     '//src/com/facebook/buck/testrunner:junit',
     '//test/com/facebook/buck/jvm/java:java',

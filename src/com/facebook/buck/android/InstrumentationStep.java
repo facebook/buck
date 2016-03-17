@@ -16,63 +16,36 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
+
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
-import com.android.ddmlib.AdbCommandRejectedException;
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.ShellCommandUnresponsiveException;
-import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+public class InstrumentationStep extends ShellStep {
 
-import java.io.IOException;
-import java.nio.file.Path;
-
-public class InstrumentationStep implements Step {
-
-  private final InstallableApk apk;
-  private final Path directoryForTestResults;
+  private final AndroidInstrumentationTestJVMArgs jvmArgs;
 
   private Optional<Long> testRuleTimeoutMs;
 
   public InstrumentationStep(
-      InstallableApk apk,
-      Path directoryForTestResults,
+      ProjectFilesystem filesystem,
+      AndroidInstrumentationTestJVMArgs jvmArgs,
       Optional<Long> testRuleTimeoutMs) {
-    this.apk = apk;
-    this.directoryForTestResults = directoryForTestResults;
+    super(filesystem.getRootPath());
+    this.jvmArgs = jvmArgs;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
-  public int execute(ExecutionContext context)
-      throws
-      IOException,
-      InterruptedException {
-    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
-    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
+  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    ImmutableList.Builder<String> args = ImmutableList.builder();
+    args.add("java");
 
-    try {
-      AdbHelper adbHelper = AdbHelper.get(context, true);
+    jvmArgs.formatCommandLineArgsToList(args);
 
-      IDevice device = adbHelper.getSingleDevice();
-      RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-          packageName,
-          testRunner,
-          device);
-
-      BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
-      listener.setReportDir(directoryForTestResults.toFile());
-      runner.run(listener);
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    } catch (TimeoutException|AdbCommandRejectedException|ShellCommandUnresponsiveException e) {
-      return 1;
-    }
-    return 0;
+    return args.build();
   }
 
   @Override
@@ -80,33 +53,8 @@ public class InstrumentationStep implements Step {
     return "instrumentation test";
   }
 
+  @Override
   protected Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
   }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
-    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
-
-    StringBuilder builder = new StringBuilder();
-
-    try {
-      AdbHelper adbHelper = AdbHelper.get(context, true);
-      for (IDevice device : adbHelper.getDevices(true)) {
-        if (builder.length() != 0) {
-          builder.append("\n");
-        }
-        builder.append("adb -s ");
-        builder.append(device.getSerialNumber());
-        builder.append(" shell am instrument -w ");
-        builder.append(packageName);
-        builder.append("/");
-        builder.append(testRunner);
-      }
-    } catch (InterruptedException e) {
-    }
-    return builder.toString();
-  }
-
 }

@@ -42,6 +42,18 @@ java_library(
 )
 
 java_library(
+  name = 'instrumentation',
+  srcs = [
+    'BuckXmlTestRunListener.java',
+    'InstrumentationTestRunner.java',
+    'InstrumentationMain.java',
+  ],
+  deps = [
+    '//third-party/java/ddmlib:ddmlib',
+  ],
+)
+
+java_library(
   name = 'testng',
   srcs = [
     'TestNGMain.java',
@@ -58,6 +70,7 @@ java_binary(
   deps = [
     ':testng',
     ':junit',
+    ':instrumentation',
   ],
   visibility = [
     'PUBLIC',

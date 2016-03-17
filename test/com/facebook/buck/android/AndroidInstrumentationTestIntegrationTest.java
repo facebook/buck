@@ -21,11 +21,13 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 
+@Ignore("Disabled due to needed a pre-running emulator")
 public class AndroidInstrumentationTestIntegrationTest {
 
   @Rule

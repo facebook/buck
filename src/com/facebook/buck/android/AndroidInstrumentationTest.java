@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -38,6 +39,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PackagedResource;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -45,13 +47,25 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AndroidInstrumentationTest extends AbstractBuildRule
     implements TestRule {
+
+  private static final String TEST_RESULT_FILE = "test_result.xml";
+
+  // TODO(#9027062): Migrate this to a PackagedResource so we don't make assumptions
+  // about the ant build.
+  private static final Path TESTRUNNER_CLASSES =
+      Paths.get(
+          System.getProperty(
+              "buck.testrunner_classes",
+              new File("build/testrunner/classes").getAbsolutePath()));
 
   @AddToRuleKey
   private ImmutableSet<BuildRule> sourceUnderTest;
@@ -122,19 +136,65 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       steps.add(new ApkInstallStep(
               ((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
-    steps.add(new InstrumentationStep(
-            apk,
-            getProjectFilesystem().resolve(pathToTestOutput),
-            testRuleTimeoutMs));
+
+    AdbHelper adb = AdbHelper.get(executionContext, true);
+    IDevice device;
+    try {
+      device = adb.getSingleDevice();
+    } catch (InterruptedException e) {
+      throw new HumanReadableException("Unable to get connected device.");
+    }
+
+    steps.add(getInstrumentationStep(
+            executionContext.getPathToAdbExecutable(),
+            Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
+            Optional.of(device.getSerialNumber())));
 
     return steps.build();
+  }
+
+  private InstrumentationStep getInstrumentationStep(
+      String pathToAdbExecutable,
+      Optional<Path> directoryForTestResults,
+      Optional<String> deviceSerial) {
+    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
+    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
+
+    String ddmlib = new PathSourcePath(
+        this.getProjectFilesystem(),
+        AndroidInstrumentationTest.class + "/ddmlib.jar",
+        new PackagedResource(
+            this.getProjectFilesystem(),
+            AndroidInstrumentationTest.class,
+            "ddmlib.jar")).getRelativePath().toString();
+
+    String kxml2 = new PathSourcePath(
+        this.getProjectFilesystem(),
+        AndroidInstrumentationTest.class + "/kxml2.jar",
+        new PackagedResource(
+            this.getProjectFilesystem(),
+            AndroidInstrumentationTest.class,
+            "kxml2.jar")).getRelativePath().toString();
+
+    AndroidInstrumentationTestJVMArgs jvmArgs = AndroidInstrumentationTestJVMArgs.builder()
+        .setPathToAdbExecutable(pathToAdbExecutable)
+        .setDeviceSerial(deviceSerial)
+        .setDirectoryForTestResults(directoryForTestResults)
+        .setTestPackage(packageName)
+        .setTestRunner(testRunner)
+        .setTestRunnerClasspath(TESTRUNNER_CLASSES)
+        .setDdmlibJarPath(ddmlib)
+        .setKxmlJarPath(kxml2)
+        .build();
+
+    return new InstrumentationStep(
+        getProjectFilesystem(), jvmArgs, testRuleTimeoutMs);
   }
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext context) {
     Path testResultPath = getProjectFilesystem().resolve(
-        getPathToTestOutputDirectory().resolve(
-            BuckXmlTestRunListener.TEST_RESULT_FILE));
+        getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
     return testResultPath.toFile().exists();
   }
 
@@ -180,8 +240,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
           summaries.add(getTestClassAssumedSummary());
         } else {
           Path testResultPath = getProjectFilesystem().resolve(
-              getPathToTestOutputDirectory().resolve(
-                  BuckXmlTestRunListener.TEST_RESULT_FILE));
+              getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
           summaries.add(
               XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
         }
