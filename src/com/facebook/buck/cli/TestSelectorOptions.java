@@ -38,7 +38,7 @@ public class TestSelectorOptions {
       aliases = {"--filter", "-f"},
       usage =
           "Select tests to run using <class>, #<method> or <class>#<method>.  " +
-          "Selectors are interpreted java.util.regex regular expressions.  " +
+          "Selectors are interpreted as java.util.regex regular expressions.  " +
           "If selectors are given, test result caching is disabled.  " +
           "If the class (or method) part is omitted, all classes (or methods) will match.  " +
           "If both the class and method is omitted (the string '#') then all tests will match.  " +
