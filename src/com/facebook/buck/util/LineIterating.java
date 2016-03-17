@@ -159,18 +159,18 @@ public final class LineIterating {
    * {@link LineIterating#iterateByLines(CharSequence, CharLineHandler)} and
    * {@link LineIterating#iterateByLines(CharBuffer, CharLineHandler)}.
    * <p>
-   * Subclass this and provide a {@link #handleLine(Buffer)} callback
+   * Subclass this and provide a {@link LineHandler#handleLine(Buffer)} callback
    * to receive each line of input.
    * <p>
    * This class is <i>not</i> thread-safe.
    * <p>
-   * The method {@link #handleLine(Buffer)} will be invoked once per line
+   * The method {@link LineHandler#handleLine(Buffer)} will be invoked once per line
    * (not including any end-of-line sequences -- note that this means
    * a line can be empty if there's a sequence of EOLs.)
    * <p>
    * You <i>must</i> call {@link #close()} after the last chunk of input has
    * been provided to this object, at which point the last line (if
-   * any) will be passed back to {@link #handleLine(Buffer)}.
+   * any) will be passed back to {@link LineHandler#handleLine(Buffer)}.
    */
   public abstract static class CharLineHandler extends LineHandler<CharBuffer> {
     public CharLineHandler() {
@@ -187,18 +187,18 @@ public final class LineIterating {
    * {@link LineIterating#iterateByLines(byte[], ByteLineHandler)} and
    * {@link LineIterating#iterateByLines(ByteBuffer, ByteLineHandler)}.
    * <p>
-   * Subclass this and provide a {@link #handleLine(Buffer)} callback
+   * Subclass this and provide a {@link LineHandler#handleLine(Buffer)} callback
    * to receive each line of input.
    * <p>
    * This class is <i>not</i> thread-safe.
    * <p>
-   * The method {@link #handleLine(Buffer)} will be invoked once per line
+   * The method {@link LineHandler#handleLine(Buffer)} will be invoked once per line
    * (not including any end-of-line sequences -- note that this means
    * a line can be empty if there's a sequence of EOLs.)
    * <p>
    * You <i>must</i> call {@link #close()} after the last chunk of input has
    * been provided to this object, at which point the last line (if
-   * any) will be passed back to {@link #handleLine(Buffer)}.
+   * any) will be passed back to {@link LineHandler#handleLine(Buffer)}.
    */
   public abstract static class ByteLineHandler extends LineHandler<ByteBuffer> {
     public ByteLineHandler() {
@@ -212,7 +212,7 @@ public final class LineIterating {
 
   /**
    * Iterates over an input {@link CharSequence string} by lines,
-   * invoking your implementation of {@link CharLineHandler#handleLine(Buffer)}
+   * invoking your implementation of {@link LineHandler#handleLine(Buffer)}
    * once for each line in the input.
    * <p>
    * If your input contains long lines split across multiple strings, you can call this method more
@@ -227,7 +227,7 @@ public final class LineIterating {
 
   /**
    * Iterates over an input {@link CharBuffer} by lines, invoking your implementation of
-   * {@link CharLineHandler#handleLine(Buffer)} once for each line in
+   * {@link LineHandler#handleLine(Buffer)} once for each line in
    * the input.
    * <p>
    * If your input contains long lines split across multiple buffers, you can call this method more
@@ -255,6 +255,7 @@ public final class LineIterating {
    * @param bytes Input byte array containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code bytes}.
    */
+  @SuppressWarnings("javadoc")
   public static void iterateByLines(byte[] bytes, ByteLineHandler lineHandler) {
     iterateBufferByLines(ByteBuffer.wrap(bytes), lineHandler, BYTE_BUFFER_OPERATIONS);
   }
@@ -274,6 +275,7 @@ public final class LineIterating {
    * @param buffer Input byte buffer containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code bytes}.
    */
+  @SuppressWarnings("javadoc")
   public static void iterateByLines(ByteBuffer buffer, ByteLineHandler lineHandler) {
     iterateBufferByLines(buffer, lineHandler, BYTE_BUFFER_OPERATIONS);
   }

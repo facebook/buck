@@ -457,6 +457,7 @@ public class CxxSourceRuleFactoryTest {
 
   @RunWith(Parameterized.class)
   public static class RulesForDifferentSourcesShouldCreateSeaparateTargets {
+    @SuppressWarnings("serial")
     Map<String, String[]> testExampleSourceSets = new HashMap<String, String[]>() {
       {
         put(

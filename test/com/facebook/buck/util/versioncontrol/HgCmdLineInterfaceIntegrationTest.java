@@ -63,7 +63,7 @@ public class HgCmdLineInterfaceIntegrationTest {
    * Test data:
    *
    * The following repo is used in the tests:
-   *
+   * <pre>
    * @  e1b8ef  branch_from_master3
    * |  diverge from master_3 further
    * |
@@ -81,7 +81,7 @@ public class HgCmdLineInterfaceIntegrationTest {
    * |
    * o  f5091a  master1
    * commit1
-   *
+   * </pre>
    * There are two different variants (both stored inside HG_REPOS_ZIP):
    *
    * hg_repo_two: above, current tip @branch_from_master2, and no local changes.
@@ -90,7 +90,7 @@ public class HgCmdLineInterfaceIntegrationTest {
    * Additionally hg_repo_with_subdir is a new hg_repo with a directory called subdir
    *
    */
-
+  @SuppressWarnings("javadoc")
   @ClassRule
   public static TemporaryFolder tempFolder = new TemporaryFolder();
 
