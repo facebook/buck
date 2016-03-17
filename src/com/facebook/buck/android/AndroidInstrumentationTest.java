@@ -24,6 +24,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
@@ -55,7 +57,7 @@ import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AndroidInstrumentationTest extends AbstractBuildRule
-    implements TestRule {
+    implements TestRule, ExternalTestRunnerRule {
 
   private static final String TEST_RESULT_FILE = "test_result.xml";
 
@@ -148,7 +150,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     steps.add(getInstrumentationStep(
             executionContext.getPathToAdbExecutable(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
-            Optional.of(device.getSerialNumber())));
+            Optional.of(device.getSerialNumber()),
+            Optional.<Path>absent(),
+            Optional.<Path>absent()));
 
     return steps.build();
   }
@@ -156,7 +160,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   private InstrumentationStep getInstrumentationStep(
       String pathToAdbExecutable,
       Optional<Path> directoryForTestResults,
-      Optional<String> deviceSerial) {
+      Optional<String> deviceSerial,
+      Optional<Path> instrumentationApkPath,
+      Optional<Path> apkUnderTestPath) {
     String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
     String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
 
@@ -177,9 +183,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
             "kxml2.jar")).getRelativePath().toString();
 
     AndroidInstrumentationTestJVMArgs jvmArgs = AndroidInstrumentationTestJVMArgs.builder()
+        .setApkUnderTestPath(apkUnderTestPath)
         .setPathToAdbExecutable(pathToAdbExecutable)
         .setDeviceSerial(deviceSerial)
         .setDirectoryForTestResults(directoryForTestResults)
+        .setInstrumentationApkPath(instrumentationApkPath)
         .setTestPackage(packageName)
         .setTestRunner(testRunner)
         .setTestRunnerClasspath(TESTRUNNER_CLASSES)
@@ -271,4 +279,31 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     return false;
   }
 
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
+    Optional<Path> apkUnderTestPath = Optional.absent();
+    if (apk instanceof AndroidInstrumentationApk) {
+      apkUnderTestPath = Optional.of(toPath(((AndroidInstrumentationApk) apk).getApkUnderTest()));
+    }
+    InstrumentationStep step = getInstrumentationStep(
+        executionContext.getPathToAdbExecutable(),
+        Optional.<Path>absent(),
+        Optional.<String>absent(),
+        Optional.of(toPath(apk)),
+        apkUnderTestPath);
+
+    return ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget())
+        .setType("android_instrumentation")
+        .setCommand(step.getShellCommandInternal(executionContext))
+        .setLabels(getLabels())
+        .setContacts(getContacts())
+        .build();
+  }
+
+  private static Path toPath(InstallableApk apk) {
+    return apk.getProjectFilesystem().resolve(
+        apk.getApkPath());
+  }
 }

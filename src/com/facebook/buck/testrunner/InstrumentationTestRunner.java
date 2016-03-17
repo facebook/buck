@@ -18,7 +18,6 @@ package com.facebook.buck.testrunner;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.IShellEnabledDevice;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 
 import java.io.File;
@@ -27,30 +26,38 @@ public class InstrumentationTestRunner {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
-  private String adbExecutablePath;
-  private String deviceSerial;
-  private String packageName;
-  private String testRunner;
-  private File outputDirectory;
+  private final String adbExecutablePath;
+  private final String deviceSerial;
+  private final String packageName;
+  private final String testRunner;
+  private final File outputDirectory;
+  @Nullable private final String instrumentationApkPath;
+  @Nullable private final String apkUnderTestPath;
 
   public InstrumentationTestRunner(
       String adbExecutablePath,
       String deviceSerial,
       String packageName,
       String testRunner,
-      File outputDirectory) {
+      File outputDirectory,
+      String instrumentationApkPath,
+      String apkUnderTestPath) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
     this.packageName = packageName;
     this.testRunner = testRunner;
     this.outputDirectory = outputDirectory;
+    this.instrumentationApkPath = instrumentationApkPath;
+    this.apkUnderTestPath = apkUnderTestPath;
   }
 
   public static InstrumentationTestRunner fromArgs(String... args) throws Throwable {
     File outputDirectory = null;
     String adbExecutablePath = null;
+    String apkUnderTestPath = null;
     String packageName = null;
     String testRunner = null;
+    String instrumentationApkPath = null;
 
     for (int i = 0; i < args.length; i++) {
       switch (args[i]) {
@@ -69,6 +76,12 @@ public class InstrumentationTestRunner {
           break;
         case "--adb-executable-path":
           adbExecutablePath = args[++i];
+          break;
+        case "--apk-under-test-path":
+          apkUnderTestPath = args[++i];
+          break;
+        case "--instrumentation-apk-path":
+          instrumentationApkPath = args[++i];
           break;
       }
     }
@@ -100,15 +113,28 @@ public class InstrumentationTestRunner {
     }
 
     return new InstrumentationTestRunner(
-        adbExecutablePath, deviceSerial, packageName, testRunner, outputDirectory);
+        adbExecutablePath,
+        deviceSerial,
+        packageName,
+        testRunner,
+        outputDirectory,
+        instrumentationApkPath,
+        apkUnderTestPath);
   }
 
   public void run() throws Throwable {
-    IShellEnabledDevice device = getDevice(this.deviceSerial);
+    IDevice device = getDevice(this.deviceSerial);
 
     if (device == null) {
       System.err.printf("Unable to get device/emulator with serial %s", this.deviceSerial);
       System.exit(1);
+    }
+
+    if (this.instrumentationApkPath != null) {
+      device.installPackage(this.instrumentationApkPath, true);
+      if (this.apkUnderTestPath != null) {
+        device.installPackage(this.apkUnderTestPath, true);
+      }
     }
 
     RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
@@ -122,7 +148,7 @@ public class InstrumentationTestRunner {
   }
 
   @Nullable
-  private IShellEnabledDevice getDevice(String serial) throws InterruptedException {
+  private IDevice getDevice(String serial) throws InterruptedException {
     AndroidDebugBridge adb = createAdb();
 
     if (adb == null) {

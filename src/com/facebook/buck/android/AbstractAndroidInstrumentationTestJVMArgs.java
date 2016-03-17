@@ -40,6 +40,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   abstract String getDdmlibJarPath();
   abstract String getKxmlJarPath();
   abstract Optional<String> getDeviceSerial();
+  abstract Optional<Path> getInstrumentationApkPath();
+  abstract Optional<Path> getApkUnderTestPath();
 
   /**
    * @return The filesystem path to the compiled Buck test runner classes.
@@ -74,5 +76,14 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
     args.add("--test-package-name", getTestPackage());
     args.add("--test-runner", getTestRunner());
     args.add("--adb-executable-path", getPathToAdbExecutable());
+
+    if (getApkUnderTestPath().isPresent()) {
+      args.add("--apk-under-test-path", getApkUnderTestPath().get().toFile().getAbsolutePath());
+    }
+    if (getInstrumentationApkPath().isPresent()) {
+      args.add(
+          "--instrumentation-apk-path",
+          getInstrumentationApkPath().get().toFile().getAbsolutePath());
+    }
   }
 }
