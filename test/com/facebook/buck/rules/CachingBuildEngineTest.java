@@ -72,7 +72,9 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.concurrent.ListeningSemaphore;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
@@ -227,7 +229,7 @@ public class CachingBuildEngineTest {
 
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -265,7 +267,7 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(11));
+      assertThat(events, Matchers.hasSize(13));
       Iterator<BuckEvent> eventIter = events.iterator();
       assertEquals(
           configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
@@ -334,7 +336,7 @@ public class CachingBuildEngineTest {
 
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              service,
+              toWeighted(service),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -349,9 +351,11 @@ public class CachingBuildEngineTest {
       assertTrue(service.shutdownNow().isEmpty());
 
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(6));
+      assertThat(events, Matchers.hasSize(8));
       assertThat(events, Matchers.<BuckEvent>contains(
           BuildRuleEvent.started(buildRule),
+          BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
+          BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
           BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
           BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
           BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
@@ -418,7 +422,7 @@ public class CachingBuildEngineTest {
       replayAll();
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -498,7 +502,7 @@ public class CachingBuildEngineTest {
       replayAll();
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -553,7 +557,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -631,7 +635,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.DEEP,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -739,7 +743,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -833,7 +837,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -873,7 +877,7 @@ public class CachingBuildEngineTest {
               pathResolver);
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -907,7 +911,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -982,7 +986,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              service,
+              toWeighted(service),
               fileHashCache,
               CachingBuildEngine.BuildMode.DEEP,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1075,7 +1079,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              service,
+              toWeighted(service),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1132,7 +1136,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               new NullFileHashCache(),
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1175,7 +1179,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1234,7 +1238,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1306,7 +1310,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1665,7 +1669,7 @@ public class CachingBuildEngineTest {
     public CachingBuildEngine engineWithDepFileFactory(
         DependencyFileRuleKeyBuilderFactory depFileFactory) {
       return new CachingBuildEngine(
-          MoreExecutors.newDirectExecutorService(),
+          toWeighted(MoreExecutors.newDirectExecutorService()),
           fileHashCache,
           CachingBuildEngine.BuildMode.SHALLOW,
           CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1729,7 +1733,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1828,7 +1832,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -1943,7 +1947,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -2047,7 +2051,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -2111,7 +2115,7 @@ public class CachingBuildEngineTest {
       FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -2162,7 +2166,7 @@ public class CachingBuildEngineTest {
           ruleKeyBuilderFactory);
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -2207,7 +2211,7 @@ public class CachingBuildEngineTest {
           NOOP_RULE_KEY_FACTORY);
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -2256,7 +2260,7 @@ public class CachingBuildEngineTest {
           Paths.get("foo.out"));
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
-              MoreExecutors.newDirectExecutorService(),
+              toWeighted(MoreExecutors.newDirectExecutorService()),
               fileHashCache,
               CachingBuildEngine.BuildMode.SHALLOW,
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
@@ -2597,4 +2601,12 @@ public class CachingBuildEngineTest {
 
     return new DefaultStepRunner(executionContext);
   }
+
+  private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
+    return new WeightedListeningExecutorService(
+        new ListeningSemaphore(Integer.MAX_VALUE),
+        /* defaultPermits */ 1,
+        service);
+  }
+
 }

@@ -46,6 +46,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -71,7 +72,6 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -89,6 +89,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -122,7 +123,7 @@ public class CachingBuildEngine implements BuildEngine {
   @Nullable
   private volatile Throwable firstFailure = null;
 
-  private final ListeningExecutorService service;
+  private final WeightedListeningExecutorService service;
   private final BuildMode buildMode;
   private final DependencySchedulingOrder dependencySchedulingOrder;
   private final DepFiles depFiles;
@@ -132,7 +133,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
 
   public CachingBuildEngine(
-      ListeningExecutorService service,
+      WeightedListeningExecutorService service,
       final FileHashCache fileHashCache,
       BuildMode buildMode,
       DependencySchedulingOrder dependencySchedulingOrder,
@@ -163,7 +164,7 @@ public class CachingBuildEngine implements BuildEngine {
    */
   @VisibleForTesting
   CachingBuildEngine(
-      ListeningExecutorService service,
+      WeightedListeningExecutorService service,
       FileHashCache fileHashCache,
       BuildMode buildMode,
       DependencySchedulingOrder dependencySchedulingOrder,
@@ -455,20 +456,46 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
-            if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE) {
-              // 5. build the rule
-              executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
-              return Futures.immediateFuture(
-                  BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
-            } else {
+            // Cache lookups failed, so if we're just trying to populate, we've failed.
+            if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
               LOG.info("Cannot populate cache for " +
-                      rule.getBuildTarget().getFullyQualifiedName());
-              return Futures.immediateFuture(BuildResult.canceled(rule,
-                      new HumanReadableException("Skipping %s: in cache population mode " +
-                          "local builds are disabled", rule)));
+                  rule.getBuildTarget().getFullyQualifiedName());
+              return Futures.immediateFuture(
+                  BuildResult.canceled(
+                      rule,
+                      new HumanReadableException(
+                          "Skipping %s: in cache population mode local builds are disabled",
+                          rule)));
             }
 
+            // Log to the event bus.
+            context.getEventBus().logVerboseAndPost(
+                LOG,
+                BuildRuleEvent.suspended(
+                    rule,
+                    ruleKeyFactory.defaultRuleKeyBuilderFactory));
 
+            // 5. build the rule.  We re-submit via the service so that we schedule it with the
+            // custom weight assigned to this rules steps.
+            return service.submit(
+                new Callable<BuildResult>() {
+                  @Override
+                  public BuildResult call() throws Exception {
+
+                    // Log to the event bus.
+                    context.getEventBus().logVerboseAndPost(
+                        LOG,
+                        BuildRuleEvent.resumed(
+                            rule,
+                            ruleKeyFactory.defaultRuleKeyBuilderFactory));
+
+                    executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
+                    return BuildResult.success(
+                        rule,
+                        BuildRuleSuccessType.BUILT_LOCALLY,
+                        cacheResult);
+                  }
+                });
           }
         },
         service);

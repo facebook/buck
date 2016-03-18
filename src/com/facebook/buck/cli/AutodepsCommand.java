@@ -40,6 +40,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -74,7 +75,7 @@ public class AutodepsCommand extends AbstractCommand {
         WorkQueueExecutionOrder.FIFO, // FIFO vs. LIFO probably does not matter here?
         concurrencyLimit)) {
       Cell cell = params.getCell();
-      ListeningExecutorService executorService = pool.getExecutor();
+      WeightedListeningExecutorService executorService = pool.getExecutor();
 
       // Ideally, we should be able to construct the TargetGraph quickly assuming most of it is
       // already in memory courtesy of buckd. Though we could make a performance optimization where
@@ -121,7 +122,10 @@ public class AutodepsCommand extends AbstractCommand {
           .setConcurrencyLimit(concurrencyLimit)
           .setEventBus(eventBus)
           .setEnvironment(/* environment */ ImmutableMap.<String, String>of())
-          .setExecutors(ImmutableMap.of(ExecutionContext.ExecutorPool.CPU, executorService))
+          .setExecutors(
+              ImmutableMap.<ExecutionContext.ExecutorPool, ListeningExecutorService>of(
+                  ExecutionContext.ExecutorPool.CPU,
+                  executorService))
           .setJavaPackageFinder(params.getJavaPackageFinder())
           .setObjectMapper(params.getObjectMapper())
           .setPlatform(params.getPlatform())

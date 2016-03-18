@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.util.concurrent.ListeningSemaphore;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.MoreExecutors;
@@ -30,6 +32,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
 
 /**
  * Encapsulates a group of threads which operate a {@link ListeningExecutorService}, providing an
@@ -48,7 +52,7 @@ public class CommandThreadManager implements AutoCloseable {
   // print an error message for.
   private final ThreadGroup threadGroup;
 
-  private final ListeningExecutorService executor;
+  private final WeightedListeningExecutorService executor;
 
   // How long to wait for the executor service to shutdown.
   private final long shutdownTimeout;
@@ -62,21 +66,24 @@ public class CommandThreadManager implements AutoCloseable {
       TimeUnit shutdownTimeoutUnit) {
     this.threadGroup = new ThreadGroup(name);
     this.executor =
-        listeningDecorator(
-            new LimitedThreadPoolExecutor(
-                new ThreadFactoryBuilder()
-                .setNameFormat(name + "-%d")
-                    .setThreadFactory(
-                        new CommandThreadFactory(
-                            new ThreadFactory() {
-                              @Override
-                              public Thread newThread(Runnable r) {
-                                return new Thread(threadGroup, r);
-                              }
-                            }))
-                    .build(),
-                workQueueExecutionOrder.newWorkQueue(),
-                concurrencyLimit));
+        new WeightedListeningExecutorService(
+            new ListeningSemaphore(concurrencyLimit.threadLimit),
+            /* defaultPermits */ 1,
+            listeningDecorator(
+                new LimitedThreadPoolExecutor(
+                    new ThreadFactoryBuilder()
+                        .setNameFormat(name + "-%d")
+                        .setThreadFactory(
+                            new CommandThreadFactory(
+                                new ThreadFactory() {
+                                  @Override
+                                  public Thread newThread(@Nonnull Runnable r) {
+                                    return new Thread(threadGroup, r);
+                                  }
+                                }))
+                        .build(),
+                    workQueueExecutionOrder.newWorkQueue(),
+                    concurrencyLimit)));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
   }
@@ -93,7 +100,7 @@ public class CommandThreadManager implements AutoCloseable {
         DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
   }
 
-  public ListeningExecutorService getExecutor() {
+  public WeightedListeningExecutorService getExecutor() {
     return executor;
   }
 

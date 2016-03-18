@@ -51,6 +51,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
@@ -299,7 +300,7 @@ public class BuildCommand extends AbstractCommand {
 
   protected int run(
       CommandRunnerParams params,
-      ListeningExecutorService executorService,
+      WeightedListeningExecutorService executorService,
       ImmutableSet<String> additionalTargets) throws IOException, InterruptedException {
     if (!additionalTargets.isEmpty()){
       this.arguments.addAll(additionalTargets);
@@ -432,7 +433,7 @@ public class BuildCommand extends AbstractCommand {
   protected int executeLocalBuild(
       CommandRunnerParams params,
       Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver,
-      ListeningExecutorService executor)
+      WeightedListeningExecutorService executor)
       throws IOException, InterruptedException {
 
     ArtifactCache artifactCache = params.getArtifactCache();
