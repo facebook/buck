@@ -116,8 +116,6 @@ abstract class AbstractBuildTarget
    * If this build target is //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
-  @Value.Derived
-  @Value.Auxiliary
   public String getFullyQualifiedName() {
     return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
   }

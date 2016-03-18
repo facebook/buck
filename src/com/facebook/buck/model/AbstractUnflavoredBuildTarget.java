@@ -69,23 +69,26 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   @Value.Parameter
   public abstract String getBaseName();
 
+  @Value.Parameter
+  public abstract String getShortName();
+
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava/".
+   * If this build target is //third_party/java/guava:guava-latest, then this would return
+   * "//third_party/java/guava:guava-latest".
    */
-  @Value.Derived
-  @Value.Auxiliary
-  public String getBaseNameWithSlash() {
-    return getBaseNameWithSlash(getBaseName());
+  public String getFullyQualifiedName() {
+    return (getCell().isPresent() ? "@" + getCell().get() : "") +
+        getBaseName() + ":" + getShortName();
   }
 
   /**
    * Helper function for getting BuildTarget base names with a trailing slash if needed.
    *
-   * If baseName were //third_party/java/guava, then this would return  "//third_party/java/guava/".
-   * If it were //, it would return //.
+   * If this build target were //third_party/java/guava:guava-latest, then this would return
+   * "//third_party/java/guava/".
    */
-  public static String getBaseNameWithSlash(String baseName) {
+  public String getBaseNameWithSlash() {
+    String baseName = getBaseName();
     return baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
   }
 
@@ -94,8 +97,6 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * {@link Path} "third_party/java/guava". This does not contain the "//" prefix so that it can be
    * appended to a file path.
    */
-  @Value.Derived
-  @Value.Auxiliary
   public Path getBasePath() {
     return getCellPath().getFileSystem().getPath(
         getBaseName().substring(BUILD_TARGET_PREFIX.length()));
@@ -106,25 +107,9 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    *     {@link #getBasePath()} returns the empty string, in which case this also returns the empty
    *     string
    */
-  @Value.Derived
-  @Value.Auxiliary
   public String getBasePathWithSlash() {
     String basePath = MorePaths.pathWithUnixSeparators(getBasePath());
     return basePath.isEmpty() ? "" : basePath + "/";
-  }
-
-  @Value.Parameter
-  public abstract String getShortName();
-
-  /**
-   * If this build target is //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava:guava-latest".
-   */
-  @Value.Derived
-  @Value.Auxiliary
-  public String getFullyQualifiedName() {
-    return (getCell().isPresent() ? "@" + getCell().get() : "") +
-        getBaseName() + ":" + getShortName();
   }
 
   public static UnflavoredBuildTarget.Builder builder(UnflavoredBuildTarget buildTarget) {
