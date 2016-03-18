@@ -119,6 +119,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
               if (!(entry.getKey().equals("keychain-access-groups") ||
                   entry.getKey().equals("application-identifier") ||
+                  entry.getKey().equals("com.apple.developer.associated-domains") ||
                   entry.getValue().equals(profileEntitlements.get(entry.getKey())))) {
                 match = false;
                 LOG.debug("Ignoring profile " + profile.getUUID() +
