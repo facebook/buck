@@ -710,6 +710,82 @@ public class ProjectWorkspace {
     }
   }
 
+
+  private void assertFilesEqual(Path expected, Path actual) throws IOException {
+    if (!Files.isRegularFile(actual)) {
+      fail("Expected file " + actual + " could not be found.");
+    }
+
+    String extension = MorePaths.getFileExtension(actual);
+    String cleanPathToObservedFile = MoreStrings.withoutSuffix(
+        templatePath.relativize(expected).toString(), EXPECTED_SUFFIX);
+
+    switch (extension) {
+      // For Apple .plist and .stringsdict files, we define equivalence if:
+      // 1. The two files are the same type (XML or binary)
+      // 2. If binary: unserialized objects are deeply-equivalent.
+      //    Otherwise, fall back to exact string match.
+      case "plist":
+      case "stringsdict":
+        NSObject expectedObject;
+        try {
+          expectedObject = BinaryPropertyListParser.parse(expected.toFile());
+        } catch (Exception e) {
+          // Not binary format.
+          expectedObject = null;
+        }
+
+        NSObject observedObject;
+        try {
+          observedObject = BinaryPropertyListParser.parse(actual.toFile());
+        } catch (Exception e) {
+          // Not binary format.
+          observedObject = null;
+        }
+
+        assertTrue(
+            String.format(
+                "In %s, expected plist to be of %s type.",
+                cleanPathToObservedFile,
+                (expectedObject != null) ? "binary" : "XML"),
+            (expectedObject != null) == (observedObject != null));
+
+        if (expectedObject != null) {
+          // These keys depend on the locally installed version of Xcode, so ignore them
+          // in comparisons.
+          String[] ignoredKeys = {
+              "DTSDKName",
+              "DTPlatformName",
+              "DTPlatformVersion",
+              "MinimumOSVersion",
+              "DTSDKBuild",
+              "DTPlatformBuild"
+          };
+          if (observedObject instanceof NSDictionary &&
+              expectedObject instanceof NSDictionary) {
+            for (String key : ignoredKeys) {
+              ((NSDictionary) observedObject).remove(key);
+              ((NSDictionary) expectedObject).remove(key);
+            }
+          }
+
+          assertEquals(
+              String.format(
+                  "In %s, expected binary plist contents to match.",
+                  cleanPathToObservedFile),
+              expectedObject,
+              observedObject);
+          break;
+        } else {
+          assertFileContentsEqual(expected, actual);
+        }
+        break;
+
+      default:
+        assertFileContentsEqual(expected, actual);
+    }
+  }
+
   private void assertFileContentsEqual(Path expectedFile, Path observedFile) throws IOException {
     String cleanPathToObservedFile = MoreStrings.withoutSuffix(
         templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
@@ -735,106 +811,41 @@ public class ProjectWorkspace {
    * For every file in the template directory whose name ends in {@code .expected}, checks that an
    * equivalent file has been written in the same place under the destination directory.
    *
-   * @param subDirectory An optional subdirectory to check. Only files in this directory will be
-   *                     compared.
+   * @param templateSubdirectory An optional subdirectory to check. Only files in this directory
+   *                     will be compared.
    */
-  public void verify(final Optional<Path> subDirectory) throws IOException {
+  private void assertPathsEqual(final Path templateSubdirectory, final Path destinationSubdirectory)
+      throws IOException {
     SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         String fileName = file.getFileName().toString();
         if (fileName.endsWith(EXPECTED_SUFFIX)) {
           // Get File for the file that should be written, but without the ".expected" suffix.
-          Path generatedFileWithSuffix = destPath.resolve(templatePath.relativize(file));
+          Path generatedFileWithSuffix =
+              destinationSubdirectory.resolve(templateSubdirectory.relativize(file));
           Path directory = generatedFileWithSuffix.getParent();
           Path observedFile = directory.resolve(MorePaths.getNameWithoutExtension(file));
-
-          if (!Files.isRegularFile(observedFile)) {
-            fail("Expected file " + observedFile + " could not be found.");
-          }
-
-          String extension = MorePaths.getFileExtension(observedFile);
-          String cleanPathToObservedFile = MoreStrings.withoutSuffix(
-              templatePath.relativize(file).toString(), EXPECTED_SUFFIX);
-
-          switch (extension) {
-            // For Apple .plist and .stringsdict files, we define equivalence if:
-            // 1. The two files are the same type (XML or binary)
-            // 2. If binary: unserialized objects are deeply-equivalent.
-            //    Otherwise, fall back to exact string match.
-            case "plist":
-            case "stringsdict":
-              NSObject expectedObject;
-              try {
-                expectedObject = BinaryPropertyListParser.parse(file.toFile());
-              } catch (Exception e) {
-                // Not binary format.
-                expectedObject = null;
-              }
-
-              NSObject observedObject;
-              try {
-                observedObject = BinaryPropertyListParser.parse(observedFile.toFile());
-              } catch (Exception e) {
-                // Not binary format.
-                observedObject = null;
-              }
-
-              assertTrue(
-                  String.format(
-                      "In %s, expected plist to be of %s type.",
-                      cleanPathToObservedFile,
-                      (expectedObject != null) ? "binary" : "XML"),
-                  !((expectedObject != null) ^ (observedObject != null)));
-
-              if (expectedObject != null && observedObject != null) {
-                // These keys depend on the locally installed version of Xcode, so ignore them
-                // in comparisons.
-                String[] ignoredKeys = {
-                    "DTSDKName",
-                    "DTPlatformName",
-                    "DTPlatformVersion",
-                    "MinimumOSVersion",
-                    "DTSDKBuild",
-                    "DTPlatformBuild"
-                };
-                if (observedObject instanceof NSDictionary &&
-                    expectedObject instanceof NSDictionary) {
-                  for (String key : ignoredKeys) {
-                    ((NSDictionary) observedObject).remove(key);
-                    ((NSDictionary) expectedObject).remove(key);
-                  }
-                }
-
-                assertEquals(
-                    String.format(
-                        "In %s, expected binary plist contents to match.",
-                        cleanPathToObservedFile),
-                    expectedObject,
-                    observedObject);
-                break;
-              } else {
-                assertFileContentsEqual(file, observedFile);
-              }
-              break;
-
-            default:
-              assertFileContentsEqual(file, observedFile);
-          }
+          assertFilesEqual(file, observedFile);
         }
         return FileVisitResult.CONTINUE;
       }
     };
 
-    Path root = subDirectory.isPresent() ? templatePath.resolve(subDirectory.get()) : templatePath;
-    Files.walkFileTree(root, copyDirVisitor);
+    Files.walkFileTree(templateSubdirectory, copyDirVisitor);
+  }
+
+  public void verify(Path templateSubdirectory, Path destinationSubdirectory) throws IOException {
+    assertPathsEqual(
+        templatePath.resolve(templateSubdirectory),
+        destPath.resolve(destinationSubdirectory));
   }
 
   public void verify() throws IOException {
-    verify(Optional.<Path>absent());
+    assertPathsEqual(templatePath, destPath);
   }
 
-  public void verify(Path subDirectory) throws IOException {
-    verify(Optional.of(subDirectory));
+  public void verify(Path subdirectory) throws IOException {
+    assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory));
   }
 }

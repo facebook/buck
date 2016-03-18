@@ -39,7 +39,7 @@ public final class MoreStrings {
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
 
-  public static final boolean isEmpty(CharSequence sequence) {
+  public static boolean isEmpty(CharSequence sequence) {
     return sequence.length() == 0;
   }
 
