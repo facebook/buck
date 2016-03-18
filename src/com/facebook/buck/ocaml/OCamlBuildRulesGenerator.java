@@ -182,13 +182,15 @@ public class OCamlBuildRulesGenerator {
                               .addAll(
                                   cxxPreprocessorInput.getIncludes().getNameToPathMap().values())
                               .build()))
-                      // Also add in extra deps from the preprocessor input, such as the symlink
-                      // tree rules.
+                  // Also add in extra deps from the preprocessor input, such as the symlink
+                  // tree rules.
                   .addAll(
                       BuildRules.toBuildRulesFor(
                           params.getBuildTarget(),
                           resolver,
                           cxxPreprocessorInput.getRules()))
+                  // Add deps from the C compiler, since we're calling it.
+                  .addAll(cCompiler.getDeps(pathResolver))
                   .addAll(params.getDeclaredDeps().get())
                   .build()),
         /* extraDeps */ params.getExtraDeps());
