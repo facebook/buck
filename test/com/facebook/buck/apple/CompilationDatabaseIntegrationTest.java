@@ -296,7 +296,7 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");
-    commandArgs.add(output + ".dep.tmp");
+    commandArgs.add(tmpRoot.resolve("dep.tmp").toString());
     commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);

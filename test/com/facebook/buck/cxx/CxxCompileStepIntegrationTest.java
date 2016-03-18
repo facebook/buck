@@ -66,6 +66,8 @@ public class CxxCompileStepIntegrationTest {
     Path relativeInput = Paths.get("input.c");
     Path input = filesystem.resolve(relativeInput);
     filesystem.writeContentsToPath("int main() {}", relativeInput);
+    Path scratchDir = filesystem.getRootPath().getFileSystem().getPath("scratchDir");
+    filesystem.mkdirs(scratchDir);
 
     ImmutableList.Builder<String> preprocessorCommand = ImmutableList.builder();
     preprocessorCommand.addAll(compiler);
@@ -81,26 +83,28 @@ public class CxxCompileStepIntegrationTest {
         ImmutableBiMap.<Path, Path>of());
 
     // Build an archive step.
-    CxxPreprocessAndCompileStep step = new CxxPreprocessAndCompileStep(
-        filesystem,
-        CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
-        output,
-        depFile,
-        relativeInput,
-        CxxSource.Type.C,
-        Optional.of(
-            new CxxPreprocessAndCompileStep.ToolCommand(
-                preprocessorCommand.build(),
-                ImmutableMap.<String, String>of(),
-                Optional.<ImmutableList<String>>absent())),
-        Optional.of(
-            new CxxPreprocessAndCompileStep.ToolCommand(
-                compilerCommand.build(),
-                ImmutableMap.<String, String>of(),
-                Optional.<ImmutableList<String>>absent())),
-        ImmutableMap.<Path, Path>of(),
-        sanitizer,
-        Optional.<Function<String, Iterable<String>>>absent());
+    CxxPreprocessAndCompileStep step =
+        new CxxPreprocessAndCompileStep(
+            filesystem,
+            CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
+            output,
+            depFile,
+            relativeInput,
+            CxxSource.Type.C,
+            Optional.of(
+                new CxxPreprocessAndCompileStep.ToolCommand(
+                    preprocessorCommand.build(),
+                    ImmutableMap.<String, String>of(),
+                    Optional.<ImmutableList<String>>absent())),
+            Optional.of(
+                new CxxPreprocessAndCompileStep.ToolCommand(
+                    compilerCommand.build(),
+                    ImmutableMap.<String, String>of(),
+                    Optional.<ImmutableList<String>>absent())),
+            ImmutableMap.<Path, Path>of(),
+            sanitizer,
+            Optional.<Function<String, Iterable<String>>>absent(),
+            scratchDir);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();

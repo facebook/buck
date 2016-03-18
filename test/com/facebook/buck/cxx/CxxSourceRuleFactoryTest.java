@@ -59,6 +59,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
@@ -242,6 +243,7 @@ public class CxxSourceRuleFactoryTest {
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+      Path scratchDir = Paths.get("scratchDir");
 
       CxxSourceRuleFactory.Builder cxxSourceRuleFactoryBuilder = CxxSourceRuleFactory.builder()
           .setParams(params)
@@ -265,7 +267,7 @@ public class CxxSourceRuleFactoryTest {
       // expected compile target.
       CxxPreprocessAndCompile noPicCompile =
           cxxSourceRuleFactoryPDC.requireCompileBuildRule(name, cxxSource);
-      assertFalse(noPicCompile.makeMainStep().getCommand().contains("-fPIC"));
+      assertFalse(noPicCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
           noPicCompile.getBuildTarget());
@@ -274,7 +276,7 @@ public class CxxSourceRuleFactoryTest {
       // expected compile target.
       CxxPreprocessAndCompile picCompile =
           cxxSourceRuleFactoryPIC.requireCompileBuildRule(name, cxxSource);
-      assertTrue(picCompile.makeMainStep().getCommand().contains("-fPIC"));
+      assertTrue(picCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picCompile.getBuildTarget());
@@ -292,7 +294,8 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource,
               CxxPreprocessMode.SEPARATE);
-      assertFalse(noPicPreprocessAndCompile.makeMainStep().getCommand().contains("-fPIC"));
+      assertFalse(
+          noPicPreprocessAndCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
           noPicPreprocessAndCompile.getBuildTarget());
@@ -304,7 +307,7 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource,
               CxxPreprocessMode.SEPARATE);
-      assertTrue(picPreprocessAndCompile.makeMainStep().getCommand().contains("-fPIC"));
+      assertTrue(picPreprocessAndCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picPreprocessAndCompile.getBuildTarget());
@@ -317,6 +320,7 @@ public class CxxSourceRuleFactoryTest {
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+      Path scratchDir = Paths.get("scratchDir");
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
       CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
@@ -347,7 +351,7 @@ public class CxxSourceRuleFactoryTest {
       ImmutableList<String> explicitPrefixHeaderRelatedFlags = ImmutableList.of(
           "-include", filesystem.resolve(prefixHeaderName).toString());
 
-      CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep();
+      CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep(scratchDir);
       assertContains(step.getCommand(), explicitPrefixHeaderRelatedFlags);
     }
 
@@ -663,6 +667,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource.Type sourceType =
           CxxSource.Type.fromExtension(MorePaths.getFileExtension(Paths.get(sourceName))).get();
 
+      Path scratchDir = Paths.get("scratchDir");
       BuckConfig buckConfig = FakeBuckConfig.builder()
           .setSections(
               ImmutableMap.of(
@@ -701,7 +706,7 @@ public class CxxSourceRuleFactoryTest {
       } else {
         rule = cxxSourceRuleFactory.requireCompileBuildRule(sourceName, source);
       }
-      ImmutableList<String> command = rule.makeMainStep().getCommand();
+      ImmutableList<String> command = rule.makeMainStep(scratchDir).getCommand();
       assertContains(command, expectedCompilerFlags);
       assertContains(command, expectedTypeSpecificFlags);
       assertContains(command, asflags);
@@ -735,6 +740,7 @@ public class CxxSourceRuleFactoryTest {
       SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+      Path scratchDir = Paths.get("scratchDir");
       CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
           .setParams(params)
           .setResolver(buildRuleResolver)
@@ -750,7 +756,8 @@ public class CxxSourceRuleFactoryTest {
           ImmutableList.<String>of());
       CxxPreprocessAndCompile cxxCompile =
           cxxSourceRuleFactory.createCompileBuildRule(name, cxxSource);
-      assertThat(cxxCompile.makeMainStep().getCommand(), Matchers.hasItems("-x", expected));
+      assertThat(
+          cxxCompile.makeMainStep(scratchDir).getCommand(), Matchers.hasItems("-x", expected));
     }
   }
 

@@ -72,6 +72,11 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final DebugPathSanitizer sanitizer;
   private final Optional<Function<String, Iterable<String>>> extraLineProcessor;
 
+  /**
+   * Directory to use to store intermediate/temp files used for compilation.
+   */
+  private final Path scratchDir;
+
   public CxxPreprocessAndCompileStep(
       ProjectFilesystem filesystem,
       Operation operation,
@@ -83,7 +88,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       Optional<ToolCommand> compilerCommand,
       ImmutableMap<Path, Path> replacementPaths,
       DebugPathSanitizer sanitizer,
-      Optional<Function<String, Iterable<String>>> extraLineProcessor) {
+      Optional<Function<String, Iterable<String>>> extraLineProcessor,
+      Path scratchDir) {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
@@ -98,6 +104,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
     this.extraLineProcessor = extraLineProcessor;
+    this.scratchDir = scratchDir;
   }
 
   @Override
@@ -146,11 +153,15 @@ public class CxxPreprocessAndCompileStep implements Step {
             sanitizer.getExpandedPath(filesystem.getRootPath().toAbsolutePath()) :
             filesystem.getRootPath().toAbsolutePath().toString());
 
+    // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
+    // intermediate files.
+    builder.environment().put("TMPDIR", filesystem.resolve(scratchDir).toString());
+
     return builder;
   }
 
   private Path getDepTemp() {
-    return depFile.getFileSystem().getPath(depFile + ".tmp");
+    return filesystem.resolve(scratchDir).resolve("dep.tmp");
   }
 
   private ImmutableList<String> getDepFileArgs(Path depFile) {

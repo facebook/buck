@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -172,7 +174,7 @@ public class CxxPreprocessAndCompile
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompileStep makeMainStep() {
+  CxxPreprocessAndCompileStep makeMainStep(Path scratchDir) {
 
     // If we're compiling, this will just be empty.
     ImmutableMap<Path, Path> replacementPaths;
@@ -223,17 +225,20 @@ public class CxxPreprocessAndCompile
         sanitizer,
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getPreprocessorExtraLineProcessor() :
-            Optional.<Function<String, Iterable<String>>>absent());
+            Optional.<Function<String, Iterable<String>>>absent(),
+        scratchDir);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s-tmp");
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        makeMainStep());
+        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
+        makeMainStep(scratchDir));
   }
 
   @VisibleForTesting
@@ -245,7 +250,7 @@ public class CxxPreprocessAndCompile
   public ImmutableList<String> getCommand(
       Optional<CxxPreprocessAndCompile> externalPreprocessRule) {
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      return makeMainStep().getCommand();
+      return makeMainStep(getProjectFilesystem().getRootPath()).getCommand();
     }
 
     CxxPreprocessAndCompile preprocessRule = externalPreprocessRule.or(this);

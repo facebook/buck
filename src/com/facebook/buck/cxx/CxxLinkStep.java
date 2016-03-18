@@ -29,16 +29,22 @@ public class CxxLinkStep extends ShellStep {
   private final ImmutableList<String> linker;
   private final Path argFilePath;
 
+  /**
+   * Directory to use to store intermediate/temp files used for linking.
+   */
+  private final Path scratchDir;
 
   public CxxLinkStep(
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
-      Path argFilePath) {
+      Path argFilePath,
+      Path scratchDir) {
     super(workingDirectory);
     this.environment = environment;
     this.linker = linker;
     this.argFilePath = argFilePath;
+    this.scratchDir = scratchDir;
   }
 
   @Override
@@ -51,7 +57,12 @@ public class CxxLinkStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return environment;
+    return ImmutableMap.<String, String>builder()
+        .putAll(environment)
+        // Set `TMPDIR` to `scratchDir` so that the linker uses it for it's temp and intermediate
+        // files.
+        .put("TMPDIR", scratchDir.toString())
+        .build();
   }
 
   @Override

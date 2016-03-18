@@ -247,7 +247,7 @@ public class CxxCompilationDatabaseTest {
             "-c",
             "-MD",
             "-MF",
-            "test.o.dep.tmp",
+            "/Users/user/src/dep.tmp",
             "test.cpp",
             "-o",
             "test.o"));

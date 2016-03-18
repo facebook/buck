@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class CxxLinkStepTest {
 
   @Test
@@ -37,11 +39,13 @@ public class CxxLinkStepTest {
     ImmutableList<String> linker = ImmutableList.of("linker");
 
     // Create our CxxLinkStep to test.
-    CxxLinkStep cxxLinkStep = new CxxLinkStep(
-        projectFilesystem.getRootPath(),
-        ImmutableMap.<String, String>of(),
-        linker,
-        projectFilesystem.getRootPath().resolve("argfile.txt"));
+    CxxLinkStep cxxLinkStep =
+        new CxxLinkStep(
+            projectFilesystem.getRootPath(),
+            ImmutableMap.<String, String>of(),
+            linker,
+            projectFilesystem.getRootPath().resolve("argfile.txt"),
+            Paths.get("scratchDir"));
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()

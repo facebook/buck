@@ -325,8 +325,8 @@ public class CxxPreprocessAndCompileTest {
         .addRuleFlags("-O3")
         .build();
     Path output = Paths.get("test.o");
-    Path depFile = Paths.get("test.o.dep");
     Path input = Paths.get("test.ii");
+    Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
@@ -346,11 +346,11 @@ public class CxxPreprocessAndCompileTest {
         .add("-c")
         .add("-MD")
         .add("-MF")
-        .add(depFile.toString() + ".tmp")
+        .add(params.getProjectFilesystem().resolve(scratchDir).resolve("dep.tmp").toString())
         .add(input.toString())
         .add("-o", output.toString())
         .build();
-    ImmutableList<String> actualCompileCommand = buildRule.makeMainStep().getCommand();
+    ImmutableList<String> actualCompileCommand = buildRule.makeMainStep(scratchDir).getCommand();
     assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 
@@ -369,9 +369,9 @@ public class CxxPreprocessAndCompileTest {
         .addRuleFlags("-Dfoo=bar")
         .build();
     Path output = Paths.get("test.ii");
-    Path depFile = Paths.get("test.ii.dep");
     Path input = Paths.get("test.cpp");
     Path prefixHeader = Paths.get("prefix.pch");
+    Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.preprocess(
@@ -409,10 +409,10 @@ public class CxxPreprocessAndCompileTest {
         .add("-E")
         .add("-MD")
         .add("-MF")
-        .add(depFile.toString() + ".tmp")
+        .add(filesystem.resolve(scratchDir).resolve("dep.tmp").toString())
         .add(input.toString())
         .build();
-    ImmutableList<String> actualPreprocessCommand = buildRule.makeMainStep().getCommand();
+    ImmutableList<String> actualPreprocessCommand = buildRule.makeMainStep(scratchDir).getCommand();
     assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
   }
 
@@ -491,6 +491,7 @@ public class CxxPreprocessAndCompileTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     Path output = Paths.get("test.o");
     Path input = Paths.get("test.ii");
+    Path scratchDir = Paths.get("scratch");
 
     CompilerDelegate compilerDelegate = new CompilerDelegate(
         pathResolver,
@@ -508,18 +509,22 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_SANITIZER);
 
-    ImmutableList<String> command = buildRule.makeMainStep().makeCompileCommand(
-        input.toString(),
-        "c++",
-        /* preprocessable */ true,
-        /* allowColorsInDiagnostics */ false);
+    ImmutableList<String> command =
+        buildRule.makeMainStep(buildRule.getProjectFilesystem().getRootPath())
+            .makeCompileCommand(
+                input.toString(),
+                "c++",
+                /* preprocessable */ true,
+                /* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
 
-    command = buildRule.makeMainStep().makeCompileCommand(
-        input.toString(),
-        "c++",
-        /* preprocessable */ true,
-        /* allowColorsInDiagnostics */ true);
+    command =
+        buildRule.makeMainStep(scratchDir)
+            .makeCompileCommand(
+                input.toString(),
+                "c++",
+                /* preprocessable */ true,
+                /* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
 
@@ -532,6 +537,7 @@ public class CxxPreprocessAndCompileTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
+    Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.preprocess(
@@ -555,12 +561,14 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_SANITIZER);
 
-    ImmutableList<String> command = buildRule.makeMainStep().makePreprocessCommand(
-        /* allowColorsInDiagnostics */ false);
+    ImmutableList<String> command =
+        buildRule.makeMainStep(scratchDir)
+            .makePreprocessCommand(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
-    command = buildRule.makeMainStep().makePreprocessCommand(
-        /* allowColorsInDiagnostics */ true);
+    command =
+        buildRule.makeMainStep(scratchDir)
+            .makePreprocessCommand(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(PreprocessorWithColorSupport.COLOR_FLAG));
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -108,14 +110,16 @@ public class CxxPrecompiledHeader
   @Override
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-  ImmutableMap<Path, Path> replacementPaths;
+    ImmutableMap<Path, Path> replacementPaths;
     try {
       replacementPaths = preprocessorDelegate.getReplacementPaths();
     } catch (AbstractCxxHeaders.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
+    Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s_tmp");
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new CxxPreprocessAndCompileStep(
             getProjectFilesystem(),
             CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
@@ -137,7 +141,8 @@ public class CxxPrecompiledHeader
             Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
             replacementPaths,
             sanitizer,
-            Optional.<Function<String, Iterable<String>>>absent()));
+            Optional.<Function<String, Iterable<String>>>absent(),
+            scratchDir));
   }
 
   @Override
