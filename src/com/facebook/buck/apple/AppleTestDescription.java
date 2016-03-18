@@ -83,7 +83,7 @@ public class AppleTestDescription implements
    * Flavors for the additional generated build rules.
    */
   private static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
-  private static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
+  public static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
   private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(

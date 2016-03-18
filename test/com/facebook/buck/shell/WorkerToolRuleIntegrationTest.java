@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -25,6 +27,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class WorkerToolRuleIntegrationTest {
 
@@ -51,8 +54,25 @@ public class WorkerToolRuleIntegrationTest {
    * @throws IOException
    */
   @Test
-  public void testGenrulesThatUseWorkerMacros() throws IOException {
-    workspace.runBuckBuild("//:test1", "//:test2", "//:test3").assertSuccess();
-    workspace.verify();
+  public void testGenrulesThatUseWorkerMacros() throws Exception {
+    BuildTarget target1 = workspace.newBuildTarget("//:test1");
+    BuildTarget target2 = workspace.newBuildTarget("//:test2");
+    BuildTarget target3 = workspace.newBuildTarget("//:test3");
+
+    workspace
+        .runBuckBuild(
+            target1.getFullyQualifiedName(),
+            target2.getFullyQualifiedName(),
+            target3.getFullyQualifiedName())
+        .assertSuccess();
+    workspace.verify(
+        Paths.get("test1_output.expected"),
+        BuildTargets.getGenPath(target1, "%s"));
+    workspace.verify(
+        Paths.get("test2_output.expected"),
+        BuildTargets.getGenPath(target2, "%s"));
+    workspace.verify(
+        Paths.get("test3_output.expected"),
+        BuildTargets.getGenPath(target3, "%s"));
   }
 }

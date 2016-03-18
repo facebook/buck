@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -34,6 +36,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class ParserIntegrationTest {
   @Rule
@@ -42,16 +45,20 @@ public class ParserIntegrationTest {
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testParserFilesAreSandboxed() throws IOException {
+  public void testParserFilesAreSandboxed() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "parser_with_method_overrides", temporaryFolder);
     workspace.setUp();
 
+    BuildTarget target = workspace.newBuildTarget("//:base_genrule");
+
     ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand(
-        "build", "//:base_genrule", "-v", "2");
+        "build", "", "-v", "2");
     buildResult.assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("base_genrule_output.expected"),
+        BuildTargets.getGenPath(target, "%s"));
   }
 
   /**

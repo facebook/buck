@@ -152,12 +152,16 @@ public class AppleTestIntegrationTest {
         this, "apple_test_info_plist_substitution", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        buildTarget.getFullyQualifiedName());
-    result.assertSuccess();
-    workspace.verify();
+    BuildTarget target = workspace.newBuildTarget("//:foo#iphonesimulator-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("foo_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .build(),
+            "%s"));
   }
 
   @Test
@@ -168,12 +172,16 @@ public class AppleTestIntegrationTest {
         this, "apple_test_default_platform", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        buildTarget.getFullyQualifiedName());
-    result.assertSuccess();
-    workspace.verify();
+    BuildTarget target = workspace.newBuildTarget("//:foo");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("foo_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .build(),
+            "%s"));
   }
 
   @Test
@@ -184,12 +192,16 @@ public class AppleTestIntegrationTest {
         this, "apple_test_with_deps", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        buildTarget.getFullyQualifiedName());
-    result.assertSuccess();
-    workspace.verify();
+    BuildTarget buildTarget = workspace.newBuildTarget("//:foo");
+    workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("foo_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(buildTarget)
+                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .build(),
+            "%s"));
 
     Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
     BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
@@ -238,12 +250,16 @@ public class AppleTestIntegrationTest {
         this, "apple_test_with_resources", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        buildTarget.getFullyQualifiedName());
-    result.assertSuccess();
-    workspace.verify();
+    BuildTarget target = workspace.newBuildTarget("//:foo#iphonesimulator-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("foo_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .build(),
+            "%s"));
   }
 
   @Test

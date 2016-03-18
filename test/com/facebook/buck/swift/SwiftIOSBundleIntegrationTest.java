@@ -17,13 +17,14 @@
 package com.facebook.buck.swift;
 
 import static org.hamcrest.Matchers.is;
-
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
-
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -32,15 +33,15 @@ import com.facebook.buck.util.BuckConstant;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class SwiftIOSBundleIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void simpleApplicationBundle() throws IOException {
+  public void simpleApplicationBundle() throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
         is(true));
@@ -50,9 +51,16 @@ public class SwiftIOSBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     assertTrue(
         Files.exists(

@@ -24,7 +24,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -97,14 +96,7 @@ public class ApplePackageIntegrationTest {
         "Payload/DemoApp.app/PkgInfo",
         new String(
             Files.readAllBytes(
-                templateDir.resolve(
-                    BuildTargets
-                        .getGenPath(
-                            BuildTarget.builder(appTarget)
-                                .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
-                                .build(),
-                            "%s")
-                        .resolve("DemoApp.app/PkgInfo.expected"))),
+                templateDir.resolve("DemoApp_output.expected/DemoApp.app/PkgInfo.expected")),
             UTF_8));
   }
 

@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AppleBundleIntegrationTest {
 
@@ -75,10 +76,16 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64,no-debug");
+        workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = workspace.getPath(
         BuildTargets
@@ -94,7 +101,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void simpleApplicationBundleWithCodeSigning() throws IOException, InterruptedException {
+  public void simpleApplicationBundleWithCodeSigning() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
@@ -104,10 +111,17 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#iphoneos-arm64,no-debug");
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = workspace.getPath(
         BuildTargets
@@ -160,10 +174,18 @@ public class AppleBundleIntegrationTest {
         "simple_fat_application_bundle_no_debug",
         tmp);
     workspace.setUp();
-    BuildTarget target = BuildTargetFactory.newInstance(
+
+    BuildTarget target = workspace.newBuildTarget(
         "//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-    workspace.verify();
+
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = workspace.getPath(
         BuildTargets
@@ -277,7 +299,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void bundleBinaryHasDsymBundle() throws IOException, InterruptedException {
+  public void bundleBinaryHasDsymBundle() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -286,10 +308,16 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:DemoApp#dwarf-and-dsym,iphonesimulator-x86_64");
+        workspace.newBuildTarget("//:DemoApp#dwarf-and-dsym,iphonesimulator-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path bundlePath = workspace.getPath(
         BuildTargets
@@ -324,7 +352,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appBundleWithResources() throws IOException {
+  public void appBundleWithResources() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -332,9 +360,16 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
   }
 
   @Test
@@ -356,17 +391,24 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void defaultPlatformInBuckConfig() throws IOException {
+  public void defaultPlatformInBuckConfig() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "default_platform_in_buckconfig_app_bundle",
         tmp);
     workspace.setUp();
-    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDebugFormat.NONE.getFlavor())
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = BuildTargets
         .getGenPath(
@@ -380,7 +422,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void defaultPlatformInBuckConfigWithFlavorSpecified() throws IOException {
+  public void defaultPlatformInBuckConfigWithFlavorSpecified() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -388,10 +430,16 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64,no-debug");
+        workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = BuildTargets
         .getGenPath(
@@ -428,7 +476,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void infoPlistSubstitutionsAreApplied() throws IOException {
+  public void infoPlistSubstitutionsAreApplied() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -436,11 +484,16 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = BuildTargets
         .getGenPath(
@@ -493,18 +546,23 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void resourcesAreCompiled() throws IOException {
+  public void resourcesAreCompiled() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "app_bundle_with_xib_and_storyboard",
         tmp);
     workspace.setUp();
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = BuildTargets
         .getGenPath(
@@ -530,7 +588,13 @@ public class AppleBundleIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
 
     Path appPath = workspace.getPath(
         BuildTargets
