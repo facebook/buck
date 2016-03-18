@@ -45,8 +45,10 @@ import javax.annotation.Nullable;
 public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   /**
-   * Used to identify this rule in the graph. This should be appended to build target that is passed
-   * to the constructor when you create instance of this class.
+   * Used to identify this rule in the graph. This should be appended ONLY to build target
+   * that is passed to the CxxStrip constructor when you create instance of this class.
+   * Appending it in other places is does nothing except adds a unnecessary flavor that will skew
+   * output paths of other build rules.
    */
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("stripped");
 
@@ -119,10 +121,22 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     this.output = output;
   }
 
+  public static BuildRuleParams removeStripStyleFlavorInParams(
+      BuildRuleParams params,
+      Optional<StripStyle> flavoredStripStyle) {
+    params = params.withoutFlavor(CxxStrip.RULE_FLAVOR);
+    if (flavoredStripStyle.isPresent()) {
+      params = params.withoutFlavor(flavoredStripStyle.get().getFlavor());
+    }
+    return params;
+  }
+
   public static BuildRuleParams restoreStripStyleFlavorInParams(
       BuildRuleParams params,
       Optional<StripStyle> flavoredStripStyle) {
     if (flavoredStripStyle.isPresent()) {
+      // we should not append CxxStrip.RULE_FLAVOR here because it must be appended
+      // to CxxStrip rule only. Other users of CxxStrip flavors must not append it.
       params = params.withFlavor(flavoredStripStyle.get().getFlavor());
     }
     return params;

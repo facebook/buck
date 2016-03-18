@@ -30,6 +30,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -56,6 +57,14 @@ public class CxxLink
     this.linker = linker;
     this.output = output;
     this.args = args;
+    performChecks(params);
+  }
+
+  private void performChecks(BuildRuleParams params) {
+    Preconditions.checkArgument(
+        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR) ||
+            !CxxStrip.StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        "CxxLink should not be created with CxxStrip flavors");
   }
 
   @Override

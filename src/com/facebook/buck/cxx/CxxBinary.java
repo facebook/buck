@@ -59,18 +59,27 @@ public class CxxBinary
       Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests) {
     super(params, resolver);
-    Preconditions.checkArgument(
-        linkRule instanceof CxxLink || linkRule instanceof CxxStrip,
-        "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip");
-    Preconditions.checkArgument(
-        getDeps().contains(linkRule),
-        "CxxBinary (%s) must depend on its link rule (%s) via deps");
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.linkRule = linkRule;
     this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.frameworks = ImmutableSortedSet.copyOf(frameworks);
+    performChecks(linkRule);
+  }
+
+  private void performChecks(BuildRule linkRule) {
+    Preconditions.checkArgument(
+        linkRule instanceof CxxLink || linkRule instanceof CxxStrip,
+        "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip");
+    Preconditions.checkArgument(
+        getDeps().contains(linkRule),
+        "CxxBinary (%s) must depend on its link rule (%s) via deps");
+    Preconditions.checkArgument(
+        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR),
+        "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise " +
+            "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
+        this, CxxStrip.RULE_FLAVOR, this, linkRule);
   }
 
   @Override

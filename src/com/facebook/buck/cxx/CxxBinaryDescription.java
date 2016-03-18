@@ -105,8 +105,7 @@ public class CxxBinaryDescription implements
     // has the same output regardless if we will strip or not.
     Optional<CxxStrip.StripStyle> flavoredStripStyle =
         CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = params.copyWithBuildTarget(
-        params.getBuildTarget().withoutFlavors(CxxStrip.StripStyle.FLAVOR_DOMAIN.getFlavors()));
+    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.

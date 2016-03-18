@@ -121,9 +121,7 @@ public class HalideLibraryDescription
 
     Optional<CxxStrip.StripStyle> flavoredStripStyle =
         CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    if (flavoredStripStyle.isPresent()) {
-      params = params.withoutFlavor(flavoredStripStyle.get().getFlavor());
-    }
+    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
 
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
         params.getBuildTarget(),

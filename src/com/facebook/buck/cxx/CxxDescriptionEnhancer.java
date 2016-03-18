@@ -762,8 +762,8 @@ public class CxxDescriptionEnhancer {
     BuildRuleParams stripRuleParams = params
         .copyWithChanges(
             BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(stripStyle.get().getFlavor())
                 .addFlavors(CxxStrip.RULE_FLAVOR)
+                .addFlavors(stripStyle.get().getFlavor())
                 .build(),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(cxxLink)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

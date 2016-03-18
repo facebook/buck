@@ -91,12 +91,8 @@ public class CxxTestDescription implements
       final A args) throws NoSuchBuildTargetException {
     Optional<CxxStrip.StripStyle> flavoredStripStyle =
         CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
-    final BuildRuleParams params;
-    if (flavoredStripStyle.isPresent()) {
-      params = inputParams.withoutFlavor(flavoredStripStyle.get().getFlavor());
-    } else {
-      params = inputParams;
-    }
+    final BuildRuleParams params =
+        CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
 
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
