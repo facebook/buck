@@ -136,6 +136,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
@@ -767,6 +769,30 @@ public class ProjectGenerator {
         "REPO_ROOT",
         projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
     defaultSettingsBuilder.put("HALIDE_COMPILER_PATH", compilerPath.toString());
+
+    // pass the source list to the xcode script
+    String halideCompilerSrcs = "";
+    if (targetNode.getConstructorArg().srcs.isPresent()) {
+      Iterable<Path> compilerSrcFiles =
+          Iterables.transform(
+              targetNode.getConstructorArg().srcs.get(),
+              new Function<SourceWithFlags, Path>() {
+                @Nullable
+                @Override
+                public Path apply(@Nullable SourceWithFlags input) {
+                  return sourcePathResolver.apply(input.getSourcePath());
+                }
+              }
+          );
+      halideCompilerSrcs = Joiner.on(" ").join(compilerSrcFiles);
+    }
+    defaultSettingsBuilder.put("HALIDE_COMPILER_SRCS", halideCompilerSrcs);
+    String halideCompilerFlags = "";
+    if (targetNode.getConstructorArg().compilerFlags.isPresent()) {
+      halideCompilerFlags = Joiner.on(" ").join(targetNode.getConstructorArg().compilerFlags.get());
+    }
+    defaultSettingsBuilder.put("HALIDE_COMPILER_FLAGS", halideCompilerFlags);
+
     defaultSettingsBuilder.put("HALIDE_OUTPUT_PATH", outputPath.toString());
     defaultSettingsBuilder.put("HALIDE_FUNC_NAME", buildTarget.getShortName());
     defaultSettingsBuilder.put(PRODUCT_NAME, productName);
