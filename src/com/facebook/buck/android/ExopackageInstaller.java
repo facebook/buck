@@ -100,6 +100,8 @@ public class ExopackageInstaller {
   @VisibleForTesting
   static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
 
+  private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
+
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final AdbHelper adbHelper;
@@ -746,7 +748,7 @@ public class ExopackageInstaller {
 
   @VisibleForTesting
   static Optional<PackageInfo> parsePathAndPackageInfo(String packageName, String rawOutput) {
-    Iterable<String> lines = Splitter.on("\r\n").omitEmptyStrings().split(rawOutput);
+    Iterable<String> lines = Splitter.on(LINE_ENDING).omitEmptyStrings().split(rawOutput);
     Iterator<String> lineIter = lines.iterator();
     String pmPathPrefix = "package:";
 
@@ -853,7 +855,7 @@ public class ExopackageInstaller {
       ImmutableSet<String> requiredHashes,
       ImmutableSet.Builder<String> foundHashes,
       ImmutableSet.Builder<String> toDelete) {
-    for (String line : Splitter.on("\r\n").omitEmptyStrings().split(output)) {
+    for (String line : Splitter.on(LINE_ENDING).omitEmptyStrings().split(output)) {
       if (line.equals("lock")) {
         continue;
       }
