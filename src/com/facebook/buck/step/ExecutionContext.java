@@ -137,9 +137,12 @@ public abstract class ExecutionContext implements Closeable {
    * @return A clone of this {@link ExecutionContext} with {@code stdout} and {@code stderr}
    *    redirected to the provided {@link PrintStream}s.
    */
-  public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
+  public ExecutionContext createSubContext(
+      PrintStream newStdout,
+      PrintStream newStderr,
+      Optional<Verbosity> verbosityOverride) {
     Console console = new Console(
-        this.getConsole().getVerbosity(),
+        verbosityOverride.or(this.getConsole().getVerbosity()),
         newStdout,
         newStderr,
         this.getConsole().getAnsi());

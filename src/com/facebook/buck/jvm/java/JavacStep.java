@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -132,10 +133,15 @@ public class JavacStep implements Step {
 
   private int tryBuildWithFirstOrderDeps(ExecutionContext context, ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
+    Verbosity verbosity =
+        context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
     try (
         CapturingPrintStream stdout = new CapturingPrintStream();
         CapturingPrintStream stderr = new CapturingPrintStream();
-        ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr)) {
+        ExecutionContext firstOrderContext = context.createSubContext(
+            stdout,
+            stderr,
+            Optional.of(verbosity))) {
 
       Javac javac = getJavac();
 
@@ -188,8 +194,10 @@ public class JavacStep implements Step {
           context.postEvent(evt);
         }
 
-        context.getStdOut().print(firstOrderStdout);
-        context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
+        if (!context.getVerbosity().isSilent()) {
+          context.getStdOut().print(firstOrderStdout);
+          context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
+        }
       }
 
       return declaredDepsResult;
