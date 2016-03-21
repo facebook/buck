@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -66,6 +67,7 @@ public class PythonTest
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
+  private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
 
   public PythonTest(
       BuildRuleParams params,
@@ -75,6 +77,7 @@ public class PythonTest
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
+      ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
 
@@ -94,6 +97,7 @@ public class PythonTest
     this.additionalDeps = additionalDeps;
     this.sourceUnderTest = sourceUnderTest;
     this.labels = labels;
+    this.neededCoverage = neededCoverage;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.contacts = contacts;
   }
@@ -227,6 +231,7 @@ public class PythonTest
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("pyunit")
+        .setNeededCoverage(neededCoverage)
         .addAllCommand(binary.getExecutableCommand().getCommandPrefix(getResolver()))
         .putAllEnv(env.get())
         .addAllLabels(getLabels())

@@ -24,6 +24,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -170,7 +172,7 @@ public class PythonTestDescription implements
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      final A args) throws NoSuchBuildTargetException {
+      final A args) throws HumanReadableException, NoSuchBuildTargetException {
 
     PythonPlatform pythonPlatform = pythonPlatforms
         .getValue(params.getBuildTarget())
@@ -300,6 +302,24 @@ public class PythonTestDescription implements
                 args.preloadDeps.get()));
     resolver.addToIndex(binary);
 
+    ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
+        ImmutableList.builder();
+    for (Pair<Float, BuildTarget> coveragePair : args.neededCoverage.get()) {
+        BuildRule buildRule = resolver.getRule(coveragePair.getSecond());
+        if (params.getDeps().contains(buildRule) &&
+                buildRule instanceof PythonLibrary) {
+            PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
+            ImmutableMap<Path, SourcePath> pathToSourcePath = pythonLibrary.getSrcs(pythonPlatform);
+            neededCoverageBuilder.add(
+                    new Pair<Float, ImmutableSet<Path>>(coveragePair.getFirst(),
+                                                        pathToSourcePath.keySet()));
+        } else {
+            throw new HumanReadableException(
+                    "%s: needed_coverage requires a python library dependency. Found %s instead",
+                    params.getBuildTarget(), buildRule);
+        }
+    }
+
     // Supplier which expands macros in the passed in test environment.
     Supplier<ImmutableMap<String, String>> testEnv =
         new Supplier<ImmutableMap<String, String>>() {
@@ -330,6 +350,7 @@ public class PythonTestDescription implements
         ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), binaryParams.getDeps())),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
+        neededCoverageBuilder.build(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.contacts.or(ImmutableSet.<String>of()));
   }
@@ -363,6 +384,7 @@ public class PythonTestDescription implements
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
     public Optional<ImmutableSet<BuildTarget>> preloadDeps;
     public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<ImmutableList<Pair<Float, BuildTarget>>> neededCoverage;
 
     public Optional<ImmutableList<String>> buildArgs;
 

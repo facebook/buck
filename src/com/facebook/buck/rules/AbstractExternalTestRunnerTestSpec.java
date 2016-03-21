@@ -17,19 +17,24 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializable;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.immutables.value.Value;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * A JSON-serializable structure that gets passed to external test runners.
@@ -60,6 +65,12 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
   public abstract ImmutableList<String> getCommand();
 
   /**
+   * @return coverage threshold and list of source path to be passed the test
+   * command for test coverage.
+   */
+  public abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
+
+  /**
    * @return environment variables the external test runner should provide for the test command.
    */
   public abstract ImmutableMap<String, String> getEnv();
@@ -84,6 +95,18 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
     jsonGenerator.writeStringField("type", getType());
     jsonGenerator.writeObjectField("command", getCommand());
     jsonGenerator.writeObjectField("env", getEnv());
+    if (!getNeededCoverage().isEmpty()) {
+        jsonGenerator.writeObjectField(
+                "needed_coverage",
+                Iterables.transform(
+                    getNeededCoverage(),
+                    new Function<Pair<Float, ImmutableSet<Path>>, ImmutableList<?>>() {
+                        @Override
+                        public ImmutableList<?> apply(Pair<Float, ImmutableSet<Path>> input) {
+                            return ImmutableList.of(input.getFirst(), input.getSecond());
+                        }
+                    }));
+    }
     jsonGenerator.writeObjectField(
         "labels",
         FluentIterable.from(getLabels())

@@ -61,6 +61,22 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
+  public void runCoverage() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c", "test.external_runner=" + workspace.getPath("test_runner_coverage.py"),
+            "//:python-coverage");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        Matchers.startsWith("[[0.9"));
+    assertThat(
+        result.getStdout(),
+        Matchers.endsWith(", [u'simple.py']]]\n"));
+  }
+
+  @Test
   public void runFail() throws IOException {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(

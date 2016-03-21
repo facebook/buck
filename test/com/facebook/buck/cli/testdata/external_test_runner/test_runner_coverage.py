@@ -13,8 +13,6 @@ parser.add_option('--buck-test-info')
 (options, args) = parser.parse_args()
 
 
-if options.buck_test_info is not None:
-    with open(options.buck_test_info) as f:
-        test_infos = json.load(f)
-        for info in test_infos:
-            subprocess.call(info['command'])
+with open(options.buck_test_info) as f:
+    test_infos = json.load(f)
+    print(test_infos[0]['needed_coverage'])
