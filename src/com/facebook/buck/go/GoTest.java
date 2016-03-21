@@ -18,6 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,39 +27,46 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
-    ExternalTestRunnerRule {
+    ExternalTestRunnerRule, BinaryBuildRule {
   private static final Pattern TEST_START_PATTERN = Pattern.compile(
       "^=== RUN\\s+(?<name>.*)$");
   private static final Pattern TEST_FINISHED_PATTERN = Pattern.compile(
@@ -73,6 +81,8 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   private final ImmutableSet<String> contacts;
   @AddToRuleKey
   private final boolean runTestsSeparately;
+  @AddToRuleKey
+  private final ImmutableSortedSet<SourcePath> resources;
 
   public GoTest(
       BuildRuleParams buildRuleParams,
@@ -81,13 +91,15 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
-      boolean runTestsSeparately) {
+      boolean runTestsSeparately,
+      ImmutableSortedSet<SourcePath> resources) {
     super(buildRuleParams, resolver);
     this.testMain = testMain;
     this.labels = labels;
     this.contacts = contacts;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestsSeparately = runTestsSeparately;
+    this.resources = resources;
   }
 
   @Override
@@ -114,8 +126,24 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
 
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestWorkingDirectory()),
+        new SymlinkTreeStep(
+            getProjectFilesystem(),
+            getPathToTestWorkingDirectory(),
+            ImmutableMap.copyOf(
+                FluentIterable.from(resources)
+                .transform(new Function<SourcePath, Map.Entry<Path, Path>>() {
+                  @Override
+                  public Map.Entry<Path, Path> apply(SourcePath input) {
+                    return Maps.immutableEntry(
+                        getProjectFilesystem().getRootPath().getFileSystem().getPath(
+                            getResolver().getSourcePathName(getBuildTarget(), input)),
+                        getResolver().getAbsolutePath(input));
+                  }
+                }))),
         new GoTestStep(
             getProjectFilesystem(),
+            getPathToTestWorkingDirectory(),
             args.build(),
             testMain.getExecutableCommand().getEnvironment(getResolver()),
             getPathToTestExitCode(),
@@ -226,7 +254,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
    */
   @Override
   public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return ImmutableSet.<BuildRule>of();
+    return ImmutableSet.of();
   }
 
   @Override
@@ -238,6 +266,10 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
 
   protected Path getPathToTestResults() {
     return getPathToTestOutputDirectory().resolve("results");
+  }
+
+  protected Path getPathToTestWorkingDirectory() {
+    return getPathToTestOutputDirectory().resolve("working_dir");
   }
 
   protected Path getPathToTestExitCode() {
@@ -256,7 +288,10 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
 
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(testMain);
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .add(testMain)
+        .addAll(getResolver().filterBuildRuleInputs(resources))
+        .build();
   }
 
   @Override
@@ -273,4 +308,8 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
         .build();
   }
 
+  @Override
+  public Tool getExecutableCommand() {
+    return testMain.getExecutableCommand();
+  }
 }

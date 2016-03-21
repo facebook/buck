@@ -197,7 +197,8 @@ public class GoTestDescription implements
         args.labels.get(),
         args.contacts.get(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.runTestSeparately.or(false));
+        args.runTestSeparately.or(false),
+        args.resources.get());
   }
 
   private GoBinary createTestMainRule(
@@ -351,5 +352,6 @@ public class GoTestDescription implements
     public Optional<ImmutableSet<Label>> labels;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;
+    public Optional<ImmutableSortedSet<SourcePath>> resources;
   }
 }
