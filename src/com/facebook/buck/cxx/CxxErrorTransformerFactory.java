@@ -84,18 +84,30 @@ class CxxErrorTransformerFactory {
   private static final ImmutableList<Pattern> PATH_PATTERNS =
       ImmutableList.of(
           Pattern.compile(
-              "(?<=^(?:In file included |\\s+)from )" +
-                  "(?<path>[^:]+)" +
-                  "(?=[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
+              "(?<prefix>^(?:In file included |\\s+)from )" +
+              "(?<path>[^:]+)" +
+              "(?<suffix>[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
           Pattern.compile(
-              "^(?<path>[^:]+)(?=:(?:\\d+:(?:\\d+:)?)? )"));
+              "(?<prefix>^(?:\u001B\\[[;\\d]*m)?)" +
+              "(?<path>[^:]+)" +
+              "(?<suffix>:(?:\\d+:(?:\\d+:)?)?)"));
 
   @VisibleForTesting
   String transformLine(String line) {
     for (Pattern pattern : PATH_PATTERNS) {
       Matcher m = pattern.matcher(line);
       if (m.find()) {
-        return m.replaceAll(transformPath(m.group("path")));
+        StringBuilder builder = new StringBuilder();
+        String prefix = m.group("prefix");
+        if (prefix != null) {
+          builder.append(prefix);
+        }
+        builder.append(transformPath(m.group("path")));
+        String suffix = m.group("suffix");
+        if (suffix != null) {
+          builder.append(suffix);
+        }
+        return m.replaceAll(Matcher.quoteReplacement(builder.toString()));
       }
     }
     return line;

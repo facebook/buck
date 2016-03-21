@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.oneOf;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -141,6 +142,23 @@ public class CxxErrorTransformerFactoryTest {
     assertThat(
         transformer.transformLine(String.format("%s:4:2: something bad", originalPath)),
         equalTo(String.format("%s:4:2: something bad", expectedPath)));
+  }
+
+  @Test
+  public void shouldProperlyTransformColoredLinesInErrorMessages() {
+    Ansi ansi = new Ansi(/* isAnsiTerminal */ true);
+    assertThat(
+        transformer.transformLine(
+            String.format("%s something bad", ansi.asErrorText(originalPath + ":"))),
+        equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":"))));
+    assertThat(
+        transformer.transformLine(
+            String.format("%s something bad", ansi.asErrorText(originalPath + ":4:"))),
+        equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":4:"))));
+    assertThat(
+        transformer.transformLine(
+            String.format("%s something bad", ansi.asErrorText(originalPath + ":4:2:"))),
+        equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":4:2:"))));
   }
 
   @Test
