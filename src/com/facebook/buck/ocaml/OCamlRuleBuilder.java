@@ -251,6 +251,12 @@ public class OCamlRuleBuilder {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
     }
+    allDepsBuilder.addAll(
+        pathResolver.filterBuildRuleInputs(
+            ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()));
+    allDepsBuilder.addAll(
+        pathResolver.filterBuildRuleInputs(
+            ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()));
     ImmutableSortedSet<BuildRule> allDeps = allDepsBuilder.build();
 
     BuildTarget buildTarget =
