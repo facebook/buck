@@ -759,7 +759,9 @@ public class ProjectWorkspace {
               "DTPlatformVersion",
               "MinimumOSVersion",
               "DTSDKBuild",
-              "DTPlatformBuild"
+              "DTPlatformBuild",
+              "DTXcode",
+              "DTXcodeBuild"
           };
           if (observedObject instanceof NSDictionary &&
               expectedObject instanceof NSDictionary) {

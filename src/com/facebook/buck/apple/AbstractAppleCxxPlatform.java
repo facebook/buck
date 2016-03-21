@@ -63,4 +63,10 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Optional<Tool> getSwiftStdlibTool();
   public abstract Set<Path> getSwiftRuntimePaths();
   public abstract Set<Path> getSwiftStaticRuntimePaths();
+
+  // Short Xcode version code, e.g. 0721
+  public abstract Optional<String> getXcodeVersion();
+
+  // Xcode build identifier, e.g. 7C1002
+  public abstract Optional<String> getXcodeBuildVersion();
 }

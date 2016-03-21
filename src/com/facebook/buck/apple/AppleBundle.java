@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
@@ -141,6 +142,9 @@ public class AppleBundle
   private final Optional<AppleAssetCatalog> assetCatalog;
 
   private final Optional<String> platformBuildVersion;
+  private final Optional<String> xcodeVersion;
+  private final Optional<String> xcodeBuildVersion;
+
   private final String minOSVersion;
   private final String binaryName;
   private final Path bundleRoot;
@@ -196,6 +200,8 @@ public class AppleBundle
     this.sdkVersion = sdk.getVersion();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
+    this.xcodeBuildVersion = appleCxxPlatform.getXcodeBuildVersion();
+    this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
@@ -542,6 +548,11 @@ public class AppleBundle
     if (platformName.contains("osx")) {
       keys.put("NSHighResolutionCapable", new NSNumber(true));
       keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
+      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("MacOSX")));
+    } else if (platformName.contains("iphoneos")) {
+      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
+    } else if (platformName.contains("iphonesimulator")) {
+      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
     }
 
     keys.put("DTPlatformName", new NSString(platformName));
@@ -551,6 +562,14 @@ public class AppleBundle
     if (platformBuildVersion.isPresent()) {
       keys.put("DTPlatformBuild", new NSString(platformBuildVersion.get()));
       keys.put("DTSDKBuild", new NSString(platformBuildVersion.get()));
+    }
+
+    if (xcodeBuildVersion.isPresent()) {
+      keys.put("DTXcodeBuild", new NSString(xcodeBuildVersion.get()));
+    }
+
+    if (xcodeVersion.isPresent()) {
+      keys.put("DTXcode", new NSString(xcodeVersion.get()));
     }
 
     return keys.build();
