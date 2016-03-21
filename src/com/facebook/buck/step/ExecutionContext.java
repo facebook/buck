@@ -150,7 +150,8 @@ public abstract class ExecutionContext implements Closeable {
     return ImmutableExecutionContext.copyOf(this)
         .withConsole(console)
         .withProcessExecutor(new ProcessExecutor(console))
-        .withClassLoaderCache(getClassLoaderCache().addRef());
+        .withClassLoaderCache(getClassLoaderCache().addRef())
+        .withWorkerProcesses(new ConcurrentHashMap<String, WorkerProcess>());
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
@@ -278,7 +279,6 @@ public abstract class ExecutionContext implements Closeable {
       setConcurrencyLimit(executionContext.getConcurrencyLimit());
       setAdbOptions(executionContext.getAdbOptions());
       setTargetDeviceOptions(executionContext.getTargetDeviceOptions());
-      setWorkerProcesses(executionContext.getWorkerProcesses());
       return this;
     }
 
