@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY eadb686dfef0ecad9821fb802415751d31bbc7d0 #@#
+#@# GENERATED FILE: DO NOT MODIFY c501e1d625bfbe2c4a79bd036c9b57441465645c #@#
 {
   "js" : [
     "//src/com/facebook/buck/android:packageable",
@@ -10,6 +10,7 @@
     "//src/com/facebook/buck/rules:rules",
     "//src/com/facebook/buck/rules/keys:keys",
     "//src/com/facebook/buck/shell:steps",
+    "//src/com/facebook/buck/shell:worker",
     "//src/com/facebook/buck/step:step",
     "//src/com/facebook/buck/step/fs:fs",
     "//src/com/facebook/buck/util:exceptions",

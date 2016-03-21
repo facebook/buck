@@ -40,6 +40,10 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+  private void enablePackagerWorker() throws IOException {
+    workspace.writeContentsToPath("[react-native]\n  use_worker = true\n", ".buckconfig.local");
+  }
+
   @BeforeClass
   public static void setupOnce() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -54,6 +58,16 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testApkContainsJSAssetAndDrawables() throws IOException {
+    runApkContainsJSAssetAndDrawables();
+  }
+
+  @Test
+  public void testApkContainsJSAssetAndDrawablesWithWorker() throws IOException {
+    enablePackagerWorker();
+    runApkContainsJSAssetAndDrawables();
+  }
+
+  private void runApkContainsJSAssetAndDrawables() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
@@ -66,6 +80,16 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testApkContainsJSAssetAndDrawablesForUnbundle() throws IOException {
+    runApkContainsJSAssetAndDrawablesForUnbundle();
+  }
+
+  @Test
+  public void testApkContainsJSAssetAndDrawablesForUnbundleWithWorker() throws IOException {
+    enablePackagerWorker();
+    runApkContainsJSAssetAndDrawablesForUnbundle();
+  }
+
+  private void runApkContainsJSAssetAndDrawablesForUnbundle() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-unbundle");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
@@ -79,6 +103,16 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testAaptPackageDependsOnReactNativeBundle() throws IOException {
+    runAaptPackageDependsOnReactNativeBundle();
+  }
+
+  @Test
+  public void testAaptPackageDependsOnReactNativeBundleWithWorker() throws IOException {
+    enablePackagerWorker();
+    runAaptPackageDependsOnReactNativeBundle();
+  }
+
+  private void runAaptPackageDependsOnReactNativeBundle() throws IOException {
     workspace.enableDirCache();
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-without-rn-res");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
@@ -100,6 +134,16 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testEditingUnusedJSFileDoesNotTriggerRebuild() throws IOException {
+    runEditingUnusedJSFileDoesNotTriggerRebuild();
+  }
+
+  @Test
+  public void testEditingUnusedJSFileDoesNotTriggerRebuildWithWorker() throws IOException {
+    enablePackagerWorker();
+    runEditingUnusedJSFileDoesNotTriggerRebuild();
+  }
+
+  private void runEditingUnusedJSFileDoesNotTriggerRebuild() throws IOException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
 
     workspace.replaceFileContents("js/app/unused.js", "anotherFunction", "someOtherFunction");
@@ -113,6 +157,16 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testEditingUsedJSFileTriggersRebuild() throws IOException {
+    runEditingUsedJSFileTriggersRebuild();
+  }
+
+  @Test
+  public void testEditingUsedJSFileTriggersRebuildWithWorker() throws IOException {
+    enablePackagerWorker();
+    runEditingUsedJSFileTriggersRebuild();
+  }
+
+  private void runEditingUsedJSFileTriggersRebuild() throws IOException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
 
     workspace.replaceFileContents("js/app/helpers.js", "something", "nothing");
@@ -126,6 +180,16 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   @Test
   public void testEditingImageRebuildsAndroidResource() throws IOException {
+    runEditingImageRebuildsAndroidResource();
+  }
+
+  @Test
+  public void testEditingImageRebuildsAndroidResourceWithWorker() throws IOException {
+    enablePackagerWorker();
+    runEditingImageRebuildsAndroidResource();
+  }
+
+  private void runEditingImageRebuildsAndroidResource() throws IOException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
 
     workspace.copyFile("js/app/image@1.5x.png", "js/app/image@2x.png");

@@ -28,3 +28,11 @@ sh_binary(
     'PUBLIC',
   ],
 )
+
+sh_binary(
+  name = 'packager_worker',
+  main = 'packager_worker.sh',
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -68,6 +68,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @AddToRuleKey
   private final Optional<String> packagerFlags;
 
+  @AddToRuleKey
+  private final boolean useWorker;
+
   private final ReactNativeDeps depsFinder;
   private final Path jsOutputDir;
   private final Path resource;
@@ -82,7 +85,8 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       Optional<String> packagerFlags,
       SourcePath jsPackager,
       ReactNativePlatform platform,
-      ReactNativeDeps depsFinder) {
+      ReactNativeDeps depsFinder,
+      boolean useWorker) {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
     this.isUnbundle = isUnbundle;
@@ -95,6 +99,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     BuildTarget buildTarget = ruleParams.getBuildTarget();
     this.jsOutputDir = getPathToJSBundleDir(buildTarget);
     this.resource = getPathToResources(buildTarget);
+    this.useWorker = useWorker;
   }
 
   @Override
@@ -108,31 +113,64 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     final Path sourceMapOutput = getPathToSourceMap(getBuildTarget());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutput.getParent()));
 
-    steps.add(
-        new ShellStep(getProjectFilesystem().getRootPath()) {
-          @Override
-          public String getShortName() {
-            return "bundle_react_native";
-          }
+    if (useWorker) {
+      appendWorkerSteps(steps, jsOutput, sourceMapOutput);
+    } else {
+      appendShellSteps(steps, jsOutput, sourceMapOutput);
+    }
 
-          @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-            return getBundleScript(
-                getResolver().getAbsolutePath(jsPackager),
-                getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
-                platform,
-                isUnbundle,
-                isDevMode,
-                packagerFlags,
-                getProjectFilesystem().resolve(jsOutput).toString(),
-                getProjectFilesystem().resolve(resource).toString(),
-                getProjectFilesystem().resolve(sourceMapOutput).toString());
-          }
-        });
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
     buildableContext.recordArtifact(sourceMapOutput.getParent());
     return steps.build();
+  }
+
+  private void appendWorkerSteps(
+      ImmutableList.Builder<Step> stepBuilder,
+      Path outputFile,
+      Path sourceMapOutput) {
+    final Path tmpDir = BuildTargets.getScratchPath(getBuildTarget(), "%s__tmp");
+    stepBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDir));
+    ReactNativeBundleWorkerStep workerStep = new ReactNativeBundleWorkerStep(
+        getProjectFilesystem(),
+        tmpDir,
+        getResolver().getAbsolutePath(jsPackager),
+        packagerFlags,
+        platform,
+        isUnbundle,
+        getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+        isDevMode,
+        getProjectFilesystem().resolve(outputFile),
+        getProjectFilesystem().resolve(resource),
+        getProjectFilesystem().resolve(sourceMapOutput));
+    stepBuilder.add(workerStep);
+  }
+
+  private void appendShellSteps(
+      ImmutableList.Builder<Step> stepBuilder,
+      final Path outputFile,
+      final Path sourceMapOutput) {
+    ShellStep shellStep = new ShellStep(getProjectFilesystem().getRootPath()) {
+      @Override
+      public String getShortName() {
+        return "bundle_react_native";
+      }
+
+      @Override
+      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+        return getBundleScript(
+            getResolver().getAbsolutePath(jsPackager),
+            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+            platform,
+            isUnbundle,
+            isDevMode,
+            packagerFlags,
+            getProjectFilesystem().resolve(outputFile).toString(),
+            getProjectFilesystem().resolve(resource).toString(),
+            getProjectFilesystem().resolve(sourceMapOutput).toString());
+      }
+    };
+    stepBuilder.add(shellStep);
   }
 
   public SourcePath getJSBundleDir() {

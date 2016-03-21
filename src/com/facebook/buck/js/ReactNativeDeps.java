@@ -72,6 +72,9 @@ public class ReactNativeDeps extends AbstractBuildRule
   @AddToRuleKey
   private final SourcePath jsPackager;
 
+  @AddToRuleKey
+  private final boolean useWorker;
+
   private final Path outputDir;
   private final Path inputsHashFile;
 
@@ -84,7 +87,8 @@ public class ReactNativeDeps extends AbstractBuildRule
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath entryPath,
       ReactNativePlatform platform,
-      Optional<String> packagerFlags) {
+      Optional<String> packagerFlags,
+      boolean useWorker) {
     super(ruleParams, resolver);
     this.jsPackager = jsPackager;
     this.srcs = srcs;
@@ -94,6 +98,7 @@ public class ReactNativeDeps extends AbstractBuildRule
     this.outputDir = BuildTargets.getGenPath(getBuildTarget(), "%s");
     this.inputsHashFile = outputDir.resolve("inputs_hash.txt");
     this.outputInitializer = new BuildOutputInitializer<>(ruleParams.getBuildTarget(), this);
+    this.useWorker = useWorker;
   }
 
   @Override
@@ -105,32 +110,11 @@ public class ReactNativeDeps extends AbstractBuildRule
     final Path output = BuildTargets.getScratchPath(getBuildTarget(), "__%s/deps.txt");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
 
-    steps.add(new ShellStep(getProjectFilesystem().getRootPath()) {
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-        builder.add(
-          getResolver().getAbsolutePath(jsPackager).toString(),
-          "list-dependencies",
-          platform.toString(),
-          getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)).toString(),
-          "--output",
-          getProjectFilesystem().resolve(output).toString()
-        );
-
-        if (packagerFlags.isPresent()) {
-          builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
-        }
-
-        return builder.build();
-      }
-
-      @Override
-      public String getShortName() {
-        return "react-native-deps";
-      }
-    });
+    if (useWorker) {
+      appendWorkerSteps(steps, output);
+    } else {
+      appendShellSteps(steps, output);
+    }
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
 
@@ -179,6 +163,49 @@ public class ReactNativeDeps extends AbstractBuildRule
     });
 
     return steps.build();
+  }
+
+  private void appendWorkerSteps(ImmutableList.Builder<Step> stepBuilder, Path outputFile) {
+    final Path tmpDir = BuildTargets.getScratchPath(getBuildTarget(), "%s__tmp");
+    stepBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDir));
+    ReactNativeDepsWorkerStep workerStep = new ReactNativeDepsWorkerStep(
+        getProjectFilesystem(),
+        tmpDir,
+        getResolver().getAbsolutePath(jsPackager),
+        packagerFlags,
+        platform,
+        getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+        getProjectFilesystem().resolve(outputFile));
+    stepBuilder.add(workerStep);
+  }
+
+  private void appendShellSteps(ImmutableList.Builder<Step> stepBuilder, final Path outputFile) {
+    ShellStep shellStep = new ShellStep(getProjectFilesystem().getRootPath()) {
+      @Override
+      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        builder.add(
+            getResolver().getAbsolutePath(jsPackager).toString(),
+            "list-dependencies",
+            platform.toString(),
+            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)).toString(),
+            "--output",
+            getProjectFilesystem().resolve(outputFile).toString());
+
+        if (packagerFlags.isPresent()) {
+          builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
+        }
+
+        return builder.build();
+      }
+
+      @Override
+      public String getShortName() {
+        return "react-native-deps";
+      }
+    };
+    stepBuilder.add(shellStep);
   }
 
   @Override
