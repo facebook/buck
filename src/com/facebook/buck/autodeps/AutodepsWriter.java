@@ -16,6 +16,7 @@
 
 package com.facebook.buck.autodeps;
 
+import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.model.BuildTarget;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -165,16 +166,19 @@ public class AutodepsWriter {
             .resolve(buildFileWithDeps.getBasePath())
             .resolve(autodepsFileName);
 
-        SortedMap<String, Object> deps = new TreeMap<>();
+        SortedMap<String, SortedMap<String, Iterable<String>>> depsForBuildFile = new TreeMap<>();
         for (DepsForBuildFiles.DepsForRule depsForRule : buildFileWithDeps) {
-          Iterable<BuildTarget> depsAsBuildTargets = depsForRule;
-          List<String> depsAsStrings = FluentIterable.from(depsAsBuildTargets)
-              .transform(Functions.toStringFunction())
-              .toList();
-          deps.put(depsForRule.getShortName(), depsAsStrings);
+          SortedMap<String, Iterable<String>> deps = new TreeMap<>();
+          for (DependencyType type : DependencyType.values()) {
+            Iterable<BuildTarget> depsAsBuildTargets = depsForRule.depsForDependencyType(type);
+            Iterable<String> depsAsStrings = FluentIterable.from(depsAsBuildTargets)
+                .transform(Functions.toStringFunction());
+            deps.put(type.name().toLowerCase(), depsAsStrings);
+          }
+          depsForBuildFile.put(depsForRule.getShortName(), deps);
         }
 
-        if (writeSignedFile(deps, generatedFile, mapper)) {
+        if (writeSignedFile(depsForBuildFile, generatedFile, mapper)) {
           numWritten++;
         }
       }
@@ -191,7 +195,7 @@ public class AutodepsWriter {
    * @return whether the file was written
    */
   private static boolean writeSignedFile(
-      SortedMap<String, Object> deps,
+      SortedMap<String, SortedMap<String, Iterable<String>>> deps,
       Path generatedFile,
       ObjectMapper mapper) throws IOException {
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();

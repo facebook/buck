@@ -18,20 +18,22 @@ package com.facebook.buck.autodeps;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.SortedSetMultimap;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.SortedSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
- * Glorified typedef for Map<Path, Map<String, Set<BuildTarget>>>.
+ * Glorified typedef for Map<Path, Map<String, EnumMap<DependencyType, SortedSet<BuildTarget>>>>.
  * <p>
  * Note that this class is not thread-safe. Currently, it is only used from a single thread. Rather
  * that introduce synchronization to make it multi-threaded in the future, we should create one
@@ -42,13 +44,18 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public class DepsForBuildFiles implements Iterable<DepsForBuildFiles.BuildFileWithDeps> {
 
+  public static enum DependencyType {
+    DEPS,
+    EXPORTED_DEPS,
+  }
+
   private Map<Path, BuildFileWithDeps> buildFileToDeps;
 
   public DepsForBuildFiles() {
     this.buildFileToDeps = new HashMap<>();
   }
 
-  public void addDep(BuildTarget rule, BuildTarget dependency) {
+  public void addDep(BuildTarget rule, BuildTarget dependency, DependencyType type) {
     if (rule.equals(dependency)) {
       return;
     }
@@ -60,7 +67,7 @@ public class DepsForBuildFiles implements Iterable<DepsForBuildFiles.BuildFileWi
       buildFileToDeps.put(directory, buildFileWithDeps);
     }
 
-    buildFileWithDeps.addDep(rule.getShortName(), dependency);
+    buildFileWithDeps.addDep(rule.getShortName(), dependency, type);
   }
 
   @Override
@@ -72,16 +79,24 @@ public class DepsForBuildFiles implements Iterable<DepsForBuildFiles.BuildFileWi
 
     private final Path cellPath;
     private final Path basePath;
-    private final SortedSetMultimap<String, BuildTarget> depsForShortName;
+    private final Map<String, EnumMap<DependencyType, Set<BuildTarget>>> deps;
 
     public BuildFileWithDeps(Path cellPath, Path basePath) {
       this.cellPath = cellPath;
       this.basePath = basePath;
-      this.depsForShortName = TreeMultimap.create();
+      this.deps = new HashMap<>();
     }
 
-    private void addDep(String shortName, BuildTarget dep) {
-      depsForShortName.put(shortName, dep);
+    private void addDep(String shortName, BuildTarget dep, DependencyType type) {
+      EnumMap<DependencyType, Set<BuildTarget>> map = deps.get(shortName);
+      if (map == null) {
+        map = new EnumMap<>(DependencyType.class);
+        for (DependencyType enumValue : DependencyType.values()) {
+          map.put(enumValue, new TreeSet<BuildTarget>());
+        }
+        deps.put(shortName, map);
+      }
+      map.get(type).add(dep);
     }
 
     public Path getCellPath() {
@@ -97,23 +112,28 @@ public class DepsForBuildFiles implements Iterable<DepsForBuildFiles.BuildFileWi
      */
     @Override
     public Iterator<DepsForRule> iterator() {
-      return Iterators.transform(depsForShortName.keySet().iterator(),
-          new Function<String, DepsForRule>() {
+      return Iterators.transform(deps.entrySet().iterator(),
+          new Function<Map.Entry<String,
+                                 EnumMap<DependencyType, Set<BuildTarget>>>, DepsForRule>() {
         @Override
-        public DepsForRule apply(String shortName) {
-          return new DepsForRule(shortName, depsForShortName.get(shortName));
+        public DepsForRule apply(
+            Map.Entry<String, EnumMap<DependencyType, Set<BuildTarget>>> entry) {
+          return new DepsForRule(entry.getKey(), entry.getValue());
         }
       });
     }
   }
 
-  public static class DepsForRule implements Iterable<BuildTarget> {
+  public static class DepsForRule {
     private final String shortName;
-    private final SortedSet<BuildTarget> deps;
+    private final ImmutableSortedSet<BuildTarget> requiredDeps;
+    private final ImmutableSortedSet<BuildTarget> exportedDeps;
 
-    private DepsForRule(String shortName, SortedSet<BuildTarget> deps) {
+    private DepsForRule(String shortName, EnumMap<DependencyType, Set<BuildTarget>> deps) {
       this.shortName = shortName;
-      this.deps = deps;
+      this.exportedDeps = ImmutableSortedSet.copyOf(deps.get(DependencyType.EXPORTED_DEPS));
+      this.requiredDeps = ImmutableSortedSet.copyOf(
+          Sets.difference(deps.get(DependencyType.DEPS), exportedDeps));
     }
 
     public String getShortName() {
@@ -124,9 +144,15 @@ public class DepsForBuildFiles implements Iterable<DepsForBuildFiles.BuildFileWi
      * The elements will be enumerated by the {@link Iterator} in lexicographical order and will not
      * contain duplicates.
      */
-    @Override
-    public Iterator<BuildTarget> iterator() {
-      return deps.iterator();
+    public Iterable<BuildTarget> depsForDependencyType(DependencyType type) {
+      switch (type) {
+      case DEPS:
+        return requiredDeps;
+      case EXPORTED_DEPS:
+        return exportedDeps;
+      default:
+        throw new IllegalArgumentException("Unrecognized type: " + type);
+      }
     }
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.autodeps.DepsForBuildFiles;
+import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -165,6 +166,7 @@ public class JavaDepsFinder {
     // * The auto-generated deps provided by this class.
     // * The exported_deps of one of the above.
     final HashMultimap<BuildTarget, String> ruleToRequiredSymbols = HashMultimap.create();
+    final HashMultimap<BuildTarget, String> ruleToExportedSymbols = HashMultimap.create();
 
     final HashMultimap<String, BuildTarget> symbolToProviders = HashMultimap.create();
 
@@ -221,9 +223,7 @@ public class JavaDepsFinder {
         Symbols symbols = getJavaFileFeatures(node, autodeps);
         if (autodeps) {
           ruleToRequiredSymbols.putAll(buildTarget, symbols.required);
-          // TODO(bolinfest): In a follow-up diff, required and exported symbols will be reported
-          // separately.
-          ruleToRequiredSymbols.putAll(buildTarget, symbols.exported);
+          ruleToExportedSymbols.putAll(buildTarget, symbols.exported);
         }
         for (String providedEntity : symbols.provided) {
           symbolToProviders.put(providedEntity, buildTarget);
@@ -248,67 +248,96 @@ public class JavaDepsFinder {
               return node.isVisibleTo(buildTarget) && !providedDeps.contains(provider);
             }
           };
+      final boolean isJavaTestRule = graph.get(buildTarget).getType() == JavaTestDescription.TYPE;
 
-      for (String requiredSymbol : ruleToRequiredSymbols.get(buildTarget)) {
-        BuildTarget provider = findProviderForSymbolFromBuckConfig(requiredSymbol);
-        if (provider != null) {
-          depsForBuildFiles.addDep(buildTarget, provider);
-          continue;
+      for (DependencyType type : DependencyType.values()) {
+        HashMultimap<BuildTarget, String> ruleToSymbolsMap;
+        switch (type) {
+        case DEPS:
+          ruleToSymbolsMap = ruleToRequiredSymbols;
+          break;
+        case EXPORTED_DEPS:
+          ruleToSymbolsMap = ruleToExportedSymbols;
+          break;
+        default:
+          throw new IllegalStateException("Unrecognized type: " + type);
         }
 
-        Set<BuildTarget> providers = symbolToProviders.get(requiredSymbol);
-        SortedSet<BuildTarget> candidateProviders = FluentIterable.from(providers)
-            .filter(isVisibleDepNotAlreadyInProvidedDeps)
-            .toSortedSet(Ordering.<BuildTarget>natural());
-
-        int numCandidates = candidateProviders.size();
-        if (numCandidates == 1) {
-          depsForBuildFiles.addDep(buildTarget, Iterables.getOnlyElement(candidateProviders));
-        } else if (numCandidates > 1) {
-          // Warn the user that there is an ambiguity. This could be very common with macros that
-          // generate multiple versions of a java_library() with the same sources.
-          // If numProviders is 0, then hopefully the dep is provided by something the user
-          // hardcoded in the BUCK file.
-          console.printErrorText(String.format(
-              "WARNING: Multiple providers for %s: %s. " +
-                  "Consider adding entry to .buckconfig to eliminate ambiguity:\n" +
-                  "[autodeps]\n" +
-                  "java-package-mappings = %s => %s",
-              requiredSymbol,
-              Joiner.on(", ").join(candidateProviders),
-              requiredSymbol,
-              Iterables.getFirst(candidateProviders, null)));
+        final DependencyType typeOfDepToAdd;
+        if (isJavaTestRule) {
+          // java_test rules do not honor exported_deps: add all dependencies to the ordinary deps.
+          typeOfDepToAdd = DependencyType.DEPS;
         } else {
-          // If there aren't any candidates, then see if there is a visible rule that can provide
-          // the symbol via its exported_deps. We make this a secondary check because we prefer to
-          // depend on the rule that defines the symbol directly rather than one of possibly many
-          // rules that provides it via its exported_deps.
-          SortedSet<BuildTarget> newCandidates = new TreeSet<>();
-          for (BuildTarget candidate : providers) {
-            Set<BuildTarget> rulesThatExportCandidate = ruleToRulesThatExportIt.get(candidate);
-            for (BuildTarget ruleThatExportsCandidate : rulesThatExportCandidate) {
-              TargetNode<?> node = graph.get(ruleThatExportsCandidate);
-              if (node.isVisibleTo(buildTarget)) {
-                newCandidates.add(ruleThatExportsCandidate);
+          typeOfDepToAdd = type;
+        }
+
+        for (String requiredSymbol : ruleToSymbolsMap.get(buildTarget)) {
+          BuildTarget provider = findProviderForSymbolFromBuckConfig(requiredSymbol);
+          if (provider != null) {
+            depsForBuildFiles.addDep(buildTarget, provider, typeOfDepToAdd);
+            continue;
+          }
+
+          Set<BuildTarget> providers = symbolToProviders.get(requiredSymbol);
+          SortedSet<BuildTarget> candidateProviders = FluentIterable.from(providers)
+              .filter(isVisibleDepNotAlreadyInProvidedDeps)
+              .toSortedSet(Ordering.<BuildTarget>natural());
+
+          int numCandidates = candidateProviders.size();
+          if (numCandidates == 1) {
+            depsForBuildFiles.addDep(
+                buildTarget,
+                Iterables.getOnlyElement(candidateProviders),
+                typeOfDepToAdd);
+          } else if (numCandidates > 1) {
+            // Warn the user that there is an ambiguity. This could be very common with macros that
+            // generate multiple versions of a java_library() with the same sources.
+            // If numProviders is 0, then hopefully the dep is provided by something the user
+            // hardcoded in the BUCK file.
+            console.printErrorText(String.format(
+                "WARNING: Multiple providers for %s: %s. " +
+                    "Consider adding entry to .buckconfig to eliminate ambiguity:\n" +
+                    "[autodeps]\n" +
+                    "java-package-mappings = %s => %s",
+                requiredSymbol,
+                Joiner.on(", ").join(candidateProviders),
+                requiredSymbol,
+                Iterables.getFirst(candidateProviders, null)));
+          } else {
+            // If there aren't any candidates, then see if there is a visible rule that can provide
+            // the symbol via its exported_deps. We make this a secondary check because we prefer to
+            // depend on the rule that defines the symbol directly rather than one of possibly many
+            // rules that provides it via its exported_deps.
+            SortedSet<BuildTarget> newCandidates = new TreeSet<>();
+            for (BuildTarget candidate : providers) {
+              Set<BuildTarget> rulesThatExportCandidate = ruleToRulesThatExportIt.get(candidate);
+              for (BuildTarget ruleThatExportsCandidate : rulesThatExportCandidate) {
+                TargetNode<?> node = graph.get(ruleThatExportsCandidate);
+                if (node.isVisibleTo(buildTarget)) {
+                  newCandidates.add(ruleThatExportsCandidate);
+                }
               }
             }
-          }
 
-          int numNewCandidates = newCandidates.size();
-          if (numNewCandidates == 1) {
-            depsForBuildFiles.addDep(buildTarget, Iterables.getOnlyElement(newCandidates));
-          } else if (numNewCandidates > 1) {
-            console.printErrorText(String.format(
-                "WARNING: No providers found for '%s' for build rule %s, " +
-                    "but there are multiple rules that export a rule to provide %s: %s",
-                requiredSymbol,
-                buildTarget,
-                requiredSymbol,
-                Joiner.on(", ").join(newCandidates)
-            ));
+            int numNewCandidates = newCandidates.size();
+            if (numNewCandidates == 1) {
+              depsForBuildFiles.addDep(
+                  buildTarget,
+                  Iterables.getOnlyElement(newCandidates),
+                  typeOfDepToAdd);
+            } else if (numNewCandidates > 1) {
+              console.printErrorText(String.format(
+                  "WARNING: No providers found for '%s' for build rule %s, " +
+                      "but there are multiple rules that export a rule to provide %s: %s",
+                  requiredSymbol,
+                  buildTarget,
+                  requiredSymbol,
+                  Joiner.on(", ").join(newCandidates)
+              ));
+            }
+            // In the case that numNewCandidates is 0, we assume that the user is taking
+            // responsibility for declaring a provider for the symbol by hardcoding it in the deps.
           }
-          // In the case that numNewCandidates is 0, we assume that the user is taking
-          // responsibility for declaring a provider for the symbol by hardcoding it in the deps.
         }
       }
     }

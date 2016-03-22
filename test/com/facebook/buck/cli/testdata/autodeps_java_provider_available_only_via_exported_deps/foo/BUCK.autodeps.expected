@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY d37a6d5a27cd3db551cb0c1d75be6b7abc36c77c #@#
+#@# GENERATED FILE: DO NOT MODIFY a3eace79ab821e341043e59dd65e2559ffa39986 #@#
 {
-  "foo" : [
-    "//bar:public_bar"
-  ]
+  "foo" : {
+    "deps" : [
+      "//bar:public_bar"
+    ],
+    "exported_deps" : [ ]
+  }
 }

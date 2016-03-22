@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY e6f9b7c94138b90f2e18c1bd85dd49fc46d0cb0c #@#
+#@# GENERATED FILE: DO NOT MODIFY e28d36731bdc1c16d6bf068eb7d24609fdcfcda1 #@#
 {
-  "bar": [
-    "//java/otherfoo:foo"
-  ]
+  "bar": {
+    "deps" : [
+      "//java/otherfoo:foo"
+    ],
+    "exported_deps" : [ ]
+  }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.autodeps;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -61,22 +62,22 @@ public class AutodepsWriterTest {
     BuildTarget hTarget = workspace.newBuildTarget("//java/com/example:h");
     BuildTarget iTarget = workspace.newBuildTarget("//java/com/example:i");
 
-    depsForBuildFiles.addDep(fooTarget, barTarget);
-    depsForBuildFiles.addDep(fooTarget, bazTarget);
+    depsForBuildFiles.addDep(fooTarget, barTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(fooTarget, bazTarget, DependencyType.DEPS);
 
-    depsForBuildFiles.addDep(barTarget, bazTarget);
+    depsForBuildFiles.addDep(barTarget, bazTarget, DependencyType.DEPS);
 
     // Add in seemingly random order so we can verify that we don't get things back in alphabetical
     // order because we added things in alphabetical order.
-    depsForBuildFiles.addDep(bazTarget, gTarget);
-    depsForBuildFiles.addDep(bazTarget, hTarget);
-    depsForBuildFiles.addDep(bazTarget, aTarget);
-    depsForBuildFiles.addDep(bazTarget, eTarget);
-    depsForBuildFiles.addDep(bazTarget, bTarget);
-    depsForBuildFiles.addDep(bazTarget, iTarget);
-    depsForBuildFiles.addDep(bazTarget, dTarget);
-    depsForBuildFiles.addDep(bazTarget, fTarget);
-    depsForBuildFiles.addDep(bazTarget, cTarget);
+    depsForBuildFiles.addDep(bazTarget, gTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, hTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, aTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, eTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, bTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, iTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, dTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, fTarget, DependencyType.DEPS);
+    depsForBuildFiles.addDep(bazTarget, cTarget, DependencyType.DEPS);
 
     int numWritten = AutodepsWriter.write(
         depsForBuildFiles,

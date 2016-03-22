@@ -173,10 +173,16 @@ def add_rule(rule, build_env):
             # and the tooling to produce BUCK.autodeps also infers the need for that dep and adds
             # it to BUCK.autodeps, then it will appear in both places.
             explicit_deps = rule.get('deps', [])
-            autodeps = build_env.autodeps[rule_name]
+            auto_deps = build_env.autodeps[rule_name]['deps']
             deps = set(explicit_deps)
-            deps.update(autodeps)
+            deps.update(auto_deps)
             rule['deps'] = list(deps)
+
+            explicit_exported_deps = rule.get('exportedDeps', [])
+            auto_exported_deps = build_env.autodeps[rule_name]['exported_deps']
+            exported_deps = set(explicit_exported_deps)
+            exported_deps.update(auto_exported_deps)
+            rule['exportedDeps'] = list(exported_deps)
         else:
             # If there is an entry in the .autodeps file for the rule, but the rule has autodeps
             # set to False, then the .autodeps file is likely out of date. Ideally, we would warn

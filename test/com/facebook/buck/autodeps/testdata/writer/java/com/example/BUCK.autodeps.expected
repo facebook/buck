@@ -1,10 +1,16 @@
-#@# GENERATED FILE: DO NOT MODIFY 0295b98992bb9c49116ce2e0da5312fd0e6d11de #@#
+#@# GENERATED FILE: DO NOT MODIFY 659bcf3f8b3c865c109850d6463695cab623eb08 #@#
 {
-  "bar" : [
-    "//java/com/example/baz:baz"
-  ],
-  "foo" : [
-    "//java/com/example:bar",
-    "//java/com/example/baz:baz"
-  ]
+  "bar" : {
+    "deps" : [
+      "//java/com/example/baz:baz"
+    ],
+    "exported_deps" : [ ]
+  },
+  "foo" : {
+    "deps" : [
+      "//java/com/example:bar",
+      "//java/com/example/baz:baz"
+    ],
+    "exported_deps" : [ ]
+  }
 }
