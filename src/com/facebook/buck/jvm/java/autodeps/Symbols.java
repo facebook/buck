@@ -33,15 +33,20 @@ final class Symbols {
   @JsonSerialize
   @JsonDeserialize
   final Iterable<String> required;
+  @JsonSerialize
+  @JsonDeserialize
+  final Iterable<String> exported;
 
   // For JsonDeserialize.
   Symbols() {
     this.provided = ImmutableList.of();
     this.required = ImmutableList.of();
+    this.exported = ImmutableList.of();
   }
 
-  Symbols(Iterable<String> provided, Iterable<String> required) {
+  Symbols(Iterable<String> provided, Iterable<String> required, Iterable<String> exported) {
     this.provided = provided;
     this.required = required;
+    this.exported = exported;
   }
 }

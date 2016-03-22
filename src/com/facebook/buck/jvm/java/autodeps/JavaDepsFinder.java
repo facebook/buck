@@ -221,6 +221,9 @@ public class JavaDepsFinder {
         Symbols symbols = getJavaFileFeatures(node, autodeps);
         if (autodeps) {
           ruleToRequiredSymbols.putAll(buildTarget, symbols.required);
+          // TODO(bolinfest): In a follow-up diff, required and exported symbols will be reported
+          // separately.
+          ruleToRequiredSymbols.putAll(buildTarget, symbols.exported);
         }
         for (String providedEntity : symbols.provided) {
           symbolToProviders.put(providedEntity, buildTarget);

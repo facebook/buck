@@ -32,7 +32,7 @@ public class SymbolsTest {
 
   @Test
   public void jsonSerializatonAndDeserialization() throws IOException {
-    // Symbols takes Iterables as parameters, so we make one a Set and one a List.
+    // Symbols takes Iterables as parameters, so we make one a Set and two as Lists.
     // Note that because these are immutable collections from Guava, iteration order is guaranteed.
     ImmutableSet<String> providedSymbols = ImmutableSet.of(
         "com.example.Example1",
@@ -42,7 +42,11 @@ public class SymbolsTest {
         "com.example.Required1",
         "com.example.Required2",
         "com.example.Required3");
-    Symbols symbols = new Symbols(providedSymbols, requiredSymbols);
+    ImmutableList<String> exportedSymbols = ImmutableList.of(
+        "com.example.Exported1",
+        "com.example.Exported2",
+        "com.example.Exported3");
+    Symbols symbols = new Symbols(providedSymbols, requiredSymbols, exportedSymbols);
 
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     StringWriter writer = new StringWriter();
@@ -52,7 +56,9 @@ public class SymbolsTest {
         "{\"provided\":" +
             "[\"com.example.Example1\",\"com.example.Example2\",\"com.example.Example3\"]," +
             "\"required\":" +
-            "[\"com.example.Required1\",\"com.example.Required2\",\"com.example.Required3\"]}",
+            "[\"com.example.Required1\",\"com.example.Required2\",\"com.example.Required3\"]," +
+            "\"exported\":" +
+            "[\"com.example.Exported1\",\"com.example.Exported2\",\"com.example.Exported3\"]}",
         writer.toString()
     );
 

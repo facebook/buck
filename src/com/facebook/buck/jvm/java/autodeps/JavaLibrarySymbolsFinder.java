@@ -72,6 +72,7 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
   public Symbols extractSymbols() {
     Set<String> providedSymbols = new HashSet<>();
     Set<String> requiredSymbols = new HashSet<>();
+    Set<String> exportedSymbols = new HashSet<>();
 
     for (SourcePath src : srcs) {
       // This should be enforced by the constructor.
@@ -91,6 +92,7 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
           .extractFeaturesFromJavaCode(code);
       if (shouldRecordRequiredSymbols) {
         requiredSymbols.addAll(features.requiredSymbols);
+        exportedSymbols.addAll(features.exportedSymbols);
       }
 
       providedSymbols.addAll(features.providedSymbols);
@@ -98,7 +100,8 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
     return new Symbols(
         providedSymbols,
-        FluentIterable.from(requiredSymbols).filter(NOT_A_BUILT_IN_SYMBOL));
+        FluentIterable.from(requiredSymbols).filter(NOT_A_BUILT_IN_SYMBOL),
+        FluentIterable.from(exportedSymbols).filter(NOT_A_BUILT_IN_SYMBOL));
   }
 
   @Override

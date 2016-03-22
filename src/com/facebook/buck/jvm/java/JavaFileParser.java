@@ -32,28 +32,36 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayType;
+import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -463,6 +471,11 @@ public class JavaFileParser {
     return Optional.absent();
   }
 
+  private static enum DependencyType {
+    REQUIRED,
+    EXPORTED,
+  }
+
   public JavaFileFeatures extractFeaturesFromJavaCode(String code) {
     // For now, we will harcode this. Ultimately, we probably want to make this configurable via
     // .buckconfig. For example, the Buck project itself is diligent about disallowing wildcard
@@ -475,13 +488,16 @@ public class JavaFileParser {
 
     final ImmutableSortedSet.Builder<String> providedSymbols = ImmutableSortedSet.naturalOrder();
     final ImmutableSortedSet.Builder<String> requiredSymbols = ImmutableSortedSet.naturalOrder();
+    final ImmutableSortedSet.Builder<String> exportedSymbols = ImmutableSortedSet.naturalOrder();
     final ImmutableSortedSet.Builder<String> requiredSymbolsFromExplicitImports =
         ImmutableSortedSet.naturalOrder();
 
     compilationUnit.accept(new ASTVisitor() {
 
       @Nullable private String packageName;
-      private Set<String> simpleImportedTypes = new HashSet<>();
+
+      /** Maps simple name to fully-qualified name. */
+      private Map<String, String> simpleImportedTypes = new HashMap<>();
 
       /**
        * Maps wildcard import prefixes, such as {@code "java.util"} to the types in the respective
@@ -511,6 +527,18 @@ public class JavaFileParser {
         if (fullyQualifiedName != null) {
           providedSymbols.add(fullyQualifiedName);
         }
+
+        @SuppressWarnings("unchecked")
+        List<Type> interfaceTypes = node.superInterfaceTypes();
+        for (Type interfaceType : interfaceTypes) {
+          tryAddType(interfaceType, DependencyType.EXPORTED);
+        }
+
+        Type superclassType = node.getSuperclassType();
+        if (superclassType != null) {
+          tryAddType(superclassType, DependencyType.EXPORTED);
+        }
+
         return true;
       }
 
@@ -549,7 +577,7 @@ public class JavaFileParser {
           // If it does not start with an uppercase letter, it is probably because it is a property
           // lookup.
           if (CharMatcher.javaUpperCase().matches(symbol.charAt(0))) {
-            addTypeFromDotDelimitedSequence(symbol);
+            addTypeFromDotDelimitedSequence(symbol, DependencyType.REQUIRED);
           }
         }
 
@@ -561,7 +589,7 @@ public class JavaFileParser {
        *     be a built-in type, such as "java.lang.Integer", in which case it will not be added to
        *     the set of required symbols.
        */
-      private void addTypeFromDotDelimitedSequence(String expr) {
+      private void addTypeFromDotDelimitedSequence(String expr, DependencyType dependencyType) {
         // At this point, symbol could be `System.out`. We want to reduce it to `System` and then
         // check it against JAVA_LANG_TYPES.
         if (startsWithUppercaseChar(expr)) {
@@ -575,7 +603,7 @@ public class JavaFileParser {
         }
 
         expr = qualifyWithPackageNameIfNecessary(expr);
-        requiredSymbols.add(expr);
+        addSymbol(expr, dependencyType);
       }
 
       @Override
@@ -601,13 +629,13 @@ public class JavaFileParser {
           }
         }
 
-        String simpleName = getSimpleNameFromFullyQualifiedName(fullyQualifiedName);
-        simpleImportedTypes.add(simpleName);
-
         // Only worry about the dependency on the enclosing type.
+        String simpleName = getSimpleNameFromFullyQualifiedName(fullyQualifiedName);
         int index = fullyQualifiedName.indexOf("." + simpleName);
         String enclosingType = fullyQualifiedName.substring(0, index + simpleName.length() + 1);
         requiredSymbolsFromExplicitImports.add(enclosingType);
+
+        simpleImportedTypes.put(simpleName, enclosingType);
         return false;
       }
 
@@ -619,7 +647,7 @@ public class JavaFileParser {
 
         String receiver = node.getExpression().toString();
         if (looksLikeAType(receiver)) {
-          addTypeFromDotDelimitedSequence(receiver);
+          addTypeFromDotDelimitedSequence(receiver, DependencyType.REQUIRED);
         }
         return true;
       }
@@ -627,46 +655,133 @@ public class JavaFileParser {
       /** An annotation on a member with zero arguments. */
       @Override
       public boolean visit(MarkerAnnotation node) {
-        addSimpleTypeName(node.getTypeName());
+        DependencyType dependencyType = findDependencyTypeForAnnotation(node);
+        addSimpleTypeName(node.getTypeName(), dependencyType);
         return true;
       }
 
       /** An annotation on a member with named arguments. */
       @Override
       public boolean visit(NormalAnnotation node) {
-        addSimpleTypeName(node.getTypeName());
+        DependencyType dependencyType = findDependencyTypeForAnnotation(node);
+        addSimpleTypeName(node.getTypeName(), dependencyType);
         return true;
       }
 
       /** An annotation on a member with a single, unnamed argument. */
       @Override
       public boolean visit(SingleMemberAnnotation node) {
-        addSimpleTypeName(node.getTypeName());
+        DependencyType dependencyType = findDependencyTypeForAnnotation(node);
+        addSimpleTypeName(node.getTypeName(), dependencyType);
         return true;
+      }
+
+      private DependencyType findDependencyTypeForAnnotation(Annotation annotation) {
+        ASTNode parentNode = annotation.getParent();
+        if (parentNode == null) {
+          return DependencyType.REQUIRED;
+        }
+
+        if (parentNode instanceof BodyDeclaration) {
+          // Note that BodyDeclaration is an abstract class. Its subclasses are things like
+          // FieldDeclaration and MethodDeclaration. We want to be sure that an annotation on any
+          // non-private declaration is considered an exported symbol.
+          BodyDeclaration declaration = (BodyDeclaration) parentNode;
+
+          int modifiers = declaration.getModifiers();
+          if ((modifiers & Modifier.PRIVATE) == 0) {
+            return DependencyType.EXPORTED;
+          }
+        }
+        return DependencyType.REQUIRED;
       }
 
       @Override
       public boolean visit(SimpleType node) {
         // This method is responsible for finding the overwhelming majority of the required symbols
         // in the AST.
-        tryAddType(node);
+        tryAddType(node, DependencyType.REQUIRED);
         return true;
       }
 
-      private void tryAddType(Type type) {
+      // exportedSymbols
+
+      @Override
+      public boolean visit(MethodDeclaration node) {
+        // Types from private method signatures need not be exported.
+        if ((node.getModifiers() & Modifier.PRIVATE) != 0) {
+          return true;
+        }
+
+        Type returnType = node.getReturnType2();
+        if (returnType != null) {
+          tryAddType(returnType, DependencyType.EXPORTED);
+        }
+
+        @SuppressWarnings("unchecked")
+        List<SingleVariableDeclaration> params = node.parameters();
+        for (SingleVariableDeclaration decl : params) {
+          tryAddType(decl.getType(), DependencyType.EXPORTED);
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Type> exceptions = node.thrownExceptionTypes();
+        for (Type exception : exceptions) {
+          tryAddType(exception, DependencyType.EXPORTED);
+        }
+
+        return true;
+      }
+
+      @Override
+      public boolean visit(FieldDeclaration node) {
+        // Types from private fields need not be exported.
+        if ((node.getModifiers() & Modifier.PRIVATE) == 0) {
+          tryAddType(node.getType(), DependencyType.EXPORTED);
+        }
+        return true;
+      }
+
+      private void tryAddType(Type type, DependencyType dependencyType) {
         if (type.isSimpleType()) {
           SimpleType simpleType = (SimpleType) type;
           Name simpleTypeName = simpleType.getName();
-          addSimpleTypeName(simpleTypeName);
+          String simpleName = simpleTypeName.toString();
+
+          // For a Type such as IExample<T>, both "IExample" and "T" will be submitted here as
+          // simple types. As such, we use this imperfect heuristic to filter out "T" from being
+          // added. Note that this will erroneously exclude "URI". In practice, this should
+          // generally be OK. For example, assuming "URI" is also imported, then at least it will
+          // end up in the set of required symbols.
+          if (!CharMatcher.JAVA_UPPER_CASE.matchesAllOf(simpleName)) {
+            addSimpleTypeName(simpleTypeName, dependencyType);
+          }
         } else if (type.isArrayType()) {
           ArrayType arrayType = (ArrayType) type;
-          tryAddType(arrayType.getElementType());
+          tryAddType(arrayType.getElementType(), dependencyType);
+        } else if (type.isParameterizedType()) {
+          ParameterizedType parameterizedType = (ParameterizedType) type;
+          tryAddType(parameterizedType.getType(), dependencyType);
+          @SuppressWarnings("unchecked")
+          List<Type> argTypes = parameterizedType.typeArguments();
+          for (Type argType : argTypes) {
+            tryAddType(argType, dependencyType);
+          }
         }
       }
 
-      private void addSimpleTypeName(Name simpleTypeName) {
+      private void addSimpleTypeName(Name simpleTypeName, DependencyType dependencyType) {
         String simpleName = simpleTypeName.toString();
-        if (JAVA_LANG_TYPES.contains(simpleName) || simpleImportedTypes.contains(simpleName)) {
+        if (JAVA_LANG_TYPES.contains(simpleName)) {
+          return;
+        }
+
+        String fullyQualifiedNameForSimpleName = simpleImportedTypes.get(simpleName);
+        if (fullyQualifiedNameForSimpleName != null) {
+          // May need to promote from required to exported in this case.
+          if (dependencyType == DependencyType.EXPORTED) {
+            addSymbol(fullyQualifiedNameForSimpleName, DependencyType.EXPORTED);
+          }
           return;
         }
 
@@ -677,7 +792,7 @@ public class JavaFileParser {
             Set<String> types =  entry.getValue();
             if (types.contains(simpleName)) {
               String packageName = entry.getKey();
-              requiredSymbols.add(packageName + "." + simpleName);
+              addSymbol(packageName + "." + simpleName, dependencyType);
               return;
             }
           }
@@ -685,7 +800,12 @@ public class JavaFileParser {
 
         String symbol = simpleTypeName.getFullyQualifiedName();
         symbol = qualifyWithPackageNameIfNecessary(symbol);
-        requiredSymbols.add(symbol);
+        addSymbol(symbol, dependencyType);
+      }
+
+      private void addSymbol(String symbol, DependencyType dependencyType) {
+        ((dependencyType == DependencyType.REQUIRED) ? requiredSymbols : exportedSymbols)
+            .add(symbol);
       }
 
       private String qualifyWithPackageNameIfNecessary(String symbol) {
@@ -707,19 +827,25 @@ public class JavaFileParser {
       }
     });
 
+    // TODO(bolinfest): Special treatment for exportedSymbols when poisoned by wildcard import.
+    ImmutableSortedSet<String> totalExportedSymbols = exportedSymbols.build();
+
     // If we were poisoned by an unsupported wildcard import, then we should rely exclusively on
     // the explicit imports to determine the required symbols.
-    ImmutableSortedSet<String> totalRequiredSymbols;
+    Set<String> totalRequiredSymbols = new HashSet<>();
     if (isPoisonedByUnsupportedWildcardImport.get()) {
-      totalRequiredSymbols = requiredSymbolsFromExplicitImports.build();
+      totalRequiredSymbols.addAll(requiredSymbolsFromExplicitImports.build());
     } else {
-      totalRequiredSymbols = ImmutableSortedSet.<String>naturalOrder()
-          .addAll(requiredSymbolsFromExplicitImports.build())
-          .addAll(requiredSymbols.build())
-          .build();
+      totalRequiredSymbols.addAll(requiredSymbolsFromExplicitImports.build());
+      totalRequiredSymbols.addAll(requiredSymbols.build());
     }
+    // Make sure that required and exported symbols are disjoint sets.
+    totalRequiredSymbols.removeAll(totalExportedSymbols);
 
-    return new JavaFileFeatures(providedSymbols.build(), totalRequiredSymbols);
+    return new JavaFileFeatures(
+        providedSymbols.build(),
+        ImmutableSortedSet.copyOf(totalRequiredSymbols),
+        totalExportedSymbols);
   }
 
   private static QualifiedName findMostQualifiedAncestor(QualifiedName node) {
@@ -791,11 +917,26 @@ public class JavaFileParser {
     public final ImmutableSortedSet<String> providedSymbols;
     public final ImmutableSortedSet<String> requiredSymbols;
 
+    /**
+     * Exported symbols are those that need to be on the classpath when compiling against the
+     * providedSymbols. These include:
+     * <ul>
+     *   <li>Parameter types for non-private methods of non-private types.
+     *   <li>Return types for non-private methods of non-private types.
+     *   <li>Parent classes of non-private provided types.
+     *   <li>Parent interfaces of non-private provided types.
+     *   <li>Types of non-private fields of non-private types.
+     * </ul>
+     */
+    public final ImmutableSortedSet<String> exportedSymbols;
+
     private JavaFileFeatures(
         ImmutableSortedSet<String> providedSymbols,
-        ImmutableSortedSet<String> requiredSymbols) {
+        ImmutableSortedSet<String> requiredSymbols,
+        ImmutableSortedSet<String> exportedSymbols) {
       this.providedSymbols = providedSymbols;
       this.requiredSymbols = requiredSymbols;
+      this.exportedSymbols = exportedSymbols;
     }
   }
 
