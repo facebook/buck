@@ -1,0 +1,23 @@
+#@# GENERATED FILE: DO NOT MODIFY 688d7e69589098ca5d47e1229d91865020547bfa #@#
+{
+  "js" : {
+    "deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/android:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/js:js",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//test/com/facebook/buck/rules:testutil"
+    ]
+  }
+}

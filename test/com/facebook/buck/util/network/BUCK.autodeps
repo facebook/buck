@@ -1,0 +1,25 @@
+#@# GENERATED FILE: DO NOT MODIFY fd53e36254e37943667420c2edaab8dcef79ccbc #@#
+{
+  "network" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util/network:network",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/network:network",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

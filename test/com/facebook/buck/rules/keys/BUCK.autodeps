@@ -1,0 +1,26 @@
+#@# GENERATED FILE: DO NOT MODIFY bda7c4fba2f089c653e9b64cc14933ead455f2a2 #@#
+{
+  "keys" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:cli",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/rules/keys:keys",
+      "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/util/cache:cache",
+      "//test/com/facebook/buck/io:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/shell:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

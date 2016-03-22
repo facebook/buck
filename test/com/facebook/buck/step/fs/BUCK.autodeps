@@ -1,0 +1,22 @@
+#@# GENERATED FILE: DO NOT MODIFY d50254ac4123bf2e43d5040cbd67f866f889ef4f #@#
+{
+  "fs" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/io:testutil",
+      "//test/com/facebook/buck/step:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit",
+      "//third-party/java/xz-java-1.3:xz"
+    ],
+    "exported_deps" : [ ]
+  }
+}

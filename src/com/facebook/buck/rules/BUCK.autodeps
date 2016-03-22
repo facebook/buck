@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8a38df67b56895bf0305b0c742fba2c15ea65bc2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9abf0b9aacc3142e88c324ed82084a093077f78f #@#
 {
   "build_event" : {
     "deps" : [ ],
@@ -119,6 +119,7 @@
       "//src/com/facebook/buck/go:go",
       "//src/com/facebook/buck/gwt:gwt",
       "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/jvm/groovy:rules",
       "//src/com/facebook/buck/jvm/java:config",

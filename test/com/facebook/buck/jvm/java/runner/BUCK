@@ -1,9 +1,1 @@
-java_test(
-  name = 'runner',
-  srcs = glob(['*.java']),
-  deps = [
-    '//src/com/facebook/buck/jvm/java/runner:runner',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
+standard_java_test()

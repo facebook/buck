@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 0b478272f84d1b0665f231f6412c88000a1cbedf #@#
+#@# GENERATED FILE: DO NOT MODIFY 42b56e20725f0b611a5f528aa574d6bd722b8817 #@#
 {
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",

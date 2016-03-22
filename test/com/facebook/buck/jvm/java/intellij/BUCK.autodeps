@@ -1,0 +1,38 @@
+#@# GENERATED FILE: DO NOT MODIFY b2e54c092646c1a0813a7f9b684eaa4e99f104fa #@#
+{
+  "intellij" : {
+    "deps" : [
+      "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/cli:cli",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/core:packagefinder",
+      "//src/com/facebook/buck/jvm/java:autodeps",
+      "//src/com/facebook/buck/jvm/java:packagefinder",
+      "//src/com/facebook/buck/jvm/java/intellij:intellij",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/util:object_mapper",
+      "//test/com/facebook/buck/android:testutil",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/jvm/java:fakepackagefinder",
+      "//test/com/facebook/buck/jvm/java:javac-env",
+      "//test/com/facebook/buck/jvm/java:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/shell:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/easymock:easymock",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

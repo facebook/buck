@@ -1,0 +1,24 @@
+#@# GENERATED FILE: DO NOT MODIFY 047ad34e9a175268d0674432b7c8c29e36e60812 #@#
+{
+  "environment" : {
+    "deps" : [
+      "//src/com/facebook/buck/util/environment:env-filter",
+      "//src/com/facebook/buck/util/environment:environment",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/environment:environment",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

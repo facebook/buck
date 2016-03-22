@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY cc801d29b128e9ab265c44ddb6ba9b5122c425ea #@#
+#@# GENERATED FILE: DO NOT MODIFY 024bafb847df42782b85383b9a5f3ba51c676401 #@#
 {
   "autodeps" : {
     "deps" : [
@@ -6,7 +6,7 @@
       "//src/com/facebook/buck/autodeps:model",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:object_mapper",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"

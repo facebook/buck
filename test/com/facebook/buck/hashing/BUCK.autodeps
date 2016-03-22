@@ -1,0 +1,17 @@
+#@# GENERATED FILE: DO NOT MODIFY b5669394e27601f398afeaecf4874b35dbce9810 #@#
+{
+  "hashing" : {
+    "deps" : [
+      "//src/com/facebook/buck/hashing:hashing",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util/cache:cache",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jimfs:jimfs",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

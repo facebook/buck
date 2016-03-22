@@ -1,9 +1,1 @@
-java_test(
-  name = 'selectors',
-  srcs = glob(['*.java']),
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/test/selectors:selectors',
-  ],
-)
+standard_java_test()

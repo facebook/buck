@@ -1,0 +1,39 @@
+#@# GENERATED FILE: DO NOT MODIFY 8f5213e5aed46b670fc5557c120bc73c0931e0eb #@#
+{
+  "io" : {
+    "deps" : [
+      "//src/com/facebook/buck/bser:bser",
+      "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/io:watchman",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/zip:stream",
+      "//test/com/facebook/buck/cli:testutil",
+      "//test/com/facebook/buck/io:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/timing:testutil",
+      "//test/com/facebook/buck/util:testutil",
+      "//third-party/java/commons-compress:commons-compress",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jimfs:jimfs",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/io:watchman",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 94622be2520edaeb1725d6b70de617128620f0e8 #@#
+#@# GENERATED FILE: DO NOT MODIFY c4541130328e1d0e4a6557d58b9152ba5d97fb6e #@#
 {
   "dotnet" : {
     "deps" : [
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/step/fs:fs",

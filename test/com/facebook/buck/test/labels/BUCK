@@ -1,11 +1,1 @@
-java_test(
-  name = 'labels',
-  srcs = glob(['*.java']),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/junit:junit',
-    '//test/com/facebook/buck/testutil/integration:integration',
-  ],
-)
+standard_java_test()

@@ -159,3 +159,41 @@ def java_test(
     ] + vm_args,
     **kwargs
   )
+
+def standard_java_test(run_test_separately = False):
+    srcs = glob(['*.java'])
+    test_srcs = []
+    testutil_srcs = []
+    for src in srcs:
+        if src.endswith('Test.java'):
+            test_srcs.append(src)
+        else:
+            testutil_srcs.append(src)
+
+    if len(testutil_srcs) > 0:
+        java_library(
+          name = 'testutil',
+          srcs = testutil_srcs,
+          autodeps = True,
+          visibility = [
+            '//test/...',
+          ]
+        )
+
+    if len(test_srcs) > 0:
+        base_path = get_base_path()
+        import os.path
+        name = os.path.basename(base_path)
+        if name == 'testutil':
+            # Having a com.facebook.buck.testutil package was probably a bad choice.
+            name = 'testutil_test'
+        java_test(
+          name = name,
+          srcs = test_srcs,
+          autodeps = True,
+          resources = glob(['testdata/**'], include_dotfiles=True),
+          vm_args = [
+            '-Xmx256M',
+          ],
+          run_test_separately = run_test_separately,
+        )

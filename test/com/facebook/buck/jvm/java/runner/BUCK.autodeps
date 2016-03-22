@@ -1,0 +1,11 @@
+#@# GENERATED FILE: DO NOT MODIFY eabcb3166b66524269c194965a257efc89326d44 #@#
+{
+  "runner" : {
+    "deps" : [
+      "//src/com/facebook/buck/jvm/java/runner:runner",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

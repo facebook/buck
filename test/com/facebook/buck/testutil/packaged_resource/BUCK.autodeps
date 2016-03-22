@@ -1,0 +1,10 @@
+#@# GENERATED FILE: DO NOT MODIFY b8e835d51768002d40e776a87d87e838d83cf5bb #@#
+{
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util:util"
+    ]
+  }
+}

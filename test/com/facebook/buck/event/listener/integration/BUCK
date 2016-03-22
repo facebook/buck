@@ -1,15 +1,1 @@
-java_test(
-  name = 'integration',
-  srcs = glob(['*.java']),
-  deps = [
-    '//src/com/facebook/buck/event/listener:listener',
-    '//src/com/facebook/buck/util:object_mapper',
-    '//test/com/facebook/buck/json:testutil',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/guava:guava',
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/jackson:jackson',
-    '//third-party/java/jetty:jetty',
-    '//third-party/java/junit:junit',
-  ],
-)
+standard_java_test()

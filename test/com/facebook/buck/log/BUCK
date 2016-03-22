@@ -1,12 +1,1 @@
-java_test(
-  name = 'log',
-  srcs = glob(['**/*Test.java']),
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/log:log',
-    '//test/com/facebook/buck/testutil:testutil',
-  ],
-)
+standard_java_test()

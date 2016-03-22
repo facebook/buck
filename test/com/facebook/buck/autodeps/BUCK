@@ -1,5 +1,1 @@
-java_test(
-  name = 'autodeps',
-  srcs = glob(['*Test.java']),
-  autodeps = True,
-)
+standard_java_test()

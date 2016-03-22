@@ -1,0 +1,11 @@
+#@# GENERATED FILE: DO NOT MODIFY 921e76f8b970bce6e94e8427ba28ecc4fa29d1b8 #@#
+{
+  "graph" : {
+    "deps" : [
+      "//src/com/facebook/buck/graph:graph",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

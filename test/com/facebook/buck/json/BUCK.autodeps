@@ -1,0 +1,22 @@
+#@# GENERATED FILE: DO NOT MODIFY c853b563dea8f876f5a3caa507dcf2b7feb16114 #@#
+{
+  "json" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/json:json",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/gson:gson",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind"
+    ]
+  }
+}

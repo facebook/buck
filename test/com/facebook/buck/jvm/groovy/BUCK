@@ -1,15 +1,1 @@
-java_test(
-  name = 'groovy',
-  srcs = glob(['*Test.java']),
-  resources = glob(['testdata/**'], include_dotfiles=True),
-  deps = [
-    '//src/com/facebook/buck/util/environment:platform',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/jvm/groovy:rules',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
+standard_java_test()

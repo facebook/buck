@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 529ebcad35c08f216381d2c134f14fd58e884be8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 26fb0eeb47977ad2b8375910c8fb2e314e9a18ef #@#
 {
   "rules" : {
     "deps" : [
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/jvm/common:resources",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/util:exceptions",

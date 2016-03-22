@@ -1,27 +1,22 @@
-STANDARD_TEST_SRCS = [
-  '**/*Test.java',
-]
-
 java_immutables_library(
   name = 'testutil',
-  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  srcs = [
+    'DeprecatedType.java',
+  ],
+  immutable_srcs = [
+    'AbstractType.java',
+  ],
+  autodeps = True,
   tests = [
     '//test/com/facebook/buck/immutables:test',
   ],
   visibility = [
     '//test/...',
   ],
-  deps = [
-    '//third-party/java/guava:guava',
-  ],
 )
 
 java_test(
   name = 'test',
-  srcs = glob(STANDARD_TEST_SRCS),
-  deps = [
-    ':testutil',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ]
+  srcs = glob(['*Test.java']),
+  autodeps = True,
 )

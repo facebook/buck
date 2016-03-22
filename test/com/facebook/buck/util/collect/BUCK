@@ -1,8 +1,1 @@
-java_test(
-  name = 'collect',
-  srcs = glob(['*.java']),
-  deps = [
-    '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/util/collect:collect',
-  ],
-)
+standard_java_test()

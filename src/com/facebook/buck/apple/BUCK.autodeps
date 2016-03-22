@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6733164bc4836822298adf85af44796c0ad35a8c #@#
+#@# GENERATED FILE: DO NOT MODIFY b840020326af0ae82c4421fc142bb1d21dc5945d #@#
 {
   "generators" : {
     "deps" : [
@@ -21,6 +21,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
@@ -71,6 +72,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",

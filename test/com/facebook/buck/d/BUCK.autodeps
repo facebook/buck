@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 733dd7ea209d7caba7a9bee33d58a8eaeb3a96a4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2166bb0694beca7c18ffe91d452c25e3f3383b8c #@#
 {
   "d" : {
     "deps" : [
@@ -14,7 +14,7 @@
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/d:testutil",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

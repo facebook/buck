@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 8977b9cb270e3a75d4f97ecc475607461156941f #@#
+{
+  "firstorder" : {
+    "deps" : [
+      "//src/com/facebook/buck/dalvik/firstorder:firstorder",
+      "//third-party/java/asm:asm",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

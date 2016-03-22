@@ -1,0 +1,18 @@
+#@# GENERATED FILE: DO NOT MODIFY 311fd8b7d3d42314e6a5fd97bdaaf24d240383ee #@#
+{
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/timing:timing"
+    ]
+  },
+  "timing" : {
+    "deps" : [
+      "//src/com/facebook/buck/timing:timing",
+      "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

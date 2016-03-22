@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 76c6d60f9053692ac702ec661235cf6ab81fb5c8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 12d496a52eb9141ad22c44e60e4887f5ab1e21d6 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -7,7 +7,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/zip:unzip",
       "//test/com/facebook/buck/android:testutil",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
@@ -28,7 +28,7 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",
       "//test/com/facebook/buck/android:testutil",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/commons-compress:commons-compress",
@@ -51,7 +51,7 @@
     "deps" : [
       "//src/com/facebook/buck/model:model",
       "//test/com/facebook/buck/android:testutil",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/junit:junit"
     ],
@@ -73,7 +73,7 @@
       "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/artifact_cache:testutil",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
@@ -98,8 +98,8 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/android:testutil",
-      "//test/com/facebook/buck/file:matchers",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/file:testutil",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
@@ -150,6 +150,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/dalvik:steps",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/jvm/core:packagefinder",
@@ -184,7 +185,7 @@
       "//test/com/facebook/buck/io:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/jvm/java:testutil",
-      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/shell:testutil",
       "//test/com/facebook/buck/step:testutil",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY eac2e90c4fb936252208a163e9786fd8b42a993b #@#
+#@# GENERATED FILE: DO NOT MODIFY c089d37f8385f20d1da854b6b995dfb8ce46d452 #@#
 {
   "autodeps" : {
     "deps" : [
@@ -95,6 +95,7 @@
   "steps" : {
     "deps" : [
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/jvm/java/abi:abi",
       "//src/com/facebook/buck/jvm/java/runner:runner",
       "//src/com/facebook/buck/log:api",

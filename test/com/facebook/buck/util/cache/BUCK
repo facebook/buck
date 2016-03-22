@@ -1,16 +1,1 @@
-java_test(
-  name = 'cache',
-  srcs = glob(['*Test.java']),
-  deps = [
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/timing:timing',
-    '//src/com/facebook/buck/util/cache:cache',
-    '//test/com/facebook/buck/cli:testutil',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//test/com/facebook/buck/testutil:testutil',
-    '//third-party/java/junit:junit',
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/guava:guava',
-  ],
-)
+standard_java_test()

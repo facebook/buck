@@ -1,14 +1,15 @@
+# This file does not use standard_java_test() because it defines a library with some nonstandard
+# resources.
 java_library(
   name = 'testutil',
-  srcs = [ 'PackagedResourceTestUtil.java' ],
+  srcs = [
+    'PackagedResourceTestUtil.java',
+  ],
   resources = [
     'testdata/packaged_resource_one',
     'testdata/packaged_resource_two'
   ],
-  deps = [
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/util:util',
-  ],
+  autodeps = True,
   visibility = [
     '//test/...',
   ],

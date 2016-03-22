@@ -1,14 +1,1 @@
-java_library(
-  name = 'testutil',
-  srcs = glob(['*.java'], excludes=['*Test.java']),
-  autodeps = True,
-  exported_deps = [
-    '//test/com/facebook/buck/rules:testutil',
-  ],
-)
-
-java_test(
-  name = 'd',
-  srcs = glob(['*Test.java']),
-  autodeps = True,
-)
+standard_java_test()

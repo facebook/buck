@@ -1,0 +1,16 @@
+#@# GENERATED FILE: DO NOT MODIFY 6dcc1727b14ec20d4b9526dce0cccf5920646697 #@#
+{
+  "cache" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util/cache:cache",
+      "//test/com/facebook/buck/cli:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

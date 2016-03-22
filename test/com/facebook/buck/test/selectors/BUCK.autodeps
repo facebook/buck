@@ -1,0 +1,11 @@
+#@# GENERATED FILE: DO NOT MODIFY 22313fda5153fc84a69ae7c2eea83c58a2df7f78 #@#
+{
+  "selectors" : {
+    "deps" : [
+      "//src/com/facebook/buck/test/selectors:selectors",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

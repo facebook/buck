@@ -1,10 +1,1 @@
-java_test(
-  name = 'graph',
-  srcs = glob(['*.java']),
-  deps = [
-    '//src/com/facebook/buck/graph:graph',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/junit:junit',
-  ],
-)
+standard_java_test()

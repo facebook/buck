@@ -1,0 +1,23 @@
+#@# GENERATED FILE: DO NOT MODIFY 5c77d72a0fe18c301168e60795e9ffc6d68fe880 #@#
+{
+  "coercer" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/rules/coercer:types",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
+      "//test/com/facebook/buck/io:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/easymock:easymock",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

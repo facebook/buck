@@ -1,5 +1,1 @@
-java_test(
-  name = 'rage',
-  srcs = glob(['*.java']),
-  autodeps = True,
-)
+standard_java_test()

@@ -1,0 +1,39 @@
+#@# GENERATED FILE: DO NOT MODIFY da263290aba15adfd723a77aed1da0ac80367d7d #@#
+{
+  "testutil" : {
+    "deps" : [
+      "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/shell:steps",
+      "//src/com/facebook/buck/util:tristate",
+      "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/jimfs:jimfs",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/cache:cache",
+      "//src/com/facebook/buck/util/environment:environment",
+      "//src/com/facebook/buck/zip:stream",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/okio:okio"
+    ]
+  },
+  "testutil_test" : {
+    "deps" : [
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

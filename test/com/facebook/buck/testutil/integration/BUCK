@@ -1,47 +1,13 @@
+# TODO(bolinfest): Replace this with standard_java_test() once `buck autodeps` is
+# fixed to automatically infer the export of '//third-party/java/jetty:jetty'.
+
 java_library(
   name = 'integration',
   srcs = glob(['*.java']),
-  deps = [
-    '//src/com/facebook/buck/android:utils',
-    '//src/com/facebook/buck/apple:rules',
-    '//src/com/facebook/buck/apple/device:device',
-    '//src/com/facebook/buck/artifact_cache:artifact_cache',
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/cli:config',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/event/external:external_lib',
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/io:watchman',
-    '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/model:build_id',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/step:step',
-    '//src/com/facebook/buck/test:test',
-    '//src/com/facebook/buck/timing:timing',
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util/environment:environment',
-    '//src/com/facebook/buck/util/environment:env-filter',
-    '//src/com/facebook/buck/util/environment:platform',
-    '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/testutil:testutil',
-    '//test/com/facebook/buck/util:testutil',
-    '//third-party/java/dd-plist:dd-plist',
-    '//third-party/java/gson:gson',
-    '//third-party/java/guava:guava',
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/jetty:jetty',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/junit:junit',
-    '//third-party/java/nailgun:nailgun',
-  ],
+  autodeps = True,
   exported_deps = [
-    # ProjectWorkspace exposes Cell.
-    '//src/com/facebook/buck/rules:types',
-    '//third-party/java/junit:junit',
+    # This is due to the bug mentioned above.
+    '//third-party/java/jetty:jetty',
   ],
   visibility = [
     '//test/...',

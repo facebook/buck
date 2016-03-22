@@ -1,0 +1,21 @@
+#@# GENERATED FILE: DO NOT MODIFY 8a45e14f6af47dc1b41e89c2abdc5678b15c6a2e #@#
+{
+  "query" : {
+    "deps" : [
+      "//src/com/facebook/buck/query:query",
+      "//test/com/facebook/buck/query:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/query:query",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

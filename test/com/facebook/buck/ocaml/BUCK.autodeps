@@ -1,0 +1,21 @@
+#@# GENERATED FILE: DO NOT MODIFY dded9d100bfc655dfcceddc26ad1902761937d21 #@#
+{
+  "ocaml" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/ocaml:rules",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

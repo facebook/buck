@@ -1,0 +1,47 @@
+#@# GENERATED FILE: DO NOT MODIFY 4b3414066d9789c587bdb09cef3c8066df50b8eb #@#
+{
+  "lua" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:cli",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/lua:lua",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:command_tool",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/lua:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//src/com/facebook/buck/rules:command_tool",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/lua:lua",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

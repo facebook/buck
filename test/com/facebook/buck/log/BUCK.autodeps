@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY a095f7e23861e56ca44924bfd4e311c6c92d930c #@#
+{
+  "log" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:log",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

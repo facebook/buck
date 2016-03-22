@@ -1,0 +1,20 @@
+#@# GENERATED FILE: DO NOT MODIFY c2f7c9318b445f1d2b097b59e3400bfe2aaf1490 #@#
+{
+  "concurrent" : {
+    "deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//test/com/facebook/buck/util/concurrent:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

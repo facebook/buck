@@ -1,0 +1,16 @@
+#@# GENERATED FILE: DO NOT MODIFY 895930222e965472ffb7cec609741662c6396b92 #@#
+{
+  "scala" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:cli",
+      "//src/com/facebook/buck/jvm/scala:rules",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util:exceptions",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a8cb20cc4fc47c0c5b85b42385fe6aae720dad93 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5aa5ec0ddd131ce9c8e1041ab228a4025c0250b4 #@#
 {
   "config" : {
     "deps" : [
@@ -9,6 +9,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/python:support",

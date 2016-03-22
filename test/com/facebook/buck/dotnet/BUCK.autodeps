@@ -1,0 +1,23 @@
+#@# GENERATED FILE: DO NOT MODIFY 5a2df9e2810ff0042e2433c3d5c6af0fc2a05d27 #@#
+{
+  "dotnet" : {
+    "deps" : [
+      "//src/com/facebook/buck/dotnet:dotnet",
+      "//src/com/facebook/buck/util:exceptions",
+      "//test/com/facebook/buck/dotnet:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jimfs:jimfs",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:executable-finder",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

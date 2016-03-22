@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY c8d3631a02cde1ca36943e7ce5b8a9511e4f4c3d #@#
+#@# GENERATED FILE: DO NOT MODIFY 4a3a688ff74df2d1aea0093013305e9796a62ff6 #@#
 {
   "d" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",

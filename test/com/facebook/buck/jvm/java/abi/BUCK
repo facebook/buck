@@ -1,13 +1,1 @@
-java_test(
-  name = 'abi',
-  srcs = glob(['*.java']),
-  deps = [
-    '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/jvm/java/abi:abi',
-    '//src/com/facebook/buck/zip:unzip',
-    '//test/com/facebook/buck/testutil/integration:integration',
-    '//third-party/java/asm:asm',
-    '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
-  ],
-)
+standard_java_test()

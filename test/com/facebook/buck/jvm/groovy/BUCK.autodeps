@@ -1,0 +1,16 @@
+#@# GENERATED FILE: DO NOT MODIFY 7b07e5073a50e18e08ff364ceb7711342002aa0c #@#
+{
+  "groovy" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/groovy:rules",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

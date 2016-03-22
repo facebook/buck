@@ -1,0 +1,31 @@
+#@# GENERATED FILE: DO NOT MODIFY 034b025e2c7ed22086e843acee6b1760cd3f4bd8 #@#
+{
+  "crosscell" : {
+    "deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/json:json",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/parser:config",
+      "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:types",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/rules/coercer:types",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/event:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/ini4j:ini4j",
+      "//third-party/java/junit:junit",
+      "//third-party/java/nailgun:nailgun"
+    ],
+    "exported_deps" : [ ]
+  }
+}

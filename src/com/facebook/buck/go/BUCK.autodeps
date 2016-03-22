@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 06055c69f54aa47487d1f266ad055d6d23308a7c #@#
+#@# GENERATED FILE: DO NOT MODIFY c52d6c0644a74915c810baf8e0a8c68a3732f0a4 #@#
 {
   "go" : {
     "deps" : [
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",

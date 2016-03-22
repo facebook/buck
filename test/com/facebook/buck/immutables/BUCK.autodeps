@@ -1,0 +1,20 @@
+#@# GENERATED FILE: DO NOT MODIFY 66e09219d232fc3793f1c7e2369704179d3aa6c2 #@#
+{
+  "test" : {
+    "deps" : [
+      "//test/com/facebook/buck/immutables:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

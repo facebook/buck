@@ -1,0 +1,10 @@
+#@# GENERATED FILE: DO NOT MODIFY dbcf7b8dbc5b2adc1526e356e0667b50880494d5 #@#
+{
+  "ddplist" : {
+    "deps" : [
+      "//third-party/java/dd-plist:dd-plist",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

@@ -25,6 +25,7 @@ java_library(
   name = 'executable-finder',
   srcs = FINDER_SRCS,
   autodeps = True,
+  visibility = [ 'PUBLIC' ],
 )
 
 java_library(

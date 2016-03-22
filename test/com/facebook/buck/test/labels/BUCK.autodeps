@@ -1,0 +1,11 @@
+#@# GENERATED FILE: DO NOT MODIFY 982bc71d4605bb8f79dc4419a41de7147547aaa7 #@#
+{
+  "labels" : {
+    "deps" : [
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

@@ -1,0 +1,11 @@
+#@# GENERATED FILE: DO NOT MODIFY 7d29f8777c7c3eed390f37d85476a6e103f8f2fa #@#
+{
+  "hash" : {
+    "deps" : [
+      "//src/com/facebook/buck/util/hash:hash",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

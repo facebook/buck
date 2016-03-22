@@ -1,0 +1,13 @@
+#@# GENERATED FILE: DO NOT MODIFY 2055645d4bad173c52188467ca198cf18ce4b8fc #@#
+{
+  "elf" : {
+    "deps" : [
+      "//src/com/facebook/buck/cxx/elf:elf",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

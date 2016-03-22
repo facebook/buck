@@ -1,0 +1,37 @@
+#@# GENERATED FILE: DO NOT MODIFY 1c20816e444fdd2f5d5f27f9fef89820e5ac5872 #@#
+{
+  "assumptions" : {
+    "deps" : [
+      "//src/com/facebook/buck/rust:rust",
+      "//src/com/facebook/buck/util:exceptions",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "integration" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:io",
+      "//test/com/facebook/buck/rust:assumptions",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "unit" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:cli",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rust:rust",
+      "//src/com/facebook/buck/util:exceptions",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

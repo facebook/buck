@@ -1,0 +1,10 @@
+#@# GENERATED FILE: DO NOT MODIFY d4cbc20def528b06c2d1086a25c683b7b46421fe #@#
+{
+  "gwt" : {
+    "deps" : [
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

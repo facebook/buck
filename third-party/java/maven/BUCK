@@ -36,6 +36,9 @@ prebuilt_jar(
     'LICENSE',
   ],
   deps = [
+    # org.codehaus.plexus.util.xml.pull.XmlPullParserException is in the signature of
+    # org.apache.maven.model.io.xpp3.MavenXpp3Reader.
+    # TODO(bolinfest): Modify prebuilt_jar to support exported_deps.
     '//third-party/java/plexus:plexus-utils',
   ],
   visibility = [
@@ -69,4 +72,3 @@ prebuilt_jar(
     '//src/com/facebook/buck/maven:util',
   ],
 )
-

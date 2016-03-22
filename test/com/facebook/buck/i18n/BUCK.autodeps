@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 082544aa2afc5dafd090117ad62c61c750dffa87 #@#
+{
+  "i18n" : {
+    "deps" : [
+      "//src/com/facebook/buck/i18n:i18n",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

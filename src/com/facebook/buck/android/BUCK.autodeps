@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 60793fa1e719679fef3b30d974e28efb64ecf317 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7e5cd1636c2aaa0fe59e56458ff6749d134b187d #@#
 {
   "exceptions" : {
     "deps" : [
@@ -142,6 +142,7 @@
       "//src/com/facebook/buck/android:split_dex",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/model:model",

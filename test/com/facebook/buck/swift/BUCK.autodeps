@@ -1,0 +1,16 @@
+#@# GENERATED FILE: DO NOT MODIFY 3ff7af9978c3966b17ad12c975f9f851760d57ed #@#
+{
+  "swift" : {
+    "deps" : [
+      "//src/com/facebook/buck/apple:platform",
+      "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util:constants",
+      "//test/com/facebook/buck/apple:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

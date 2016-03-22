@@ -1,0 +1,25 @@
+#@# GENERATED FILE: DO NOT MODIFY 555964586c4d0dc3d2f539cd7bfda168cb3b6e5e #@#
+{
+  "test" : {
+    "deps" : [
+      "//src/com/facebook/buck/test:config",
+      "//src/com/facebook/buck/test:test",
+      "//src/com/facebook/buck/test/result/type:type",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cli:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/test:test"
+    ]
+  }
+}

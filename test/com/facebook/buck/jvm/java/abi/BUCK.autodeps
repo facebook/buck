@@ -1,0 +1,24 @@
+#@# GENERATED FILE: DO NOT MODIFY e122b5a44aff3880e1c27a31b1f6d20d5b358d5b #@#
+{
+  "abi" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/java/abi:abi",
+      "//src/com/facebook/buck/zip:unzip",
+      "//test/com/facebook/buck/jvm/java/abi:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/asm:asm",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [
+      "//third-party/java/asm:asm"
+    ]
+  }
+}
