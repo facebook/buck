@@ -9,9 +9,6 @@ java_immutables_library(
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
     '//src/com/facebook/buck/event/api:api',
   ],
-  exported_deps = [
-    '//src/com/facebook/buck/event/external:external_lib',
-  ],
   visibility = [
     'PUBLIC',
   ],

@@ -51,9 +51,9 @@ java_immutables_library(
     'JavaLibrary.java',
     'Javac.java',
     'JavacErrorParser.java',
-    'JdkProvidedInMemoryJavac.java',
     'JavaInMemoryFileManager.java',
     'JavaInMemoryFileObject.java',
+    'JdkProvidedInMemoryJavac.java',
     'Jsr199Javac.java',
     'MavenPublishable.java',
     'OptionsConsumer.java',
@@ -70,10 +70,6 @@ java_immutables_library(
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
     '//src/com/facebook/buck/event/api:api',
   ],
-  exported_deps = [
-    # HasJavaClassHashes is part of the JavaLibrary interface.
-    '//src/com/facebook/buck/jvm/core:classhash',
-  ],
   visibility = ['PUBLIC'],
 )
 
@@ -82,10 +78,6 @@ java_library(
   srcs = [
     'DefaultJavaPackageFinder.java',
     'ResourcesRootPackageFinder.java',
-  ],
-  exported_deps = [
-    # DefaultJavaPackageFinder implements com.facebook.buck.jvm.core.JavaPackageFinder.
-    '//src/com/facebook/buck/jvm/core:packagefinder',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],
@@ -116,15 +108,6 @@ java_library(
     'MavenUberJar.java',
     'PrebuiltJar.java',
     'PrebuiltJarDescription.java',
-  ],
-  exported_deps = [
-    # DefaultJavaLibrary implements a number of interfaces that need to be exported:
-    # For JavaLibrary and HasClasspathEntries.
-    '//src/com/facebook/buck/jvm/java:support',
-    # For com.facebook.buck.android.AndroidPackageable.
-    '//src/com/facebook/buck/android:packageable',
-    # For com.facebook.buck.rules.InitializableFromDisk.
-    '//src/com/facebook/buck/rules:rules',
   ],
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',
@@ -165,10 +148,6 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',
     '//test/com/facebook/buck/jvm/java:java',
-  ],
-  exported_deps = [
-    # JUnitStep extends ShellStep.
-    '//src/com/facebook/buck/shell:steps',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],

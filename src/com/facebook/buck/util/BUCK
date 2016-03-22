@@ -74,11 +74,6 @@ java_immutables_library(
   tests = [
   ],
   autodeps = True,
-  exported_deps = [
-    '//third-party/java/nuprocess:nuprocess',
-    # ProcessExecutor.Result exposes Optional.
-    '//third-party/java/guava:guava',
-  ],
   visibility = [ 'PUBLIC' ],
 )
 
@@ -115,9 +110,6 @@ java_library(
   name = 'object_mapper',
   srcs = OBJECT_MAPPER_SRCS,
   autodeps = True,
-  exported_deps = [
-    '//third-party/java/jackson:jackson-databind',
-  ],
   visibility = [
     'PUBLIC',
   ],

@@ -2,9 +2,5 @@ java_library(
   name = 'keys',
   srcs = glob(['*.java']),
   autodeps = True,
-  exported_deps = [
-    # DefaultRuleKeyBuilderFactory takes a FileHashCache.
-    '//src/com/facebook/buck/util/cache:cache',
-  ],
   visibility = ['PUBLIC'],
 )

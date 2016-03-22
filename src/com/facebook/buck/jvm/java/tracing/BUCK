@@ -12,6 +12,8 @@ java_library(
     ':javac-tracing-compiler-plugin',
   ],
   exported_deps = [
+    # Have to export this manually. `buck autodeps` does not export it because it is in the
+    # provided_deps. This should be fixed in `buck autodeps`.
     ':api',
   ],
   provided_deps = [

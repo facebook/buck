@@ -53,10 +53,6 @@ java_immutables_library(
     '//test/com/facebook/buck/shell:shell',
   ],
   autodeps = True,
-  exported_deps = [
-    # WorkerTool extends com.facebook.buck.rules.NoopBuildRule.
-    '//src/com/facebook/buck/rules:rules',
-  ],
   visibility = ['PUBLIC'],
 )
 

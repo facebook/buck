@@ -9,10 +9,6 @@ java_library(
     '//test/com/facebook/buck/rules:rules',
   ],
   autodeps = True,
-  exported_deps = [
-    # Cell exports ProjectFilesystem via a getter.
-    '//src/com/facebook/buck/io:io',
-  ],
   visibility = [
     '//src/com/facebook/buck/apple:generators',
     '//src/com/facebook/buck/cli:cli',
@@ -116,34 +112,6 @@ java_immutables_library(
     '//test/com/facebook/buck/rules:rules',
   ],
   autodeps = True,
-  exported_deps = [
-    '//src/com/facebook/buck/rules:rule_key',
-
-    # Need this because TargetGraph subclasses
-    # com.facebook.buck.graph.DefaultDirectedAcyclicGraph.
-    '//src/com/facebook/buck/graph:graph',
-
-    # AbstractBuildRule requires that BuildTarget be visible to subclasses.
-    '//src/com/facebook/buck/model:model',
-
-    # `Description` is a commonly implemented interface that includes a method
-    # with a `throws NoSuchBuildTargetException` clause, so we export this
-    # rule so that `NoSuchBuildTargetException` will be on the classpath.
-    #
-    # It needs to be available because a class that implements `Description` can
-    # implement the method without declaring `throws NoSuchBuildTargetException`
-    # which creates the implicit dependency on `NoSuchBuildTargetException` that
-    # is repaired by exporting this rule.
-    '//src/com/facebook/buck/parser:rule_pattern',
-
-    # AbstractDescriptionArg uses the @SuppressFieldNotInitialized annotation,
-    # it is required by all subclasses to make them build with Infer.
-    '//third-party/java/infer-annotations:infer-annotations',
-
-    # ExternalTestRunnerTestSpec implements
-    # com.fasterxml.jackson.databind.JsonSerializable.
-    '//third-party/java/jackson:jackson-databind',
-  ],
   visibility = [
     'PUBLIC',
   ],
@@ -200,10 +168,11 @@ java_immutables_library(
   ],
   autodeps = True,
   exported_deps = [
+    # For some reason, :build_event is not a PUBLIC rule. As such, we export it
+    # explicitly as part of :rules even though it is not used by any of its
+    # srcs. This is probably for legacy reasons: we can (and should) move
+    # :build_event into its own package and make it a PUBLIC rule.
     '//src/com/facebook/buck/rules:build_event',
-
-    # SymlinkTree implements com.facebook.buck.rules.keys.SupportsInputBasedRuleKey.
-    '//src/com/facebook/buck/rules/keys:keys',
   ],
   visibility = ['PUBLIC'],
 )
@@ -217,9 +186,5 @@ java_library(
     '//test/com/facebook/buck/rules:rules',
   ],
   autodeps = True,
-  exported_deps = [
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules/args:args',
-  ],
   visibility = ['PUBLIC'],
 )

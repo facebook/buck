@@ -33,9 +33,6 @@ CONFIG_SRCS = [
 java_library(
   name = 'config',
   srcs = CONFIG_SRCS,
-  exported_deps = [
-    '//src/com/facebook/buck/cli:low-level-config',
-  ],
   autodeps = True,
   visibility = [
     '//src/com/facebook/buck/android:rules',
