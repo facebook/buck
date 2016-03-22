@@ -213,9 +213,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -492,13 +499,19 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
-
     final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
     validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
@@ -653,9 +666,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -880,9 +900,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1168,9 +1195,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1453,9 +1487,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2229,5 +2270,66 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 0L, ImmutableList.of(
                         "[-] GENERATING PROJECT...FINISHED 0,0s"));
+  }
+
+  @Test
+  public void testBuildTimeDoesNotDisplayNegativeOffset() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            new SuperConsoleConfig(FakeBuckConfig.builder().build()),
+            console,
+            fakeClock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent(),
+            Locale.US,
+            logPath,
+            timeZone);
+    eventBus.register(listener);
+
+    // Do a full parse and action graph cycle before the build event starts
+    // This sequencing occurs when running `buck project`
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
+    rawEventBus.post(configureTestEventAtTime(
+        parseStarted,
+        100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+        ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
+    rawEventBus.post(configureTestEventAtTime(
+        actionGraphStarted,
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 200L, ImmutableList.of("[+] PROCESSING BUCK FILES...0.1s"));
+
+    rawEventBus.post(configureTestEventAtTime(
+        ActionGraphEvent.finished(actionGraphStarted),
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            buildEventStarted,
+            300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+
+    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+
+    validateConsole(console, listener, 433L, ImmutableList.of(parsingLine,
+        DOWNLOAD_STRING,
+        "[+] BUILDING...0.1s"));
   }
 }

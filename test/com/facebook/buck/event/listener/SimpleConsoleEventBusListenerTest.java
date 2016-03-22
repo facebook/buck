@@ -31,6 +31,7 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -61,9 +62,8 @@ import org.junit.Test;
 
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
-
-import java.util.concurrent.TimeUnit;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
@@ -205,10 +205,61 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
   }
 
+  @Test
+  public void testBuildTimeDoesNotDisplayNegativeOffset() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+
+    SimpleConsoleEventBusListener listener =
+        new SimpleConsoleEventBusListener(console,
+            fakeClock,
+            TestResultSummaryVerbosity.of(false, false),
+            Locale.US,
+            logPath);
+    eventBus.register(listener);
+
+    // Do a full parse and action graph cycle before the build event starts
+    // This sequencing occurs when running `buck project`
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
+    rawEventBus.post(configureTestEventAtTime(
+        parseStarted,
+        100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+        ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    String expectedOutput = "[-] PARSING BUCK FILES...FINISHED 0.2s\n";
+    assertOutput(expectedOutput, console);
+
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
+    rawEventBus.post(configureTestEventAtTime(
+        actionGraphStarted,
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+        ActionGraphEvent.finished(actionGraphStarted),
+        500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            buildEventStarted,
+            500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildEvent.finished(buildEventStarted, 0),
+            600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    expectedOutput += "[-] BUILDING...FINISHED 0.1s\n";
+    assertOutput(expectedOutput, console);
+  }
+
   private void assertOutput(String expectedOutput, TestConsole console) {
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(expectedOutput, console.getTextWrittenToStdErr());
   }
-
-
 }

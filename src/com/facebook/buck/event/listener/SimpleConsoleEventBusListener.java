@@ -15,16 +15,16 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.timing.Clock;
@@ -35,8 +35,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Collection;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 /**
@@ -79,8 +80,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         0L,
-        parseStarted,
-        parseFinished,
+        buckFilesProcessing.values(),
         getEstimatedProgressOfProcessingBuckFiles(),
         lines));
     printLines(lines);
@@ -94,12 +94,23 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (console.getVerbosity().isSilent()) {
       return;
     }
+    long currentMillis = clock.currentTimeMillis();
     ImmutableList.Builder<String> lines = ImmutableList.builder();
+    long buildStartedTime = buildStarted != null
+        ? buildStarted.getTimestamp()
+        : Long.MAX_VALUE;
+    long buildFinishedTime = buildFinished != null
+        ? buildFinished.getTimestamp()
+        : currentMillis;
+    Collection<EventPair> processingEvents = getEventsBetween(buildStartedTime,
+        buildFinishedTime,
+        buckFilesProcessing.values());
+    long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
     logEventPair(
         "BUILDING",
         /* suffix */ Optional.<String>absent(),
-        clock.currentTimeMillis(),
-        parseTime.get(),
+        currentMillis,
+        offsetMs,
         buildStarted,
         buildFinished,
         getApproximateBuildProgress(),

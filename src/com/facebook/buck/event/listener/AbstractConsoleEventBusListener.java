@@ -22,8 +22,10 @@ import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -41,16 +43,24 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeSet;
+import com.google.common.collect.TreeRangeSet;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
-import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -88,15 +98,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable
   protected volatile ProjectGenerationEvent.Finished projectGenerationFinished;
 
-  @Nullable
-  protected volatile ParseEvent.Started parseStarted;
-  @Nullable
-  protected volatile ParseEvent.Finished parseFinished;
+  protected ConcurrentLinkedDeque<ParseEvent.Started> parseStarted;
+  protected ConcurrentLinkedDeque<ParseEvent.Finished> parseFinished;
 
-  @Nullable
-  protected volatile ActionGraphEvent.Started actionGraphStarted;
-  @Nullable
-  protected volatile ActionGraphEvent.Finished actionGraphFinished;
+  protected ConcurrentLinkedDeque<ActionGraphEvent.Started> actionGraphStarted;
+  protected ConcurrentLinkedDeque<ActionGraphEvent.Finished> actionGraphFinished;
+
+  protected ConcurrentHashMap<EventKey, EventPair> buckFilesProcessing;
 
   @Nullable
   protected volatile BuildEvent.Started buildStarted;
@@ -141,11 +149,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.projectGenerationStarted = null;
     this.projectGenerationFinished = null;
 
-    this.parseStarted = null;
-    this.parseFinished = null;
+    this.parseStarted = new ConcurrentLinkedDeque<>();
+    this.parseFinished = new ConcurrentLinkedDeque<>();
 
-    this.actionGraphStarted = null;
-    this.actionGraphFinished = null;
+    this.actionGraphStarted = new ConcurrentLinkedDeque<>();
+    this.actionGraphFinished = new ConcurrentLinkedDeque<>();
+
+    this.buckFilesProcessing = new ConcurrentHashMap<>();
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -193,6 +203,44 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   /**
+   * Filter a list of events and return the subset that fall between the given start and end
+   * timestamps. Preserves ordering if the given iterable was ordered. Will replace event pairs
+   * that straddle the boundary with {@link com.facebook.buck.event.listener.ProxyBuckEvent}
+   * instances, so that the resulting collection is strictly contained within the boundaries.
+   * @param start the start timestamp (inclusive)
+   * @param end the end timestamp (also inclusive)
+   * @param eventPairs the events to filter.
+   * @return a list of all events from the given iterable that fall between the given start and end
+   *         times. If an event straddles the given start or end, it will be replaced with a proxy
+   *         event pair that cuts off at exactly the start or end.
+   */
+  protected static Collection<EventPair> getEventsBetween(long start,
+      long end,
+      Iterable<EventPair> eventPairs) {
+    List<EventPair> outEvents = new ArrayList<>();
+    for (EventPair ep : eventPairs) {
+      long startTime = ep.getStartTime();
+      long endTime = ep.getEndTime();
+
+      if (ep.isComplete()) {
+        if (startTime >= start && endTime <= end) {
+          outEvents.add(ep);
+        } else if (startTime >= start && startTime <= end) {
+          // If the start time is within bounds, but the end time is not, replace with a proxy
+          outEvents.add(EventPair.proxy(startTime, end));
+        } else if (endTime <= end && endTime >= start) {
+          // If the end time is within bounds, but the start time is not, replace with a proxy
+          outEvents.add(EventPair.proxy(start, endTime));
+        }
+      } else if (ep.isOngoing()) {
+        // If the event is ongoing, replace with a proxy
+        outEvents.add(EventPair.proxy(startTime, end));
+      } // Ignore the case where we have an end event but not a start. Just drop that EventPair.
+    }
+    return outEvents;
+  }
+
+  /**
    * Adds a line about a pair of start and finished events to lines.
    *
    * @param prefix Prefix to print for this event pair.
@@ -216,32 +264,121 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       @Nullable BuckEvent finishedEvent,
       Optional<Double> progress,
       ImmutableList.Builder<String> lines) {
-    long result = UNFINISHED_EVENT_PAIR;
     if (startEvent == null) {
-      return result;
+      return UNFINISHED_EVENT_PAIR;
     }
-    String parseLine = (finishedEvent != null ? "[-] " : "[+] ") + prefix + "...";
-    long elapsedTimeMs;
-    if (finishedEvent != null) {
-      elapsedTimeMs = finishedEvent.getTimestamp() - startEvent.getTimestamp();
-      parseLine += "FINISHED ";
-      result = elapsedTimeMs;
-      if (progress.isPresent()) {
-        progress = Optional.<Double>of(Double.valueOf(1));
-      }
+    EventPair pair = EventPair.builder()
+        .setStart(startEvent)
+        .setFinish(Optional.<BuckEventExternalInterface>fromNullable(finishedEvent))
+        .build();
+    return logEventPair(prefix,
+        suffix,
+        currentMillis,
+        offsetMs,
+        ImmutableList.of(pair),
+        progress,
+        lines);
+  }
+
+  /**
+   * Adds a line about a set of start and finished events to lines.
+   *
+   * @param prefix Prefix to print for this event pair.
+   * @param suffix Suffix to print for this event pair.
+   * @param currentMillis The current time in milliseconds.
+   * @param offsetMs Offset to remove from calculated time.  Set this to a non-zero value if the
+   *     event pair would contain another event.  For example, build time includes parse time, but
+   *     to make the events easier to reason about it makes sense to pull parse time out of build
+   *     time.
+   * @param eventPairs the collection of start/end events to sum up when calculating elapsed time.
+   * @param lines The builder to append lines to.
+   * @return The summed time between start and finished events if each start event has a matching
+   *    finished event, otherwise {@link AbstractConsoleEventBusListener#UNFINISHED_EVENT_PAIR}.
+   */
+  protected long logEventPair(String prefix,
+      Optional<String> suffix,
+      long currentMillis,
+      long offsetMs,
+      Collection<EventPair> eventPairs,
+      Optional<Double> progress,
+      ImmutableList.Builder<String> lines) {
+    if (eventPairs.isEmpty()) {
+      return UNFINISHED_EVENT_PAIR;
+    }
+
+    long completedRunTimesMs = getTotalCompletedTimeFromEventPairs(eventPairs);
+    long currentlyRunningTime = getWorkingTimeFromLastStartUntilNow(eventPairs, currentMillis);
+    boolean stillRunning = currentlyRunningTime >= 0;
+    String parseLine = (stillRunning ? "[+] " : "[-] ") + prefix + "...";
+    long elapsedTimeMs = completedRunTimesMs - offsetMs;
+    if (stillRunning) {
+      elapsedTimeMs += currentlyRunningTime;
     } else {
-      elapsedTimeMs = currentMillis - startEvent.getTimestamp();
+      parseLine += "FINISHED ";
+      if (progress.isPresent()) {
+        progress = Optional.of(1.0);
+      }
     }
-    parseLine += formatElapsedTime(elapsedTimeMs - offsetMs);
+    parseLine += formatElapsedTime(elapsedTimeMs);
     if (progress.isPresent()) {
-      parseLine += " [" + Math.round(progress.get().doubleValue() * 100) + "%]";
+      parseLine += " [" + Math.round(progress.get() * 100) + "%]";
     }
     if (suffix.isPresent()) {
       parseLine += " " + suffix.get();
     }
     lines.add(parseLine);
+    return stillRunning ? UNFINISHED_EVENT_PAIR : elapsedTimeMs;
+  }
 
-    return result;
+  /**
+   * Takes a collection of start and finished events. If there are any events that
+   * have a start, but no finished time, the collection is considered ongoing.
+   * @param eventPairs the collection of event starts/stops.
+   * @param currentMillis the current time.
+   * @return -1 if all events are completed, otherwise the time elapsed between the latest
+   *         event and currentMillis.
+   */
+  protected static long getWorkingTimeFromLastStartUntilNow(Collection<EventPair> eventPairs,
+      long currentMillis) {
+    // We examine all events to determine whether we have any incomplete events and also
+    // to get the latest timestamp available (start or stop).
+    long latestTimestamp = 0L;
+    long earliestOngoingStart = Long.MAX_VALUE;
+    boolean anyEventIsOngoing = false;
+    for (EventPair pair : eventPairs) {
+      if (pair.isOngoing()) {
+        anyEventIsOngoing = true;
+        if (pair.getStartTime() < earliestOngoingStart) {
+          latestTimestamp = pair.getStartTime();
+        }
+      } else if (pair.getEndTime() > latestTimestamp) {
+        latestTimestamp = pair.getEndTime();
+      }
+    }
+    // If any events are unpaired, the whole collection is considered ongoing and we return
+    // the difference between the latest time in the collection and the current time.
+    return anyEventIsOngoing ? currentMillis - latestTimestamp : -1;
+  }
+
+  /**
+   * Get the summed elapsed time from all matched event pairs. Does not consider unmatched
+   * event pairs. Pairs are determined by their {@link com.facebook.buck.event.EventKey}.
+   * @param eventPairs a set of paired events (incomplete events are okay).
+   * @return the sum of all times between matched event pairs.
+   */
+  protected static long getTotalCompletedTimeFromEventPairs(Collection<EventPair> eventPairs) {
+    long totalTime = 0L;
+    // Flatten the event groupings into a timeline, so that we don't over count parallel work.
+    RangeSet<Long> timeline = TreeRangeSet.create();
+    for (EventPair pair : eventPairs) {
+      if (pair.isComplete() && pair.getElapsedTimeMs() > 0) {
+        timeline.add(Range.open(pair.getStartTime(), pair.getEndTime()));
+      }
+    }
+    for (Range<Long> range : timeline.asRanges()) {
+      totalTime += range.upperEndpoint() - range.lowerEndpoint();
+    }
+    return totalTime;
   }
 
   /**
@@ -305,7 +442,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {
-    parseStarted = started;
+    parseStarted.add(started);
+    EventKey eventKey = started.getEventKey();
+    if (!buckFilesProcessing.containsKey(eventKey)) {
+      buckFilesProcessing.put(eventKey, EventPair.builder().setStart(started).build());
+    } else {
+      EventPair pair = buckFilesProcessing.get(eventKey);
+      buckFilesProcessing.put(eventKey, pair.withStart(started));
+    }
   }
 
   @Subscribe
@@ -317,20 +461,41 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void parseFinished(ParseEvent.Finished finished) {
-    parseFinished = finished;
+    parseFinished.add(finished);
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didFinishParsing();
+    }
+    EventKey eventKey = finished.getEventKey();
+    if (!buckFilesProcessing.containsKey(eventKey)) {
+      buckFilesProcessing.put(eventKey, EventPair.builder().setFinish(finished).build());
+    } else {
+      EventPair pair = buckFilesProcessing.get(eventKey);
+      buckFilesProcessing.put(eventKey, pair.withFinish(finished));
     }
   }
 
   @Subscribe
   public void actionGraphStarted(ActionGraphEvent.Started started) {
-    actionGraphStarted = started;
+    actionGraphStarted.add(started);
+    EventKey eventKey = started.getEventKey();
+    if (!buckFilesProcessing.containsKey(eventKey)) {
+      buckFilesProcessing.put(eventKey, EventPair.builder().setStart(started).build());
+    } else {
+      EventPair pair = buckFilesProcessing.get(eventKey);
+      buckFilesProcessing.put(eventKey, pair.withStart(started));
+    }
   }
 
   @Subscribe
   public void actionGraphFinished(ActionGraphEvent.Finished finished) {
-    actionGraphFinished = finished;
+    actionGraphFinished.add(finished);
+    EventKey eventKey = finished.getEventKey();
+    if (!buckFilesProcessing.containsKey(eventKey)) {
+      buckFilesProcessing.put(eventKey, EventPair.builder().setFinish(finished).build());
+    } else {
+      EventPair pair = buckFilesProcessing.get(eventKey);
+      buckFilesProcessing.put(eventKey, pair.withFinish(finished));
+    }
   }
 
   @Subscribe

@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -279,12 +280,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       getDistBuildDebugInfo(lines);
     }
 
-    if (parseStarted == null && parseFinished == null) {
+    // If we have not yet started processing the BUCK files, show parse times
+    if (parseStarted.isEmpty() && parseFinished.isEmpty()) {
       logEventPair(
           "PARSING BUCK FILES",
           /* suffix */ Optional.<String>absent(),
           currentTimeMillis,
-          0L,
+          /* offsetMs */ 0L,
           projectBuildFileParseStarted,
           projectBuildFileParseFinished,
           getEstimatedProgressOfProcessingBuckFiles(),
@@ -294,9 +296,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long parseTime = logEventPair("PROCESSING BUCK FILES",
         /* suffix */ Optional.<String>absent(),
         currentTimeMillis,
-        0L,
-        parseStarted,
-        actionGraphFinished,
+        /* offsetMs */ 0L,
+        buckFilesProcessing.values(),
         getEstimatedProgressOfProcessingBuckFiles(),
         lines);
 
@@ -304,7 +305,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         "GENERATING PROJECT",
         Optional.<String>absent(),
         currentTimeMillis,
-        0L,
+        /* offsetMs */ 0L,
         projectGenerationStarted,
         projectGenerationFinished,
         getEstimatedProgressOfGeneratingProjectFiles(),
@@ -360,18 +361,35 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         }
       }
 
+
+      if (buildStarted == null) {
+        // All steps past this point require a build.
+        return lines.build();
+      }
       String suffix = Joiner.on(" ")
           .join(FluentIterable.of(new String[] {jobSummary, buildTrace})
               .filter(Predicates.notNull()));
       Optional<String> suffixOptional =
           suffix.isEmpty() ? Optional.<String>absent() : Optional.of(suffix);
+      // Check to see if the build encompasses the time spent parsing. This is true for runs of
+      // buck build but not so for runs of e.g. buck project. If so, subtract parse times
+      // from the build time.
+      long buildStartedTime = buildStarted.getTimestamp();
+      long buildFinishedTime = buildFinished != null
+          ? buildFinished.getTimestamp()
+          : currentTimeMillis;
+      Collection<EventPair> processingEvents = getEventsBetween(buildStartedTime,
+          buildFinishedTime,
+          buckFilesProcessing.values());
+      long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
 
-      long buildTime = logEventPair("BUILDING",
+      long buildTime = logEventPair(
+          "BUILDING",
           suffixOptional,
           currentTimeMillis,
-          parseTime,
-          buildStarted,
-          buildFinished,
+          offsetMs, // parseTime,
+          this.buildStarted,
+          this.buildFinished,
           getApproximateBuildProgress(),
           lines);
 
@@ -397,7 +415,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           "TESTING",
           renderTestSuffix(),
           currentTimeMillis,
-          0,
+          0, /* offsetMs */
           testRunStarted.get(),
           testRunFinished.get(),
           Optional.<Double>absent(),
