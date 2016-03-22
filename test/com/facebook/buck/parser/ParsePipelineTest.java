@@ -96,7 +96,7 @@ public class ParsePipelineTest {
 
   @Test
   public void speculativeDepsTraversal() throws Exception {
-    final Fixture fixture = new Fixture("pipeline_test");
+    final Fixture fixture = createMultiThreadedFixture("pipeline_test");
     final Cell cell = fixture.getCell();
     TargetNode<?> libTargetNode = fixture.getParsePipeline().getTargetNode(
         cell,
@@ -115,7 +115,7 @@ public class ParsePipelineTest {
 
   @Test
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
-    final Fixture fixture = new Fixture("pipeline_test");
+    final Fixture fixture = createMultiThreadedFixture("pipeline_test");
     final Cell cell = fixture.getCell();
     ImmutableSet<TargetNode<?>> libTargetNodes = fixture.getParsePipeline().getAllTargetNodes(
         cell,
@@ -141,7 +141,7 @@ public class ParsePipelineTest {
 
   @Test
   public void missingTarget() throws Exception {
-    try (Fixture fixture = new Fixture("parse_rule_with_bad_dependency")) {
+    try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCell();
       expectedException.expect(HumanReadableException.class);
       expectedException.expectMessage("No rule found when resolving target //:notthere");
@@ -153,7 +153,7 @@ public class ParsePipelineTest {
 
   @Test
   public void missingBuildFile() throws Exception {
-    try (Fixture fixture = new Fixture("parse_rule_with_bad_dependency")) {
+    try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCell();
       expectedException.expect(BuildFileParseException.class);
       expectedException.expectMessage(
@@ -168,7 +168,7 @@ public class ParsePipelineTest {
 
   @Test
   public void missingBuildFileRaw() throws Exception {
-    try (Fixture fixture = new Fixture("parse_rule_with_bad_dependency")) {
+    try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCell();
       expectedException.expect(BuildFileParseException.class);
       expectedException.expectMessage(
@@ -183,7 +183,7 @@ public class ParsePipelineTest {
 
   @Test
   public void badDependency() throws Exception {
-    try (Fixture fixture = new Fixture("parse_rule_with_bad_dependency")) {
+    try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCell();
       fixture.getParsePipeline().getTargetNode(
           cell,
@@ -193,7 +193,7 @@ public class ParsePipelineTest {
 
   @Test
   public void exceptionOnMalformedRawNode() throws Exception {
-    try (Fixture fixture = new Fixture("pipeline_test")) {
+    try (Fixture fixture = createMultiThreadedFixture("pipeline_test")) {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       fixture.getCache().putRawNodesIfNotPresentAndStripMetaEntries(
@@ -211,7 +211,7 @@ public class ParsePipelineTest {
 
   @Test
   public void exceptionOnSwappedRawNodesInGetAllTargetNodes() throws Exception {
-    try (Fixture fixture = new Fixture("pipeline_test")) {
+    try (Fixture fixture = createSynchronousExecutionFixture("pipeline_test")) {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
@@ -239,7 +239,7 @@ public class ParsePipelineTest {
     // The difference between this test and exceptionOnSwappedRawNodesInGetAllTargetNodes is that
     // the two methods follow different code paths to determine what the BuildTarget for the result
     // should be and we want to test both of them.
-    try (Fixture fixture = new Fixture("pipeline_test")) {
+    try (Fixture fixture = createSynchronousExecutionFixture("pipeline_test")) {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
@@ -310,6 +310,24 @@ public class ParsePipelineTest {
     }
   }
 
+  private Fixture createMultiThreadedFixture(String scenario) throws Exception {
+    return new Fixture(
+        scenario,
+        com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
+            MoreExecutors.newMultiThreadExecutor("ParsePipelineTest", 4)),
+        SpeculativeParsing.of(true));
+  }
+
+  // Use this method to make sure the Pipeline doesn't execute stuff on another thread, useful
+  // if you're poking at the cache state directly.
+  private Fixture createSynchronousExecutionFixture(String scenario) throws Exception {
+    return new Fixture(
+        scenario,
+        com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService(),
+        SpeculativeParsing.of(false));
+  }
+
+
   private class Fixture implements AutoCloseable {
 
     private ProjectWorkspace workspace;
@@ -322,15 +340,17 @@ public class ParsePipelineTest {
     private ListeningExecutorService executorService;
     private Set<ProjectBuildFileParser> projectBuildFileParsers;
 
-    public Fixture(String scenario) throws Exception {
+    public Fixture(
+        String scenario,
+        ListeningExecutorService executorService,
+        SpeculativeParsing speculativeParsing) throws Exception {
       this.workspace = TestDataHelper.createProjectWorkspaceForScenario(
           this,
           scenario,
           tmp);
       this.eventBus = BuckEventBusFactory.newInstance();
       this.console = new TestConsole();
-      this.executorService = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
-          MoreExecutors.newMultiThreadExecutor("ParsePipelineTest", 4));
+      this.executorService = executorService;
       this.projectBuildFileParsers = new HashSet<>();
       this.workspace.setUp();
 
@@ -376,7 +396,7 @@ public class ParsePipelineTest {
           this.executorService,
           this.eventBus,
           this.projectBuildFileParserPool,
-          true);
+          speculativeParsing.value());
     }
 
     public ParsePipeline getParsePipeline() {
