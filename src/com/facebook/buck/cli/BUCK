@@ -34,7 +34,7 @@ java_library(
   name = 'config',
   srcs = CONFIG_SRCS,
   exported_deps = [
-    ':low-level-config',
+    '//src/com/facebook/buck/cli:low-level-config',
   ],
   autodeps = True,
   visibility = [

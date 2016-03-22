@@ -124,7 +124,7 @@ java_immutables_library(
   autodeps = True,
   exported_deps = [
     # AndroidLibrary implements AndroidPackageable.
-    ':packageable',
+    '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/rules:rules',
 
     # AndroidLibraryDescription extends JavaLibraryDescription.

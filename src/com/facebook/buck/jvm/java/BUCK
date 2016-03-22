@@ -120,7 +120,7 @@ java_library(
   exported_deps = [
     # DefaultJavaLibrary implements a number of interfaces that need to be exported:
     # For JavaLibrary and HasClasspathEntries.
-    ':support',
+    '//src/com/facebook/buck/jvm/java:support',
     # For com.facebook.buck.android.AndroidPackageable.
     '//src/com/facebook/buck/android:packageable',
     # For com.facebook.buck.rules.InitializableFromDisk.

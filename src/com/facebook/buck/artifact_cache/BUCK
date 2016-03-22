@@ -54,8 +54,8 @@ java_immutables_library(
   ],
   autodeps = True,
   exported_deps = [
-    ':binary_protocol',
-    ':artifact_cache',
+    '//src/com/facebook/buck/artifact_cache:binary_protocol',
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
   ],
   visibility = [
     '//test/com/facebook/buck/artifact_cache/...',

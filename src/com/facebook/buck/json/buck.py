@@ -160,6 +160,13 @@ def add_rule(rule, build_env):
     # set to False.
     if rule_name in build_env.autodeps:
         if rule.get('autodeps', False):
+            # TODO(bolinfest): One major edge case that exists right now when using a set to de-dupe
+            # elements is that the same target may be referenced in two different ways:
+            # 1. As a fully-qualified target: //src/com/facebook/buck/android:packageable
+            # 2. As a local target:           :packageable
+            # Because of this, we may end up with two entries for the same target even though we
+            # are trying to use a set to remove duplicates.
+
             # Combine all of the deps into a set to eliminate duplicates. Although we would prefer
             # it if each dep were exclusively in BUCK or BUCK.autodeps, that is not always
             # possible. For example, if a user-defined macro creates a library that hardcodes a dep

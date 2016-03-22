@@ -31,7 +31,7 @@ java_library(
   name = 'io',
   srcs = glob(['*.java'], excludes = FINDER_SRCS + WATCHMAN_SRCS),
   exported_deps = [
-    ':executable-finder',
+    '//src/com/facebook/buck/io:executable-finder',
   ],
   autodeps = True,
   visibility = [ 'PUBLIC' ],
