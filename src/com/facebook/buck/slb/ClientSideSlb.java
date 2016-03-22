@@ -23,6 +23,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.net.URI;
@@ -109,11 +110,18 @@ public class ClientSideSlb implements HttpLoadBalancer {
       long nowMillis = clock.currentTimeMillis();
       Stopwatch stopwatch = Stopwatch.createStarted();
       try {
-        pingClient.newCall(request).execute();
-        long requestLatencyMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
-        healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
-        healthManager.reportRequestSuccess(serverUri, nowMillis);
+        Response response = pingClient.newCall(request).execute();
+        try {
+          long requestLatencyMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+          perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
+          healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
+          healthManager.reportRequestSuccess(serverUri, nowMillis);
+        } finally {
+          // This guarantees response resources are released. In OkHttp if the Response's stream
+          // is not explicitly closed the connection is leaked from the connection pool and
+          // it will go into CLOSE_WAIT state waiting for a TCP timeout to be hit.
+          response.body().close();
+        }
       } catch (IOException e) {
         healthManager.reportRequestError(serverUri, nowMillis);
         perServerData.setException(e);

@@ -411,6 +411,7 @@ public class HttpArtifactCacheTest {
             assertArrayEquals(expectedData, actualData);
 
             return new Response.Builder()
+                .body(createDummyBody())
                 .code(HttpURLConnection.HTTP_ACCEPTED)
                 .protocol(Protocol.HTTP_1_1)
                 .request(request)
@@ -488,6 +489,7 @@ public class HttpArtifactCacheTest {
               }
             }
             return new Response.Builder()
+                .body(createDummyBody())
                 .code(HttpURLConnection.HTTP_ACCEPTED)
                 .protocol(Protocol.HTTP_1_1)
                 .request(request)
@@ -679,4 +681,7 @@ public class HttpArtifactCacheTest {
     cache.close();
   }
 
+  private static ResponseBody createDummyBody() {
+    return ResponseBody.create(MediaType.parse("text/plain"), "SUCCESS");
+  }
 }

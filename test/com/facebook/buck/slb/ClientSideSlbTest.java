@@ -21,7 +21,10 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -89,6 +92,8 @@ public class ClientSideSlbTest {
     try (ClientSideSlb slb = new ClientSideSlb(config)) {
       Assert.assertTrue(capture.hasCaptured());
     }
+
+    EasyMock.verify(mockScheduler);
   }
 
   @Test
@@ -102,16 +107,27 @@ public class ClientSideSlbTest {
         EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
+    ResponseBody mockBody = EasyMock.createMock(ResponseBody.class);
+    mockBody.close();
+    EasyMock.expectLastCall().times(SERVERS.size());
+    Response response = new Response.Builder()
+        .body(mockBody)
+        .code(200)
+        .protocol(Protocol.HTTP_1_1)
+        .request(new Request.Builder().url("http://dummy.url").build())
+        .build();
     Call mockCall = EasyMock.createMock(Call.class);
-    EasyMock.expect(mockCall.execute()).andReturn(null).times(SERVERS.size());
+    EasyMock.expect(mockCall.execute()).andReturn(response).times(SERVERS.size());
     EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class)))
         .andReturn(mockCall)
         .times(SERVERS.size());
-    EasyMock.replay(mockClient, mockCall, mockScheduler);
+    EasyMock.replay(mockClient, mockCall, mockScheduler, mockBody);
 
     try (ClientSideSlb slb = new ClientSideSlb(config)) {
       Runnable healthCheckLoop = capture.getValue();
       healthCheckLoop.run();
     }
+
+    EasyMock.verify(mockClient, mockCall, mockScheduler, mockBody);
   }
 }
