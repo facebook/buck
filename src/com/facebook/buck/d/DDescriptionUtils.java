@@ -172,24 +172,20 @@ abstract class DDescriptionUtils {
       SourcePathResolver pathResolver,
       SourceList sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
-    try {
-      return new SymlinkTree(
-          baseParams.copyWithChanges(
-              target,
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-          pathResolver,
-          baseParams.getProjectFilesystem().resolve(
-              BuildTargets.getGenPath(baseParams.getBuildTarget(), "%s")),
-          MoreMaps.transformKeys(
-              sources.toNameMap(
-                  baseParams.getBuildTarget(),
-                  pathResolver,
-                  "srcs"),
-              MorePaths.toPathFn(baseParams.getProjectFilesystem().getRootPath().getFileSystem())));
-    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw new RuntimeException(e);
-    }
+    return new SymlinkTree(
+        baseParams.copyWithChanges(
+            target,
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        pathResolver,
+        baseParams.getProjectFilesystem().resolve(
+            BuildTargets.getGenPath(baseParams.getBuildTarget(), "%s")),
+        MoreMaps.transformKeys(
+            sources.toNameMap(
+                baseParams.getBuildTarget(),
+                pathResolver,
+                "srcs"),
+            MorePaths.toPathFn(baseParams.getProjectFilesystem().getRootPath().getFileSystem())));
   }
 
   private static ImmutableMap<BuildTarget, DLibrary> getTransitiveDLibraryRules(

@@ -447,20 +447,15 @@ public class LuaBinaryDescription implements
     Path linkTreeRoot =
         params.getProjectFilesystem().resolve(
             BuildTargets.getGenPath(linkTreeTarget, "%s"));
-    try {
-      return resolver.addToIndex(
-          SymlinkTree.from(
-              params.copyWithChanges(
-                  linkTreeTarget,
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-              pathResolver,
-              linkTreeRoot,
-              components));
-    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(
-          params.getBuildTarget().getUnflavoredBuildTarget());
-    }
+    return resolver.addToIndex(
+        SymlinkTree.from(
+            params.copyWithChanges(
+                linkTreeTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            linkTreeRoot,
+            components));
   }
 
   private Tool getInPlaceBinary(

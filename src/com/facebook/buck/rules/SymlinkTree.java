@@ -16,14 +16,16 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableBiMap;
@@ -33,29 +35,25 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multiset;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class SymlinkTree
     extends AbstractBuildRule
-    implements HasPostBuildSteps, SupportsInputBasedRuleKey {
+    implements HasPostBuildSteps, SupportsInputBasedRuleKey, RuleKeyAppendable {
 
   private final Path root;
-
-  @AddToRuleKey
-  private final ImmutableSortedMap<String, NonHashableSourcePathContainer> linksForRuleKey;
-
   private final ImmutableSortedMap<Path, SourcePath> links;
-
-  private final ImmutableMap<Path, SourcePath> fullLinks;
 
   public SymlinkTree(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path root,
-      ImmutableMap<Path, SourcePath> links) throws InvalidSymlinkTreeException {
+      final ImmutableMap<Path, SourcePath> links) {
     super(params, resolver);
 
     Preconditions.checkState(
@@ -65,36 +63,23 @@ public class SymlinkTree
 
     this.root = root;
     this.links = ImmutableSortedMap.copyOf(links);
-
-    ImmutableMap.Builder<Path, SourcePath> fullLinks = ImmutableMap.builder();
-    // Maintain ordering
-    for (ImmutableMap.Entry<Path, SourcePath> entry : this.links.entrySet()) {
-      for (Path pathPart : entry.getKey()) {
-        if (pathPart.toString().equals("..")) {
-          throw new InvalidSymlinkTreeException(
-              String.format(
-                  "Path '%s' should not contain '%s'.",
-                  entry.getKey(),
-                  pathPart));
-        }
-      }
-      fullLinks.put(root.resolve(entry.getKey()), entry.getValue());
-    }
-    this.fullLinks = fullLinks.build();
-    this.linksForRuleKey = getLinksForRuleKey(links);
   }
 
   public static SymlinkTree from(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path root,
-      ImmutableMap<String, SourcePath> links)
-      throws InvalidSymlinkTreeException {
+      ImmutableMap<String, SourcePath> links) {
     return new SymlinkTree(
         params,
         resolver,
         root,
         MoreMaps.transformKeys(links, MorePaths.toPathFn(root.getFileSystem())));
+  }
+
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    return builder.setReflectively("links", getLinksForRuleKey());
   }
 
   /**
@@ -164,8 +149,7 @@ public class SymlinkTree
 
   // Put the link map into the rule key, as if it changes at all, we need to
   // re-run it.
-  private ImmutableSortedMap<String, NonHashableSourcePathContainer> getLinksForRuleKey(
-      ImmutableMap<Path, SourcePath> links) {
+  private ImmutableSortedMap<String, NonHashableSourcePathContainer> getLinksForRuleKey() {
     ImmutableSortedMap.Builder<String, NonHashableSourcePathContainer> linksForRuleKeyBuilder =
         ImmutableSortedMap.naturalOrder();
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
@@ -183,6 +167,30 @@ public class SymlinkTree
     return root;
   }
 
+  @VisibleForTesting
+  protected Step getVerifiyStep() {
+    return new AbstractExecutionStep("verify_symlink_tree") {
+        @Override
+        public int execute(ExecutionContext context) throws IOException {
+          for (ImmutableMap.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
+            for (Path pathPart : entry.getKey()) {
+              if (pathPart.toString().equals("..")) {
+                context.getBuckEventBus().post(
+                    ConsoleEvent.create(
+                        Level.SEVERE,
+                        String.format(
+                            "Path '%s' should not contain '%s'.",
+                            entry.getKey(),
+                            pathPart)));
+                return 1;
+              }
+            }
+          }
+          return 0;
+        }
+      };
+  }
+
   // We generate the symlinks using post-build steps to avoid the cache because:
   // 1) We don't currently support caching symlinks.
   // 2) It's almost certainly always more expensive to cache them rather than just re-create them.
@@ -192,6 +200,7 @@ public class SymlinkTree
       BuildContext context,
       BuildableContext buildableContext) {
     return ImmutableList.of(
+        getVerifiyStep(),
         new MakeCleanDirectoryStep(getProjectFilesystem(), root),
         new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
   }
@@ -204,27 +213,4 @@ public class SymlinkTree
     return links;
   }
 
-  public ImmutableMap<Path, SourcePath> getFullLinks() {
-    return fullLinks;
-  }
-
-  @SuppressWarnings("serial")
-  public static class InvalidSymlinkTreeException extends Exception {
-    public InvalidSymlinkTreeException(String message) {
-      super(message);
-    }
-
-    public HumanReadableException getHumanReadableExceptionForBuildTarget(
-        UnflavoredBuildTarget buildTarget) {
-      return new HumanReadableException(
-          this,
-          "Target '%s' has invalid symlink tree entry. %s",
-          buildTarget,
-          getMessage());
-    }
-  }
-
-  public ImmutableSortedMap<String, NonHashableSourcePathContainer> getLinksForRuleKey() {
-    return linksForRuleKey;
-  }
 }

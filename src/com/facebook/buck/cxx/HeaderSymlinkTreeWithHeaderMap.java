@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
@@ -41,7 +40,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       SourcePathResolver resolver,
       Path root,
       Path headerMapPath,
-      ImmutableMap<Path, SourcePath> links) throws SymlinkTree.InvalidSymlinkTreeException {
+      ImmutableMap<Path, SourcePath> links) {
     super(params, resolver, root, links);
     this.headerMapPath = headerMapPath;
   }

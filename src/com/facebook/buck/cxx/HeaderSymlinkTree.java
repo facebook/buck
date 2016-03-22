@@ -31,7 +31,7 @@ public class HeaderSymlinkTree extends SymlinkTree {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path root,
-      ImmutableMap<Path, SourcePath> links) throws SymlinkTree.InvalidSymlinkTreeException {
+      ImmutableMap<Path, SourcePath> links) {
     super(params, resolver, root, links);
   }
 

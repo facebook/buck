@@ -164,9 +164,7 @@ public class PythonBinaryDescription implements
             .build();
     Path linkTreeRoot = params.getProjectFilesystem().resolve(
         BuildTargets.getGenPath(linkTreeTarget, "%s"));
-    SymlinkTree linkTree;
-    try {
-      linkTree =
+    SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
                 params.copyWithChanges(
@@ -180,10 +178,6 @@ public class PythonBinaryDescription implements
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
                     .build()));
-    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(
-          params.getBuildTarget().getUnflavoredBuildTarget());
-    }
 
     return new PythonInPlaceBinary(
         params,

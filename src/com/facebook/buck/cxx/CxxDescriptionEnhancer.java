@@ -989,18 +989,14 @@ public class CxxDescriptionEnhancer {
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
-    try {
-      return new SymlinkTree(
-          params.copyWithChanges(
-              symlinkTreeTarget,
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-          pathResolver,
-          symlinkTreeRoot,
-          links.build());
-    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw new RuntimeException(e.getMessage());
-    }
+    return new SymlinkTree(
+        params.copyWithChanges(
+            symlinkTreeTarget,
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        pathResolver,
+        symlinkTreeRoot,
+        links.build());
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {

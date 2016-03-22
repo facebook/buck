@@ -159,7 +159,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
         symlinkTreeBuildRule.getPostBuildSteps(
             buildContext,
             buildableContext);
-    assertEquals(expectedBuildSteps, actualBuildSteps);
+    assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));
   }
 
   @Test

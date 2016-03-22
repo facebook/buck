@@ -31,6 +31,7 @@ import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -150,7 +151,7 @@ public class SymlinkTreeTest {
         symlinkTreeBuildRule.getPostBuildSteps(
             buildContext,
             buildableContext);
-    assertEquals(expectedBuildSteps, actualBuildSteps);
+    assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));
   }
 
   @Test
@@ -312,21 +313,22 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void constructorThrowsIfKeyContainsDotDot() throws Exception {
+  public void verifyStepFailsIfKeyContainsDotDot() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    exception.expect(SymlinkTree.InvalidSymlinkTreeException.class);
-    new SymlinkTree(
-        new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        pathResolver,
-        outputPath,
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get("../something"),
-            new PathSourcePath(
-                projectFilesystem,
-                MorePaths.relativize(tmpDir.getRoot().toPath(), tmpDir.newFile().toPath()))));
+    SymlinkTree symlinkTree =
+        new SymlinkTree(
+            new FakeBuildRuleParamsBuilder(buildTarget).build(),
+            pathResolver,
+            outputPath,
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get("../something"),
+                new PathSourcePath(
+                    projectFilesystem,
+                    MorePaths.relativize(tmpDir.getRoot().toPath(), tmpDir.newFile().toPath()))));
+    int exitCode = symlinkTree.getVerifiyStep().execute(TestExecutionContext.newInstance());
+    assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));
   }
 
   @Test

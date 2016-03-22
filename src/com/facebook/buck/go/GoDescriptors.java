@@ -380,12 +380,7 @@ abstract class GoDescriptors {
         params.getBuildTarget(),
         "__%s__tree"));
 
-    try {
-      return new SymlinkTree(params, pathResolver, root, treeMap);
-    } catch (SymlinkTree.InvalidSymlinkTreeException ex) {
-      // This should never happen since go package names don't have .. as a path component.
-      throw new RuntimeException(ex);
-    }
+    return new SymlinkTree(params, pathResolver, root, treeMap);
   }
 
   /**

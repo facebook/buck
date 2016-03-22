@@ -41,7 +41,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -93,11 +92,7 @@ public class ThriftLibraryDescriptionTest {
         new FakeBuildRuleParamsBuilder(target)
             .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build();
-    try {
-      return new HeaderSymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
-    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw new RuntimeException(e);
-    }
+    return new HeaderSymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
   }
 
   private static class FakeThriftLanguageSpecificEnhancer

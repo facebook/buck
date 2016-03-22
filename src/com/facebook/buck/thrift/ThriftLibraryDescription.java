@@ -35,7 +35,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -282,9 +281,8 @@ public class ThriftLibraryDescription
       // Create the symlink tree build rule and add it to the resolver.
       Path includeRoot = params.getProjectFilesystem().resolve(getIncludeRoot(target));
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
-      HeaderSymlinkTree symlinkTree;
-      try {
-        symlinkTree = new HeaderSymlinkTree(
+      HeaderSymlinkTree symlinkTree =
+        new HeaderSymlinkTree(
             params.copyWithChanges(
                 symlinkTreeTarget,
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
@@ -292,9 +290,6 @@ public class ThriftLibraryDescription
             pathResolver,
             includeRoot,
             includes);
-      } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(target.getUnflavoredBuildTarget());
-      }
       resolver.addToIndex(symlinkTree);
 
       // Create a dummy rule that dependents can use to grab the information they need

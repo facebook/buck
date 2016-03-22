@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -163,29 +162,25 @@ public class CxxPreprocessables {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    try {
-      if (headerMapPath.isPresent()) {
-        return new HeaderSymlinkTreeWithHeaderMap(
-            paramsWithoutDeps,
-            resolver,
-            root,
-            headerMapPath.get(),
-            links);
-      } else {
-        return new HeaderSymlinkTree(
-            paramsWithoutDeps,
-            resolver,
-            root,
-            links);
-      }
-    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(target.getUnflavoredBuildTarget());
+    if (headerMapPath.isPresent()) {
+      return new HeaderSymlinkTreeWithHeaderMap(
+          paramsWithoutDeps,
+          resolver,
+          root,
+          headerMapPath.get(),
+          links);
+    } else {
+      return new HeaderSymlinkTree(
+          paramsWithoutDeps,
+          resolver,
+          root,
+          links);
     }
   }
 
   /**
-   * @return adds a the header {@link SymlinkTree} for the given rule to the
-   *     {@link CxxPreprocessorInput}.
+   * @return adds a the header {@link com.facebook.buck.rules.SymlinkTree} for the given rule to
+   *     the {@link CxxPreprocessorInput}.
    */
   public static CxxPreprocessorInput.Builder addHeaderSymlinkTree(
       CxxPreprocessorInput.Builder builder,
