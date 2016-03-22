@@ -69,7 +69,9 @@ public class AppleNativeIntegrationTestUtils {
         "fakeversion",
         "fakearch",
         sdkPaths.get(anySdk),
-        buckConfig);
+        buckConfig,
+        new AppleConfig(buckConfig),
+        Optional.<ProcessExecutor>absent());
     return
         appleCxxPlatform.getSwift().isPresent() &&
         appleCxxPlatform.getSwiftStdlibTool().isPresent();

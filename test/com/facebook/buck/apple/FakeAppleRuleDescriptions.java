@@ -30,6 +30,7 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -104,7 +105,9 @@ public class FakeAppleRuleDescriptions {
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           FakeBuckConfig.builder().build(),
-          EXECUTABLE_FINDER);
+          new FakeAppleConfig(),
+          EXECUTABLE_FINDER,
+          Optional.<ProcessExecutor>absent());
 
   private static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
@@ -113,7 +116,9 @@ public class FakeAppleRuleDescriptions {
           "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
           FakeBuckConfig.builder().build(),
-          EXECUTABLE_FINDER);
+          new FakeAppleConfig(),
+          EXECUTABLE_FINDER,
+          Optional.<ProcessExecutor>absent());
 
 
   private static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
@@ -123,7 +128,9 @@ public class FakeAppleRuleDescriptions {
           "x86_64",
           DEFAULT_MACOSX_SDK_PATHS,
           FakeBuckConfig.builder().build(),
-          EXECUTABLE_FINDER);
+          new FakeAppleConfig(),
+          EXECUTABLE_FINDER,
+          Optional.<ProcessExecutor>absent());
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 

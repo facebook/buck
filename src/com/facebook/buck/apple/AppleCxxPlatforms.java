@@ -39,6 +39,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -78,14 +79,18 @@ public class AppleCxxPlatforms {
       String minVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
-      BuckConfig buckConfig) {
+      BuckConfig buckConfig,
+      AppleConfig appleConfig,
+      Optional<ProcessExecutor> processExecutor) {
     return buildWithExecutableChecker(
         targetSdk,
         minVersion,
         targetArchitecture,
         sdkPaths,
         buckConfig,
-        new ExecutableFinder());
+        appleConfig,
+        new ExecutableFinder(),
+        processExecutor);
   }
 
   @VisibleForTesting
@@ -95,7 +100,9 @@ public class AppleCxxPlatforms {
       String targetArchitecture,
       final AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
-      ExecutableFinder executableFinder) {
+      AppleConfig appleConfig,
+      ExecutableFinder executableFinder,
+      Optional<ProcessExecutor> processExecutor) {
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
     // Search for tools from most specific to least specific.
@@ -390,11 +397,6 @@ public class AppleCxxPlatforms {
           if (xcodeVersionObject != null) {
             platformBuilder.setXcodeVersion(Optional.of(xcodeVersionObject.toString()));
           }
-
-          NSObject xcodeBuildVersionObject = parsedXcodeInfoPlist.objectForKey("DTXcodeBuild");
-          if (xcodeBuildVersionObject != null) {
-            platformBuilder.setXcodeBuildVersion(Optional.of(xcodeBuildVersionObject.toString()));
-          }
         } catch (IOException e) {
           LOG.debug(
               "Error reading Xcode's info plist %s; ignoring Xcode versions",
@@ -405,6 +407,20 @@ public class AppleCxxPlatforms {
                 ParserConfigurationException |
                 SAXException e) {
           LOG.debug("Error in parsing %s; ignoring Xcode versions", xcodeInfoPlistPath);
+        }
+      }
+
+      // Get the Xcode build version as reported by `xcodebuild -version`.  This is
+      // different than the build number in the Info.plist, sigh.
+      if (processExecutor.isPresent()) {
+        try {
+          Optional<String> xcodeBuildVersion =
+              appleConfig.getXcodeBuildVersionSupplier(
+                  developerPath.get(), processExecutor.get()).get();
+          platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
+          LOG.debug("Xcode build version is: " + xcodeBuildVersion.or("<absent>"));
+        } catch (IOException e) {
+          LOG.debug("Error in getting Xcode build version");
         }
       }
     }
@@ -457,5 +473,4 @@ public class AppleCxxPlatforms {
           toolSearchPaths,
           ImmutableSet.<String>of());
   }
-
 }

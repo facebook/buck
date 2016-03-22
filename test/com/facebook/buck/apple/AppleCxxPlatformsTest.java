@@ -58,6 +58,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -129,7 +130,9 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -244,7 +247,9 @@ public class AppleCxxPlatformsTest {
             "armv7k",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -349,7 +354,9 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     assertThat(appleCxxPlatform.getOtest().isPresent(), is(false));
   }
@@ -401,7 +408,9 @@ public class AppleCxxPlatformsTest {
             "cha+rs",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     assertEquals(
         ImmutableFlavor.of("__in__va_id_-cha_rs"),
@@ -461,7 +470,9 @@ public class AppleCxxPlatformsTest {
                         "cppflags", "-DCTHING",
                         "cxxflags", "-std=c++11",
                         "cxxppflags", "-DCXXTHING"))).build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -543,7 +554,9 @@ AppleSdkPaths appleSdkPaths =
             "armv7",
             appleSdkPaths,
             config,
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     CxxPlatform defaultCxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -597,7 +610,9 @@ AppleSdkPaths appleSdkPaths =
         "armv7",
         appleSdkPaths,
         FakeBuckConfig.builder().build(),
-        new FakeExecutableFinder(ImmutableSet.<Path>of()));
+        new FakeAppleConfig(),
+        new FakeExecutableFinder(ImmutableSet.<Path>of()),
+        Optional.<ProcessExecutor>absent());
   }
 
   @Test
@@ -646,7 +661,9 @@ AppleSdkPaths appleSdkPaths =
             "armv7",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -705,7 +722,9 @@ AppleSdkPaths appleSdkPaths =
             "armv7k",
             appleSdkPaths,
             FakeBuckConfig.builder().build(),
-            new FakeExecutableFinder(paths));
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -852,7 +871,9 @@ AppleSdkPaths appleSdkPaths =
         "armv7",
         appleSdkPaths,
         FakeBuckConfig.builder().build(),
-        new AlwaysFoundExecutableFinder());
+        new FakeAppleConfig(),
+        new AlwaysFoundExecutableFinder(),
+        Optional.<ProcessExecutor>absent());
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path

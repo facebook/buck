@@ -235,7 +235,8 @@ public class KnownBuildRuleTypes {
       ImmutableList<Path> extraPlatformPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
-      ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleSdkPathsBuilder)
+      ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleSdkPathsBuilder,
+      ProcessExecutor processExecutor)
       throws IOException {
     Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
     if (appleDeveloperDirectory.isPresent() &&
@@ -268,7 +269,9 @@ public class KnownBuildRuleTypes {
             targetSdkVersion,
             architecture,
             appleSdkPaths,
-            buckConfig);
+            buckConfig,
+            appleConfig,
+            Optional.of(processExecutor));
         platformFlavorsToAppleSdkPathsBuilder.put(
             appleCxxPlatform.getCxxPlatform().getFlavor(),
             appleCxxPlatform);
@@ -322,7 +325,8 @@ public class KnownBuildRuleTypes {
         appleConfig.getExtraPlatformPaths(),
         config,
         appleConfig,
-        platformFlavorsToAppleCxxPlatformsBuilder);
+        platformFlavorsToAppleCxxPlatformsBuilder,
+        processExecutor);
     ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         platformFlavorsToAppleCxxPlatformsBuilder.build();
 
