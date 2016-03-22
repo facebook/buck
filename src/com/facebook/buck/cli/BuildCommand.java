@@ -394,7 +394,8 @@ public class BuildCommand extends AbstractCommand {
               executor,
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  getArguments()));
+                  getArguments()),
+              /* ignoreBuckAutodepsFiles */ false);
       buildTargets = result.getFirst();
       buildTargetsHaveBeenCalculated = true;
       TargetGraphToActionGraph targetGraphToActionGraph =

@@ -35,5 +35,6 @@ public interface ProjectBuildFileParserFactory {
       ConstructorArgMarshaller marshaller,
       Console console,
       ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus);
+      BuckEventBus buckEventBus,
+      boolean ignoreBuckAutodepsFiles);
 }

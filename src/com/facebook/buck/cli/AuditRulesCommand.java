@@ -124,7 +124,8 @@ public class AuditRulesCommand extends AbstractCommand {
             params.getObjectMapper())),
         params.getConsole(),
         params.getEnvironment(),
-        params.getBuckEventBus())) {
+        params.getBuckEventBus(),
+        /* ignoreBuckAutodepsFiles */ false)) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {

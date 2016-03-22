@@ -2052,7 +2052,8 @@ public class ParserTest {
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
                         filter,
-                        BuildFileSpec.fromRecursivePath(Paths.get("")))))
+                        BuildFileSpec.fromRecursivePath(Paths.get("")))),
+                /* ignoreBuckAutodepsFiles */ false)
                 .getSecond().getNodes())
         .filter(filter)
         .transform(HasBuildTarget.TO_TARGET)

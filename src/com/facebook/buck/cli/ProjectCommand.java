@@ -993,7 +993,8 @@ public class ProjectCommand extends BuildCommand {
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
                       Predicates.<TargetNode<?>>alwaysTrue(),
-                      BuildFileSpec.fromRecursivePath(Paths.get("")))))
+                      BuildFileSpec.fromRecursivePath(Paths.get("")))),
+              /* ignoreBuckAutodepsFiles */ false)
           .getSecond();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());

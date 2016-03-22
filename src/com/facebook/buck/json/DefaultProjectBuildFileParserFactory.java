@@ -34,13 +34,15 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ConstructorArgMarshaller marshaller,
       Console console,
       ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      boolean ignoreBuckAutodepsFiles) {
     return new ProjectBuildFileParser(
         options,
         marshaller,
         environment,
         options.getRawConfig(),
         buckEventBus,
-        new ProcessExecutor(console));
+        new ProcessExecutor(console),
+        ignoreBuckAutodepsFiles);
   }
 }

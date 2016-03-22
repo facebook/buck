@@ -57,6 +57,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -108,7 +109,8 @@ public class Parser {
                 executor,
                 cell,
                 enableProfiling,
-                SpeculativeParsing.of(false))) {
+                SpeculativeParsing.of(false),
+                /* ignoreBuckAutodepsFiles */ false)) {
       return state.getAllRawNodes(cell, buildFile);
     }
   }
@@ -136,7 +138,8 @@ public class Parser {
         executor,
         cell,
         enableProfiling,
-        SpeculativeParsing.of(true))) {
+        SpeculativeParsing.of(true),
+        /* ignoreBuckAutodepsFiles */ false)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -157,7 +160,8 @@ public class Parser {
                 executor,
                 cell,
                 enableProfiling,
-                SpeculativeParsing.of(false))) {
+                SpeculativeParsing.of(false),
+                /* ignoreBuckAutodepsFiles */ false)) {
       return state.getTargetNode(target);
     }
   }
@@ -227,18 +231,21 @@ public class Parser {
                  executor,
                  rootCell,
                  enableProfiling,
-                 SpeculativeParsing.of(true))) {
+                 SpeculativeParsing.of(true),
+                 /* ignoreBuckAutodepsFiles */ false)) {
       return buildTargetGraph(
           state,
           eventBus,
-          toExplore);
+          toExplore,
+          /* ignoreBuckAutodepsFiles */ false);
     }
   }
 
   private TargetGraph buildTargetGraph(
       final PerBuildState state,
       final BuckEventBus eventBus,
-      final Iterable<BuildTarget> toExplore)
+      final Iterable<BuildTarget> toExplore,
+      final boolean ignoreBuckAutodepsFiles)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
 
     if (Iterables.isEmpty(toExplore)) {
@@ -261,6 +268,10 @@ public class Parser {
           } catch (BuildFileParseException | BuildTargetException e) {
             throw new RuntimeException(e);
           }
+        }
+
+        if (ignoreBuckAutodepsFiles) {
+          return Collections.emptyIterator();
         }
 
         Set<BuildTarget> deps = Sets.newHashSet();
@@ -319,8 +330,9 @@ public class Parser {
   }
 
   /**
-   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @param eventBus used to log events while parsing.
+   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
+   * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
    * @return the target graph containing the build targets and their related targets.
    */
   public synchronized Pair<ImmutableSet<BuildTarget>, TargetGraph>
@@ -329,7 +341,8 @@ public class Parser {
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean ignoreBuckAutodepsFiles)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     try (PerBuildState state =
@@ -340,14 +353,15 @@ public class Parser {
                  executor,
                  rootCell,
                  enableProfiling,
-                 SpeculativeParsing.of(true))) {
+                 SpeculativeParsing.of(true),
+                 ignoreBuckAutodepsFiles)) {
 
       ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
           state,
           eventBus,
           rootCell,
           targetNodeSpecs);
-      TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets);
+      TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets, ignoreBuckAutodepsFiles);
 
       return new Pair<>(buildTargets, graph);
     }
@@ -375,7 +389,8 @@ public class Parser {
                 executor,
                 rootCell,
                 enableProfiling,
-                speculativeParsing)) {
+                speculativeParsing,
+                /* ignoreBuckAutodepsFiles */ false)) {
       return resolveTargetSpecs(
           state,
           eventBus,

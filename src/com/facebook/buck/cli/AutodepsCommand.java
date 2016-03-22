@@ -40,8 +40,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -96,7 +96,8 @@ public class AutodepsCommand extends AbstractCommand {
                     TargetNodePredicateSpec.of(
                         Predicates.<TargetNode<?>>alwaysTrue(),
                         BuildFileSpec.fromRecursivePath(
-                            Paths.get(""))))).getSecond();
+                            Paths.get("")))),
+                /* ignoreBuckAutodepsFiles */ true).getSecond();
       } catch (BuildTargetException | BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

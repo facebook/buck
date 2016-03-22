@@ -34,6 +34,26 @@ public class AutodepsCommandIntegrationTest {
 
   @Test
   public void necessarySymbolHasASingleProviderInAPublicRule() throws IOException {
+    verifyBasicBuckAutodepsCase();
+  }
+
+  @Test
+  public void malformedBuckAutodepsFileDoesNotBreakBuckAutodeps() throws IOException {
+    ProjectWorkspace workspace = verifyBasicBuckAutodepsCase();
+
+    workspace.writeContentsToPath(
+        "This is not valid contents for a BUCK.autodeps file",
+        "BUCK.autodeps");
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("autodeps");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 file written.\n"));
+    workspace.verify();
+  }
+
+  private ProjectWorkspace verifyBasicBuckAutodepsCase() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "autodeps_java_single_public_provider", tmp);
     workspace.setUp();
@@ -44,6 +64,7 @@ public class AutodepsCommandIntegrationTest {
         result.getStderr(),
         containsString("1 file written.\n"));
     workspace.verify();
+    return workspace;
   }
 
   @Test

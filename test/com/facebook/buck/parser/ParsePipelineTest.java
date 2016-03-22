@@ -349,7 +349,8 @@ public class ParsePipelineTest {
               ProjectBuildFileParser buildFileParser = input.createBuildFileParser(
                   constructorArgMarshaller,
                   console,
-                  eventBus);
+                  eventBus,
+                  /* ignoreBuckAutodepsFiles */ false);
               synchronized (projectBuildFileParsers) {
                 projectBuildFileParsers.add(buildFileParser);
               }

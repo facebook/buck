@@ -105,6 +105,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final BserDeserializer bserDeserializer;
   private final BserSerializer bserSerializer;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
+  private final boolean ignoreBuckAutodepsFiles;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -120,7 +121,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       ImmutableMap<String, String> environment,
       final ImmutableMap<String, ImmutableMap<String, String>> rawConfig,
       BuckEventBus buckEventBus,
-      ProcessExecutor processExecutor) {
+      ProcessExecutor processExecutor,
+      boolean ignoreBuckAutodepsFiles) {
     this.pathToBuckPy = Optional.absent();
     this.options = options;
     this.marshaller = marshaller;
@@ -130,6 +132,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.SORTED);
     this.bserSerializer = new BserSerializer();
     this.assertSingleThreadedParsing = new AssertScopeExclusiveAccess();
+    this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
 
     this.rawConfigJson =
         Suppliers.memoize(
@@ -242,6 +245,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     if (enableProfiling) {
       argBuilder.add("--profile");
+    }
+
+    if (ignoreBuckAutodepsFiles) {
+      argBuilder.add("--ignore_buck_autodeps_files");
     }
 
     if (options.getAllowEmptyGlobs()) {

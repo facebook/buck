@@ -87,7 +87,8 @@ public class FetchCommand extends BuildCommand {
                 pool.getExecutor(),
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
-                    getArguments()));
+                    getArguments()),
+                /* ignoreBuckAutodepsFiles */ false);
         actionGraphAndResolver = Preconditions.checkNotNull(transformer.apply(result.getSecond()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildTargetException | BuildFileParseException e) {

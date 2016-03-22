@@ -91,7 +91,8 @@ class PerBuildState implements AutoCloseable {
       ListeningExecutorService executorService,
       Cell rootCell,
       boolean enableProfiling,
-      SpeculativeParsing speculativeParsing) {
+      SpeculativeParsing speculativeParsing,
+      final boolean ignoreBuckAutodepsFiles) {
     this.permState = permState;
     this.marshaller = marshaller;
     this.eventBus = eventBus;
@@ -118,7 +119,7 @@ class PerBuildState implements AutoCloseable {
         new Function<Cell, ProjectBuildFileParser>() {
           @Override
           public ProjectBuildFileParser apply(Cell input) {
-            return createBuildFileParser(input);
+            return createBuildFileParser(input, ignoreBuckAutodepsFiles);
           }
         });
     this.parsePipeline = new ParsePipeline(
@@ -183,8 +184,12 @@ class PerBuildState implements AutoCloseable {
     return parsePipeline.getRawNodes(cell, buildFile);
   }
 
-  private ProjectBuildFileParser createBuildFileParser(Cell cell) {
-    ProjectBuildFileParser parser = cell.createBuildFileParser(marshaller, console, eventBus);
+  private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
+    ProjectBuildFileParser parser = cell.createBuildFileParser(
+        marshaller,
+        console,
+        eventBus,
+        ignoreBuckAutodepsFiles);
     parser.setEnableProfiling(enableProfiling);
     return parser;
   }

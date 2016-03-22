@@ -60,6 +60,7 @@ class BuckTest(unittest.TestCase):
             None,               # watchman_project_prefix
             self.build_file_name,
             self.allow_empty_globs,
+            False,              # ignore_buck_autodeps_files
             self.watchman_client,
             self.watchman_error,
             includes,

@@ -238,7 +238,8 @@ public class ProjectBuildFileParserTest {
         ConstructorArgMarshaller marshaller,
         Console console,
         ImmutableMap<String, String> environment,
-        BuckEventBus buckEventBus) {
+        BuckEventBus buckEventBus,
+        boolean ignoreBuckAutodepsFiles) {
       PythonBuckConfig config = new PythonBuckConfig(
           FakeBuckConfig.builder().setEnvironment(environment).build(),
           new ExecutableFinder());
@@ -368,7 +369,8 @@ public class ProjectBuildFileParserTest {
             ImmutableMap.<String, String>of(),
             ImmutableMap.<String, ImmutableMap<String, String>>of(),
             buckEventBus,
-            processExecutor);
+            processExecutor,
+            /* ignoreBuckAutodepsFiles */ false);
       }
     }
   }

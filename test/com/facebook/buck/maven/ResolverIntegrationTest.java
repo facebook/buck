@@ -126,7 +126,8 @@ public class ResolverIntegrationTest {
             ObjectMappers.newDefaultInstance())),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
-        BuckEventBusFactory.newInstance());
+        BuckEventBusFactory.newInstance(),
+        /* ignoreBuckAutodepsFiles */ false);
   }
 
   @AfterClass

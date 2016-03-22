@@ -154,7 +154,8 @@ public class JavaSymbolFinder {
         marshaller,
         console,
         environment,
-        buckEventBus)) {
+        buckEventBus,
+        /* ignoreBuckAutodepsFiles */ false)) {
       for (Path sourceFile : sourceFilePaths) {
         for (Path buckFile : possibleBuckFilesForSourceFile(sourceFile)) {
           List<Map<String, Object>> rules;

@@ -375,6 +375,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor) throws IOException, InterruptedException {
     try {
+      boolean ignoreBuckAutodepsFiles = false;
       if (getArguments().isEmpty() || isDetectTestChanges()) {
         return Optional.of(new Pair<>(
             ImmutableSet.<BuildTarget>of(),
@@ -388,7 +389,8 @@ public class TargetsCommand extends AbstractCommand {
                     TargetNodePredicateSpec.of(
                         Predicates.<TargetNode<?>>alwaysTrue(),
                         BuildFileSpec.fromRecursivePath(
-                            Paths.get(""))))).getSecond()));
+                            Paths.get("")))),
+                ignoreBuckAutodepsFiles).getSecond()));
       } else {
         return Optional.of(
             params.getParser()
@@ -399,7 +401,8 @@ public class TargetsCommand extends AbstractCommand {
                     executor,
                     parseArgumentsAsTargetNodeSpecs(
                         params.getBuckConfig(),
-                        getArguments())));
+                        getArguments()),
+                    ignoreBuckAutodepsFiles));
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -685,7 +688,8 @@ public class TargetsCommand extends AbstractCommand {
             executor,
             parseArgumentsAsTargetNodeSpecs(
                 params.getBuckConfig(),
-                getArguments()));
+                getArguments()),
+            /* ignoreBuckAutodepsFiles */ false);
     matchingBuildTargets = res.getFirst();
     targetGraph = res.getSecond();
 

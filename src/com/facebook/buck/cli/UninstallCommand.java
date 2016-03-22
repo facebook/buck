@@ -117,7 +117,8 @@ public class UninstallCommand extends AbstractCommand {
               pool.getExecutor(),
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  getArguments()));
+                  getArguments()),
+              /* ignoreBuckAutodepsFiles */ false);
       buildTargets = result.getFirst();
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),

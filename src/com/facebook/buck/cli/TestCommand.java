@@ -377,6 +377,7 @@ public class TestCommand extends BuildCommand {
 
         // If the user asked to run all of the tests, parse all of the build files looking for any
         // test rules.
+        boolean ignoreBuckAutodepsFiles = false;
         if (isRunAllTests()) {
           targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
@@ -391,7 +392,8 @@ public class TestCommand extends BuildCommand {
                           return input.getType().isTestRule();
                         }
                       },
-                      BuildFileSpec.fromRecursivePath(Paths.get(""))))).getSecond();
+                      BuildFileSpec.fromRecursivePath(Paths.get("")))),
+              ignoreBuckAutodepsFiles).getSecond();
           explicitBuildTargets = ImmutableSet.of();
 
           // Otherwise, the user specified specific test targets to build and run, so build a graph
@@ -406,7 +408,8 @@ public class TestCommand extends BuildCommand {
                   pool.getExecutor(),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getBuckConfig(),
-                      getArguments()));
+                      getArguments()),
+                  ignoreBuckAutodepsFiles);
           targetGraph = result.getSecond();
           explicitBuildTargets = result.getFirst();
 
