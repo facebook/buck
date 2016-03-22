@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -27,6 +28,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
@@ -38,14 +41,20 @@ public class SwiftStdlibStep implements Step {
   private static final Logger LOG = Logger.get(SwiftStdlibStep.class);
 
   private final Path workingDirectory;
+  private final Path temp;
+  private final Path destinationDirectory;
   private final Iterable<String> command;
   private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
 
   public SwiftStdlibStep(
       Path workingDirectory,
+      Path temp,
+      Path destinationDirectory,
       Iterable<String> command,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
     this.workingDirectory = workingDirectory;
+    this.destinationDirectory = workingDirectory.resolve(destinationDirectory);
+    this.temp = workingDirectory.resolve(temp);
     this.command = command;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
   }
@@ -59,6 +68,7 @@ public class SwiftStdlibStep implements Step {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(workingDirectory.toAbsolutePath().toFile());
     builder.setCommand(command);
+    builder.addCommand("--destination", temp.toString());
     if (codeSignIdentitySupplier.isPresent()) {
       builder.addCommand(
           "--sign",
@@ -80,12 +90,27 @@ public class SwiftStdlibStep implements Step {
       int result = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
       if (result != 0) {
         LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
+        return result;
       }
-      return result;
     } catch (IOException e) {
       LOG.error(e, "Could not execute command %s", command);
       return 1;
     }
+
+    // Copy from temp to destinationDirectory if we wrote files.
+    if (Files.notExists(temp)) {
+      return 0;
+    }
+    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp)) {
+      if (dirStream.iterator().hasNext()) {
+        Files.createDirectories(destinationDirectory);
+        MoreFiles.copyRecursively(temp, destinationDirectory);
+      }
+    } catch (IOException e) {
+      LOG.error(e, "Could not copy to %s", destinationDirectory);
+      return 1;
+    }
+    return 0;
   }
 
   @Override

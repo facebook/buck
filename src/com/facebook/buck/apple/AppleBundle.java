@@ -589,13 +589,13 @@ public class AppleBundle
           "--scan-folder",
           bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
           "--scan-folder",
-          bundleRoot.resolve(destinations.getPlugInsPath()).toString(),
-          "--destination",
-          bundleRoot.resolve(Paths.get("Frameworks")).toString());
+          bundleRoot.resolve(destinations.getPlugInsPath()).toString());
 
       stepsBuilder.add(
           new SwiftStdlibStep(
               getProjectFilesystem().getRootPath(),
+              BuildTargets.getScratchPath(getBuildTarget(), "__swift_temp__%s"),
+              bundleRoot.resolve(Paths.get("Frameworks")),
               swiftStdlibCommand.build(),
               codeSignIdentitySupplier)
       );

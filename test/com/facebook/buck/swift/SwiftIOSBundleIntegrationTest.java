@@ -28,12 +28,12 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SwiftIOSBundleIntegrationTest {
@@ -62,12 +62,16 @@ public class SwiftIOSBundleIntegrationTest {
                 .build(),
             "%s"));
 
-    assertTrue(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve(
-                    "DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks/DemoApp.app/" +
-                        "DemoApp")));
+    Path appPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve(target.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
+
+    assertTrue(Files.exists(appPath.resolve("Frameworks")));
   }
 }

@@ -98,6 +98,9 @@ public class AppleBundleIntegrationTest {
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
 
     assertFalse(checkCodeSigning(appPath));
+
+    // Non-Swift target shouldn't include Frameworks/
+    assertFalse(Files.exists(appPath.resolve("Frameworks")));
   }
 
   @Test
