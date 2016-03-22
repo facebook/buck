@@ -161,8 +161,8 @@ public class ProgressEstimator {
     if (rulesCount > 0) {
       numberOfStartedRules.set(rulesCount);
       numberOfFinishedRules.set(rulesCount);
-      numberOfSuspendedRules.set(rulesCount * 2);
-      numberOfResumedRules.set(rulesCount * 2);
+      numberOfSuspendedRules.set(rulesCount * 3);
+      numberOfResumedRules.set(rulesCount * 3);
       calculateBuildProgress();
     }
   }
@@ -349,8 +349,8 @@ public class ProgressEstimator {
       // TODO(beefon): t8529466 compute progress in better way
       double cacheCheckProgress = numberOfStartedRules.get() / ruleCount;
       double buildProgress = (numberOfFinishedRules.get() +
-          numberOfSuspendedRules.get() / 2.0 +
-          numberOfResumedRules.get() / 2.0) / 3.0 / ruleCount;
+          numberOfSuspendedRules.get() / 3.0 +
+          numberOfResumedRules.get() / 3.0) / 3.0 / ruleCount;
       // cache check takes approximately 10% of time on clean builds. If there will be nothing
       // to build after that, we will jump to 100%.
       double totalProgress = cacheCheckProgress * 0.1 + Math.pow(buildProgress, 2.0) * 0.9;
