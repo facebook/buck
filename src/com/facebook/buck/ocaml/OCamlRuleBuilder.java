@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -210,16 +209,12 @@ public class OCamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
-    CxxPreprocessorInput cxxPreprocessorInputFromDeps;
-    try {
-      cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
+    CxxPreprocessorInput cxxPreprocessorInputFromDeps =
+      CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
-    } catch (CxxHeaders.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
-    }
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -357,16 +352,12 @@ public class OCamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
-    CxxPreprocessorInput cxxPreprocessorInputFromDeps;
-    try {
-      cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
+    CxxPreprocessorInput cxxPreprocessorInputFromDeps =
+      CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
-    } catch (CxxHeaders.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
-    }
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 

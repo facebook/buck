@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -172,25 +171,18 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
-      CxxPreprocessorInput cxxPreprocessorInput;
-      try {
-        // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
-        // NDK library rules.
-        cxxPreprocessorInput = CxxPreprocessorInput.concat(
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform,
-                params.getDeps(),
-                Predicates.instanceOf(NdkLibrary.class)));
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
-      }
+      // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
+      // NDK library rules.
+      CxxPreprocessorInput cxxPreprocessorInput =
+          CxxPreprocessorInput.concat(
+              CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                  cxxPlatform,
+                  params.getDeps(),
+                  Predicates.instanceOf(NdkLibrary.class)));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
-      deps.addAll(
-          pathResolver.filterBuildRuleInputs(
-              cxxPreprocessorInput.getIncludes().getNameToPathMap().values()));
-      deps.addAll(resolver.getAllRules(cxxPreprocessorInput.getRules()));
+      deps.addAll(cxxPreprocessorInput.getDeps(resolver, pathResolver));
 
       // Add in the transitive preprocessor flags contributed by C/C++ library rules into the
       // NDK build.

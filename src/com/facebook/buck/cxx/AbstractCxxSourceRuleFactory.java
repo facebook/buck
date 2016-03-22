@@ -24,7 +24,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -92,18 +91,7 @@ abstract class AbstractCxxSourceRuleFactory {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
     ImmutableList<CxxPreprocessorInput> inputs = getCxxPreprocessorInput();
     for (CxxPreprocessorInput input : inputs) {
-      // Depend on the rules that generate the sources and headers we're compiling.
-      builder.addAll(
-          getPathResolver().filterBuildRuleInputs(
-              ImmutableList.<SourcePath>builder()
-                  .addAll(input.getIncludes().getNameToPathMap().values())
-                  .build()));
-      // Also add in extra deps from the preprocessor input, such as the symlink tree rules.
-      builder.addAll(
-          BuildRules.toBuildRulesFor(
-              getParams().getBuildTarget(),
-              getResolver(),
-              input.getRules()));
+      builder.addAll(input.getDeps(getResolver(), getPathResolver()));
     }
     return builder.build();
   }
@@ -139,7 +127,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @Value.Lazy
   protected ImmutableList<CxxHeaders> getIncludes() {
     return FluentIterable.from(getCxxPreprocessorInput())
-        .transform(CxxPreprocessorInput.GET_INCLUDES)
+        .transformAndConcat(CxxPreprocessorInput.GET_INCLUDES)
         .toList();
   }
 

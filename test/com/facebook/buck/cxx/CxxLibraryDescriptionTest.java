@@ -189,7 +189,7 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform.getFlavor(),
                     HeaderVisibility.PUBLIC))
-            .setIncludes(
+            .addIncludes(
                 CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(headerName),
@@ -238,7 +238,7 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform.getFlavor(),
                     HeaderVisibility.PRIVATE))
-            .setIncludes(
+            .addIncludes(
                 CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(privateHeaderName),
@@ -535,7 +535,7 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform.getFlavor(),
                     HeaderVisibility.PUBLIC))
-            .setIncludes(
+            .addIncludes(
                 CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(genHeaderName),
@@ -1305,18 +1305,19 @@ public class CxxLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(cxxLibraryBuilder.build()),
             new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        input.getIncludes().getNameToPathMap().keySet(),
+        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
         Matchers.<Path>empty());
     assertThat(
         input.getSystemIncludeRoots(),
         Matchers.<Path>empty());
     assertThat(
-        input.getRules(),
-        Matchers.<BuildTarget>empty());
+        ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
+        Matchers.<BuildRule>empty());
   }
 
 }

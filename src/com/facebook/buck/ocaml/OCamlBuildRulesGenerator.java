@@ -26,7 +26,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -175,20 +174,9 @@ public class OCamlBuildRulesGenerator {
         /* declaredDeps */ Suppliers.ofInstance(
               ImmutableSortedSet.<BuildRule>naturalOrder()
                   // Depend on the rule that generates the sources and headers we're compiling.
-                  .addAll(
-                      pathResolver.filterBuildRuleInputs(
-                          ImmutableList.<SourcePath>builder()
-                              .add(cSrc)
-                              .addAll(
-                                  cxxPreprocessorInput.getIncludes().getNameToPathMap().values())
-                              .build()))
-                  // Also add in extra deps from the preprocessor input, such as the symlink
-                  // tree rules.
-                  .addAll(
-                      BuildRules.toBuildRulesFor(
-                          params.getBuildTarget(),
-                          resolver,
-                          cxxPreprocessorInput.getRules()))
+                  .addAll(pathResolver.filterBuildRuleInputs(cSrc))
+                  // Add any deps from the C/C++ preprocessor input.
+                  .addAll(cxxPreprocessorInput.getDeps(resolver, pathResolver))
                   // Add deps from the C compiler, since we're calling it.
                   .addAll(cCompiler.getDeps(pathResolver))
                   .addAll(params.getDeclaredDeps().get())
@@ -206,7 +194,7 @@ public class OCamlBuildRulesGenerator {
               outputPath,
               cSrc,
               cCompileFlags.build(),
-              ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
+              cxxPreprocessorInput.getIncludes()));
       resolver.addToIndex(compileRule);
       objects.add(
           new BuildTargetSourcePath(compileRule.getBuildTarget()));

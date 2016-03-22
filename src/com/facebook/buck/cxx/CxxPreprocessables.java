@@ -194,7 +194,7 @@ public class CxxPreprocessables {
     HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
     builder
         .addRules(symlinkTree.getBuildTarget())
-        .setIncludes(
+        .addIncludes(
             CxxHeaders.builder()
                 .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
                 .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))

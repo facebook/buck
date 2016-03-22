@@ -172,7 +172,7 @@ public class CxxLibraryDescription implements
         CxxPreprocessorInput.builder()
             .addRules(symlinkTree.getBuildTarget())
             .putAllPreprocessorFlags(exportedPreprocessorFlags)
-            .setIncludes(
+            .addIncludes(
                 CxxHeaders.builder()
                     .putAllNameToPathMap(symlinkTree.getLinks())
                     .putAllFullNameToPathMap(symlinkTree.getFullLinks())

@@ -100,7 +100,7 @@ public class HalideLibraryDescriptionTest {
                     libTarget,
                     cxxPlatform.getFlavor(),
                     HeaderVisibility.PUBLIC))
-            .setIncludes(
+            .addIncludes(
                 CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(headerName),

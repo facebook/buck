@@ -17,11 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -29,8 +32,6 @@ import com.google.common.collect.Multimap;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -40,10 +41,10 @@ import java.util.Set;
 @BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
 
-  public static final Function<CxxPreprocessorInput, CxxHeaders> GET_INCLUDES =
-      new Function<CxxPreprocessorInput, CxxHeaders>() {
+  public static final Function<CxxPreprocessorInput, ImmutableList<CxxHeaders>> GET_INCLUDES =
+      new Function<CxxPreprocessorInput, ImmutableList<CxxHeaders>>() {
         @Override
-        public CxxHeaders apply(CxxPreprocessorInput input) {
+        public ImmutableList<CxxHeaders> apply(CxxPreprocessorInput input) {
           return input.getIncludes();
         }
       };
@@ -82,16 +83,13 @@ abstract class AbstractCxxPreprocessorInput {
 
   // The build rules which produce headers found in the includes below.
   @Value.Parameter
-  public abstract Set<BuildTarget> getRules();
+  protected abstract Set<BuildTarget> getRules();
 
   @Value.Parameter
   public abstract Multimap<CxxSource.Type, String> getPreprocessorFlags();
 
   @Value.Parameter
-  @Value.Default
-  public CxxHeaders getIncludes() {
-    return CxxHeaders.builder().build();
-  }
+  public abstract ImmutableList<CxxHeaders> getIncludes();
 
   // Normal include directories where headers are found.
   @Value.Parameter
@@ -131,15 +129,24 @@ abstract class AbstractCxxPreprocessorInput {
     }
   }
 
+  public Iterable<BuildRule> getDeps(
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver) {
+    ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
+    for (CxxHeaders cxxHeaders : getIncludes()) {
+      builder.addAll(cxxHeaders.getDeps(pathResolver));
+    }
+    builder.addAll(ruleResolver.getAllRules(getRules()));
+    return builder.build();
+  }
+
   public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
-  public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs)
-      throws AbstractCxxHeaders.ConflictingHeadersException {
+  public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
     ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
       ImmutableMultimap.builder();
-    Map<Path, SourcePath> includeNameToPathMap = new HashMap<>();
-    Map<Path, SourcePath> includeFullNameToPathMap = new HashMap<>();
+    ImmutableList.Builder<CxxHeaders> headers = ImmutableList.builder();
     ImmutableSet.Builder<Path> includeRoots = ImmutableSet.builder();
     ImmutableSet.Builder<Path> systemIncludeRoots = ImmutableSet.builder();
     ImmutableSet.Builder<Path> headerMaps = ImmutableSet.builder();
@@ -148,12 +155,7 @@ abstract class AbstractCxxPreprocessorInput {
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
       preprocessorFlags.putAll(input.getPreprocessorFlags());
-      CxxHeaders.addAllEntriesToIncludeMap(
-          includeNameToPathMap,
-          input.getIncludes().getNameToPathMap());
-      CxxHeaders.addAllEntriesToIncludeMap(
-          includeFullNameToPathMap,
-          input.getIncludes().getFullNameToPathMap());
+      headers.addAll(input.getIncludes());
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
       headerMaps.addAll(input.getHeaderMaps());
@@ -163,10 +165,7 @@ abstract class AbstractCxxPreprocessorInput {
     return CxxPreprocessorInput.of(
         rules.build(),
         preprocessorFlags.build(),
-        CxxHeaders.builder()
-            .putAllNameToPathMap(includeNameToPathMap)
-            .putAllFullNameToPathMap(includeFullNameToPathMap)
-            .build(),
+        headers.build(),
         includeRoots.build(),
         systemIncludeRoots.build(),
         headerMaps.build(),

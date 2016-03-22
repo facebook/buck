@@ -502,17 +502,18 @@ public class PrebuiltCxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        input.getIncludes().getNameToPathMap().keySet(),
+        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
         Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
     assertThat(
-        input.getRules(),
-        Matchers.equalTo(getInputRules(lib)));
+        ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
+        Matchers.equalTo(resolver.getAllRules(getInputRules(lib))));
     assertThat(
         input.getSystemIncludeRoots(),
         Matchers.hasItem(
@@ -544,20 +545,21 @@ public class PrebuiltCxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        input.getIncludes().getNameToPathMap().keySet(),
+        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
         Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
     assertThat(
-        input.getIncludes().getNameToPathMap().keySet(),
+        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
         Matchers.not(Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("bar.h"))));
     assertThat(
-        input.getRules(),
-        Matchers.equalTo(getInputRules(lib)));
+        ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
+        Matchers.equalTo(resolver.getAllRules(getInputRules(lib))));
     assertThat(
         input.getSystemIncludeRoots(),
         Matchers.hasItem(
@@ -610,7 +612,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        input.getIncludes().getNameToPathMap().keySet(),
+        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
         Matchers.contains(filesystem.getRootPath().getFileSystem().getPath("hello", "foo.h")));
   }
 
@@ -764,19 +766,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build()),
             new BuildTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        input.getIncludes().getNameToPathMap().keySet(),
+        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
         Matchers.<Path>empty());
     assertThat(
         input.getSystemIncludeRoots(),
         Matchers.<Path>empty());
     assertThat(
-        input.getRules(),
-        Matchers.<BuildTarget>empty());
+        ImmutableList.copyOf(input.getDeps(resolver, pathResolver)),
+        Matchers.<BuildRule>empty());
   }
 
   @Test

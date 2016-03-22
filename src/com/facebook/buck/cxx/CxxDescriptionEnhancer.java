@@ -400,7 +400,7 @@ public class CxxDescriptionEnhancer {
         CxxPreprocessorInput.builder()
             .addAllRules(Iterables.transform(headerSymlinkTrees, HasBuildTarget.TO_TARGET))
             .putAllPreprocessorFlags(preprocessorFlags)
-            .setIncludes(
+            .addIncludes(
                 CxxHeaders.builder()
                     .putAllNameToPathMap(allLinks.build())
                     .putAllFullNameToPathMap(allFullLinks.build())

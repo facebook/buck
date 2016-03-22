@@ -197,7 +197,7 @@ public class OCamlBuildStep implements Step {
               outputPath,
               cSrc,
               cCompileFlags.build(),
-              ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
+              cxxPreprocessorInput.getIncludes()));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;

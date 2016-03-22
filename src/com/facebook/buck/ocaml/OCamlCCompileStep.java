@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -83,7 +84,7 @@ public class OCamlCCompileStep extends ShellStep {
     public final ImmutableList<String> flags;
     public final Path output;
     public final SourcePath input;
-    public final ImmutableMap<Path, SourcePath> includes;
+    public final ImmutableList<CxxHeaders> includes;
 
     public Args(
         ImmutableMap<String, String> environment,
@@ -92,7 +93,7 @@ public class OCamlCCompileStep extends ShellStep {
         Path output,
         SourcePath input,
         ImmutableList<String> flags,
-        ImmutableMap<Path, SourcePath> includes) {
+        ImmutableList<CxxHeaders> includes) {
       this.environment = environment;
       this.cCompiler = cCompiler;
       this.ocamlCompiler = ocamlCompiler;
@@ -109,7 +110,7 @@ public class OCamlCCompileStep extends ShellStep {
       builder.setReflectively("output", output.toString());
       builder.setReflectively("input", input);
       builder.setReflectively("flags", flags);
-      builder.setReflectively("includes", includes.values());
+      builder.setReflectively("includes", includes);
       return builder;
     }
   }
