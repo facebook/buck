@@ -6,11 +6,10 @@
 # URLs, so warnings about errors fetching expected URLs should be ignored.
 
 
-import sets
 import sys
 
 
-WARNING_WHITELIST = sets.ImmutableSet(map(
+WARNING_WHITELIST = frozenset(map(
     lambda url: '  [javadoc] javadoc: warning - Error fetching URL: ' + url,
     [
         'http://docs.oracle.com/javase/7/docs/api/package-list',
