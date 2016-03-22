@@ -38,7 +38,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -57,14 +56,29 @@ public class CxxPreprocessables {
   private CxxPreprocessables() {}
 
   public enum IncludeType {
+
     /**
      * Headers should be included with `-I`.
      */
-    LOCAL,
+    LOCAL("-I"),
+
     /**
      * Headers should be included with `-isystem`.
      */
-    SYSTEM,
+    SYSTEM("-isystem"),
+
+    ;
+
+    private String flag;
+
+    IncludeType(String flag) {
+      this.flag = flag;
+    }
+
+    public String getFlag() {
+      return flag;
+    }
+
   }
 
   /**
@@ -192,24 +206,8 @@ public class CxxPreprocessables {
         rule.getClass(),
         target);
     HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
-    builder
-        .addRules(symlinkTree.getBuildTarget())
-        .addIncludes(
-            CxxHeaders.builder()
-                .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
-                .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
-                .build());
-    switch(includeType) {
-      case LOCAL:
-        builder.addIncludeRoots(symlinkTree.getIncludePath());
-        builder.addAllHeaderMaps(symlinkTree.getHeaderMap().asSet());
-        break;
-      case SYSTEM:
-        builder.addSystemIncludeRoots(symlinkTree.getSystemIncludePath());
-        break;
-    }
+    builder.addIncludes(CxxHeaders.fromSymlinkTree(symlinkTree, includeType));
     return builder;
-
   }
 
   /**

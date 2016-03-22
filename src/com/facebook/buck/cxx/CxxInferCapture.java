@@ -26,19 +26,11 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -56,15 +48,8 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   private final CxxSource.Type inputType;
   @AddToRuleKey(stringify = true)
   private final Path output;
-  private final ImmutableSet<Path> includeRoots;
-  private final ImmutableSet<Path> systemIncludeRoots;
-  private final ImmutableSet<Path> headerMaps;
   @AddToRuleKey
-  private final ImmutableSet<FrameworkPath> frameworkRoots;
-  @AddToRuleKey
-  private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
-  @AddToRuleKey
-  private final Optional<SourcePath> prefixHeader;
+  private final PreprocessorDelegate preprocessorDelegate;
 
   private final Path resultsDir;
   private final DebugPathSanitizer sanitizer;
@@ -77,12 +62,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
       SourcePath input,
       AbstractCxxSource.Type inputType,
       Path output,
-      ImmutableSet<Path> includeRoots,
-      ImmutableSet<Path> systemIncludeRoots,
-      ImmutableSet<Path> headerMaps,
-      ImmutableSet<FrameworkPath> frameworkRoots,
-      RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
-      Optional<SourcePath> prefixHeader,
+      PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig,
       DebugPathSanitizer sanitizer) {
     super(buildRuleParams, pathResolver);
@@ -91,47 +71,14 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     this.input = input;
     this.inputType = inputType;
     this.output = output;
-    this.includeRoots = includeRoots;
-    this.systemIncludeRoots = systemIncludeRoots;
-    this.headerMaps = headerMaps;
-    this.frameworkRoots = frameworkRoots;
-    this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
-    this.prefixHeader = prefixHeader;
+    this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
     this.resultsDir = BuildTargets.getGenPath(this.getBuildTarget(), "infer-out-%s");
     this.sanitizer = sanitizer;
   }
 
   private CxxToolFlags getSearchPathFlags() {
-    return CxxToolFlags.explicitBuilder()
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-include"),
-                FluentIterable.from(prefixHeader.asSet())
-                    .transform(getResolver().deprecatedPathFunction())
-                    .transform(Functions.toStringFunction())))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-I"),
-                Iterables.transform(headerMaps, Functions.toStringFunction())))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-I"),
-                Iterables.transform(includeRoots, Functions.toStringFunction())))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-isystem"),
-                Iterables.transform(systemIncludeRoots, Functions.toStringFunction())))
-        .addAllRuleFlags(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-F"),
-                FluentIterable.from(frameworkRoots)
-                    .transform(
-                        Functions.compose(
-                            Functions.toStringFunction(),
-                            frameworkPathSearchPathFunction))
-                    .toSet()))
-        .build();
+    return preprocessorDelegate.getFlagsWithSearchPaths();
   }
 
   private ImmutableList<String> getFrontendCommand() {

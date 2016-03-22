@@ -176,15 +176,20 @@ public class CxxPreprocessAndCompile
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(Path scratchDir) {
 
+    // Check for conflicting headers.
+    if (preprocessDelegate.isPresent()) {
+      try {
+        preprocessDelegate.get().checkForConflictingHeaders();
+      } catch (PreprocessorDelegate.ConflictingHeadersException e) {
+        throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+      }
+    }
+
     // If we're compiling, this will just be empty.
-    ImmutableMap<Path, Path> replacementPaths;
-    try {
-      replacementPaths = preprocessDelegate.isPresent()
+    ImmutableMap<Path, Path> replacementPaths =
+      preprocessDelegate.isPresent()
           ? preprocessDelegate.get().getReplacementPaths()
           : ImmutableMap.<Path, Path>of();
-    } catch (CxxHeaders.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-    }
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> preprocessorCommand;
 

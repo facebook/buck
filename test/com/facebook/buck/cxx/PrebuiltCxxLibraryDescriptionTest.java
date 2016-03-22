@@ -48,6 +48,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,6 +118,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .addFlavors(CXX_PLATFORM.getFlavor())
             .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
             .build());
+  }
+
+  private static ImmutableSet<Path> getHeaderNames(Iterable<CxxHeaders> includes) {
+    ImmutableSet.Builder<Path> names = ImmutableSet.builder();
+    for (CxxHeaders headers : includes) {
+      names.addAll(headers.getNameToPathMap().keySet());
+    }
+    return names.build();
   }
 
   @Test
@@ -324,7 +333,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         CxxPlatformUtils.DEFAULT_PLATFORM
             .withFlavor(ImmutableFlavor.of("PLATFORM1"));
 
-    Path path = genRule.getPathToOutput().toAbsolutePath();
+    Path path = Preconditions.checkNotNull(genRule.getPathToOutput()).toAbsolutePath();
     final SourcePath staticLibraryPath = PrebuiltCxxLibraryDescription.getStaticLibraryPath(
         TARGET,
         cellRoots,
@@ -334,9 +343,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         libDir,
         libName);
     assertEquals(
-        TARGET.getBasePath().resolve(String.format(String.format("%s/libtest.a", path))),
+        TARGET.getBasePath().resolve(String.format("%s/libtest.a", path)),
         pathResolver.getAbsolutePath(staticLibraryPath));
-
   }
 
   @Test
@@ -357,7 +365,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         filesystem,
         resolver,
         platform,
-        Optional.<String>of("lib"),
+        Optional.of("lib"),
         Optional.<String>absent());
 
     assertThat(
@@ -509,18 +517,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
+        getHeaderNames(input.getIncludes()),
         Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
         Matchers.equalTo(resolver.getAllRules(getInputRules(lib))));
-    assertThat(
-        input.getSystemIncludeRoots(),
-        Matchers.hasItem(
-            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                lib.getBuildTarget(),
-                CXX_PLATFORM.getFlavor(),
-                HeaderVisibility.PUBLIC)));
   }
 
   @Test
@@ -552,21 +553,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
+        getHeaderNames(input.getIncludes()),
         Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("foo.h")));
     assertThat(
-        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
+        getHeaderNames(input.getIncludes()),
         Matchers.not(Matchers.hasItem(filesystem.getRootPath().getFileSystem().getPath("bar.h"))));
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
         Matchers.equalTo(resolver.getAllRules(getInputRules(lib))));
-    assertThat(
-        input.getSystemIncludeRoots(),
-        Matchers.hasItem(
-            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                lib.getBuildTarget(),
-                CXX_PLATFORM.getFlavor(),
-                HeaderVisibility.PUBLIC)));
   }
 
   @Test
@@ -583,7 +577,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .build(resolver, filesystem);
     filesystem.writeContentsToPath(
         "class Test {}",
-        new File(genSrc.getPathToOutput().toString(), "libx.so").toPath());
+        new File(Preconditions.checkNotNull(genSrc.getPathToOutput()).toString(), "libx.so")
+            .toPath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:x")
         .withFlavors(platform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -612,7 +607,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
+        getHeaderNames(input.getIncludes()),
         Matchers.contains(filesystem.getRootPath().getFileSystem().getPath("hello", "foo.h")));
   }
 
@@ -772,7 +767,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
-        CxxHeaders.concat(input.getIncludes()).getNameToPathMap().keySet(),
+        getHeaderNames(input.getIncludes()),
         Matchers.<Path>empty());
     assertThat(
         input.getSystemIncludeRoots(),

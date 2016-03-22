@@ -74,7 +74,6 @@ public abstract class CxxToolFlags {
     return ExplicitCxxToolFlags.of(platformFlags, ruleFlags);
   }
 
-
   /**
    * Concatenate multiple flags in a pairwise manner.
    */
@@ -109,6 +108,11 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
   @Override
   @Value.Parameter
   public abstract ImmutableList<String> getRuleFlags();
+
+  public static void addCxxToolFlags(ExplicitCxxToolFlags.Builder builder, CxxToolFlags flags) {
+    builder.addAllPlatformFlags(flags.getPlatformFlags());
+    builder.addAllRuleFlags(flags.getRuleFlags());
+  }
 }
 
 /**

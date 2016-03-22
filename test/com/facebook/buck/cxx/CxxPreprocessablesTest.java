@@ -170,7 +170,6 @@ public class CxxPreprocessablesTest {
         .addRules(cppDepTarget1)
         .putPreprocessorFlags(CxxSource.Type.C, "-Dtest=yes")
         .putPreprocessorFlags(CxxSource.Type.CXX, "-Dtest=yes")
-        .addIncludeRoots(filesystem.resolve("foo/bar"), filesystem.resolve("hello"))
         .addSystemIncludeRoots(Paths.get("/usr/include"))
         .build();
     BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem, "//:dep1");
@@ -182,7 +181,6 @@ public class CxxPreprocessablesTest {
         .addRules(cppDepTarget2)
         .putPreprocessorFlags(CxxSource.Type.C, "-DBLAH")
         .putPreprocessorFlags(CxxSource.Type.CXX, "-DBLAH")
-        .addIncludeRoots(filesystem.resolve("goodbye"))
         .addSystemIncludeRoots(filesystem.resolve("test"))
         .build();
     BuildTarget depTarget2 = BuildTargetFactory.newInstance("//:dep2");

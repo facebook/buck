@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -316,13 +317,13 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
 
     CxxPreprocessorInput cxxPreprocessorInput = getCxxPreprocessorInput();
 
-    for (Path headerMap : cxxPreprocessorInput.getHeaderMaps()) {
-      compileFlags.add("-ccopt", "-I" + headerMap.toString());
-    }
-
-    for (Path includes : cxxPreprocessorInput.getIncludeRoots()) {
-      compileFlags.add("-ccopt", "-I" + includes.toString());
-    }
+    compileFlags.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-ccopt"),
+            CxxHeaders.getArgs(
+                cxxPreprocessorInput.getIncludes(),
+                getSourcePathResolver(),
+                Optional.<Function<Path, Path>>absent())));
 
     for (Path includes : cxxPreprocessorInput.getSystemIncludeRoots()) {
       compileFlags.add("-ccopt", "-isystem" + includes.toString());

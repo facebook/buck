@@ -97,27 +97,6 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   @Value.Lazy
-  protected ImmutableSet<Path> getIncludeRoots() {
-    return FluentIterable.from(getCxxPreprocessorInput())
-        .transformAndConcat(CxxPreprocessorInput.GET_INCLUDE_ROOTS)
-        .toSet();
-  }
-
-  @Value.Lazy
-  protected ImmutableSet<Path> getSystemIncludeRoots() {
-    return FluentIterable.from(getCxxPreprocessorInput())
-        .transformAndConcat(CxxPreprocessorInput.GET_SYSTEM_INCLUDE_ROOTS)
-        .toSet();
-  }
-
-  @Value.Lazy
-  protected ImmutableSet<Path> getHeaderMaps() {
-    return FluentIterable.from(getCxxPreprocessorInput())
-        .transformAndConcat(CxxPreprocessorInput.GET_HEADER_MAPS)
-        .toSet();
-  }
-
-  @Value.Lazy
   protected ImmutableSet<FrameworkPath> getFrameworks() {
     return FluentIterable.from(getCxxPreprocessorInput())
         .transformAndConcat(CxxPreprocessorInput.GET_FRAMEWORKS)
@@ -129,6 +108,13 @@ abstract class AbstractCxxSourceRuleFactory {
     return FluentIterable.from(getCxxPreprocessorInput())
         .transformAndConcat(CxxPreprocessorInput.GET_INCLUDES)
         .toList();
+  }
+
+  @Value.Lazy
+  protected ImmutableSet<Path> getSystemIncludeRoots() {
+    return FluentIterable.from(getCxxPreprocessorInput())
+        .transformAndConcat(CxxPreprocessorInput.GET_SYSTEM_INCLUDE_ROOTS)
+        .toSet();
   }
 
   private final LoadingCache<CxxSource.Type, ImmutableList<String>> preprocessorFlags =
@@ -465,6 +451,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
     LOG.verbose("Creating preprocessed InferCapture build rule %s for %s", target, source);
 
+    PreprocessorDelegate preprocessorDelegate = preprocessorDelegates.getUnchecked(
+        PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags()));
     CxxInferCapture result = new CxxInferCapture(
         getParams().copyWithChanges(
             target,
@@ -478,12 +466,7 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         getCompileOutputPath(target, name),
-        getIncludeRoots(),
-        getSystemIncludeRoots(),
-        getHeaderMaps(),
-        getFrameworks(),
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
-        getPrefixHeader(),
+        preprocessorDelegate,
         inferConfig,
         getCxxPlatform().getDebugPathSanitizer());
     getResolver().addToIndex(result);
@@ -722,9 +705,8 @@ abstract class AbstractCxxSourceRuleFactory {
           PreprocessorFlags.of(
               getPrefixHeader(),
               computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
+              getIncludes(),
               getFrameworks(),
-              getHeaderMaps(),
-              getIncludeRoots(),
               getSystemIncludeRoots()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
           getIncludes());

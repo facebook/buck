@@ -19,15 +19,13 @@ package com.facebook.buck.halide;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -38,6 +36,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -45,8 +44,10 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -84,40 +85,23 @@ public class HalideLibraryDescriptionTest {
     // Check that the library rule has the correct preprocessor input.
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
     String headerName = "rule.h";
-    Path headerRoot =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-            libTarget,
-            cxxPlatform.getFlavor(),
-            HeaderVisibility.PUBLIC);
     BuildTarget flavoredLibTarget = libTarget.withFlavors(
         HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
         cxxPlatform.getFlavor());
     Path headerPath = HalideCompile.headerOutputPath(flavoredLibTarget);
-    assertEquals(
-        CxxPreprocessorInput.builder()
-            .addRules(
-                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                    libTarget,
-                    cxxPlatform.getFlavor(),
-                    HeaderVisibility.PUBLIC))
-            .addIncludes(
-                CxxHeaders.builder()
-                    .putNameToPathMap(
-                        Paths.get(headerName),
-                        new BuildTargetSourcePath(
-                            flavoredLibTarget,
-                            headerPath))
-                    .putFullNameToPathMap(
-                        headerRoot.resolve(headerName),
-                        new BuildTargetSourcePath(
-                            flavoredLibTarget,
-                            headerPath))
-                    .build())
-            .addSystemIncludeRoots(headerRoot)
-            .build(),
-        lib.getCxxPreprocessorInput(
-            cxxPlatform,
-            HeaderVisibility.PUBLIC));
+    CxxHeaders publicHeaders =
+        lib.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).getIncludes().get(0);
+    assertThat(
+        publicHeaders.getIncludeType(),
+        Matchers.equalTo(CxxPreprocessables.IncludeType.SYSTEM));
+    assertThat(
+        publicHeaders.getNameToPathMap(),
+        Matchers.equalTo(
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get(headerName),
+                new BuildTargetSourcePath(
+                    flavoredLibTarget,
+                    headerPath))));
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input = lib.getNativeLinkableInput(

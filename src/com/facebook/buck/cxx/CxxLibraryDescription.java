@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
@@ -167,18 +168,26 @@ public class CxxLibraryDescription implements
             exportedHeaders,
             HeaderVisibility.PUBLIC);
     Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
+
+    CxxHeaders.Builder headers = CxxHeaders.builder();
+    headers.setIncludeType(CxxPreprocessables.IncludeType.LOCAL);
+    headers.setRoot(
+        new BuildTargetSourcePath(
+            symlinkTree.getBuildTarget(),
+            symlinkTree.getIncludePath()));
+    headers.putAllNameToPathMap(symlinkTree.getLinks());
+    if (symlinkTree.getHeaderMap().isPresent()) {
+      headers.setHeaderMap(
+          new BuildTargetSourcePath(
+              symlinkTree.getBuildTarget(),
+              symlinkTree.getHeaderMap().get()));
+    }
     input.put(
         params.getBuildTarget(),
         CxxPreprocessorInput.builder()
-            .addRules(symlinkTree.getBuildTarget())
             .putAllPreprocessorFlags(exportedPreprocessorFlags)
             .addIncludes(
-                CxxHeaders.builder()
-                    .putAllNameToPathMap(symlinkTree.getLinks())
-                    .putAllFullNameToPathMap(symlinkTree.getFullLinks())
-                    .build())
-            .addIncludeRoots(symlinkTree.getIncludePath())
-            .addAllHeaderMaps(symlinkTree.getHeaderMap().asSet())
+                CxxHeaders.fromSymlinkTree(symlinkTree, CxxPreprocessables.IncludeType.LOCAL))
             .addAllFrameworks(frameworks)
             .build());
     for (BuildRule rule : params.getDeps()) {

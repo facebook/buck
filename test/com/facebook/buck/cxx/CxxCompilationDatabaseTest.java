@@ -98,7 +98,7 @@ public class CxxCompilationDatabaseTest {
         .build();
 
     PreprocessorFlags preprocessorFlags = PreprocessorFlags.builder()
-        .addIncludePaths(
+        .addSystemIncludePaths(
             filesystem.resolve("foo/bar"),
             filesystem.resolve("test"))
         .build();
@@ -238,9 +238,9 @@ public class CxxCompilationDatabaseTest {
     runCombinedTest(CxxPreprocessMode.COMBINED,
         ImmutableList.of(
             "compiler",
-            "-I",
+            "-isystem",
             "foo/bar",
-            "-I",
+            "-isystem",
             "test",
             "-x",
             "c++",
@@ -258,9 +258,9 @@ public class CxxCompilationDatabaseTest {
     runCombinedTest(CxxPreprocessMode.PIPED,
         ImmutableList.of(
             "compiler",
-            "-I",
+            "-isystem",
             "foo/bar",
-            "-I",
+            "-isystem",
             "test",
             "-x",
             "c++",
@@ -275,8 +275,8 @@ public class CxxCompilationDatabaseTest {
     runCombinedTest(CxxPreprocessMode.SEPARATE,
         ImmutableList.of(
             "compiler",
-            "-I", "foo/bar",
-            "-I", "test",
+            "-isystem", "foo/bar",
+            "-isystem", "test",
             // compdb will present a single command despite this being two commands under the hood,
             // hence, this is compiling a cpp file, not cpp preprocessed output.
             "-x", "c++",

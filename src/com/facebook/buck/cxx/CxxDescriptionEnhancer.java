@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -63,7 +62,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -385,28 +383,16 @@ public class CxxDescriptionEnhancer {
         params.getBuildTarget(),
         cxxPreprocessorInputFromTestedRules);
 
-    ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
-    ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
-    ImmutableList.Builder<Path> allIncludeRoots = ImmutableList.builder();
-    ImmutableSet.Builder<Path> allHeaderMaps = ImmutableSet.builder();
+    ImmutableList.Builder<CxxHeaders> allIncludes = ImmutableList.builder();
     for (HeaderSymlinkTree headerSymlinkTree : headerSymlinkTrees) {
-      allLinks.putAll(headerSymlinkTree.getLinks());
-      allFullLinks.putAll(headerSymlinkTree.getFullLinks());
-      allIncludeRoots.add(headerSymlinkTree.getIncludePath());
-      allHeaderMaps.addAll(headerSymlinkTree.getHeaderMap().asSet());
+      allIncludes.add(
+          CxxHeaders.fromSymlinkTree(headerSymlinkTree, CxxPreprocessables.IncludeType.LOCAL));
     }
 
     CxxPreprocessorInput localPreprocessorInput =
         CxxPreprocessorInput.builder()
-            .addAllRules(Iterables.transform(headerSymlinkTrees, HasBuildTarget.TO_TARGET))
             .putAllPreprocessorFlags(preprocessorFlags)
-            .addIncludes(
-                CxxHeaders.builder()
-                    .putAllNameToPathMap(allLinks.build())
-                    .putAllFullNameToPathMap(allFullLinks.build())
-                    .build())
-            .addAllIncludeRoots(allIncludeRoots.build())
-            .addAllHeaderMaps(allHeaderMaps.build())
+            .addAllIncludes(allIncludes.build())
             .addAllFrameworks(frameworks)
             .build();
 

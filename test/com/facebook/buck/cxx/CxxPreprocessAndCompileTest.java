@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -105,6 +106,8 @@ public class CxxPreprocessAndCompileTest {
   private static final ImmutableList<CxxHeaders> DEFAULT_INCLUDES =
       ImmutableList.of(
           CxxHeaders.builder()
+              .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+              .setRoot(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:include")))
               .putNameToPathMap(Paths.get("test.h"), new FakeSourcePath("foo/test.h"))
               .build());
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
@@ -387,7 +390,7 @@ public class CxxPreprocessAndCompileTest {
                     .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
                     .build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.of(CxxHeaders.builder().build())),
+                ImmutableList.<CxxHeaders>of()),
             new CompilerDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
@@ -550,7 +553,7 @@ public class CxxPreprocessAndCompileTest {
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.of(CxxHeaders.builder().build())),
+                ImmutableList.<CxxHeaders>of()),
             new CompilerDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,

@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Fake implementation of {@link CxxLibrary} for testing.
@@ -48,10 +49,8 @@ public final class FakeCxxLibrary
 
   private final BuildTarget publicHeaderTarget;
   private final BuildTarget publicHeaderSymlinkTreeTarget;
-  private final Path publicHeaderSymlinkTreeRoot;
   private final BuildTarget privateHeaderTarget;
   private final BuildTarget privateHeaderSymlinkTreeTarget;
-  private final Path privateHeaderSymlinkTreeRoot;
   private final BuildRule archive;
   private final BuildRule sharedLibrary;
   private final Path sharedLibraryOutput;
@@ -69,10 +68,8 @@ public final class FakeCxxLibrary
       SourcePathResolver pathResolver,
       BuildTarget publicHeaderTarget,
       BuildTarget publicHeaderSymlinkTreeTarget,
-      Path publicHeaderSymlinkTreeRoot,
       BuildTarget privateHeaderTarget,
       BuildTarget privateHeaderSymlinkTreeTarget,
-      Path privateHeaderSymlinkTreeRoot,
       BuildRule archive,
       BuildRule sharedLibrary,
       Path sharedLibraryOutput,
@@ -81,10 +78,8 @@ public final class FakeCxxLibrary
     super(params, pathResolver);
     this.publicHeaderTarget = publicHeaderTarget;
     this.publicHeaderSymlinkTreeTarget = publicHeaderSymlinkTreeTarget;
-    this.publicHeaderSymlinkTreeRoot = publicHeaderSymlinkTreeRoot;
     this.privateHeaderTarget = privateHeaderTarget;
     this.privateHeaderSymlinkTreeTarget = privateHeaderSymlinkTreeTarget;
-    this.privateHeaderSymlinkTreeRoot = privateHeaderSymlinkTreeRoot;
     this.archive = archive;
     this.sharedLibrary = sharedLibrary;
     this.sharedLibraryOutput = sharedLibraryOutput;
@@ -105,13 +100,25 @@ public final class FakeCxxLibrary
       switch (headerVisibility) {
         case PUBLIC:
           return CxxPreprocessorInput.builder()
-              .addRules(publicHeaderTarget, publicHeaderSymlinkTreeTarget)
-              .addIncludeRoots(publicHeaderSymlinkTreeRoot)
+              .addIncludes(
+                  CxxHeaders.builder()
+                      .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                      .putNameToPathMap(
+                          Paths.get("header.h"),
+                          new BuildTargetSourcePath(publicHeaderTarget))
+                      .setRoot(new BuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                      .build())
               .build();
         case PRIVATE:
           return CxxPreprocessorInput.builder()
-              .addRules(privateHeaderTarget, privateHeaderSymlinkTreeTarget)
-              .addIncludeRoots(privateHeaderSymlinkTreeRoot)
+              .addIncludes(
+                  CxxHeaders.builder()
+                      .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                      .setRoot(new BuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                      .putNameToPathMap(
+                          Paths.get("header.h"),
+                          new BuildTargetSourcePath(privateHeaderTarget))
+                      .build())
               .build();
       }
       throw new RuntimeException("Invalid header visibility value: " + headerVisibility);

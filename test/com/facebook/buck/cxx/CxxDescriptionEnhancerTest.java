@@ -19,20 +19,20 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -43,9 +43,12 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CxxDescriptionEnhancerTest {
 
@@ -59,16 +62,13 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
-    ProjectFilesystem filesystem = libParams.getProjectFilesystem();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
-        filesystem.resolve("symlink/tree/lib"),
         BuildTargetFactory.newInstance("//:privateheader"),
         BuildTargetFactory.newInstance("//:privatesymlink"),
-        filesystem.resolve("private/symlink/tree/lib"),
         new FakeBuildRule("//:archive", pathResolver),
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
@@ -93,12 +93,16 @@ public class CxxDescriptionEnhancerTest {
                 FluentIterable.from(testParams.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
 
+    Set<SourcePath> roots = new HashSet<>();
+    for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
+      roots.add(headers.getRoot());
+    }
     assertThat(
         "Test of library should include both public and private headers",
-        CxxPreprocessorInput.concat(combinedInput).getIncludeRoots(),
-        hasItems(
-            filesystem.resolve("symlink/tree/lib"),
-            filesystem.resolve("private/symlink/tree/lib")));
+        roots,
+        Matchers.<SourcePath>hasItems(
+            new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:symlink")),
+            new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:privatesymlink"))));
   }
 
   @Test
@@ -110,16 +114,13 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
-    ProjectFilesystem filesystem = libParams.getProjectFilesystem();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
         BuildTargetFactory.newInstance("//:header"),
         BuildTargetFactory.newInstance("//:symlink"),
-        filesystem.resolve("symlink/tree/lib"),
         BuildTargetFactory.newInstance("//:privateheader"),
         BuildTargetFactory.newInstance("//:privatesymlink"),
-        filesystem.resolve("private/symlink/tree/lib"),
         new FakeBuildRule("//:archive", pathResolver),
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
@@ -145,12 +146,17 @@ public class CxxDescriptionEnhancerTest {
                 FluentIterable.from(otherLibDepParams.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
 
+    Set<SourcePath> roots = new HashSet<>();
+    for (CxxHeaders headers : CxxPreprocessorInput.concat(otherInput).getIncludes()) {
+      roots.add(headers.getRoot());
+    }
     assertThat(
         "Non-test rule with library dep should include public and not private headers",
-        CxxPreprocessorInput.concat(otherInput).getIncludeRoots(),
+        roots,
         allOf(
-            hasItem(filesystem.resolve("symlink/tree/lib")),
-            not(hasItem(filesystem.resolve("private/symlink/tree/lib")))));
+            hasItem(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:symlink"))),
+            not(hasItem(
+                new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:privatesymlink"))))));
   }
 
   @Test

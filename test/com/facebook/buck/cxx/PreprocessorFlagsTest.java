@@ -71,18 +71,8 @@ public class PreprocessorFlagsTest {
               true,
           },
           {
-              "includePaths",
-              defaultFlags.withIncludePaths(Paths.get("different")),
-              false,
-          },
-          {
               "systemIncludePaths",
               defaultFlags.withSystemIncludePaths(Paths.get("different")),
-              false,
-          },
-          {
-              "headerMaps",
-              defaultFlags.withHeaderMaps(Paths.get("different")),
               false,
           },
           {
@@ -107,7 +97,6 @@ public class PreprocessorFlagsTest {
 
     @Parameterized.Parameter(2)
     public boolean shouldDiffer;
-
 
     @Test
     public void shouldAffectRuleKey() {

@@ -17,25 +17,30 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -108,17 +113,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * Resolve the map of symlinks to real paths to hand off the preprocess step.
    */
-  public ImmutableMap<Path, Path> getReplacementPaths()
-      throws CxxHeaders.ConflictingHeadersException {
-    try {
-      return replacementPaths.get();
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      if (cause != null) {
-        Throwables.propagateIfInstanceOf(cause, CxxHeaders.ConflictingHeadersException.class);
-      }
-      throw e;
-    }
+  public ImmutableMap<Path, Path> getReplacementPaths() {
+    return replacementPaths.get();
   }
 
   /**
@@ -150,6 +146,21 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    */
   public Optional<Function<String, Iterable<String>>> getPreprocessorExtraLineProcessor() {
     return preprocessor.getExtraLineProcessor();
+  }
+
+  public void checkForConflictingHeaders() throws ConflictingHeadersException {
+    Map<Path, SourcePath> headers = new HashMap<>();
+    for (CxxHeaders cxxHeaders : includes) {
+      for (Map.Entry<Path, SourcePath> entry : cxxHeaders.getNameToPathMap().entrySet()) {
+        SourcePath original = headers.put(entry.getKey(), entry.getValue());
+        if (original != null && !original.equals(entry.getValue())) {
+          throw new ConflictingHeadersException(
+              entry.getKey(),
+              original,
+              entry.getValue());
+        }
+      }
+    }
   }
 
   /**
@@ -186,42 +197,61 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessor.getFlagsForColorDiagnostics();
   }
 
+  @SuppressWarnings("serial")
+  public static class ConflictingHeadersException extends Exception {
+    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
+      super(
+          String.format(
+              "'%s' maps to both %s.",
+              key,
+              ImmutableSortedSet.of(value1, value2)));
+    }
+
+    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
+      return new HumanReadableException(
+          this,
+          "Target '%s' uses conflicting header file mappings. %s",
+          buildTarget,
+          getMessage());
+    }
+  }
+
   private class ReplacementPathsSupplier implements Supplier<ImmutableMap<Path, Path>> {
     @Override
     public ImmutableMap<Path, Path> get() {
-      try {
-        ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
-        for (Map.Entry<Path, SourcePath> entry :
-            CxxHeaders.concat(includes).getFullNameToPathMap().entrySet()) {
+      // Use a regular map here, as we might have duplicate entries.
+      Map<Path, Path> replacementPathsBuilder = new LinkedHashMap<>();
+      for (CxxHeaders include : includes) {
+        Path root = resolver.getAbsolutePath(include.getRoot());
+        for (Map.Entry<Path, SourcePath> entry : include.getNameToPathMap().entrySet()) {
           // TODO(#9117006): We don't currently support a way to serialize `SourcePath` objects in a
           // cache-compatible format, and we certainly can't use absolute paths here.  So, for now,
           // just use relative paths.  The consequence here is that debug paths and error/warning
           // messages may be incorrect when referring to headers in another cell.
           replacementPathsBuilder.put(
-              Preconditions.checkNotNull(minLengthPathRepresentation.apply(entry.getKey())),
+              Preconditions.checkNotNull(
+                  minLengthPathRepresentation.apply(root.resolve(entry.getKey()))),
               resolver.getRelativePath(entry.getValue()));
         }
-        return replacementPathsBuilder.build();
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw new RuntimeException(e);
       }
+      return ImmutableMap.copyOf(replacementPathsBuilder);
     }
   }
-
 
   private class PathToSourcePathMapSupplier
       implements Supplier<ImmutableMultimap<String, SourcePath>> {
     @Override
     public ImmutableMultimap<String, SourcePath> get() {
-      try {
-        return Multimaps.index(
-            CxxHeaders.concat(includes).getFullNameToPathMap().values(),
-            Functions.compose(
-                Functions.toStringFunction(),
-                resolver.getRelativePathFunction()));
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw new RuntimeException(e);
+      List<SourcePath> paths = new ArrayList<>();
+      for (CxxHeaders cxxHeaders : includes) {
+        paths.addAll(cxxHeaders.getNameToPathMap().values());
       }
+      return Multimaps.index(
+          paths,
+          Functions.compose(
+              Functions.toStringFunction(),
+              resolver.getRelativePathFunction()));
     }
   }
+
 }

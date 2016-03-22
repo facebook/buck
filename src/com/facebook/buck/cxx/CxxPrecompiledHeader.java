@@ -34,7 +34,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -110,12 +109,14 @@ public class CxxPrecompiledHeader
   @Override
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    ImmutableMap<Path, Path> replacementPaths;
+
+    // Check for conflicting headers.
     try {
-      replacementPaths = preprocessorDelegate.getReplacementPaths();
-    } catch (AbstractCxxHeaders.ConflictingHeadersException e) {
+      preprocessorDelegate.checkForConflictingHeaders();
+    } catch (PreprocessorDelegate.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
+
     Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s_tmp");
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
@@ -139,7 +140,7 @@ public class CxxPrecompiledHeader
                     preprocessorDelegate.getEnvironment(),
                     preprocessorDelegate.getFlagsForColorDiagnostics())),
             Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
-            replacementPaths,
+            preprocessorDelegate.getReplacementPaths(),
             sanitizer,
             Optional.<Function<String, Iterable<String>>>absent(),
             scratchDir));

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -59,7 +57,6 @@ public class CxxLibraryTest {
 
   @Test
   public void cxxLibraryInterfaces() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
@@ -71,12 +68,9 @@ public class CxxLibraryTest {
     // Setup some dummy values for the header info.
     final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");
     final BuildTarget publicHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance("//:symlink");
-    final Path publicHeaderSymlinkTreeRoot = projectFilesystem.resolve("symlink/tree/root");
     final BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//:privateheader");
     final BuildTarget privateHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance(
         "//:privatesymlink");
-    final Path privateHeaderSymlinkTreeRoot =
-        projectFilesystem.resolve("private/symlink/tree/root");
 
     // Setup some dummy values for the library archive info.
     final BuildRule archive = new FakeBuildRule("//:archive", pathResolver);
@@ -92,10 +86,8 @@ public class CxxLibraryTest {
         pathResolver,
         publicHeaderTarget,
         publicHeaderSymlinkTreeTarget,
-        publicHeaderSymlinkTreeRoot,
         privateHeaderTarget,
         privateHeaderSymlinkTreeTarget,
-        privateHeaderSymlinkTreeRoot,
         archive,
         sharedLibrary,
         sharedLibraryOutput,
@@ -105,8 +97,14 @@ public class CxxLibraryTest {
     // Verify that we get the header/symlink targets and root via the CxxPreprocessorDep
     // interface.
     CxxPreprocessorInput expectedPublicCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addRules(publicHeaderTarget, publicHeaderSymlinkTreeTarget)
-        .addIncludeRoots(publicHeaderSymlinkTreeRoot)
+        .addIncludes(
+            CxxHeaders.builder()
+                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                .putNameToPathMap(
+                    Paths.get("header.h"),
+                    new BuildTargetSourcePath(publicHeaderTarget))
+                .setRoot(new BuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                .build())
         .build();
     assertEquals(
         expectedPublicCxxPreprocessorInput,
@@ -115,8 +113,14 @@ public class CxxLibraryTest {
             HeaderVisibility.PUBLIC));
 
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .addRules(privateHeaderTarget, privateHeaderSymlinkTreeTarget)
-        .addIncludeRoots(privateHeaderSymlinkTreeRoot)
+        .addIncludes(
+            CxxHeaders.builder()
+                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                .setRoot(new BuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                .putNameToPathMap(
+                    Paths.get("header.h"),
+                    new BuildTargetSourcePath(privateHeaderTarget))
+                .build())
         .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
@@ -257,7 +261,7 @@ public class CxxLibraryTest {
         Functions.constant(StringArg.from("-ldl")),
         /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
-        ImmutableSet.<FrameworkPath>of(frameworkPath),
+        ImmutableSet.of(frameworkPath),
         ImmutableSet.<FrameworkPath>of(),
         NativeLinkable.Linkage.STATIC,
         /* linkWhole */ false,
@@ -268,7 +272,7 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
             StringArg.from("-ldl"),
-            ImmutableSet.<FrameworkPath>of(frameworkPath),
+            ImmutableSet.of(frameworkPath),
             ImmutableSet.<FrameworkPath>of());
 
     assertEquals(
