@@ -1,7 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY c1cf2a4dfee66a5c8c5eb9fca589e4e1caf68b9f #@#
+#@# GENERATED FILE: DO NOT MODIFY 4a7b2ef5123dbd5c1a6cd19e1beda91106a9e6a3 #@#
 {
-  "hashing" : [
-    "//src/com/facebook/buck/io:io",
-    "//third-party/java/guava:guava"
-  ]
+  "hashing" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

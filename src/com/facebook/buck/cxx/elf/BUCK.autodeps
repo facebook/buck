@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 7303146a40e97cd8e3b1054631de93edf53777d4 #@#
+#@# GENERATED FILE: DO NOT MODIFY c4077e0ad8b34dff8ea1c85a5ae4dd5c05e9badc #@#
 {
-  "elf" : [
-    "//third-party/java/guava:guava"
-  ]
+  "elf" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

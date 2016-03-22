@@ -1,9 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY fd7ee8e7acfbefaeaa4ed63789f0cb87bb6da126 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4d25c2d3e26d3561acfd96bfad20aa34d04b0e4e #@#
 {
-  "concurrent" : [
-    "//src/com/facebook/buck/log:api",
-    "//third-party/java/concurrent-locks:concurrent-locks",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "concurrent" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api"
+    ],
+    "exported_deps" : [
+      "//third-party/java/concurrent-locks:concurrent-locks",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

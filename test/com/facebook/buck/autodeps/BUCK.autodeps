@@ -1,13 +1,16 @@
-#@# GENERATED FILE: DO NOT MODIFY c283ff76276a497d74c9eba3b85fce6afdb38d5d #@#
+#@# GENERATED FILE: DO NOT MODIFY cc801d29b128e9ab265c44ddb6ba9b5122c425ea #@#
 {
-  "autodeps" : [
-    "//src/com/facebook/buck/autodeps:autodeps",
-    "//src/com/facebook/buck/autodeps:model",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/util:object_mapper",
-    "//test/com/facebook/buck/model:BuildTargetFactory",
-    "//test/com/facebook/buck/testutil/integration:integration",
-    "//third-party/java/guava:guava",
-    "//third-party/java/junit:junit"
-  ]
+  "autodeps" : {
+    "deps" : [
+      "//src/com/facebook/buck/autodeps:autodeps",
+      "//src/com/facebook/buck/autodeps:model",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util:object_mapper",
+      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
 }

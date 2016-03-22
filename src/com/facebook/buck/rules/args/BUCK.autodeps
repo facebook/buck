@@ -1,11 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY 99c7b30deffad8d33b9be09c8ed8d417affc6308 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1d77c79792c07c62c80e762e118b74e2bf8f611c #@#
 {
-  "args" : [
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/rules/macros:macros",
-    "//src/com/facebook/buck/shell:worker",
-    "//src/com/facebook/buck/util:exceptions",
-    "//third-party/java/guava:guava"
-  ]
+  "args" : {
+    "deps" : [
+      "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/util:exceptions"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules/macros:macros",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

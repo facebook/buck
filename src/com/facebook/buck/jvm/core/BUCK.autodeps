@@ -1,13 +1,22 @@
-#@# GENERATED FILE: DO NOT MODIFY 6b8d0d1d455c27f407c865bdf219d4a7edf4f965 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4376b6c313f14ac71e107da6b226f60ee7ead329 #@#
 {
-  "classhash" : [
-    "//src/com/facebook/buck/model:model",
-    "//third-party/java/guava:guava"
-  ],
-  "packagefinder" : [
-    "//src/com/facebook/buck/model:model"
-  ],
-  "suggestbuildrules" : [
-    "//third-party/java/guava:guava"
-  ]
+  "classhash" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "packagefinder" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model"
+    ]
+  },
+  "suggestbuildrules" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

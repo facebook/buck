@@ -1,25 +1,28 @@
-#@# GENERATED FILE: DO NOT MODIFY 2b943daa9324ee5fdc52a01f22d77701d8a0f78d #@#
+#@# GENERATED FILE: DO NOT MODIFY 6fa6dfd65dec8798f4964cd6ec5828ccc6d0f558 #@#
 {
-  "rage" : [
-    "//src/com/facebook/buck/cli:config",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/model:build_id",
-    "//src/com/facebook/buck/rage:config",
-    "//src/com/facebook/buck/rage:rage",
-    "//src/com/facebook/buck/rules:types",
-    "//src/com/facebook/buck/util:constants",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util:io",
-    "//src/com/facebook/buck/util:object_mapper",
-    "//src/com/facebook/buck/util:tristate",
-    "//src/com/facebook/buck/util/environment:environment",
-    "//test/com/facebook/buck/cli:FakeBuckConfig",
-    "//test/com/facebook/buck/testutil:testutil",
-    "//test/com/facebook/buck/testutil/integration:integration",
-    "//third-party/java/guava:guava",
-    "//third-party/java/hamcrest:java-hamcrest",
-    "//third-party/java/jackson:jackson-databind",
-    "//third-party/java/jetty:jetty",
-    "//third-party/java/junit:junit"
-  ]
+  "rage" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:build_id",
+      "//src/com/facebook/buck/rage:config",
+      "//src/com/facebook/buck/rage:rage",
+      "//src/com/facebook/buck/rules:types",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:tristate",
+      "//src/com/facebook/buck/util/environment:environment",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/jetty:jetty",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
 }

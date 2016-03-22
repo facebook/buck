@@ -1,19 +1,26 @@
-#@# GENERATED FILE: DO NOT MODIFY b7f44f0bfb692076dffc85feef1467329caa3ba1 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0f549a0e2b4e18d807d750f4872f09a3d2354f7f #@#
 {
-  "build_id" : [
-    "//third-party/java/jackson:jackson-annotations",
-    "//third-party/java/jackson:jackson-core",
-    "//third-party/java/jackson:jackson-databind"
-  ],
-  "model" : [
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:constants",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor",
-    "//third-party/java/jackson:jackson-annotations",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "build_id" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/jackson:jackson-annotations",
+      "//third-party/java/jackson:jackson-core",
+      "//third-party/java/jackson:jackson-databind"
+    ]
+  },
+  "model" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:constants",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

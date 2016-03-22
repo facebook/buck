@@ -1,9 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY e4add6bf6ec46a634743e71adf8e91f24637b319 #@#
+#@# GENERATED FILE: DO NOT MODIFY dfd00a3f06e9d79c307f9bc49453cb46ed669792 #@#
 {
-  "classes" : [
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/util:util",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "classes" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:util"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

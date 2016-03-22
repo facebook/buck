@@ -1,15 +1,19 @@
-#@# GENERATED FILE: DO NOT MODIFY e00f4390138a2deb76d5f6bf5c2a2ade3feee2a6 #@#
+#@# GENERATED FILE: DO NOT MODIFY a518def16e70b87aef14d942ac28a8563cbe7075 #@#
 {
-  "distributed" : [
-    "//src-gen:thrift",
-    "//src/com/facebook/buck/cli:config",
-    "//src/com/facebook/buck/event:event",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/slb:slb",
-    "//src/com/facebook/buck/timing:timing",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor",
-    "//third-party/java/thrift:libthrift"
-  ]
+  "distributed" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/timing:timing",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src-gen:thrift",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/slb:slb",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/thrift:libthrift"
+    ]
+  }
 }

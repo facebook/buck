@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY a6377e8cf28bab6ce5125eb5403930b972866070 #@#
+#@# GENERATED FILE: DO NOT MODIFY b5fa3b699a8c476f7be319c7539baf0d3c3f0e44 #@#
 {
-  "coverage" : [
-    "//third-party/java/jacoco:jacoco"
-  ]
+  "coverage" : {
+    "deps" : [
+      "//third-party/java/jacoco:jacoco"
+    ],
+    "exported_deps" : [ ]
+  }
 }

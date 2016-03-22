@@ -1,9 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY cbd9d06173971a286b022e241c9c4aa1e545d8dc #@#
+#@# GENERATED FILE: DO NOT MODIFY 65d0eb8d3804ea5d8ea5a9973f3866f50262b2c5 #@#
 {
-  "timing" : [
-    "//src/com/facebook/buck/util:tristate",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor"
-  ]
+  "timing" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:tristate",
+      "//third-party/java/guava:guava",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables"
+    ]
+  }
 }

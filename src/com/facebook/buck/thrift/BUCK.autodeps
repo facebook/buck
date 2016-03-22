@@ -1,29 +1,33 @@
-#@# GENERATED FILE: DO NOT MODIFY eb06c55266430f792db660413fe7b5fd628fa2c3 #@#
+#@# GENERATED FILE: DO NOT MODIFY abdf65f75ceae308f8ab3cff5fc5c9875104d5b5 #@#
 {
-  "rules" : [
-    "//src/com/facebook/buck/cli:config",
-    "//src/com/facebook/buck/cxx:rules",
-    "//src/com/facebook/buck/graph:graph",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/jvm/java:rules",
-    "//src/com/facebook/buck/jvm/java:steps",
-    "//src/com/facebook/buck/jvm/java:support",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/parser:rule_pattern",
-    "//src/com/facebook/buck/python:rules",
-    "//src/com/facebook/buck/python:support",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/rules:rules",
-    "//src/com/facebook/buck/rules/coercer:coercer",
-    "//src/com/facebook/buck/shell:steps",
-    "//src/com/facebook/buck/step:step",
-    "//src/com/facebook/buck/step/fs:fs",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util:util",
-    "//src/com/facebook/buck/zip:constants",
-    "//src/com/facebook/buck/zip:steps",
-    "//third-party/java/guava:guava",
-    "//third-party/java/infer-annotations:infer-annotations",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "rules" : {
+    "deps" : [
+      "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/java:steps",
+      "//src/com/facebook/buck/python:support",
+      "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/zip:constants",
+      "//src/com/facebook/buck/zip:steps"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/jvm/java:rules",
+      "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/python:rules",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/shell:steps",
+      "//src/com/facebook/buck/step:step",
+      "//third-party/java/guava:guava",
+      "//third-party/java/infer-annotations:infer-annotations",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

@@ -1,7 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 907748cbe6ae1360de4d5717184a99a5f1433d6f #@#
+#@# GENERATED FILE: DO NOT MODIFY 30fd98bf39a887199b6e9364c61dc84338cce8d0 #@#
 {
-  "bser" : [
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "bser" : {
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

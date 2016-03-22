@@ -1,23 +1,33 @@
-#@# GENERATED FILE: DO NOT MODIFY caec4b11c81213e111cd131475d86df6b72ca960 #@#
+#@# GENERATED FILE: DO NOT MODIFY c090ddfea457492de2e1303d7b9f54e1b124c967 #@#
 {
-  "dalvik" : [
-    "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/jvm/java/classes:classes",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:exceptions",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ],
-  "dalvik_stats_tool" : [
-    "//third-party/java/asm:asm",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ],
-  "steps" : [
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/jvm/java/classes:classes",
-    "//src/com/facebook/buck/step:step",
-    "//third-party/java/guava:guava"
-  ]
+  "dalvik" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:exceptions"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/java/classes:classes",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  },
+  "dalvik_stats_tool" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/asm:asm",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  },
+  "steps" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/java/classes:classes",
+      "//src/com/facebook/buck/step:step",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

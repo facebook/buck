@@ -1,11 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY b3ea99b56aed7ec62be4f4ec1930edb8e800c453 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4051d1d039fe4fbc603c3c8f194c814f20abc476 #@#
 {
-  "simulator" : [
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:io",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/dd-plist:dd-plist",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor"
-  ]
+  "simulator" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//third-party/java/dd-plist:dd-plist",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

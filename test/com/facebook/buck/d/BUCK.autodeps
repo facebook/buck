@@ -1,33 +1,40 @@
-#@# GENERATED FILE: DO NOT MODIFY a418f48073634ef19572389132d8d65a0271da8f #@#
+#@# GENERATED FILE: DO NOT MODIFY 733dd7ea209d7caba7a9bee33d58a8eaeb3a96a4 #@#
 {
-  "d" : [
-    "//src/com/facebook/buck/cli:cli",
-    "//src/com/facebook/buck/cli:config",
-    "//src/com/facebook/buck/cxx:platform",
-    "//src/com/facebook/buck/d:d",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util:io",
-    "//src/com/facebook/buck/util/environment:platform",
-    "//test/com/facebook/buck/cli:FakeBuckConfig",
-    "//test/com/facebook/buck/cxx:testutil",
-    "//test/com/facebook/buck/d:testutil",
-    "//test/com/facebook/buck/model:BuildTargetFactory",
-    "//test/com/facebook/buck/testutil/integration:integration",
-    "//third-party/java/guava:guava",
-    "//third-party/java/hamcrest:java-hamcrest",
-    "//third-party/java/junit:junit"
-  ],
-  "testutil" : [
-    "//src/com/facebook/buck/cxx:platform",
-    "//src/com/facebook/buck/d:d",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/rules/coercer:coercer",
-    "//test/com/facebook/buck/cli:FakeBuckConfig",
-    "//test/com/facebook/buck/cxx:testutil",
-    "//test/com/facebook/buck/rules:testutil",
-    "//third-party/java/guava:guava",
-    "//third-party/java/junit:junit"
-  ]
+  "d" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:cli",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/d:d",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/d:testutil",
+      "//test/com/facebook/buck/model:BuildTargetFactory",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/d:d",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//test/com/facebook/buck/rules:testutil",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

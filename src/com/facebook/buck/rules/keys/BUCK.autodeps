@@ -1,12 +1,16 @@
-#@# GENERATED FILE: DO NOT MODIFY 9ca7dc0e82c9a10754b6cfada85b2f7c964a856d #@#
+#@# GENERATED FILE: DO NOT MODIFY b50ed68c769016fad8f3d9c94e2420c082b47f21 #@#
 {
-  "keys" : [
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/rules:rule_key",
-    "//src/com/facebook/buck/util/cache:cache",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "keys" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/util/cache:cache",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

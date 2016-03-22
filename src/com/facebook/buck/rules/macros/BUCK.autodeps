@@ -1,18 +1,22 @@
-#@# GENERATED FILE: DO NOT MODIFY a910857a5b47dc0e8fad658df01029f88f9eed1a #@#
+#@# GENERATED FILE: DO NOT MODIFY d04370ce605c5a3542e0632e0550d29db2c38277 #@#
 {
-  "macros" : [
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/jvm/java:support",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/parser:rule_pattern",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/shell:worker",
-    "//src/com/facebook/buck/util:escaper",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util/environment:platform",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "macros" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/util:escaper",
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

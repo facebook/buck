@@ -1,12 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY 1691126ad9566df5f3c473a952f8319745482513 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7b4cc90a673aa2d5fc3ed1ee3b5f47e043aa7c43 #@#
 {
-  "simulator" : [
-    "//src/com/facebook/buck/apple/simulator:simulator",
-    "//src/com/facebook/buck/util:io",
-    "//test/com/facebook/buck/testutil/integration:integration",
-    "//test/com/facebook/buck/util:testutil",
-    "//third-party/java/guava:guava",
-    "//third-party/java/hamcrest:java-hamcrest",
-    "//third-party/java/junit:junit"
-  ]
+  "simulator" : {
+    "deps" : [
+      "//src/com/facebook/buck/apple/simulator:simulator",
+      "//src/com/facebook/buck/util:io",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/util:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
 }

@@ -1,7 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 129f9049324ecc1dc713462c45564562bf5f7996 #@#
+#@# GENERATED FILE: DO NOT MODIFY 89a4eedbb454fdef2b23b54ed7f5be00352645f9 #@#
 {
-  "hash" : [
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "hash" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

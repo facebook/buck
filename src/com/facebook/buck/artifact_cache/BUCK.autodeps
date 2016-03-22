@@ -1,52 +1,68 @@
-#@# GENERATED FILE: DO NOT MODIFY 6def5c6d2ab53098136edbfdcbfcca38c527978f #@#
+#@# GENERATED FILE: DO NOT MODIFY 5efa7c497fc758d77bfb3133d895d34548b424f4 #@#
 {
-  "artifact_cache" : [
-    "//src/com/facebook/buck/event:event",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/model:build_id",
-    "//src/com/facebook/buck/rules:rule_key",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor",
-    "//third-party/java/jackson:jackson-annotations"
-  ],
-  "binary_protocol" : [
-    "//src/com/facebook/buck/rules:rule_key",
-    "//src/com/facebook/buck/util/hash:hash",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor"
-  ],
-  "config" : [
-    "//src/com/facebook/buck/artifact_cache:artifact_cache",
-    "//src/com/facebook/buck/artifact_cache:impl",
-    "//src/com/facebook/buck/cli:config",
-    "//src/com/facebook/buck/event:event",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/slb:slb",
-    "//src/com/facebook/buck/timing:timing",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//src/com/facebook/buck/util/unit:unit",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor",
-    "//third-party/java/okhttp:okhttp",
-    "//third-party/java/okio:okio"
-  ],
-  "impl" : [
-    "//src/com/facebook/buck/artifact_cache:artifact_cache",
-    "//src/com/facebook/buck/artifact_cache:binary_protocol",
-    "//src/com/facebook/buck/event:event",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/rules:rule_key",
-    "//src/com/facebook/buck/slb:slb",
-    "//src/com/facebook/buck/util:constants",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util/collect:collect",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305",
-    "//third-party/java/okhttp:okhttp",
-    "//third-party/java/okio:okio"
-  ]
+  "artifact_cache" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:build_id",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations"
+    ]
+  },
+  "binary_protocol" : {
+    "deps" : [
+      "//src/com/facebook/buck/util/hash:hash",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "config" : {
+    "deps" : [
+      "//src/com/facebook/buck/artifact_cache:impl",
+      "//src/com/facebook/buck/slb:slb",
+      "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/unit:unit",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/okhttp:okhttp",
+      "//third-party/java/okio:okio"
+    ]
+  },
+  "impl" : {
+    "deps" : [
+      "//src/com/facebook/buck/artifact_cache:binary_protocol",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/collect:collect"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/slb:slb",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/okhttp:okhttp",
+      "//third-party/java/okio:okio"
+    ]
+  }
 }

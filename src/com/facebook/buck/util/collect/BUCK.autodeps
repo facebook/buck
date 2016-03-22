@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 2f2776fa6c4f6f9e0077f623b882fe90aba47cd8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8fd44b8dcac8c9a7bf4de73a9cc17c2395ee3b0c #@#
 {
-  "collect" : [
-    "//third-party/java/guava:guava"
-  ]
+  "collect" : {
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [ ]
+  }
 }

@@ -1,12 +1,16 @@
-#@# GENERATED FILE: DO NOT MODIFY 3a43f1a20116ac6e817e06a9b7b409a2ac208c51 #@#
+#@# GENERATED FILE: DO NOT MODIFY 373617455607c8695936e327b36357eebb051108 #@#
 {
-  "xcode" : [
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:util",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/dd-plist:dd-plist",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "xcode" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:util",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/dd-plist:dd-plist",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

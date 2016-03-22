@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 9ac103e19e2cfdaaaba51f9b3f337446ea747dc0 #@#
+#@# GENERATED FILE: DO NOT MODIFY e67b952d13ca9af31002a0ea8c0161cb37a9084d #@#
 {
-  "immutables" : [
-    "//third-party/java/immutables:processor"
-  ]
+  "immutables" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [ ]
+  }
 }

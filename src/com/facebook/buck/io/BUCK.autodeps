@@ -1,36 +1,48 @@
-#@# GENERATED FILE: DO NOT MODIFY 0633ab67cf985c7f752b7d2dd125358136ea2fc0 #@#
+#@# GENERATED FILE: DO NOT MODIFY fe3d43d7a1f806d5e3acf8b75c9470b4f3e8b0d6 #@#
 {
-  "executable-finder" : [
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util/environment:env-filter",
-    "//src/com/facebook/buck/util/environment:platform",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ],
-  "io" : [
-    "//src/com/facebook/buck/cli:low-level-config",
-    "//src/com/facebook/buck/io:executable-finder",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:constants",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util/concurrent:concurrent",
-    "//src/com/facebook/buck/util/environment:platform",
-    "//src/com/facebook/buck/zip:stream",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305",
-    "//third-party/java/okio:okio"
-  ],
-  "watchman" : [
-    "//src/com/facebook/buck/bser:bser",
-    "//src/com/facebook/buck/io:executable-finder",
-    "//src/com/facebook/buck/io/unixsocket:unixsocket",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/timing:timing",
-    "//src/com/facebook/buck/util:exceptions",
-    "//src/com/facebook/buck/util:io",
-    "//src/com/facebook/buck/util:util",
-    "//src/com/facebook/buck/util/concurrent:concurrent",
-    "//third-party/java/guava:guava"
-  ]
+  "executable-finder" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/environment:env-filter",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "io" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/zip:stream"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/cli:low-level-config",
+      "//src/com/facebook/buck/io:executable-finder",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/okio:okio"
+    ]
+  },
+  "watchman" : {
+    "deps" : [
+      "//src/com/facebook/buck/bser:bser",
+      "//src/com/facebook/buck/io/unixsocket:unixsocket",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util/concurrent:concurrent"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:io",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

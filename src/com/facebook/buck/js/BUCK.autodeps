@@ -1,21 +1,25 @@
-#@# GENERATED FILE: DO NOT MODIFY c501e1d625bfbe2c4a79bd036c9b57441465645c #@#
+#@# GENERATED FILE: DO NOT MODIFY 9cc3c6da6e6860908df0b720b73ed7afd6ceb3df #@#
 {
-  "js" : [
-    "//src/com/facebook/buck/android:packageable",
-    "//src/com/facebook/buck/android:rules",
-    "//src/com/facebook/buck/cli:config",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/rules:rules",
-    "//src/com/facebook/buck/rules/keys:keys",
-    "//src/com/facebook/buck/shell:steps",
-    "//src/com/facebook/buck/shell:worker",
-    "//src/com/facebook/buck/step:step",
-    "//src/com/facebook/buck/step/fs:fs",
-    "//src/com/facebook/buck/util:exceptions",
-    "//third-party/java/guava:guava",
-    "//third-party/java/infer-annotations:infer-annotations",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "js" : {
+    "deps" : [
+      "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/shell:steps",
+      "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/util:exceptions"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/android:packageable",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/rules/keys:keys",
+      "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/step:step",
+      "//third-party/java/guava:guava",
+      "//third-party/java/infer-annotations:infer-annotations",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

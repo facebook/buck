@@ -1,12 +1,16 @@
-#@# GENERATED FILE: DO NOT MODIFY b59aa63e66c6bd1b8cfacd9cb71d37c9aff79206 #@#
+#@# GENERATED FILE: DO NOT MODIFY 968a757dada1ec75f7cc78878b81b8bb16e0d1ae #@#
 {
-  "log" : [
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/log:appendablelogrecord",
-    "//src/com/facebook/buck/util:constants",
-    "//src/com/facebook/buck/util:io",
-    "//src/com/facebook/buck/util/concurrent:concurrent",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "log" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/log:appendablelogrecord",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

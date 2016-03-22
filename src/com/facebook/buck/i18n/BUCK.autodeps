@@ -1,7 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY af1d68bdb67e369586e754cafa83d02c84cb956d #@#
+#@# GENERATED FILE: DO NOT MODIFY 3ed0d84696285fc2111d4f150a8e2bf43984528d #@#
 {
-  "i18n" : [
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "i18n" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

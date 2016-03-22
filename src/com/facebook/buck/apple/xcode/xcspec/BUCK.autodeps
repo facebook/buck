@@ -1,7 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 01b73457aa0c61031b87ecad415e33f4bc7df9fd #@#
+#@# GENERATED FILE: DO NOT MODIFY 86e69001fe82ce8d8c7f0b11e160db457bf58aee #@#
 {
-  "xcspec" : [
-    "//third-party/java/dd-plist:dd-plist",
-    "//third-party/java/guava:guava"
-  ]
+  "xcspec" : {
+    "deps" : [
+      "//third-party/java/dd-plist:dd-plist",
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [ ]
+  }
 }

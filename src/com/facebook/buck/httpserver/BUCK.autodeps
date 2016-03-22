@@ -1,38 +1,49 @@
-#@# GENERATED FILE: DO NOT MODIFY cb80c69fa7abb0124ed16d824a41a1fa12f8e7b0 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8b84efa985f6f3c223a7093e95816b26d9b8801e #@#
 {
-  "cache_handler" : [
-    "//src/com/facebook/buck/artifact_cache:artifact_cache",
-    "//src/com/facebook/buck/artifact_cache:binary_protocol",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/rules:rule_key",
-    "//src/com/facebook/buck/util:constants",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jetty:jetty"
-  ],
-  "httpserver" : [
-    "//src/com/facebook/buck/artifact_cache:artifact_cache",
-    "//src/com/facebook/buck/cli:events",
-    "//src/com/facebook/buck/event:event",
-    "//src/com/facebook/buck/httpserver:cache_handler",
-    "//src/com/facebook/buck/httpserver:util",
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/model:build_id",
-    "//src/com/facebook/buck/parser:parser",
-    "//src/com/facebook/buck/rules:rules",
-    "//src/com/facebook/buck/step:step",
-    "//src/com/facebook/buck/util:constants",
-    "//src/com/facebook/buck/util:exceptions",
-    "//third-party/java/closure-templates:closure-templates",
-    "//third-party/java/gson:gson",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jackson:jackson-databind",
-    "//third-party/java/jetty:jetty",
-    "//third-party/java/jsr:jsr305"
-  ],
-  "util" : [
-    "//third-party/java/guava:guava",
-    "//third-party/java/jetty:jetty"
-  ]
+  "cache_handler" : {
+    "deps" : [
+      "//src/com/facebook/buck/artifact_cache:binary_protocol",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/util:constants"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/io:io",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jetty:jetty"
+    ]
+  },
+  "httpserver" : {
+    "deps" : [
+      "//src/com/facebook/buck/cli:events",
+      "//src/com/facebook/buck/httpserver:cache_handler",
+      "//src/com/facebook/buck/httpserver:util",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/gson:gson"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:build_id",
+      "//third-party/java/closure-templates:closure-templates",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/jetty:jetty",
+      "//third-party/java/jsr:jsr305"
+    ]
+  },
+  "util" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava",
+      "//third-party/java/jetty:jetty"
+    ]
+  }
 }

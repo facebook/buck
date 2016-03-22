@@ -1,6 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 5cafe165840ca786f5bd4ad8c883223baf2081f6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 079574fdc8d433ddab6ba86e7f7a75ecade3c4af #@#
 {
-  "graph" : [
-    "//third-party/java/guava:guava"
-  ]
+  "graph" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

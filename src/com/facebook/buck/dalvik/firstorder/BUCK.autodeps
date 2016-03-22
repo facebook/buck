@@ -1,8 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY d13879f59b0ecd01b3dc128e4f2af0a954d015ed #@#
+#@# GENERATED FILE: DO NOT MODIFY 1f0fb7b6b4d26c187e8d3a833d3778f382a0e400 #@#
 {
-  "firstorder" : [
-    "//third-party/java/asm:asm",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "firstorder" : {
+    "deps" : [
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//third-party/java/asm:asm",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

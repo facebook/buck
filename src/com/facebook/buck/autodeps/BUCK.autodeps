@@ -1,15 +1,23 @@
-#@# GENERATED FILE: DO NOT MODIFY 538e6b2e4f7cd3542a2272cb01e7481a61187d14 #@#
+#@# GENERATED FILE: DO NOT MODIFY 48480db4b740e96788eae49a93a8068a25ce8175 #@#
 {
-  "autodeps" : [
-    "//src/com/facebook/buck/autodeps:model",
-    "//src/com/facebook/buck/model:model",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jackson:jackson-core",
-    "//third-party/java/jackson:jackson-databind"
-  ],
-  "model" : [
-    "//src/com/facebook/buck/model:model",
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ]
+  "autodeps" : {
+    "deps" : [
+      "//src/com/facebook/buck/model:model"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/autodeps:model",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-core",
+      "//third-party/java/jackson:jackson-databind"
+    ]
+  },
+  "model" : {
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
 }

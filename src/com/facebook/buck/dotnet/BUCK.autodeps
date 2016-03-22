@@ -1,16 +1,20 @@
-#@# GENERATED FILE: DO NOT MODIFY 7cb4992cf019b7d285ea99ddd270bf715f2f0f1d #@#
+#@# GENERATED FILE: DO NOT MODIFY 94622be2520edaeb1725d6b70de617128620f0e8 #@#
 {
-  "dotnet" : [
-    "//src/com/facebook/buck/io:io",
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/model:model",
-    "//src/com/facebook/buck/rules:build_rule",
-    "//src/com/facebook/buck/shell:steps",
-    "//src/com/facebook/buck/step:step",
-    "//src/com/facebook/buck/step/fs:fs",
-    "//src/com/facebook/buck/util:escaper",
-    "//src/com/facebook/buck/util:exceptions",
-    "//third-party/java/guava:guava",
-    "//third-party/java/infer-annotations:infer-annotations"
-  ]
+  "dotnet" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/util:escaper",
+      "//src/com/facebook/buck/util:exceptions"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/shell:steps",
+      "//src/com/facebook/buck/step:step",
+      "//third-party/java/guava:guava",
+      "//third-party/java/infer-annotations:infer-annotations"
+    ]
+  }
 }

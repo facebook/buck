@@ -1,10 +1,17 @@
-#@# GENERATED FILE: DO NOT MODIFY 81155b0357abc15e554db9b3f4e324d48767763c #@#
+#@# GENERATED FILE: DO NOT MODIFY 435072cdbee932fe74fbb4273408c3e1eeedf8d0 #@#
 {
-  "headermap" : [
-    "//third-party/java/guava:guava",
-    "//third-party/java/jsr:jsr305"
-  ],
-  "printheadermap" : [
-    "//src/com/facebook/buck/apple/clang:headermap"
-  ]
+  "headermap" : {
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//third-party/java/jsr:jsr305"
+    ]
+  },
+  "printheadermap" : {
+    "deps" : [
+      "//src/com/facebook/buck/apple/clang:headermap"
+    ],
+    "exported_deps" : [ ]
+  }
 }

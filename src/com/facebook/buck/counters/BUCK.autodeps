@@ -1,9 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY b661c2e518a5f58d729530f3328febe3e3ee0a3b #@#
+#@# GENERATED FILE: DO NOT MODIFY 455f0fd85b408a03de8c27644f2cbee825b7981f #@#
 {
-  "counters" : [
-    "//src/com/facebook/buck/event:event",
-    "//src/com/facebook/buck/util/immutables:immutables",
-    "//third-party/java/guava:guava",
-    "//third-party/java/immutables:processor"
-  ]
+  "counters" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }

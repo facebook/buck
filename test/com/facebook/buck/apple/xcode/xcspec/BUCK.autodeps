@@ -1,9 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 258694382e473f44c41734aab22ca1beea410644 #@#
+#@# GENERATED FILE: DO NOT MODIFY 042b12b36cef3b96837e38e0c770d74289f65b40 #@#
 {
-  "xcspec" : [
-    "//src/com/facebook/buck/apple/xcode/xcspec:xcspec",
-    "//test/com/facebook/buck/testutil/integration:integration",
-    "//third-party/java/guava:guava",
-    "//third-party/java/junit:junit"
-  ]
+  "xcspec" : {
+    "deps" : [
+      "//src/com/facebook/buck/apple/xcode/xcspec:xcspec",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
 }

@@ -1,8 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 61e6cffb83027280797fad576c8922324389cdea #@#
+#@# GENERATED FILE: DO NOT MODIFY 5bd32e9eb4e482392bbf29a7895667a2d442a5c7 #@#
 {
-  "device" : [
-    "//src/com/facebook/buck/log:api",
-    "//src/com/facebook/buck/util:io",
-    "//third-party/java/guava:guava"
-  ]
+  "device" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util:io",
+      "//third-party/java/guava:guava"
+    ]
+  }
 }
