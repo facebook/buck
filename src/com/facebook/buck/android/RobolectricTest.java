@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -107,6 +108,7 @@ public class RobolectricTest extends JavaTest {
       SourcePath abiJar,
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
+      JavaOptions javaOptions,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       ImmutableSet<BuildRule> sourceTargetsUnderTest,
@@ -131,6 +133,7 @@ public class RobolectricTest extends JavaTest {
         additionalClasspathEntries,
         TestType.JUNIT,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
+        javaOptions.getJavaRuntimeLauncher(),
         vmArgs,
         nativeLibsEnvironment,
         sourceTargetsUnderTest,
@@ -140,8 +143,7 @@ public class RobolectricTest extends JavaTest {
         runTestSeparately,
         stdOutLogLevel,
         stdErrLogLevel,
-        testTempDirOverride
-    );
+        testTempDirOverride);
     this.optionalDummyRDotJava = optionalDummyRDotJava;
   }
 

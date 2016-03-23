@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7e5cd1636c2aaa0fe59e56458ff6749d134b187d #@#
+#@# GENERATED FILE: DO NOT MODIFY 050018aac720e915793f049b5df797290e2955cb #@#
 {
   "exceptions" : {
     "deps" : [
@@ -144,6 +144,7 @@
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

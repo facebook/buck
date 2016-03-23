@@ -40,6 +40,13 @@ public class JavaBuckConfig {
     this.delegate = delegate;
   }
 
+  public JavaOptions getDefaultJavaOptions() {
+    return JavaOptions
+        .builder()
+        .setJavaPath(getPathToExecutable("java"))
+        .build();
+  }
+
   public JavacOptions getDefaultJavacOptions() {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
@@ -72,16 +79,20 @@ public class JavaBuckConfig {
 
   @VisibleForTesting
   Optional<Path> getJavacPath() {
-    Optional<String> path = delegate.getValue("tools", "javac");
+    return getPathToExecutable("javac");
+  }
+
+  private Optional<Path> getPathToExecutable(String executableName) {
+    Optional<String> path = delegate.getValue("tools", executableName);
     if (path.isPresent()) {
-      File javac = new File(path.get());
-      if (!javac.exists()) {
-        throw new HumanReadableException("Javac does not exist: " + javac.getPath());
+      File file = new File(path.get());
+      if (!file.exists()) {
+        throw new HumanReadableException(executableName + " does not exist: " + file.getPath());
       }
-      if (!javac.canExecute()) {
-        throw new HumanReadableException("Javac is not executable: " + javac.getPath());
+      if (!file.canExecute()) {
+        throw new HumanReadableException(executableName + " is not executable: " + file.getPath());
       }
-      return Optional.of(javac.toPath());
+      return Optional.of(file.toPath());
     }
     return Optional.absent();
   }

@@ -84,6 +84,7 @@ public class JUnitStepTest {
         filesystem,
         /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
         /* testRuleTimeoutMs*/ Optional.<Long>absent(),
+        new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
@@ -94,7 +95,7 @@ public class JUnitStepTest {
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(
         ImmutableList.of(
-            "java",
+            "/foo/bar/custom/java",
             "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
@@ -159,6 +160,7 @@ public class JUnitStepTest {
         filesystem,
         ImmutableMap.<String, String>of(),
         /* testRuleTimeoutMs*/ Optional.<Long>absent(),
+        new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
 
     TestConsole console = new TestConsole(Verbosity.ALL);
@@ -170,7 +172,7 @@ public class JUnitStepTest {
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(
         ImmutableList.of(
-            "java",
+            "/foo/bar/custom/java",
             "-Djava.io.tmpdir=/opt/src/buck/" + directoryForTemp,
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,

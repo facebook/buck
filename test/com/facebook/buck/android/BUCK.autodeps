@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 12d496a52eb9141ad22c44e60e4887f5ab1e21d6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 807828c1cd029b13253753f905ea8527f32719f1 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -99,6 +99,7 @@
       "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/file:testutil",
+      "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/step:testutil",

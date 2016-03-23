@@ -39,6 +39,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -263,7 +264,7 @@ public class ProjectWorkspace {
       ImmutableList<String> vmArgs,
       String... args)  throws IOException, InterruptedException {
     List<String> command = ImmutableList.<String>builder()
-        .add("java")
+        .add(JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher().getCommand())
         .addAll(vmArgs)
         .add("-jar")
         .add(jar.toString())

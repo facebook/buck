@@ -39,6 +39,7 @@ import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final ProjectFilesystem filesystem;
   private final Set<String> sourceDirectories;
   private final Set<Path> classesDirectories;
@@ -48,6 +49,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final Path propertyFile;
 
   public GenerateCodeCoverageReportStep(
+      JavaRuntimeLauncher javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       Set<String> sourceDirectories,
       Set<Path> classesDirectories,
@@ -55,6 +57,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       CoverageReportFormat format,
       String title) {
     super(filesystem.getRootPath());
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
 
     this.filesystem = filesystem;
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
@@ -109,7 +112,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("java");
+    args.add(javaRuntimeLauncher.getCommand());
 
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 

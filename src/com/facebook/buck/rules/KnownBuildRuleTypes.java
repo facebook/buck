@@ -97,6 +97,7 @@ import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -458,6 +459,7 @@ public class KnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
+    JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
 
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
 
@@ -518,6 +520,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
+            defaultJavaOptions,
             defaultJavacOptions,
             proGuardConfig,
             ndkCxxPlatforms,
@@ -528,7 +531,9 @@ public class KnownBuildRuleTypes {
             defaultJavacOptions,
             ndkCxxPlatforms,
             dxExecutorService));
-    builder.register(new AndroidInstrumentationTestDescription(defaultTestRuleTimeoutMs));
+    builder.register(new AndroidInstrumentationTestDescription(
+        defaultJavaOptions,
+        defaultTestRuleTimeoutMs));
     builder.register(new AndroidLibraryDescription(defaultJavacOptions));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
@@ -594,12 +599,13 @@ public class KnownBuildRuleTypes {
     builder.register(
         new GroovyTestDescription(
             groovyBuckConfig,
+            defaultJavaOptions,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             testTempDirOverride
         )
     );
-    builder.register(new GwtBinaryDescription());
+    builder.register(new GwtBinaryDescription(defaultJavaOptions));
     builder.register(
       new HalideLibraryDescription(
         defaultCxxPlatform,
@@ -607,10 +613,14 @@ public class KnownBuildRuleTypes {
         cxxBuckConfig.getPreprocessMode(),
         halideBuckConfig));
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
-    builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
+    builder.register(new JavaBinaryDescription(
+        defaultJavaOptions,
+        defaultJavacOptions,
+        defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(
         new JavaTestDescription(
+            defaultJavaOptions,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform,
@@ -642,6 +652,7 @@ public class KnownBuildRuleTypes {
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(
+            defaultJavaOptions,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform,
@@ -651,6 +662,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ScalaLibraryDescription(scalaConfig));
     builder.register(new ScalaTestDescription(
         scalaConfig,
+        defaultJavaOptions,
         defaultTestRuleTimeoutMs,
         defaultCxxPlatform,
         testTempDirOverride));

@@ -40,6 +40,7 @@ public class JUnitStep extends ShellStep {
   private static final Logger LOG = Logger.get(JUnitStep.class);
 
   private final ProjectFilesystem filesystem;
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final ImmutableMap<String, String> nativeLibsEnvironment;
   private final Optional<Long> testRuleTimeoutMs;
   private final JUnitJvmArgs junitJvmArgs;
@@ -51,9 +52,11 @@ public class JUnitStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
+      JavaRuntimeLauncher javaRuntimeLauncher,
       JUnitJvmArgs junitJvmArgs) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.junitJvmArgs = junitJvmArgs;
@@ -67,7 +70,7 @@ public class JUnitStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("java");
+    args.add(javaRuntimeLauncher.getCommand());
 
     junitJvmArgs.formatCommandLineArgsToList(
         args,

@@ -80,6 +80,7 @@ public class JavaBinaryTest {
             new JavaBinary(
                 params,
                 new SourcePathResolver(ruleResolver),
+                new ExternalJavaRuntimeLauncher("/foobar/java"),
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,
@@ -95,7 +96,7 @@ public class JavaBinaryTest {
     // run from a /tmp directory, if necessary.
     String expectedClasspath = basePath + javaBinary.getPathToOutput();
 
-    List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
+    List<String> expectedCommand = ImmutableList.of("/foobar/java", "-jar", expectedClasspath);
     assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
 
     assertFalse(

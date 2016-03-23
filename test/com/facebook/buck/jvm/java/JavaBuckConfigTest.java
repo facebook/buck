@@ -63,6 +63,29 @@ public class JavaBuckConfigTest {
   }
 
   @Test
+  public void whenJavaIsNotSetThenJavaFromPathIsReturned() throws IOException {
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
+    JavaOptions options = config.getDefaultJavaOptions();
+    assertEquals(Optional.absent(), options.getJavaPath());
+    assertEquals("java", options.getJavaRuntimeLauncher().getCommand());
+  }
+
+  @Test
+  public void whenJavaExistsAndIsExecutableThenItIsReturned() throws IOException {
+    File java = temporaryFolder.newExecutableFile();
+    String javaCommand = java.toPath().toString();
+    JavaBuckConfig config = new JavaBuckConfig(
+        FakeBuckConfig
+            .builder()
+            .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaCommand)))
+            .build());
+
+    JavaOptions options = config.getDefaultJavaOptions();
+    assertEquals(Optional.of(java.toPath()), options.getJavaPath());
+    assertEquals(javaCommand, options.getJavaRuntimeLauncher().getCommand());
+  }
+
+  @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     assertEquals(Optional.absent(), config.getJavacPath());
@@ -70,8 +93,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavacExistsAndIsExecutableThenCorrectPathIsReturned() throws IOException {
-    File javac = temporaryFolder.newFile();
-    assertTrue(javac.setExecutable(true));
+    File javac = temporaryFolder.newExecutableFile();
 
     Reader reader = new StringReader(
         Joiner.on('\n').join(
@@ -93,7 +115,7 @@ public class JavaBuckConfigTest {
       config.getJavacPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac does not exist: " + invalidPath);
+      assertEquals(e.getHumanReadableErrorMessage(), "javac does not exist: " + invalidPath);
     }
   }
 
@@ -110,7 +132,7 @@ public class JavaBuckConfigTest {
       config.getJavacPath();
       fail("Should throw exception as javac file is not executable.");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac is not executable: " + javac.getPath());
+      assertEquals(e.getHumanReadableErrorMessage(), "javac is not executable: " + javac.getPath());
     }
   }
 

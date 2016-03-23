@@ -23,6 +23,8 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.log.Logger;
@@ -454,6 +456,9 @@ public class TestRunning {
             getReportCommand(
                 rulesUnderTest,
                 defaultJavaPackageFinderOptional,
+                new JavaBuckConfig(params.getBuckConfig())
+                    .getDefaultJavaOptions()
+                    .getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),
                 JACOCO_OUTPUT_DIR,
                 options.getCoverageReportFormat(),
@@ -772,6 +777,7 @@ public class TestRunning {
   private static Step getReportCommand(
       ImmutableSet<JavaLibrary> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
+      JavaRuntimeLauncher javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       Path outputDirectory,
       CoverageReportFormat format,
@@ -794,6 +800,7 @@ public class TestRunning {
     }
 
     return new GenerateCodeCoverageReportStep(
+        javaRuntimeLauncher,
         filesystem,
         srcDirectories.build(),
         pathsToClasses.build(),

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -70,6 +71,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
               new File("build/testrunner/classes").getAbsolutePath()));
 
   @AddToRuleKey
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
+
+  @AddToRuleKey
   private ImmutableSet<BuildRule> sourceUnderTest;
 
   private final ImmutableSet<Label> labels;
@@ -86,10 +90,12 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       InstallableApk apk,
       Set<Label> labels,
       Set<String> contacts,
+      JavaRuntimeLauncher javaRuntimeLauncher,
       ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
     this.apk = apk;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.sourceUnderTest = sourceUnderTest;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
@@ -196,7 +202,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         .build();
 
     return new InstrumentationStep(
-        getProjectFilesystem(), jvmArgs, testRuleTimeoutMs);
+        getProjectFilesystem(), javaRuntimeLauncher, jvmArgs, testRuleTimeoutMs);
   }
 
   @Override

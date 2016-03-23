@@ -57,10 +57,13 @@ public class JavaBinaryDescription implements
 
   private final JavacOptions javacOptions;
   private final CxxPlatform cxxPlatform;
+  private final JavaOptions javaOptions;
 
   public JavaBinaryDescription(
+      JavaOptions javaOptions,
       JavacOptions javacOptions,
       CxxPlatform cxxPlatform) {
+    this.javaOptions = javaOptions;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
@@ -102,6 +105,7 @@ public class JavaBinaryDescription implements
     BuildRule rule = new JavaBinary(
         binaryParams.appendExtraDeps(transitiveClasspathEntries.keys()),
         pathResolver,
+        javaOptions.getJavaRuntimeLauncher(),
         args.mainClass.orNull(),
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),
@@ -127,7 +131,8 @@ public class JavaBinaryDescription implements
           pathResolver,
           javacOptions,
           innerJar,
-          nativeLibraries);
+          nativeLibraries,
+          javaOptions.getJavaRuntimeLauncher());
     }
 
     return rule;

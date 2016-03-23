@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -50,16 +51,19 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
   public static final BuildRuleType TYPE = BuildRuleType.of("robolectric_test");
 
+  private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
   private final Optional<Path> testTempDirOverride;
 
   public RobolectricTestDescription(
+      JavaOptions javaOptions,
       JavacOptions templateOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform,
       Optional<Path> testTempDirOverride) {
+    this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
@@ -153,6 +157,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 new BuildTargetSourcePath(abiJarTarget),
                 additionalClasspathEntries,
                 javacOptions,
+                javaOptions,
                 vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 JavaTestDescription.validateAndGetSourcesUnderTest(

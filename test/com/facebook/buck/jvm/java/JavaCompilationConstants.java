@@ -18,6 +18,10 @@ package com.facebook.buck.jvm.java;
 
 public class JavaCompilationConstants {
 
+  public static final JavaOptions DEFAULT_JAVA_OPTIONS =
+      JavaOptions.builder()
+          .build();
+
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
           .setSourceLevel("7")

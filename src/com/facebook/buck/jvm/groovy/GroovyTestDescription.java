@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
@@ -51,17 +52,20 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
   public static final BuildRuleType TYPE = BuildRuleType.of("groovy_test");
 
   private final GroovyBuckConfig groovyBuckConfig;
+  private final JavaOptions javaOptions;
   private final JavacOptions defaultJavacOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final Optional<Path> testTempDirOverride;
 
   public GroovyTestDescription(
       GroovyBuckConfig groovyBuckConfig,
-      JavacOptions defaultOptions,
+      JavaOptions javaOptions,
+      JavacOptions defaultJavacOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
       Optional<Path> testTempDirOverride) {
     this.groovyBuckConfig = groovyBuckConfig;
-    this.defaultJavacOptions = defaultOptions;
+    this.javaOptions = javaOptions;
+    this.defaultJavacOptions = defaultJavacOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.testTempDirOverride = testTempDirOverride;
   }
@@ -125,6 +129,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.testType.or(TestType.JUNIT),
                 stepFactory,
+                javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
                 ImmutableMap.<String, String>of(),
                 ImmutableSet.<BuildRule>of(),
@@ -133,8 +138,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
-                args.stdErrLogLevel,
-                testTempDirOverride));
+                args.stdErrLogLevel, testTempDirOverride));
 
     resolver.addToIndex(
         CalculateAbi.of(

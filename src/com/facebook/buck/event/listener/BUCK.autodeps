@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a744821f44b26202a6a131bd0152844078003977 #@#
+#@# GENERATED FILE: DO NOT MODIFY 09a96050c158e684d27de98fa4789d3458dc0ed0 #@#
 {
   "listener" : {
     "deps" : [
@@ -21,6 +21,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
@@ -28,6 +29,7 @@
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/distributed:distributed",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/external:external_lib",
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
@@ -41,6 +43,7 @@
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:environment",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/network:network",
       "//src/com/facebook/buck/util/unit:unit",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

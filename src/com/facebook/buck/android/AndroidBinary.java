@@ -25,6 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.jvm.java.Classpaths;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -219,6 +220,8 @@ public class AndroidBinary
   private final Optional<Boolean> compressAssetLibraries;
   @AddToRuleKey
   private final ManifestEntries manifestEntries;
+  @AddToRuleKey
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
 
   AndroidBinary(
       BuildRuleParams params,
@@ -248,7 +251,8 @@ public class AndroidBinary
       ListeningExecutorService dxExecutorService,
       Optional<Boolean> packageAssetLibraries,
       Optional<Boolean> compressAssetLibraries,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      JavaRuntimeLauncher javaRuntimeLauncher) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -256,6 +260,7 @@ public class AndroidBinary
     this.keystore = keystore;
     this.packageType = packageType;
     this.dexSplitMode = dexSplitMode;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(buildTargetsToExcludeFromDex);
     this.sdkProguardConfig = sdkProguardConfig;
     this.optimizationPasses = proguardOptimizationPasses;
@@ -343,6 +348,10 @@ public class AndroidBinary
   public Optional<Boolean> getPackageAssetLibraries() { return packageAssetLibraries; }
 
   public ManifestEntries getManifestEntries() { return manifestEntries; }
+
+  JavaRuntimeLauncher getJavaRuntimeLauncher() {
+    return javaRuntimeLauncher;
+  }
 
   @VisibleForTesting
   AndroidGraphEnhancementResult getEnhancementResult() {
@@ -563,7 +572,8 @@ public class AndroidBinary
             .toSet(),
         getResolver().getAbsolutePath(keystore.getPathToStore()),
         getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
-        /* debugMode */ false);
+        /* debugMode */ false,
+        javaRuntimeLauncher);
     steps.add(apkBuilderCommand);
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -854,6 +864,7 @@ public class AndroidBinary
         .getPathToGeneratedProguardConfigDir();
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
+        javaRuntimeLauncher,
         getProjectFilesystem(),
         proguardJarOverride.isPresent() ?
             Optional.of(getResolver().getAbsolutePath(proguardJarOverride.get())) :

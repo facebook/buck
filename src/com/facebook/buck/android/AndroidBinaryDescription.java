@@ -26,6 +26,7 @@ import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.log.Logger;
@@ -92,16 +93,19 @@ public class AndroidBinaryDescription
   private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(
       PACKAGE_STRING_ASSETS_FLAVOR);
 
+  private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
 
   public AndroidBinaryDescription(
+      JavaOptions javaOptions,
       JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService) {
+    this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
     this.nativePlatforms = nativePlatforms;
@@ -269,7 +273,8 @@ public class AndroidBinaryDescription
         dxExecutorService,
         args.packageAssetLibraries,
         args.compressAssetLibraries,
-        args.manifestEntries.or(ManifestEntries.empty()));
+        args.manifestEntries.or(ManifestEntries.empty()),
+        javaOptions.getJavaRuntimeLauncher());
   }
 
   private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {

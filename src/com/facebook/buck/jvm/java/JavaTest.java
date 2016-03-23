@@ -96,6 +96,9 @@ public class JavaTest
               new File("build/testrunner/classes").getAbsolutePath()));
 
   @AddToRuleKey
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
+
+  @AddToRuleKey
   private final ImmutableList<String> vmArgs;
 
   private final ImmutableMap<String, String> nativeLibsEnvironment;
@@ -147,6 +150,7 @@ public class JavaTest
       ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
       CompileToJarStepFactory compileStepFactory,
+      JavaRuntimeLauncher javaRuntimeLauncher,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       ImmutableSet<BuildRule> sourceUnderTest,
@@ -173,6 +177,7 @@ public class JavaTest
         resourcesRoot,
         mavenCoords,
         /* tests */ ImmutableSortedSet.<BuildTarget>of());
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.sourceUnderTest = sourceUnderTest;
@@ -259,6 +264,7 @@ public class JavaTest
         getProjectFilesystem(),
         nativeLibsEnvironment,
         testRuleTimeoutMs,
+        javaRuntimeLauncher,
         args);
   }
 

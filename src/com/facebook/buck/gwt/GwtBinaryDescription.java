@@ -19,6 +19,7 @@ package com.facebook.buck.gwt;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.gwt.GwtBinary.Style;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -59,6 +60,12 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
    * This value is taken from GWT's source code: http://bit.ly/1nZtmMv
    */
   private static final Integer DEFAULT_OPTIMIZE = Integer.valueOf(9);
+
+  private final JavaOptions javaOptions;
+
+  public GwtBinaryDescription(JavaOptions javaOptions) {
+    this.javaOptions = javaOptions;
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -113,6 +120,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
         new SourcePathResolver(resolver),
         args.modules.get(),
+        javaOptions.getJavaRuntimeLauncher(),
         args.vmArgs.get(),
         args.style.or(DEFAULT_STYLE),
         args.draftCompile.or(DEFAULT_DRAFT_COMPILE),

@@ -61,6 +61,7 @@ public class  GenerateCodeCoverageReportStepTest {
     filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
 
     step = new GenerateCodeCoverageReportStep(
+        new ExternalJavaRuntimeLauncher("/baz/qux/java"),
         filesystem,
         SOURCE_DIRECTORIES,
         CLASSES_DIRECTORIES,
@@ -82,7 +83,7 @@ public class  GenerateCodeCoverageReportStepTest {
         MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString());
 
     shellCommandBuilder.add(
-        "java",
+        "/baz/qux/java",
         "-jar",
         MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString(),
         absolutifyPath(Paths.get(OUTPUT_DIRECTORY + "/parameters.properties")));

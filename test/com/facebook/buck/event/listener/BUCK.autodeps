@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d96bdfb0f1a332f475687ca8e456ac38b846d15a #@#
+#@# GENERATED FILE: DO NOT MODIFY a924c8fa9118886031e64160b1b8da630c56811a #@#
 {
   "listener" : {
     "deps" : [
@@ -10,6 +10,7 @@
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/distributed:distributed",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/external:external_lib",
       "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:io",

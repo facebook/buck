@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 
@@ -25,15 +26,18 @@ import com.google.common.collect.ImmutableList;
 
 public class InstrumentationStep extends ShellStep {
 
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final AndroidInstrumentationTestJVMArgs jvmArgs;
 
   private Optional<Long> testRuleTimeoutMs;
 
   public InstrumentationStep(
       ProjectFilesystem filesystem,
+      JavaRuntimeLauncher javaRuntimeLauncher,
       AndroidInstrumentationTestJVMArgs jvmArgs,
       Optional<Long> testRuleTimeoutMs) {
     super(filesystem.getRootPath());
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.jvmArgs = jvmArgs;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
@@ -41,7 +45,7 @@ public class InstrumentationStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("java");
+    args.add(javaRuntimeLauncher.getCommand());
 
     jvmArgs.formatCommandLineArgsToList(args);
 

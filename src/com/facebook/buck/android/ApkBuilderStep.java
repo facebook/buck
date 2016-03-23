@@ -21,6 +21,7 @@ import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
@@ -71,6 +72,7 @@ public class ApkBuilderStep implements Step {
   private final Path pathToKeystore;
   private final Path pathToKeystorePropertiesFile;
   private final boolean debugMode;
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
 
   /**
    *
@@ -96,7 +98,8 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<Path> jarFilesThatMayContainResources,
       Path pathToKeystore,
       Path pathToKeystorePropertiesFile,
-      boolean debugMode) {
+      boolean debugMode,
+      JavaRuntimeLauncher javaRuntimeLauncher) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -108,6 +111,7 @@ public class ApkBuilderStep implements Step {
     this.pathToKeystore = pathToKeystore;
     this.pathToKeystorePropertiesFile = pathToKeystorePropertiesFile;
     this.debugMode = debugMode;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 
   @Override
@@ -210,7 +214,7 @@ public class ApkBuilderStep implements Step {
   public String getDescription(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(
-        "java",
+        javaRuntimeLauncher.getCommand(),
         "-classpath",
         // TODO(bolinfest): Make the directory that corresponds to $ANDROID_HOME a field that is
         // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
