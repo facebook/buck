@@ -275,6 +275,9 @@ public class RuleKeyBuilder {
       }
       feed(((boolean) val ? "t" : "f").getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Enum) {
+      if (logElms != null) {
+        logElms.add(String.format("enum(%s):", val));
+      }
       feed(String.valueOf(val).getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Number) {
       if (logElms != null) {
