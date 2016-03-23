@@ -69,7 +69,7 @@ public class IjProjectWriter {
     this.projectFilesystem = projectFilesystem;
   }
 
-  public void write(BuckConfig buckConfig) throws IOException {
+  public void write(BuckConfig buckConfig, boolean runPostGenerationCleaner) throws IOException {
     IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
 
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
@@ -83,7 +83,9 @@ public class IjProjectWriter {
     Path indexFile = writeModulesIndex();
     cleaner.doNotDelete(indexFile);
 
-    cleaner.clean(buckConfig, LIBRARIES_PREFIX);
+    if (runPostGenerationCleaner) {
+      cleaner.clean(buckConfig, LIBRARIES_PREFIX);
+    }
   }
 
   private Path writeModule(IjModule module) throws IOException {

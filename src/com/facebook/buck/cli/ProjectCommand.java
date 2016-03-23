@@ -222,6 +222,12 @@ public class ProjectCommand extends BuildCommand {
   @Nullable
   private IjModuleGraph.AggregationMode intellijAggregationMode = null;
 
+  @Option(
+      name = "--run-ij-cleaner",
+      usage = "After generating an IntelliJ project using --experimental-ij-generation, start a " +
+          "cleaner which removes any .iml files which weren't generated as part of the project.")
+  private boolean runIjCleaner = false;
+
   public boolean getCombinedProject() {
     return combinedProject;
   }
@@ -550,7 +556,7 @@ public class ProjectCommand extends BuildCommand {
         getIntellijAggregationMode(params.getBuckConfig()),
         params.getBuckConfig());
 
-    ImmutableSet<BuildTarget> requiredBuildTargets = project.write();
+    ImmutableSet<BuildTarget> requiredBuildTargets = project.write(runIjCleaner);
 
     if (!requiredBuildTargets.isEmpty()) {
       BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)

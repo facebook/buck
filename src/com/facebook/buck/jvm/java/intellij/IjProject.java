@@ -76,11 +76,12 @@ public class IjProject {
   /**
    * Write the project to disk.
    *
+   * @param runPostGenerationCleaner Whether or not the post-generation cleaner should be run.
    * @return set of {@link BuildTarget}s which should be built in order for the project to index
    *   correctly.
    * @throws IOException
    */
-  public ImmutableSet<BuildTarget> write() throws IOException {
+  public ImmutableSet<BuildTarget> write(boolean runPostGenerationCleaner) throws IOException {
     final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
@@ -181,7 +182,7 @@ public class IjProject {
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
         projectFilesystem);
-    writer.write(buckConfig);
+    writer.write(buckConfig, runPostGenerationCleaner);
     return requiredBuildTargets.build();
   }
 }
