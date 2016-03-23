@@ -16,6 +16,8 @@
 
 package com.facebook.buck.intellij.plugin.file;
 
+import com.intellij.openapi.vfs.VirtualFile;
+
 public final class BuckFileUtil {
 
   private static final String DEFAULT_BUILD_FILE = "BUCK";
@@ -48,5 +50,23 @@ public final class BuckFileUtil {
 
   public static String getSampleBuckFile() {
     return SAMPLE_BUCK_FILE;
+  }
+
+  public static VirtualFile getBuckFile(VirtualFile virtualFile) {
+
+    if (virtualFile == null) {
+      return null;
+    }
+
+    VirtualFile parent = virtualFile.getParent();
+    if (parent == null) {
+      return null;
+    }
+    VirtualFile buckFile = parent.findChild(BuckFileUtil.getBuildFileName());
+    while ((buckFile == null && parent != null) || (buckFile != null && buckFile.isDirectory())) {
+      buckFile = parent.findChild(BuckFileUtil.getBuildFileName());
+      parent = parent.getParent();
+    }
+    return buckFile;
   }
 }

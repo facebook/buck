@@ -50,22 +50,8 @@ public class GoToBuckFile extends AnAction {
       return;
     }
     VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(document);
-    if (virtualFile == null) {
-      return;
-    }
 
-    VirtualFile parent = virtualFile.getParent();
-    if (parent == null) {
-      return;
-    }
-
-    VirtualFile buckFile = parent.findChild(BuckFileUtil.getBuildFileName());
-    while (buckFile == null && parent != null) {
-      parent = parent.getParent();
-      buckFile = parent.findChild(BuckFileUtil.getBuildFileName());
-    }
-
-    final VirtualFile file = buckFile;
+    final VirtualFile file = BuckFileUtil.getBuckFile(virtualFile);
     if (file != null) {
       ApplicationManager.getApplication().invokeLater(new Runnable() {
         @Override
