@@ -514,6 +514,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
+  @Subscribe
+  public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
+    ruleCount = Optional.of(updated.getNumRules());
+  }
+
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {

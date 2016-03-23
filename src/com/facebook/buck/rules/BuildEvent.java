@@ -51,6 +51,10 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     return new RuleCountCalculated(buildTargets, ruleCount);
   }
 
+  public static UnskippedRuleCountUpdated unskippedRuleCountUpdated(int ruleCount) {
+    return new UnskippedRuleCountUpdated(ruleCount);
+  }
+
   public static class Started extends BuildEvent {
 
     private final ImmutableSet<String> buildArgs;
@@ -171,4 +175,37 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     }
   }
 
+  public static class UnskippedRuleCountUpdated extends BuildEvent {
+
+    private final int numRules;
+
+    protected UnskippedRuleCountUpdated(int numRulesToBuild) {
+      super(EventKey.unique());
+      this.numRules = numRulesToBuild;
+    }
+
+    public int getNumRules() {
+      return numRules;
+    }
+
+    @Override
+    public String getEventName() {
+      return "UnskippedRuleCountUpdated";
+    }
+
+    @Override
+    protected String getValueString() {
+      return Integer.toString(numRules);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      return this == o;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(this);
+    }
+  }
 }

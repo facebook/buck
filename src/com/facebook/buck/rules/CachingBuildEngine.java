@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
@@ -46,8 +47,8 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -72,6 +73,7 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -119,6 +121,7 @@ public class CachingBuildEngine implements BuildEngine {
       Maps.newConcurrentMap();
 
   private final RuleDepsCache ruleDeps;
+  private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
 
   @Nullable
   private volatile Throwable firstFailure = null;
@@ -141,6 +144,7 @@ public class CachingBuildEngine implements BuildEngine {
       long maxDepFileCacheEntries,
       final BuildRuleResolver resolver) {
     this.ruleDeps = new RuleDepsCache(service);
+    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
     this.service = service;
     this.buildMode = buildMode;
@@ -173,6 +177,7 @@ public class CachingBuildEngine implements BuildEngine {
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
     this.ruleDeps = new RuleDepsCache(service);
+    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
     this.service = service;
     this.buildMode = buildMode;
@@ -189,6 +194,17 @@ public class CachingBuildEngine implements BuildEngine {
             return ruleKeyFactoriesFunction.apply(filesystem);
           }
         });
+  }
+
+  private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
+      BuildMode buildMode,
+      RuleDepsCache ruleDeps,
+      ListeningExecutorService service) {
+    if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+      // Those modes never skip rules, there is no need to track unskipped rules.
+      return Optional.absent();
+    }
+    return Optional.of(new UnskippedRulesTracker(ruleDeps, service));
   }
 
   private static LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader(
@@ -280,11 +296,13 @@ public class CachingBuildEngine implements BuildEngine {
     Optional<RuleKey> cachedRuleKey =
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
     if (ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule).equals(cachedRuleKey.orNull())) {
-      return Futures.immediateFuture(
-          BuildResult.success(
-              rule,
-              BuildRuleSuccessType.MATCHING_RULE_KEY,
-              CacheResult.localKeyUnchangedHit()));
+      return Futures.transform(
+          markRuleAsUsed(rule, context.getEventBus()),
+          Functions.constant(
+              BuildResult.success(
+                  rule,
+                  BuildRuleSuccessType.MATCHING_RULE_KEY,
+                  CacheResult.localKeyUnchangedHit())));
     }
 
     // 2. Rule key cache lookup.
@@ -298,8 +316,10 @@ public class CachingBuildEngine implements BuildEngine {
             rule.getProjectFilesystem(),
             context);
     if (cacheResult.getType().isSuccess()) {
-      return Futures.immediateFuture(
-          BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
+      return Futures.transform(
+          markRuleAsUsed(rule, context.getEventBus()),
+          Functions.constant(
+              BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult)));
     }
 
     // Log to the event bus.
@@ -309,9 +329,20 @@ public class CachingBuildEngine implements BuildEngine {
             rule,
             ruleKeyFactory.defaultRuleKeyBuilderFactory));
 
+    ListenableFuture<List<BuildResult>> getDepResultsAndMarkRuleAsUsed = Futures.transformAsync(
+        getDepResults(rule, context, asyncCallbacks),
+        new AsyncFunction<List<BuildResult>, List<BuildResult>>() {
+          @Override
+          public ListenableFuture<List<BuildResult>> apply(List<BuildResult> input) {
+            return Futures.transform(
+                markRuleAsUsed(rule, context.getEventBus()),
+                Functions.constant(input));
+          }
+        });
+
     // 3. Build deps.
     return Futures.transformAsync(
-        getDepResults(rule, context, asyncCallbacks),
+        getDepResultsAndMarkRuleAsUsed,
         new AsyncFunction<List<BuildResult>, BuildResult>() {
           @Override
           public ListenableFuture<BuildResult> apply(@Nonnull List<BuildResult> depResults)
@@ -812,6 +843,22 @@ public class CachingBuildEngine implements BuildEngine {
     return result;
   }
 
+  private ListenableFuture<Void> registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
+    if (unskippedRulesTracker.isPresent()) {
+      return unskippedRulesTracker.get().registerTopLevelRule(rule, eventBus);
+    } else {
+      return Futures.immediateFuture(null);
+    }
+  }
+
+  private ListenableFuture<Void> markRuleAsUsed(BuildRule rule, BuckEventBus eventBus) {
+    if (unskippedRulesTracker.isPresent()) {
+      return unskippedRulesTracker.get().markRuleAsUsed(rule, eventBus);
+    } else {
+      return Futures.immediateFuture(null);
+    }
+  }
+
   // Provide a future that resolve to the result of executing this rule and its runtime
   // dependencies.
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
@@ -974,8 +1021,10 @@ public class CachingBuildEngine implements BuildEngine {
     // to make sure we wait for these before calling yielding the final build result.
     final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks =
         new ConcurrentLinkedQueue<>();
-    final ListenableFuture<BuildResult> resultFuture =
-        getBuildRuleResultWithRuntimeDeps(rule, context, asyncCallbacks);
+    ListenableFuture<BuildResult> resultFuture = MoreFutures.chainExceptions(
+        registerTopLevelRule(rule, context.getEventBus()),
+        getBuildRuleResultWithRuntimeDeps(rule, context, asyncCallbacks),
+        service);
     return Futures.transformAsync(
         resultFuture,
         new AsyncFunction<BuildResult, BuildResult>() {

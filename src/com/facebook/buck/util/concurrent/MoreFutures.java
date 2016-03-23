@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util.concurrent;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -159,7 +161,7 @@ public class MoreFutures {
     return addListenableCallback(
         future,
         callback,
-        com.google.common.util.concurrent.MoreExecutors.directExecutor());
+        directExecutor());
   }
 
   /**
@@ -169,6 +171,17 @@ public class MoreFutures {
   public static <F, T> ListenableFuture<T> chainExceptions(
       ListenableFuture<F> from,
       final ListenableFuture<T> to) {
+    return chainExceptions(from, to, directExecutor());
+  }
+
+  /**
+   * @return a {@link ListenableFuture} which fails if either input future fails or returns
+   *     the value contained in {@code to} if they both succeed.
+   */
+  public static <F, T> ListenableFuture<T> chainExceptions(
+      ListenableFuture<F> from,
+      final ListenableFuture<T> to,
+      Executor executor) {
     return Futures.transformAsync(
         from,
         new AsyncFunction<F, T>() {
@@ -177,7 +190,8 @@ public class MoreFutures {
               throws Exception {
             return to;
           }
-        });
+        },
+        executor);
   }
 
 }

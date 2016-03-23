@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.isA;
+import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -83,7 +84,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,6 +99,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.EasyMockSupport;
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -267,8 +272,9 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(13));
+      assertThat(events, Matchers.hasSize(15));
       Iterator<BuckEvent> eventIter = events.iterator();
+      assertThat(eventIter.next(), isUnskipedRuleCountEvent(2));
       assertEquals(
           configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
           eventIter.next());
@@ -351,6 +357,10 @@ public class CachingBuildEngineTest {
       assertTrue(service.shutdownNow().isEmpty());
 
       List<BuckEvent> events = listener.getEvents();
+      events = FluentIterable.from(events)
+          .filter(
+              Predicates.not(Predicates.instanceOf(BuildEvent.UnskippedRuleCountUpdated.class)))
+          .toList();
       assertThat(events, Matchers.hasSize(8));
       assertThat(events, Matchers.<BuckEvent>contains(
           BuildRuleEvent.started(buildRule),
@@ -573,21 +583,33 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(6));
-      assertThat(events, Matchers.<BuckEvent>contains(
-          BuildRuleEvent.started(dep),
-          BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory),
-          BuildRuleEvent.started(ruleToTest),
-          BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory),
-          BuildRuleEvent.finished(
-              ruleToTest,
-              BuildRuleKeys.of(ruleToTestKey),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.localKeyUnchangedHit(),
-              Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent())));
+      assertThat(events, Matchers.hasSize(8));
+      Iterator<BuckEvent> eventIter = events.iterator();
+      assertThat(eventIter.next(), isUnskipedRuleCountEvent(2));
+      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(dep)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory)));
+      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(ruleToTest)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory)));
+      assertThat(eventIter.next(), isUnskipedRuleCountEvent(1));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(
+              BuildRuleEvent.finished(
+                  ruleToTest,
+                  BuildRuleKeys.of(ruleToTestKey),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.localKeyUnchangedHit(),
+                  Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
+      assertThat(eventIter.hasNext(), is(false));
     }
 
     @Test
@@ -757,41 +779,64 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(12));
-      assertThat(events, Matchers.<BuckEvent>contains(
-          BuildRuleEvent.started(transitiveRuntimeDep),
-          BuildRuleEvent.suspended(transitiveRuntimeDep, ruleKeyBuilderFactory),
-          BuildRuleEvent.started(runtimeDep),
-          BuildRuleEvent.suspended(runtimeDep, ruleKeyBuilderFactory),
-          BuildRuleEvent.started(ruleToTest),
-          BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory),
-          BuildRuleEvent.finished(
-              ruleToTest,
-              BuildRuleKeys.of(ruleToTestKey),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.localKeyUnchangedHit(),
-              Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent()),
-          BuildRuleEvent.resumed(runtimeDep, ruleKeyBuilderFactory),
-          BuildRuleEvent.finished(
-              runtimeDep,
-              BuildRuleKeys.of(runtimeDepKey),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.localKeyUnchangedHit(),
-              Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent()),
-          BuildRuleEvent.resumed(transitiveRuntimeDep, ruleKeyBuilderFactory),
-          BuildRuleEvent.finished(
-              transitiveRuntimeDep,
-              BuildRuleKeys.of(transitiveRuntimeDepKey),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.localKeyUnchangedHit(),
-              Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent())));
+      assertThat(events, Matchers.hasSize(13));
+      Iterator<BuckEvent> eventIter = events.iterator();
+      assertThat(eventIter.next(), isUnskipedRuleCountEvent(3));
+      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(transitiveRuntimeDep)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.suspended(transitiveRuntimeDep, ruleKeyBuilderFactory)));
+      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(runtimeDep)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.suspended(runtimeDep, ruleKeyBuilderFactory)));
+      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(ruleToTest)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(
+              BuildRuleEvent.finished(
+                  ruleToTest,
+                  BuildRuleKeys.of(ruleToTestKey),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.localKeyUnchangedHit(),
+                  Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.resumed(runtimeDep, ruleKeyBuilderFactory)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(
+              BuildRuleEvent.finished(
+                  runtimeDep,
+                  BuildRuleKeys.of(runtimeDepKey),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.localKeyUnchangedHit(),
+                  Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(BuildRuleEvent.resumed(transitiveRuntimeDep, ruleKeyBuilderFactory)));
+      assertThat(
+          eventIter.next(),
+          isEqualEvent(
+              BuildRuleEvent.finished(
+                  transitiveRuntimeDep,
+                  BuildRuleKeys.of(transitiveRuntimeDepKey),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.localKeyUnchangedHit(),
+                  Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
+      assertThat(eventIter.hasNext(), is(false));
     }
 
     @Test
@@ -2607,6 +2652,24 @@ public class CachingBuildEngineTest {
         new ListeningSemaphore(Integer.MAX_VALUE),
         /* defaultPermits */ 1,
         service);
+  }
+
+  private static Matcher<BuckEvent> isEqualEvent(BuckEvent event) {
+    return equalTo(event);
+  }
+
+  private static Matcher<BuckEvent> isUnskipedRuleCountEvent(int numRules) {
+    return both(Matchers.<BuckEvent>instanceOf(BuildEvent.UnskippedRuleCountUpdated.class))
+        .and(
+            new FeatureMatcher<BuckEvent, Integer>(
+                equalTo(numRules),
+                "reported number of unskipped rules",
+                "numRules") {
+              @Override
+              protected Integer featureValueOf(BuckEvent event) {
+                return ((BuildEvent.UnskippedRuleCountUpdated) event).getNumRules();
+              }
+            });
   }
 
 }
