@@ -52,7 +52,7 @@ public class ArchiveStepTest {
 
     // Create and archive step.
     ArchiveStep archiveStep = new ArchiveStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         /* environment */ ImmutableMap.<String, String>of(),
         archiver,
         output,
@@ -67,7 +67,7 @@ public class ArchiveStepTest {
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(archiver)
         .add("qc")
-        .add(output.toString())
+        .add(projectFilesystem.resolve(output).toString())
         .addAll(Iterables.transform(inputs, Functions.toStringFunction()))
         .build();
     ImmutableList<String> actual = shellStep.getShellCommand(context);

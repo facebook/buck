@@ -116,7 +116,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new RmStep(getProjectFilesystem(), output, /* shouldForceDeletion */ true),
         new ArchiveStep(
-            getProjectFilesystem().getRootPath(),
+            getProjectFilesystem(),
             archiver.getEnvironment(getResolver()),
             archiver.getCommandPrefix(getResolver()),
             output,

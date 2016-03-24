@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
 import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -68,7 +70,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build an archive step.
     ArchiveStep archiveStep = new ArchiveStep(
-        filesystem.getRootPath(),
+        filesystem,
         archiver.getEnvironment(sourcePathResolver),
         archiver.getCommandPrefix(sourcePathResolver),
         output,
@@ -95,6 +97,42 @@ public class ArchiveStepIntegrationTest {
       assertEquals(0, entry.getUserId());
       assertEquals(0, entry.getGroupId());
       assertEquals(String.format("0%o", entry.getMode()), 0100644, entry.getMode());
+    }
+  }
+
+  @Test
+  public void emptyArchives() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    CxxPlatform platform =
+        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+
+    // Build up the paths to various files the archive step will use.
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    Tool archiver = platform.getAr();
+    Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
+
+    // Build an archive step.
+    ArchiveStep archiveStep =
+        new ArchiveStep(
+            filesystem,
+            archiver.getEnvironment(sourcePathResolver),
+            archiver.getCommandPrefix(sourcePathResolver),
+            output,
+            ImmutableList.<Path>of());
+
+    // Execute the archive step and verify it ran successfully.
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    TestConsole console = (TestConsole) executionContext.getConsole();
+    int exitCode = archiveStep.execute(executionContext);
+    assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
+
+    // Now read the archive entries and verify that the timestamp, UID, and GID fields are
+    // zero'd out.
+    try (ArArchiveInputStream stream = new ArArchiveInputStream(
+        new FileInputStream(filesystem.resolve(output).toFile()))) {
+      assertThat(stream.getNextArEntry(), Matchers.nullValue());
     }
   }
 
