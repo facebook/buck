@@ -1,14 +1,17 @@
-#@# GENERATED FILE: DO NOT MODIFY 1d77c79792c07c62c80e762e118b74e2bf8f611c #@#
+#@# GENERATED FILE: DO NOT MODIFY ecf03c07dde939a56b6141cf40c1e3a61b11ad34 #@#
 {
   "args" : {
     "deps" : [
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/shell:worker",
-      "//src/com/facebook/buck/util:exceptions"
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/macros:macros",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
   }

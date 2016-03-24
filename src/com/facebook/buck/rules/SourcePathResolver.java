@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.BuckConstant;
@@ -74,6 +75,19 @@ public class SourcePathResolver {
       paths.put(entry.getKey(), getAbsolutePath(entry.getValue()));
     }
     return paths.build();
+  }
+
+  /**
+   * @return the {@link ProjectFilesystem} associated with {@code sourcePath}.
+   */
+  public ProjectFilesystem getFilesystem(SourcePath sourcePath) {
+    if (sourcePath instanceof PathSourcePath) {
+      return ((PathSourcePath) sourcePath).getFilesystem();
+    }
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      return getRule(sourcePath).get().getProjectFilesystem();
+    }
+    throw new IllegalStateException();
   }
 
   /**

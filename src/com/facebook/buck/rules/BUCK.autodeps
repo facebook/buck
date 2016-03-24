@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ca724c3a60514f776c8d59f2ca2d96020a4da9d5 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4f2e112a8fd04913c220fe5acf8400b3046f5954 #@#
 {
   "build_event" : {
     "deps" : [ ],
@@ -62,6 +62,7 @@
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/rules:build_event",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
