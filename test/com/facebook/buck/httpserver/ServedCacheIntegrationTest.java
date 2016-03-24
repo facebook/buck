@@ -25,12 +25,12 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.BorrowablePath;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -329,7 +329,7 @@ public class ServedCacheIntegrationTest {
 
     ArtifactCache secondCache = new ArtifactCache() {
       @Override
-      public CacheResult fetch(RuleKey ruleKey, LazyPath output) throws InterruptedException {
+      public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
         if (ruleKey.equals(bFileRuleKey)) {
           try {
             projectFilesystem.writeContentsToPath("second", output.get());

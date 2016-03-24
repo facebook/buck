@@ -109,14 +109,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
           BuckConstant.SCRATCH_PATH,
           "outgoing_rulekey",
           ".tmp");
-      CacheResult fetchResult;
-      try {
-        fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
-      } catch (InterruptedException e) {
-        LOG.error(e, "Interrupted when fetching from local cache.");
-        e.printStackTrace(response.getWriter());
-        return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-      }
+      CacheResult fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
       if (!fetchResult.getType().isSuccess()) {
         return HttpServletResponse.SC_NOT_FOUND;
       }
@@ -174,9 +167,6 @@ public class ArtifactCacheHandler extends AbstractHandler {
           storeRequest.getMetadata(),
           BorrowablePath.notBorrowablePath(temp));
       return HttpServletResponse.SC_ACCEPTED;
-    } catch (InterruptedException e) {
-      response.getWriter().write("Interrupted while serving request.");
-      return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
     } finally {
       if (temp != null) {
         projectFilesystem.deleteFileAtPathIfExists(temp);

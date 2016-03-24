@@ -34,7 +34,7 @@ public interface ArtifactCache extends AutoCloseable {
    * @return whether it was a {@link CacheResultType#MISS} (indicating a failure) or some
    *     type of hit.
    */
-  CacheResult fetch(RuleKey ruleKey, LazyPath output) throws InterruptedException;
+  CacheResult fetch(RuleKey ruleKey, LazyPath output);
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched
@@ -51,8 +51,9 @@ public interface ArtifactCache extends AutoCloseable {
    * @return {@link ListenableFuture} that completes once the store has finished.
    */
   ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata, BorrowablePath output)
-      throws InterruptedException;
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      BorrowablePath output);
 
   /**
    * This method must return the same value over the lifetime of this object.

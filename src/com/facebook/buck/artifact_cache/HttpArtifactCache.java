@@ -173,9 +173,7 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(
-      RuleKey ruleKey,
-      LazyPath output) throws InterruptedException {
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(ImmutableSet.<RuleKey>of());
     buckEventBus.post(startedEvent);
     Finished.Builder eventBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
@@ -276,8 +274,7 @@ public class HttpArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       final ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final BorrowablePath output)
-      throws InterruptedException {
+      final BorrowablePath output) {
     if (!isStoreSupported()) {
       return Futures.immediateFuture(null);
     }

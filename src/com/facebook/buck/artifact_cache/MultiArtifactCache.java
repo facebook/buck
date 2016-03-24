@@ -65,8 +65,7 @@ public class MultiArtifactCache implements ArtifactCache {
    * artifact to one or more of the other encapsulated ArtifactCaches as a side effect.
    */
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output)
-      throws InterruptedException {
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult cacheResult = CacheResult.miss();
     for (ArtifactCache artifactCache : artifactCaches) {
       cacheResult = artifactCache.fetch(ruleKey, output);
@@ -100,8 +99,7 @@ public class MultiArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      BorrowablePath output)
-      throws InterruptedException {
+      BorrowablePath output) {
 
     List<ListenableFuture<Void>> storeFutures =
         Lists.newArrayListWithExpectedSize(writableArtifactCaches.size());

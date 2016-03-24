@@ -2487,7 +2487,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, LazyPath file) throws InterruptedException {
+    public CacheResult fetch(RuleKey ruleKey, LazyPath file) {
       try {
         writeEntriesToZip(file.get(), ImmutableMap.copyOf(desiredEntries));
       } catch (IOException e) {

@@ -1309,39 +1309,34 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     final Path tempFile = Files.createTempFile("buck.", ".manifest");
-    try {
-      // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
-      // `ArtifactCache` interface uses raw paths.
-      try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
-           OutputStream outputStream =
-               new GZIPOutputStream(
-                   new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
-        ByteStreams.copy(inputStream, outputStream);
-      }
-      cache
-          .store(
-              ImmutableSet.of(manifestKey.getFirst()),
-              ImmutableMap.<String, String>of(),
-              BorrowablePath.notBorrowablePath(tempFile))
-          .addListener(
-              new Runnable() {
-                @Override
-                public void run() {
-                  try {
-                    Files.deleteIfExists(tempFile);
-                  } catch (IOException e) {
-                    LOG.warn(
-                        e,
-                        "Error occurred while deleting temporary manifest file for %s",
-                        manifestPath);
-                  }
-                }
-              },
-              MoreExecutors.directExecutor());
-    } catch (InterruptedException e) {
-      Files.deleteIfExists(tempFile);
-      throw e;
+    // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
+    // `ArtifactCache` interface uses raw paths.
+    try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
+         OutputStream outputStream =
+             new GZIPOutputStream(
+                 new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
+      ByteStreams.copy(inputStream, outputStream);
     }
+    cache
+        .store(
+            ImmutableSet.of(manifestKey.getFirst()),
+            ImmutableMap.<String, String>of(),
+            BorrowablePath.notBorrowablePath(tempFile))
+        .addListener(
+            new Runnable() {
+          @Override
+          public void run() {
+                try {
+                  Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                  LOG.warn(
+                      e,
+                      "Error occurred while deleting temporary manifest file for %s",
+                      manifestPath);
+                }
+            }
+          },
+            MoreExecutors.directExecutor());
   }
 
   // Fetch an artifact from the cache using manifest-based caching.

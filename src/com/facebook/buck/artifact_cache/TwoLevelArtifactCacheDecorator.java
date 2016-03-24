@@ -74,9 +74,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(
-      RuleKey ruleKey,
-      LazyPath output) throws InterruptedException {
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult fetchResult = delegate.fetch(ruleKey, output);
     if (!fetchResult.getType().isSuccess() ||
         !fetchResult.getMetadata().containsKey(METADATA_KEY)) {
@@ -95,7 +93,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   public ListenableFuture<Void> store(
       final ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final BorrowablePath output) throws InterruptedException {
+      final BorrowablePath output) {
 
     return Futures.transformAsync(
         attemptTwoLevelStore(ruleKeys, metadata, output),

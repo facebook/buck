@@ -44,8 +44,7 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output)
-      throws InterruptedException {
+  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
@@ -60,8 +59,7 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
   public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      BorrowablePath output)
-      throws InterruptedException {
+      BorrowablePath output) {
     ArtifactCacheEvent.Started started = eventFactory.newStoreStartedEvent(ruleKeys, metadata);
     eventBus.post(started);
     ListenableFuture<Void> storeFuture = delegate.store(ruleKeys, metadata, output);
