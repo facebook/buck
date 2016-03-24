@@ -89,8 +89,8 @@ public class CxxTestDescription implements
       BuildRuleParams inputParams,
       final BuildRuleResolver resolver,
       final A args) throws NoSuchBuildTargetException {
-    Optional<CxxStrip.StripStyle> flavoredStripStyle =
-        CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
+    Optional<StripStyle> flavoredStripStyle =
+        StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
     final BuildRuleParams params =
         CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
 
@@ -310,7 +310,7 @@ public class CxxTestDescription implements
       return true;
     }
 
-    if (CxxStrip.StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
+    if (StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return true;
     }
 

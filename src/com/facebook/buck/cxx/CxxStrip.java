@@ -16,8 +16,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -51,49 +49,6 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
    * output paths of other build rules.
    */
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("stripped");
-
-  /**
-   * Defines the level of symbol stripping to be performed on the linked product of the build.
-   */
-  public enum StripStyle implements FlavorConvertible {
-    /**
-     * Strips debugging symbols, but saves local and global symbols.
-     */
-    DEBUGGING_SYMBOLS(ImmutableFlavor.of("strip-debug"), ImmutableList.of("-S")),
-
-    /**
-     * Strips non-global symbols, but saves external symbols.
-     * This is preferred for dynamic shared libraries.
-     */
-    NON_GLOBAL_SYMBOLS(ImmutableFlavor.of("strip-non-global"), ImmutableList.of("-x")),
-
-    /**
-     * Completely strips the binary, removing the symbol table and relocation information.
-     * This is preferred for executable files.
-     */
-    ALL_SYMBOLS(ImmutableFlavor.of("strip-all"), ImmutableList.<String>of()),
-    ;
-
-    private final Flavor flavor;
-    private final ImmutableList<String> stripToolArgs;
-
-    StripStyle(Flavor flavor, ImmutableList<String> stripToolArgs) {
-      this.flavor = flavor;
-      this.stripToolArgs = stripToolArgs;
-    }
-
-    public ImmutableList<String> getStripToolArgs() {
-      return stripToolArgs;
-    }
-
-    @Override
-    public Flavor getFlavor() {
-      return flavor;
-    }
-
-    public static final FlavorDomain<StripStyle> FLAVOR_DOMAIN =
-        FlavorDomain.from("Strip Style", StripStyle.class);
-  }
 
   @AddToRuleKey
   private final StripStyle stripStyle;

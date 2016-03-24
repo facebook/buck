@@ -63,7 +63,7 @@ public class CxxLink
   private void performChecks(BuildRuleParams params) {
     Preconditions.checkArgument(
         !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR) ||
-            !CxxStrip.StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+            !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
         "CxxLink should not be created with CxxStrip flavors");
   }
 

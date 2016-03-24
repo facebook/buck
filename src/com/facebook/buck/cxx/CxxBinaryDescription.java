@@ -103,8 +103,8 @@ public class CxxBinaryDescription implements
 
     // We explicitly remove strip flavor from params to make sure rule
     // has the same output regardless if we will strip or not.
-    Optional<CxxStrip.StripStyle> flavoredStripStyle =
-        CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    Optional<StripStyle> flavoredStripStyle =
+        StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
 
     // Extract the platform from the flavor, falling back to the default platform if none are
@@ -293,9 +293,9 @@ public class CxxBinaryDescription implements
             CxxInferEnhancer.InferFlavors.INFER.get(),
             CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get(),
             CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get(),
-            CxxStrip.StripStyle.ALL_SYMBOLS.getFlavor(),
-            CxxStrip.StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
-            CxxStrip.StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
+            StripStyle.ALL_SYMBOLS.getFlavor(),
+            StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
+            StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
 
     return flavors.isEmpty();
   }

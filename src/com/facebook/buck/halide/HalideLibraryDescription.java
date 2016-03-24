@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -89,7 +90,7 @@ public class HalideLibraryDescription
     return cxxPlatforms.containsAnyOf(flavors) ||
         flavors.contains(HALIDE_COMPILE_FLAVOR) ||
         flavors.contains(HALIDE_COMPILER_FLAVOR) ||
-        CxxStrip.StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
+        StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
   }
 
   @Override
@@ -119,8 +120,8 @@ public class HalideLibraryDescription
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
       throws NoSuchBuildTargetException {
 
-    Optional<CxxStrip.StripStyle> flavoredStripStyle =
-        CxxStrip.StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    Optional<StripStyle> flavoredStripStyle =
+        StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
 
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(

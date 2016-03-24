@@ -530,7 +530,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
       CxxPreprocessMode preprocessMode,
-      Optional<CxxStrip.StripStyle> stripStyle) throws NoSuchBuildTargetException {
+      Optional<StripStyle> stripStyle) throws NoSuchBuildTargetException {
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(
@@ -573,7 +573,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
       CxxPreprocessMode preprocessMode,
-      Optional<CxxStrip.StripStyle> stripStyle,
+      Optional<StripStyle> stripStyle,
       Linker.LinkableDepType linkStyle,
       Optional<ImmutableList<String>> preprocessorFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags,
@@ -742,7 +742,7 @@ public class CxxDescriptionEnhancer {
   private static CxxStrip createCxxStripRule(
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
-      Optional<CxxStrip.StripStyle> stripStyle,
+      Optional<StripStyle> stripStyle,
       SourcePathResolver sourcePathResolver,
       CxxLink cxxLink) {
     BuildRuleParams stripRuleParams = params

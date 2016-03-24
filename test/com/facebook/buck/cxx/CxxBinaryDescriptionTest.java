@@ -376,7 +376,7 @@ public class CxxBinaryDescriptionTest {
                 .withFlavors(
                     platform.getFlavor(),
                     ImmutableFlavor.of("shared"),
-                    CxxStrip.StripStyle.ALL_SYMBOLS.getFlavor()));
+                    StripStyle.ALL_SYMBOLS.getFlavor()));
     binaryBuilder
         .setSrcs(
             ImmutableSortedSet.of(
@@ -389,6 +389,6 @@ public class CxxBinaryDescriptionTest {
     assertThat(((CxxBinary) resultRule).getLinkRule(), Matchers.instanceOf(CxxStrip.class));
 
     CxxStrip strip = (CxxStrip) ((CxxBinary) resultRule).getLinkRule();
-    assertThat(strip.getStripStyle(), Matchers.equalTo(CxxStrip.StripStyle.ALL_SYMBOLS));
+    assertThat(strip.getStripStyle(), Matchers.equalTo(StripStyle.ALL_SYMBOLS));
   }
 }

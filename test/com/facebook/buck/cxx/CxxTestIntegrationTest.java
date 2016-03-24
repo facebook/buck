@@ -90,6 +90,6 @@ public class CxxTestIntegrationTest {
   @Test
   public void testTestsWithStrippingBehaveSimilarToUnstripped() throws IOException {
     runAndAssertSpinningTestTimesOutWithPerRuleTimeout(
-        ImmutableSet.of(CxxStrip.StripStyle.ALL_SYMBOLS.getFlavor()));
+        ImmutableSet.of(StripStyle.ALL_SYMBOLS.getFlavor()));
   }
 }
