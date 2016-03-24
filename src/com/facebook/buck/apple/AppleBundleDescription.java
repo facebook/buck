@@ -130,15 +130,12 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     Flavor debugFormatFlavor = flavoredDebugInfoFormat.getFlavor();
     if (!params.getBuildTarget().getFlavors().contains(debugFormatFlavor)) {
       return (BuildRuleWithAppleBundle) resolver.requireRule(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(debugFormatFlavor)
-              .build());
+          params.getBuildTarget().withAppendedFlavor(debugFormatFlavor));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       return (BuildRuleWithAppleBundle) resolver.requireRule(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-              .build());
+          params.getBuildTarget().withAppendedFlavor(
+              AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     AppleBundle appleBundle = AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,

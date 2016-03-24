@@ -226,9 +226,7 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
     BuildTarget dummyOmnibusTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(DUMMY_OMNIBUS_FLAVOR)
-            .build();
+        params.getBuildTarget().withAppendedFlavor(DUMMY_OMNIBUS_FLAVOR);
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
@@ -361,18 +359,16 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
-                BuildTarget.builder(params.getBuildTarget())
-                    .addFlavors(ImmutableFlavor.of("omnibus-undefined-symbols-file"))
-                    .build(),
+                params.getBuildTarget().withAppendedFlavor(
+                    ImmutableFlavor.of("omnibus-undefined-symbols-file")),
                 linkerInputs);
     return cxxPlatform.getLd().resolve(ruleResolver)
         .createUndefinedSymbolsLinkerArgs(
             params,
             ruleResolver,
             pathResolver,
-            BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(ImmutableFlavor.of("omnibus-undefined-symbols-args"))
-                .build(),
+            params.getBuildTarget().withAppendedFlavor(
+                ImmutableFlavor.of("omnibus-undefined-symbols-args")),
             ImmutableList.of(undefinedSymbolsFile));
   }
 
@@ -458,10 +454,7 @@ public class Omnibus {
     }
 
     // Create the merged omnibus library using the arguments assembled above.
-    BuildTarget omnibusTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(OMNIBUS_FLAVOR)
-            .build();
+    BuildTarget omnibusTarget = params.getBuildTarget().withAppendedFlavor(OMNIBUS_FLAVOR);
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(

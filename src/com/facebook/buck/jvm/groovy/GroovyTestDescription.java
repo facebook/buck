@@ -88,10 +88,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    BuildTarget abiJarTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(CalculateAbi.FLAVOR)
-            .build();
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
 
     GroovycToJarStepFactory stepFactory = new GroovycToJarStepFactory(
         groovyBuckConfig.getGroovyCompiler().get(),

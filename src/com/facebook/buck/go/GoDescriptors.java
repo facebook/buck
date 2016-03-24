@@ -192,9 +192,8 @@ abstract class GoDescriptors {
       List<String> linkerFlags,
       GoPlatform platform) throws NoSuchBuildTargetException {
     BuildTarget libraryTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("compile"), platform.getFlavor())
-            .build();
+        params.getBuildTarget().withAppendedFlavors(
+            ImmutableFlavor.of("compile"), platform.getFlavor());
     GoCompile library = GoDescriptors.createGoCompileRule(
         params.copyWithBuildTarget(libraryTarget),
         resolver,

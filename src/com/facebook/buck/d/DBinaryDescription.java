@@ -95,10 +95,7 @@ public class DBinaryDescription implements
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
-            params.copyWithBuildTarget(
-                BuildTarget.builder(params.getBuildTarget())
-                    .addFlavors(BINARY_FLAVOR)
-                    .build()),
+            params.copyWithBuildTarget(params.getBuildTarget().withAppendedFlavor(BINARY_FLAVOR)),
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,

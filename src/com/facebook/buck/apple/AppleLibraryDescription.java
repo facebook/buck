@@ -154,9 +154,8 @@ public class AppleLibraryDescription implements
       }
       if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
         return resolver.requireRule(
-            BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-                .build());
+            params.getBuildTarget().withAppendedFlavor(
+                AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
       }
 
       return AppleDescriptions.createAppleBundle(

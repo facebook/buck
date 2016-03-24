@@ -132,10 +132,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         args
     );
 
-    BuildTarget abiJarTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(CalculateAbi.FLAVOR)
-            .build();
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
     DefaultJavaLibrary defaultJavaLibrary =

@@ -67,10 +67,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    BuildTarget abiJarTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(CalculateAbi.FLAVOR)
-            .build();
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
     resolver.addToIndex(
         CalculateAbi.of(
             abiJarTarget,

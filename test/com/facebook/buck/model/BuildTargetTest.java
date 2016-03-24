@@ -19,12 +19,14 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -161,6 +163,21 @@ public class BuildTargetTest {
     BuildTarget.builder(ROOT, "//foo", "bar")
         .addFlavors(ImmutableFlavor.of("1234"))
         .build();
+  }
+
+  @Test
+  public void testAppendingFlavors() {
+    Flavor aaa = ImmutableFlavor.of("aaa");
+    Flavor biz = ImmutableFlavor.of("biz");
+
+    BuildTarget flavoredTarget = BuildTarget
+        .builder(ROOT, "//foo/bar", "baz")
+        .addFlavors(biz)
+        .build();
+    BuildTarget appendedFlavor = flavoredTarget.withAppendedFlavor(aaa);
+    assertThat(appendedFlavor, Matchers.not(Matchers.equalTo(flavoredTarget)));
+    ImmutableSortedSet<Flavor> expectedFlavors = ImmutableSortedSet.of(biz, aaa);
+    assertThat(appendedFlavor.getFlavors(), Matchers.equalTo(expectedFlavors));
   }
 
 }

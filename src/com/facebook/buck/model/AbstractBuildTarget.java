@@ -24,6 +24,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -188,6 +189,20 @@ abstract class AbstractBuildTarget
       }
     }
     return builder.build();
+  }
+
+  public BuildTarget withAppendedFlavors(Set<Flavor> flavorsToAppend) {
+    BuildTarget.Builder builder = BuildTarget.builder(getBuildTarget());
+    builder.addAllFlavors(flavorsToAppend);
+    return builder.build();
+  }
+
+  public BuildTarget withAppendedFlavors(Flavor... flavors) {
+    return withAppendedFlavors(ImmutableSet.copyOf(flavors));
+  }
+
+  public BuildTarget withAppendedFlavor(Flavor flavor) {
+    return withAppendedFlavors(ImmutableSet.of(flavor));
   }
 
   public BuildTarget withoutCell() {

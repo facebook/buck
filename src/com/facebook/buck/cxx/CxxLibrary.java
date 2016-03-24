@@ -230,11 +230,7 @@ public class CxxLibrary
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {
-    BuildTarget requiredBuildTarget =
-        BuildTarget.builder(getBuildTarget())
-            .addFlavors(flavors)
-            .build();
-    return ruleResolver.requireRule(requiredBuildTarget);
+    return ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
   }
 
   @Override

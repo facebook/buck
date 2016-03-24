@@ -236,9 +236,7 @@ public class AppleTestDescription implements
 
     BuildRule library = appleLibraryDescription.createBuildRule(
         params.copyWithChanges(
-            BuildTarget.builder(params.getBuildTarget())
-                .addAllFlavors(extraFlavorsBuilder.build())
-                .build(),
+            params.getBuildTarget().withAppendedFlavors(extraFlavorsBuilder.build()),
             params.getDeclaredDeps(),
             params.getExtraDeps()),
         resolver,
@@ -296,7 +294,7 @@ public class AppleTestDescription implements
 
     BuildRule bundle = new AppleBundle(
         params.copyWithChanges(
-            BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
+            params.getBuildTarget().withAppendedFlavor(BUNDLE_FLAVOR),
             // We have to add back the original deps here, since they're likely
             // stripped from the library link above (it doesn't actually depend on them).
             Suppliers.ofInstance(

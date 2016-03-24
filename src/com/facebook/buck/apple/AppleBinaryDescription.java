@@ -177,14 +177,12 @@ public class AppleBinaryDescription implements
               .getApplePlatform();
       if (applePlatform.getAppIncludesFrameworks()) {
         return resolver.requireRule(
-            BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-                .build());
+            params.getBuildTarget().withAppendedFlavor(
+                AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
       }
       return resolver.requireRule(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-              .build());
+          params.getBuildTarget().withAppendedFlavor(
+              AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();
     return AppleDescriptions.createAppleBundle(

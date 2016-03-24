@@ -117,10 +117,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
 
     Tool scalac = config.getScalac(resolver);
 
-    BuildTarget abiJarTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(CalculateAbi.FLAVOR)
-            .build();
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
 
     JavaTest test =
         resolver.addToIndex(

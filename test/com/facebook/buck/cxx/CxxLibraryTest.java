@@ -174,11 +174,9 @@ public class CxxLibraryTest {
         DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     BuildTarget staticPicLibraryTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(
-                cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)
-            .build();
+        params.getBuildTarget().withAppendedFlavors(
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
         new FakeBuildRule(
             new FakeBuildRuleParamsBuilder(staticPicLibraryTarget).build(),
@@ -234,12 +232,9 @@ public class CxxLibraryTest {
     CxxPlatform cxxPlatform =
         DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
-    BuildTarget staticPicLibraryTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(
-                cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)
-            .build();
+    BuildTarget staticPicLibraryTarget = params.getBuildTarget().withAppendedFlavors(
+        cxxPlatform.getFlavor(),
+        CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
         new FakeBuildRule(
             new FakeBuildRuleParamsBuilder(staticPicLibraryTarget).build(),

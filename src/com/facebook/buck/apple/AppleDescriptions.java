@@ -333,9 +333,7 @@ public class AppleDescriptions {
     }
 
     BuildRuleParams assetCatalogParams = params.copyWithChanges(
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(AppleAssetCatalog.FLAVOR)
-            .build(),
+        params.getBuildTarget().withAppendedFlavor(AppleAssetCatalog.FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
@@ -365,7 +363,7 @@ public class AppleDescriptions {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return new AppleDsym(
         params.copyWithChanges(
-            BuildTarget.builder(params.getBuildTarget()).addFlavors(APPLE_DSYM).build(),
+            params.getBuildTarget().withAppendedFlavor(APPLE_DSYM),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(appleBundle)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
@@ -384,7 +382,7 @@ public class AppleDescriptions {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return new AppleBundleWithDsym(
         params.copyWithChanges(
-            BuildTarget.builder(params.getBuildTarget()).addFlavors(APPLE_BUNDLE_WITH_DSYM).build(),
+            params.getBuildTarget().withAppendedFlavor(APPLE_BUNDLE_WITH_DSYM),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(appleDsym)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,

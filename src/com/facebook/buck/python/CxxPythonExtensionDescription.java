@@ -359,9 +359,7 @@ public class CxxPythonExtensionDescription implements
 
           @Override
           public BuildTarget getBuildTarget() {
-            return BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(pythonPlatform.getFlavor())
-                .build();
+            return params.getBuildTarget().withAppendedFlavor(pythonPlatform.getFlavor());
           }
 
           @Override
@@ -383,10 +381,9 @@ public class CxxPythonExtensionDescription implements
                 .addAllArgs(
                     getExtensionArgs(
                         params.copyWithChanges(
-                            BuildTarget.builder(params.getBuildTarget())
-                                .addFlavors(pythonPlatform.getFlavor())
-                                .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-                                .build(),
+                            params.getBuildTarget().withAppendedFlavors(
+                                pythonPlatform.getFlavor(),
+                                CxxDescriptionEnhancer.SHARED_FLAVOR),
                             Suppliers.ofInstance(
                                 ImmutableSortedSet.copyOf(
                                     getPlatformDeps(params, ruleResolver, pythonPlatform, args))),
