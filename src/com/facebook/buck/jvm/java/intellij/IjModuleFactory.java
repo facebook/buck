@@ -23,6 +23,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
@@ -38,6 +39,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 
@@ -107,6 +109,13 @@ public class IjModuleFactory {
      * @return path on disk to the assets folder.
      */
     Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg> targetNode);
+
+    /**
+     * @param targetNode node which may use annotation processors.
+     * @return path to the annotation processor output if any annotation proceessors are configured
+     *        for the given node.
+     */
+    Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
   }
 
   /**
@@ -117,6 +126,7 @@ public class IjModuleFactory {
 
     private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
     private ImmutableSet.Builder<Path> extraClassPathDependenciesBuilder;
+    private ImmutableSet.Builder<IjFolder> generatedSourceCodeFoldersBuilder;
     private Map<Path, IjFolder> sourceFoldersMergeMap;
     // See comment in getDependencies for these two member variables.
     private Map<BuildTarget, IjModuleGraph.DependencyType> dependencyTypeMap;
@@ -126,6 +136,7 @@ public class IjModuleFactory {
       this.circularDependencyInducingTargets = circularDependencyInducingTargets;
       this.androidFacetBuilder = Optional.absent();
       this.extraClassPathDependenciesBuilder = new ImmutableSet.Builder<>();
+      this.generatedSourceCodeFoldersBuilder = ImmutableSet.builder();
       this.sourceFoldersMergeMap = new HashMap<>();
       this.dependencyTypeMap = new HashMap<>();
       this.dependencyOriginMap = HashMultimap.create();
@@ -162,6 +173,14 @@ public class IjModuleFactory {
 
     public ImmutableSet<Path> getExtraClassPathDependencies() {
       return extraClassPathDependenciesBuilder.build();
+    }
+
+    public void addGeneratedSourceCodeFolder(IjFolder generatedFolder) {
+      generatedSourceCodeFoldersBuilder.add(generatedFolder);
+    }
+
+    public ImmutableSet<IjFolder> getGeneratedSourceCodeFolders() {
+      return generatedSourceCodeFoldersBuilder.build();
     }
 
     /**
@@ -316,6 +335,7 @@ public class IjModuleFactory {
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
+        .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
         .build();
   }
 
@@ -383,7 +403,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static void addDepsAndFolder(
+  private void addDepsAndFolder(
       IjFolder.IJFolderFactory folderFactory,
       IjModuleGraph.DependencyType dependencyType,
       TargetNode<?> targetNode,
@@ -394,9 +414,13 @@ public class IjModuleFactory {
     ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(inputPaths);
     addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
     addDeps(foldersToInputsIndex, targetNode, dependencyType, context);
+
+    if (targetNode.getConstructorArg() instanceof JvmLibraryArg) {
+      addAnnotationOutputIfNeeded(folderFactory, targetNode, context);
+    }
   }
 
-  private static void addDepsAndFolder(
+  private void addDepsAndFolder(
       IjFolder.IJFolderFactory folderFactory,
       IjModuleGraph.DependencyType dependencyType,
       TargetNode<?> targetNode,
@@ -412,7 +436,7 @@ public class IjModuleFactory {
         targetNode.getInputs());
   }
 
-  private static void addDepsAndSources(
+  private void addDepsAndSources(
       TargetNode<?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
@@ -424,7 +448,7 @@ public class IjModuleFactory {
         context);
   }
 
-  private static void addDepsAndTestSources(
+  private void addDepsAndTestSources(
       TargetNode<?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
@@ -456,6 +480,29 @@ public class IjModuleFactory {
     if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
       context.addCompileShadowDep(targetNode.getBuildTarget());
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void addAnnotationOutputIfNeeded(
+      IjFolder.IJFolderFactory folderFactory,
+      TargetNode<?> targetNode,
+      ModuleBuildContext context) {
+    TargetNode<? extends JvmLibraryArg> jvmLibraryTargetNode =
+        (TargetNode<? extends JvmLibraryArg>) targetNode;
+
+    Optional<Path> annotationOutput =
+        moduleFactoryResolver.getAnnotationOutputPath(jvmLibraryTargetNode);
+    if (!annotationOutput.isPresent()) {
+      return;
+    }
+
+    Path annotationOutputPath = annotationOutput.get();
+    context.addGeneratedSourceCodeFolder(
+        folderFactory.create(
+            annotationOutputPath,
+            false,
+            ImmutableSortedSet.<Path>of(annotationOutputPath))
+    );
   }
 
   private class AndroidBinaryModuleRule
@@ -551,7 +598,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class CxxLibraryModuleRule implements IjModuleRule<CxxLibraryDescription.Arg> {
+  private class CxxLibraryModuleRule implements IjModuleRule<CxxLibraryDescription.Arg> {
 
     @Override
     public BuildRuleType getType() {
@@ -568,7 +615,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class JavaLibraryModuleRule implements IjModuleRule<JavaLibraryDescription.Arg> {
+  private class JavaLibraryModuleRule implements IjModuleRule<JavaLibraryDescription.Arg> {
 
     @Override
     public BuildRuleType getType() {
@@ -585,7 +632,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class JavaTestModuleRule implements IjModuleRule<JavaTestDescription.Arg> {
+  private class JavaTestModuleRule implements IjModuleRule<JavaTestDescription.Arg> {
 
     @Override
     public BuildRuleType getType() {
@@ -602,7 +649,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class RobolectricTestModuleRule extends JavaTestModuleRule {
+  private class RobolectricTestModuleRule extends JavaTestModuleRule {
 
     @Override
     public BuildRuleType getType() {

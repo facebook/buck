@@ -94,9 +94,18 @@ public class IjProjectWriter {
 
     ST moduleContents = getST(StringTemplateFile.MODULE_TEMPLATE);
 
-    moduleContents.add("contentRoot", projectDataPreparer.getContentRoot(module));
-    moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
-    moduleContents.add("androidFacet", projectDataPreparer.getAndroidProperties(module));
+    moduleContents.add(
+        "contentRoot",
+        projectDataPreparer.getContentRoot(module));
+    moduleContents.add(
+        "dependencies",
+        projectDataPreparer.getDependencies(module));
+    moduleContents.add(
+        "generatedSourceFolders",
+        projectDataPreparer.getGeneratedSourceFolders(module));
+    moduleContents.add(
+        "androidFacet",
+        projectDataPreparer.getAndroidProperties(module));
 
     writeToFile(moduleContents, path);
     return path;

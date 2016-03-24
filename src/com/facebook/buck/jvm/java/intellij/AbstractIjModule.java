@@ -80,6 +80,11 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract ImmutableSet<Path> getExtraClassPathDependencies();
 
   /**
+   * @return Folders which contain the generated source code.
+   */
+  public abstract ImmutableSet<IjFolder> getGeneratedSourceCodeFolders();
+
+  /**
    * @return path where the XML describing the module to IntelliJ will be written to.
    */
   @Value.Derived

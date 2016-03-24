@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -658,6 +659,12 @@ public class IjModuleGraphTest {
           @Override
           public Optional<Path> getAssetsPath(
               TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return Optional.absent();
+          }
+
+          @Override
+          public Optional<Path> getAnnotationOutputPath(
+              TargetNode<? extends JvmLibraryArg> targetNode) {
             return Optional.absent();
           }
         });

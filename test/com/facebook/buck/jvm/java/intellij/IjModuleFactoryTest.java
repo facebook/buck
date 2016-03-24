@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -471,6 +472,12 @@ public class IjModuleFactoryTest {
           @Override
           public Optional<Path> getAssetsPath(
               TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return Optional.absent();
+          }
+
+          @Override
+          public Optional<Path> getAnnotationOutputPath(
+              TargetNode<? extends JvmLibraryArg> targetNode) {
             return Optional.absent();
           }
         });

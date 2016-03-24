@@ -225,39 +225,6 @@ public class IjProjectTemplateDataPreparer {
     return librariesToBeWritten;
   }
 
-  private IjSourceFolder createSourceFolder(
-      IjFolder folder,
-      Path moduleLocationBasePath,
-      String packagePrefix) {
-    return IjSourceFolder.builder()
-        .setType(folder.getIjName())
-        .setUrl(toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
-        .setIsTestSource(folder instanceof TestFolder)
-        .setIsAndroidResources(folder instanceof AndroidResourceFolder)
-        .setPackagePrefix(packagePrefix)
-        .build();
-  }
-
-  @Nullable
-  private String getPackagePrefix(IjFolder folder) {
-    if (!folder.getWantsPackagePrefix()) {
-      return null;
-    }
-    Path fileToLookupPackageIn;
-    if (!folder.getInputs().isEmpty() &&
-        folder.getInputs().first().getParent().equals(folder.getPath())) {
-      fileToLookupPackageIn = folder.getInputs().first();
-    } else {
-      fileToLookupPackageIn = folder.getPath().resolve("notfound");
-    }
-    String packagePrefix = javaPackageFinder.findJavaPackage(fileToLookupPackageIn);
-    if (packagePrefix.isEmpty()) {
-      // It doesn't matter either way, but an empty prefix looks confusing.
-      return null;
-    }
-    return packagePrefix;
-  }
-
   private ContentRoot createContentRoot(
       final IjModule module,
       Path contentRootPath,
@@ -268,20 +235,7 @@ public class IjProjectTemplateDataPreparer {
         SimplificationLimit.of(contentRootPath.getNameCount()),
         folders);
     ImmutableSortedSet<IjSourceFolder> sourceFolders = FluentIterable.from(simplifiedFolders)
-        .transform(
-            new Function<IjFolder, IjSourceFolder>() {
-              @Override
-              public IjSourceFolder apply(IjFolder input) {
-                String packagePrefix;
-                if (module.getAndroidFacet().isPresent() &&
-                    module.getAndroidFacet().get().getPackageName().isPresent()) {
-                  packagePrefix = module.getAndroidFacet().get().getPackageName().get();
-                } else {
-                  packagePrefix = getPackagePrefix(input);
-                }
-                return createSourceFolder(input, moduleLocationBasePath, packagePrefix);
-              }
-            })
+        .transform(new IjFolderToIjSourceFolderTransform(module))
         .toSortedSet(Ordering.natural());
     return ContentRoot.builder()
         .setUrl(url)
@@ -357,6 +311,12 @@ public class IjProjectTemplateDataPreparer {
         .append(createExcludes(module))
         .toSet();
     return createContentRoot(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
+  }
+
+  public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(final IjModule module) {
+    return FluentIterable.from(module.getGeneratedSourceCodeFolders())
+        .transform(new IjFolderToIjSourceFolderTransform(module))
+        .toSet();
   }
 
   public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
@@ -542,4 +502,60 @@ public class IjProjectTemplateDataPreparer {
           "/" + Joiner.on(";/").join(relativeResourcePaths));
     }
   }
+
+  private class IjFolderToIjSourceFolderTransform implements Function<IjFolder, IjSourceFolder> {
+    private Path moduleBasePath;
+    private Optional<IjModuleAndroidFacet> androidFacet;
+
+    IjFolderToIjSourceFolderTransform(IjModule module) {
+      moduleBasePath = module.getModuleBasePath();
+      androidFacet = module.getAndroidFacet();
+    }
+
+    @Override
+    public IjSourceFolder apply(IjFolder input) {
+      String packagePrefix;
+      if (androidFacet.isPresent() && androidFacet.get().getPackageName().isPresent()) {
+        packagePrefix = androidFacet.get().getPackageName().get();
+      } else {
+        packagePrefix = getPackagePrefix(input);
+      }
+      return createSourceFolder(input, moduleBasePath, packagePrefix);
+    }
+
+    private IjSourceFolder createSourceFolder(
+        IjFolder folder,
+        Path moduleLocationBasePath,
+        String packagePrefix) {
+      return IjSourceFolder.builder()
+          .setType(folder.getIjName())
+          .setUrl(toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
+          .setIsTestSource(folder instanceof TestFolder)
+          .setIsAndroidResources(folder instanceof AndroidResourceFolder)
+          .setPackagePrefix(packagePrefix)
+          .build();
+    }
+
+
+    @Nullable
+    private String getPackagePrefix(IjFolder folder) {
+      if (!folder.getWantsPackagePrefix()) {
+        return null;
+      }
+      Path fileToLookupPackageIn;
+      if (!folder.getInputs().isEmpty() &&
+          folder.getInputs().first().getParent().equals(folder.getPath())) {
+        fileToLookupPackageIn = folder.getInputs().first();
+      } else {
+        fileToLookupPackageIn = folder.getPath().resolve("notfound");
+      }
+      String packagePrefix = javaPackageFinder.findJavaPackage(fileToLookupPackageIn);
+      if (packagePrefix.isEmpty()) {
+        // It doesn't matter either way, but an empty prefix looks confusing.
+        return null;
+      }
+      return packagePrefix;
+    }
+  }
+
 }

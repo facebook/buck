@@ -122,11 +122,7 @@ public class ProjectCommand extends BuildCommand {
       new Predicate<TargetNode<?>>() {
         @Override
         public boolean apply(TargetNode<?> input) {
-          if (input.getType() != JavaLibraryDescription.TYPE) {
-            return false;
-          }
-          JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) input.getConstructorArg());
-          return !arg.annotationProcessors.get().isEmpty();
+          return isTargetWithAnnotations(input);
         }
       };
 
@@ -558,23 +554,91 @@ public class ProjectCommand extends BuildCommand {
 
     ImmutableSet<BuildTarget> requiredBuildTargets = project.write(runIjCleaner);
 
-    if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)
-          .transform(Functions.toStringFunction())
-          .toList());
-      buildCommand.setKeepGoing(true);
-      int exitCode = buildCommand.run(params);
-      if (exitCode != 0) {
-        params.getConsole().getAnsi().printHighlightedSuccessText(
-            params.getConsole().getStdErr(),
-            "Because the build did not complete successfully some parts of the project may not\n" +
-            "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
-      }
+    if (requiredBuildTargets.isEmpty()) {
+      return 0;
+    }
+
+    return shouldProcessAnnotations() ?
+        buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
+            params,
+            targetGraphAndTargets,
+            requiredBuildTargets) :
+        runBuild(params, requiredBuildTargets);
+  }
+
+  private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
+      CommandRunnerParams params,
+      final TargetGraphAndTargets targetGraphAndTargets,
+      ImmutableSet<BuildTarget> requiredBuildTargets)
+      throws IOException, InterruptedException {
+    ImmutableSet<BuildTarget> annotatedTargets =
+        getTargetsWithAnnotations(
+            targetGraphAndTargets.getTargetGraph(),
+            requiredBuildTargets);
+
+    ImmutableSet<BuildTarget> unannotatedTargets =
+        Sets.difference(requiredBuildTargets, annotatedTargets).immutableCopy();
+
+    int exitCode = runBuild(params, unannotatedTargets);
+    if (exitCode != 0) {
+      addBuildFailureError(params);
+    }
+
+    if (annotatedTargets.isEmpty()) {
       return exitCode;
     }
 
-    return 0;
+    int annotationExitCode = runBuild(params, annotatedTargets, true);
+    if (exitCode == 0 && annotationExitCode != 0) {
+      addBuildFailureError(params);
+    }
+
+    return exitCode == 0 ? annotationExitCode : exitCode;
   }
+
+  private int runBuild(
+      CommandRunnerParams params,
+      ImmutableSet<BuildTarget> targets)
+      throws IOException, InterruptedException {
+    return runBuild(params, targets, false);
+  }
+
+  private int runBuild(
+      CommandRunnerParams params,
+      ImmutableSet<BuildTarget> targets,
+      boolean disableCaching)
+      throws IOException, InterruptedException {
+    BuildCommand buildCommand = new BuildCommand(FluentIterable.from(targets)
+        .transform(Functions.toStringFunction())
+        .toList());
+    buildCommand.setKeepGoing(true);
+    buildCommand.setArtifactCacheDisabled(disableCaching);
+    return buildCommand.run(params);
+  }
+
+
+  private ImmutableSet<BuildTarget> getTargetsWithAnnotations(
+      final TargetGraph targetGraph,
+      ImmutableSet<BuildTarget> buildTargets) {
+    return FluentIterable
+        .from(buildTargets)
+        .filter(new Predicate<BuildTarget>() {
+          @Override
+          public boolean apply(@Nullable BuildTarget input) {
+            TargetNode<?> targetNode = targetGraph.get(input);
+            return targetNode != null && isTargetWithAnnotations(targetNode);
+          }
+        })
+        .toSet();
+  }
+
+  private void addBuildFailureError(CommandRunnerParams params) {
+    params.getConsole().getAnsi().printHighlightedSuccessText(
+        params.getConsole().getStdErr(),
+        "Because the build did not complete successfully some parts of the project may not\n" +
+            "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
+  }
+
 
   /**
    * Run intellij specific project generation actions.
@@ -1103,6 +1167,14 @@ public class ProjectCommand extends BuildCommand {
     workspaceArgs.extraSchemes = Optional.of(ImmutableSortedMap.<String, BuildTarget>of());
     workspaceArgs.isRemoteRunnable = Optional.absent();
     return workspaceArgs;
+  }
+
+  private static boolean isTargetWithAnnotations(TargetNode<?> target) {
+    if (target.getType() != JavaLibraryDescription.TYPE) {
+      return false;
+    }
+    JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) target.getConstructorArg());
+    return !arg.annotationProcessors.get().isEmpty();
   }
 
   @Override

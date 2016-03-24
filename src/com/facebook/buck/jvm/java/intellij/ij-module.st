@@ -40,6 +40,14 @@
       <sourceFolder url="file://$MODULE_DIR$%androidFacet.module_gen_path%" isTestSource="false" />
     </content>
 %endif%
+%generatedSourceFolders:{generatedFolder |
+    <content url="%generatedFolder.url%">
+      <%generatedFolder.type% url="%generatedFolder.url%" %\\%
+        isTestSource="%generatedFolder.isTestSource%" %\\%
+        %if(generatedFolder.packagePrefix)% packagePrefix="%generatedFolder.packagePrefix%"%endif%%\\%
+        %if(generatedFolder.isAndroidResources)% type="java-resource" %endif%/>
+    </content>
+}%
 %dependencies:{dep |
   %if(dep.module)%
     <orderEntry type="%dep.type%" module-name="%dep.module.name%" scope="%dep.module.scope%" %\\%

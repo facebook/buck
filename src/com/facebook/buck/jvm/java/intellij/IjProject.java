@@ -23,8 +23,10 @@ import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -159,6 +161,26 @@ public class IjProject {
                 .getConstructorArg()
                 .assets
                 .transform(getAbsolutePathAndRecordRuleFunction);
+          }
+
+          @Override
+          public Optional<Path> getAnnotationOutputPath(
+              TargetNode<? extends JvmLibraryArg> targetNode) {
+            AnnotationProcessingParams annotationProcessingParams =
+                targetNode
+                .getConstructorArg()
+                .buildAnnotationProcessingParams(
+                    targetNode.getBuildTarget(),
+                    projectFilesystem,
+                    buildRuleResolver
+                );
+            if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
+              return Optional.<Path>absent();
+            }
+
+            return Optional
+                  .fromNullable(annotationProcessingParams.getGeneratedSourceFolderName())
+                  .or(Optional.<Path>absent());
           }
 
           private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
