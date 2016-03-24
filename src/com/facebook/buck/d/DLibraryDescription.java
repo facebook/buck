@@ -16,7 +16,7 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cxx.Archives;
+import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
@@ -150,15 +150,10 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
             cxxPlatform.getFlavor(),
             pic);
 
-    return Archives.createArchiveRule(
-        pathResolver,
+    return Archive.from(
         staticTarget,
-        params.copyWithBuildTarget(
-            BuildTarget.builder().from(params.getBuildTarget())
-            .addFlavors(
-                cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.STATIC_FLAVOR)
-            .build()),
+        params,
+        pathResolver,
         cxxPlatform.getAr(),
         cxxPlatform.getRanlib(),
         staticLibraryPath,

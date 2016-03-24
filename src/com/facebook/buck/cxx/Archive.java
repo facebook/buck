@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -31,7 +33,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -50,7 +54,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   @AddToRuleKey
   private final ImmutableList<SourcePath> inputs;
 
-  public Archive(
+  private Archive(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Archiver archiver,
@@ -62,6 +66,42 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     this.ranlib = ranlib;
     this.output = output;
     this.inputs = inputs;
+  }
+
+  /**
+   * Construct an {@link com.facebook.buck.cxx.Archive} from a
+   * {@link com.facebook.buck.rules.BuildRuleParams} object representing a target
+   * node.  In particular, make sure to trim dependencies to *only* those that
+   * provide the input {@link com.facebook.buck.rules.SourcePath}.
+   */
+  public static Archive from(
+      BuildTarget target,
+      BuildRuleParams baseParams,
+      SourcePathResolver resolver,
+      Archiver archiver,
+      Tool ranlib,
+      Path output,
+      ImmutableList<SourcePath> inputs) {
+
+    // Convert the input build params into ones specialized for this archive build rule.
+    // In particular, we only depend on BuildRules directly from the input file SourcePaths.
+    BuildRuleParams archiveParams =
+        baseParams.copyWithChanges(
+            target,
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(resolver.filterBuildRuleInputs(inputs))
+                    .addAll(archiver.getDeps(resolver))
+                    .build()));
+
+    return new Archive(
+        archiveParams,
+        resolver,
+        archiver,
+        ranlib,
+        output,
+        inputs);
   }
 
   @Override

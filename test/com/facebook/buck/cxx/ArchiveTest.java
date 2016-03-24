@@ -16,13 +16,17 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
@@ -32,10 +36,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -75,7 +82,8 @@ public class ArchiveTest {
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
-        new Archive(
+        Archive.from(
+            target,
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
@@ -85,7 +93,8 @@ public class ArchiveTest {
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
-        new Archive(
+        Archive.from(
+            target,
             params,
             pathResolver,
             new GnuArchiver(new HashedFileTool(Paths.get("different"))),
@@ -96,7 +105,8 @@ public class ArchiveTest {
 
     // Verify that changing the output path causes a rulekey change.
     RuleKey outputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
-        new Archive(
+        Archive.from(
+            target,
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
@@ -107,7 +117,8 @@ public class ArchiveTest {
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
-        new Archive(
+        Archive.from(
+            target,
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
@@ -118,7 +129,8 @@ public class ArchiveTest {
 
     // Verify that changing the type of archiver causes a rulekey change.
     RuleKey archiverTypeChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
-        new Archive(
+        Archive.from(
+            target,
             params,
             pathResolver,
             new BsdArchiver(new HashedFileTool(AR)),
@@ -126,6 +138,76 @@ public class ArchiveTest {
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
+  }
+
+  @Test
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+
+    // Create a couple of genrules to generate inputs for an archive rule.
+    Genrule genrule1 = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+        .setOut("foo/bar.o")
+        .build(resolver);
+    Genrule genrule2 = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
+        .setOut("foo/test.o")
+        .build(resolver);
+
+    // Build the archive using a normal input the outputs of the genrules above.
+    Archive archive =
+        Archive.from(
+            target,
+            params,
+            new SourcePathResolver(resolver),
+            DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
+            DEFAULT_OUTPUT,
+            ImmutableList.<SourcePath>of(
+                new FakeSourcePath("simple.o"),
+                new BuildTargetSourcePath(genrule1.getBuildTarget()),
+                new BuildTargetSourcePath(genrule2.getBuildTarget())));
+
+    // Verify that the archive dependencies include the genrules providing the
+    // SourcePath inputs.
+    assertEquals(
+        ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
+        archive.getDeps());
+  }
+
+  @Test
+  public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+
+    // Create an `Archive` rule using build params with an existing dependency,
+    // as if coming from a `TargetNode` which had declared deps.  These should *not*
+    // propagate to the `Archive` rule, since it only cares about dependencies generating
+    // it's immediate inputs.
+    BuildRule dep = new FakeBuildRule(
+        new FakeBuildRuleParamsBuilder("//:fake").build(),
+        pathResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:archive");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
+            .setDeclaredDeps(ImmutableSortedSet.of(dep))
+            .build();
+    Archive archive =
+        Archive.from(
+            target,
+            params,
+            pathResolver,
+            DEFAULT_ARCHIVER,
+            DEFAULT_RANLIB,
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUTS);
+
+    // Verify that the archive rules dependencies are empty.
+    assertEquals(archive.getDeps(), ImmutableSortedSet.<BuildRule>of());
   }
 
 }

@@ -474,10 +474,10 @@ public class CxxLibraryDescription implements
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             pic);
-    return Archives.createArchiveRule(
-        sourcePathResolver,
+    return Archive.from(
         staticTarget,
         params,
+        sourcePathResolver,
         cxxPlatform.getAr(),
         cxxPlatform.getRanlib(),
         staticLibraryPath,

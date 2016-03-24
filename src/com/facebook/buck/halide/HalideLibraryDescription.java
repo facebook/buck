@@ -186,8 +186,9 @@ public class HalideLibraryDescription
     BuildRule halideCompile = ruleResolver.requireRule(
         params.getBuildTarget().withFlavors(HALIDE_COMPILE_FLAVOR, platform.getFlavor()));
     BuildTarget buildTarget = halideCompile.getBuildTarget();
-    return new Archive(
-        params.copyWithExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(halideCompile))),
+    return Archive.from(
+        params.getBuildTarget(),
+        params,
         pathResolver,
         platform.getAr(),
         platform.getRanlib(),
@@ -267,11 +268,7 @@ public class HalideLibraryDescription
       // Halide always output PIC, so it's output can be used for both cases.
       // See: https://github.com/halide/Halide/blob/e3c301f3/src/LLVM_Output.cpp#L152
       return createHalideStaticLibrary(
-          params.copyWithDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>of())),
+          params,
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform);

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9abf0b9aacc3142e88c324ed82084a093077f78f #@#
+#@# GENERATED FILE: DO NOT MODIFY ca724c3a60514f776c8d59f2ca2d96020a4da9d5 #@#
 {
   "build_event" : {
     "deps" : [ ],
@@ -64,6 +64,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:processor",
@@ -81,7 +82,6 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/immutables:immutables",
