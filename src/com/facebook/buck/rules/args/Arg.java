@@ -44,6 +44,14 @@ public abstract class Arg implements RuleKeyAppendable {
         }
       };
 
+  private static final Function<Arg, ImmutableCollection<SourcePath>> GET_INPUTS =
+      new Function<Arg, ImmutableCollection<SourcePath>>() {
+        @Override
+        public ImmutableCollection<SourcePath> apply(Arg arg) {
+          return arg.getInputs();
+        }
+      };
+
   /**
    * @return any {@link BuildRule}s that need to be built before this argument can be used.
    */
@@ -81,6 +89,10 @@ public abstract class Arg implements RuleKeyAppendable {
         return arg.getDeps(resolver);
       }
     };
+  }
+
+  public static Function<Arg, ImmutableCollection<SourcePath>> getInputsFunction() {
+    return GET_INPUTS;
   }
 
   public static Function<Arg, ImmutableList<String>> stringListFunction() {

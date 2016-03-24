@@ -207,6 +207,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'halide': [
             'halide_library',
         ],
+        'haskell': [
+            'prebuilt_haskell_library',
+        ],
         'ios': [
             'apple_asset_catalog',
             'apple_binary',
@@ -301,6 +304,30 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'Halide' /}
         {param rules: $platformRulesMap['halide'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Haskell' /}
+        {param rules: $platformRulesMap['haskell'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Halide' /}
+        {param rules: $platformRulesMap['halide'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'iOS' /}
+        {param rules: $platformRulesMap['ios'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Java' /}
+        {param rules: $platformRulesMap['java'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Lua' /}
+        {param rules: $platformRulesMap['lua'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Python' /}
+        {param rules: $platformRulesMap['python'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param platform: 'iOS' /}
@@ -671,6 +698,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .groovy_library}
 {call .ruleLink}{param name : 'groovy_library' /}{/call}
+{/template}
+
+/***/
+{template .prebuilt_haskell_library}
+{call .ruleLink}{param name : 'prebuilt_haskell_library' /}{/call}
 {/template}
 
 /***/

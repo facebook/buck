@@ -1,0 +1,117 @@
+{namespace prebuilt_haskell_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_haskell_library()' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_haskell_library() rule represents prebuilt Haskell library
+      and interface files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>prebuilt_haskell_library()</code> rule is used to identify Haskell
+prebuilt libraries and their associated interface files.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Other <code>prebuilt_haskell_library()</code> rules from which this library
+  imports modules.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'staticInterfaces' /}
+  {param default : 'None' /}
+  {param desc}
+  Directory of interface files dependents will use when building for a statically
+  linked top-level target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'sharedInterfaces' /}
+  {param default : 'None' /}
+  {param desc}
+  Directory of interface files dependents will use when building for a dynamically
+  linked top-level target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'static_libs' /}
+  {param default : '[]' /}
+  {param desc}
+  The libraries to use when building a statically linked top-level target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'shared_libs' /}
+  {{param default : '{}' /}}
+  {param desc}
+  A map of shared library names to shared library paths to use when building a
+  dynamically linked top-level target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'exported_compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Compiler flags used by dependent rules when compiling with this library.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'exported_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Linker flags used by dependent rules when linking with this library.
+  {/param}
+{/call}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_haskell_library(
+  name = 'file',
+  static_interfaces = [
+    'interfaces',
+  ],
+  shared_interfaces = [
+    'interfaces_dyn',
+  ],
+  static_libs = [
+    'libFileUtil.a',
+  ],
+  shared_libs = {
+    'libFileUtil.so': 'libFileUtil.so',
+  },
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

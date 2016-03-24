@@ -89,6 +89,7 @@ import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.haskell.HaskellBinaryDescription;
 import com.facebook.buck.haskell.HaskellBuckConfig;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
+import com.facebook.buck.haskell.PrebuiltHaskellLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
@@ -518,6 +519,7 @@ public class KnownBuildRuleTypes {
     builder.register(new HaskellLibraryDescription(haskellBuckConfig, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
+    builder.register(new PrebuiltHaskellLibraryDescription());
 
     // Create an executor service exclusively for the smart dexing step.
     ListeningExecutorService dxExecutorService =
