@@ -933,6 +933,7 @@
                failonerror="true"
                additionalparam="${javadoc.doclint}"
                >
+        <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/cli/quickstart/**" />
