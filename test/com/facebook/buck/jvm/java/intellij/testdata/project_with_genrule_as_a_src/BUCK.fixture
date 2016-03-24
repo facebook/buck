@@ -1,0 +1,9 @@
+java_binary(
+  name = 'root_module',
+  visibility = [
+  ],
+)
+
+project_config(
+  src_target = ':root_module',
+)

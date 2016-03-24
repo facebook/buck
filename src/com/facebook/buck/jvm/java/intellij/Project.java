@@ -47,6 +47,8 @@ import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
@@ -601,6 +603,23 @@ public class Project {
 
     if (buildRule.getProperties().is(PACKAGING) && sourceRoots.isEmpty()) {
       return false;
+    }
+
+    JavaLibrary javaLibrary = null;
+    if (buildRule instanceof JavaLibrary) {
+      javaLibrary = (JavaLibrary) buildRule;
+      Path basePath = buildRule.getBuildTarget().getBasePath();
+      for (SourcePath path : javaLibrary.getSources()) {
+        if (!(path instanceof PathSourcePath)) {
+          Path pathToTarget = resolver.getRelativePath(path);
+          Path relativePath = basePath.relativize(Paths.get(""))
+            .resolve(pathToTarget).getParent();
+          String url = String.format("file://$MODULE_DIR$/%s", relativePath.toString());
+          SerializableModule.SourceFolder sourceFolder =
+              new SerializableModule.SourceFolder(url, isTestSource, "");
+          module.sourceFolders.add(sourceFolder);
+        }
+      }
     }
 
     if (sourceRoots.isEmpty()) {

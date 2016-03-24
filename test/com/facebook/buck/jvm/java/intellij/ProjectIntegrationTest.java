@@ -83,6 +83,19 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithGenruleAsASrc() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_with_genrule_as_a_src", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "-v", "5");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
+
+
+  @Test
   public void testBuckProjectDoesNotCauseUnnecessaryWrites() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_with_root_iml_already_present", temporaryFolder);
