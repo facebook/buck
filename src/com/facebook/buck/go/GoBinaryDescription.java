@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -26,16 +27,23 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
 import java.util.List;
 
-public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>, Flavored {
+public class GoBinaryDescription implements
+    Description<GoBinaryDescription.Arg>,
+    ImplicitDepsInferringDescription<GoBinaryDescription.Arg>,
+    Flavored {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("go_binary");
 
@@ -78,6 +86,20 @@ public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>
         args.assemblerFlags.get(),
         args.linkerFlags.get(),
         platform);
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Arg constructorArg) {
+    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
+
+    // Add the C/C++ linker parse time deps.
+    CxxPlatform cxxPlatform = goBuckConfig.getDefaultPlatform().getCxxPlatform().get();
+    targets.addAll(cxxPlatform.getLd().getParseTimeDeps());
+
+    return targets.build();
   }
 
   @SuppressFieldNotInitialized
