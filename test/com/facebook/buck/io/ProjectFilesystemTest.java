@@ -646,4 +646,23 @@ public class ProjectFilesystemTest {
         new ProjectFilesystem(rootPath, config),
         equalTo(new ProjectFilesystem(rootPath, config)));
   }
+
+  @Test
+  public void createZipWithSymlink() throws IOException {
+    tmp.newFolder("foo");
+    Files.createSymbolicLink(tmp.getRoot().resolve("foo/link.txt"), Paths.get("bar.txt"));
+    Path output = tmp.newFile("out.zip");
+    filesystem.createZip(
+        ImmutableList.of(Paths.get("foo/link.txt")),
+        output);
+
+    // Verify that the symlink was stored correctly.
+    try (ZipFile zip = new ZipFile(output.toFile())) {
+      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+      ZipArchiveEntry entry = entries.nextElement();
+      assertTrue(entry.isUnixSymlink());
+      assertThat(zip.getUnixSymlink(entry), equalTo("bar.txt"));
+    }
+  }
+
 }
