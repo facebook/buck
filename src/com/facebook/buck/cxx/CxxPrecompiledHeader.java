@@ -140,7 +140,7 @@ public class CxxPrecompiledHeader
                     preprocessorDelegate.getEnvironment(),
                     preprocessorDelegate.getFlagsForColorDiagnostics())),
             Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
-            preprocessorDelegate.getReplacementPaths(),
+            preprocessorDelegate.getHeaderPathNormalizer(),
             sanitizer,
             Optional.<Function<String, Iterable<String>>>absent(),
             scratchDir));

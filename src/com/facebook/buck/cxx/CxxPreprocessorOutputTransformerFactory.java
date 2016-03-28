@@ -23,31 +23,29 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class CxxPreprocessorOutputTransformerFactory {
 
   private final Path workingDir;
-  private final ImmutableMap<Path, Path> replacementPaths;
+  private final HeaderPathNormalizer pathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Optional<Function<String, Iterable<String>>> extraPreprocessorTransformer;
 
   public CxxPreprocessorOutputTransformerFactory(
       Path workingDir,
-      Map<Path, Path> replacementPaths,
+      HeaderPathNormalizer pathNormalizer,
       DebugPathSanitizer sanitizer,
       Optional<Function<String, Iterable<String>>> extraPreprocessorTransformer) {
     this.workingDir = workingDir;
-    this.replacementPaths = ImmutableMap.copyOf(replacementPaths);
+    this.pathNormalizer = pathNormalizer;
     this.sanitizer = sanitizer;
     this.extraPreprocessorTransformer = extraPreprocessorTransformer;
   }
@@ -94,10 +92,11 @@ class CxxPreprocessorOutputTransformerFactory {
       String originalPath = m.group("path");
       String replacementPath = originalPath;
 
-      replacementPath = Optional
-          .fromNullable(replacementPaths.get(Paths.get(replacementPath)))
-          .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
-          .or(replacementPath);
+      Optional<Path> normalizedPath =
+          pathNormalizer.getRelativePathForUnnormalizedPath(Paths.get(replacementPath));
+      if (normalizedPath.isPresent()) {
+        replacementPath = Escaper.escapePathForCIncludeString(normalizedPath.get());
+      }
 
       replacementPath = sanitizer.sanitize(Optional.of(workingDir), replacementPath);
 

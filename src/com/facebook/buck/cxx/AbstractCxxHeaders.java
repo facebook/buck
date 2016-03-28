@@ -75,6 +75,13 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
   abstract ImmutableMap<Path, SourcePath> getNameToPathMap();
 
   /**
+   * Add this header pack to the given {@link com.facebook.buck.cxx.HeaderPathNormalizer.Builder}.
+   */
+  public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
+    builder.addSymlinkTree(getRoot(), getNameToPathMap());
+  }
+
+  /**
    * @return all deps required by this header pack.
    */
   public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {

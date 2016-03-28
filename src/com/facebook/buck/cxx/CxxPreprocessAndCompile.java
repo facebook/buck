@@ -37,7 +37,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -186,10 +185,10 @@ public class CxxPreprocessAndCompile
     }
 
     // If we're compiling, this will just be empty.
-    ImmutableMap<Path, Path> replacementPaths =
-      preprocessDelegate.isPresent()
-          ? preprocessDelegate.get().getReplacementPaths()
-          : ImmutableMap.<Path, Path>of();
+    HeaderPathNormalizer headerPathNormalizer =
+        preprocessDelegate.isPresent() ?
+            preprocessDelegate.get().getHeaderPathNormalizer() :
+            HeaderPathNormalizer.empty(getResolver());
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> preprocessorCommand;
 
@@ -226,7 +225,7 @@ public class CxxPreprocessAndCompile
         inputType,
         preprocessorCommand,
         compilerCommand,
-        replacementPaths,
+        headerPathNormalizer,
         sanitizer,
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getPreprocessorExtraLineProcessor() :

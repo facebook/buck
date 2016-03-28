@@ -101,7 +101,7 @@ public class CxxCompileStepIntegrationTest {
                     compilerCommand.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
-            ImmutableMap.<Path, Path>of(),
+            HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             Optional.<Function<String, Iterable<String>>>absent(),
             scratchDir);

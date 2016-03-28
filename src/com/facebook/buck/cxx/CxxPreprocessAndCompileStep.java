@@ -36,7 +36,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
@@ -68,7 +67,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final CxxSource.Type inputType;
   private final Optional<ToolCommand> preprocessorCommand;
   private final Optional<ToolCommand> compilerCommand;
-  private final ImmutableMap<Path, Path> replacementPaths;
+  private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Optional<Function<String, Iterable<String>>> extraLineProcessor;
 
@@ -86,7 +85,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       CxxSource.Type inputType,
       Optional<ToolCommand> preprocessorCommand,
       Optional<ToolCommand> compilerCommand,
-      ImmutableMap<Path, Path> replacementPaths,
+      HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       Optional<Function<String, Iterable<String>>> extraLineProcessor,
       Path scratchDir) {
@@ -101,7 +100,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.inputType = inputType;
     this.preprocessorCommand = preprocessorCommand;
     this.compilerCommand = compilerCommand;
-    this.replacementPaths = replacementPaths;
+    this.headerPathNormalizer = headerPathNormalizer;
     this.sanitizer = sanitizer;
     this.extraLineProcessor = extraLineProcessor;
     this.scratchDir = scratchDir;
@@ -426,7 +425,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private CxxPreprocessorOutputTransformerFactory createPreprocessorOutputTransformerFactory() {
     return new CxxPreprocessorOutputTransformerFactory(
         filesystem.getRootPath(),
-        replacementPaths,
+        headerPathNormalizer,
         sanitizer,
         extraLineProcessor);
   }
@@ -441,7 +440,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         context.shouldReportAbsolutePaths() ?
             Optional.of(filesystem.getAbsolutifier()) :
             Optional.<Function<Path, Path>>absent(),
-        replacementPaths,
+        headerPathNormalizer,
         sanitizer);
   }
 
@@ -465,7 +464,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       // included them using source relative include paths. To handle both cases we check for the
       // prerequisites both in the values and the keys of the replacement map.
       if (operation.isPreprocess() && exitCode == 0) {
-        ImmutableSet<Path> values = ImmutableSet.copyOf(replacementPaths.values());
         LOG.debug("Processing dependency file %s as Makefile", getDepTemp());
         ImmutableMap<String, Object> params = ImmutableMap.<String, Object>of(
             "input", this.input, "output", this.output);
@@ -479,14 +477,11 @@ public class CxxPreprocessAndCompileStep implements Step {
                  params)) {
           for (String prereq : Depfiles.parseDepfile(reader).getPrereqs()) {
             Path path = Paths.get(prereq);
-            if (values.contains(path)) {
-              writer.write(path.toString());
-              writer.newLine();
-              continue;
-            }
-            Path replacement = replacementPaths.get(Paths.get(prereq));
-            if (replacement != null) {
-              writer.write(replacement.toString());
+            Optional<Path> absolutePath =
+                headerPathNormalizer.getAbsolutePathForUnnormalizedPath(path);
+            if (absolutePath.isPresent()) {
+              Preconditions.checkState(absolutePath.get().isAbsolute());
+              writer.write(absolutePath.get().toString());
               writer.newLine();
             }
           }

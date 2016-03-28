@@ -453,7 +453,7 @@ public class CxxPreprocessAndCompileTest {
                 new DefaultPreprocessor(preprocessorTool),
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                DEFAULT_INCLUDES),
+                ImmutableList.<CxxHeaders>of()),
             new CompilerDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
