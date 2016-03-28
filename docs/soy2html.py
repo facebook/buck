@@ -16,7 +16,12 @@
 # 9814 via ./docs/soyweb-prod.sh.
 
 import os
+import subprocess
 import sys
+import time
+
+
+URL_ROOT = 'http://localhost:9814/'
 
 
 def main(output_dir):
@@ -32,10 +37,10 @@ def main(output_dir):
                 # Construct the URL where the .soy file is being served.
                 soy_file = file_name
                 html_file = root + '/' + soy_file[:-len('.soy')] + '.html'
-                url = 'http://localhost:9814/' + html_file
+                url = URL_ROOT + html_file
 
                 copy_dest = ensure_dir(html_file, output_dir)
-                os.system("curl -o '%s' '%s'" % (copy_dest, url))
+                subprocess.check_call(["curl", "-o", copy_dest, url])
             elif (file_name == ".nojekyll" or
                   file_name == "CNAME" or
                   file_name.endswith('.css') or
@@ -71,6 +76,17 @@ def copy_to_output_dir(path, output_dir, content):
         f.write(content)
 
 
+def pollForServerReady():
+    SERVER_START_POLL = 5
+    print 'Waiting for server to start.'
+    for _ in range(0, SERVER_START_POLL):
+        result = subprocess.call(['curl', '-I', URL_ROOT])
+        if result == 0:
+            return
+        time.sleep(1)
+    print 'Server failed to start after %s seconds.' % SERVER_START_POLL
+
 if __name__ == '__main__':
     output_dir = sys.argv[1]
+    pollForServerReady()
     main(output_dir)
