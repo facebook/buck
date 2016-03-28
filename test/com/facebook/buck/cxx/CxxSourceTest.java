@@ -59,7 +59,7 @@ public class CxxSourceTest {
         CxxSource.Type.fromExtension("mii"));
 
     // Assembly
-    assertEquals(Optional.of(CxxSource.Type.ASSEMBLER), CxxSource.Type.fromExtension("s"));
+    assertEquals(Optional.of(CxxSource.Type.ASSEMBLER_WITH_CPP), CxxSource.Type.fromExtension("s"));
 
     // Preprocessable assembly
     assertEquals(Optional.of(CxxSource.Type.ASSEMBLER_WITH_CPP), CxxSource.Type.fromExtension("S"));

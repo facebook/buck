@@ -582,8 +582,7 @@ public class CxxSourceRuleFactoryTest {
           {"test.cpp", cxxflags, explicitCompilerFlags, cxxppflags, explicitCxxppflags},
 
           // asm do not have compiler specific flags, nor (non-as) file type specific flags.
-          {"test.s", empty, empty, empty, empty},
-          {"test.S", empty, empty, asppflags, explicitCppflags},
+          {"test.s", empty, empty, asppflags, explicitCppflags},
 
           // ObjC
           {"test.mi", cflags, explicitCompilerFlags, empty, empty},

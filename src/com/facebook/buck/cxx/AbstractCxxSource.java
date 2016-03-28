@@ -52,8 +52,9 @@ abstract class AbstractCxxSource {
     OBJCXX_CPP_OUTPUT("objective-c++-cpp-output", "objective-c++-cpp-output", "mii"),
     CUDA_CPP_OUTPUT("cuda-cpp-output", "cuda-cpp-output", "cui"),
 
+    // Note, this is declared before ASSEMBLER so .s files are recognized as needing preprocessor.
+    ASSEMBLER_WITH_CPP("assembler-with-cpp", "assembler", "s", "S"),
     ASSEMBLER("assembler", "assembler", "s"),
-    ASSEMBLER_WITH_CPP("assembler-with-cpp", "assembler", "S"),
     ;
 
     private final String language;
