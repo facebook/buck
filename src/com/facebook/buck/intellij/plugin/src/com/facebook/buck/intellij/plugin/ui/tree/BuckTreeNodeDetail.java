@@ -72,7 +72,9 @@ public class BuckTreeNodeDetail implements TreeNode {
         return null;
     }
 
-    public String getDetail() { return mDetail; }
+    public String getDetail() {
+        return mDetail;
+    }
 
     public void setDetail(String detail) {
         mDetail = detail;

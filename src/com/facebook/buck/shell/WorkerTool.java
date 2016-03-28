@@ -43,7 +43,9 @@ public class WorkerTool extends NoopBuildRule implements HasRuntimeDeps {
     return this.exe;
   }
 
-  public String getArgs() { return this.args; }
+  public String getArgs() {
+    return this.args;
+  }
 
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {

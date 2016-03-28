@@ -70,7 +70,9 @@ public class RunCommand extends AbstractCommand {
       }
     });
 
-  public ImmutableList<String> getArguments() { return arguments.get(); }
+  public ImmutableList<String> getArguments() {
+    return arguments.get();
+  }
 
   /** @return the arguments (if any) to be passed to the target command. */
   public ImmutableList<String> getTargetArguments() {

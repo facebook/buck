@@ -165,7 +165,9 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
     }
   }
 
-  public Path getBytecodeOutput() { return getBytecodeOutputPath(getBuildTarget(), isLibrary()); }
+  public Path getBytecodeOutput() {
+    return getBytecodeOutputPath(getBuildTarget(), isLibrary());
+  }
 
   public static Path getBytecodeOutputPath(UnflavoredBuildTarget target, boolean isLibrary) {
     if (isLibrary) {

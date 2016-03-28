@@ -35,7 +35,9 @@ public class StringArg extends Arg {
   private static final Function<String, Arg> CONVERT =
       new Function<String, Arg>() {
         @Override
-        public Arg apply(String input) { return new StringArg(input); }
+        public Arg apply(String input) {
+          return new StringArg(input);
+        }
       };
 
   public StringArg(String arg) {

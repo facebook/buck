@@ -32,7 +32,9 @@ public enum Platform {
   /**
    * @return platform name as used in autoconf target tuples
    */
-  public String getAutoconfName() { return autoconfName; }
+  public String getAutoconfName() {
+    return autoconfName;
+  }
 
   public String getPrintableName() {
     return platformName;

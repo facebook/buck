@@ -254,9 +254,13 @@ public class AppleBundle
     return bundleRoot.resolve(destinations.getMetadataPath());
   }
 
-  public String getPlatformName() { return platformName; }
+  public String getPlatformName() {
+    return platformName;
+  }
 
-  public Optional<BuildRule> getBinary() { return binary; }
+  public Optional<BuildRule> getBinary() {
+    return binary;
+  }
 
   @Override
   public ImmutableList<Step> getBuildSteps(

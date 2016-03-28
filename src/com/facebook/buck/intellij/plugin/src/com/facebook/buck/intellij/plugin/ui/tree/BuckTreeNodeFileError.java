@@ -93,5 +93,7 @@ public class BuckTreeNodeFileError implements TreeNode {
         return Collections.enumeration(mErrors);
     }
 
-    public String getFilePath() { return mFilePath; }
+    public String getFilePath() {
+        return mFilePath;
+    }
 }

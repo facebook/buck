@@ -151,13 +151,13 @@ public class ApkBuilderStep implements Step {
 
       // Build the APK
       builder.sealApk();
-    } catch (ApkCreationException
-        | CertificateException
-        | IOException
-        | KeyStoreException
-        | NoSuchAlgorithmException
-        | SealedApkException
-        | UnrecoverableKeyException e) {
+    } catch (ApkCreationException |
+            CertificateException |
+            IOException |
+            KeyStoreException |
+            NoSuchAlgorithmException |
+            SealedApkException |
+            UnrecoverableKeyException e) {
       context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
       Throwables.propagateIfInstanceOf(e, IOException.class);
       return 1;

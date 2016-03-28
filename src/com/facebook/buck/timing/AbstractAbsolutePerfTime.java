@@ -29,5 +29,7 @@ abstract class AbstractAbsolutePerfTime {
   @Value.Parameter(order = 2)
   public abstract long getSystemCpuTimeNs();
 
-  public boolean hasCpuTime() { return getUserCpuTimeNs() != UNSUPPORTED; }
+  public boolean hasCpuTime() {
+    return getUserCpuTimeNs() != UNSUPPORTED;
+  }
 }

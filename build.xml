@@ -836,7 +836,7 @@
   separated by commas.
   -->
   <target name="checkstyle-files-xml" if="lint.files">
-    <taskdef resource="checkstyletask.properties"
+    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
            classpathref="checkstyle-classpath"/>
     <checkstyle config="checkstyle.xml">
       <formatter type="xml" toFile="${lint.outputpath}" />
@@ -851,7 +851,7 @@
   separated by commas.
   -->
   <target name="checkstyle-xml">
-    <taskdef resource="checkstyletask.properties"
+    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
            classpathref="checkstyle-classpath"/>
     <checkstyle config="checkstyle.xml">
       <formatter type="xml" toFile="${lint.outputpath}" />
@@ -869,7 +869,7 @@
   Runs checkstyle on all source and test files.
   -->
   <target name="checkstyle">
-    <taskdef resource="checkstyletask.properties"
+    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
            classpathref="checkstyle-classpath"/>
     <checkstyle config="checkstyle.xml" maxWarnings="0">
       <fileset dir="${src.dir}">

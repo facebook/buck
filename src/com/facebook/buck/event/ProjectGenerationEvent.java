@@ -35,8 +35,9 @@ public abstract class ProjectGenerationEvent extends AbstractBuckEvent {
     return new Finished();
   }
 
-  public static Processed processed() { return new Processed(); }
-
+  public static Processed processed() {
+    return new Processed();
+  }
 
   public static class Started extends ProjectGenerationEvent {
     @Override
@@ -54,6 +55,8 @@ public abstract class ProjectGenerationEvent extends AbstractBuckEvent {
 
   public static class Processed extends ProjectGenerationEvent {
     @Override
-    public String getEventName() { return "ProjectGenerationProcessed"; }
+    public String getEventName() {
+      return "ProjectGenerationProcessed";
+    }
   }
 }

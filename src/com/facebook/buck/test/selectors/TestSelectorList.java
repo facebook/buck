@@ -134,7 +134,7 @@ public class TestSelectorList {
           }
           File file = new File(pathString);
           loadFromFile(file);
-        } catch (TestSelectorParseException|IOException e) {
+        } catch (TestSelectorParseException | IOException e) {
           String message = String.format("Error with test-selector '%s': %s",
               rawSelector, e.getMessage());
           throw new RuntimeException(message, e);

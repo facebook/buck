@@ -68,8 +68,12 @@ public class CompilerErrorEvent extends AbstractBuckEvent
     return target.getFullyQualifiedName();
   }
 
-  public CompilerType getCompilerType() { return compilerType; }
+  public CompilerType getCompilerType() {
+    return compilerType;
+  }
 
   @Override
-  public ImmutableSet<String> getSuggestions() { return suggestions; }
+  public ImmutableSet<String> getSuggestions() {
+    return suggestions;
+  }
 }

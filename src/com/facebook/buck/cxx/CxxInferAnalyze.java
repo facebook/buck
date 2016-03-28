@@ -89,7 +89,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     return specsDir;
   }
 
-  public Path getResultsDir() { return resultsDir; }
+  public Path getResultsDir() {
+    return resultsDir;
+  }
 
   public ImmutableSet<CxxInferCapture> getCaptureRules() {
     return captureAndAnalyzeRules.captureRules;

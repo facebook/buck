@@ -57,7 +57,9 @@ public class EventTime {
     this.timingStarted = false;
   }
 
-  private boolean hasCpuTime() { return userCpuTimeTotalNs != RelativePerfTime.UNSUPPORTED; }
+  private boolean hasCpuTime() {
+    return userCpuTimeTotalNs != RelativePerfTime.UNSUPPORTED;
+  }
 
   public void startTiming(long wallTimeMs, AbsolutePerfTime perfTime) {
     Preconditions.checkState(!timingStarted, "Timing already started");

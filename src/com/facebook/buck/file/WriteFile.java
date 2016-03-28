@@ -90,5 +90,7 @@ public class WriteFile extends AbstractBuildRule {
     return output;
   }
 
-  public byte[] getFileContents() { return fileContents.clone(); }
+  public byte[] getFileContents() {
+    return fileContents.clone();
+  }
 }

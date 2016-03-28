@@ -167,7 +167,7 @@ public class RemoteLogUploaderEventListener implements BuckEventListener {
       Futures.successfulAsList(uploads).get(
           BlockingHttpEndpoint.DEFAULT_COMMON_TIMEOUT_MS * 100,
           TimeUnit.MILLISECONDS);
-    } catch (ExecutionException|TimeoutException  e) {
+    } catch (ExecutionException | TimeoutException e) {
       LOG.info(e, "Failed uploading remaining log data to remote server");
     }
   }

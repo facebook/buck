@@ -94,7 +94,9 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     return getBinPath().resolve("libs");
   }
 
-  public Path getPathToNativeLibsAssetsDir() { return getBinPath().resolve("assetLibs"); }
+  public Path getPathToNativeLibsAssetsDir() {
+    return getBinPath().resolve("assetLibs");
+  }
 
   /**
    * Returns the path that is the immediate parent of {@link #getPathToNativeLibsAssetsDir()} and

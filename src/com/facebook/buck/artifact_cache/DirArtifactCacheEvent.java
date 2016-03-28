@@ -28,8 +28,7 @@ public class DirArtifactCacheEvent {
 
   private DirArtifactCacheEvent() {}
 
-  public static class DirArtifactCacheEventFactory implements ArtifactCacheEventFactory
-  {
+  public static class DirArtifactCacheEventFactory implements ArtifactCacheEventFactory {
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
       return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.<String>absent());

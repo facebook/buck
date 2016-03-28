@@ -42,11 +42,23 @@ public class CompilerErrorItem {
     public void setError(String error) {
         mError = error;
     }
-    public void setColumn(int column) { mColumn = column; }
+    public void setColumn(int column) {
+        mColumn = column;
+    }
 
-    public String getError() { return mError; }
-    public String getFilePath() { return mFilePath; }
-    public int getColumn() { return mColumn; }
-    public int getLine() { return mLine; }
-    public Type getType() { return mType; }
+    public String getError() {
+        return mError;
+    }
+    public String getFilePath() {
+        return mFilePath;
+    }
+    public int getColumn() {
+        return mColumn;
+    }
+    public int getLine() {
+        return mLine;
+    }
+    public Type getType() {
+        return mType;
+    }
 }

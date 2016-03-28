@@ -29,7 +29,9 @@ public class BuckClientTest {
     public class TestBuckEventHandler implements BuckEventsHandlerInterface {
 
         private String lastMessage = "";
-        public String getLastMessage() { return this.lastMessage; }
+        public String getLastMessage() {
+            return this.lastMessage;
+        }
 
         @Override
         public void onConnect() {

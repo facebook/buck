@@ -33,7 +33,9 @@ public class FakeWorkerProcessProtocol implements WorkerProcessProtocol {
       throws IOException {}
 
   @Override
-  public int receiveCommandResponse(int messageID) throws IOException { return 0; }
+  public int receiveCommandResponse(int messageID) throws IOException {
+    return 0;
+  }
 
   @Override
   public void close() throws IOException {

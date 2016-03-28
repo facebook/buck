@@ -345,9 +345,13 @@ public class AndroidBinary
     return optimizationPasses;
   }
 
-  public Optional<Boolean> getPackageAssetLibraries() { return packageAssetLibraries; }
+  public Optional<Boolean> getPackageAssetLibraries() {
+    return packageAssetLibraries;
+  }
 
-  public ManifestEntries getManifestEntries() { return manifestEntries; }
+  public ManifestEntries getManifestEntries() {
+    return manifestEntries;
+  }
 
   JavaRuntimeLauncher getJavaRuntimeLauncher() {
     return javaRuntimeLauncher;
