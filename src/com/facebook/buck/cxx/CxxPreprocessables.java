@@ -201,7 +201,7 @@ public class CxxPreprocessables {
         rule.getClass(),
         target);
     HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
-    builder.addIncludes(CxxHeaders.fromSymlinkTree(symlinkTree, includeType));
+    builder.addIncludes(CxxSymlinkTreeHeaders.from(symlinkTree, includeType));
     return builder;
   }
 

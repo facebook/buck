@@ -96,7 +96,8 @@ public class CxxLibraryDescriptionTest {
   private static ImmutableSet<Path> getHeaderNames(Iterable<CxxHeaders> includes) {
     ImmutableSet.Builder<Path> names = ImmutableSet.builder();
     for (CxxHeaders headers : includes) {
-      names.addAll(headers.getNameToPathMap().keySet());
+      CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) headers;
+      names.addAll(symlinkTreeHeaders.getNameToPathMap().keySet());
     }
     return names.build();
   }
@@ -186,7 +187,7 @@ public class CxxLibraryDescriptionTest {
                 new PathSourcePath(filesystem, Paths.get("/some/framework/path/s.dylib"))),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(filesystem, Paths.get("/another/framework/path/a.dylib")))));
-    CxxHeaders publicHeaders = publicInput.getIncludes().get(0);
+    CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
     assertThat(
         publicHeaders.getIncludeType(),
         Matchers.equalTo(CxxPreprocessables.IncludeType.LOCAL));
@@ -219,7 +220,8 @@ public class CxxLibraryDescriptionTest {
                 new PathSourcePath(filesystem, Paths.get("/some/framework/path/s.dylib"))),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(filesystem, Paths.get("/another/framework/path/a.dylib")))));
-    CxxHeaders privateHeaders = privateInput.getIncludes().get(0);
+    CxxSymlinkTreeHeaders privateHeaders =
+        (CxxSymlinkTreeHeaders) privateInput.getIncludes().get(0);
     assertThat(
         privateHeaders.getIncludeType(),
         Matchers.equalTo(CxxPreprocessables.IncludeType.LOCAL));
@@ -503,7 +505,7 @@ public class CxxLibraryDescriptionTest {
                 new PathSourcePath(filesystem, Paths.get("/some/framework/path/s.dylib"))),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(filesystem, Paths.get("/another/framework/path/a.dylib")))));
-    CxxHeaders publicHeaders = publicInput.getIncludes().get(0);
+    CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
     assertThat(
         publicHeaders.getIncludeType(),
         Matchers.equalTo(CxxPreprocessables.IncludeType.LOCAL));

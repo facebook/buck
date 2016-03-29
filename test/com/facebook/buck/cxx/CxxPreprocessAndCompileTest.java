@@ -104,8 +104,8 @@ public class CxxPreprocessAndCompileTest {
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final ImmutableList<CxxHeaders> DEFAULT_INCLUDES =
-      ImmutableList.of(
-          CxxHeaders.builder()
+      ImmutableList.<CxxHeaders>of(
+          CxxSymlinkTreeHeaders.builder()
               .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
               .setRoot(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:include")))
               .putNameToPathMap(Paths.get("test.h"), new FakeSourcePath("foo/test.h"))

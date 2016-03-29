@@ -98,7 +98,7 @@ public class CxxLibraryTest {
     // interface.
     CxxPreprocessorInput expectedPublicCxxPreprocessorInput = CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxHeaders.builder()
+            CxxSymlinkTreeHeaders.builder()
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                 .putNameToPathMap(
                     Paths.get("header.h"),
@@ -114,7 +114,7 @@ public class CxxLibraryTest {
 
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput = CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxHeaders.builder()
+            CxxSymlinkTreeHeaders.builder()
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                 .setRoot(new BuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
                 .putNameToPathMap(

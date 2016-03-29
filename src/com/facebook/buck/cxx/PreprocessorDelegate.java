@@ -158,13 +158,16 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   public void checkForConflictingHeaders() throws ConflictingHeadersException {
     Map<Path, SourcePath> headers = new HashMap<>();
     for (CxxHeaders cxxHeaders : includes) {
-      for (Map.Entry<Path, SourcePath> entry : cxxHeaders.getNameToPathMap().entrySet()) {
-        SourcePath original = headers.put(entry.getKey(), entry.getValue());
-        if (original != null && !original.equals(entry.getValue())) {
-          throw new ConflictingHeadersException(
-              entry.getKey(),
-              original,
-              entry.getValue());
+      if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
+        CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
+        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
+          SourcePath original = headers.put(entry.getKey(), entry.getValue());
+          if (original != null && !original.equals(entry.getValue())) {
+            throw new ConflictingHeadersException(
+                entry.getKey(),
+                original,
+                entry.getValue());
+          }
         }
       }
     }

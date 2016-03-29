@@ -101,7 +101,7 @@ public final class FakeCxxLibrary
         case PUBLIC:
           return CxxPreprocessorInput.builder()
               .addIncludes(
-                  CxxHeaders.builder()
+                  CxxSymlinkTreeHeaders.builder()
                       .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                       .putNameToPathMap(
                           Paths.get("header.h"),
@@ -112,7 +112,7 @@ public final class FakeCxxLibrary
         case PRIVATE:
           return CxxPreprocessorInput.builder()
               .addIncludes(
-                  CxxHeaders.builder()
+                  CxxSymlinkTreeHeaders.builder()
                       .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                       .setRoot(new BuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
                       .putNameToPathMap(

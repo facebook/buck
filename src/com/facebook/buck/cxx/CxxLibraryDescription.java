@@ -169,7 +169,7 @@ public class CxxLibraryDescription implements
             HeaderVisibility.PUBLIC);
     Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
 
-    CxxHeaders.Builder headers = CxxHeaders.builder();
+    CxxSymlinkTreeHeaders.Builder headers = CxxSymlinkTreeHeaders.builder();
     headers.setIncludeType(CxxPreprocessables.IncludeType.LOCAL);
     headers.setRoot(
         new BuildTargetSourcePath(
@@ -187,7 +187,7 @@ public class CxxLibraryDescription implements
         CxxPreprocessorInput.builder()
             .putAllPreprocessorFlags(exportedPreprocessorFlags)
             .addIncludes(
-                CxxHeaders.fromSymlinkTree(symlinkTree, CxxPreprocessables.IncludeType.LOCAL))
+                CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL))
             .addAllFrameworks(frameworks)
             .build());
     for (BuildRule rule : params.getDeps()) {

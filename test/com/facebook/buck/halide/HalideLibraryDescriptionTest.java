@@ -22,10 +22,10 @@ import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -89,8 +89,11 @@ public class HalideLibraryDescriptionTest {
         HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
         cxxPlatform.getFlavor());
     Path headerPath = HalideCompile.headerOutputPath(flavoredLibTarget);
-    CxxHeaders publicHeaders =
-        lib.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).getIncludes().get(0);
+    CxxSymlinkTreeHeaders publicHeaders =
+        (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(
+            cxxPlatform,
+            HeaderVisibility.PUBLIC).getIncludes()
+            .get(0);
     assertThat(
         publicHeaders.getIncludeType(),
         Matchers.equalTo(CxxPreprocessables.IncludeType.SYSTEM));

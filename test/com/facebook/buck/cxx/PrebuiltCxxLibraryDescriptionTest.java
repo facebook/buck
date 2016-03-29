@@ -123,7 +123,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
   private static ImmutableSet<Path> getHeaderNames(Iterable<CxxHeaders> includes) {
     ImmutableSet.Builder<Path> names = ImmutableSet.builder();
     for (CxxHeaders headers : includes) {
-      names.addAll(headers.getNameToPathMap().keySet());
+      CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) headers;
+      names.addAll(symlinkTreeHeaders.getNameToPathMap().keySet());
     }
     return names.build();
   }

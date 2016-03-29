@@ -386,7 +386,7 @@ public class CxxDescriptionEnhancer {
     ImmutableList.Builder<CxxHeaders> allIncludes = ImmutableList.builder();
     for (HeaderSymlinkTree headerSymlinkTree : headerSymlinkTrees) {
       allIncludes.add(
-          CxxHeaders.fromSymlinkTree(headerSymlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+          CxxSymlinkTreeHeaders.from(headerSymlinkTree, CxxPreprocessables.IncludeType.LOCAL));
     }
 
     CxxPreprocessorInput localPreprocessorInput =
