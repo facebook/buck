@@ -213,8 +213,6 @@ public class PrebuiltCxxLibrary
         }
         builder.putAllPreprocessorFlags(
             Preconditions.checkNotNull(exportedPreprocessorFlags.apply(cxxPlatform)));
-        // Just pass the include dirs as system includes.
-
         final Iterable<SourcePath> includePaths = Iterables.transform(
             includeDirs,
             new Function<String, SourcePath>() {
@@ -231,11 +229,9 @@ public class PrebuiltCxxLibrary
                 );
               }
             });
-
-        builder.addAllSystemIncludeRoots(
-            Iterables.transform(includePaths, getResolver().getAbsolutePathFunction()));
-        builder.addAllRules(Iterables.transform(
-            getResolver().filterBuildRuleInputs(includePaths), TO_TARGET));
+        for (SourcePath includePath : includePaths) {
+          builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includePath));
+        }
         return builder.build();
       case PRIVATE:
         return builder.build();

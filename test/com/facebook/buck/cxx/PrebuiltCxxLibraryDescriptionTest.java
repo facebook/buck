@@ -747,9 +747,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
-            .getSystemIncludeRoots(),
-        Matchers.hasItem(
-            filesystem.resolve(rule.getBuildTarget().getBasePath()).resolve("include")));
+            .getIncludes(),
+        Matchers.<CxxHeaders>contains(
+            CxxHeadersDir.of(
+                CxxPreprocessables.IncludeType.SYSTEM,
+                new PathSourcePath(
+                    filesystem,
+                    rule.getBuildTarget().getBasePath().resolve("include")))));
   }
 
   @Test
