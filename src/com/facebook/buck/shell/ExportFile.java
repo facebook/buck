@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
@@ -114,13 +115,23 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
-    ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), out.getParent()))
-        .add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                getResolver().getAbsolutePath(src),
-                out));
+    ImmutableList.Builder<Step> builder = ImmutableList.builder();
+    builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
+    builder.add(new RmStep(getProjectFilesystem(), out, /* force */ true, /* recurse */ true));
+    if (getResolver().getFilesystem(src).isDirectory(getResolver().getRelativePath(src))) {
+      builder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              getResolver().getAbsolutePath(src),
+              out,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    } else {
+      builder.add(
+          CopyStep.forFile(
+              getProjectFilesystem(),
+              getResolver().getAbsolutePath(src),
+              out));
+    }
 
     buildableContext.recordArtifact(out);
     return builder.build();

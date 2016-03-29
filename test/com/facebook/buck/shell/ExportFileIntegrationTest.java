@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -24,6 +26,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ExportFileIntegrationTest {
 
@@ -40,4 +44,14 @@ public class ExportFileIntegrationTest {
 
     result.assertSuccess();
   }
+
+  @Test
+  public void exportFileWorksWithDirectories() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "export_file_dir", tmp);
+    workspace.setUp();
+    Path output = workspace.buildAndReturnOutput("//:dir");
+    assertTrue(Files.exists(output.resolve("file.txt")));
+  }
+
 }
