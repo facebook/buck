@@ -16,7 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
@@ -43,6 +47,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -56,6 +61,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -348,7 +354,7 @@ public class CxxLibraryDescriptionTest {
     ImmutableList<String> sonameArgs = ImmutableList.copyOf(linker.soname(soname));
     assertThat(
         Arg.stringify(rule.getArgs()),
-        Matchers.hasItems(sonameArgs.toArray(new String[sonameArgs.size()])));
+        hasItems(sonameArgs.toArray(new String[sonameArgs.size()])));
   }
 
   @Test
@@ -388,7 +394,7 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.STATIC);
     assertThat(
         Arg.stringify(input.getArgs()),
-        Matchers.not(Matchers.hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
+        Matchers.not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
 
     // Create a cxx library using link whole.
     CxxLibraryBuilder linkWholeBuilder =
@@ -414,7 +420,7 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.STATIC);
     assertThat(
         Arg.stringify(linkWholeInput.getArgs()),
-        Matchers.hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
+        hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
   }
 
   @Test
@@ -755,9 +761,15 @@ public class CxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.STATIC_PIC);
+    Arg firstArg = nativeLinkableInput.getArgs().get(0);
+    assertThat(firstArg, instanceOf(SourcePathArg.class));
+    SourcePathArg sourcePathArg = (SourcePathArg) firstArg;
+    ImmutableCollection<BuildRule> deps = sourcePathArg.getDeps(new SourcePathResolver(resolver));
+    assertThat(deps.size(), is(1));
+    BuildRule buildRule = deps.asList().get(0);
     assertThat(
-        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
-        Matchers.containsString("static-pic"));
+        buildRule.getBuildTarget().getFlavors(),
+        hasItem(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR));
   }
 
   @Test
@@ -792,11 +804,11 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), Matchers.hasItem(loc));
+    assertThat(lib.getDeps(), hasItem(loc));
     assertThat(
         Arg.stringify(lib.getArgs()),
-        Matchers.hasItem(
-            Matchers.containsString(Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
+        hasItem(
+            containsString(Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
 
   @Test
@@ -836,16 +848,16 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), Matchers.hasItem(loc));
+    assertThat(lib.getDeps(), hasItem(loc));
     assertThat(
         Arg.stringify(lib.getArgs()),
-        Matchers.hasItem(
+        hasItem(
             String.format(
                 "-Wl,--version-script=%s",
                 Preconditions.checkNotNull(loc.getPathToOutput()).toAbsolutePath())));
     assertThat(
         Arg.stringify(lib.getArgs()),
-        Matchers.not(Matchers.hasItem(loc.getPathToOutput().toAbsolutePath().toString())));
+        Matchers.not(hasItem(loc.getPathToOutput().toAbsolutePath().toString())));
   }
 
   @Test
@@ -885,12 +897,12 @@ public class CxxLibraryDescriptionTest {
             filesystem,
             targetGraph);
 
-    assertThat(lib.getDeps(), Matchers.not(Matchers.hasItem(loc)));
+    assertThat(lib.getDeps(), Matchers.not(hasItem(loc)));
     assertThat(
         Arg.stringify(lib.getArgs()),
         Matchers.not(
-            Matchers.hasItem(
-                Matchers.containsString(
+            hasItem(
+                containsString(
                     Preconditions.checkNotNull(loc.getPathToOutput()).toString()))));
   }
 
@@ -931,11 +943,11 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(Arg.getDepsFunction(pathResolver))
             .toSet(),
-        Matchers.hasItem(loc));
+        hasItem(loc));
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs()),
-        Matchers.hasItem(
-            Matchers.containsString(
+        hasItem(
+            containsString(
                 Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
 
@@ -981,11 +993,11 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(Arg.getDepsFunction(pathResolver))
             .toSet(),
-        Matchers.hasItem(loc));
+        hasItem(loc));
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs()),
-        Matchers.hasItem(
-            Matchers.containsString(
+        hasItem(
+            containsString(
                 Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
 
@@ -1034,12 +1046,12 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(Arg.getDepsFunction(pathResolver))
             .toSet(),
-        Matchers.not(Matchers.hasItem(loc)));
+        Matchers.not(hasItem(loc)));
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs()),
         Matchers.not(
-            Matchers.hasItem(
-                Matchers.containsString(
+            hasItem(
+                containsString(
                     Preconditions.checkNotNull(loc.getPathToOutput()).toString()))));
   }
 
@@ -1176,7 +1188,7 @@ public class CxxLibraryDescriptionTest {
         rule.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         Arg.stringify(input.getArgs()),
-        Matchers.hasItems("--flag", "--exported-flag"));
+        hasItems("--flag", "--exported-flag"));
   }
 
   @Test
@@ -1197,7 +1209,7 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(cxxLibrary.getRuntimeDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet(),
-        Matchers.hasItem(cxxBinaryBuilder.getTarget()));
+        hasItem(cxxBinaryBuilder.getTarget()));
   }
 
   @Test
@@ -1228,7 +1240,7 @@ public class CxxLibraryDescriptionTest {
     CxxLink library = (CxxLink) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         Arg.stringify(library.getArgs()),
-        Matchers.hasItems("-L", "/another/path", "$SDKROOT/usr/lib", "-la", "-lz"));
+        hasItems("-L", "/another/path", "$SDKROOT/usr/lib", "-la", "-lz"));
   }
 
   @Test

@@ -154,7 +154,20 @@ public class AppleBundleIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#iphoneos-arm64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
+    workspace.assertFilesEqual(
+        Paths.get("DemoApp.xcent.expected"),
+        BuildTargets.getScratchPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s.xcent"));
 
     Path appPath = workspace.getPath(
         BuildTargets

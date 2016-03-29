@@ -711,8 +711,13 @@ public class ProjectWorkspace {
     }
   }
 
-
-  private void assertFilesEqual(Path expected, Path actual) throws IOException {
+  public void assertFilesEqual(Path expected, Path actual) throws IOException {
+    if (!expected.isAbsolute()) {
+      expected = templatePath.resolve(expected);
+    }
+    if (!actual.isAbsolute()) {
+      actual = destPath.resolve(actual);
+    }
     if (!Files.isRegularFile(actual)) {
       fail("Expected file " + actual + " could not be found.");
     }

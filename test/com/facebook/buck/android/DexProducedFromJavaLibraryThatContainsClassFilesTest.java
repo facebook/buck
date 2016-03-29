@@ -147,7 +147,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
     assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
-        ImmutableSet.of(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")),
+        ImmutableSet.of(BuildTargets.getGenPath(buildTarget, "%s.dex.jar")),
         buildableContext.getRecordedArtifacts());
 
     buildableContext.assertContainsMetadataMapping(

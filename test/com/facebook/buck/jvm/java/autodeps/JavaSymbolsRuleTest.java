@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -114,8 +115,13 @@ public class JavaSymbolsRuleTest {
 
     verify(executionContext);
 
-    JsonNode jsonNode = objectMapper.readTree(projectFilesystem.getFileForRelativePath(
-        "buck-out/gen/__examples#java_symbols__.json"));
+    JsonNode jsonNode = objectMapper.readTree(
+        projectFilesystem
+            .resolve(
+                BuildTargets.getGenPath(
+                    buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
+                    "__%s__.json"))
+            .toFile());
     assertTrue(jsonNode instanceof ObjectNode);
     assertEquals(
         ImmutableSet.of(

@@ -459,7 +459,7 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  public void testDepenciesLinking() throws IOException, InterruptedException {
+  public void testDependenciesLinking() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_test_dependencies_test", tmp);
@@ -474,8 +474,10 @@ public class AppleTestIntegrationTest {
         "nm",
         workspace
             .getPath(
-                "buck-out/gen/AppTests#apple-test-library,iphonesimulator-x86_64,shared/" +
-                    "libAppTests#apple-test-library.dylib")
+                BuildTargets.getGenPath(
+                    workspace.newBuildTarget(
+                        "//:AppTests#apple-test-library,iphonesimulator-x86_64,shared"),
+                    "%s/libAppTests#apple-test-library.dylib"))
             .toString());
 
     assertThat(hasSymbol.getExitCode(), equalTo(0));

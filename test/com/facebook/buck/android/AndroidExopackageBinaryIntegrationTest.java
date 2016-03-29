@@ -104,8 +104,8 @@ public class AndroidExopackageBinaryIntegrationTest {
     Path secondaryDir = workspace.resolve(
         BuildTargets.getScratchPath(
             BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
-                .withFlavors(ImmutableFlavor.of("dex_merge_output")),
-            "_%s/jarfiles/assets/secondary-program-dex-jars"));
+                .withFlavors(ImmutableFlavor.of("dex_merge")),
+            "_%s_output/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
       List<Path> files = Lists.newArrayList(stream);

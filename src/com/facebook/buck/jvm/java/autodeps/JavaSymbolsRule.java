@@ -52,7 +52,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   }
 
   private static final String TYPE = "java_symbols";
-  private static final Flavor JAVA_SYMBOLS = ImmutableFlavor.of(TYPE);
+  public static final Flavor JAVA_SYMBOLS = ImmutableFlavor.of(TYPE);
 
   private final BuildTarget buildTarget;
 

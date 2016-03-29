@@ -71,7 +71,5 @@ public class SwiftIOSBundleIntegrationTest {
                 "%s")
             .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
-
-    assertTrue(Files.exists(appPath.resolve("Frameworks")));
   }
 }

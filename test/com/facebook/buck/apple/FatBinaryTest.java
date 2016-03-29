@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -90,9 +91,9 @@ public class FatBinaryTest {
             endsWith("lipo"),
             equalTo("-create"),
             equalTo("-output"),
-            endsWith("foo/xctest#iphoneos-i386,iphoneos-x86_64"),
-            endsWith("/xctest#iphoneos-i386"),
-            endsWith("/xctest#iphoneos-x86_64")));
+            containsString("foo/xctest#"),
+            containsString("/xctest#"),
+            containsString("/xctest#")));
   }
 
   @Test

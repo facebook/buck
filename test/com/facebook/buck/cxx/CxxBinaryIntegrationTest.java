@@ -893,7 +893,9 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     String specsPathList = BuildTargets
-        .getGenPath(inputBuildTarget, "infer-analysis-%s-analyze/specs_path_list.txt")
+        .getGenPath(
+            inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()),
+            "infer-analysis-%s/specs_path_list.txt")
         .toString();
     String out = workspace.getFileContents(specsPathList);
 
