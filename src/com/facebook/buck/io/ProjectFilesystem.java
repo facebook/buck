@@ -948,7 +948,7 @@ public class ProjectFilesystem {
   public Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
     Path resolvedPath = getPathForRelativePath(path);
     if (Files.getFileAttributeView(resolvedPath, PosixFileAttributeView.class) != null) {
-      return Files.getPosixFilePermissions(resolvedPath, LinkOption.NOFOLLOW_LINKS);
+      return Files.getPosixFilePermissions(resolvedPath);
     } else {
       return ImmutableSet.of();
     }
@@ -988,7 +988,7 @@ public class ProjectFilesystem {
       ImmutableMap<Path, String> additionalFileContents) throws IOException {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
-        boolean isDirectory = isDirectory(path, LinkOption.NOFOLLOW_LINKS);
+        boolean isDirectory = isDirectory(path);
         CustomZipEntry entry = new CustomZipEntry(path, isDirectory);
 
         // We want deterministic ZIPs, so avoid mtimes.
@@ -998,12 +998,8 @@ public class ProjectFilesystem {
 
         zip.putNextEntry(entry);
         if (!isDirectory) {
-          if (isSymLink(path)) {
-            zip.write(readSymLink(path).toString().getBytes(Charsets.UTF_8));
-          } else {
-            try (InputStream input = newFileInputStream(path)) {
-              ByteStreams.copy(input, zip);
-            }
+          try (InputStream input = newFileInputStream(path)) {
+            ByteStreams.copy(input, zip);
           }
         }
         zip.closeEntry();
