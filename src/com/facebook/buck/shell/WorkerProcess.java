@@ -49,6 +49,8 @@ public class WorkerProcess {
   private boolean handshakePerformed = false;
   @Nullable
   private WorkerProcessProtocol protocol;
+  @Nullable
+  private ProcessExecutor.LaunchedProcess launchedProcess;
 
   public WorkerProcess(
       ProcessExecutor executor,
@@ -68,7 +70,7 @@ public class WorkerProcess {
     LOG.debug("Starting up process %d using command: \'%s\'",
         this.hashCode(),
         Joiner.on(' ').join(processParams.getCommand()));
-    ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(processParams);
+    launchedProcess = executor.launchProcess(processParams);
     JsonWriter processStdinWriter = new JsonWriter(
         new BufferedWriter(new OutputStreamWriter(launchedProcess.getOutputStream())));
     JsonReader processStdoutReader = new JsonReader(
@@ -138,5 +140,17 @@ public class WorkerProcess {
   @VisibleForTesting
   void setProtocol(WorkerProcessProtocol protocolMock) {
     this.protocol = protocolMock;
+  }
+
+  public String getStdErrorOutput() throws IOException {
+    StringBuilder sb = new StringBuilder();
+    if (launchedProcess != null) {
+      BufferedReader errorReader = new BufferedReader(
+          new InputStreamReader(launchedProcess.getErrorStream()));
+      while (errorReader.ready()) {
+        sb.append(errorReader.readLine() + "\n");
+      }
+    }
+    return sb.toString();
   }
 }
