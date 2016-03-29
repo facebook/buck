@@ -185,6 +185,9 @@ public class ProcessExecutor {
     if (params.getRedirectError().isPresent()) {
       pb.redirectError(params.getRedirectError().get());
     }
+    if (params.getRedirectErrorStream().isPresent()) {
+      pb.redirectErrorStream(params.getRedirectErrorStream().get());
+    }
     return BgProcessKiller.startProcess(pb);
   }
 

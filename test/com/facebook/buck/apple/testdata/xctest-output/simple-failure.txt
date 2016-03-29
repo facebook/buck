@@ -1,0 +1,13 @@
+Test Suite 'Example/ExampleTests.xctest(Tests)' started at 2015-05-27 03:29:01 +0000
+
+Test Suite 'FailureTests' started at 2015-05-27 03:29:01 +0000
+Test Case '-[FailureTests testFailure]' started.
+-- test output --
+FailureTests.m:9: error: testFailure : failure reason
+Test Case '-[FailureTests testFailure]' failed (0.000 seconds).
+Test Suite 'FailureTests' failed at 2015-05-27 03:29:01 +0000.
+	 Passed 0 tests, with 1 failures (0 unexpected) in 0.012 (0.013) seconds
+
+Test Suite 'Example/ExampleTests.xctest(Tests)' finished at 2015-05-27 03:29:01 +0000.
+	 Passed 0 tests, with 1 failures (0 unexpected) in 0.012 (0.051) seconds
+

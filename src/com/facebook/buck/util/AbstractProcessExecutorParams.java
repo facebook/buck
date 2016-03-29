@@ -76,4 +76,10 @@ abstract class AbstractProcessExecutorParams {
   @Value.Parameter
   public abstract Optional<ProcessBuilder.Redirect> getRedirectError();
 
+  /*
+   * If true, redirects stderr for the process to stdout.
+   */
+  @Value.Parameter
+  public abstract Optional<Boolean> getRedirectErrorStream();
+
 }

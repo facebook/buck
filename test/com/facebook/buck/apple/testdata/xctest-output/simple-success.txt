@@ -1,0 +1,12 @@
+Test Suite 'Example/ExampleTests.xctest(Tests)' started at 2015-05-27 03:29:01 +0000
+
+Test Suite 'SuccessTests' started at 2015-05-27 03:29:01 +0000
+Test Case '-[SuccessTests testSuccess]' started.
+-- test output --
+Test Case '-[SuccessTests testSuccess]' passed (0.003 seconds).
+Test Suite 'SuccessTests' passed at 2015-05-27 03:29:01 +0000.
+	 Passed 1 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+
+Test Suite 'Example/ExampleTests.xctest(Tests)' finished at 2015-05-27 03:29:01 +0000.
+	 Passed 1 tests, with 0 failures (0 unexpected) in 0.012 (0.051) seconds
+
