@@ -40,7 +40,9 @@ def main(output_dir):
                 url = URL_ROOT + html_file
 
                 copy_dest = ensure_dir(html_file, output_dir)
-                subprocess.check_call(["curl", "-o", copy_dest, url])
+                subprocess.check_call([
+                    "curl", "--fail", "--output", copy_dest, url
+                ])
             elif (file_name == ".nojekyll" or
                   file_name == "CNAME" or
                   file_name.endswith('.css') or
@@ -80,7 +82,7 @@ def pollForServerReady():
     SERVER_START_POLL = 5
     print 'Waiting for server to start.'
     for _ in range(0, SERVER_START_POLL):
-        result = subprocess.call(['curl', '-I', URL_ROOT])
+        result = subprocess.call(['curl', '--fail', '-I', URL_ROOT])
         if result == 0:
             return
         time.sleep(1)
