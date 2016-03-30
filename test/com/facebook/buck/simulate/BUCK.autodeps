@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 246f1f25c57f243fc8e96d2845ae50a178af7ef4 #@#
+#@# GENERATED FILE: DO NOT MODIFY d890a131b97531ca77fb66162b32c30ea41cc195 #@#
 {
   "simulate" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.simulate;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -54,7 +54,7 @@ public class BuildSimulatorTest {
     SimulateTimes times = SimulateTimes.createEmpty(DEFAULT_MILLIS);
     TargetGraph oneNodeGraph = createOneNodeGraph();
     TargetGraphTransformer transformer =
-        new TargetGraphToActionGraph(eventBus, new BuildTargetNodeToBuildRuleTransformer());
+        new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
     Pair<ActionGraph, BuildRuleResolver> result =
         Preconditions.checkNotNull(transformer.apply(oneNodeGraph));
     BuildSimulator sim = new BuildSimulator(
@@ -76,7 +76,7 @@ public class BuildSimulatorTest {
     SimulateTimes times = SimulateTimesTest.createDefaultTestInstance();
     TargetGraph oneNodeGraph = createOneNodeGraph();
     TargetGraphTransformer transformer =
-        new TargetGraphToActionGraph(eventBus, new BuildTargetNodeToBuildRuleTransformer());
+        new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
     Pair<ActionGraph, BuildRuleResolver> result =
         Preconditions.checkNotNull(transformer.apply(oneNodeGraph));
     BuildSimulator sim = new BuildSimulator(
@@ -170,7 +170,7 @@ public class BuildSimulatorTest {
       long expectedDurationMillis) throws IOException {
     SimulateTimes times = SimulateTimes.createEmpty(DEFAULT_MILLIS);
     TargetGraphTransformer transformer =
-        new TargetGraphToActionGraph(eventBus, new BuildTargetNodeToBuildRuleTransformer());
+        new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
     Pair<ActionGraph, BuildRuleResolver> result =
         Preconditions.checkNotNull(transformer.apply(targetGraph));
     BuildSimulator sim = new BuildSimulator(

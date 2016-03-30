@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -68,7 +68,7 @@ public class RemoteFileTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
 
     BuildableContext buildableContext = EasyMock.createNiceMock(BuildableContext.class);
     buildableContext.recordArtifact(remoteFile.getPathToOutput());
@@ -130,7 +130,10 @@ public class RemoteFileTest {
     RemoteFile remoteFile = new RemoteFile(
         params,
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         downloader,
         new URI("http://example.com"),
         hashCode,

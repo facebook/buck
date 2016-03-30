@@ -14,24 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.google.common.base.Suppliers;
 
 /**
- * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule} in a manner
- * suitable for running the {@link BuildCommand}.
+ * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
  */
-public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
+public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
   @Override
   public <T> BuildRule transform(

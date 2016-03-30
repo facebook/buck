@@ -56,7 +56,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -4253,7 +4253,7 @@ public class ProjectGeneratorTest {
         return new SourcePathResolver(
             new BuildRuleResolver(
                 targetGraph,
-                new BuildTargetNodeToBuildRuleTransformer()));
+                new DefaultTargetNodeToBuildRuleTransformer()));
       }
     };
   }

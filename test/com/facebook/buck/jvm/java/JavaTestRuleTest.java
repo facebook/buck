@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -90,7 +90,7 @@ public class JavaTestRuleTest {
   @Test
   public void transitiveLibraryDependenciesAreRuntimeDeps() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     FakeJavaLibrary transitiveDep =
@@ -125,7 +125,7 @@ public class JavaTestRuleTest {
         .build(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new BuildTargetNodeToBuildRuleTransformer()));
+                new DefaultTargetNodeToBuildRuleTransformer()));
   }
 
 }

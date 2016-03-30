@@ -16,7 +16,7 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -61,7 +61,7 @@ public class PublisherTest {
 
     ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
   }
 
   @Test

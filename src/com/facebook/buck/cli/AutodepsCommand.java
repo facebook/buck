@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImmutableBuildContext;
@@ -106,7 +107,7 @@ public class AutodepsCommand extends AbstractCommand {
 
       BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
           graph,
-          new BuildTargetNodeToBuildRuleTransformer());
+          new DefaultTargetNodeToBuildRuleTransformer());
       BuildEngine buildEngine = new CachingBuildEngine(
           executorService,
           params.getFileHashCache(),

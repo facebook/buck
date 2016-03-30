@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -60,7 +60,7 @@ public class NativeLinkablesTest {
           new SourcePathResolver(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer())),
+                  new DefaultTargetNodeToBuildRuleTransformer())),
           ImmutableSortedSet.copyOf(ruleDeps));
       this.deps = ImmutableList.copyOf(deps);
       this.exportedDeps = ImmutableList.copyOf(exportedDeps);
@@ -261,7 +261,7 @@ public class NativeLinkablesTest {
   @Test
   public void nonNativeLinkableDepsAreIgnored() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeNativeLinkable c =
         new FakeNativeLinkable(

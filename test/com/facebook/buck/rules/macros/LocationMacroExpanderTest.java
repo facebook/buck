@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -65,7 +65,7 @@ public class LocationMacroExpanderTest {
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
         .build(resolver);
@@ -95,7 +95,7 @@ public class LocationMacroExpanderTest {
   public void replaceLocationOfFullyQualifiedBuildTarget() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
     Path outputPath = javaBinary.getPathToOutput();
     Path absolutePath = outputPath.toAbsolutePath();
@@ -125,7 +125,7 @@ public class LocationMacroExpanderTest {
   public void extractRuleKeyAppendable() throws MacroException {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     LocationMacroExpander macroExpander = new LocationMacroExpander();
     assertThat(
         macroExpander.extractRuleKeyAppendables(

@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -41,9 +41,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromSet() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -63,9 +63,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromTheSameFromSet() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -89,9 +89,9 @@ public class AppleDescriptionsTest {
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
         "file.h", new FakeSourcePath("file.h"));
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
@@ -107,9 +107,9 @@ public class AppleDescriptionsTest {
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
         "file.h", new FakeSourcePath("file.h"));
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
@@ -119,9 +119,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithPrefix() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -140,9 +140,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithoutPrefix() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", new FakeSourcePath("path/to/some_file.h"),

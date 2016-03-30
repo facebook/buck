@@ -18,7 +18,7 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -39,9 +39,9 @@ public class GlobArgTest {
   public void emptyDir() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path dir = filesystem.getRootPath().getFileSystem().getPath("foo/bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     filesystem.mkdirs(dir);
     Arg arg = GlobArg.of(pathResolver, new PathSourcePath(filesystem, dir), "**");
     assertThat(
@@ -53,9 +53,9 @@ public class GlobArgTest {
   public void filesInSortedOrder() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path dir = filesystem.getRootPath().getFileSystem().getPath("foo/bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     filesystem.mkdirs(dir);
     filesystem.touch(dir.resolve("file2.dat"));
     filesystem.touch(dir.resolve("file1.dat"));

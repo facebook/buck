@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -67,7 +67,7 @@ public class MiniAaptTest {
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final SourcePathResolver resolver =
       new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();

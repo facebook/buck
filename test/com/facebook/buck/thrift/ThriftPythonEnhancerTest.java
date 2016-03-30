@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -234,7 +234,7 @@ public class ThriftPythonEnhancerTest {
   @Test
   public void createBuildRule() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams = new FakeBuildRuleParamsBuilder(TARGET).build();
 
@@ -270,7 +270,7 @@ public class ThriftPythonEnhancerTest {
   public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         new FakeBuildRuleParamsBuilder(target).build();
@@ -321,7 +321,7 @@ public class ThriftPythonEnhancerTest {
   public void twistedBaseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         new FakeBuildRuleParamsBuilder(target).build();
@@ -372,7 +372,7 @@ public class ThriftPythonEnhancerTest {
   public void asyncioBaseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         new FakeBuildRuleParamsBuilder(target).build();

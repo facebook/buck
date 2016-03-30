@@ -34,7 +34,6 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -139,7 +138,7 @@ public class CachingBuildEngineTest {
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   private static final RuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyBuilderFactory(
           new NullFileHashCache(),
@@ -173,7 +172,7 @@ public class CachingBuildEngineTest {
           .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
           .build();
       resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       pathResolver = new SourcePathResolver(resolver);
       ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
     }

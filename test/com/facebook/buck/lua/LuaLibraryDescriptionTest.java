@@ -18,7 +18,7 @@ package com.facebook.buck.lua;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -35,7 +35,7 @@ public class LuaLibraryDescriptionTest {
   @Test
   public void unnamedSource() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("some/foo.lua")))
@@ -51,7 +51,7 @@ public class LuaLibraryDescriptionTest {
   @Test
   public void namedSource() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(
@@ -68,7 +68,7 @@ public class LuaLibraryDescriptionTest {
   @Test
   public void baseModuleSource() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("some/foo.lua")))

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -100,7 +100,7 @@ public class CxxSourceRuleFactoryTest {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
       FakeBuildRule dep = resolver.addToIndex(new FakeBuildRule("//:dep1", pathResolver));
@@ -144,7 +144,7 @@ public class CxxSourceRuleFactoryTest {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
       ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
@@ -199,7 +199,7 @@ public class CxxSourceRuleFactoryTest {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
       FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
       resolver.addToIndex(dep);
@@ -242,7 +242,7 @@ public class CxxSourceRuleFactoryTest {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       Path scratchDir = Paths.get("scratchDir");
 
       CxxSourceRuleFactory.Builder cxxSourceRuleFactoryBuilder = CxxSourceRuleFactory.builder()
@@ -316,7 +316,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void checkPrefixHeaderIsIncluded() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -358,7 +358,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void duplicateRuleFetchedFromResolverShouldCreateTheSameTarget() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -400,7 +400,7 @@ public class CxxSourceRuleFactoryTest {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
       ShBinary cxxpp =
@@ -512,7 +512,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void test() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -609,7 +609,7 @@ public class CxxSourceRuleFactoryTest {
 
     // Some common boilerplate.
     private BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     private SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     private BuildTarget target = BuildTargetFactory.newInstance("//:target");
     private BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -735,7 +735,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void test() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();

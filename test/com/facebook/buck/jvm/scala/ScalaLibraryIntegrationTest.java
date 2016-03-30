@@ -21,7 +21,7 @@ import static org.junit.Assume.assumeNoException;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -63,7 +63,7 @@ public class ScalaLibraryIntegrationTest {
   public void shouldWorkWithLocalCompiler() throws Exception {
     try {
       new ScalaBuckConfig(FakeBuckConfig.builder().build()).getScalac(
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
       );
     } catch (HumanReadableException e) {
       assumeNoException("Could not find local scalac", e);

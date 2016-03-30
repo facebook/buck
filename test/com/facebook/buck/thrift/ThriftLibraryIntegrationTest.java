@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -120,7 +120,7 @@ public class ThriftLibraryIntegrationTest {
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(target));
 
-    TargetNodeToBuildRuleTransformer transformer = new BuildTargetNodeToBuildRuleTransformer();
+    TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
 
     // There was a case where the cxx library being generated wouldn't put the header into the tree
     // with the right flavour. This catches this case without us needing to stick a working thrift

@@ -1,10 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 51eb69cb0b9058d95b59181675fd0a6022d4e718 #@#
+#@# GENERATED FILE: DO NOT MODIFY f3b9600529c77295f808d9f0e00770c5894ce2cb #@#
 {
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/cxx:platform",
@@ -74,7 +73,6 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/timing:timing",

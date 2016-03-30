@@ -18,7 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -183,7 +183,7 @@ public class DBuckConfigTest {
   /** Returns the path of a Tool. */
   private String toolPath(Tool tool) {
     BuildRuleResolver resolver = new BuildRuleResolver(
-        TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return tool.getCommandPrefix(new SourcePathResolver(resolver)).get(0);
   }
 }

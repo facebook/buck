@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d0554d8febd8ade292cb3dea34c5e26b296432a9 #@#
+#@# GENERATED FILE: DO NOT MODIFY d9926c22a55a5df8a1e6a890af9e3dbe9b0b00f3 #@#
 {
   "apple" : {
     "deps" : [
@@ -7,7 +7,6 @@
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/apple/clang:headermap",
       "//src/com/facebook/buck/apple/xcode:xcode",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",

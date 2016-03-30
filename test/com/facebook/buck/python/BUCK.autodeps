@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 776cf471a03a50b140ecf20b0afea2960a52025a #@#
+#@# GENERATED FILE: DO NOT MODIFY d16f2d62250a983df729a1312e2fb749f7b6d685 #@#
 {
   "builders" : {
     "deps" : [
@@ -22,7 +22,6 @@
   },
   "python" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",

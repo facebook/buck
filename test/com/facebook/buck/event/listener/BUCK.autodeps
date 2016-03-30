@@ -1,11 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY a924c8fa9118886031e64160b1b8da630c56811a #@#
+#@# GENERATED FILE: DO NOT MODIFY 44943184f11cd4625d36821f40f9ba45ffebf94d #@#
 {
   "listener" : {
     "deps" : [
       "//src-gen:thrift",
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/distributed:distributed",

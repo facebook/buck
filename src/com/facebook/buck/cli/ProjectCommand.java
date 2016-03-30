@@ -57,6 +57,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -533,7 +534,7 @@ public class ProjectCommand extends BuildCommand {
       final TargetGraphAndTargets targetGraphAndTargets) throws IOException, InterruptedException {
     TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
         targetGraphToActionGraph.apply(targetGraphAndTargets.getTargetGraph()));
     BuildRuleResolver ruleResolver = result.getSecond();
@@ -657,7 +658,7 @@ public class ProjectCommand extends BuildCommand {
     Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
         new TargetGraphToActionGraph(
             params.getBuckEventBus(),
-            new BuildTargetNodeToBuildRuleTransformer())
+            new DefaultTargetNodeToBuildRuleTransformer())
             .apply(targetGraphAndTargets.getTargetGraph()));
     ActionGraph actionGraph = result.getFirst();
 
@@ -845,7 +846,7 @@ public class ProjectCommand extends BuildCommand {
           public TargetGraphToActionGraph get() {
             return new TargetGraphToActionGraph(
                 params.getBuckEventBus(),
-                new BuildTargetNodeToBuildRuleTransformer());
+                new DefaultTargetNodeToBuildRuleTransformer());
           }
         });
     final LoadingCache<TargetNode<?>, SourcePathResolver>

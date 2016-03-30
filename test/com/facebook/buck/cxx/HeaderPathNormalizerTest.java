@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -38,9 +38,9 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void unmanagedHeader() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     HeaderPathNormalizer normalizer =
@@ -53,9 +53,9 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void managedHeader() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
@@ -73,9 +73,9 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void managedHeaderDir() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());

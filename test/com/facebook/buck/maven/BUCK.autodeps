@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY f7f6c051e42910f85f81a28395551e886a994b13 #@#
+#@# GENERATED FILE: DO NOT MODIFY 58fb0b969b6153e8f513bd4893a35d8a76eb464c #@#
 {
   "maven" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/file:downloader",
       "//src/com/facebook/buck/file:file",

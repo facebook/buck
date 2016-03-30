@@ -30,7 +30,7 @@ import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -144,7 +144,7 @@ public class DefaultJavaLibraryTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(
             TargetGraph.EMPTY,
-            new BuildTargetNodeToBuildRuleTransformer());
+            new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     BuildRule libraryRule = AndroidLibraryBuilder
         .createBuilder(buildTarget)
@@ -188,7 +188,7 @@ public class DefaultJavaLibraryTest {
           .build(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer()),
+                  new DefaultTargetNodeToBuildRuleTransformer()),
               filesystem);
       fail("An exception should have been thrown because a directory was passed as a resource.");
     } catch (HumanReadableException e) {
@@ -295,7 +295,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testGetClasspathEntriesMap() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule libraryOne = JavaLibraryBuilder.createBuilder(libraryOneTarget)
@@ -331,7 +331,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testGetClasspathDeps() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule libraryOne = JavaLibraryBuilder.createBuilder(libraryOneTarget)
@@ -366,9 +366,9 @@ public class DefaultJavaLibraryTest {
     // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
     // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     FakeJavaLibrary libraryOne = new FakeJavaLibrary(libraryOneTarget, resolver) {
 
       @Override
@@ -396,7 +396,7 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(libraryOne);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
@@ -478,7 +478,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testExportedDeps() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget nonIncludedTarget = BuildTargetFactory.newInstance("//:not_included");
     BuildRule notIncluded = JavaLibraryBuilder
@@ -609,7 +609,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testExportedDepsShouldOnlyContainJavaLibraryRules() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
     BuildRule genrule = GenruleBuilder
@@ -731,7 +731,7 @@ public class DefaultJavaLibraryTest {
   public void testInputBasedRuleKeySourceChange() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup a Java library consuming a source generated by a genrule and grab its rule key.
@@ -759,7 +759,7 @@ public class DefaultJavaLibraryTest {
     // we don't change it).  This should *not* affect the input-based rule key of the consuming
     // java library, since it only cares about the contents of the source.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     genSrc =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_srcs"))
             .setOut("Test.java")
@@ -782,7 +782,7 @@ public class DefaultJavaLibraryTest {
 
     // Now actually modify the source, which should make the input-based rule key change.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     genSrc =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_srcs"))
             .setOut("Test.java")
@@ -812,7 +812,7 @@ public class DefaultJavaLibraryTest {
   public void testInputBasedRuleKeyWithJavaLibraryDep() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup a Java library which builds against another Java library dep.
@@ -842,7 +842,7 @@ public class DefaultJavaLibraryTest {
     // contents, but keep its ABI JAR the same.  This should *not* affect the input-based rule key
     // of the consuming java library, since it only cares about the contents of the ABI JAR.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("Source.java"))
@@ -867,7 +867,7 @@ public class DefaultJavaLibraryTest {
     // Now actually change the Java library dependency's ABI JAR.  This *should* affect the
     // input-based rule key of the consuming java library.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("Source.java"))
@@ -899,7 +899,7 @@ public class DefaultJavaLibraryTest {
   public void testInputBasedRuleKeyWithExportedDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup a Java library which builds against another Java library dep exporting another Java
@@ -935,7 +935,7 @@ public class DefaultJavaLibraryTest {
     // rule key of the consuming java library, since it only cares about the contents of the ABI
     // JAR.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     exportedDep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:edep"))
             .addSrc(Paths.get("Source1.java"))
@@ -964,7 +964,7 @@ public class DefaultJavaLibraryTest {
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     exportedDep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:edep"))
             .addSrc(Paths.get("Source1.java"))
@@ -1000,7 +1000,7 @@ public class DefaultJavaLibraryTest {
   public void testInputBasedRuleKeyWithRecursiveExportedDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup a Java library which builds against another Java library dep exporting another Java
@@ -1040,7 +1040,7 @@ public class DefaultJavaLibraryTest {
     // rule key of the consuming java library, since it only cares about the contents of the ABI
     // JAR.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     exportedDep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:edep"))
             .addSrc(Paths.get("Source1.java"))
@@ -1073,7 +1073,7 @@ public class DefaultJavaLibraryTest {
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     exportedDep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:edep"))
             .addSrc(Paths.get("Source1.java"))
@@ -1128,7 +1128,7 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
         buildRuleParams,
         new SourcePathResolver(ruleResolver),
@@ -1164,7 +1164,7 @@ public class DefaultJavaLibraryTest {
       }
     };
     BuildRuleResolver resolver1 =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver1 = new SourcePathResolver(resolver1);
     DefaultJavaLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
@@ -1179,7 +1179,7 @@ public class DefaultJavaLibraryTest {
         .build(resolver1, filesystem);
 
     BuildRuleResolver resolver2 =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver2 = new SourcePathResolver(resolver2);
     DefaultJavaLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
@@ -1216,7 +1216,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule rule = JavaLibraryBuilder
@@ -1235,7 +1235,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildTarget javacTarget = BuildTargetFactory.newInstance("//langtools:javac");
@@ -1303,7 +1303,7 @@ public class DefaultJavaLibraryTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
       }
     },
     VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {
@@ -1314,7 +1314,7 @@ public class DefaultJavaLibraryTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
       }
     },
     VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {
@@ -1326,7 +1326,7 @@ public class DefaultJavaLibraryTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
       }
     };
 
@@ -1409,7 +1409,7 @@ public class DefaultJavaLibraryTest {
 
       BuildRuleResolver ruleResolver = new BuildRuleResolver(
           TargetGraph.EMPTY,
-          new BuildTargetNodeToBuildRuleTransformer());
+          new DefaultTargetNodeToBuildRuleTransformer());
       AndroidLibrary androidLibrary = new AndroidLibrary(
           buildRuleParams,
           new SourcePathResolver(

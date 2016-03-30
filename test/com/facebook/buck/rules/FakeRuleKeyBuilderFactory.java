@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
@@ -50,9 +49,9 @@ public class FakeRuleKeyBuilderFactory
 
   @Override
   public RuleKeyBuilder newInstance(final BuildRule buildRule) {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     return new RuleKeyBuilder(resolver, fileHashCache, this) {
 
       @Override

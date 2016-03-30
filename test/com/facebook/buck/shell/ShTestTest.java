@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -62,7 +62,10 @@ public class ShTestTest extends EasyMockSupport {
             .setProjectFilesystem(filesystem)
             .build(),
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* env */ ImmutableMap.<String, Arg>of(),
@@ -82,7 +85,7 @@ public class ShTestTest extends EasyMockSupport {
   @Test
   public void depsAreRuntimeDeps() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
@@ -95,7 +98,10 @@ public class ShTestTest extends EasyMockSupport {
             .setExtraDeps(ImmutableSortedSet.of(extraDep))
             .build(),
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* env */ ImmutableMap.<String, Arg>of(),

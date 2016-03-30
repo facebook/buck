@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -51,7 +50,7 @@ public class UnskippedRulesTrackerTest {
   private static final SourcePathResolver sourcePathResolver = new SourcePathResolver(
       new BuildRuleResolver(
           TargetGraph.EMPTY,
-          new BuildTargetNodeToBuildRuleTransformer()));
+          new DefaultTargetNodeToBuildRuleTransformer()));
 
   private UnskippedRulesTracker unskippedRulesTracker;
   private BuckEventBus eventBus;

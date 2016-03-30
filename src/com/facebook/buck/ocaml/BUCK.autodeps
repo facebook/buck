@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 42b56e20725f0b611a5f528aa574d6bd722b8817 #@#
+#@# GENERATED FILE: DO NOT MODIFY 87713a2912db0a2d4b8311051037e281bd9a7f14 #@#
 {
   "rules" : {
     "deps" : [
-      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/rules:command_tool",
@@ -15,6 +14,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",

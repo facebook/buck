@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY bee7edfb36e4619a97a85d56735dee0a2ded7373 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7677c83f6255859ddfdd513801f5c42836bcace1 #@#
 {
   "thrift" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",

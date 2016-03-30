@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 4b3414066d9789c587bdb09cef3c8066df50b8eb #@#
+#@# GENERATED FILE: DO NOT MODIFY de7f180672d32c3e292ff496067611cc0dc0aabe #@#
 {
   "lua" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",

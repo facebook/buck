@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -105,7 +105,7 @@ public class GenruleTest {
      */
 
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     createSampleJavaBinaryRule(ruleResolver);
 
     // From the Python object, create a GenruleBuildRuleFactory to create a Genrule.Builder
@@ -265,7 +265,7 @@ public class GenruleTest {
   @Test
   public void testGenruleWithWorkerMacroUsesSpecialShellStep() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
 
     List<Step> steps = genrule.getBuildSteps(
@@ -291,7 +291,7 @@ public class GenruleTest {
   @Test
   public void testIsWorkerGenruleReturnsTrue() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
     assertTrue(((Genrule) genrule).isWorkerGenrule());
   }
@@ -299,7 +299,7 @@ public class GenruleTest {
   @Test
   public void testIsWorkerGenruleReturnsFalse() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_no_worker"))
         .setCmd("echo hello >> $OUT")
@@ -311,7 +311,7 @@ public class GenruleTest {
   @Test
   public void testConstructingGenruleWithBadWorkerMacroThrows() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     GenruleBuilder genruleBuilder = createGenruleBuilderThatUsesWorkerMacro(ruleResolver);
     try {
       genruleBuilder.setBash("no worker macro here").build(ruleResolver);
@@ -327,7 +327,7 @@ public class GenruleTest {
   @Test
   public void testDepsEnvironmentVariableIsComplete() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(resolver)) {
       @Override
@@ -380,7 +380,7 @@ public class GenruleTest {
   public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     BuildRule rule = GenruleBuilder
         .newGenruleBuilder(target)
@@ -433,7 +433,7 @@ public class GenruleTest {
   @Test
   public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
     Path sdkDir = Paths.get("/opt/users/android_sdk");
     Path ndkDir = Paths.get("/opt/users/android_ndk");
@@ -469,7 +469,7 @@ public class GenruleTest {
   @Test
   public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     Genrule genrule = (Genrule) GenruleBuilder.newGenruleBuilder(target)
         .setBash("echo something > $OUT")
@@ -485,7 +485,7 @@ public class GenruleTest {
   @Test
   public void testGetShellCommand() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     String bash = "rm -rf /usr";
     String cmdExe = "rmdir /s /q C:\\Windows";
     String cmd = "echo \"Hello\"";
@@ -550,7 +550,7 @@ public class GenruleTest {
           .build(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer()));
+                  new DefaultTargetNodeToBuildRuleTransformer()));
       assertEquals(name, genrule.getOutputName());
     }
     {
@@ -561,7 +561,7 @@ public class GenruleTest {
           .build(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer()));
+                  new DefaultTargetNodeToBuildRuleTransformer()));
       assertEquals(name, genrule.getOutputName());
     }
   }
@@ -569,7 +569,7 @@ public class GenruleTest {
   @Test
   public void thatChangingOutChangesRuleKey() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
@@ -603,7 +603,7 @@ public class GenruleTest {
 
     // Create an initial input-based rule key
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
@@ -628,7 +628,7 @@ public class GenruleTest {
     // This is because the input-based rule key for the consuming rule only cares about the contents
     // of the output this rule produces.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
         .setOut("dep.out")
         .setCmd("something else")
@@ -650,7 +650,7 @@ public class GenruleTest {
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
@@ -677,7 +677,7 @@ public class GenruleTest {
 
     // Create an initial input-based rule key
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
@@ -702,7 +702,7 @@ public class GenruleTest {
     // same.  This is because the input-based rule key for the consuming rule only cares about the
     // contents of the output this rule produces.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Genrule extra =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:extra"))
             .setOut("something")
@@ -728,7 +728,7 @@ public class GenruleTest {
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
@@ -754,7 +754,7 @@ public class GenruleTest {
 
     // Create an initial input-based rule key
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     JavaLibrary dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
@@ -779,7 +779,7 @@ public class GenruleTest {
     // the same.  This is because the input-based rule key for the consuming rule only cares about
     // the contents of the output this rule produces.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
         .addSrc(Paths.get("source.java"))
         .setResourcesRoot(Paths.get("resource_root"))
@@ -801,7 +801,7 @@ public class GenruleTest {
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))

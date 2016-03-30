@@ -18,7 +18,7 @@ package com.facebook.buck.android.aapt;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -115,7 +115,7 @@ public class MergeAndroidResourcesSourcesTest {
             new SourcePathResolver(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer())),
+                    new DefaultTargetNodeToBuildRuleTransformer())),
             directories);
 
     ImmutableList<Step> steps = mergeAndroidResourceSourcesStep.getBuildSteps(

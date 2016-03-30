@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -401,7 +402,7 @@ public class BuildCommand extends AbstractCommand {
       TargetGraphToActionGraph targetGraphToActionGraph =
           new TargetGraphToActionGraph(
               params.getBuckEventBus(),
-              new BuildTargetNodeToBuildRuleTransformer());
+              new DefaultTargetNodeToBuildRuleTransformer());
       actionGraphAndResolver = Preconditions.checkNotNull(
           targetGraphToActionGraph.apply(result.getSecond()));
     } catch (BuildTargetException | BuildFileParseException e) {

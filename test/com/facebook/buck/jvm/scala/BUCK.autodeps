@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 895930222e965472ffb7cec609741662c6396b92 #@#
+#@# GENERATED FILE: DO NOT MODIFY 262020c8386b0acd5cfa97c783899bd982cbb43d #@#
 {
   "scala" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/jvm/scala:rules",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",

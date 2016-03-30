@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 2166bb0694beca7c18ffe91d452c25e3f3383b8c #@#
+#@# GENERATED FILE: DO NOT MODIFY c7d9b77b8c9ee647a3460139f403ca37a87839c7 #@#
 {
   "d" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/d:d",

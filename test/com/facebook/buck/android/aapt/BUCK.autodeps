@@ -1,9 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY d5c46b2928976e3ba22a299fbb722ef334e2416f #@#
+#@# GENERATED FILE: DO NOT MODIFY d5eadf17fd6eedbc9f2ba920cc02bece63be70f0 #@#
 {
   "aapt" : {
     "deps" : [
       "//src/com/facebook/buck/android/aapt:aapt",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",

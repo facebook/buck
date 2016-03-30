@@ -18,7 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -58,7 +58,7 @@ public class PythonTestDescriptionTest {
   @Test
   public void thatTestModulesAreInComponents() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     PythonTest testRule =
         (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setSrcs(
@@ -95,7 +95,7 @@ public class PythonTestDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         normal.getBinary().getComponents().getModules().keySet(),
         Matchers.hasItem(target.getBasePath().resolve(sourceName)));
@@ -109,7 +109,7 @@ public class PythonTestDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         withBaseModule.getBinary().getComponents().getModules().keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
@@ -119,7 +119,7 @@ public class PythonTestDescriptionTest {
   public void buildArgs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonTest test =
         (PythonTest) PythonTestBuilder.create(target)
@@ -155,7 +155,7 @@ public class PythonTestDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         test.getBinary().getComponents().getModules().values(),
         Matchers.allOf(
@@ -182,7 +182,7 @@ public class PythonTestDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         test.getBinary().getComponents().getResources().values(),
         Matchers.allOf(
@@ -212,7 +212,7 @@ public class PythonTestDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(test1.getBinary().getPythonPlatform(), Matchers.equalTo(platform1));
     PythonTest test2 =
         (PythonTest) builder
@@ -220,14 +220,14 @@ public class PythonTestDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(test2.getBinary().getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
   @Test
   public void runtimeDepOnDeps() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule cxxBinary =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .build(resolver);
@@ -247,7 +247,7 @@ public class PythonTestDescriptionTest {
   @Test
   public void packageStyleParam() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     PythonTest pythonTest =
         (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
@@ -256,7 +256,7 @@ public class PythonTestDescriptionTest {
         pythonTest.getBinary(),
         Matchers.instanceOf(PythonInPlaceBinary.class));
     resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     pythonTest =
         (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
@@ -294,7 +294,7 @@ public class PythonTestDescriptionTest {
             TargetGraphFactory.newInstance(
                 pexExecutorBuilder.build(),
                 builder.build()),
-            new BuildTargetNodeToBuildRuleTransformer());
+            new DefaultTargetNodeToBuildRuleTransformer());
     ShBinary pexExecutor = (ShBinary) pexExecutorBuilder.build(resolver);
     PythonTest binary = (PythonTest) builder.build(resolver);
     assertThat(

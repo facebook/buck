@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY b8eef9d39729a25faf23c69212c18d2144eb7e84 #@#
+#@# GENERATED FILE: DO NOT MODIFY bd3383f9bb34ebee24b33ea91844fd021a6a8da2 #@#
 {
   "zip" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/step:step",

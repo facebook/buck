@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -41,9 +41,9 @@ import java.util.List;
 public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     // Files:
     // android/java/BUCK
     // android/java/src/com/facebook/base/data.json
@@ -89,7 +89,10 @@ public class CopyResourcesStepTest {
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         buildTarget,
         ImmutableSet.<SourcePath>of(
             new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
@@ -125,7 +128,10 @@ public class CopyResourcesStepTest {
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         buildTarget,
         ImmutableSet.of(
             new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),

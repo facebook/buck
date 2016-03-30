@@ -24,7 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -72,9 +72,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
         BuildTargetFactory.newInstance("//foo:bar"), pathResolver) {
       @Override
@@ -188,7 +188,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             new SourcePathResolver(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer())),
+                    new DefaultTargetNodeToBuildRuleTransformer())),
             javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
@@ -244,7 +244,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             new SourcePathResolver(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer())),
+                    new DefaultTargetNodeToBuildRuleTransformer())),
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutput());
     assertEquals(
@@ -266,7 +266,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   @Test
   public void getOutputDoesNotAccessWrappedJavaLibrary() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     JavaLibrary javaLibrary =

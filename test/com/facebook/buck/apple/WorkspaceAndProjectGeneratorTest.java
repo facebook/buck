@@ -38,7 +38,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -1446,7 +1446,7 @@ public class WorkspaceAndProjectGeneratorTest {
       public SourcePathResolver apply(TargetNode<?> input) {
         TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
             BuckEventBusFactory.newInstance(),
-            new BuildTargetNodeToBuildRuleTransformer());
+            new DefaultTargetNodeToBuildRuleTransformer());
         TargetGraph subgraph = targetGraph.getSubgraph(
             ImmutableSet.of(
                 input));

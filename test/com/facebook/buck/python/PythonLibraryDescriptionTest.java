@@ -19,7 +19,7 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -53,7 +53,7 @@ public class PythonLibraryDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.of(
             target.getBasePath().resolve(sourceName),
@@ -69,7 +69,7 @@ public class PythonLibraryDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertEquals(
         ImmutableMap.of(
             Paths.get(baseModule).resolve(sourceName),
@@ -96,7 +96,7 @@ public class PythonLibraryDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         library.getSrcs(PythonTestUtils.PYTHON_PLATFORM).values(),
         Matchers.contains(matchedSource));
@@ -121,7 +121,7 @@ public class PythonLibraryDescriptionTest {
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new BuildTargetNodeToBuildRuleTransformer()));
+                    new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         library.getResources(PythonTestUtils.PYTHON_PLATFORM).values(),
         Matchers.contains(matchedSource));

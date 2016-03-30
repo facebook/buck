@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY bda7c4fba2f089c653e9b64cc14933ead455f2a2 #@#
+#@# GENERATED FILE: DO NOT MODIFY d66c0d8c60bdd82676a263f66f84485bd9a83909 #@#
 {
   "keys" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

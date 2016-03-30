@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -104,7 +104,7 @@ public class PreprocessorFlagsTest {
           new SourcePathResolver(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer()));
+                  new DefaultTargetNodeToBuildRuleTransformer()));
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache =
           FakeFileHashCache.createFromStrings(ImmutableMap.of(
@@ -138,7 +138,7 @@ public class PreprocessorFlagsTest {
           new SourcePathResolver(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer()));
+                  new DefaultTargetNodeToBuildRuleTransformer()));
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       final FakeFileHashCache hashCache =
           FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of());

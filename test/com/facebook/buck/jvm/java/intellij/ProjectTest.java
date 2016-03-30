@@ -27,7 +27,7 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -94,7 +94,7 @@ public class ProjectTest {
   public Pair<ProjectWithModules, BuildRuleResolver> createActionGraphForTesting(
       @Nullable JavaPackageFinder javaPackageFinder) throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     // prebuilt_jar //third_party/guava:guava
     guava = PrebuiltJarBuilder
@@ -411,7 +411,7 @@ public class ProjectTest {
   @Test
   public void testPrebuiltJarIncludesDeps() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     // Build up a the graph that corresponds to:
     //
@@ -502,7 +502,7 @@ public class ProjectTest {
   @Test
   public void testIfModuleIsBothTestAndCompileDepThenTreatAsCompileDep() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     // Create a java_library() and a java_test() that both depend on Guava.
     // When they are part of the same project_config() rule, then the resulting module should
@@ -567,7 +567,7 @@ public class ProjectTest {
   @Test
   public void testThatJarsAreListedBeforeModules() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule supportV4 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
@@ -644,7 +644,7 @@ public class ProjectTest {
   public void testSrcRoots() throws Exception {
     // Create a project_config() with src_roots=None.
     BuildRuleResolver ruleResolver1 =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule resBuildRule = ruleResolver1.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
@@ -673,7 +673,7 @@ public class ProjectTest {
 
     // Create a project_config() with src_roots=[].
     BuildRuleResolver ruleResolver2 =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule baseBuildRule = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver2);
@@ -710,7 +710,7 @@ public class ProjectTest {
 
     // Create a project_config() with src_roots=['src'].
     BuildRuleResolver ruleResolver3 =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule baseBuildRule3 = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver3);
@@ -745,7 +745,7 @@ public class ProjectTest {
             .build()
     );
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule baseBuildRule = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver);
@@ -862,7 +862,7 @@ public class ProjectTest {
   @Test
   public void testNdkLibraryHasCorrectPath() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     // Build up a the graph that corresponds to:
     //
@@ -907,9 +907,9 @@ public class ProjectTest {
 
   @Test
   public void testDoNotIgnoreAllOfBuckOut() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     );
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     ImmutableSet<Path> ignorePaths = ImmutableSet.of(Paths.get("buck-out"), Paths.get(".git"));
     EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("/opt/src/buck"));

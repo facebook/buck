@@ -1,13 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY b2e54c092646c1a0813a7f9b684eaa4e99f104fa #@#
+#@# GENERATED FILE: DO NOT MODIFY 0f143471102fdb9cb72f61eb815a6aeb9ed139a8 #@#
 {
   "intellij" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:autodeps",
       "//src/com/facebook/buck/jvm/java:packagefinder",
+      "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java/intellij:intellij",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",

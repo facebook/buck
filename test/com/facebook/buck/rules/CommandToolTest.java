@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -42,7 +41,7 @@ public class CommandToolTest {
   @Test
   public void buildTargetSourcePath() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -73,7 +72,7 @@ public class CommandToolTest {
   @Test
   public void pathSourcePath() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -93,7 +92,7 @@ public class CommandToolTest {
   @Test
   public void extraInputs() {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule rule = new FakeBuildRule("//some:target", pathResolver);
     ruleResolver.addToIndex(rule);
@@ -115,7 +114,7 @@ public class CommandToolTest {
   @Test
   public void environment() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     SourcePath path = new FakeSourcePath("input");
     CommandTool tool =
@@ -132,7 +131,7 @@ public class CommandToolTest {
   @Test
   public void sourcePathsContributeToRuleKeys() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     SourcePath path = new FakeSourcePath("input");
     CommandTool tool =

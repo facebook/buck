@@ -25,6 +25,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -122,7 +123,7 @@ public class UninstallCommand extends AbstractCommand {
       buildTargets = result.getFirst();
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
-          new BuildTargetNodeToBuildRuleTransformer());
+          new DefaultTargetNodeToBuildRuleTransformer());
       resolver =
           Preconditions.checkNotNull(targetGraphTransformer.apply(result.getSecond())).getSecond();
     } catch (BuildTargetException | BuildFileParseException e) {

@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -59,7 +58,7 @@ public class ProjectConfigTest extends EasyMockSupport {
 
   private ProjectConfig createProjectConfig() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule javaRule = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//javatests:lib"))
         .build(ruleResolver);

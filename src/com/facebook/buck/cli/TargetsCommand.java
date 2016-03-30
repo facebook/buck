@@ -40,6 +40,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -711,7 +712,7 @@ public class TargetsCommand extends AbstractCommand {
     if (isShowRuleKey() || isShowOutput()) {
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
-          new BuildTargetNodeToBuildRuleTransformer());
+          new DefaultTargetNodeToBuildRuleTransformer());
       Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
           targetGraphTransformer.apply(targetGraph));
       actionGraph = Optional.of(result.getFirst());

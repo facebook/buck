@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -40,9 +40,9 @@ import java.nio.file.Path;
 public class CxxHeadersDirTest {
 
   private RuleKey getRuleKey(ProjectFilesystem filesystem, CxxHeaders cxxHeaders) {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);

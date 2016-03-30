@@ -1,10 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY af0eabce45e5011c43c8e7b34a2d9b72c8c6acdb #@#
+#@# GENERATED FILE: DO NOT MODIFY ecf4b5f9dedeaf6a364b8a6850033c47e610e918 #@#
 {
   "shell" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",

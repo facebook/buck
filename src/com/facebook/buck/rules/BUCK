@@ -101,6 +101,7 @@ java_immutables_library(
     'TargetName.java',
     'TargetNode.java',
     'TargetNodeToBuildRuleTransformer.java',
+    'DefaultTargetNodeToBuildRuleTransformer.java',
     'TargetNodes.java',
     'Tool.java',
     'ToolProvider.java',

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -108,7 +108,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
@@ -139,7 +139,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
@@ -181,7 +181,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
@@ -235,7 +235,7 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleY.equals(inputRuleZ));
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
@@ -327,7 +327,7 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleY));
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
@@ -380,7 +380,7 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleY.equals(inputRuleZ));
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
@@ -562,7 +562,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
-        new BuildTargetNodeToBuildRuleTransformer());
+        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
@@ -722,7 +722,7 @@ public class DirArtifactCacheTest {
           new SourcePathResolver(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new BuildTargetNodeToBuildRuleTransformer())));
+                  new DefaultTargetNodeToBuildRuleTransformer())));
       this.file = new PathSourcePath(new FakeProjectFilesystem(), file);
     }
   }

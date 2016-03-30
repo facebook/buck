@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -53,9 +54,9 @@ public class TestCommandTest {
 
   @Test
   public void testFilterBuilds() throws CmdLineException {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     TestCommand command = getCommand("--exclude", "linux", "windows");
 
     TestRule rule1 = new FakeTestRule(
@@ -87,9 +88,9 @@ public class TestCommandTest {
 
   @Test
   public void testLabelConjunctionsWithInclude() throws CmdLineException {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     TestCommand command = getCommand("--include", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(
@@ -115,9 +116,9 @@ public class TestCommandTest {
 
   @Test
   public void testLabelConjunctionsWithExclude() throws CmdLineException {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     TestCommand command = getCommand("--exclude", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(
@@ -152,7 +153,10 @@ public class TestCommandTest {
             Label.of("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
@@ -175,7 +179,10 @@ public class TestCommandTest {
             Label.of("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
@@ -189,9 +196,9 @@ public class TestCommandTest {
 
   @Test
   public void testNoTransitiveTests() throws CmdLineException {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     TestCommand command = getCommand("--exclude-transitive-tests", "//:wow");
 
     FakeTestRule rule1 = new FakeTestRule(
@@ -223,9 +230,9 @@ public class TestCommandTest {
 
   @Test
   public void testNoTransitiveTestsWhenLabelExcludeWins() throws CmdLineException {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
     TestCommand command = getCommand(
         "--labels", "!linux", "--always-exclude",
         "--exclude-transitive-tests", "//:for", "//:lulz");
@@ -298,7 +305,10 @@ public class TestCommandTest {
         /* labels */ ImmutableSet.of(Label.of(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(
-            new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer())),
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        ),
         /* deps */ ImmutableSortedSet.<BuildRule>of()
         /* visibility */);
     Iterable<TestRule> filtered = command.filterTestRules(

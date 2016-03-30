@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.model.BuildTarget;
@@ -59,7 +59,7 @@ public class BuildThreadStateRendererTest {
       };
   private static final SourcePathResolver PATH_RESOLVER =
       new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer()));
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   private static final BuildTarget TARGET1 = BuildTargetFactory.newInstance("//:target1");
   private static final BuildTarget TARGET2 = BuildTargetFactory.newInstance("//:target2");
   private static final BuildTarget TARGET3 = BuildTargetFactory.newInstance("//:target3");

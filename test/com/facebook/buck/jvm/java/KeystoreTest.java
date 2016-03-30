@@ -21,7 +21,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
@@ -41,7 +41,7 @@ public class KeystoreTest {
 
   private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new BuildTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return (Keystore) KeystoreBuilder.createBuilder(
         BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(new FakeSourcePath("keystores/debug.keystore"))

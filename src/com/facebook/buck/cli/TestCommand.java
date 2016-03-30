@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -446,7 +447,7 @@ public class TestCommand extends BuildCommand {
       TargetGraphToActionGraph targetGraphToActionGraph =
           new TargetGraphToActionGraph(
               params.getBuckEventBus(),
-              new BuildTargetNodeToBuildRuleTransformer());
+              new DefaultTargetNodeToBuildRuleTransformer());
       Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
           Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph));
 

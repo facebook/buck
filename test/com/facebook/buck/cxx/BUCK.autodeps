@@ -1,10 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY b5941ed00fd19284d86c4d9540bd163d39aef612 #@#
+#@# GENERATED FILE: DO NOT MODIFY 733a147e209f3b8df331bb8618b245a4758792a9 #@#
 {
   "cxx" : {
     "deps" : [
       "//src/com/facebook/buck/apple/clang:headermap",
       "//src/com/facebook/buck/apple/xcode:xcode",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:framework_path_arg",
       "//src/com/facebook/buck/cxx:platform",
@@ -55,7 +54,6 @@
   },
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/rules/args:args",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

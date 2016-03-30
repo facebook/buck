@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -40,7 +40,7 @@ public class PathRelativizerTest {
         new SourcePathResolver(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new BuildTargetNodeToBuildRuleTransformer()))
+                new DefaultTargetNodeToBuildRuleTransformer()))
             .deprecatedPathFunction());
   }
 

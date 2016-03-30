@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 7f4d29d8275a59f2220b6dc0f4fc33f91e709bd6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 046e7ec1b7618055fc639b33deddacfe798b1cb5 #@#
 {
   "halide" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/halide:rules",
