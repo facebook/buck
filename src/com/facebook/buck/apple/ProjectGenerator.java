@@ -92,6 +92,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -896,6 +897,11 @@ public class ProjectGenerator {
           .addAll(getTransitiveFrameworkNodes(targetNode))
           .build();
     }
+
+    if (bundleLoaderNode.isPresent()) {
+      copiedRules = rulesWithoutBundleLoader(copiedRules, bundleLoaderNode.get());
+    }
+
     ImmutableList<PBXBuildPhase> copyFilesBuildPhases = getCopyFilesBuildPhases(copiedRules);
 
     PBXNativeTarget target = generateBinaryTarget(
@@ -950,6 +956,15 @@ public class ProjectGenerator {
         return true;
       }
     }).toList();
+  }
+
+  private ImmutableList<TargetNode<?>> rulesWithoutBundleLoader(
+      Iterable<TargetNode<?>> copiedRules,
+      TargetNode<?> bundleLoader) {
+    return FluentIterable
+        .from(copiedRules)
+        .filter(Predicates.not(Predicates.<TargetNode<?>>equalTo(bundleLoader)))
+        .toList();
   }
 
   private PBXNativeTarget generateAppleBinaryTarget(
