@@ -47,19 +47,22 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   private final ListeningExecutorService listeningExecutorService;
   private final Path emptyFilePath;
   private final boolean performTwoLevelStores;
-  private final long twoLevelStoreThreshold;
+  private final long minimumTwoLevelStoredArtifactSize;
+  private final Optional<Long> maximumTwoLevelStoredArtifactSize;
 
   public TwoLevelArtifactCacheDecorator(
       ArtifactCache delegate,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService listeningExecutorService,
       boolean performTwoLevelStores,
-      long twoLevelThreshold) {
+      long minimumTwoLevelStoredArtifactSize,
+      Optional<Long> maximumTwoLevelStoredArtifactSize) {
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
     this.listeningExecutorService = listeningExecutorService;
     this.performTwoLevelStores = performTwoLevelStores;
-    this.twoLevelStoreThreshold = twoLevelThreshold;
+    this.minimumTwoLevelStoredArtifactSize = minimumTwoLevelStoredArtifactSize;
+    this.maximumTwoLevelStoredArtifactSize = maximumTwoLevelStoredArtifactSize;
     try {
       projectFilesystem.mkdirs(BuckConstant.SCRATCH_PATH);
       this.emptyFilePath = projectFilesystem.resolve(
@@ -125,7 +128,10 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
           public ListenableFuture<Optional<String>> apply(Void input) throws Exception {
             long fileSize = projectFilesystem.getFileSize(output.getPath());
 
-            if (!performTwoLevelStores || fileSize < twoLevelStoreThreshold) {
+            if (!performTwoLevelStores ||
+                fileSize < minimumTwoLevelStoredArtifactSize ||
+                (maximumTwoLevelStoredArtifactSize.isPresent() &&
+                    fileSize > maximumTwoLevelStoredArtifactSize.get())) {
               return Futures.immediateFuture(Optional.<String>absent());
             }
 

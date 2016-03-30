@@ -170,7 +170,8 @@ public class ArtifactCaches {
         projectFilesystem,
         httpWriteExecutorService,
         buckConfig.getTwoLevelCachingEnabled(),
-        buckConfig.getTwoLevelCachingThreshold());
+        buckConfig.getTwoLevelCachingMinimumSize(),
+        buckConfig.getTwoLevelCachingMaximumSize());
 
     return result;
   }

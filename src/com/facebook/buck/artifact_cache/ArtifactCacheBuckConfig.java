@@ -86,8 +86,13 @@ public class ArtifactCacheBuckConfig {
       LoadBalancingType.SINGLE_SERVER;
 
   private static final String TWO_LEVEL_CACHING_ENABLED_FIELD_NAME = "two_level_cache_enabled";
+  // Old name for "two_level_cache_minimum_size", remove eventually.
   private static final String TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME = "two_level_cache_threshold";
-  private static final long TWO_LEVEL_CACHING_THRESHOLD_DEFAULT = 20 * 1024L;
+  private static final String TWO_LEVEL_CACHING_MIN_SIZE_FIELD_NAME =
+      "two_level_cache_minimum_size";
+  private static final String TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME =
+      "two_level_cache_maximum_size";
+  private static final long TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT = 20 * 1024L;
 
   public enum LoadBalancingType {
     SINGLE_SERVER,
@@ -203,8 +208,9 @@ public class ArtifactCacheBuckConfig {
         false);
   }
 
-  public long getTwoLevelCachingThreshold() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME)
+  public long getTwoLevelCachingMinimumSize() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MIN_SIZE_FIELD_NAME)
+        .or(buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME))
         .transform(
             new Function<String, Long>() {
               @Override
@@ -212,7 +218,18 @@ public class ArtifactCacheBuckConfig {
                 return SizeUnit.parseBytes(input);
               }
             })
-        .or(TWO_LEVEL_CACHING_THRESHOLD_DEFAULT);
+        .or(TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT);
+  }
+
+  public Optional<Long> getTwoLevelCachingMaximumSize() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME)
+        .transform(
+            new Function<String, Long>() {
+              @Override
+              public Long apply(String input) {
+                return SizeUnit.parseBytes(input);
+              }
+            });
   }
 
   private CacheReadMode getDirCacheReadMode() {

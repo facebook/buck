@@ -779,10 +779,20 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
-  {param name: 'two_level_cache_threshold' /}
+  {param name: 'two_level_cache_minimum_size' /}
   {param example_value: '1024' /}
   {param description}
     When performing a store artifacts smaller than this size will be stored
+    directly, without the content hash redirection.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'two_level_cache_maximum_size' /}
+  {param example_value: '1024' /}
+  {param description}
+    When performing a store artifacts bigger than this size will be stored
     directly, without the content hash redirection.
   {/param}
 {/call}
