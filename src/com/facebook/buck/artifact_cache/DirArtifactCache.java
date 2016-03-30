@@ -260,7 +260,10 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {
-    deleteOldFiles();
+    // Do a cache clean up on exit only if cache was written to.
+    if (bytesSinceLastDeleteOldFiles > 0) {
+      deleteOldFiles();
+    }
   }
 
   /**
