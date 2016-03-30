@@ -146,7 +146,7 @@ java_immutables_library(
     'TestType.java',
   ],
   immutable_srcs = [
-    'AbstractJUnitJVMArgs.java',
+    'AbstractJUnitJvmArgs.java',
   ],
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',
