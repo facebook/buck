@@ -18,12 +18,13 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.collect.ImmutableList;
 
 /**
  * Events tracking the start and stop of a buck command.
  */
-public abstract class CommandEvent extends AbstractBuckEvent {
+public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final String commandName;
   private final ImmutableList<String> args;
   private final boolean isDaemon;

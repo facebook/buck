@@ -18,10 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
 
-public abstract class IndividualTestEvent extends AbstractBuckEvent {
+public abstract class IndividualTestEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
 
   private IndividualTestEvent(int secret) {
     super(EventKey.slowValueKey("IndividualTestEvent", secret));

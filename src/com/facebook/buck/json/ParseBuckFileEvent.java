@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.base.Objects;
 
 import java.nio.file.Path;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * Base class for events about parsing build files..
  */
-public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
+public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final Path buckFilePath;
 
   protected ParseBuckFileEvent(EventKey eventKey, Path buckFilePath) {

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -27,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Base class for events about building.
  */
-public abstract class BuildEvent extends AbstractBuckEvent {
+public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
 
   public BuildEvent(EventKey eventKey) {
     super(eventKey);

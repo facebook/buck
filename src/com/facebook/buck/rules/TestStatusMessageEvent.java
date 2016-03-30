@@ -19,12 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.TestStatusMessage;
 
 /**
  * Events posted when a test emits a diagnostic status message event.
  */
-public abstract class TestStatusMessageEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class TestStatusMessageEvent
+    extends AbstractBuckEvent
+    implements LeafEvent, WorkAdvanceEvent {
 
   private TestStatusMessage testStatusMessage;
 

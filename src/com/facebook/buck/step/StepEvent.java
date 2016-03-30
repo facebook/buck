@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
@@ -29,7 +30,7 @@ import java.util.UUID;
  * Base class for events about steps.
  */
 public abstract class StepEvent extends AbstractBuckEvent
-    implements LeafEvent, StepEventExternalInterface {
+    implements LeafEvent, StepEventExternalInterface, WorkAdvanceEvent {
 
   private final String shortName;
   private final String description;

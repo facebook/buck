@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,7 +30,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Base class for events about parsing build files..
  */
-public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
   protected ParseEvent(EventKey eventKey, Iterable<BuildTarget> buildTargets) {

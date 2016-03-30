@@ -20,7 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
-public abstract class InstallEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class InstallEvent
+    extends AbstractBuckEvent
+    implements LeafEvent, WorkAdvanceEvent {
   private final BuildTarget buildTarget;
 
   protected InstallEvent(EventKey eventKey, BuildTarget buildTarget) {

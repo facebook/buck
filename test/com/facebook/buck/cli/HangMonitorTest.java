@@ -17,6 +17,9 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.SettableFuture;
@@ -30,6 +33,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public class HangMonitorTest {
+
+  private static class WorkEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
+
+    public WorkEvent() {
+      super(EventKey.unique());
+    }
+
+    @Override
+    protected String getValueString() {
+      return "work";
+    }
+
+    @Override
+    public String getEventName() {
+      return "WorkEvent";
+    }
+  }
 
   @Test
   public void reportContainsCurrentThread() throws Exception {
@@ -77,7 +97,7 @@ public class HangMonitorTest {
   }
 
   @Test
-  public void eventBusEventsSuppressReport() throws Exception {
+  public void workAdvanceEventsSuppressReport() throws Exception {
     final AtomicBoolean didGetReport = new AtomicBoolean(false);
     HangMonitor hangMonitor = new HangMonitor(
         new Function<String, Void>() {
@@ -89,7 +109,7 @@ public class HangMonitorTest {
           }
         },
         new TimeSpan(10, TimeUnit.MILLISECONDS));
-    hangMonitor.onAnything(new Object());
+    hangMonitor.onWorkAdvance(new WorkEvent());
     hangMonitor.runOneIteration();
     assertThat(didGetReport.get(), Matchers.is(false));
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.event.external.events.TestRunFinishedEventInterface;
@@ -26,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
-public abstract class TestRunEvent extends AbstractBuckEvent {
+public abstract class TestRunEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
 
   private TestRunEvent(int secret) {
     super(EventKey.slowValueKey("TestRunEvent", secret));

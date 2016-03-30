@@ -18,13 +18,16 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
 
 /**
  * Base class for events about Java annotation processing.
  */
-public abstract class AnnotationProcessingEvent extends AbstractBuckEvent {
+public abstract class AnnotationProcessingEvent
+    extends AbstractBuckEvent
+    implements WorkAdvanceEvent {
 
   public enum Operation {
     GET_COMPLETIONS,

@@ -19,11 +19,14 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.TestResultSummary;
 
 import java.util.UUID;
 
-public abstract class TestSummaryEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class TestSummaryEvent
+    extends AbstractBuckEvent
+    implements LeafEvent, WorkAdvanceEvent {
 
   private final String testCaseName;
   private final String testName;

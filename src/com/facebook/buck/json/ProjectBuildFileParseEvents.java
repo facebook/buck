@@ -19,11 +19,14 @@ package com.facebook.buck.json;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 
 /**
  * Events posted before and after running buck.py.
  */
-public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent implements LeafEvent {
+public abstract class ProjectBuildFileParseEvents
+    extends AbstractBuckEvent
+    implements LeafEvent, WorkAdvanceEvent {
   // This class does nothing; it exists only to group two AbstractBuckEvents.
   private ProjectBuildFileParseEvents(EventKey eventKey) {
     super(eventKey);

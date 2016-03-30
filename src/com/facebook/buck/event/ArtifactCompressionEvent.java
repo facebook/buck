@@ -22,7 +22,9 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
-public abstract class ArtifactCompressionEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class ArtifactCompressionEvent
+    extends AbstractBuckEvent
+    implements LeafEvent, WorkAdvanceEvent {
   public enum Operation {
     COMPRESS,
     DECOMPRESS,

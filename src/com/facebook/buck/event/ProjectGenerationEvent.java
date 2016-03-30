@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-public abstract class ProjectGenerationEvent extends AbstractBuckEvent {
+public abstract class ProjectGenerationEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
 
   public ProjectGenerationEvent() {
     super(EventKey.unique());

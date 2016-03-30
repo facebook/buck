@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -27,7 +28,7 @@ import org.immutables.value.Value;
 
 import java.util.List;
 
-public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent {
+public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
   private final DistBuildStatus status;
 

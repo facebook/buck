@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.google.common.base.Function;
@@ -47,7 +48,7 @@ public class HangMonitor extends AbstractScheduledService {
 
   @Subscribe
   @SuppressWarnings("unused")
-  public void onAnything(Object object) {
+  public void onWorkAdvance(WorkAdvanceEvent event) {
     eventsSeenSinceLastCheck.incrementAndGet();
   }
 

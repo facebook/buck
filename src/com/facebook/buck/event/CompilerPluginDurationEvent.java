@@ -22,7 +22,9 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Base class for events being reported by plugins to in-process compilers such as JSR199 javac.
  */
-public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent {
+public abstract class CompilerPluginDurationEvent
+    extends AbstractBuckEvent
+    implements WorkAdvanceEvent {
   private final BuildTarget buildTarget;
   private final String pluginName;
   private final String durationName;

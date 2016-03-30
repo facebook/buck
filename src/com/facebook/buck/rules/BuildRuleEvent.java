@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.WorkAdvanceEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
@@ -26,7 +27,7 @@ import com.google.common.hash.HashCode;
 /**
  * Base class for events about build rules.
  */
-public abstract class BuildRuleEvent extends AbstractBuckEvent {
+public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final BuildRule rule;
 
   protected BuildRuleEvent(BuildRule rule) {

@@ -19,12 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.WorkAdvanceEvent;
 
 
 /**
  * Base class for events about building up the action graph from the target graph.
  */
-public abstract class ActionGraphEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class ActionGraphEvent
+    extends AbstractBuckEvent
+    implements LeafEvent, WorkAdvanceEvent {
 
   public ActionGraphEvent(EventKey eventKey) {
     super(eventKey);
