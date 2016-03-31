@@ -6,35 +6,34 @@ java_library(
   name = 'config',
   srcs = CONFIG_SRCS,
   resources = [
-      '__test_main__.py',
+    '__test_main__.py',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],
 )
 
-SUPPORT_IMMUTABLES = [
+SUPPORT_SRCS = [
   'AbstractPythonPlatform.java',
   'AbstractPythonVersion.java',
-]
-SUPPORT_SRCS = [
   'PythonEnvironment.java',
 ]
 java_immutables_library(
   name = 'support',
   srcs = SUPPORT_SRCS,
-  immutable_srcs = SUPPORT_IMMUTABLES,
+  immutable_types = [
+    'PythonPlatform',
+    'PythonVersion',
+  ],
   autodeps = True,
   visibility = ['PUBLIC'],
 )
 
-RULES_IMMUTABLES = [
-  'AbstractPythonPackageComponents.java',
-]
 java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java'],
-              excludes=CONFIG_SRCS + SUPPORT_SRCS + SUPPORT_IMMUTABLES + RULES_IMMUTABLES),
-  immutable_srcs = RULES_IMMUTABLES,
+  srcs = glob(['*.java'], excludes=CONFIG_SRCS + SUPPORT_SRCS),
+  immutable_types = [
+    'PythonPackageComponents',
+  ],
   tests = [
     '//test/com/facebook/buck/python:python',
   ],
@@ -43,13 +42,13 @@ java_immutables_library(
   ],
   autodeps = True,
   visibility = [
-    '//src/com/facebook/buck/rules:types',
-    '//src/com/facebook/buck/ocaml:rules',
     '//src/com/facebook/buck/cxx:rules',
-    '//test/com/facebook/buck/python:',
+    '//src/com/facebook/buck/ocaml:rules',
+    '//src/com/facebook/buck/rules:types',
+    '//src/com/facebook/buck/thrift:rules',
     '//test/com/facebook/buck/cxx:cxx',
     '//test/com/facebook/buck/cxx:testutil',
-    '//src/com/facebook/buck/thrift:rules',
+    '//test/com/facebook/buck/python:',
     '//test/com/facebook/buck/thrift:thrift',
   ],
 )

@@ -8,9 +8,12 @@ PUBLIC_SRCS = [
   'VersionControlStatsGenerator.java',
 ]
 
-java_immutables_library (
+java_immutables_library(
   name = 'versioncontrol',
   srcs = PUBLIC_SRCS,
+  immutable_types = [
+    'ImmutableVersionControlStats',
+  ],
   tests = [
     '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
     '//test/com/facebook/buck/util/versioncontrol:hg_cmd_line_interface_integration',
@@ -21,7 +24,7 @@ java_immutables_library (
   ],
 )
 
-java_immutables_library (
+java_library(
   name = 'impl',
   srcs = glob(['*.java'], excludes = PUBLIC_SRCS),
   tests = [

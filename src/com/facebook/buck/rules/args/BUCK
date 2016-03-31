@@ -1,7 +1,9 @@
 java_immutables_library(
   name = 'args',
-  srcs = glob(['*.java'], excludes=['Abstract*.java']),
-  immutable_srcs = glob(['Abstract*.java']),
+  srcs = glob(['*.java']),
+  immutable_types = [
+    'GlobArg',
+  ],
   autodeps = True,
   visibility = [ 'PUBLIC' ],
 )

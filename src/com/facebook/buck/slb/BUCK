@@ -1,10 +1,11 @@
-SLB_IMMUTABLES = [
-  'AbstractClientSideSlbConfig.java',
-]
 java_immutables_library(
   name = 'slb',
-  srcs = glob(['*.java'], excludes = SLB_IMMUTABLES),
-  immutable_srcs = SLB_IMMUTABLES,
+  srcs = glob(['*.java']),
+  immutable_types = [
+    'ClientSideSlbConfig',
+    'PerServerData',
+    'ServerHealthManagerEventData',
+  ],
   autodeps = True,
   visibility = [
     'PUBLIC',

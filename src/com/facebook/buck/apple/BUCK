@@ -1,15 +1,28 @@
-PLATFORM_IMMUTABLES = [
+PLATFORM_SRCS = [
   'AbstractAppleCxxPlatform.java',
   'AbstractApplePlatform.java',
   'AbstractAppleSdk.java',
   'AbstractAppleSdkPaths.java',
   'AbstractAppleToolchain.java',
   'AbstractFatBinaryInfo.java',
-]
-PLATFORM_SRCS = [
   'ApplePlatforms.java',
   'FatBinaryInfos.java',
 ]
+java_immutables_library(
+  name = 'platform',
+  srcs = PLATFORM_SRCS,
+  immutable_types = [
+    'AppleCxxPlatform',
+    'ApplePlatform',
+    'AppleSdk',
+    'AppleSdkPaths',
+    'AppleToolchain',
+    'FatBinaryInfo',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
 GENERATOR_SRCS = [
   'CxxPlatformXcodeConfigGenerator.java',
   'ProjectGenerator.java',
@@ -17,15 +30,7 @@ GENERATOR_SRCS = [
   'WorkspaceAndProjectGenerator.java',
   'WorkspaceGenerator.java',
 ]
-java_immutables_library(
-  name = 'platform',
-  srcs = PLATFORM_SRCS,
-  immutable_srcs = PLATFORM_IMMUTABLES,
-  autodeps = True,
-  visibility = ['PUBLIC'],
-)
-
-java_immutables_library(
+java_library(
   name = 'generators',
   srcs = GENERATOR_SRCS,
   tests = [
@@ -41,6 +46,14 @@ java_immutables_library(
 java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java',], excludes=PLATFORM_SRCS+GENERATOR_SRCS),
+  immutable_types = [
+    'AppleBundleDestinations',
+    'AppleTestBundleParamsKey',
+    'CodeSignIdentity',
+    'FrameworkDependencies',
+    'GroupedSource',
+    'ProvisioningProfileMetadata',
+  ],
   tests = [
     '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/apple:apple_test_integration',

@@ -1,7 +1,5 @@
-PUBLIC_API_IMMUTABLES = [
-  'AbstractCacheResult.java',
-]
 PUBLIC_API_SOURCES = [
+  'AbstractCacheResult.java',
   'ArtifactCache.java',
   'ArtifactCacheEvent.java',
   'ArtifactCacheEventFactory.java',
@@ -11,18 +9,12 @@ PUBLIC_API_SOURCES = [
   'CacheResultType.java',
   'NoopArtifactCache.java',
 ]
-PROTOCOL_SOURCES = [
-  'HttpArtifactCacheBinaryProtocol.java'
-]
-CONFIG_SOURCES = [
-  'ArtifactCacheBuckConfig.java',
-  'ArtifactCaches.java',
-]
-
 java_immutables_library(
   name = 'artifact_cache',
   srcs = PUBLIC_API_SOURCES,
-  immutable_srcs = PUBLIC_API_IMMUTABLES,
+  immutable_types = [
+    'CacheResult',
+  ],
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
@@ -32,9 +24,18 @@ java_immutables_library(
   ],
 )
 
+PROTOCOL_SOURCES = [
+  'HttpArtifactCacheBinaryProtocol.java'
+]
 java_immutables_library(
   name = 'binary_protocol',
   srcs = PROTOCOL_SOURCES,
+  immutable_types = [
+    'MetadataAndPayloadReadResultInternal',
+    'FetchResponseReadResult',
+    'StoreResponseReadResult',
+    'StoreWriteResult',
+  ],
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
@@ -45,25 +46,19 @@ java_immutables_library(
   ],
 )
 
-java_immutables_library(
-  name = 'impl',
-  srcs = glob(['*.java'],
-              excludes=PUBLIC_API_SOURCES + PUBLIC_API_IMMUTABLES + \
-                       CONFIG_SOURCES + PROTOCOL_SOURCES),
-  tests = [
-    '//test/com/facebook/buck/artifact_cache:artifact_cache',
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/com/facebook/buck/artifact_cache/...',
-  ],
-)
-
+CONFIG_SOURCES = [
+  'ArtifactCacheBuckConfig.java',
+  'ArtifactCaches.java',
+]
 java_immutables_library(
   name = 'config',
   srcs = [
     'ArtifactCacheBuckConfig.java',
     'ArtifactCaches.java',
+  ],
+  immutable_types = [
+    'DirCacheEntry',
+    'HttpCacheEntry',
   ],
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
@@ -77,4 +72,17 @@ java_immutables_library(
     '//test/com/facebook/buck/cli/...',
     '//test/com/facebook/buck/httpserver:httpserver_cache_integration_test',
   ]
+)
+
+java_library(
+  name = 'impl',
+  srcs = glob(['*.java'],
+              excludes=PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES),
+  tests = [
+    '//test/com/facebook/buck/artifact_cache:artifact_cache',
+  ],
+  autodeps = True,
+  visibility = [
+    '//test/com/facebook/buck/artifact_cache/...',
+  ],
 )

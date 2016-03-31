@@ -1,4 +1,4 @@
-java_immutables_library(
+java_library(
   name = 'rules',
   srcs = glob(['*.java']),
   autodeps = True,

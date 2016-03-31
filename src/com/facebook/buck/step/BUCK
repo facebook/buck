@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'step',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'ImmutableExecutionContext',
+  ],
   tests = [
     '//test/com/facebook/buck/step:step',
   ],

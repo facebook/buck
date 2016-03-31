@@ -12,17 +12,17 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-PACKAGEABLE_IMMUTABLES = [
-  'AbstractAndroidPackageableCollection.java',
-]
 PACKAGEABLE_SRCS = [
+  'AbstractAndroidPackageableCollection.java',
   'AndroidPackageable.java',
   'AndroidPackageableCollector.java',
 ]
 java_immutables_library(
   name = 'packageable',
   srcs = PACKAGEABLE_SRCS,
-  immutable_srcs = PACKAGEABLE_IMMUTABLES,
+  immutable_types = [
+    'AndroidPackageableCollection',
+  ],
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
@@ -35,12 +35,10 @@ java_immutables_library(
   visibility = ['PUBLIC'],
 )
 
-RULES_IMMUTABLES = [
-  'AbstractAndroidGraphEnhancementResult.java',
-  'AbstractAndroidInstrumentationTestJVMArgs.java',
-]
 RULES_SRCS = [
   'AaptPackageResources.java',
+  'AbstractAndroidGraphEnhancementResult.java',
+  'AbstractAndroidInstrumentationTestJVMArgs.java',
   'AndroidAar.java',
   'AndroidAarDescription.java',
   'AndroidBinaryGraphEnhancer.java',
@@ -109,7 +107,11 @@ RULES_SRCS = [
 java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
-  immutable_srcs = RULES_IMMUTABLES,
+  immutable_types = [
+    'AndroidGraphEnhancementResult',
+    'AndroidInstrumentationTestJVMArgs',
+    'StrippedObjectDescription',
+  ],
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android:aar-integration',
@@ -161,8 +163,7 @@ HELPERS_SRCS = [
   'ExopackageInstaller.java',
 ]
 
-# java_library?
-java_immutables_library(
+java_library(
   name = 'helpers',
   srcs = HELPERS_SRCS,
   tests = [
@@ -192,17 +193,14 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-STEPS_IMMUTABLES = [
-  'AbstractNdkCxxPlatform.java',
-]
 java_immutables_library(
   name = 'steps',
   srcs = glob(['*.java'],
-              excludes = STEPS_IMMUTABLES + EXCEPTION_SRCS +
-                  PACKAGEABLE_SRCS + PACKAGEABLE_IMMUTABLES +
-                  RULES_SRCS + RULES_IMMUTABLES +
+              excludes = EXCEPTION_SRCS + PACKAGEABLE_SRCS + RULES_SRCS +
                   SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS),
-  immutable_srcs = STEPS_IMMUTABLES,
+  immutable_types = [
+    'NdkCxxPlatform',
+  ],
   tests = [
     '//test/com/facebook/buck/android:steps',
     '//test/com/facebook/buck/android:integration',

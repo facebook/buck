@@ -1,6 +1,10 @@
 java_immutables_library(
   name = 'query',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'QueryBuildTarget',
+    'QueryFileTarget',
+  ],
   tests = [
     '//test/com/facebook/buck/query:query',
   ],

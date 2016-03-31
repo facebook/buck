@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'command',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'BuildExecutionResult',
+  ],
   tests = [
     '//test/com/facebook/buck/command:command',
   ],

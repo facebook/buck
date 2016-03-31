@@ -4,26 +4,24 @@ TYPES_SRCS = [
   'TypeCoercerFactory.java',
 ]
 
-java_immutables_library(
+java_library(
   name = 'types',
   srcs = TYPES_SRCS,
   autodeps = True,
   visibility = ['PUBLIC'],
 )
 
-COERCER_IMMUTABLES = [
-  'AbstractBuildConfigFields.java',
-  'AbstractFrameworkPath.java',
-  'AbstractManifestEntries.java',
-  'AbstractOCamlSource.java',
-  'AbstractSourceList.java',
-  'AbstractSourceWithFlagsList.java',
-]
-
 java_immutables_library(
   name = 'coercer',
-  srcs = glob(['*.java'], excludes=TYPES_SRCS + COERCER_IMMUTABLES),
-  immutable_srcs = COERCER_IMMUTABLES,
+  srcs = glob(['*.java'], excludes = TYPES_SRCS),
+  immutable_types = [
+    'BuildConfigFields',
+    'FrameworkPath',
+    'ManifestEntries',
+    'OCamlSource',
+    'SourceList',
+    'SourceWithFlagsList',
+  ],
   autodeps = True,
   visibility = ['PUBLIC'],
 )

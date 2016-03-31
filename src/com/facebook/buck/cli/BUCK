@@ -70,16 +70,15 @@ java_library(
   ]
 )
 
-CLI_IMMUTABLES = [
-  'AbstractInstallResult.java',
-  'AbstractProjectPredicates.java',
-  'AbstractTestRun.java',
-]
 java_immutables_library(
   name = 'cli',
   srcs = glob(['*.java'],
-              excludes = EVENTS_SRCS + CONFIG_SRCS + RAW_CONFIG_SRCS + CLI_IMMUTABLES),
-  immutable_srcs = CLI_IMMUTABLES,
+              excludes = EVENTS_SRCS + CONFIG_SRCS + RAW_CONFIG_SRCS),
+  immutable_types = [
+    'InstallResult',
+    'ProjectPredicates',
+    'TestRun',
+  ],
   resources = [
     '//src/com/facebook/buck/cli/quickstart/android:android-template',
     '//src/com/facebook/buck/cli/quickstart/ios:ios-template',

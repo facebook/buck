@@ -17,17 +17,18 @@ def java_library(
 
 def java_immutables_library(
     name,
-    # All entries in this list must start with "Abstract" and end with ".java".
-    immutable_srcs=None,
+    # These must be relative to the package implied by the path to the BUCK file.
+    immutable_types=None,
     source='7',
     target='7',
     **kwargs
     ):
-    immutable_srcs = immutable_srcs or []
-    srcs = kwargs.get('srcs', [])
-    srcs += immutable_srcs
+    if not immutable_types:
+        build_target = '//%s:%s' % (get_base_path(), name)
+        raise Exception(('%s is a java_immutables_library(), ' +
+                         'but does not specify any immutable_types.') % build_target)
 
-    generated_symbols = map(symbol_for_immutable_src, immutable_srcs)
+    generated_symbols = map(fully_qualified_name_for_immutable_type, immutable_types)
     all_generated_symbols = generated_symbols + kwargs.get('generated_symbols', [])
 
     deps = kwargs.get('deps', [])
@@ -61,7 +62,6 @@ def java_immutables_library(
       'deps',
       'exported_deps',
       'generated_symbols',
-      'srcs',
     ]
     args = {}
     for k in kwargs:
@@ -69,7 +69,6 @@ def java_immutables_library(
         args[k] = kwargs[k]
     return java_library(
       name,
-      srcs=srcs,
       generated_symbols=all_generated_symbols,
       source=source,
       target=target,
@@ -80,15 +79,7 @@ def java_immutables_library(
       **args)
 
 
-IMMUTABLE_PREFIX_LEN = len('Abstract')
-IMMUTABLE_SUFFIX_INDEX = -len('.java')
-
-def symbol_for_immutable_src(src):
-    '''src must start with "Abstract" and end with ".java".'''
-    if not src.startswith('Abstract') or not src.endswith('.java'):
-        raise Exception(src + ' must start with Abstract and end with .java')
-
-    name = src[IMMUTABLE_PREFIX_LEN:IMMUTABLE_SUFFIX_INDEX]
+def fully_qualified_name_for_immutable_type(immutable_type):
     base_path = get_base_path()
 
     # Strip off src/ or test/ prefix, as appropriate, from base_path.
@@ -100,7 +91,7 @@ def symbol_for_immutable_src(src):
         raise Exception(src + ' must start with src/ or test/')
 
     package_name = base_path.replace('/', '.')
-    return package_name + '.' + name
+    return package_name + '.' + immutable_type
 
 
 original_java_test = java_test

@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'distributed',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'DistBuildStatus',
+  ],
   tests = [
     '//test/com/facebook/buck/distributed:distributed',
   ],

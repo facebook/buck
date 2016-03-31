@@ -25,14 +25,12 @@ java_library(
   ],
 )
 
-ENVIRONMENT_IMMUTABLES = [
-  'AbstractBuildEnvironmentDescription.java',
-]
-
 java_immutables_library(
   name = 'environment',
-  srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS + ENVIRONMENT_IMMUTABLES),
-  immutable_srcs = ENVIRONMENT_IMMUTABLES,
+  srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS),
+  immutable_types = [
+    'BuildEnvironmentDescription',
+  ],
   tests = [
     '//test/com/facebook/buck/util/environment:environment',
   ],

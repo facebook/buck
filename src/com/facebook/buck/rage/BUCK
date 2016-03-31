@@ -1,14 +1,14 @@
 CONFIG_SRCS = [
-  'RageBuckConfig.java',
-]
-CONFIG_IMMUTABLES = [
   'AbstractRageConfig.java',
+  'RageBuckConfig.java',
 ]
 
 java_immutables_library(
   name = 'config',
   srcs = CONFIG_SRCS,
-  immutable_srcs = CONFIG_IMMUTABLES,
+  immutable_types = [
+    'RageConfig',
+  ],
   autodeps = True,
   visibility = [
     'PUBLIC'
@@ -17,10 +17,13 @@ java_immutables_library(
 
 java_immutables_library(
   name = 'rage',
-  srcs = glob(['*.java'], excludes=CONFIG_SRCS + CONFIG_IMMUTABLES),
+  srcs = glob(['*.java'], excludes = CONFIG_SRCS),
+  immutable_types = [
+    'BuildLogEntry',
+    'UserReport',
+  ],
   autodeps = True,
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
   ],
 )
-

@@ -1,11 +1,10 @@
-RULES_IMMUTABLES = [
-  'AbstractOCamlBuildContext.java',
-  'AbstractOCamlGeneratedBuildRules.java',
-]
 java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java'], excludes = RULES_IMMUTABLES),
-  immutable_srcs = RULES_IMMUTABLES,
+  srcs = glob(['*.java']),
+  immutable_types = [
+    'OCamlBuildContext',
+    'OCamlGeneratedBuildRules',
+  ],
   tests = [
     '//test/com/facebook/buck/ocaml:ocaml',
   ],

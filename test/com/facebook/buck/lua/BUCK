@@ -1,12 +1,13 @@
 java_immutables_library(
   name = 'testutil',
   srcs = [
+    'AbstractFakeLuaConfig.java',
     'CxxLuaExtensionBuilder.java',
     'LuaBinaryBuilder.java',
     'LuaLibraryBuilder.java',
   ],
-  immutable_srcs = [
-    'AbstractFakeLuaConfig.java',
+  immutable_types = [
+    'FakeLuaConfig',
   ],
   autodeps = True,
   visibility = [

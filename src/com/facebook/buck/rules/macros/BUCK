@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'macros',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'MacroMatchResult',
+  ],
   tests = [
     '//test/com/facebook/buck/rules/macros:macros',
   ],

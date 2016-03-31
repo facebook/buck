@@ -1,7 +1,6 @@
 REPORT_FORMAT_SRCS = [
   'CoverageReportFormat.java',
 ]
-
 java_library(
   name = 'report-format',
   srcs = REPORT_FORMAT_SRCS,
@@ -12,17 +11,16 @@ java_library(
   ],
 )
 
-CONFIG_IMMUTABLES = [
-  'AbstractTestResultSummaryVerbosity.java',
-]
 CONFIG_SRCS = [
+  'AbstractTestResultSummaryVerbosity.java',
   'TestConfig.java',
 ]
-
 java_immutables_library(
   name = 'config',
   srcs = CONFIG_SRCS,
-  immutable_srcs = CONFIG_IMMUTABLES,
+  immutable_types = [
+    'TestResultSummaryVerbosity',
+  ],
   autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
@@ -32,20 +30,15 @@ java_immutables_library(
   ],
 )
 
-TEST_IMMUTABLES = [
-  'AbstractTestResults.java',
-  'AbstractTestRunningOptions.java',
-  'AbstractTestStatusMessage.java',
-]
-
 # Sources for dealing with test results.
 java_immutables_library(
   name = 'test',
-  srcs = glob(
-    ['*.java'],
-    excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS + CONFIG_IMMUTABLES + TEST_IMMUTABLES
-  ),
-  immutable_srcs = TEST_IMMUTABLES,
+  srcs = glob(['*.java'], excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS),
+  immutable_types = [
+    'TestResults',
+    'TestRunningOptions',
+    'TestStatusMessage',
+  ],
   tests = [
     '//test/com/facebook/buck/test:test',
   ],

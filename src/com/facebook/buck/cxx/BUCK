@@ -1,8 +1,6 @@
-PLATFORM_IMMUTABLES = [
-  'AbstractNativeLinkableInput.java',
-  'AbstractCxxPlatform.java',
-]
 PLATFORM_SRCS = [
+  'AbstractCxxPlatform.java',
+  'AbstractNativeLinkableInput.java',
   'Archiver.java',
   'BsdArchiver.java',
   'ByteBufferReplacer.java',
@@ -37,7 +35,10 @@ PLATFORM_SRCS = [
 java_immutables_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
-  immutable_srcs = PLATFORM_IMMUTABLES,
+  immutable_types = [
+    'CxxPlatform',
+    'NativeLinkableInput',
+  ],
   autodeps = True,
   visibility = [
     'PUBLIC'
@@ -47,9 +48,12 @@ java_immutables_library(
 # This is here only so that we don't have to let rules depend on xcode.
 # FrameworkPathArg depends on xcode because Javac insists on being able to see the type on which
 # we're calling .toString()
+FRAMEWORK_PATH_ARG_SRCS = [
+  'FrameworkPathArg.java',
+]
 java_library(
   name = 'framework_path_arg',
-  srcs = ['FrameworkPathArg.java'],
+  srcs = FRAMEWORK_PATH_ARG_SRCS,
   tests = [
     '//test/com/facebook/buck/cxx:cxx',
   ],
@@ -61,8 +65,18 @@ java_library(
 
 java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java'],
-              excludes=PLATFORM_SRCS + PLATFORM_IMMUTABLES + ['FrameworkPathArg.java']),
+  srcs = glob(['*.java'], excludes=PLATFORM_SRCS + FRAMEWORK_PATH_ARG_SRCS),
+  immutable_types = [
+    'CxxCompilationDatabaseDependencies',
+    'CxxCompilationDatabaseEntry',
+    'CxxHeaders',
+    'CxxHeaderSourceSpec',
+    'CxxSource',
+    'CxxSourceRuleFactory',
+    'CxxSourceSet',
+    'MachoHeader',
+    'PreprocessorFlags',
+  ],
   tests = [
     '//test/com/facebook/buck/cxx:cxx',
   ],

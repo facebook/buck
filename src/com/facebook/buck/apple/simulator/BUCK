@@ -1,6 +1,10 @@
 java_immutables_library(
   name = 'simulator',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'AppleSimulator',
+    'AppleSimulatorProfile',
+  ],
   tests = [
     '//test/com/facebook/buck/apple/simulator:simulator',
   ],

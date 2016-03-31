@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'cache',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'HashCodeAndFileType',
+  ],
   tests = [
     '//test/com/facebook/buck/util/cache:cache',
   ],

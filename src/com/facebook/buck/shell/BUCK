@@ -42,12 +42,13 @@ java_library(
 java_immutables_library(
   name = 'worker',
   srcs = [
+    'AbstractWorkerJobParams.java',
     'WorkerShellStep.java',
     'WorkerTool.java',
     'WorkerToolDescription.java',
   ],
-  immutable_srcs = [
-    'AbstractWorkerJobParams.java',
+  immutable_types = [
+    'WorkerJobParams',
   ],
   tests = [
     '//test/com/facebook/buck/shell:shell',
@@ -59,12 +60,13 @@ java_immutables_library(
 java_immutables_library(
   name = 'worker_process',
   srcs = [
+    'AbstractWorkerJobResult.java',
     'WorkerProcess.java',
     'WorkerProcessProtocol.java',
     'WorkerProcessProtocolZero.java',
   ],
-  immutable_srcs = [
-    'AbstractWorkerJobResult.java',
+  immutable_types = [
+    'WorkerJobResult',
   ],
   tests = [
     '//test/com/facebook/buck/shell:shell',

@@ -28,15 +28,6 @@ java_library(
   ],
 )
 
-BUILD_RULE_IMMUTABLES = [
-  'AbstractBuildRuleType.java',
-  'AbstractExopackageInfo.java',
-  'AbstractExternalTestRunnerTestSpec.java',
-  'AbstractLabel.java',
-  'AbstractSha1HashCode.java',
-  'AbstractSourceWithFlags.java',
-]
-
 # Ideally, BuildRule.java would require only a handful of other source files
 # in order to compile it. Because BuildContext is referenced in the BuildRule
 # interface, its dependencies are much broader than desired.
@@ -44,8 +35,14 @@ java_immutables_library(
   name = 'build_rule',
   srcs = [
     'AbstractBuildRule.java',
+    'AbstractBuildRuleType.java',
     'AbstractDescriptionArg.java',
+    'AbstractExopackageInfo.java',
+    'AbstractExternalTestRunnerTestSpec.java',
+    'AbstractLabel.java',
+    'AbstractSha1HashCode.java',
     'AbstractSourcePath.java',
+    'AbstractSourceWithFlags.java',
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',
@@ -107,7 +104,15 @@ java_immutables_library(
     'ToolProvider.java',
     'UncachableBuildRule.java',
   ],
-  immutable_srcs = BUILD_RULE_IMMUTABLES,
+  immutable_types = [
+    'BuildRuleType',
+    'ExopackageInfo',
+    'ExternalTestRunnerTestSpec',
+    'ImmutableBuildContext',
+    'Label',
+    'Sha1HashCode',
+    'SourceWithFlags',
+  ],
   tests = [
     '//test/com/facebook/buck/rules/coercer:coercer',
     '//test/com/facebook/buck/rules:rules',
@@ -118,7 +123,7 @@ java_immutables_library(
   ],
 )
 
-java_immutables_library(
+java_library(
   name = 'target_graph_hashing',
   srcs = [
     'TargetGraphHashing.java',
@@ -164,6 +169,9 @@ java_immutables_library(
     'TestSummaryEvent.java',
     'UnskippedRulesTracker.java',
     'WriteStringTemplateRule.java',
+  ],
+  immutable_types = [
+    'BuildRuleKeys',
   ],
   tests = [
     '//test/com/facebook/buck/rules:rules',

@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'event',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'ScubaData',
+  ],
   tests = [
     '//test/com/facebook/buck/event:event',
   ],

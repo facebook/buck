@@ -1,20 +1,8 @@
 java_immutables_library(
   name = 'd',
-  srcs = [
-    'DBinary.java',
-    'DBinaryDescription.java',
-    'DBuckConfig.java',
-    'DCompileBuildRule.java',
-    'DCompileStep.java',
-    'DDescriptionUtils.java',
-    'DLibrary.java',
-    'DLibraryDescription.java',
-    'DTest.java',
-    'DTestDescription.java',
-    'DTestStep.java',
-  ],
-  immutable_srcs = [
-    'AbstractDIncludes.java',
+  srcs = glob(['*.java']),
+  immutable_types = [
+    'DIncludes',
   ],
   autodeps = True,
   visibility=['PUBLIC'],

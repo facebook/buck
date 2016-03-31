@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c52d6c0644a74915c810baf8e0a8c68a3732f0a4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 58478fdf7284f6b35d9033b22714dd82fd6df432 #@#
 {
   "go" : {
     "deps" : [
@@ -11,12 +11,12 @@
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util"
+      "//src/com/facebook/buck/util:util",
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
-      "//src/com/facebook/buck/go:immutables",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
@@ -27,20 +27,9 @@
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"
-    ]
-  },
-  "immutables" : {
-    "deps" : [
-      "//third-party/java/immutables:processor"
-    ],
-    "exported_deps" : [
-      "//src/com/facebook/buck/cxx:platform",
-      "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
     ]
   }
 }
