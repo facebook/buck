@@ -347,6 +347,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       // -dump
       args.add("-printmapping").add(getMappingTxt().toString());
       args.add("-printconfiguration").add(getConfigurationTxt().toString());
+      args.add("-printseeds").add(getSeedsTxt().toString());
 
       return args.build();
     }
@@ -357,6 +358,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     public Path getMappingTxt() {
       return proguardDirectory.resolve("mapping.txt");
+    }
+
+    public Path getSeedsTxt() {
+      return proguardDirectory.resolve("seeds.txt");
     }
 
     @Override
