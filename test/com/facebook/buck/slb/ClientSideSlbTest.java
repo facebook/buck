@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.squareup.okhttp.Call;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
@@ -107,11 +108,9 @@ public class ClientSideSlbTest {
         EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
-    ResponseBody mockBody = EasyMock.createMock(ResponseBody.class);
-    mockBody.close();
-    EasyMock.expectLastCall().times(SERVERS.size());
+    ResponseBody body = ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
     Response response = new Response.Builder()
-        .body(mockBody)
+        .body(body)
         .code(200)
         .protocol(Protocol.HTTP_1_1)
         .request(new Request.Builder().url("http://dummy.url").build())
@@ -121,13 +120,13 @@ public class ClientSideSlbTest {
     EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class)))
         .andReturn(mockCall)
         .times(SERVERS.size());
-    EasyMock.replay(mockClient, mockCall, mockScheduler, mockBody);
+    EasyMock.replay(mockClient, mockCall, mockScheduler);
 
     try (ClientSideSlb slb = new ClientSideSlb(config)) {
       Runnable healthCheckLoop = capture.getValue();
       healthCheckLoop.run();
     }
 
-    EasyMock.verify(mockClient, mockCall, mockScheduler, mockBody);
+    EasyMock.verify(mockClient, mockCall, mockScheduler);
   }
 }

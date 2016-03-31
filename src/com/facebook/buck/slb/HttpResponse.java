@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,13 +16,30 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.Request;
-
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 
-public interface HttpService extends AutoCloseable {
-  HttpResponse makeRequest(String path, Request.Builder request) throws IOException;
+public interface HttpResponse extends Closeable {
+  /**
+   * @return HTTP Response code.
+   */
+  int code();
 
-  @Override
-  void close();
+  /**
+   * @return Number of bytes in the body of this response.
+   * @throws IOException
+   */
+  long contentLength() throws IOException;
+
+  /**
+   * @return Stream with the response body.
+   * @throws IOException
+   */
+  InputStream getBody() throws IOException;
+
+  /**
+   * @return The full URL of the request that generated this response.
+   */
+  String requestUrl();
 }

@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.net.URI;
@@ -37,7 +36,7 @@ public class LoadBalancedService implements HttpService {
   }
 
   @Override
-  public Response makeRequest(
+  public HttpResponse makeRequest(
       String path, Request.Builder requestBuilder) throws IOException {
     URI server = slb.getBestServer();
     LoadBalancedServiceEventData.Builder data = LoadBalancedServiceEventData.builder()
@@ -49,15 +48,13 @@ public class LoadBalancedService implements HttpService {
     }
     Call call = client.newCall(request);
     try {
-      Response response = call.execute();
-      if (response.body() != null && response.body().contentLength() != -1) {
-        data.setResponseSizeBytes(response.body().contentLength());
+      HttpResponse response = new LoadBalancedHttpResponse(server, slb, call.execute());
+      if (response.contentLength() != -1) {
+        data.setResponseSizeBytes(response.contentLength());
       }
-      slb.reportRequestSuccess(server);
       return response;
     } catch (IOException e) {
       data.setException(e);
-      slb.reportRequestException(server);
       throw new IOException(e);
     } finally {
       eventBus.post(new LoadBalancedServiceEvent(data.build()));

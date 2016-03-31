@@ -18,7 +18,6 @@ package com.facebook.buck.slb;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -37,9 +36,9 @@ public class SingleUriService implements HttpService {
   }
 
   @Override
-  public Response makeRequest(String path, Request.Builder requestBuilder) throws IOException {
+  public HttpResponse makeRequest(String path, Request.Builder requestBuilder) throws IOException {
     requestBuilder.url(getFullUrl(server, path));
-    return client.newCall(requestBuilder.build()).execute();
+    return new OkHttpResponseWrapper(client.newCall(requestBuilder.build()).execute());
   }
 
   @Override

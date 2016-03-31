@@ -21,11 +21,13 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -112,6 +114,11 @@ public class ClientSideSlb implements HttpLoadBalancer {
       try {
         Response response = pingClient.newCall(request).execute();
         try {
+          // Make sure we explicitly read the whole response and that's taken into account in
+          // the latency calculation.
+          try (InputStream inputStream = response.body().byteStream()) {
+            ByteStreams.copy(inputStream, ByteStreams.nullOutputStream());
+          }
           long requestLatencyMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
           perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
           healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
