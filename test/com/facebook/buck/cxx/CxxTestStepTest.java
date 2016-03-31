@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -117,6 +118,7 @@ public class CxxTestStepTest {
   }
 
   @Test
+  @Ignore("t10638841")
   public void timeout() throws IOException, InterruptedException {
     CxxTestStep step =
         new CxxTestStep(
