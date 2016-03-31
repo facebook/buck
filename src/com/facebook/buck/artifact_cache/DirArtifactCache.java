@@ -297,13 +297,21 @@ public class DirArtifactCache implements ArtifactCache {
         ImmutableSet.<FileVisitOption>of(),
         Integer.MAX_VALUE,
         new SimpleFileVisitor<Path>() {
+
+          @Override
+          public FileVisitResult preVisitDirectory(
+              Path dir, BasicFileAttributes attrs) throws IOException {
+            // do not work with files in temp folder as they will be moved later
+            if (dir.equals(getPathToTempFolder())) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            return super.preVisitDirectory(dir, attrs);
+          }
+
           @Override
           public FileVisitResult visitFile(Path file,
               BasicFileAttributes attrs) throws IOException {
-            // do not work with files in temp folder as they will be moved later
-            if (!file.getParent().equals(getPathToTempFolder())) {
-              allFiles.add(file.toFile());
-            }
+            allFiles.add(file.toFile());
             return super.visitFile(file, attrs);
           }
         });
