@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
@@ -25,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+
+import org.xml.sax.SAXException;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
@@ -34,6 +37,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.text.ParseException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Utility class to discover the location of toolchains contained inside an Xcode
@@ -90,16 +96,18 @@ public class AppleToolchainDiscovery {
         Path toolchainDir,
         ImmutableMap.Builder<String, AppleToolchain> identifierToToolchainBuilder)
         throws IOException {
-    try (InputStream toolchainInfoPlist = Files.newInputStream(
-             toolchainDir.resolve("ToolchainInfo.plist"));
+    Path toolchainInfoPlistPath = toolchainDir.resolve("ToolchainInfo.plist");
+    try (InputStream toolchainInfoPlist = Files.newInputStream(toolchainInfoPlistPath);
          BufferedInputStream bufferedToolchainInfoPlist = new BufferedInputStream(
              toolchainInfoPlist)) {
       NSDictionary parsedToolchainInfoPlist;
       try {
         parsedToolchainInfoPlist = (NSDictionary) PropertyListParser.parse(
             bufferedToolchainInfoPlist);
-      } catch (Exception e) {
-        throw new IOException(e);
+      } catch (PropertyListFormatException | ParseException | ParserConfigurationException |
+          SAXException e) {
+        LOG.error(e, "Failed to parse ToolchainInfo.plist: %s, ignoring", toolchainInfoPlistPath);
+        return;
       }
       NSObject identifierObject = parsedToolchainInfoPlist.objectForKey("Identifier");
       NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");

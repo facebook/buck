@@ -18,17 +18,24 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.testutil.TestLogSink;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -36,6 +43,9 @@ public class AppleToolchainDiscoveryTest {
 
   @Rule
   public TemporaryFolder temp = new TemporaryFolder();
+
+  @Rule
+  public TestLogSink logSink = new TestLogSink(AppleToolchainDiscovery.class);
 
   @Test
   public void shouldReturnAnEmptyMapIfNoToolchainsFound() throws IOException {
@@ -120,5 +130,29 @@ public class AppleToolchainDiscoveryTest {
             Optional.of(root),
             ImmutableList.<Path>of(Paths.get("invalid"))),
         equalTo(expected));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // for hasItems
+  public void shouldEmitLogMessageWhenFailingToReadToolchainInfo() throws Exception {
+    Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
+    Path tempRoot = temp.getRoot().toPath();
+    MoreFiles.copyRecursively(root, tempRoot);
+    Files.delete(tempRoot.resolve("Toolchains/foo.xctoolchain/ToolchainInfo.plist"));
+    Files.write(
+        tempRoot.resolve("Toolchains/bar.xctoolchain/ToolchainInfo.plist"),
+        ImmutableList.of("Not a valid plist"),
+        Charsets.UTF_8);
+
+    assertThat(
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            Optional.of(tempRoot),
+            ImmutableList.<Path>of()),
+        Matchers.<String, AppleToolchain>anEmptyMap());
+    assertThat(
+        logSink.getRecords(),
+        hasItems(
+            TestLogSink.logRecordWithMessage(matchesPattern("No .* found .* ignoring")),
+            TestLogSink.logRecordWithMessage(matchesPattern("Failed to parse .* ignoring"))));
   }
 }

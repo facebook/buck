@@ -18,12 +18,15 @@ package com.facebook.buck.apple;
 
 import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.dd.plist.NSDictionary;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -57,8 +60,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +76,9 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -81,6 +88,12 @@ public class AppleCxxPlatformsTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public TestLogSink logSink = new TestLogSink(AppleCxxPlatforms.class);
+
+  @Rule
+  public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
   public void iphoneOSSdkPathsBuiltFromDirectory() throws Exception {
@@ -931,4 +944,48 @@ AppleSdkPaths appleSdkPaths =
 
   }
 
+  @Test
+  public void nonExistentPlatformVersionPlistIsLogged() {
+    AppleCxxPlatform platform = buildAppleCxxPlatform(Paths.get("/nonexistentjabberwock"));
+    assertThat(platform.getBuildVersion(), equalTo(Optional.<String>absent()));
+    assertThat(
+        logSink.getRecords(),
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                matchesPattern(".*does not exist.*Build version will be unset.*"))));
+  }
+
+  @Test
+  public void invalidPlatformVersionPlistIsLogged() throws Exception {
+    Path tempRoot = temp.getRoot().toPath();
+    Path platformRoot = tempRoot.resolve("Platforms/iPhoneOS.platform");
+    Files.createDirectories(platformRoot);
+    Files.write(
+        platformRoot.resolve("version.plist"),
+        "I am, as a matter of fact, an extremely invalid plist.".getBytes(Charsets.UTF_8));
+    AppleCxxPlatform platform = buildAppleCxxPlatform(tempRoot);
+    assertThat(platform.getBuildVersion(), equalTo(Optional.<String>absent()));
+    assertThat(
+        logSink.getRecords(),
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                matchesPattern("Failed to parse.*Build version will be unset.*"))));
+  }
+
+  @Test
+  public void platformVersionPlistWithMissingFieldIsLogged() throws Exception {
+    Path tempRoot = temp.getRoot().toPath();
+    Path platformRoot = tempRoot.resolve("Platforms/iPhoneOS.platform");
+    Files.createDirectories(platformRoot);
+    Files.write(
+        platformRoot.resolve("version.plist"),
+        new NSDictionary().toXMLPropertyList().getBytes(Charsets.UTF_8));
+    AppleCxxPlatform platform = buildAppleCxxPlatform(tempRoot);
+    assertThat(platform.getBuildVersion(), equalTo(Optional.<String>absent()));
+    assertThat(
+        logSink.getRecords(),
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                matchesPattern(".*missing ProductBuildVersion. Build version will be unset.*"))));
+  }
 }

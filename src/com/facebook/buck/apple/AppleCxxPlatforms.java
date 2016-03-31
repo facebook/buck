@@ -54,6 +54,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -254,11 +255,29 @@ public class AppleCxxPlatforms {
     ImmutableMap<String, String> macros = macrosBuilder.build();
 
     Optional<String> buildVersion;
-    try (InputStream versionPlist =
-             Files.newInputStream(sdkPaths.getPlatformPath().resolve("version.plist"))) {
+    Path platformVersionPlistPath = sdkPaths.getPlatformPath().resolve("version.plist");
+    try (InputStream versionPlist = Files.newInputStream(platformVersionPlistPath)) {
       NSDictionary versionInfo = (NSDictionary) PropertyListParser.parse(versionPlist);
-      buildVersion = Optional.of(versionInfo.objectForKey("ProductBuildVersion").toString());
-    } catch (Exception e) {
+      try {
+        buildVersion = Optional.of(versionInfo.objectForKey("ProductBuildVersion").toString());
+      } catch (NullPointerException e) {
+        LOG.warn(
+            "In %s, missing ProductBuildVersion. Build version will be unset for this platform.",
+            platformVersionPlistPath);
+        buildVersion = Optional.absent();
+      }
+    } catch (NoSuchFileException e) {
+      LOG.warn(
+          "%s does not exist. Build version will be unset for this platform.",
+          platformVersionPlistPath);
+      buildVersion = Optional.absent();
+    } catch (PropertyListFormatException | SAXException | ParserConfigurationException |
+        ParseException | IOException e) {
+      // Some other error occurred, print the exception since it may contain error details.
+      LOG.warn(
+          e,
+          "Failed to parse %s. Build version will be unset for this platform.",
+          platformVersionPlistPath);
       buildVersion = Optional.absent();
     }
 
