@@ -171,10 +171,10 @@ public class CompileStringsStep implements Step {
     // (United States)" requests for a string, the Android runtime first looks for the string in
     // "es_US" set of resources, and if not found, returns the resource from the "es" set.
     // We merge these because we want the individual .fbstr files to be self contained for
-    // simplicity.
+    // simplicity except for "en" because the string is already in Android resources.
     for (String regionSpecificLocale : regionSpecificToBaseLocaleMap.keySet()) {
       String baseLocale = regionSpecificToBaseLocaleMap.get(regionSpecificLocale);
-      if (!resourcesByLocale.containsKey(baseLocale)) {
+      if (!resourcesByLocale.containsKey(baseLocale) || ENGLISH_LOCALE.equals(baseLocale)) {
         continue;
       }
 
