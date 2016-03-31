@@ -20,6 +20,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
@@ -28,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -127,21 +129,15 @@ public class WorkerShellStep implements Step {
   ImmutableList<String> getCommand(Platform platform) {
     ImmutableList<String> executionArgs = platform == Platform.WINDOWS ?
         ImmutableList.of("cmd.exe", "/c") :
-        ImmutableList.of("/bin/bash", "-e");
+        ImmutableList.of("/bin/bash", "-e", "-c");
 
     WorkerJobParams paramsToUse = this.getWorkerJobParamsToUse(platform);
-    // Split the startup args string on whitespace
-    ImmutableList<String> startupArgParts = ImmutableList.<String>builder()
-        .add(paramsToUse.getStartupArgs().split("\\s+"))
-        .build();
-    ImmutableList<String> startupCommand = ImmutableList.<String>builder()
-        .addAll(paramsToUse.getStartupCommand())
-        .addAll(startupArgParts)
-        .build();
-
     return ImmutableList.<String>builder()
         .addAll(executionArgs)
-        .addAll(startupCommand)
+        .add(FluentIterable.from(paramsToUse.getStartupCommand())
+              .transform(Escaper.SHELL_ESCAPER)
+              .append(paramsToUse.getStartupArgs())
+              .join(Joiner.on(' ')))
         .build();
   }
 
@@ -219,6 +215,8 @@ public class WorkerShellStep implements Step {
   public final String getDescription(ExecutionContext context) {
     return String.format("Sending job with args \'%s\' to the process started with \'%s\'",
         getExpandedJobArgs(context),
-        Joiner.on(' ').join(getCommand(context.getPlatform())));
+        FluentIterable.from(getCommand(context.getPlatform()))
+            .transform(Escaper.SHELL_ESCAPER)
+            .join(Joiner.on(' ')));
   }
 }
