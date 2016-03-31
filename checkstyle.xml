@@ -16,7 +16,9 @@ page at http://checkstyle.sourceforge.net/config.html -->
     -->
   </module>
 
-  <module name="NewlineAtEndOfFile"/>
+  <module name="NewlineAtEndOfFile">
+    <property name="lineSeparator" value="lf_cr_crlf"/>
+  </module>
 
   <module name="RegexpSingleline">
     <!-- Checks that FIXME is not used in comments.  TODO is preferred.
