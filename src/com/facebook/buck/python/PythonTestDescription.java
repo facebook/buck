@@ -309,11 +309,25 @@ public class PythonTestDescription implements
         if (params.getDeps().contains(buildRule) &&
             buildRule instanceof PythonLibrary) {
           PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
-          ImmutableMap<Path, SourcePath> pathToSourcePath = pythonLibrary.getSrcs(pythonPlatform);
+          ImmutableSortedSet<Path> paths;
+          if (coverageSpec.getPathName().isPresent()) {
+            Path path = coverageSpec.getBuildTarget().getBasePath().resolve(
+                coverageSpec.getPathName().get());
+            if (!pythonLibrary.getSrcs(pythonPlatform).keySet().contains(path)) {
+              throw new HumanReadableException(
+                  "%s: path %s specified in needed_coverage not found in target %s",
+                  params.getBuildTarget(),
+                  path,
+                  buildRule.getBuildTarget());
+            }
+            paths = ImmutableSortedSet.of(path);
+          } else {
+            paths = ImmutableSortedSet.copyOf(pythonLibrary.getSrcs(pythonPlatform).keySet());
+          }
           neededCoverageBuilder.add(
-              new Pair<>(
+              new Pair<Float, ImmutableSet<Path>>(
                   coverageSpec.getNeededCoverageRatio(),
-                  pathToSourcePath.keySet()));
+                  paths));
         } else {
             throw new HumanReadableException(
                     "%s: needed_coverage requires a python library dependency. Found %s instead",

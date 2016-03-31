@@ -464,12 +464,21 @@ public class TypeCoercerTest {
     ImmutableList<?> input = ImmutableList.of(
         ImmutableList.of(0.0, "//some:build-target"),
         ImmutableList.of(0.9, "//other/build:target"),
-        ImmutableList.of(1.0, "//:target"));
+        ImmutableList.of(1.0, "//:target", "some/path.py"));
     Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
     ImmutableList<NeededCoverageSpec> expectedResult = ImmutableList.of(
-        NeededCoverageSpec.of(0.0f, BuildTargetFactory.newInstance("//some:build-target")),
-        NeededCoverageSpec.of(0.9f, BuildTargetFactory.newInstance("//other/build:target")),
-        NeededCoverageSpec.of(1.0f, BuildTargetFactory.newInstance("//:target")));
+        NeededCoverageSpec.of(
+            0.0f,
+            BuildTargetFactory.newInstance("//some:build-target"),
+            Optional.<String>absent()),
+        NeededCoverageSpec.of(
+            0.9f,
+            BuildTargetFactory.newInstance("//other/build:target"),
+            Optional.<String>absent()),
+        NeededCoverageSpec.of(
+            1.0f,
+            BuildTargetFactory.newInstance("//:target"),
+            Optional.of("some/path.py")));
     assertEquals(expectedResult, result);
   }
 

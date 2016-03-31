@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -57,7 +59,7 @@ public class ExternalTestRunnerIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        Matchers.equalTo("TESTS PASSED!\n"));
+        is(equalTo("TESTS PASSED!\n")));
   }
 
   @Test
@@ -66,14 +68,13 @@ public class ExternalTestRunnerIntegrationTest {
         workspace.runBuckCommand(
             "test",
             "-c", "test.external_runner=" + workspace.getPath("test_runner_coverage.py"),
-            "//:python-coverage");
+            "//dir:python-coverage");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        Matchers.startsWith("[[0.9"));
-    assertThat(
-        result.getStdout(),
-        Matchers.endsWith(", [u'simple.py']]]\n"));
+        is(equalTo("[[0.0, [u'dir/simple.py']], " +
+            "[0.75, [u'dir/also_simple.py', u'dir/simple.py']], " +
+            "[1.0, [u'dir/also_simple.py']]]\n")));
   }
 
   @Test
@@ -101,7 +102,7 @@ public class ExternalTestRunnerIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout().trim(),
-        Matchers.equalTo("bobloblawlobslawbomb"));
+        is(equalTo("bobloblawlobslawbomb")));
   }
 
   @Test

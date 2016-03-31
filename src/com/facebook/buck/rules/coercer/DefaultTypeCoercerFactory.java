@@ -91,7 +91,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         sourcePathTypeCoercer);
     TypeCoercer<Float> floatTypeCoercer = new NumberTypeCoercer<>(Float.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
-        new NeededCoverageSpecTypeCoercer(floatTypeCoercer, buildTargetTypeCoercer);
+        new NeededCoverageSpecTypeCoercer(
+            floatTypeCoercer,
+            buildTargetTypeCoercer,
+            stringTypeCoercer);
     nonParameterizedTypeCoercers = new TypeCoercer<?>[] {
         // special classes
         labelTypeCoercer,

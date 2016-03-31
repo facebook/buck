@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
@@ -27,5 +28,6 @@ interface AbstractNeededCoverageSpec {
 
   float getNeededCoverageRatio();
   BuildTarget getBuildTarget();
+  Optional<String> getPathName();
 
 }

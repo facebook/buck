@@ -32,12 +32,15 @@ import java.util.Iterator;
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
   private final TypeCoercer<Float> floatTypeCoercer;
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<String> pathNameTypeCoercer;
 
   NeededCoverageSpecTypeCoercer(
       TypeCoercer<Float> floatTypeCoercer,
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
+      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<String> pathNameTypeCoercer) {
     this.floatTypeCoercer = floatTypeCoercer;
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+    this.pathNameTypeCoercer = pathNameTypeCoercer;
   }
 
   @Override
@@ -48,13 +51,18 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   @Override
   public boolean hasElementClass(Class<?>... types) {
     return floatTypeCoercer.hasElementClass(types) ||
-        buildTargetTypeCoercer.hasElementClass(types);
+        buildTargetTypeCoercer.hasElementClass(types) ||
+        pathNameTypeCoercer.hasElementClass(types);
   }
 
   @Override
   public void traverse(NeededCoverageSpec object, Traversal traversal) {
     floatTypeCoercer.traverse(object.getNeededCoverageRatio(), traversal);
     buildTargetTypeCoercer.traverse(object.getBuildTarget(), traversal);
+    Optional<String> pathName = object.getPathName();
+    if (pathName.isPresent()) {
+      pathNameTypeCoercer.traverse(pathName.get(), traversal);
+    }
   }
 
   @Override
@@ -74,7 +82,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
     if (object instanceof Collection<?>) {
       Collection<?> collection = (Collection<?>) object;
-      if (collection.size() == 2) {
+      if (collection.size() == 2 || collection.size() == 3) {
         Iterator<?> iter = collection.iterator();
         Float neededRatio = floatTypeCoercer.coerce(
             cellRoots,
@@ -92,13 +100,22 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
             filesystem,
             pathRelativeToProjectRoot,
             iter.next());
-        return NeededCoverageSpec.of(neededRatio, buildTarget);
+        Optional<String> pathName = Optional.absent();
+        if (iter.hasNext()) {
+          pathName = Optional.of(
+              pathNameTypeCoercer.coerce(
+                  cellRoots,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  iter.next()));
+        }
+        return NeededCoverageSpec.of(neededRatio, buildTarget, pathName);
       }
     }
 
     throw CoerceFailedException.simple(
         object,
         getOutputClass(),
-        "input should be a tuple of needed coverage ratio and a build target");
+        "input should be a tuple of needed coverage ratio, a build target, and optionally a path");
   }
 }
