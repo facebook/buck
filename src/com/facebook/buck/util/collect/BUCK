@@ -1,11 +1,5 @@
-java_library(
-  name = 'collect',
-  srcs = glob(['*.java']),
+standard_java_library(
   tests = [
     '//test/com/facebook/buck/util/collect:collect',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
   ],
 )

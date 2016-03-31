@@ -1,6 +1,6 @@
-#@# GENERATED FILE: DO NOT MODIFY e423d614fdc9c7d159b01f17ec27e9c88db0911e #@#
+#@# GENERATED FILE: DO NOT MODIFY f962b815e562c15a2f14c051e7a58c859d00bf50 #@#
 {
-  "rules" : {
+  "swift" : {
     "deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",

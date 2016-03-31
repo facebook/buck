@@ -1,9 +1,5 @@
-java_library(
-  name = 'coverage',
-  srcs = [
-    'ReportGenerator.java',
-  ],
-  autodeps = True,
+standard_java_library(
+  visibility = [], # Only visible to this build file.
 )
 
 java_binary(

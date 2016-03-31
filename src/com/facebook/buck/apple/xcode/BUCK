@@ -1,5 +1,4 @@
-java_immutables_library(
-  name = 'xcode',
+standard_java_library(
   srcs = [
     'GidGenerator.java',
     'XcodeprojSerializer.java',
@@ -11,9 +10,5 @@ java_immutables_library(
   ],
   tests = [
     '//test/com/facebook/buck/apple/xcode:xcode',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
   ],
 )

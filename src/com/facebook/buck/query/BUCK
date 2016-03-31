@@ -1,15 +1,9 @@
-java_immutables_library(
-  name = 'query',
-  srcs = glob(['*.java']),
+standard_java_library(
   immutable_types = [
     'QueryBuildTarget',
     'QueryFileTarget',
   ],
   tests = [
     '//test/com/facebook/buck/query:query',
-  ],
-  autodeps = True,
-  visibility = [
-      'PUBLIC',
   ],
 )

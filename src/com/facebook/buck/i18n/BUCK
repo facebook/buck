@@ -1,8 +1,1 @@
-java_library(
-  name = 'i18n',
-  srcs = glob(['*.java']),
-  autodeps = True,
-  visibility = [
-    'PUBLIC'
-  ],
-)
+standard_java_library()

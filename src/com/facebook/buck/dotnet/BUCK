@@ -1,7 +1,4 @@
-java_library(
-  name = 'dotnet',
-  srcs = glob(['*.java']),
-  autodeps = True,
+standard_java_library(
   visibility = [
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/dotnet:',

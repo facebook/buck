@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c089d37f8385f20d1da854b6b995dfb8ce46d452 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6ddea8f4cc1c185edc3ebdb464f40ae6aa41767c #@#
 {
   "autodeps" : {
     "deps" : [
@@ -55,7 +55,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/graph:graph",
-      "//src/com/facebook/buck/jvm/common:resources",
+      "//src/com/facebook/buck/jvm/common:common",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:fat-jar-main",
       "//src/com/facebook/buck/jvm/java:packagefinder",

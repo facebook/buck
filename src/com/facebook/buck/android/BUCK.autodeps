@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 050018aac720e915793f049b5df797290e2955cb #@#
+#@# GENERATED FILE: DO NOT MODIFY 75cd41bd1f257d096c1468aa7104f45faf552b6b #@#
 {
   "exceptions" : {
     "deps" : [
@@ -56,7 +56,7 @@
       "//src/com/facebook/buck/dalvik:steps",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/graph:graph",
-      "//src/com/facebook/buck/jvm/common:resources",
+      "//src/com/facebook/buck/jvm/common:common",
       "//src/com/facebook/buck/jvm/core:suggestbuildrules",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/jvm/java/runner:runner",

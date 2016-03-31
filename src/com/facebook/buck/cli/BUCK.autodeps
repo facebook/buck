@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e7652bde76b3f48f97099130da4ae1115fa320cd #@#
+#@# GENERATED FILE: DO NOT MODIFY 7dd3c9ad8ff7d8718a338e7309b566a37187be16 #@#
 {
   "cli" : {
     "deps" : [
@@ -21,7 +21,7 @@
       "//src/com/facebook/buck/file:downloader",
       "//src/com/facebook/buck/file:file",
       "//src/com/facebook/buck/graph:graph",
-      "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:watchman",

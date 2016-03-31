@@ -1,10 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 046e7ec1b7618055fc639b33deddacfe798b1cb5 #@#
+#@# GENERATED FILE: DO NOT MODIFY a85e75309309a4f06c85e04dfdeba16f4875db11 #@#
 {
   "halide" : {
     "deps" : [
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
-      "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
@@ -30,7 +30,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cxx:platform",
-      "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//test/com/facebook/buck/cxx:testutil"

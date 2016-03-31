@@ -151,6 +151,61 @@ def java_test(
     **kwargs
   )
 
+def _get_name():
+    base_path = get_base_path()
+    import os.path
+    return os.path.basename(base_path)
+
+def standard_java_library(
+    srcs = None,
+    immutable_types = None,
+    tests = None,
+    resources = None,
+    provided_deps = None,
+    visibility = None,
+):
+    '''By default, generates a java_library() with the following args:
+
+    java_library(
+      name = <DIRECTORY_NAME>,
+      srcs = glob(['*.java']),
+      autodeps = True,
+      visibility = [
+        'PUBLIC',
+      ],
+    )
+
+    Some of these fields can be overridden.
+    '''
+    if srcs is None:
+        srcs = glob(['*.java'])
+    if tests is None:
+        tests = []
+    if resources is None:
+        resources = []
+    if provided_deps is None:
+        provided_deps = []
+    if visibility is None:
+        visibility = [ 'PUBLIC' ]
+
+    kwargs = {}
+    if immutable_types:
+        build_rule = java_immutables_library
+        kwargs['immutable_types'] = immutable_types
+    else:
+        build_rule = java_library
+
+    build_rule(
+        name = _get_name(),
+        srcs = srcs,
+        resources = resources,
+        tests = tests,
+        autodeps = True,
+        provided_deps = provided_deps,
+        visibility = visibility,
+        **kwargs
+    )
+
 def standard_java_test(run_test_separately = False):
     srcs = glob(['*.java'])
     test_srcs = []
@@ -172,9 +227,7 @@ def standard_java_test(run_test_separately = False):
         )
 
     if len(test_srcs) > 0:
-        base_path = get_base_path()
-        import os.path
-        name = os.path.basename(base_path)
+        name = _get_name()
         if name == 'testutil':
             # Having a com.facebook.buck.testutil package was probably a bad choice.
             name = 'testutil_test'

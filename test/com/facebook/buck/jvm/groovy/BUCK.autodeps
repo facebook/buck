@@ -1,10 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 7b07e5073a50e18e08ff364ceb7711342002aa0c #@#
+#@# GENERATED FILE: DO NOT MODIFY 534ea53d6af9363b4fd4844a2ad69d6ba6f1174a #@#
 {
   "groovy" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/jvm/groovy:rules",
+      "//src/com/facebook/buck/jvm/groovy:groovy",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",

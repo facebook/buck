@@ -1,11 +1,5 @@
-java_library(
-  name = 'hashing',
-  srcs = glob(['*.java']),
+standard_java_library(
   tests = [
     '//test/com/facebook/buck/hashing:hashing',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
   ],
 )

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY dded9d100bfc655dfcceddc26ad1902761937d21 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8d7a1e1b5f95cb8ff5942ea0b28a1082f0b11ac6 #@#
 {
   "ocaml" : {
     "deps" : [
@@ -7,7 +7,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/ocaml:rules",
+      "//src/com/facebook/buck/ocaml:ocaml",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",

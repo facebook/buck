@@ -1,15 +1,4 @@
-java_library(
-  name = 'rust',
-  srcs = [
-    'RustBinary.java',
-    'RustBinaryDescription.java',
-    'RustBuckConfig.java',
-    'RustCompileStep.java',
-    'RustLibrary.java',
-    'RustLibraryDescription.java',
-    'RustLinkable.java',
-  ],
-  autodeps = True,
+standard_java_library(
   visibility = [
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/rust/...',

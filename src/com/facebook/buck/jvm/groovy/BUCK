@@ -1,15 +1,5 @@
-java_library(
-  name = 'rules',
-  srcs = [
-    'GroovyBuckConfig.java',
-    'GroovyLibraryDescription.java',
-    'GroovycToJarStepFactory.java',
-    'GroovyTestDescription.java',
-    'GroovycStep.java',
-  ],
+standard_java_library(
   tests = [
     '//test/com/facebook/buck/jvm/groovy:groovy',
   ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
 )

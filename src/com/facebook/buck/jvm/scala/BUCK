@@ -1,15 +1,5 @@
-java_library(
-  name = 'rules',
-  srcs = [
-    'ScalaBuckConfig.java',
-    'ScalaLibraryDescription.java',
-    'ScalaTestDescription.java',
-    'ScalacToJarStepFactory.java',
-    'ScalacStep.java',
-  ],
+standard_java_library(
   tests = [
     '//test/com/facebook/buck/jvm/scala:scala',
   ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
 )

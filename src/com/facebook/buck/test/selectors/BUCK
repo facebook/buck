@@ -4,9 +4,7 @@ java_library(
   tests = [
     '//test/com/facebook/buck/test/selectors:selectors',
   ],
-  deps = [
-    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.
-  ],
+  autodeps = False, # This list is to remain empty. See src/com/facebook/buck/testruner/BUCK.
   visibility = [
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/apple:rules',

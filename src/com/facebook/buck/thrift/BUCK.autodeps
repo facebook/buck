@@ -1,6 +1,6 @@
-#@# GENERATED FILE: DO NOT MODIFY abdf65f75ceae308f8ab3cff5fc5c9875104d5b5 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6b6211fd4ffa095b461413c90f1cb2f13dad4f61 #@#
 {
-  "rules" : {
+  "thrift" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:io",

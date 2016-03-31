@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d9926c22a55a5df8a1e6a890af9e3dbe9b0b00f3 #@#
+#@# GENERATED FILE: DO NOT MODIFY a10ac13ea2ef6e7c4ee13088cd2213c01d4bf07b #@#
 {
   "apple" : {
     "deps" : [
@@ -11,7 +11,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
-      "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/js:js",

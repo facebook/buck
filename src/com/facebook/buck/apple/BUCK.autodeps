@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b840020326af0ae82c4421fc142bb1d21dc5945d #@#
+#@# GENERATED FILE: DO NOT MODIFY 0ec9c75c15bffedf6b61d41816a0d312d781bf26 #@#
 {
   "generators" : {
     "deps" : [
@@ -20,7 +20,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
-      "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
@@ -51,7 +51,7 @@
     "deps" : [
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
-      "//src/com/facebook/buck/halide:rules",
+      "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/step/fs:fs",

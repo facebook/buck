@@ -1,6 +1,4 @@
-java_immutables_library(
-  name = 'lua',
-  srcs = glob(['*.java']),
+standard_java_library(
   immutable_types = [
     'LuaPackageComponents',
   ],
@@ -10,9 +8,5 @@ java_immutables_library(
   resources = [
     'native-starter.cpp.in',
     'starter.lua.in',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
   ],
 )

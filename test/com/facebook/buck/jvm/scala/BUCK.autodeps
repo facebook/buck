@@ -1,8 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 262020c8386b0acd5cfa97c783899bd982cbb43d #@#
+#@# GENERATED FILE: DO NOT MODIFY 168d92caf22c1a53a85f9ec54f6ef55528d373c1 #@#
 {
   "scala" : {
     "deps" : [
-      "//src/com/facebook/buck/jvm/scala:rules",
+      "//src/com/facebook/buck/jvm/scala:scala",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

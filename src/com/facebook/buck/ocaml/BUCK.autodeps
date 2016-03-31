@@ -1,6 +1,6 @@
-#@# GENERATED FILE: DO NOT MODIFY 87713a2912db0a2d4b8311051037e281bd9a7f14 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7e1a1b2407e47a5ddc0404c44601f5dce63520db #@#
 {
-  "rules" : {
+  "ocaml" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:executable-finder",
@@ -12,7 +12,6 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",

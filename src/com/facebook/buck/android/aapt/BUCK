@@ -1,10 +1,6 @@
-java_library(
-  name = 'aapt',
-  srcs = glob(['*.java']),
+standard_java_library(
   tests = [
     '//test/com/facebook/buck/android:unit',
     '//test/com/facebook/buck/android/aapt:aapt',
   ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
 )

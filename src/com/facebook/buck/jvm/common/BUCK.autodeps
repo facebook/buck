@@ -1,6 +1,6 @@
-#@# GENERATED FILE: DO NOT MODIFY 9c5381fdbdffdefca1156bbb6569c8c5ccb6fc0e #@#
+#@# GENERATED FILE: DO NOT MODIFY f03a5c19f5672545d30c1dae858cbae42f347858 #@#
 {
-  "resources" : {
+  "common" : {
     "deps" : [
       "//src/com/facebook/buck/util:exceptions"
     ],

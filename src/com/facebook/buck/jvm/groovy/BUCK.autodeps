@@ -1,9 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY c41299941b68a4208f431d1fa5de77acebcc1a7e #@#
+#@# GENERATED FILE: DO NOT MODIFY 19775e14eab02d2bf3d0f1a1f6058d88f77355ec #@#
 {
-  "rules" : {
+  "groovy" : {
     "deps" : [
       "//src/com/facebook/buck/io:executable-finder",
-      "//src/com/facebook/buck/jvm/common:resources",
+      "//src/com/facebook/buck/jvm/common:common",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io"
     ],
