@@ -159,18 +159,15 @@ public class WorkerShellStepTest {
             ImmutableList.of(
                 "/bin/bash",
                 "-e",
-                "command",
-                "--platform",
-                "unix-like")));
+                "-c",
+                "command --platform unix-like")));
     assertThat(
         step.getCommand(Platform.WINDOWS),
         Matchers.equalTo(
             ImmutableList.of(
                 "cmd.exe",
                 "/c",
-                "command",
-                "--platform",
-                "windows")));
+                "command --platform windows")));
   }
 
   @Test
@@ -201,7 +198,7 @@ public class WorkerShellStepTest {
     WorkerProcess workerProcess = new FakeWorkerProcess(ImmutableMap.of("myJobArgs", jobResult));
 
     ConcurrentHashMap<String, WorkerProcess> workerProcessMap = new ConcurrentHashMap<>();
-    workerProcessMap.put("/bin/bash -e startupCommand startupArgs", workerProcess);
+    workerProcessMap.put("/bin/bash -e -c startupCommand startupArgs", workerProcess);
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
