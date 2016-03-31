@@ -13,6 +13,7 @@ java_library(
 )
 
 SUPPORT_SRCS = [
+  'AbstractNeededCoverageSpec.java',
   'AbstractPythonPlatform.java',
   'AbstractPythonVersion.java',
   'PythonEnvironment.java',
@@ -21,6 +22,7 @@ java_immutables_library(
   name = 'support',
   srcs = SUPPORT_SRCS,
   immutable_types = [
+    'NeededCoverageSpec',
     'PythonPlatform',
     'PythonVersion',
   ],

@@ -304,15 +304,16 @@ public class PythonTestDescription implements
 
     ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
         ImmutableList.builder();
-    for (Pair<Float, BuildTarget> coveragePair : args.neededCoverage.get()) {
-        BuildRule buildRule = resolver.getRule(coveragePair.getSecond());
+    for (NeededCoverageSpec coverageSpec : args.neededCoverage.get()) {
+        BuildRule buildRule = resolver.getRule(coverageSpec.getBuildTarget());
         if (params.getDeps().contains(buildRule) &&
-                buildRule instanceof PythonLibrary) {
-            PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
-            ImmutableMap<Path, SourcePath> pathToSourcePath = pythonLibrary.getSrcs(pythonPlatform);
-            neededCoverageBuilder.add(
-                    new Pair<Float, ImmutableSet<Path>>(coveragePair.getFirst(),
-                                                        pathToSourcePath.keySet()));
+            buildRule instanceof PythonLibrary) {
+          PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
+          ImmutableMap<Path, SourcePath> pathToSourcePath = pythonLibrary.getSrcs(pythonPlatform);
+          neededCoverageBuilder.add(
+              new Pair<>(
+                  coverageSpec.getNeededCoverageRatio(),
+                  pathToSourcePath.keySet()));
         } else {
             throw new HumanReadableException(
                     "%s: needed_coverage requires a python library dependency. Found %s instead",
@@ -384,7 +385,7 @@ public class PythonTestDescription implements
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
     public Optional<ImmutableSet<BuildTarget>> preloadDeps;
     public Optional<ImmutableList<String>> linkerFlags;
-    public Optional<ImmutableList<Pair<Float, BuildTarget>>> neededCoverage;
+    public Optional<ImmutableList<NeededCoverageSpec>> neededCoverage;
 
     public Optional<ImmutableList<String>> buildArgs;
 

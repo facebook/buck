@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -88,6 +89,9 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new ListTypeCoercer<>(stringTypeCoercer));
     TypeCoercer<OCamlSource> ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(
         sourcePathTypeCoercer);
+    TypeCoercer<Float> floatTypeCoercer = new NumberTypeCoercer<>(Float.class);
+    TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
+        new NeededCoverageSpecTypeCoercer(floatTypeCoercer, buildTargetTypeCoercer);
     nonParameterizedTypeCoercers = new TypeCoercer<?>[] {
         // special classes
         labelTypeCoercer,
@@ -103,7 +107,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         // numeric
         new NumberTypeCoercer<>(Integer.class),
         new NumberTypeCoercer<>(Double.class),
-        new NumberTypeCoercer<>(Float.class),
+        floatTypeCoercer,
         new NumberTypeCoercer<>(Long.class),
         new NumberTypeCoercer<>(Short.class),
         new NumberTypeCoercer<>(Byte.class),
@@ -119,6 +123,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new LogLevelTypeCoercer(),
         new ManifestEntriesTypeCoercer(jacksonObjectMapper),
         patternTypeCoercer,
+        neededCoverageSpecTypeCoercer,
     };
   }
 

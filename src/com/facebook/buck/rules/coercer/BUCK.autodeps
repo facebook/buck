@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6499be3567023aeec6c86e1f0376d9db303f4b37 #@#
+#@# GENERATED FILE: DO NOT MODIFY db3ef40bcadc31edebb54dd27dbb98c77273a326 #@#
 {
   "coercer" : {
     "deps" : [
@@ -10,6 +10,7 @@
       "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util/immutables:immutables",

@@ -26,8 +26,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -454,6 +456,24 @@ public class TypeCoercerTest {
   }
 
   @Test
+  public void coerceToNeededCoverageSpec()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfNeededCoverageSpecs").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<?> input = ImmutableList.of(
+        ImmutableList.of(0.0, "//some:build-target"),
+        ImmutableList.of(0.9, "//other/build:target"),
+        ImmutableList.of(1.0, "//:target"));
+    Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
+    ImmutableList<NeededCoverageSpec> expectedResult = ImmutableList.of(
+        NeededCoverageSpec.of(0.0f, BuildTargetFactory.newInstance("//some:build-target")),
+        NeededCoverageSpec.of(0.9f, BuildTargetFactory.newInstance("//other/build:target")),
+        NeededCoverageSpec.of(1.0f, BuildTargetFactory.newInstance("//:target")));
+    assertEquals(expectedResult, result);
+  }
+
+  @Test
   public void coerceToEnumShouldWorkInList()
     throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
@@ -676,6 +696,7 @@ public class TypeCoercerTest {
     public Either<Path, ImmutableList<String>> eitherPathOrListOfStrings;
     public Either<ImmutableList<String>, Path> eitherListOfStringsOrPath;
     public ImmutableSet<TestEnum> setOfTestEnums;
+    public ImmutableList<NeededCoverageSpec> listOfNeededCoverageSpecs;
   }
 
   private static enum TestEnum { RED, PURPLE, yellow, grey, PINK, white, VIOLET }
