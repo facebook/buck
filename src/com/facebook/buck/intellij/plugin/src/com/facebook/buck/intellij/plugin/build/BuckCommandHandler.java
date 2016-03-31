@@ -214,6 +214,10 @@ public abstract class BuckCommandHandler {
     handler.startNotify();
   }
 
+  protected boolean processExitSuccesfull() {
+    return process.exitValue() == 0;
+  }
+
   /**
    * Wait for process termination.
    */
