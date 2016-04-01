@@ -833,6 +833,10 @@ public class CxxLibraryDescription implements
     return cxxPlatforms;
   }
 
+  public CxxPlatform getDefaultCxxPlatform() {
+    return defaultCxxPlatform;
+  }
+
   @Override
   public <A extends Arg, U> Optional<U> createMetadata(
       BuildTarget buildTarget,

@@ -219,7 +219,7 @@ public class CxxLibrary
         Preconditions.checkNotNull(libraries));
   }
 
-  private BuildRule getLibraryLinkRule(
+  public BuildRule getLibraryLinkRule(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     return requireBuildRule(
