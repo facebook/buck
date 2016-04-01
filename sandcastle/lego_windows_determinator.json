@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Build Buck on Windows",
+    "steps": [
+      {
+        "name": "Building Buck with ant",
+        "shell": "powershell -C 'ant clean default; exit $LastExitCode'"
+      },
+      {
+        "name": "Linting with ant",
+        "shell": "powershell -C 'ant lint; exit $LastExitCode'"
+      },
+      {
+        "name": "Ensuring that `buck clean` works correctly",
+        "shell": "powershell -C '.\\bin\\buck clean; exit $LastExitCode'"
+      },
+      {
+        "name": "Building Buck with Buck",
+        "shell": "powershell -C '.\\bin\\buck build buck; exit $LastExitCode'"
+      },
+      {
+        "name": "Testing with Buck",
+        "shell": "powershell -C '.\\bin\\buck test --all --test-selectors=@windows_failures.txt; exit $LastExitCode'",
+        "required": false
+      }
+    ]
+  }
+]
