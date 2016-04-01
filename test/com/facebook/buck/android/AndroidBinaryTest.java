@@ -125,7 +125,9 @@ public class AndroidBinaryTest {
         BuildTargets.getGenPath(aaptPackageTarget, "__%s__proguard__/.proguard/");
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
         proguardOutputDir.resolve("configuration.txt"),
-        proguardOutputDir.resolve("mapping.txt"));
+        proguardOutputDir.resolve("mapping.txt"),
+        proguardOutputDir.resolve("seeds.txt")
+    );
 
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
 

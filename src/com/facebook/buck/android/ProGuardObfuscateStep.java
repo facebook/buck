@@ -106,6 +106,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
     buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
+    buildableContext.recordArtifact(commandLineHelperStep.getSeedsTxt());
 
     steps.add(
         commandLineHelperStep,
