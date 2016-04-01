@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -67,13 +68,21 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
       Tool strip,
       Path output) {
     super(buildRuleParams, resolver);
-    Preconditions.checkArgument(
-        buildRuleParams.getBuildTarget().getFlavors().contains(RULE_FLAVOR),
-        "CxxStrip rule %s should contain %s flavor", this, RULE_FLAVOR);
     this.stripStyle = stripStyle;
     this.cxxLinkSourcePath = cxxLinkSourcePath;
     this.strip = strip;
     this.output = output;
+    performChecks(buildRuleParams.getBuildTarget());
+  }
+
+  private void performChecks(BuildTarget buildTarget) {
+    Preconditions.checkArgument(
+        buildTarget.getFlavors().contains(RULE_FLAVOR),
+        "CxxStrip rule %s should contain %s flavor", this, RULE_FLAVOR);
+    Preconditions.checkArgument(
+        StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        "CxxStrip rule %s should contain one of the strip style flavors (%s)",
+        this, StripStyle.FLAVOR_DOMAIN.getFlavors());
   }
 
   public static BuildRuleParams removeStripStyleFlavorInParams(
