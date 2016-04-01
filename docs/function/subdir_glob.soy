@@ -6,17 +6,17 @@
     {param title: 'subdir_glob()' /}
     {param prettify: true /}
     {param description}
-      The subdir_glob() function is useful for defining header maps for C/C++ libraries which 
+      The subdir_glob() function is useful for defining header maps for C/C++ libraries which
       should be relative the given sub-directory.
     {/param}
     {param content}
 
-{call buck.rule}
+{call buck.function}
 {param status: 'UNFROZEN' /}
 {param overview}
-	<p>The <code>subdir_glob()</code> function is useful for defining header maps for C/C++ libraries 
-	which should be relative the given sub-directory. Given a list of tuples, the form of 
-	(relative-sub-directory, glob-pattern), return a dict of sub-directory relative paths to full 
+	<p>The <code>subdir_glob()</code> function is useful for defining header maps for C/C++ libraries
+	which should be relative the given sub-directory. Given a list of tuples, the form of
+	(relative-sub-directory, glob-pattern), return a dict of sub-directory relative paths to full
 	paths.</p>
 	<p>Please refer to <code>{call buck.fn_glob /}</code> for explanations and examples of the pattern. </p>
 {/param}
@@ -57,10 +57,10 @@ Given this <code>exported_headers</code> description:
 exported_headers = subdir_glob([
     ("lib/source", "video/**/*.h"),
     ("lib/source", "audio/**/*.h"),
-  ], 
+  ],
   excludes = [
     "lib/source/video/codecs/*.h",
-  ], 
+  ],
   prefix = "MediaLib/")
 </pre>{/literal}
 
@@ -89,7 +89,7 @@ lib/
 
 {/param}
 
-{/call} // buck.rule
+{/call} // buck.function
     {/param} // content
   {/call}
 {/template}

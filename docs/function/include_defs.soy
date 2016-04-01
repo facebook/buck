@@ -11,7 +11,7 @@
     {/param}
     {param content}
 
-{call buck.rule}
+{call buck.function}
 {param status: 'FROZEN' /}
 {param overview}
 The <code>include_defs()</code> function is used to include
@@ -35,7 +35,7 @@ macros for creating more complex build rules.
 {call buck.functionArg}
   {param desc}
   The first and only argument is a path, of sorts, to a file containing
-  {sp}<a href="{ROOT}extending/macros.html"><code>macros</code></a> and 
+  {sp}<a href="{ROOT}extending/macros.html"><code>macros</code></a> and
   constants. It looks similar to a build target because it starts with
   {sp}<code>//</code> (indicating the root of the project), but is not a
   proper build target because it identifies a file relative to the root of
@@ -72,7 +72,7 @@ android_binary(
 
 {/param}
 
-{/call} // buck.rule
+{/call} // buck.function
     {/param} // content
   {/call}
 {/template}
