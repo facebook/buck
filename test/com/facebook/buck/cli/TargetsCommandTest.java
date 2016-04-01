@@ -524,7 +524,7 @@ public class TargetsCommandTest {
         .build();
 
     Path genSrc = resDir.resolve("foo.txt");
-    BuildTarget genTarget = BuildTargetFactory.newInstance("//:res");
+    BuildTarget genTarget = BuildTargetFactory.newInstance("//:gen");
     TargetNode<?> genNode = GenruleBuilder.newGenruleBuilder(genTarget)
         .setSrcs(ImmutableList.<SourcePath>of(new PathSourcePath(projectFilesystem, genSrc)))
         .build();
