@@ -689,38 +689,32 @@ public class CxxDescriptionEnhancer {
     // Add object files into the args.
     argsBuilder.addAll(SourcePathArg.from(sourcePathResolver, objects.values()));
 
-    // Generate the final link rule.  We use the top-level target as the link rule's
-    // target, so that it corresponds to the actual binary we build.
-    CxxLink cxxLink =
-        CxxLinkableEnhancer.createCxxLinkableBuildRule(
-            cxxPlatform,
-            params,
-            resolver,
-            sourcePathResolver,
-            createCxxLinkTarget(params.getBuildTarget()),
-            Linker.LinkType.EXECUTABLE,
-            Optional.<String>absent(),
-            linkOutput,
-            linkStyle,
-            FluentIterable.from(params.getDeps())
-                .filter(NativeLinkable.class),
-            cxxRuntimeType,
-            Optional.<SourcePath>absent(),
-            ImmutableSet.<BuildTarget>of(),
-            NativeLinkableInput.builder()
-                .setArgs(argsBuilder.build())
-                .setFrameworks(frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
-                .setLibraries(libraries.or(ImmutableSortedSet.<FrameworkPath>of()))
-                .build());
-    resolver.addToIndex(cxxLink);
+    BuildTarget linkRuleTarget = createCxxLinkTarget(params.getBuildTarget());
+
+    CxxLink cxxLink = createCxxLinkRule(
+        params,
+        resolver,
+        cxxPlatform,
+        linkStyle,
+        frameworks,
+        libraries,
+        cxxRuntimeType,
+        sourcePathResolver,
+        linkOutput,
+        argsBuilder,
+        linkRuleTarget);
 
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.absent();
     if (stripStyle.isPresent()) {
-      CxxStrip stripRule =
-          createCxxStripRule(params, cxxPlatform, stripStyle, sourcePathResolver, cxxLink);
+      CxxStrip stripRule = createCxxStripRule(
+          params,
+          resolver,
+          cxxPlatform,
+          stripStyle.get(),
+          sourcePathResolver,
+          cxxLink);
       cxxStrip = Optional.of(stripRule);
-      resolver.addToIndex(stripRule);
       binaryRuleForExecutable = stripRule;
     } else {
       binaryRuleForExecutable = cxxLink;
@@ -739,25 +733,80 @@ public class CxxDescriptionEnhancer {
         executableBuilder.build());
   }
 
-  private static CxxStrip createCxxStripRule(
+  private static CxxLink createCxxLinkRule(
       BuildRuleParams params,
+      BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      Optional<StripStyle> stripStyle,
+      Linker.LinkableDepType linkStyle,
+      Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
+      Optional<ImmutableSortedSet<FrameworkPath>> libraries,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       SourcePathResolver sourcePathResolver,
-      CxxLink cxxLink) {
+      Path linkOutput,
+      ImmutableList.Builder<Arg> argsBuilder,
+      BuildTarget linkRuleTarget) throws NoSuchBuildTargetException {
+    CxxLink cxxLink;
+    Optional<BuildRule> existingCxxLinkRule = resolver.getRuleOptional(linkRuleTarget);
+    if (existingCxxLinkRule.isPresent()) {
+      Preconditions.checkArgument(existingCxxLinkRule.get() instanceof CxxLink);
+      cxxLink = (CxxLink) existingCxxLinkRule.get();
+    } else {
+      // Generate the final link rule.  We use the top-level target as the link rule's
+      // target, so that it corresponds to the actual binary we build.
+      cxxLink =
+          CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              cxxPlatform,
+              params,
+              resolver,
+              sourcePathResolver,
+              linkRuleTarget,
+              Linker.LinkType.EXECUTABLE,
+              Optional.<String>absent(),
+              linkOutput,
+              linkStyle,
+              FluentIterable.from(params.getDeps())
+                  .filter(NativeLinkable.class),
+              cxxRuntimeType,
+              Optional.<SourcePath>absent(),
+              ImmutableSet.<BuildTarget>of(),
+              NativeLinkableInput.builder()
+                  .setArgs(argsBuilder.build())
+                  .setFrameworks(frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
+                  .setLibraries(libraries.or(ImmutableSortedSet.<FrameworkPath>of()))
+                  .build());
+      resolver.addToIndex(cxxLink);
+    }
+    return cxxLink;
+  }
+
+  public static CxxStrip createCxxStripRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      StripStyle stripStyle,
+      SourcePathResolver sourcePathResolver,
+      BuildRule unstrippedBinaryRule) {
     BuildRuleParams stripRuleParams = params
         .copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(
-                CxxStrip.RULE_FLAVOR, stripStyle.get().getFlavor()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(cxxLink)),
+                CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
+            Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    return new CxxStrip(
-        stripRuleParams,
-        sourcePathResolver,
-        stripStyle.get(),
-        new BuildTargetSourcePath(cxxLink.getBuildTarget()),
-        cxxPlatform.getStrip(),
-        CxxDescriptionEnhancer.getLinkOutputPath(stripRuleParams.getBuildTarget()));
+    Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());
+    if (exisitingRule.isPresent()) {
+      Preconditions.checkArgument(exisitingRule.get() instanceof CxxStrip);
+      return (CxxStrip) exisitingRule.get();
+    } else {
+      CxxStrip cxxStrip = new CxxStrip(
+          stripRuleParams,
+          sourcePathResolver,
+          stripStyle,
+          new BuildTargetSourcePath(unstrippedBinaryRule.getBuildTarget()),
+          cxxPlatform.getStrip(),
+          CxxDescriptionEnhancer.getLinkOutputPath(stripRuleParams.getBuildTarget()));
+      resolver.addToIndex(cxxStrip);
+      return cxxStrip;
+    }
   }
 
   /**

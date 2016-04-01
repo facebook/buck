@@ -236,13 +236,18 @@ public class AppleBinaryDescription implements
         throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
       }
     } else {
-      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-      AppleDescriptions.populateCxxBinaryDescriptionArg(
-          new SourcePathResolver(resolver),
-          delegateArg,
-          args,
-          params.getBuildTarget());
-      return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+      Optional<BuildRule> existingRule = resolver.getRuleOptional(params.getBuildTarget());
+      if (existingRule.isPresent()) {
+        return existingRule.get();
+      } else {
+        CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+        AppleDescriptions.populateCxxBinaryDescriptionArg(
+            new SourcePathResolver(resolver),
+            delegateArg,
+            args,
+            params.getBuildTarget());
+        return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+      }
     }
   }
 
@@ -277,6 +282,12 @@ public class AppleBinaryDescription implements
       BuildRuleResolver resolver,
       A args,
       FatBinaryInfo fatBinaryInfo) throws NoSuchBuildTargetException {
+
+    Optional<BuildRule> existingRule = resolver.getRuleOptional(params.getBuildTarget());
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
     ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
     for (BuildTarget thinTarget : fatBinaryInfo.getThinTargets()) {
       Optional<BuildRule> existingThinRule = resolver.getRuleOptional(thinTarget);

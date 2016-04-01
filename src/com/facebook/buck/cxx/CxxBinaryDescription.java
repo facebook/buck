@@ -225,7 +225,7 @@ public class CxxBinaryDescription implements
     //     preventing it from affecting link parallelism.
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
-    return new CxxBinary(
+    CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         resolver,
         pathResolver,
@@ -233,6 +233,8 @@ public class CxxBinaryDescription implements
         cxxLinkAndCompileRules.executable,
         args.frameworks.get(),
         args.tests.get());
+    resolver.addToIndex(cxxBinary);
+    return cxxBinary;
   }
 
   @Override
