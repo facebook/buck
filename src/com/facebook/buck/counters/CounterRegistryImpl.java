@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -63,6 +64,7 @@ public class CounterRegistryImpl implements CounterRegistry {
       /* initialDelay */ firstFlushIntervalMillis,
       /* period */ flushIntervalMillis,
       /* unit */ TimeUnit.MILLISECONDS);
+    eventBus.register(this);
   }
 
   @Override
@@ -94,6 +96,12 @@ public class CounterRegistryImpl implements CounterRegistry {
           "Duplicate counters=[%s]",
           countersToRegister);
     }
+  }
+
+  @Override
+  @Subscribe
+  public void registerCounters(AsyncCounterRegistrationEvent event) {
+    registerCounters(event.getCounters());
   }
 
   @Override

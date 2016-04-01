@@ -16,7 +16,11 @@
 
 package com.facebook.buck.counters;
 
+import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -38,4 +42,31 @@ public interface CounterRegistry extends Closeable {
       ImmutableMap<String, String> tags);
 
   void registerCounters(Collection<Counter> counters);
+
+  @Subscribe
+  void registerCounters(AsyncCounterRegistrationEvent event);
+
+  class AsyncCounterRegistrationEvent extends AbstractBuckEvent {
+
+    private ImmutableCollection<Counter> counters;
+
+    public AsyncCounterRegistrationEvent(ImmutableCollection<Counter> counters) {
+      super(EventKey.unique());
+      this.counters = counters;
+    }
+
+    public ImmutableCollection<Counter> getCounters() {
+      return counters;
+    }
+
+    @Override
+    protected String getValueString() {
+      return toString();
+    }
+
+    @Override
+    public String getEventName() {
+      return "AsyncCounterRegistration";
+    }
+  }
 }

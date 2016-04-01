@@ -106,7 +106,7 @@ public class DirArtifactCache implements ArtifactCache {
       // Now copy the artifact out.
       filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.<String>absent()), output.get());
 
-      result = CacheResult.hit(name, metadata.build());
+      result = CacheResult.hit(name, metadata.build(), filesystem.getFileSize(output.get()));
     } catch (NoSuchFileException e) {
       result = CacheResult.miss();
     } catch (IOException e) {

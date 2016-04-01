@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5efa7c497fc758d77bfb3133d895d34548b424f4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7b0a701ba90e80c57455f0efb694c6b892142174 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -48,6 +48,7 @@
   "impl" : {
     "deps" : [
       "//src/com/facebook/buck/artifact_cache:binary_protocol",
+      "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",

@@ -199,6 +199,7 @@ public class HttpArtifactCacheTest {
     CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
     assertEquals(result.cacheError().or(""), CacheResultType.HIT, result.getType());
     assertEquals(Optional.of(data), filesystem.readFileIfItExists(output));
+    assertEquals(result.artifactSizeBytes(), Optional.of(filesystem.getFileSize(output)));
     assertTrue(
         "response wasn't fully read!",
         responseList.get(0).body().source().exhausted());

@@ -16,6 +16,11 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.counters.CounterRegistry;
+import com.facebook.buck.counters.IntegerCounter;
+import com.facebook.buck.counters.SamplingCounter;
+import com.facebook.buck.counters.TagSetCounter;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -36,10 +41,25 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 
+/**
+ * The {@link DirArtifactCache} and {@link HttpArtifactCache} caches use a straightforward
+ * rulekey -> (metadata, artifact) mapping. This works well and is easy to reason about.
+ * That also means that we will fetch `artifact` whenever they `key` or `metadata` change possibly
+ * resulting in fetching the same artifact multiple times.
+ * This class is an attempt at reducing the number of repeated fetches for the same artifact. The
+ * data is stored and retrieved using the following scheme:
+ *   rulekey -> (metadata, content hash)
+ *   content hash -> artifact
+ * This means we only download the artifact when its contents change. This means that rules with
+ * different keys but identical outputs require less network bandwidth at the expense of doubling
+ * latency for downloading rules whose outputs we had not yet seen.
+ */
 public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
   @VisibleForTesting
   static final String METADATA_KEY = "TWO_LEVEL_CACHE_CONTENT_HASH";
+  private static final String COUNTER_CATEGORY = "buck_two_level_cache_stats";
+
   private static final Logger LOG = Logger.get(TwoLevelArtifactCacheDecorator.class);
 
   private final ArtifactCache delegate;
@@ -50,9 +70,15 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   private final long minimumTwoLevelStoredArtifactSize;
   private final Optional<Long> maximumTwoLevelStoredArtifactSize;
 
+  private final TagSetCounter secondLevelCacheHitTypes;
+  private final SamplingCounter secondLevelCacheHitBytes;
+  private final IntegerCounter secondLevelCacheMisses;
+  private final SamplingCounter secondLevelHashComputationTimeMs;
+
   public TwoLevelArtifactCacheDecorator(
       ArtifactCache delegate,
       ProjectFilesystem projectFilesystem,
+      BuckEventBus buckEventBus,
       ListeningExecutorService listeningExecutorService,
       boolean performTwoLevelStores,
       long minimumTwoLevelStoredArtifactSize,
@@ -74,6 +100,29 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
       throw new HumanReadableException("Could not create file in " +
           projectFilesystem.resolve(BuckConstant.SCRATCH_PATH));
     }
+
+    secondLevelCacheHitTypes = new TagSetCounter(
+        COUNTER_CATEGORY,
+        "second_level_cache_hit_types",
+        ImmutableMap.<String, String>of());
+    secondLevelCacheHitBytes = new SamplingCounter(
+        COUNTER_CATEGORY,
+        "second_level_cache_hit_bytes",
+        ImmutableMap.<String, String>of());
+    secondLevelCacheMisses = new IntegerCounter(
+        COUNTER_CATEGORY,
+        "second_level_cache_misses",
+        ImmutableMap.<String, String>of());
+    secondLevelHashComputationTimeMs = new SamplingCounter(
+        COUNTER_CATEGORY,
+        "second_level_hash_computation_time_ms",
+        ImmutableMap.<String, String>of());
+    buckEventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(
+        ImmutableSet.of(
+            secondLevelCacheHitTypes,
+            secondLevelCacheHitBytes,
+            secondLevelCacheMisses,
+            secondLevelHashComputationTimeMs)));
   }
 
   @Override
@@ -87,8 +136,17 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
         new RuleKey(fetchResult.getMetadata().get(METADATA_KEY)),
         output);
     if (!outputFileFetchResult.getType().isSuccess()) {
+      secondLevelCacheMisses.inc();
       return outputFileFetchResult;
     }
+
+    if (outputFileFetchResult.cacheSource().isPresent()) {
+      secondLevelCacheHitTypes.add(outputFileFetchResult.cacheSource().get());
+    }
+    if (outputFileFetchResult.artifactSizeBytes().isPresent()) {
+      secondLevelCacheHitBytes.addSample(outputFileFetchResult.artifactSizeBytes().get());
+    }
+
     return fetchResult;
   }
 
@@ -135,7 +193,11 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
               return Futures.immediateFuture(Optional.<String>absent());
             }
 
-            String hashCode = projectFilesystem.computeSha1(output.getPath()) +  "2c00";
+            long hashComputationStart = System.currentTimeMillis();
+            String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
+            long hashComputationEnd = System.currentTimeMillis();
+            secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
+
             return Futures.transform(
                 delegate.store(
                     ImmutableSet.of(new RuleKey(hashCode)),

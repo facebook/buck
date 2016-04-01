@@ -684,6 +684,9 @@ public class DirArtifactCacheTest {
     assertThat(
         result.getMetadata(),
         Matchers.equalTo(metadata));
+    assertThat(
+        result.getArtifactSizeBytes(),
+        Matchers.equalTo(filesystem.getFileSize(data)));
 
     cache.close();
   }

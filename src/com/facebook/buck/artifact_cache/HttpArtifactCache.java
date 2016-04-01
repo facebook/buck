@@ -168,7 +168,7 @@ public class HttpArtifactCache implements ArtifactCache {
         projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
 
         LOGGER.info("fetch(%s, %s): cache hit", response.requestUrl(), ruleKey);
-        return CacheResult.hit(name, fetchedData.getMetadata());
+        return CacheResult.hit(name, fetchedData.getMetadata(), fetchedData.getResponseSizeBytes());
       }
     }
   }

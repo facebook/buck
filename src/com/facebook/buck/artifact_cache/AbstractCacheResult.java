@@ -33,19 +33,22 @@ abstract class AbstractCacheResult {
           CacheResultType.MISS,
           Optional.<String>absent(),
           Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent());
+          Optional.<ImmutableMap<String, String>>absent(),
+          Optional.<Long>absent());
   private static final CacheResult IGNORED_RESULT =
       CacheResult.of(
           CacheResultType.IGNORED,
           Optional.<String>absent(),
           Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent());
+          Optional.<ImmutableMap<String, String>>absent(),
+          Optional.<Long>absent());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
           CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
           Optional.<String>absent(),
           Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent());
+          Optional.<ImmutableMap<String, String>>absent(),
+          Optional.<Long>absent());
 
   @Value.Parameter
   @JsonProperty("type") public abstract CacheResultType getType();
@@ -58,6 +61,9 @@ abstract class AbstractCacheResult {
 
   @Value.Parameter
   @JsonProperty("metadata") protected abstract Optional<ImmutableMap<String, String>> metadata();
+
+  @Value.Parameter
+  @JsonProperty("artifactSizeBytes") protected abstract Optional<Long> artifactSizeBytes();
 
   public String getCacheSource() {
     Preconditions.checkState(
@@ -75,6 +81,11 @@ abstract class AbstractCacheResult {
     return metadata().get();
   }
 
+  public long getArtifactSizeBytes() {
+    Preconditions.checkState(getType() == CacheResultType.HIT);
+    return artifactSizeBytes().get();
+  }
+
   public String name() {
     String name = getType().name();
     if (cacheSource().isPresent()) {
@@ -83,16 +94,25 @@ abstract class AbstractCacheResult {
     return name;
   }
 
-  public static CacheResult hit(String cacheSource, ImmutableMap<String, String> metadata) {
+  public static CacheResult hit(
+      String cacheSource,
+      ImmutableMap<String, String> metadata,
+      long artifactSize) {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
         Optional.<String>absent(),
-        Optional.of(metadata));
+        Optional.of(metadata),
+        Optional.of(artifactSize));
   }
 
   public static CacheResult hit(String cacheSource) {
-    return hit(cacheSource, ImmutableMap.<String, String>of());
+    return CacheResult.of(
+        CacheResultType.HIT,
+        Optional.of(cacheSource),
+        Optional.<String>absent(),
+        Optional.of(ImmutableMap.<String, String>of()),
+        Optional.<Long>absent());
   }
 
   public static CacheResult error(String cacheSource, String cacheError) {
@@ -100,7 +120,8 @@ abstract class AbstractCacheResult {
         CacheResultType.ERROR,
         Optional.of(cacheSource),
         Optional.of(cacheError),
-        Optional.<ImmutableMap<String, String>>absent());
+        Optional.<ImmutableMap<String, String>>absent(),
+        Optional.<Long>absent());
   }
 
   public static CacheResult miss() {
@@ -131,7 +152,8 @@ abstract class AbstractCacheResult {
             type == CacheResultType.ERROR ?
                 Optional.of("") :
                 Optional.<String>absent(),
-            Optional.<ImmutableMap<String, String>>absent());
+            Optional.<ImmutableMap<String, String>>absent(),
+            Optional.<Long>absent());
       }
     }
     throw new IllegalStateException("invalid cache result string: " + val);

@@ -198,7 +198,8 @@ public class EventSerializationTest {
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
             "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
             "\"present\":false},\"cacheError\":{\"present\":false}," +
-            "\"metadata\":{\"present\":false}}, \"buildRule\":{\"type\":" +
+            "\"metadata\":{\"present\":false},\"artifactSizeBytes\":{\"present\":false}}," +
+            "\"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
             "\"type\":\"BuildRuleFinished\"," +
             "\"eventKey\":{\"value\":1024186770}}",

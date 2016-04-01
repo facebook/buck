@@ -168,6 +168,7 @@ public class ArtifactCaches {
     result = new TwoLevelArtifactCacheDecorator(
         result,
         projectFilesystem,
+        buckEventBus,
         httpWriteExecutorService,
         buckConfig.getTwoLevelCachingEnabled(),
         buckConfig.getTwoLevelCachingMinimumSize(),
