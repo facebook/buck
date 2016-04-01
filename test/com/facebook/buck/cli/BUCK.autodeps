@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 05684d2b1b17094501dad17e9d58041760ee68fa #@#
+#@# GENERATED FILE: DO NOT MODIFY 89e718bf514932d3bf2f832ea15e896809b54164 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
+      "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/testutil:testutil"
     ],
     "exported_deps" : [
@@ -98,6 +99,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules/coercer:coercer",
@@ -108,6 +110,7 @@
       "//src/com/facebook/buck/util/cache:cache",
       "//test/com/facebook/buck/android:utils",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/jvm/java:fakepackagefinder",
       "//test/com/facebook/buck/rules:testutil",

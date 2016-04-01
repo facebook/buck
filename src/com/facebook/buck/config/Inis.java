@@ -26,8 +26,7 @@ import org.ini4j.Profile;
 import java.io.IOException;
 import java.io.Reader;
 
-// TODO(yiding): make this package-private once outside uses are eliminated.
-public class Inis {
+class Inis {
 
   private Inis() {}
 

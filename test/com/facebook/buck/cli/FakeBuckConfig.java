@@ -17,18 +17,13 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Inis;
+import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Arrays;
 
 /**
  * Implementation of {@link BuckConfig} with no data, or only the data specified by
@@ -84,14 +79,7 @@ public class FakeBuckConfig {
     }
 
     public Builder setSections(String... iniFileLines) {
-      try {
-        sections = RawConfig.of(Inis.read(
-            new StringReader(
-                Joiner.on(
-                    "\n").join(Arrays.asList(iniFileLines)))));
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      sections = ConfigBuilder.rawFromLines(iniFileLines);
       return this;
     }
 

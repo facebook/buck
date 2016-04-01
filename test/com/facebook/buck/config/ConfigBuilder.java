@@ -19,6 +19,7 @@ package com.facebook.buck.config;
 import com.google.common.base.Joiner;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 
 public class ConfigBuilder {
@@ -26,11 +27,18 @@ public class ConfigBuilder {
   private ConfigBuilder() { }
 
   public static Config createFromText(String... lines) {
-    StringReader reader = new StringReader(Joiner.on('\n').join(lines));
+    return new Config(rawFromLines(lines));
+  }
+
+  public static RawConfig rawFromLines(String... lines) {
     try {
-      return new Config(RawConfig.builder().putAll(Inis.read(reader)).build());
+      return rawFromReader(new StringReader(Joiner.on('\n').join(lines)));
     } catch (IOException e) {
       throw new AssertionError("Ini read from StringReader should not throw", e);
     }
+  }
+
+  public static RawConfig rawFromReader(Reader reader) throws IOException {
+    return RawConfig.of(Inis.read(reader));
   }
 }
