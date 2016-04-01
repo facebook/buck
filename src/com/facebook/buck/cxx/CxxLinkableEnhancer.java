@@ -76,6 +76,9 @@ public class CxxLinkableEnhancer {
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
+    // Add flags to generate linker map if supported.
+    argsBuilder.addAll(linker.linkerMap(output));
+
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(

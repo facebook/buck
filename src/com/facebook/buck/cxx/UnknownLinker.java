@@ -76,6 +76,11 @@ public class UnknownLinker implements Linker {
   }
 
   @Override
+  public Iterable<Arg> linkerMap(Path output) {
+    return ImmutableList.<Arg>of();
+  }
+
+  @Override
   public Iterable<String> soname(String arg) {
     return ImmutableList.of(arg);
   }

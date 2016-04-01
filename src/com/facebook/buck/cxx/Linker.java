@@ -45,6 +45,13 @@ public interface Linker extends Tool {
   Iterable<Arg> linkWhole(Arg input);
 
   /**
+   * @return the platform-specific way to generate a link-map file.
+   *
+   * @param output the path of the output binary
+   */
+  Iterable<Arg> linkerMap(Path output);
+
+  /**
    * @return the platform-specific way to specify that linker should use the given soname
    *     when linking a shared library.
    */

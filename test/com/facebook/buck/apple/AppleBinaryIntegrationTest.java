@@ -62,6 +62,7 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));

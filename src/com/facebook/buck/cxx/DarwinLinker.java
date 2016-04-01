@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -85,6 +86,16 @@ public class DarwinLinker implements Linker {
         new StringArg("-force_load"),
         new StringArg("-Xlinker"),
         input);
+  }
+
+  @Override
+  public Iterable<Arg> linkerMap(Path output) {
+    // Build up the arguments to pass to the linker.
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    Path linkMapPath = Paths.get(output + "-LinkMap.txt");
+    argsBuilder.addAll(StringArg.from("-Xlinker", "-map", "-Xlinker", linkMapPath.toString()));
+    return argsBuilder.build();
   }
 
   @Override
