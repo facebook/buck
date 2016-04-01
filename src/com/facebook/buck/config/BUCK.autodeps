@@ -1,0 +1,13 @@
+#@# GENERATED FILE: DO NOT MODIFY acba21cf65a8be2c08d2dfcca7be31c260723849 #@#
+{
+  "config" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/ini4j:ini4j"
+    ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

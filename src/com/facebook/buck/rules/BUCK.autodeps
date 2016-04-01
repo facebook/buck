@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9042f4f2ed4f4ef98565dd0beaa2732c32678be8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1a227db8c74d744a624db09bf506d350137c57c2 #@#
 {
   "build_event" : {
     "deps" : [ ],
@@ -113,6 +113,7 @@
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/d:d",
       "//src/com/facebook/buck/dotnet:dotnet",
       "//src/com/facebook/buck/file:downloader",

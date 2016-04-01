@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY da263290aba15adfd723a77aed1da0ac80367d7d #@#
+#@# GENERATED FILE: DO NOT MODIFY 1ec3eacb55fbf14bba17a81abef95ee0834d428d #@#
 {
   "testutil" : {
     "deps" : [
@@ -6,8 +6,7 @@
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/util:tristate",
       "//test/com/facebook/buck/timing:testutil",
-      "//third-party/java/jimfs:jimfs",
-      "//third-party/java/junit:junit"
+      "//third-party/java/jimfs:jimfs"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
@@ -22,6 +21,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jsr:jsr305",
+      "//third-party/java/junit:junit",
       "//third-party/java/okio:okio"
     ]
   },

@@ -28,7 +28,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.Config;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;

@@ -18,8 +18,8 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.Config;
-import com.facebook.buck.cli.ConfigBuilder;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.Watchman;

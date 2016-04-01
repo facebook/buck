@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9c811ff5604d731031569a4fbc6d34670348c1e4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 255af40e6a5000ac0c9cce56c378cb37c90bec4e #@#
 {
   "slb" : {
     "deps" : [
@@ -8,7 +8,8 @@
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit",
-      "//third-party/java/okhttp:okhttp"
+      "//third-party/java/okhttp:okhttp",
+      "//third-party/java/okio:okio"
     ],
     "exported_deps" : [ ]
   }

@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY de7f180672d32c3e292ff496067611cc0dc0aabe #@#
+#@# GENERATED FILE: DO NOT MODIFY 38ec2e20f2a2cb533556ee37ab1347e4eae6e373 #@#
 {
   "lua" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:executable-finder",

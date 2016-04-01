@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 8f5213e5aed46b670fc5557c120bc73c0931e0eb #@#
+#@# GENERATED FILE: DO NOT MODIFY 962b0950e96c3ee698ddba247e66470c1341a1e4 #@#
 {
   "io" : {
     "deps" : [
       "//src/com/facebook/buck/bser:bser",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
@@ -10,7 +11,7 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",
-      "//test/com/facebook/buck/cli:testutil",
+      "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/io:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

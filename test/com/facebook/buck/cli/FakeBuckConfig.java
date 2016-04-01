@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Inis;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Architecture;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.config;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;

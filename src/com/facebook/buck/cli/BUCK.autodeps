@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7dd3c9ad8ff7d8718a338e7309b566a37187be16 #@#
+#@# GENERATED FILE: DO NOT MODIFY c7df42f29e63a13e19836ecf3bfdf5bbd77d3b69 #@#
 {
   "cli" : {
     "deps" : [
@@ -12,7 +12,7 @@
       "//src/com/facebook/buck/autodeps:autodeps",
       "//src/com/facebook/buck/autodeps:model",
       "//src/com/facebook/buck/cli:events",
-      "//src/com/facebook/buck/cli:low-level-config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
@@ -115,7 +115,7 @@
       "//third-party/java/okhttp:okhttp"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/cli:low-level-config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:packagefinder",
@@ -135,16 +135,6 @@
     "exported_deps" : [
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/event/external:external_lib",
-      "//third-party/java/guava:guava"
-    ]
-  },
-  "low-level-config" : {
-    "deps" : [
-      "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/ini4j:ini4j"
-    ],
-    "exported_deps" : [
       "//third-party/java/guava:guava"
     ]
   }

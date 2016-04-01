@@ -1,12 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY 6ea95685e4fc990c8d5250f00acb1f5a0a43ec98 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5558d76c4281b0ad3d089f576185bf6adfde41e0 #@#
 {
   "model" : {
     "deps" : [
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
-      "//test/com/facebook/buck/cli:testutil",
+      "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

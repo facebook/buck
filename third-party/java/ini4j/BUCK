@@ -5,7 +5,7 @@ prebuilt_jar(
     'LICENSE',
   ],
   visibility = [
-    '//src/com/facebook/buck/cli:low-level-config',
+    '//src/com/facebook/buck/config:config',
     '//test/com/facebook/buck/crosscell:crosscell',
     '//test/com/facebook/buck/util:util',
   ],

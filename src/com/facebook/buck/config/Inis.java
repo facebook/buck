@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.config;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +26,8 @@ import org.ini4j.Profile;
 import java.io.IOException;
 import java.io.Reader;
 
-class Inis {
+// TODO(yiding): make this package-private once outside uses are eliminated.
+public class Inis {
 
   private Inis() {}
 

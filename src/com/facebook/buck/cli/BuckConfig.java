@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
 
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Inis;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -517,8 +519,7 @@ public class BuckConfig {
     return ImmutableSet.copyOf(getListWithoutComments("java", "src_roots"));
   }
 
-  @VisibleForTesting
-  DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
+  public DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
     Set<String> srcRoots = getSrcRoots();
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(srcRoots);
   }
@@ -526,7 +527,7 @@ public class BuckConfig {
   /**
    * Return Strings so as to avoid a dependency on {@link LabelSelector}!
    */
-  ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
+  public ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     return getListWithoutComments("test", "excluded_labels");
   }
 

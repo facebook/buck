@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 8d7a1e1b5f95cb8ff5942ea0b28a1082f0b11ac6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1a33f446ae228b1c6c77ae38cfd7ff62165e3d06 #@#
 {
   "ocaml" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",

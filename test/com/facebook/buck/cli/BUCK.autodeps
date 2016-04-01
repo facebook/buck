@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 034676d814895bb83c12b8d5f298fb43aebcc4ab #@#
+#@# GENERATED FILE: DO NOT MODIFY 7355870640edeaed6b003815b2e26ffdf51fb516 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
+      "//src/com/facebook/buck/config:config",
       "//test/com/facebook/buck/testutil:testutil"
     ],
     "exported_deps" : [

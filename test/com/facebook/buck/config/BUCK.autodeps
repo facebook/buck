@@ -1,0 +1,22 @@
+#@# GENERATED FILE: DO NOT MODIFY bd57fd484f6ae21a23b79916f60fa1689c125494 #@#
+{
+  "config" : {
+    "deps" : [
+      "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/util:exceptions",
+      "//test/com/facebook/buck/config:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/config:config"
+    ]
+  }
+}

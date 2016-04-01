@@ -11,19 +11,6 @@ java_library(
   ],
 )
 
-RAW_CONFIG_SRCS = [
-  'Config.java',
-  'Inis.java',
-]
-java_library(
-  name = 'low-level-config',
-  srcs = RAW_CONFIG_SRCS,
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/io:io',
-  ],
-)
-
 CONFIG_SRCS = [
   'BuckConfig.java',
   'DownloadConfig.java',
@@ -73,7 +60,7 @@ java_library(
 java_immutables_library(
   name = 'cli',
   srcs = glob(['*.java'],
-              excludes = EVENTS_SRCS + CONFIG_SRCS + RAW_CONFIG_SRCS),
+              excludes = EVENTS_SRCS + CONFIG_SRCS),
   immutable_types = [
     'InstallResult',
     'ProjectPredicates',

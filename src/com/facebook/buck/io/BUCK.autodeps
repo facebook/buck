@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fe3d43d7a1f806d5e3acf8b75c9470b4f3e8b0d6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7d4faf8dd9c3b452442198bc3dea4f9cc4dd7e0f #@#
 {
   "executable-finder" : {
     "deps" : [
@@ -22,7 +22,7 @@
       "//src/com/facebook/buck/zip:stream"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/cli:low-level-config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:executable-finder",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 76b0337ff93eb86fc8cc811886e336ea4048d4ce #@#
+#@# GENERATED FILE: DO NOT MODIFY a0b0cef59e12d449aee82ab41fbaf4fe91d7bec9 #@#
 {
   "integration" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/apple/device:device",
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.cli.Config;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.CustomZipEntry;
