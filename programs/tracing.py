@@ -105,7 +105,11 @@ class Tracing(object):
                 raise
         with open(trace_filename, 'w') as f:
             json.dump(Tracing._trace_events, f)
-        create_symlink(trace_filename, trace_filename_link)
+        try:
+            create_symlink(trace_filename, trace_filename_link)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
         Tracing.clean_up_old_logs(buck_log_dir)
 
     @staticmethod
