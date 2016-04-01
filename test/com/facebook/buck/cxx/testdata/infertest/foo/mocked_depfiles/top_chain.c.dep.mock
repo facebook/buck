@@ -1,0 +1,2 @@
+top_chain.o: foo/top_chain.c \
+  foo/chain_dep_one.h

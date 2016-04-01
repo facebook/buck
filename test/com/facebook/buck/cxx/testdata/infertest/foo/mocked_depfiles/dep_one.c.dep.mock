@@ -1,0 +1,1 @@
+dep_one.o: foo/dep_one.c /usr/include/stdlib.h

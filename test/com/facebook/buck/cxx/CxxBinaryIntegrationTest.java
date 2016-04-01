@@ -641,6 +641,63 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testInferCxxBinaryWithUnusedDepsDoesNotRebuildWhenUnusedHeaderChanges(
+  ) throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+    workspace.enableDirCache(); // enable the cache
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_unused_header");
+    String inputBuildTargetName = inputBuildTarget
+        .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())
+        .getFullyQualifiedName();
+
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        inputBuildTarget,
+        cxxPlatform);
+
+    BuildTarget simpleOneCppCaptureTarget =
+        cxxSourceRuleFactory.createInferCaptureBuildTarget("simple_one.cpp");
+
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+
+    /*
+     * Check that when the unused-header is changed, no builds are triggered
+     */
+    workspace.resetBuildLogFile();
+    workspace.replaceFileContents("foo/unused_header.h", "int* input", "int* input, int* input2");
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    BuckBuildLog.BuildLogEntry simpleOnceCppCaptureTargetEntry = buildLog.getLogEntry(
+        simpleOneCppCaptureTarget);
+
+    assertThat(
+        simpleOnceCppCaptureTargetEntry.getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
+
+    /*
+     * Check that when the used-header is changed, then a build is triggered
+     */
+    workspace.resetBuildLogFile();
+    workspace.replaceFileContents("foo/used_header.h", "int* input", "int* input, int* input2");
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
+    buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(simpleOneCppCaptureTarget.toString());
+  }
+
+  @Test
   public void testInferCxxBinaryWithDiamondDepsEmitsAllTransitiveCaptureRulesOnce(
   ) throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);

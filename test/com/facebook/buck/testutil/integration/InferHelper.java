@@ -61,7 +61,9 @@ public class InferHelper {
                 "infer_bin = %s\n" +
                 "clang_compiler = %s\n" +
                 "clang_plugin = %s\n" +
-                "%s",
+                "%s\n" +
+            "[build]\n" +
+                "depfiles = cache",
             inferBin.toString(),
             facebookClangPluginsRoot.resolve("fake-clang"),
             facebookClangPluginsRoot.resolve("fake-plugin"),

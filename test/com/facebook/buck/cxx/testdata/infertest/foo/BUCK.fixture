@@ -113,9 +113,27 @@ cxx_library(
     ],
 )
 
+cxx_binary(
+    name='binary_with_unused_header',
+    srcs=[
+        'simple_one.cpp',
+    ],
+    deps=[
+        ':headers_only_lib_2',
+    ],
+)
+
 cxx_library(
     name='headers_only_lib',
     exported_headers=[
         'dep_one.h',
+    ],
+)
+
+cxx_library(
+    name='headers_only_lib_2',
+    exported_headers=[
+        'unused_header.h',
+        'used_header.h'
     ],
 )

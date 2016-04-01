@@ -1,0 +1,2 @@
+simple_one.o: foo/simple_one.cpp /usr/include/stdlib.h \
+  foo/used_header.h

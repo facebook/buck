@@ -26,18 +26,23 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.shell.DefaultShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
  * Generate the CFG for a source file
  */
-public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppendable {
+public class CxxInferCapture
+    extends AbstractBuildRule
+    implements RuleKeyAppendable, SupportsDependencyFileRuleKey {
 
   @AddToRuleKey
   private final InferBuckConfig inferConfig;
@@ -91,6 +96,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
         .add("--out", resultsDir.toString())
         .add("--")
         .add("clang")
+        .add("-MD", "-MF", getTempDepFilePath().toString())
         .addAll(
             CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
                 .getAllFlags())
@@ -115,6 +121,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
                 getProjectFilesystem().getRootPath(),
                 frontendCommand,
                 ImmutableMap.<String, String>of()))
+        .add(new ParseAndWriteBuckCompatibleDepfileStep(getTempDepFilePath(), getDepFilePath()))
         .build();
   }
 
@@ -141,4 +148,70 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
             "ruleCompilerFlags",
             sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
+
+  @Override
+  public boolean useDependencyFileRuleKeys() {
+    return true;
+  }
+
+  @Override
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
+
+    // include all inputs coming from the preprocessor tool.
+    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines()));
+
+    // Add the input.
+    inputs.add(input);
+
+    return inputs.build();
+  }
+
+  private Path getDepFilePath() {
+    return output.getFileSystem().getPath(output.toString() + ".dep");
+  }
+
+  private Path getTempDepFilePath() {
+    return output.getFileSystem().getPath(getDepFilePath().toString() + ".tmp.dep");
+  }
+
+  private ImmutableList<String> readDepFileLines() throws IOException {
+    return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
+  }
+
+
+  private class ParseAndWriteBuckCompatibleDepfileStep implements Step {
+
+    private Path sourceDepfile;
+    private Path destDepfile;
+
+    public ParseAndWriteBuckCompatibleDepfileStep(Path sourceDepfile, Path destDepfile) {
+      this.sourceDepfile = sourceDepfile;
+      this.destDepfile = destDepfile;
+    }
+
+    @Override
+    public int execute(ExecutionContext context) throws IOException, InterruptedException {
+      Depfiles.parseAndWriteBuckCompatibleDepfile(
+          context,
+          getProjectFilesystem(),
+          preprocessorDelegate.getHeaderPathNormalizer(),
+          sourceDepfile,
+          destDepfile,
+          getResolver().deprecatedGetPath(input),
+          output);
+      return 0;
+    }
+
+    @Override
+    public String getShortName() {
+      return "depfile-parse";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "Parse depfiles and write them in a Buck compatible format";
+    }
+  }
+
 }
