@@ -17,8 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
@@ -38,16 +36,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -457,35 +449,15 @@ public class CxxPreprocessAndCompileStep implements Step {
         exitCode = executeOther(context);
       }
 
-      // Process the dependency file, fixing up the paths, and write it out to it's final location.
-      // The paths of the headers written out to the depfile are the paths to the symlinks from the
-      // root of the repo if the compilation included them from the header search paths pointing to
-      // the symlink trees, or paths to headers relative to the source file if the compilation
-      // included them using source relative include paths. To handle both cases we check for the
-      // prerequisites both in the values and the keys of the replacement map.
       if (operation.isPreprocess() && exitCode == 0) {
-        LOG.debug("Processing dependency file %s as Makefile", getDepTemp());
-        ImmutableMap<String, Object> params = ImmutableMap.<String, Object>of(
-            "input", this.input, "output", this.output);
-        try (InputStream input = filesystem.newFileInputStream(getDepTemp());
-             BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-             OutputStream output = filesystem.newFileOutputStream(depFile);
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output));
-             SimplePerfEvent.Scope perfEvent = SimplePerfEvent.scope(
-                 context.getBuckEventBus(),
-                 PerfEventId.of("depfile-parse"),
-                 params)) {
-          for (String prereq : Depfiles.parseDepfile(reader).getPrereqs()) {
-            Path path = Paths.get(prereq);
-            Optional<Path> absolutePath =
-                headerPathNormalizer.getAbsolutePathForUnnormalizedPath(path);
-            if (absolutePath.isPresent()) {
-              Preconditions.checkState(absolutePath.get().isAbsolute());
-              writer.write(absolutePath.get().toString());
-              writer.newLine();
-            }
-          }
-        }
+        Depfiles.parseAndWriteBuckCompatibleDepfile(
+            context,
+            filesystem,
+            headerPathNormalizer,
+            getDepTemp(),
+            depFile,
+            input,
+            output);
       }
 
       // If the compilation completed successfully and we didn't effect debug-info normalization
