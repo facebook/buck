@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.config.RawConfig;
 
 import java.io.IOException;
 
@@ -34,6 +34,5 @@ public interface Command {
 
   String getShortDescription();
 
-  ImmutableMap<String, ImmutableMap<String, String>> getConfigOverrides();
-
+  RawConfig getConfigOverrides();
 }

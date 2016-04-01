@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.RawConfig;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
@@ -83,10 +83,10 @@ public abstract class AbstractContainerCommand implements Command {
   }
 
   @Override
-  public ImmutableMap<String, ImmutableMap<String, String>> getConfigOverrides() {
+  public RawConfig getConfigOverrides() {
     Optional<Command> cmd = getSubcommand();
     return cmd.isPresent()
         ? cmd.get().getConfigOverrides()
-        : ImmutableMap.<String, ImmutableMap<String, String>>of();
+        : RawConfig.of();
   }
 }

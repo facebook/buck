@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c7df42f29e63a13e19836ecf3bfdf5bbd77d3b69 #@#
+#@# GENERATED FILE: DO NOT MODIFY 44ba95fecd843b2d6fe28795a097f5d066a67f62 #@#
 {
   "cli" : {
     "deps" : [
@@ -12,7 +12,6 @@
       "//src/com/facebook/buck/autodeps:autodeps",
       "//src/com/facebook/buck/autodeps:model",
       "//src/com/facebook/buck/cli:events",
-      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
@@ -69,6 +68,7 @@
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/command:command",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:io",

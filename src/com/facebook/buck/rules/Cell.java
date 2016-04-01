@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -134,10 +136,7 @@ public class Cell {
         }
 
         // TODO(shs96c): Get the overrides from the parent config
-        ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
-        Config config = Config.createDefaultConfig(
-            cellPath,
-            sections);
+        Config config = Configs.createDefaultConfig(cellPath, RawConfig.of());
 
         ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
 

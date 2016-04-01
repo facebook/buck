@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ExecutableFinder;
@@ -66,9 +68,7 @@ public class JavaSymbolFinderIntegrationTest {
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
-    Config rawConfig = Config.createDefaultConfig(
-        projectFilesystem.getRootPath(),
-        ImmutableMap.<String, ImmutableMap<String, String>>of());
+    Config rawConfig = Configs.createDefaultConfig(projectFilesystem.getRootPath(), RawConfig.of());
     BuckConfig config = new BuckConfig(
         rawConfig,
         projectFilesystem,

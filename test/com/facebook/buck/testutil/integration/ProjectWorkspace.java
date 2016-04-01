@@ -31,6 +31,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -592,9 +594,7 @@ public class ProjectWorkspace {
   }
 
   public Cell asCell() throws IOException, InterruptedException {
-    Config config = Config.createDefaultConfig(
-        getDestPath(),
-        ImmutableMap.<String, ImmutableMap<String, String>>of());
+    Config config = Configs.createDefaultConfig(getDestPath(), RawConfig.of());
 
     ProjectFilesystem filesystem = new ProjectFilesystem(getDestPath(), config);
     TestConsole console = new TestConsole();

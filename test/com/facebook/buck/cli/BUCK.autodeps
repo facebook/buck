@@ -1,12 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 7355870640edeaed6b003815b2e26ffdf51fb516 #@#
+#@# GENERATED FILE: DO NOT MODIFY 05684d2b1b17094501dad17e9d58041760ee68fa #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
-      "//src/com/facebook/buck/config:config",
       "//test/com/facebook/buck/testutil:testutil"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/guava:guava"

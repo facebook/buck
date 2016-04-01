@@ -20,6 +20,7 @@ import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
 
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Inis;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -189,6 +190,7 @@ public class BuckConfig {
     throw new HumanReadableException("Not a valid %s: %s.", fieldName.toLowerCase(), aliasName);
   }
 
+  // TODO(yiding): remove this test-specific constructor
   @SafeVarargs
   @VisibleForTesting
   static BuckConfig createFromReaders(
@@ -199,18 +201,17 @@ public class BuckConfig {
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
   throws IOException {
-    ImmutableList.Builder<ImmutableMap<String, ImmutableMap<String, String>>> builder =
-        ImmutableList.builder();
+    RawConfig.Builder builder = RawConfig.builder();
     for (Map.Entry<Path, Reader> entry : readers.entrySet()) {
       Path filePath = entry.getKey();
       Reader reader = entry.getValue();
       ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration = Inis.read(reader);
       LOG.debug("Loaded a configuration file %s: %s", filePath, parsedConfiguration);
-      builder.add(parsedConfiguration);
+      builder.putAll(parsedConfiguration);
     }
     for (ImmutableMap<String, ImmutableMap<String, String>> configOverride : configOverrides) {
       LOG.debug("Adding configuration overrides: %s", configOverride);
-      builder.add(configOverride);
+      builder.putAll(configOverride);
     }
     Config config = new Config(builder.build());
     return new BuckConfig(

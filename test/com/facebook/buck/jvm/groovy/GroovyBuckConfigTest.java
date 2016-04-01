@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Architecture;
@@ -102,7 +103,7 @@ public class GroovyBuckConfigTest {
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     BuckConfig config = new BuckConfig(
-         new Config(rawConfig),
+        new Config(RawConfig.of(rawConfig)),
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),

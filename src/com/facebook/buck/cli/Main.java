@@ -29,6 +29,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
@@ -81,10 +82,10 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
+import com.facebook.buck.util.Libc;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PkillProcessManager;
-import com.facebook.buck.util.Libc;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
@@ -125,6 +126,10 @@ import com.google.common.util.concurrent.ServiceManager;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGServer;
+import com.sun.jna.LastErrorException;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 
 import org.kohsuke.args4j.CmdLineException;
 
@@ -158,11 +163,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
-
-import com.sun.jna.LastErrorException;
-import com.sun.jna.Native;
-import com.sun.jna.Pointer;
-import com.sun.jna.ptr.IntByReference;
 
 public final class Main {
 
@@ -665,15 +665,11 @@ public final class Main {
       return 1;
     }
 
-    ImmutableMap<String, ImmutableMap<String, String>> configOverrides =
-        command.getConfigOverrides();
-
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-
-    Config rawConfig = Config.createDefaultConfig(canonicalRootPath, configOverrides);
-    ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, rawConfig);
+    Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
+    ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     BuckConfig buckConfig = new BuckConfig(
-        rawConfig,
+        config,
         filesystem,
         architecture,
         platform,

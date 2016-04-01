@@ -25,8 +25,12 @@ public class ConfigBuilder {
   // Utility class, do not instantiate.
   private ConfigBuilder() { }
 
-  public static Config createFromText(String... lines) throws IOException {
+  public static Config createFromText(String... lines) {
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
-    return new Config(Inis.read(reader));
+    try {
+      return new Config(RawConfig.builder().putAll(Inis.read(reader)).build());
+    } catch (IOException e) {
+      throw new AssertionError("Ini read from StringReader should not throw", e);
+    }
   }
 }

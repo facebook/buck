@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.ConfigOverrideBuilder;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -30,7 +30,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
@@ -83,8 +82,8 @@ public abstract class AbstractCommand implements Command {
   private Map<String, String> configOverrides = Maps.newLinkedHashMap();
 
   @Override
-  public ImmutableMap<String, ImmutableMap<String, String>> getConfigOverrides() {
-    ConfigOverrideBuilder builder = new ConfigOverrideBuilder();
+  public RawConfig getConfigOverrides() {
+    RawConfig.Builder builder = RawConfig.builder();
 
     // Parse command-line config overrides.
     for (Map.Entry<String, String> entry : configOverrides.entrySet()) {

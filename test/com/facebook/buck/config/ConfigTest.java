@@ -18,57 +18,17 @@ package com.facebook.buck.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Iterator;
-import java.util.Map;
 
 public class ConfigTest {
-
-  @Test
-  public void testSortOrder() throws IOException {
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[alias]",
-            "one =   //foo:one",
-            "two =   //foo:two",
-            "three = //foo:three",
-            "four  = //foo:four"));
-    ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries =
-        new Config(Inis.read(reader)).getSectionToEntries();
-    Map<String, String> aliases = sectionsToEntries.get("alias");
-
-    // Verify that entries are sorted in the order that they appear in the file, rather than in
-    // alphabetical order, or some sort of hashed-key order.
-    Iterator<Map.Entry<String, String>> entries = aliases.entrySet().iterator();
-
-    Map.Entry<String, String> first = entries.next();
-    assertEquals("one", first.getKey());
-
-    Map.Entry<String, String> second = entries.next();
-    assertEquals("two", second.getKey());
-
-    Map.Entry<String, String> third = entries.next();
-    assertEquals("three", third.getKey());
-
-    Map.Entry<String, String> fourth = entries.next();
-    assertEquals("four", fourth.getKey());
-
-    assertFalse(entries.hasNext());
-  }
 
   @Test
   public void shouldGetBooleanValues() throws IOException {
@@ -133,49 +93,28 @@ public class ConfigTest {
     ConfigBuilder.createFromText("[a]", "  f = potato").getFloat("a", "f");
   }
 
-  @Test
-  public void testOverride() throws IOException {
-    Reader readerA = new StringReader(Joiner.on('\n').join(
-        "[cache]",
-        "    mode = dir,http"));
-    Reader readerB = new StringReader(Joiner.on('\n').join(
-        "[cache]",
-        "    mode ="));
-    // Verify that no exception is thrown when a definition is overridden.
-    Config config = new Config(Inis.read(readerA), Inis.read(readerB));
-    assertThat(config.getValue("cache", "mode"), Matchers.equalToObject(Optional.absent()));
-  }
-
-  private static enum TestEnum {
+  private enum TestEnum {
     A,
     B
   }
 
   @Test
   public void getEnum() {
-    Config config = new Config(
-        ImmutableMap.of(
-            "section",
-            ImmutableMap.of("field", "A")));
+    Config config = ConfigBuilder.createFromText("[section]", "field = A");
     Optional<TestEnum> value = config.getEnum("section", "field", TestEnum.class);
     assertEquals(Optional.of(TestEnum.A), value);
   }
 
   @Test
   public void getEnumLowerCase() {
-    Config config = new Config(
-        ImmutableMap.of("section",
-            ImmutableMap.of("field", "a")));
+    Config config = ConfigBuilder.createFromText("[section]", "field = a");
     Optional<TestEnum> value = config.getEnum("section", "field", TestEnum.class);
     assertEquals(Optional.of(TestEnum.A), value);
   }
 
   @Test(expected = HumanReadableException.class)
   public void getEnumInvalidValue() {
-    Config config = new Config(
-        ImmutableMap.of(
-            "section",
-            ImmutableMap.of("field", "C")));
+    Config config = ConfigBuilder.createFromText("[section]", "field = C");
     config.getEnum("section", "field", TestEnum.class);
   }
 

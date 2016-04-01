@@ -24,6 +24,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -290,10 +292,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
-    Config rawConfig =
-        Config.createDefaultConfig(
-            tmp.getRootPath(),
-            ImmutableMap.<String, ImmutableMap<String, String>>of());
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath(), RawConfig.of());
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,

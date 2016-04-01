@@ -16,7 +16,6 @@
 
 package com.facebook.buck.config;
 
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -27,21 +26,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -52,90 +42,33 @@ import java.util.regex.Pattern;
  */
 public class Config {
 
-  private static final Logger LOG = Logger.get(Config.class);
-
-  private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
-  public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
-  private static final String DEFAULT_BUCK_CONFIG_DIRECTORY_NAME = ".buckconfig.d";
-
-  private static final Path GLOBAL_BUCK_CONFIG_FILE_PATH = Paths.get("/etc/buckconfig");
-  private static final Path GLOBAL_BUCK_CONFIG_DIRECTORY_PATH = Paths.get("/etc/buckconfig.d");
-
-  private final ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries;
+  private final RawConfig rawConfig;
 
   private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
     new Supplier<Integer>() {
       @Override
       public Integer get() {
-        return Objects.hashCode(sectionToEntries);
+        return Objects.hashCode(rawConfig);
       }
     });
 
-  @SafeVarargs
-  public Config(ImmutableMap<String, ImmutableMap<String, String>>... maps) {
-    this(ImmutableList.copyOf(maps));
+  /**
+   * Convenience constructor to create an empty config.
+   */
+  public Config() {
+    this(RawConfig.of());
   }
 
-  public Config(
-      ImmutableList<ImmutableMap<String, ImmutableMap<String, String>>> sectionToEntries) {
-    this(sectionToEntriesFromMaps(sectionToEntries));
-  }
-
-  public Config(ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries) {
-    this.sectionToEntries = sectionToEntries;
-  }
-
-  public static Config createDefaultConfig(
-      Path root,
-      ImmutableMap<String, ImmutableMap<String, String>> configOverrides) throws IOException {
-    ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
-
-    configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
-    if (Files.isRegularFile(GLOBAL_BUCK_CONFIG_FILE_PATH)) {
-      configFileBuilder.add(GLOBAL_BUCK_CONFIG_FILE_PATH);
-    }
-
-    Path homeDirectory = Paths.get(System.getProperty("user.home"));
-    Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
-    configFileBuilder.addAll(listFiles(userConfigDir));
-    Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
-    if (Files.isRegularFile(userConfigFile)) {
-      configFileBuilder.add(userConfigFile);
-    }
-
-    Path configFile = root.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
-    if (Files.isRegularFile(configFile)) {
-      configFileBuilder.add(configFile);
-    }
-    Path overrideConfigFile = root.resolve(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
-    if (Files.isRegularFile(overrideConfigFile)) {
-      configFileBuilder.add(overrideConfigFile);
-    }
-
-    ImmutableList<Path> configFiles = configFileBuilder.build();
-
-    ImmutableList.Builder<ImmutableMap<String, ImmutableMap<String, String>>> builder =
-        ImmutableList.builder();
-    for (Path file : configFiles) {
-      try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-        ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration = Inis.read(reader);
-        LOG.debug("Loaded a configuration file %s: %s", file, parsedConfiguration);
-        builder.add(parsedConfiguration);
-      }
-    }
-    LOG.debug("Adding configuration overrides: %s", configOverrides);
-    builder.add(configOverrides);
-    return new Config(builder.build());
+  public Config(RawConfig rawConfig) {
+    this.rawConfig = rawConfig;
   }
 
   public ImmutableMap<String, ImmutableMap<String, String>> getSectionToEntries() {
-    return sectionToEntries;
+    return this.rawConfig.getValues();
   }
 
   public ImmutableMap<String, String> get(String sectionName) {
-    return Optional
-        .fromNullable(sectionToEntries.get(sectionName))
-        .or(ImmutableMap.<String, String>of());
+    return this.rawConfig.getSection(sectionName);
   }
 
   /**
@@ -289,29 +222,6 @@ public class Config {
     }
   }
 
-
-  private static ImmutableMap<String, ImmutableMap<String, String>> sectionToEntriesFromMaps(
-      ImmutableList<ImmutableMap<String, ImmutableMap<String, String>>> maps) {
-    Map<String, Map<String, String>> sectionToEntries = new LinkedHashMap<>();
-    for (ImmutableMap<String, ImmutableMap<String, String>> map : maps) {
-      for (Map.Entry<String, ImmutableMap<String, String>> section : map.entrySet()) {
-        if (!sectionToEntries.containsKey(section.getKey())) {
-          sectionToEntries.put(section.getKey(), new LinkedHashMap<String, String>());
-        }
-        Map<String, String> entries = Preconditions.checkNotNull(
-            sectionToEntries.get(section.getKey()));
-        for (Map.Entry<String, String> entry : section.getValue().entrySet()) {
-          entries.put(entry.getKey(), entry.getValue());
-        }
-      }
-    }
-    ImmutableMap.Builder<String, ImmutableMap<String, String>> builder = ImmutableMap.builder();
-    for (Map.Entry<String, Map<String, String>> entry : sectionToEntries.entrySet()) {
-      builder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
-    }
-    return builder.build();
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -320,7 +230,7 @@ public class Config {
       return false;
     }
     Config that = (Config) obj;
-    return Objects.equal(this.sectionToEntries, that.sectionToEntries);
+    return Objects.equal(this.rawConfig, that.rawConfig);
   }
 
   public boolean equalsIgnoring(
@@ -329,8 +239,8 @@ public class Config {
     if (this == other) {
       return true;
     }
-    ImmutableMap<String, ImmutableMap<String, String>> left = this.sectionToEntries;
-    ImmutableMap<String, ImmutableMap<String, String>> right = other.sectionToEntries;
+    ImmutableMap<String, ImmutableMap<String, String>> left = this.getSectionToEntries();
+    ImmutableMap<String, ImmutableMap<String, String>> right = other.getSectionToEntries();
     Sets.SetView<String> sections = Sets.union(left.keySet(), right.keySet());
     for (String section : sections) {
       ImmutableMap<String, String> leftFields = left.get(section);
@@ -355,20 +265,6 @@ public class Config {
   @Override
   public int hashCode() {
     return hashCodeSupplier.get();
-  }
-
-  private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {
-    if (!Files.isDirectory(root)) {
-      return ImmutableSortedSet.of();
-    }
-
-    ImmutableSortedSet.Builder<Path> toReturn = ImmutableSortedSet.naturalOrder();
-
-    try (DirectoryStream<Path> directory = Files.newDirectoryStream(root)) {
-      toReturn.addAll(directory.iterator());
-    }
-
-    return toReturn.build();
   }
 
   /**
