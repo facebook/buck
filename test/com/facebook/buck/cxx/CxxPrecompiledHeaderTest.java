@@ -62,6 +62,7 @@ public class CxxPrecompiledHeaderTest {
         new PreprocessorDelegate(
             sourcePathResolver,
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             Paths.get("./"),
             preprocessorSupportingPch,
             PreprocessorFlags.builder().build(),

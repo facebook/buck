@@ -42,6 +42,7 @@ public class CxxSourceRuleFactoryHelper {
                 .build())
         .setResolver(resolver)
         .setPathResolver(new SourcePathResolver(resolver))
+        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
         .setCxxPlatform(cxxPlatform)
         .setPicType(CxxSourceRuleFactory.PicType.PDC)
         .build();
@@ -60,6 +61,7 @@ public class CxxSourceRuleFactoryHelper {
             .build())
         .setResolver(resolver)
         .setPathResolver(new SourcePathResolver(resolver))
+        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
         .setCxxPlatform(cxxPlatform)
         .setPicType(picType)
         .build();

@@ -218,6 +218,7 @@ public class LuaBinaryDescription implements
             baseParams,
             ruleResolver,
             pathResolver,
+            cxxBuckConfig,
             cxxPlatform,
             ImmutableList.<CxxPreprocessorInput>builder()
                 .add(

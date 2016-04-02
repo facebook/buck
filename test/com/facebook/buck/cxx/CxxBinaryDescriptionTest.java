@@ -133,6 +133,7 @@ public class CxxBinaryDescriptionTest {
         .setParams(cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem))
         .setResolver(resolver)
         .setPathResolver(pathResolver)
+        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
         .setCxxPlatform(cxxPlatform)
         .setPicType(CxxSourceRuleFactory.PicType.PDC)
         .build();

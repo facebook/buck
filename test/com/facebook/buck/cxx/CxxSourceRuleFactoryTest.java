@@ -114,6 +114,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(resolver)
           .setPathResolver(pathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(CXX_PLATFORM)
           .addCxxPreprocessorInput(cxxPreprocessorInput)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -161,6 +162,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(resolver)
           .setPathResolver(pathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(platform)
           .addCxxPreprocessorInput(cxxPreprocessorInput)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -208,6 +210,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(resolver)
           .setPathResolver(new SourcePathResolver(resolver))
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(CXX_PLATFORM)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();
@@ -249,6 +252,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(resolver)
           .setPathResolver(new SourcePathResolver(resolver))
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(CXX_PLATFORM);
       CxxSourceRuleFactory cxxSourceRuleFactoryPDC = cxxSourceRuleFactoryBuilder
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -332,6 +336,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(buildRuleResolver)
           .setPathResolver(new SourcePathResolver(buildRuleResolver))
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(platform)
           .setPrefixHeader(prefixHeaderSourcePath)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -370,6 +375,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(buildRuleResolver)
           .setPathResolver(new SourcePathResolver(buildRuleResolver))
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(platform)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();
@@ -428,6 +434,7 @@ public class CxxSourceRuleFactoryTest {
               .setParams(params)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
+              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(cxxPlatform)
               .addCxxPreprocessorInput(CxxPreprocessorInput.EMPTY)
               .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -524,6 +531,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(buildRuleResolver)
           .setPathResolver(new SourcePathResolver(buildRuleResolver))
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(platform)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();
@@ -645,6 +653,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(buildRuleResolver)
           .setPathResolver(sourcePathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(platform)
           .addCxxPreprocessorInput(cxxPreprocessorInput)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -684,6 +693,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(buildRuleResolver)
           .setPathResolver(sourcePathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(platform)
           .setCompilerFlags(
               CxxFlags.getLanguageFlags(
@@ -744,6 +754,7 @@ public class CxxSourceRuleFactoryTest {
           .setParams(params)
           .setResolver(buildRuleResolver)
           .setPathResolver(sourcePathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(CXX_PLATFORM)
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();

@@ -76,6 +76,8 @@ abstract class AbstractCxxSourceRuleFactory {
   @Value.Parameter
   public abstract SourcePathResolver getPathResolver();
   @Value.Parameter
+  public abstract CxxBuckConfig getCxxBuckConfig();
+  @Value.Parameter
   public abstract CxxPlatform getCxxPlatform();
   @Value.Parameter
   public abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
@@ -643,6 +645,7 @@ abstract class AbstractCxxSourceRuleFactory {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
       ImmutableMultimap<CxxSource.Type, String> compilerFlags,
@@ -654,6 +657,7 @@ abstract class AbstractCxxSourceRuleFactory {
         params,
         resolver,
         pathResolver,
+        cxxBuckConfig,
         cxxPlatform,
         cxxPreprocessorInput,
         compilerFlags,
@@ -699,6 +703,7 @@ abstract class AbstractCxxSourceRuleFactory {
       return new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getDebugPathSanitizer(),
+          getCxxBuckConfig().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
           CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
               .resolve(getResolver()),

@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessMode;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -162,10 +162,10 @@ public class FakeAppleRuleDescriptions {
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
     new AppleLibraryDescription(
         new CxxLibraryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             DEFAULT_PLATFORM,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
-            DEFAULT_APPLE_FLAVOR_DOMAIN,
-            CxxPreprocessMode.COMBINED),
+            DEFAULT_APPLE_FLAVOR_DOMAIN),
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
@@ -178,10 +178,10 @@ public class FakeAppleRuleDescriptions {
   public static final AppleBinaryDescription BINARY_DESCRIPTION =
     new AppleBinaryDescription(
         new CxxBinaryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
-            DEFAULT_APPLE_FLAVOR_DOMAIN,
-            CxxPreprocessMode.COMBINED),
+            DEFAULT_APPLE_FLAVOR_DOMAIN),
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(

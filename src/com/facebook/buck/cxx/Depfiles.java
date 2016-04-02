@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -38,6 +39,7 @@ import java.nio.CharBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.logging.Level;
 
 /**
  * Specialized parser for .d Makefiles emitted by {@code gcc -MD}.
@@ -172,10 +174,11 @@ public class Depfiles {
     }
   }
 
-  public static void parseAndWriteBuckCompatibleDepfile(
+  public static int parseAndWriteBuckCompatibleDepfile(
       ExecutionContext context,
       ProjectFilesystem filesystem,
       HeaderPathNormalizer headerPathNormalizer,
+      HeaderVerification headerVerification,
       Path sourceDepFile,
       Path destDepFile,
       Path inputPath,
@@ -198,17 +201,35 @@ public class Depfiles {
              context.getBuckEventBus(),
              PerfEventId.of("depfile-parse"),
              params)) {
-      for (String prereq : parseDepfile(reader).getPrereqs()) {
-        Path path = Paths.get(prereq);
+      ImmutableList<String> prereqs = Depfiles.parseDepfile(reader).getPrereqs();
+      // Skip the first prereq, as it's the input source file.
+      Preconditions.checkState(inputPath.toString().equals(prereqs.get(0)));
+      ImmutableList<String> headers = prereqs.subList(1, prereqs.size());
+      for (String header : headers) {
         Optional<Path> absolutePath =
-            headerPathNormalizer.getAbsolutePathForUnnormalizedPath(path);
+            headerPathNormalizer.getAbsolutePathForUnnormalizedPath(Paths.get(header));
         if (absolutePath.isPresent()) {
           Preconditions.checkState(absolutePath.get().isAbsolute());
           writer.write(absolutePath.get().toString());
           writer.newLine();
+        } else if (
+            headerVerification.getMode() != HeaderVerification.Mode.IGNORE &&
+                !headerVerification.isWhitelisted(header)) {
+          context.getBuckEventBus().post(
+              ConsoleEvent.create(
+                  headerVerification.getMode() == HeaderVerification.Mode.ERROR ?
+                      Level.SEVERE :
+                      Level.WARNING,
+                  "%s: included an untracked header \"%s\"",
+                  inputPath,
+                  header));
+          if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
+            return 1;
+          }
         }
       }
     }
+    return 0;
   }
 
   public static class Depfile {

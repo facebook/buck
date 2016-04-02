@@ -527,9 +527,9 @@ public class CxxDescriptionEnhancer {
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      CxxPreprocessMode preprocessMode,
       Optional<StripStyle> stripStyle) throws NoSuchBuildTargetException {
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -546,10 +546,10 @@ public class CxxDescriptionEnhancer {
     return createBuildRulesForCxxBinary(
         params,
         resolver,
+        cxxBuckConfig,
         cxxPlatform,
         srcs,
         headers,
-        preprocessMode,
         stripStyle,
         args.linkStyle.or(Linker.LinkableDepType.STATIC),
         args.preprocessorFlags,
@@ -569,10 +569,10 @@ public class CxxDescriptionEnhancer {
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
-      CxxPreprocessMode preprocessMode,
       Optional<StripStyle> stripStyle,
       Linker.LinkableDepType linkStyle,
       Optional<ImmutableList<String>> preprocessorFlags,
@@ -625,6 +625,7 @@ public class CxxDescriptionEnhancer {
             params,
             resolver,
             sourcePathResolver,
+            cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
             CxxFlags.getLanguageFlags(
@@ -633,7 +634,7 @@ public class CxxDescriptionEnhancer {
                 langCompilerFlags,
                 cxxPlatform),
             prefixHeader,
-            preprocessMode,
+            cxxBuckConfig.getPreprocessMode(),
             srcs,
             linkStyle == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
@@ -818,8 +819,8 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      CxxPreprocessMode preprocessMode,
       CxxConstructorArg arg) throws NoSuchBuildTargetException {
     // Invoking requireObjects has the side-effect of invoking
     // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
@@ -828,15 +829,15 @@ public class CxxDescriptionEnhancer {
         params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE),
         ruleResolver,
         pathResolver,
+        cxxBuckConfig,
         cxxPlatform,
-        preprocessMode,
         CxxSourceRuleFactory.PicType.PIC,
         arg);
 
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
         pathResolver,
-        preprocessMode,
+        cxxBuckConfig.getPreprocessMode(),
         objects.keySet());
   }
 
@@ -904,8 +905,8 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver sourcePathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic,
       CxxConstructorArg args) throws NoSuchBuildTargetException {
     ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
@@ -965,6 +966,7 @@ public class CxxDescriptionEnhancer {
         params,
         ruleResolver,
         sourcePathResolver,
+        cxxBuckConfig,
         cxxPlatform,
         cxxPreprocessorInputFromDependencies,
         CxxFlags.getLanguageFlags(
@@ -973,7 +975,7 @@ public class CxxDescriptionEnhancer {
             args.langCompilerFlags,
             cxxPlatform),
         args.prefixHeader,
-        preprocessMode,
+        cxxBuckConfig.getPreprocessMode(),
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
             sourcePathResolver,

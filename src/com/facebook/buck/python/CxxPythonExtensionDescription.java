@@ -180,6 +180,7 @@ public class CxxPythonExtensionDescription implements
             params,
             ruleResolver,
             pathResolver,
+            cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
             CxxFlags.getLanguageFlags(

@@ -19,10 +19,10 @@ package com.facebook.buck.halide;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
@@ -70,18 +70,18 @@ public class HalideLibraryDescription
   public static final Flavor HALIDE_COMPILE_FLAVOR = ImmutableFlavor.of("halide-compile");
 
   private final CxxPlatform defaultCxxPlatform;
+  private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPreprocessMode preprocessMode;
   private final HalideBuckConfig halideBuckConfig;
 
   public HalideLibraryDescription(
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPreprocessMode preprocessMode,
       HalideBuckConfig halideBuckConfig) {
+    this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
-    this.preprocessMode = preprocessMode;
     this.halideBuckConfig = halideBuckConfig;
   }
 
@@ -147,10 +147,10 @@ public class HalideLibraryDescription
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
             params,
             ruleResolver,
+            cxxBuckConfig,
             cxxPlatform,
             srcs,
             /* headers */ ImmutableMap.<Path, SourcePath>of(),
-            preprocessMode,
             flavoredStripStyle,
             Linker.LinkableDepType.STATIC,
             preprocessorFlags,

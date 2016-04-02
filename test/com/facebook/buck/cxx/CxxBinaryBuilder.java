@@ -29,10 +29,10 @@ public class CxxBinaryBuilder extends
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxBinaryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             new InferBuckConfig(FakeBuckConfig.builder().build()),
             defaultCxxPlatform,
-            cxxPlatforms,
-            CxxPreprocessMode.SEPARATE),
+            cxxPlatforms),
         target);
   }
 

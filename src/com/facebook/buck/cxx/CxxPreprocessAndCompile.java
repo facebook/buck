@@ -228,6 +228,9 @@ public class CxxPreprocessAndCompile
         headerPathNormalizer,
         sanitizer,
         preprocessDelegate.isPresent() ?
+            preprocessDelegate.get().getHeaderVerification() :
+            HeaderVerification.NONE,
+        preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getPreprocessorExtraLineProcessor() :
             Optional.<Function<String, Iterable<String>>>absent(),
         scratchDir);

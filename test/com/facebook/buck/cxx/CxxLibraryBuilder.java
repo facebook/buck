@@ -38,10 +38,10 @@ public class CxxLibraryBuilder extends
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxLibraryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             DefaultCxxPlatforms.build(cxxBuckConfig),
             new InferBuckConfig(FakeBuckConfig.builder().build()),
-            cxxPlatforms,
-            CxxPreprocessMode.SEPARATE),
+            cxxPlatforms),
         target);
   }
 

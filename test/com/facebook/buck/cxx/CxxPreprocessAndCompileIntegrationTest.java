@@ -603,6 +603,36 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .assertSuccess();
   }
 
+  @Test
+  public void ignoreVerifyHeaders() throws IOException {
+    workspace.runBuckBuild("-c", "cxx.untracked_headers=ignore", "//:untracked_header")
+        .assertSuccess();
+  }
+
+  @Test
+  public void errorVerifyHeaders() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "cxx.untracked_headers=error",
+            "-c", "cxx.untracked_headers_whitelist=something",
+            "//:untracked_header");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "untracked_header.cpp: included an untracked header \"untracked_header.h\""));
+  }
+
+  @Test
+  public void whitelistVerifyHeaders() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "cxx.untracked_headers=error",
+            "-c", "cxx.untracked_headers_whitelist=/usr/local/.*, untracked_.*.h",
+            "//:untracked_header");
+    result.assertSuccess();
+  }
+
   private BuildTarget getPreprocessTarget(
       CxxPlatform cxxPlatform,
       BuildTarget target,

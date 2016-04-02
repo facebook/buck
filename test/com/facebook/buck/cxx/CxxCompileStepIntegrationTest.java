@@ -103,6 +103,7 @@ public class CxxCompileStepIntegrationTest {
                     Optional.<ImmutableList<String>>absent())),
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
+            CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             Optional.<Function<String, Iterable<String>>>absent(),
             scratchDir);
 

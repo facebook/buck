@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a10ac13ea2ef6e7c4ee13088cd2213c01d4bf07b #@#
+#@# GENERATED FILE: DO NOT MODIFY dc1d58c44875c2771567edfe5094573235194fae #@#
 {
   "apple" : {
     "deps" : [
@@ -85,6 +85,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jsr:jsr305",

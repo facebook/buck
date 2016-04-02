@@ -103,8 +103,8 @@ public class CxxTestDescription implements
           params,
           resolver,
           pathResolver,
+          cxxBuckConfig,
           cxxPlatform,
-          cxxBuckConfig.getPreprocessMode(),
           args);
     }
 
@@ -113,9 +113,9 @@ public class CxxTestDescription implements
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             params,
             resolver,
+            cxxBuckConfig,
             cxxPlatform,
             args,
-            cxxBuckConfig.getPreprocessMode(),
             flavoredStripStyle);
 
     // Construct the actual build params we'll use, notably with an added dependency on the

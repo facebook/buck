@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -27,7 +28,6 @@ import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -75,10 +75,10 @@ public class ThriftCxxEnhancerTest {
       FlavorDomain.of("C/C++ Platform", CXX_PLATFORM);
   private static final CxxLibraryDescription CXX_LIBRARY_DESCRIPTION =
       new CxxLibraryDescription(
+          CxxPlatformUtils.DEFAULT_CONFIG,
           CXX_PLATFORM,
           new InferBuckConfig(BUCK_CONFIG),
-          CXX_PLATFORMS,
-          CxxPreprocessMode.SEPARATE);
+          CXX_PLATFORMS);
   private static final ThriftCxxEnhancer ENHANCER_CPP =
       new ThriftCxxEnhancer(
           THRIFT_BUCK_CONFIG,
@@ -608,10 +608,10 @@ public class ThriftCxxEnhancerTest {
     // propagated.
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             CXX_PLATFORM,
             new InferBuckConfig(BUCK_CONFIG),
-            CXX_PLATFORMS,
-            CxxPreprocessMode.SEPARATE) {
+            CXX_PLATFORMS) {
           @Override
           public <A extends Arg> BuildRule createBuildRule(
               TargetGraph targetGraph,
@@ -672,10 +672,10 @@ public class ThriftCxxEnhancerTest {
     // propagated.
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             CXX_PLATFORM,
             new InferBuckConfig(BUCK_CONFIG),
-            CXX_PLATFORMS,
-            CxxPreprocessMode.SEPARATE) {
+            CXX_PLATFORMS) {
           @Override
           public <A extends Arg> BuildRule createBuildRule(
               TargetGraph targetGraph,

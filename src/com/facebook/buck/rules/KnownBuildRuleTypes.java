@@ -469,16 +469,17 @@ public class KnownBuildRuleTypes {
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
+            cxxBuckConfig,
             inferBuckConfig,
             defaultCxxPlatform,
-            cxxPlatforms,
-            cxxBuckConfig.getPreprocessMode());
+            cxxPlatforms);
 
-    CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
-        defaultCxxPlatform,
-        inferBuckConfig,
-        cxxPlatforms,
-        cxxBuckConfig.getPreprocessMode());
+    CxxLibraryDescription cxxLibraryDescription =
+        new CxxLibraryDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            inferBuckConfig,
+            cxxPlatforms);
 
     CodeSignIdentityStore codeSignIdentityStore =
         CodeSignIdentityStore.fromSystem(processExecutor);
@@ -608,10 +609,10 @@ public class KnownBuildRuleTypes {
     builder.register(new GwtBinaryDescription(defaultJavaOptions));
     builder.register(
       new HalideLibraryDescription(
-        defaultCxxPlatform,
-        cxxPlatforms,
-        cxxBuckConfig.getPreprocessMode(),
-        halideBuckConfig));
+          cxxBuckConfig,
+          defaultCxxPlatform,
+          cxxPlatforms,
+          halideBuckConfig));
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(
         defaultJavaOptions,

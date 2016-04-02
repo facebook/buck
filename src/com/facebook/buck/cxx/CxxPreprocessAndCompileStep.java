@@ -61,6 +61,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Optional<ToolCommand> compilerCommand;
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
+  private final HeaderVerification headerVerification;
   private final Optional<Function<String, Iterable<String>>> extraLineProcessor;
 
   /**
@@ -79,6 +80,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       Optional<ToolCommand> compilerCommand,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
+      HeaderVerification headerVerification,
       Optional<Function<String, Iterable<String>>> extraLineProcessor,
       Path scratchDir) {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
@@ -94,6 +96,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.compilerCommand = compilerCommand;
     this.headerPathNormalizer = headerPathNormalizer;
     this.sanitizer = sanitizer;
+    this.headerVerification = headerVerification;
     this.extraLineProcessor = extraLineProcessor;
     this.scratchDir = scratchDir;
   }
@@ -450,14 +453,16 @@ public class CxxPreprocessAndCompileStep implements Step {
       }
 
       if (operation.isPreprocess() && exitCode == 0) {
-        Depfiles.parseAndWriteBuckCompatibleDepfile(
-            context,
-            filesystem,
-            headerPathNormalizer,
-            getDepTemp(),
-            depFile,
-            input,
-            output);
+        exitCode =
+            Depfiles.parseAndWriteBuckCompatibleDepfile(
+                context,
+                filesystem,
+                headerPathNormalizer,
+                headerVerification,
+                getDepTemp(),
+                depFile,
+                input,
+                output);
       }
 
       // If the compilation completed successfully and we didn't effect debug-info normalization

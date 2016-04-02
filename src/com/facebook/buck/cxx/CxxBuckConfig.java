@@ -25,9 +25,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -35,6 +37,7 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 /**
  * Contains platform independent settings for C/C++ rules.
@@ -279,6 +282,24 @@ public class CxxBuckConfig {
         delegate.getEnum(cxxSection, "linker_platform", LinkerProvider.Type.class);
     return Optional.<LinkerProvider>of(
         new DefaultLinkerProvider(type.or(defaultType), toolProvider.get()));
+  }
+
+  public HeaderVerification getHeaderVerification() {
+    return HeaderVerification.builder()
+        .setMode(
+            delegate.getEnum(cxxSection, "untracked_headers", HeaderVerification.Mode.class)
+                .or(HeaderVerification.Mode.IGNORE))
+        .addAllWhitelist(
+            FluentIterable
+                .from(delegate.getListWithoutComments(cxxSection, "untracked_headers_whitelist"))
+                .transform(
+                    new Function<String, Pattern>() {
+                      @Override
+                      public Pattern apply(String input) {
+                        return Pattern.compile(input);
+                      }
+                    }))
+        .build();
   }
 
   @Value.Immutable

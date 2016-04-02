@@ -105,20 +105,20 @@ public class CxxLibraryDescription implements
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final InferBuckConfig inferBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPreprocessMode preprocessMode;
 
   public CxxLibraryDescription(
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       InferBuckConfig inferBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPreprocessMode preprocessMode) {
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.inferBuckConfig = inferBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
-    this.preprocessMode = preprocessMode;
   }
 
   @Override
@@ -205,13 +205,13 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Arg arg,
       ImmutableList<String> linkerFlags,
       ImmutableList<String> exportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
-      ImmutableSet<FrameworkPath> libraries,
-      CxxPreprocessMode preprocessMode)
+      ImmutableSet<FrameworkPath> libraries)
       throws NoSuchBuildTargetException {
 
     // Create rules for compiling the PIC object files.
@@ -220,8 +220,8 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            cxxBuckConfig,
             cxxPlatform,
-            preprocessMode,
             CxxSourceRuleFactory.PicType.PIC,
             arg);
 
@@ -251,13 +251,13 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.Arg args,
       ImmutableList<String> linkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       Optional<String> soname,
-      CxxPreprocessMode preprocessMode,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
@@ -270,8 +270,8 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            cxxBuckConfig,
             cxxPlatform,
-            preprocessMode,
             CxxSourceRuleFactory.PicType.PIC,
             args);
 
@@ -434,9 +434,9 @@ public class CxxLibraryDescription implements
   private static BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Arg args,
-      CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
@@ -446,8 +446,8 @@ public class CxxLibraryDescription implements
             params,
             resolver,
             sourcePathResolver,
+            cxxBuckConfig,
             cxxPlatform,
-            preprocessMode,
             pic,
             args);
 
@@ -490,9 +490,9 @@ public class CxxLibraryDescription implements
   private static <A extends Arg> BuildRule createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       A args,
-      CxxPreprocessMode preprocessMode,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -516,13 +516,13 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         sourcePathResolver,
+        cxxBuckConfig,
         cxxPlatform,
         args,
         linkerFlags.build(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.soname,
-        preprocessMode,
         args.cxxRuntimeType,
         linkType,
         linkableDepType,
@@ -567,8 +567,8 @@ public class CxxLibraryDescription implements
           params,
           resolver,
           sourcePathResolver,
+          cxxBuckConfig,
           cxxPlatform,
-          preprocessMode,
           args);
     } else if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
@@ -583,6 +583,7 @@ public class CxxLibraryDescription implements
           params,
           resolver,
           new SourcePathResolver(resolver),
+          cxxBuckConfig,
           platform.or(defaultCxxPlatform),
           args,
           inferBuckConfig,
@@ -593,6 +594,7 @@ public class CxxLibraryDescription implements
           params,
           resolver,
           new SourcePathResolver(resolver),
+          cxxBuckConfig,
           platform.or(defaultCxxPlatform),
           args,
           inferBuckConfig,
@@ -602,6 +604,7 @@ public class CxxLibraryDescription implements
       return CxxInferEnhancer.requireAllTransitiveCaptureBuildRules(
           params,
           resolver,
+          cxxBuckConfig,
           platform.or(defaultCxxPlatform),
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig),
@@ -612,6 +615,7 @@ public class CxxLibraryDescription implements
           params,
           resolver,
           new SourcePathResolver(resolver),
+          cxxBuckConfig,
           platform.or(defaultCxxPlatform),
           args,
           inferBuckConfig,
@@ -648,9 +652,9 @@ public class CxxLibraryDescription implements
           return createSharedLibraryBuildRule(
               typeParams,
               resolver,
+              cxxBuckConfig,
               platform.get(),
               args,
-              preprocessMode,
               Linker.LinkType.SHARED,
               linkableDepType.or(Linker.LinkableDepType.SHARED),
               Optional.<SourcePath>absent(),
@@ -659,9 +663,9 @@ public class CxxLibraryDescription implements
           return createSharedLibraryBuildRule(
               typeParams,
               resolver,
+              cxxBuckConfig,
               platform.get(),
               args,
-              preprocessMode,
               Linker.LinkType.MACH_O_BUNDLE,
               linkableDepType.or(Linker.LinkableDepType.SHARED),
               bundleLoader,
@@ -670,17 +674,17 @@ public class CxxLibraryDescription implements
           return createStaticLibraryBuildRule(
               typeParams,
               resolver,
+              cxxBuckConfig,
               platform.get(),
               args,
-              preprocessMode,
               CxxSourceRuleFactory.PicType.PDC);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
               typeParams,
               resolver,
+              cxxBuckConfig,
               platform.get(),
               args,
-              preprocessMode,
               CxxSourceRuleFactory.PicType.PIC);
       }
       throw new RuntimeException("unhandled library build type");
@@ -759,6 +763,7 @@ public class CxxLibraryDescription implements
                   params,
                   resolver,
                   pathResolver,
+                  cxxBuckConfig,
                   cxxPlatform,
                   args,
                   CxxFlags.getFlags(
@@ -770,8 +775,7 @@ public class CxxLibraryDescription implements
                       args.exportedPlatformLinkerFlags,
                       cxxPlatform),
                   args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
-                  args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
-                  preprocessMode);
+                  args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()));
             } catch (NoSuchBuildTargetException e) {
               throw new RuntimeException(e);
             }

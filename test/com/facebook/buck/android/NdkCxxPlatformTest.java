@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
@@ -98,6 +99,7 @@ public class NdkCxxPlatformTest {
           .setParams(new FakeBuildRuleParamsBuilder(target).build())
           .setResolver(resolver)
           .setPathResolver(pathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(entry.getValue().getCxxPlatform())
           .setPicType(CxxSourceRuleFactory.PicType.PIC)
           .build();

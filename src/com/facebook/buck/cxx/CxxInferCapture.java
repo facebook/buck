@@ -196,6 +196,7 @@ public class CxxInferCapture
           context,
           getProjectFilesystem(),
           preprocessorDelegate.getHeaderPathNormalizer(),
+          preprocessorDelegate.getHeaderVerification(),
           sourceDepfile,
           destDepfile,
           getResolver().deprecatedGetPath(input),

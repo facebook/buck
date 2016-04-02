@@ -57,6 +57,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final DebugPathSanitizer sanitizer;
   private final Path workingDir;
   private final SourcePathResolver resolver;
+  private final HeaderVerification headerVerification;
 
   private final Function<Path, Path> minLengthPathRepresentation =
       new Function<Path, Path>() {
@@ -93,6 +94,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   public PreprocessorDelegate(
       SourcePathResolver resolver,
       DebugPathSanitizer sanitizer,
+      HeaderVerification headerVerification,
       Path workingDir,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
@@ -102,6 +104,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.includes = ImmutableList.copyOf(includes);
     this.preprocessorFlags = preprocessorFlags;
     this.sanitizer = sanitizer;
+    this.headerVerification = headerVerification;
     this.workingDir = workingDir;
     this.resolver = resolver;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
@@ -207,6 +210,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
     return preprocessor.getFlagsForColorDiagnostics();
+  }
+
+  public HeaderVerification getHeaderVerification() {
+    return headerVerification;
   }
 
   @SuppressWarnings("serial")

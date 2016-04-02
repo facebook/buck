@@ -21,7 +21,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -42,9 +41,9 @@ public class HalideLibraryBuilder extends
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new HalideLibraryDescription(
+            CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
             cxxPlatforms,
-            CxxPreprocessMode.SEPARATE,
             halideBuckConfig),
         target);
   }

@@ -142,6 +142,7 @@ public class CxxPrecompiledHeader
             Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
             preprocessorDelegate.getHeaderPathNormalizer(),
             sanitizer,
+            preprocessorDelegate.getHeaderVerification(),
             Optional.<Function<String, Iterable<String>>>absent(),
             scratchDir));
   }

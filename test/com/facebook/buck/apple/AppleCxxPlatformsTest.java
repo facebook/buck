@@ -28,6 +28,7 @@ import static org.junit.Assert.assertThat;
 
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -778,6 +779,7 @@ AppleSdkPaths appleSdkPaths =
           .setParams(new FakeBuildRuleParamsBuilder(target).build())
           .setResolver(resolver)
           .setPathResolver(pathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(entry.getValue().getCxxPlatform())
           .setPicType(CxxSourceRuleFactory.PicType.PIC)
           .build();

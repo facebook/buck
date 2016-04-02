@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
@@ -27,6 +28,9 @@ import java.nio.file.Paths;
 public class CxxPlatformUtils {
 
   private CxxPlatformUtils() {}
+
+  public static final CxxBuckConfig DEFAULT_CONFIG =
+      new CxxBuckConfig(new FakeBuckConfig.Builder().build());
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()

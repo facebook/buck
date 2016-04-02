@@ -111,3 +111,10 @@ sh_binary(
   name = 'cxx',
   main = 'cxx.sh',
 )
+
+cxx_binary(
+  name = 'untracked_header',
+  srcs = [
+    'untracked_header.cpp',
+  ],
+)

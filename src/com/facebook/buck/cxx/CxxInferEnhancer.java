@@ -100,6 +100,7 @@ public final class CxxInferEnhancer {
   public static BuildRule requireAllTransitiveCaptureBuildRules(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       InferBuckConfig inferBuckConfig,
       CxxInferSourceFilter sourceFilter,
@@ -110,6 +111,7 @@ public final class CxxInferEnhancer {
             params,
             ruleResolver,
             new SourcePathResolver(ruleResolver),
+            cxxBuckConfig,
             cxxPlatform,
             args,
             inferBuckConfig,
@@ -134,6 +136,7 @@ public final class CxxInferEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
       InferBuckConfig inferConfig,
@@ -153,6 +156,7 @@ public final class CxxInferEnhancer {
         cleanParams,
         resolver,
         pathResolver,
+        cxxBuckConfig,
         cxxPlatform,
         args,
         inferConfig,
@@ -168,6 +172,7 @@ public final class CxxInferEnhancer {
   requireTransitiveCaptureAndAggregatingRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
       InferBuckConfig inferConfig,
@@ -185,6 +190,7 @@ public final class CxxInferEnhancer {
     ImmutableSet<CxxInferCapture> captureRules = requireInferCaptureBuildRules(
         cleanParams,
         resolver,
+        cxxBuckConfig,
         cxxPlatform,
         sources,
         inferConfig,
@@ -207,6 +213,7 @@ public final class CxxInferEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
       InferBuckConfig inferConfig,
@@ -228,6 +235,7 @@ public final class CxxInferEnhancer {
         requireTransitiveCaptureAndAggregatingRules(
             params,
             resolver,
+            cxxBuckConfig,
             cxxPlatform,
             args,
             inferConfig,
@@ -248,6 +256,7 @@ public final class CxxInferEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
       InferBuckConfig inferConfig,
@@ -269,6 +278,7 @@ public final class CxxInferEnhancer {
         cxxInferCaptureAndAnalyzeRules = requireTransitiveCaptureAndAggregatingRules(
             params,
             resolver,
+            cxxBuckConfig,
             cxxPlatform,
             args,
             inferConfig,
@@ -367,6 +377,7 @@ public final class CxxInferEnhancer {
   private static ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> sources,
       InferBuckConfig inferBuckConfig,
@@ -417,6 +428,7 @@ public final class CxxInferEnhancer {
         params,
         resolver,
         pathResolver,
+        cxxBuckConfig,
         cxxPlatform,
         preprocessorInputs,
         CxxFlags.getLanguageFlags(
