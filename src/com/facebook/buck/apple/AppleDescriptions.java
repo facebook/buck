@@ -620,6 +620,8 @@ public class AppleDescriptions {
               platformName.equals(ApplePlatform.WATCHSIMULATOR.getName())) &&
               appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
             destinationPath = destinations.getWatchAppPath();
+          } else if (appleBundle.isLegacyWatchApp()) {
+            destinationPath = destinations.getResourcesPath();
           } else {
             destinationPath = destinations.getPlugInsPath();
           }

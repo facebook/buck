@@ -59,6 +59,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR);
 
+  public static final Flavor WATCH_OS_FLAVOR = ImmutableFlavor.of("watchos-armv7k");
+  public static final Flavor WATCH_SIMULATOR_FLAVOR = ImmutableFlavor.of("watchsimulator-i386");
+
   private static final Flavor WATCH = ImmutableFlavor.of("watch");
 
   private final AppleBinaryDescription appleBinaryDescription;
@@ -200,12 +203,12 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     String platformName = cxxPlatform.getFlavor().getName();
     final Flavor actualWatchFlavor;
     if (ApplePlatform.isSimulator(platformName)) {
-      actualWatchFlavor = ImmutableFlavor.builder().name("watchsimulator-i386").build();
+      actualWatchFlavor = WATCH_SIMULATOR_FLAVOR;
     } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName()) ||
         platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
-      actualWatchFlavor = ImmutableFlavor.builder().name("watchos-armv7k").build();
+      actualWatchFlavor = WATCH_OS_FLAVOR;
     } else {
-      actualWatchFlavor = ImmutableFlavor.builder().name(platformName).build();
+      actualWatchFlavor = ImmutableFlavor.of(platformName);
     }
 
     FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps.get())

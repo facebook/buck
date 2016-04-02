@@ -262,6 +262,13 @@ public class AppleBundle
     return binary;
   }
 
+  public boolean isLegacyWatchApp() {
+    return extension.equals(AppleBundleExtension.APP.toFileExtension()) &&
+        binary.isPresent() &&
+        binary.get().getBuildTarget().getFlavors()
+            .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR);
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -539,7 +546,7 @@ public class AppleBundle
 
     if (platformName.contains("osx")) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(false));
-    } else if (!platformName.contains("watch")) {
+    } else if (!platformName.contains("watch") && !isLegacyWatchApp()) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(true));
     }
 

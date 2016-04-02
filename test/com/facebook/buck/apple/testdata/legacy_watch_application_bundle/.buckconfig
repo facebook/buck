@@ -1,0 +1,4 @@
+[cache]
+  mode = dir
+[cxx]
+  default_platform = iphonesimulator-x86_64

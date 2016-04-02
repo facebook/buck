@@ -63,6 +63,7 @@ public class AppleBinaryDescription implements
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
   public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
+  public static final Flavor LEGACY_WATCH_FLAVOR = ImmutableFlavor.of("legacy_watch");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       APP_FLAVOR,
@@ -224,7 +225,7 @@ public class AppleBinaryDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     Optional<Path> stubBinaryPath = getStubBinaryPath(params, args);
-    if (stubBinaryPath.isPresent()) {
+    if (shouldUseStubBinary(params) && stubBinaryPath.isPresent()) {
       try {
         return new WriteFile(
             params,
@@ -249,6 +250,13 @@ public class AppleBinaryDescription implements
         return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
       }
     }
+  }
+
+  private boolean shouldUseStubBinary(BuildRuleParams params) {
+    ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    return (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR) ||
+        flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR) ||
+        flavors.contains(LEGACY_WATCH_FLAVOR));
   }
 
 
