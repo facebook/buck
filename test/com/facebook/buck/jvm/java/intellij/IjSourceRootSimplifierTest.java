@@ -49,6 +49,10 @@ public class IjSourceRootSimplifierTest {
     return new TestFolder(Paths.get(path));
   }
 
+  private static IjFolder buildNonCoalescingFolder(String path) {
+    return new AndroidResourceFolder(Paths.get(path));
+  }
+
   private static JavaPackageFinder fakePackageFinder() {
     return fakePackageFinder(ImmutableMap.<Path, Path>of());
   }
@@ -235,4 +239,19 @@ public class IjSourceRootSimplifierTest {
             ImmutableSet.of(aFolder, aaFolder, bFolder)),
         Matchers.containsInAnyOrder(aFolder, aaFolder, bFolder));
   }
-}
+
+  @Test
+  public void testNonCoalesingChildrenDontMerge() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder abFolder = buildSourceFolder("src/a/b");
+    IjFolder abrFolder = buildNonCoalescingFolder("src/a/b/r");
+    IjFolder acFolder = buildSourceFolder("src/a/c");
+
+    IjFolder mergedSrcFolder = buildSourceFolder("src/");
+
+    assertThat(
+        simplifier.simplify(
+            SimplificationLimit.of(0),
+            ImmutableSet.of(abFolder, abrFolder, acFolder)),
+        Matchers.containsInAnyOrder(mergedSrcFolder, abrFolder));
+  }}
