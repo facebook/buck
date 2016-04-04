@@ -82,6 +82,7 @@ import com.google.common.collect.Maps;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.core.AllOf;
 import org.junit.Before;
 import org.junit.Rule;
@@ -1401,6 +1402,54 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(
         mainSchemeBuildAction.getParallelizeBuild(),
         is(true));
+  }
+
+  @Test
+  public void customRunnableSettings() throws IOException {
+    BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
+    TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .build();
+
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
+        .setWorkspaceName(Optional.of("workspace"))
+        .setSrcTarget(Optional.of(fooLibTarget))
+        .setExplicitRunnablePath(Optional.of("/some.app"))
+        .setLaunchStyle(Optional.of(XCScheme.LaunchAction.LaunchStyle.WAIT))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        rootCell,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
+            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+        false /* combinedProject */,
+        false /* buildWithBuck */,
+        ImmutableList.<String>of(),
+        true /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        "BUCK",
+        getSourcePathResolverForNodeFunction(targetGraph),
+        getFakeBuckEventBus(),
+        halideBuckConfig,
+        cxxBuckConfig);
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
+    XCScheme.LaunchAction launchAction = mainScheme.getLaunchAction().get();
+    assertThat(launchAction.getRunnablePath().get(), Matchers.equalTo("/some.app"));
+    assertThat(launchAction.getLaunchStyle(),
+        Matchers.equalTo(XCScheme.LaunchAction.LaunchStyle.WAIT));
   }
 
   private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {

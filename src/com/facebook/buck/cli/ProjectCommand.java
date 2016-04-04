@@ -1167,6 +1167,8 @@ public class ProjectCommand extends BuildCommand {
     workspaceArgs.workspaceName = Optional.absent();
     workspaceArgs.extraSchemes = Optional.of(ImmutableSortedMap.<String, BuildTarget>of());
     workspaceArgs.isRemoteRunnable = Optional.absent();
+    workspaceArgs.explicitRunnablePath = Optional.absent();
+    workspaceArgs.launchStyle = Optional.absent();
     return workspaceArgs;
   }
 

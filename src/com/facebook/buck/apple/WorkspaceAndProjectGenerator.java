@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -840,9 +841,9 @@ public class WorkspaceAndProjectGenerator {
       if (isMainScheme) {
         orderedRunTestTargets = orderedRunTestTargets.append(synthesizedCombinedTestTargets);
       }
-      Optional<String> runnablePath;
+      Optional<String> runnablePath = schemeConfigArg.explicitRunnablePath;
       Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
-      if (buildWithBuck && targetToBuildWithBuck.isPresent()) {
+      if (buildWithBuck && targetToBuildWithBuck.isPresent() && !runnablePath.isPresent()) {
         Optional<String> productName = getProductName(
             schemeNameToSrcTargetNode.get(schemeName),
             targetToBuildWithBuck);
@@ -851,8 +852,6 @@ public class WorkspaceAndProjectGenerator {
             rootCell.getFilesystem().resolve(
                 ProjectGenerator.getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName)
             ).toString());
-      } else {
-        runnablePath = Optional.absent();
       }
       Optional<String> remoteRunnablePath;
       if (schemeConfigArg.isRemoteRunnable.or(false)) {
@@ -876,7 +875,8 @@ public class WorkspaceAndProjectGenerator {
           runnablePath,
           remoteRunnablePath,
           XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
-          targetToProjectPathMap);
+          targetToProjectPathMap,
+          schemeConfigArg.launchStyle.or(XCScheme.LaunchAction.LaunchStyle.AUTO));
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }

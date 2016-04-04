@@ -80,6 +80,7 @@ class SchemeGenerator {
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
   private Optional<XCScheme> outputScheme = Optional.absent();
+  private final XCScheme.LaunchAction.LaunchStyle launchStyle;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -94,9 +95,11 @@ class SchemeGenerator {
       Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
       Map<SchemeActionType, String> actionConfigNames,
-      Map<PBXTarget, Path> targetToProjectPathMap) {
+      Map<PBXTarget, Path> targetToProjectPathMap,
+      XCScheme.LaunchAction.LaunchStyle launchStyle) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
+    this.launchStyle = launchStyle;
     this.orderedBuildTargets = ImmutableSet.copyOf(orderedBuildTargets);
     this.orderedBuildTestTargets = ImmutableSet.copyOf(orderedBuildTestTargets);
     this.orderedRunTestTargets = ImmutableSet.copyOf(orderedRunTestTargets);
@@ -193,7 +196,8 @@ class SchemeGenerator {
                 primaryBuildableReference,
                 Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.LAUNCH)),
                 runnablePath,
-                remoteRunnablePath));
+                remoteRunnablePath,
+                launchStyle));
         profileAction = Optional.of(
             new XCScheme.ProfileAction(
                 primaryBuildableReference,
@@ -336,6 +340,11 @@ class SchemeGenerator {
       Element refElem = serializeBuildableReference(doc, launchAction.getBuildableReference());
       productRunnableElem.appendChild(refElem);
     }
+
+    XCScheme.LaunchAction.LaunchStyle launchStyle = launchAction.getLaunchStyle();
+    launchActionElem.setAttribute(
+        "launchStyle",
+        launchStyle == XCScheme.LaunchAction.LaunchStyle.AUTO ? "0" : "1");
 
     return launchActionElem;
   }
