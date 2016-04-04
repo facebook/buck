@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.3</version>
+  <version>2.4</version>
   <category>Build</category>
 
   <description><![CDATA[
@@ -133,8 +133,6 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
-      <action class="com.facebook.buck.intellij.plugin.actions.ConnectToBuck" id="buck.connect" />
-      <action class="com.facebook.buck.intellij.plugin.actions.DisconnectFromBuck" id="buck.disconnect" />
     </group>
   </actions>
 

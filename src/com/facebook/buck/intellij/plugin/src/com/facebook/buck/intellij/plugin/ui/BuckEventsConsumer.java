@@ -112,12 +112,6 @@ public class BuckEventsConsumer implements
 
     public void detachWithMessage(String message) {
         detach();
-        BuckEventsConsumer.this.mTreeModel.setRoot(new BuckTreeNodeDetail(
-                null,
-                BuckTreeNodeDetail.DetailType.ERROR,
-                "Disconnected from buck: " + message
-        ));
-        BuckEventsConsumer.this.mTreeModel.reload();
     }
 
     public void attach(String target, DefaultTreeModel treeModel) {
