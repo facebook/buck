@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
+import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.intellij.execution.filters.HyperlinkInfo;
@@ -155,6 +156,23 @@ public class BuckBuildManager {
         runInCurrentThread(handler, indicator, true, operationTitle);
       }
     });
+  }
+
+  /**
+   * Execute simple process asynchronously with progress and connect to Buck server.
+   *
+   * @param handler        a handler
+   * @param operationTitle an operation title shown in progress dialog
+   * @param module         the BuckModule throught which we connect to Buck
+   */
+  public void runBuckCommandWhileConnectedToBuck(
+      final BuckCommandHandler handler,
+      final String operationTitle,
+      final BuckModule module) {
+    if (!module.isConnected()) {
+      module.connect();
+    }
+    runBuckCommand(handler, operationTitle);
   }
 
   /**

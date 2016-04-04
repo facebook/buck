@@ -39,8 +39,8 @@ public class BuckKillAction extends BuckBaseAction {
 
   @Override
   public void update(AnActionEvent e) {
-    if (preUpdateCheck(e)) {
-      Project project = e.getProject();
+    Project project = e.getProject();
+    if (project != null) {
       BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
       e.getPresentation().setEnabled(!buildManager.isKilling() && buildManager.isBuilding());
     }
@@ -48,13 +48,14 @@ public class BuckKillAction extends BuckBaseAction {
 
   @Override
   public void actionPerformed(final AnActionEvent e) {
-    BuckModule mod = e.getProject().getComponent(BuckModule.class);
-    mod.disconnect("Killed!");
+    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
+    buckModule.disconnect();
 
     BuckKillCommandHandler handler = new BuckKillCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
         BuckCommand.KILL);
-    BuckBuildManager.getInstance(e.getProject()).runBuckCommand(handler, ACTION_TITLE);
+    BuckBuildManager.getInstance(e.getProject())
+        .runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }
 }

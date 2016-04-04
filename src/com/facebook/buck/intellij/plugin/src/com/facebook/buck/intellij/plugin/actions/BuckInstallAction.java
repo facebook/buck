@@ -24,7 +24,6 @@ import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.Project;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,14 +38,6 @@ public class BuckInstallAction extends BuckBaseAction {
 
   public BuckInstallAction() {
     super(ACTION_TITLE, ACTION_DESCRIPTION, AllIcons.Actions.Execute);
-  }
-
-  @Override
-  public void update(AnActionEvent e) {
-    if (preUpdateCheck(e)) {
-      Project project = e.getProject();
-      e.getPresentation().setEnabled(!BuckBuildManager.getInstance(project).isBuilding());
-    }
   }
 
   @Override
@@ -65,8 +56,8 @@ public class BuckInstallAction extends BuckBaseAction {
 
     // Initiate a buck install
     BuckEventsConsumer buckEventsConsumer = new BuckEventsConsumer(e.getProject());
-    BuckModule mod = e.getProject().getComponent(BuckModule.class);
-    mod.attach(buckEventsConsumer, target);
+    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
+    buckModule.attach(buckEventsConsumer, target);
 
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
@@ -92,6 +83,6 @@ public class BuckInstallAction extends BuckBaseAction {
       }
     }
     handler.command().addParameter(target);
-    buildManager.runBuckCommand(handler, ACTION_TITLE);
+    buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }
 }

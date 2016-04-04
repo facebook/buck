@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.actions;
 
-import com.facebook.buck.intellij.plugin.config.BuckModule;
+import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
@@ -29,17 +29,11 @@ abstract class BuckBaseAction extends DumbAwareAction {
         super(title, desc, icon);
     }
 
-    public boolean preUpdateCheck(AnActionEvent e) {
+    @Override
+    public void update(AnActionEvent e) {
         Project project = e.getProject();
         if (project != null) {
-            BuckModule mod = project.getComponent(BuckModule.class);
-            if (!mod.isConnected()) {
-                e.getPresentation().setEnabled(false);
-                return false;
-            } else {
-                return true;
-            }
+            e.getPresentation().setEnabled(!BuckBuildManager.getInstance(project).isBuilding());
         }
-        return false;
     }
 }

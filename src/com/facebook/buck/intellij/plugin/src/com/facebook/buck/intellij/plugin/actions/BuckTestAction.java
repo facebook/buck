@@ -23,7 +23,6 @@ import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.Project;
 
 /**
  * Run buck test command.
@@ -38,14 +37,6 @@ public class BuckTestAction extends BuckBaseAction {
   }
 
   @Override
-  public void update(AnActionEvent e) {
-    if (preUpdateCheck(e)) {
-      Project project = e.getProject();
-      e.getPresentation().setEnabled(!BuckBuildManager.getInstance(project).isBuilding());
-    }
-  }
-
-  @Override
   public void actionPerformed(AnActionEvent e) {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(e.getProject());
 
@@ -57,8 +48,8 @@ public class BuckTestAction extends BuckBaseAction {
 
     // Initiate a buck test
     BuckEventsConsumer buckEventsConsumer = new BuckEventsConsumer(e.getProject());
-    BuckModule mod = e.getProject().getComponent(BuckModule.class);
-    mod.attach(buckEventsConsumer, target);
+    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
+    buckModule.attach(buckEventsConsumer, target);
 
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
@@ -66,6 +57,6 @@ public class BuckTestAction extends BuckBaseAction {
         BuckCommand.TEST,
         buckEventsConsumer);
     handler.command().addParameter(target);
-    buildManager.runBuckCommand(handler, ACTION_TITLE);
+    buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }
 }

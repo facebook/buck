@@ -145,7 +145,7 @@ public final class BuckModule implements ProjectComponent {
                                     "Try adding to your '.buckconfig.local' file:\n" +
                                     "[httpserver]\n" +
                                     "    port = 0\n" +
-                                    "After that press the 'Connect to buck' button.\n",
+                                    "After that, try running the command again.\n",
                                 ConsoleViewContentType.ERROR_OUTPUT);
                         } else {
                             mClient = new BuckClient(port, mEventHandler);
