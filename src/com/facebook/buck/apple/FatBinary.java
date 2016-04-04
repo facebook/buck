@@ -16,9 +16,11 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -28,6 +30,7 @@ import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -36,7 +39,7 @@ import java.util.SortedSet;
 /**
  * Puts together multiple thin binaries into a fat binary.
  */
-public class FatBinary extends AbstractBuildRule {
+public class FatBinary extends AbstractBuildRule implements ProvidesStaticLibraryDeps {
 
   @AddToRuleKey
   private final Tool lipo;
@@ -82,5 +85,16 @@ public class FatBinary extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return output;
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
+    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+    for (BuildRule dep : getDeps()) {
+      if (dep instanceof ProvidesStaticLibraryDeps) {
+        builder.addAll(((ProvidesStaticLibraryDeps) dep).getStaticLibraryDeps());
+      }
+    }
+    return builder.build();
   }
 }

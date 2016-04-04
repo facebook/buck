@@ -33,6 +33,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -41,7 +42,7 @@ import javax.annotation.Nullable;
 
 public class CxxBinary
     extends AbstractBuildRule
-    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps {
+    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesStaticLibraryDeps {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -121,6 +122,15 @@ public class CxxBinary
         CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.<CxxSource.Type, String>of(),
         frameworks);
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
+    if (linkRule instanceof ProvidesStaticLibraryDeps) {
+      return ((ProvidesStaticLibraryDeps) linkRule).getStaticLibraryDeps();
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at

@@ -31,6 +31,8 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,7 +40,14 @@ import java.nio.file.Path;
 
 public class CxxLink
     extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey {
+    implements SupportsInputBasedRuleKey, ProvidesStaticLibraryDeps {
+
+  private static final Predicate<BuildRule> ARCHIVE_RULES_PREDICATE = new Predicate<BuildRule>() {
+    @Override
+    public boolean apply(BuildRule input) {
+      return input instanceof Archive;
+    }
+  };
 
   @AddToRuleKey
   private final Linker linker;
@@ -102,6 +111,11 @@ public class CxxLink
             getProjectFilesystem(),
             output,
             linker.getScrubbers(cellRoots.build())));
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
+    return FluentIterable.from(getDeps()).filter(ARCHIVE_RULES_PREDICATE).toSet();
   }
 
   @Override
