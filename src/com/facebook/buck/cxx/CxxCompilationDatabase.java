@@ -30,6 +30,7 @@ import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -47,7 +48,8 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 
-public class CxxCompilationDatabase extends AbstractBuildRule implements HasPostBuildSteps {
+public class CxxCompilationDatabase extends AbstractBuildRule
+    implements HasPostBuildSteps, HasRuntimeDeps {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
   public static final Flavor UBER_COMPILATION_DATABASE =
       ImmutableFlavor.of("uber-compilation-database");
@@ -58,12 +60,15 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
   @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
+  private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       CxxPreprocessMode preprocessMode,
-      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
+      HeaderSymlinkTree privateHeaderSymlinkTreeRule,
+      Optional<HeaderSymlinkTree> exportedHeaderSymlinkTreeRule) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
         .naturalOrder();
@@ -80,18 +85,28 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
             params.getExtraDeps()),
         pathResolver,
         compileRules.build(),
-        preprocessMode);
+        preprocessMode,
+        privateHeaderSymlinkTreeRule,
+        exportedHeaderSymlinkTreeRule);
   }
 
   CxxCompilationDatabase(
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      CxxPreprocessMode preprocessMode) {
+      CxxPreprocessMode preprocessMode,
+      HeaderSymlinkTree privateHeaderSymlinkTreeRule,
+      Optional<HeaderSymlinkTree> exportedHeaderSymlinkTreeRule) {
     super(buildRuleParams, pathResolver);
     this.compileRules = compileRules;
     this.preprocessMode = preprocessMode;
     this.outputJsonFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s.json");
+    ImmutableSortedSet.Builder<BuildRule> runtimeDepsBuilder = ImmutableSortedSet.naturalOrder();
+    runtimeDepsBuilder.add(privateHeaderSymlinkTreeRule);
+    if (exportedHeaderSymlinkTreeRule.isPresent()) {
+      runtimeDepsBuilder.add(exportedHeaderSymlinkTreeRule.get());
+    }
+    this.runtimeDeps = runtimeDepsBuilder.build();
   }
 
   @Override
@@ -117,6 +132,19 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
   @Override
   public Path getPathToOutput() {
     return outputJsonFile;
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    // The compilation database contains commands which refer to a
+    // particular state of generated header symlink trees/header map
+    // files.
+    //
+    // Ensure even if this rule doesn't need to be built due to a
+    // cache hit on the (empty) output of the rule, we still fetch and
+    // lay out the headers so the resulting compilation database can
+    // be used.
+    return runtimeDeps;
   }
 
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {

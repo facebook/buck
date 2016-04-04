@@ -138,19 +138,37 @@ public class CxxBinaryDescription implements
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      BuildRuleParams paramsWithoutFlavor =
+          params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
       CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
           .createBuildRulesForCxxBinaryDescriptionArg(
-              params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE),
+              paramsWithoutFlavor,
               resolver,
               cxxBuckConfig,
               cxxPlatform,
               args,
               flavoredStripStyle);
+      HeaderSymlinkTree privateHeaderSymlinkTreeRule = CxxDescriptionEnhancer
+          .createHeaderSymlinkTree(
+              paramsWithoutFlavor,
+              resolver,
+              pathResolver,
+              cxxPlatform,
+              CxxDescriptionEnhancer.parseHeaders(
+                  params.getBuildTarget(),
+                  pathResolver,
+                  Optional.of(cxxPlatform),
+                  args),
+              HeaderVisibility.PRIVATE);
+
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           pathResolver,
           cxxBuckConfig.getPreprocessMode(),
-          cxxLinkAndCompileRules.compileRules);
+          cxxLinkAndCompileRules.compileRules,
+          privateHeaderSymlinkTreeRule,
+          // cxx_binary rules do not export headers
+          Optional.<HeaderSymlinkTree>absent());
     }
 
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {

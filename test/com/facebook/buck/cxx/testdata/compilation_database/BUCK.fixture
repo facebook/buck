@@ -13,9 +13,8 @@ cxx_library(
   srcs = [
     'bar.cpp',
   ],
-  exported_headers = [
-    'bar.h',
-  ],
+  headers = glob(['*.h']),
+  exported_headers = glob(['*.h'], excludes=['*_private.h']),
 )
 
 cxx_test(

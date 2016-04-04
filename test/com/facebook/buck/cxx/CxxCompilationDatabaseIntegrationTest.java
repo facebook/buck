@@ -16,10 +16,14 @@
 package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -43,6 +47,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -115,9 +120,9 @@ public class CxxCompilationDatabaseIntegrationTest {
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(binaryHeaderSymlinkTreeFolder))
+            .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(libraryExportedHeaderSymlinkTreeFolder))
+            .add(headerSymlinkTreePath(libraryExportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
@@ -177,9 +182,9 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fPIC")
             .add("-fPIC")
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(headerSymlinkTreeFolder))
+            .add(headerSymlinkTreePath(headerSymlinkTreeFolder).toString())
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(exportedHeaderSymlinkTreeFolder))
+            .add(headerSymlinkTreePath(exportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
@@ -234,9 +239,9 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fPIC")
             .add("-fPIC")
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(binaryHeaderSymlinkTreeFolder))
+            .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .add("-I")
-            .add(headerSymlinkTreeIncludePath(binaryExportedHeaderSymlinkTreeFolder))
+            .add(headerSymlinkTreePath(binaryExportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps())
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
@@ -255,11 +260,116 @@ public class CxxCompilationDatabaseIntegrationTest {
             .build());
   }
 
-  private String headerSymlinkTreeIncludePath(Path headerSymlinkTreePath) throws IOException {
+  @Test
+  public void compilationDatabaseFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMap()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compilation_database", tmp);
+    workspace.setUp();
+
+    // This test only fails if the directory cache is enabled and we don't update
+    // the header map/symlink tree correctly when fetching from the cache.
+    workspace.enableDirCache();
+
+    addLibraryHeaderFiles(workspace);
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
+
+    // Populate the cache with the built rule
+    workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+
+    Path headerSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
+    Path exportedHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
+
+    // Validate the symlink tree/header maps
+    verifyHeaders(
+        workspace,
+        headerSymlinkTreeFolder,
+        "bar.h",
+        "baz.h",
+        "blech_private.h");
+    verifyHeaders(
+        workspace,
+        exportedHeaderSymlinkTreeFolder,
+        "bar.h",
+        "baz.h");
+
+    // Delete the newly-added files and build again
+    Files.delete(workspace.getPath("baz.h"));
+    Files.delete(workspace.getPath("blech_private.h"));
+    workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    verifyHeaders(
+        workspace,
+        headerSymlinkTreeFolder,
+        "bar.h");
+    verifyHeaders(
+        workspace,
+        exportedHeaderSymlinkTreeFolder,
+        "bar.h");
+
+    // Restore the headers, build again, and check the symlink tree/header maps
+    addLibraryHeaderFiles(workspace);
+    workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    verifyHeaders(
+        workspace,
+        headerSymlinkTreeFolder,
+        "bar.h",
+        "baz.h",
+        "blech_private.h");
+    verifyHeaders(
+        workspace,
+        exportedHeaderSymlinkTreeFolder,
+        "bar.h",
+        "baz.h");
+  }
+
+  private void addLibraryHeaderFiles(ProjectWorkspace workspace) throws IOException {
+    // These header files are included in //:library_with_header via a glob
+    workspace.writeContentsToPath("// Hello world\n", "baz.h");
+    workspace.writeContentsToPath("// Hello private world\n", "blech_private.h");
+  }
+
+  private void verifyHeaders(
+      ProjectWorkspace projectWorkspace,
+      Path path,
+      String... headers) throws IOException {
+    Path resolvedPath = headerSymlinkTreePath(path);
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
-      return String.format("%s.hmap", headerSymlinkTreePath);
+      final List<String> presentHeaders = new ArrayList<>();
+      HeaderMap headerMap = HeaderMap.loadFromFile(
+          projectWorkspace.getPath(resolvedPath).toFile());
+      headerMap.visit(new HeaderMap.HeaderMapVisitor() {
+          @Override
+          public void apply(String str, String prefix, String suffix) {
+            presentHeaders.add(str);
+          }
+      });
+      assertThat(presentHeaders, containsInAnyOrder(headers));
     } else {
-      return String.format("%s", headerSymlinkTreePath);
+      for (String header : headers) {
+        assertThat(
+            Files.exists(projectWorkspace.getPath(resolvedPath.resolve(header))),
+            is(true));
+      }
+    }
+  }
+
+  private Path headerSymlinkTreePath(Path path) throws IOException {
+    if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
+      return path.resolveSibling(String.format("%s.hmap", path.getFileName()));
+    } else {
+      return path;
     }
   }
 

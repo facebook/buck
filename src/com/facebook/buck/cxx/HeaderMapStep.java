@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Objects;
@@ -28,6 +29,8 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class HeaderMapStep implements Step {
+
+  private static final Logger LOG = Logger.get(HeaderMapStep.class);
 
   private final ProjectFilesystem filesystem;
   private final Path output;
@@ -54,6 +57,7 @@ public class HeaderMapStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws IOException {
+    LOG.debug("Writing header map with %d entries to %s", entries.size(), output);
     HeaderMap.Builder builder = HeaderMap.builder();
     for (Map.Entry<Path, Path> entry : entries.entrySet()) {
       builder.add(entry.getKey().toString(), entry.getValue());

@@ -825,8 +825,10 @@ public class CxxDescriptionEnhancer {
     // Invoking requireObjects has the side-effect of invoking
     // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
     // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
+    BuildRuleParams paramsWithoutFlavor = params.withoutFlavor(
+        CxxCompilationDatabase.COMPILATION_DATABASE);
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
-        params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE),
+        paramsWithoutFlavor,
         ruleResolver,
         pathResolver,
         cxxBuckConfig,
@@ -834,11 +836,44 @@ public class CxxDescriptionEnhancer {
         CxxSourceRuleFactory.PicType.PIC,
         arg);
 
+    HeaderSymlinkTree privateHeaderSymlinkTree =
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            paramsWithoutFlavor,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            CxxDescriptionEnhancer.parseHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                Optional.of(cxxPlatform),
+                arg),
+            HeaderVisibility.PRIVATE);
+
+    Optional<HeaderSymlinkTree> exportedHeaderSymlinkTree;
+    if (arg instanceof CxxLibraryDescription.Arg) {
+      CxxLibraryDescription.Arg libArg = (CxxLibraryDescription.Arg) arg;
+      exportedHeaderSymlinkTree = Optional.of(
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            paramsWithoutFlavor,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            CxxDescriptionEnhancer.parseExportedHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                Optional.of(cxxPlatform),
+                libArg),
+            HeaderVisibility.PUBLIC));
+    } else {
+      exportedHeaderSymlinkTree = Optional.absent();
+    }
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
         pathResolver,
         cxxBuckConfig.getPreprocessMode(),
-        objects.keySet());
+        objects.keySet(),
+        privateHeaderSymlinkTree,
+        exportedHeaderSymlinkTree);
   }
 
   public static BuildRule createUberCompilationDatabase(

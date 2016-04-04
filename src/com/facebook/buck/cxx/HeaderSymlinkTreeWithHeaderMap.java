@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,6 +32,8 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
 public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
+
+  private static final Logger LOG = Logger.get(HeaderSymlinkTreeWithHeaderMap.class);
 
   @AddToRuleKey(stringify = true)
   private final Path headerMapPath;
@@ -56,6 +59,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
     Path buckOut = getProjectFilesystem().resolve(BuckConstant.BUCK_OUTPUT_PATH);
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
     for (Path key : getLinks().keySet()) {

@@ -16,6 +16,7 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -43,9 +45,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import org.hamcrest.Matchers;
 
 import org.junit.Test;
 
@@ -203,11 +209,33 @@ public class CxxCompilationDatabaseTest {
         throw new RuntimeException("Invalid strategy");
     }
 
+    HeaderSymlinkTree privateSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        testBuildRuleParams,
+        testBuildRuleResolver,
+        testSourcePathResolver,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        ImmutableMap.<Path, SourcePath>of(),
+        HeaderVisibility.PRIVATE
+    );
+    HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        testBuildRuleParams,
+        testBuildRuleResolver,
+        testSourcePathResolver,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        ImmutableMap.<Path, SourcePath>of(),
+        HeaderVisibility.PUBLIC
+    );
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         testSourcePathResolver,
         strategy,
-        rules.build());
+        rules.build(),
+        privateSymlinkTree,
+        Optional.of(exportedSymlinkTree));
+
+    assertThat(
+        compilationDatabase.getRuntimeDeps(),
+        Matchers.<BuildRule>contains(exportedSymlinkTree, privateSymlinkTree));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
