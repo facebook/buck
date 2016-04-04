@@ -44,6 +44,7 @@ java_immutables_library(
     'AbstractSha1HashCode.java',
     'AbstractSourcePath.java',
     'AbstractSourceWithFlags.java',
+    'AbstractTargetGraphAndBuildTargets.java',
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',

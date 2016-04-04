@@ -45,6 +45,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -299,7 +300,7 @@ public class TargetsCommand extends AbstractCommand {
     // know which targets can refer to the specified targets or their dependencies in their
     // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
     // longer be necessary.
-    Optional<Pair<ImmutableSet<BuildTarget>, TargetGraph>> graphAndTargets =
+    Optional<TargetGraphAndBuildTargets> graphAndTargets =
         buildTargetGraphAndTargets(params, executor);
     if (!graphAndTargets.isPresent()) {
       return 1;
@@ -307,8 +308,8 @@ public class TargetsCommand extends AbstractCommand {
 
     SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
         params,
-        graphAndTargets.get().getFirst(),
-        graphAndTargets.get().getSecond(),
+        graphAndTargets.get().getBuildTargets(),
+        graphAndTargets.get().getTargetGraph(),
         buildRuleTypes);
 
     return printResults(params, executor, matchingNodes, showRulesResult);
@@ -373,26 +374,26 @@ public class TargetsCommand extends AbstractCommand {
     return matchingNodes;
   }
 
-  private Optional<Pair<ImmutableSet<BuildTarget>, TargetGraph>> buildTargetGraphAndTargets(
+  private Optional<TargetGraphAndBuildTargets> buildTargetGraphAndTargets(
       CommandRunnerParams params,
       ListeningExecutorService executor) throws IOException, InterruptedException {
     try {
       boolean ignoreBuckAutodepsFiles = false;
       if (getArguments().isEmpty() || isDetectTestChanges()) {
-        return Optional.of(new Pair<>(
-            ImmutableSet.<BuildTarget>of(),
-            params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
-                executor,
-                ImmutableList.of(
-                    TargetNodePredicateSpec.of(
-                        Predicates.<TargetNode<?>>alwaysTrue(),
-                        BuildFileSpec.fromRecursivePath(
-                            Paths.get("")))),
-                ignoreBuckAutodepsFiles).getSecond()));
+        return Optional.of(TargetGraphAndBuildTargets.builder()
+            .setBuildTargets(ImmutableSet.<BuildTarget>of())
+            .setTargetGraph(params.getParser()
+                .buildTargetGraphForTargetNodeSpecs(
+                    params.getBuckEventBus(),
+                    params.getCell(),
+                    getEnableProfiling(),
+                    executor,
+                    ImmutableList.of(
+                        TargetNodePredicateSpec.of(
+                            Predicates.<TargetNode<?>>alwaysTrue(),
+                            BuildFileSpec.fromRecursivePath(
+                                Paths.get("")))),
+                    ignoreBuckAutodepsFiles).getTargetGraph()).build());
       } else {
         return Optional.of(
             params.getParser()
@@ -682,7 +683,7 @@ public class TargetsCommand extends AbstractCommand {
 
     ImmutableSet<BuildTarget> matchingBuildTargets;
     TargetGraph targetGraph;
-    Pair<ImmutableSet<BuildTarget>, TargetGraph> res = params.getParser()
+    TargetGraphAndBuildTargets res = params.getParser()
         .buildTargetGraphForTargetNodeSpecs(
             params.getBuckEventBus(),
             params.getCell(),
@@ -692,8 +693,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckConfig(),
                 getArguments()),
             /* ignoreBuckAutodepsFiles */ false);
-    matchingBuildTargets = res.getFirst();
-    targetGraph = res.getSecond();
+    matchingBuildTargets = res.getBuildTargets();
+    targetGraph = res.getTargetGraph();
 
     Map<String, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
     if (isShowTargetHash()) {

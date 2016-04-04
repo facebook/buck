@@ -29,10 +29,10 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -335,7 +335,7 @@ public class Parser {
    * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
    * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized Pair<ImmutableSet<BuildTarget>, TargetGraph>
+  public synchronized TargetGraphAndBuildTargets
   buildTargetGraphForTargetNodeSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
@@ -363,7 +363,10 @@ public class Parser {
           targetNodeSpecs);
       TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets, ignoreBuckAutodepsFiles);
 
-      return new Pair<>(buildTargets, graph);
+      return TargetGraphAndBuildTargets.builder()
+          .setBuildTargets(buildTargets)
+          .setTargetGraph(graph)
+          .build();
     }
   }
 

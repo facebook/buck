@@ -25,12 +25,11 @@ import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
@@ -78,7 +77,7 @@ public class FetchCommand extends BuildCommand {
       ActionGraphAndResolver actionGraphAndResolver;
       ImmutableSet<BuildTarget> buildTargets;
       try {
-        Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+        TargetGraphAndBuildTargets result = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
                 params.getBuckEventBus(),
                 params.getCell(),
@@ -88,7 +87,8 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckConfig(),
                     getArguments()),
                 /* ignoreBuckAutodepsFiles */ false);
-        actionGraphAndResolver = Preconditions.checkNotNull(transformer.apply(result.getSecond()));
+        actionGraphAndResolver = Preconditions.checkNotNull(transformer.apply(
+            result.getTargetGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildTargetException | BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(

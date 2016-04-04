@@ -2054,7 +2054,7 @@ public class ParserTest {
                         filter,
                         BuildFileSpec.fromRecursivePath(Paths.get("")))),
                 /* ignoreBuckAutodepsFiles */ false)
-                .getSecond().getNodes())
+                .getTargetGraph().getNodes())
         .filter(filter)
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();

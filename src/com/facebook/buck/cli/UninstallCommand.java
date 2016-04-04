@@ -21,13 +21,12 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.AdbOptions;
@@ -110,7 +109,7 @@ public class UninstallCommand extends AbstractCommand {
         "Uninstall",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
-      Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+      TargetGraphAndBuildTargets result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
@@ -120,12 +119,12 @@ public class UninstallCommand extends AbstractCommand {
                   params.getBuckConfig(),
                   getArguments()),
               /* ignoreBuckAutodepsFiles */ false);
-      buildTargets = result.getFirst();
+      buildTargets = result.getBuildTargets();
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
           new DefaultTargetNodeToBuildRuleTransformer());
       resolver = Preconditions.checkNotNull(
-          targetGraphTransformer.apply(result.getSecond())).getResolver();
+          targetGraphTransformer.apply(result.getTargetGraph())).getResolver();
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

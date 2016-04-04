@@ -98,7 +98,7 @@ public class AutodepsCommand extends AbstractCommand {
                         Predicates.<TargetNode<?>>alwaysTrue(),
                         BuildFileSpec.fromRecursivePath(
                             Paths.get("")))),
-                /* ignoreBuckAutodepsFiles */ true).getSecond();
+                /* ignoreBuckAutodepsFiles */ true).getTargetGraph();
       } catch (BuildTargetException | BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

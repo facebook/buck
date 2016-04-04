@@ -22,7 +22,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -34,6 +33,7 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
@@ -393,14 +393,14 @@ public class TestCommand extends BuildCommand {
                         }
                       },
                       BuildFileSpec.fromRecursivePath(Paths.get("")))),
-              ignoreBuckAutodepsFiles).getSecond();
+              ignoreBuckAutodepsFiles).getTargetGraph();
           explicitBuildTargets = ImmutableSet.of();
 
           // Otherwise, the user specified specific test targets to build and run, so build a graph
           // around these.
         } else {
           LOG.debug("Parsing graph for arguments %s", getArguments());
-          Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+          TargetGraphAndBuildTargets result = params.getParser()
               .buildTargetGraphForTargetNodeSpecs(
                   params.getBuckEventBus(),
                   params.getCell(),
@@ -410,8 +410,8 @@ public class TestCommand extends BuildCommand {
                       params.getBuckConfig(),
                       getArguments()),
                   ignoreBuckAutodepsFiles);
-          targetGraph = result.getSecond();
-          explicitBuildTargets = result.getFirst();
+          targetGraph = result.getTargetGraph();
+          explicitBuildTargets = result.getBuildTargets();
 
           LOG.debug("Got explicit build targets %s", explicitBuildTargets);
           ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();

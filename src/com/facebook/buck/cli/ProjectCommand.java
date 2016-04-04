@@ -1066,7 +1066,7 @@ public class ProjectCommand extends BuildCommand {
                       Predicates.<TargetNode<?>>alwaysTrue(),
                       BuildFileSpec.fromRecursivePath(Paths.get("")))),
               /* ignoreBuckAutodepsFiles */ false)
-          .getSecond();
+          .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
     return params.getParser()
