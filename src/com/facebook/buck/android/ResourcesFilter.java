@@ -153,8 +153,7 @@ public class ResourcesFilter extends AbstractBuildRule
       GetStringsFilesStep getStringsFilesStep = new GetStringsFilesStep(
           getProjectFilesystem(),
           resPaths,
-          stringFilesBuilder,
-          whitelistedStringPaths);
+          stringFilesBuilder);
       steps.add(getStringsFilesStep);
     }
 

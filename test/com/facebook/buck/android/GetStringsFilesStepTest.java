@@ -65,8 +65,7 @@ public class GetStringsFilesStepTest {
     GetStringsFilesStep step = new GetStringsFilesStep(
         filesystem,
         ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("test2")),
-        stringFilesBuilder,
-        ImmutableSet.<Path>of());
+        stringFilesBuilder);
 
     assertEquals(0, step.execute(context));
 
@@ -80,41 +79,6 @@ public class GetStringsFilesStepTest {
         Paths.get("test2/res/values/strings.xml"),
         Paths.get("test2/res/values-es/strings.xml"),
         Paths.get("test2/res/values-es-rES/strings.xml"));
-
-    assertIterablesEquals(expectedStringFiles, stringFilesBuilder.build());
-  }
-
-  @Test
-  public void testWhitelistedStringsAreIgnored() {
-    setUpFakeFilesystem(
-        ImmutableSet.<Path>of(
-            Paths.get("test/res/values/strings.xml"),
-            Paths.get("test/res/values-es/strings.xml"),
-            Paths.get("test/res/values-es-rES/strings.xml"),
-            Paths.get("whitelisted/path/res/values/strings.xml"),
-            Paths.get("whitelisted/path/res/values-es/strings.xml"),
-            Paths.get("whitelisted/path/res/values-es-rES/strings.xml"),
-            Paths.get("test3/res/values/strings.xml"),
-            Paths.get("test3/res/values-es/strings.xml"),
-            Paths.get("test3/res/values-es-rES/strings.xml"),
-            Paths.get("test3/res/values/dimens.xml")));
-
-    ImmutableList<Path> expectedStringFiles = ImmutableList.of(
-        Paths.get("test3/res/values/strings.xml"),
-        Paths.get("test3/res/values-es/strings.xml"),
-        Paths.get("test3/res/values-es-rES/strings.xml"),
-        Paths.get("test/res/values/strings.xml"),
-        Paths.get("test/res/values-es/strings.xml"),
-        Paths.get("test/res/values-es-rES/strings.xml"));
-
-    ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
-    GetStringsFilesStep step = new GetStringsFilesStep(
-        filesystem,
-        ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("whitelisted/path")),
-        stringFilesBuilder,
-        ImmutableSet.of(Paths.get("whitelisted")));
-
-    assertEquals(0, step.execute(context));
 
     assertIterablesEquals(expectedStringFiles, stringFilesBuilder.build());
   }

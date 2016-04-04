@@ -23,13 +23,12 @@ import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 /**
- * Generates a list of strings.xml files (excluding files in the whitelisted directories)
+ * Generates a list of strings.xml files
  *
  * The ordering of strings files is consistent with the order of the input resource directories
  */
@@ -41,21 +40,17 @@ public class GetStringsFilesStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> resDirs;
   private final ImmutableList.Builder<Path> stringFilesBuilder;
-  private final ImmutableSet<Path> whitelistedStringDirs;
 
   /**
    * @param resDirs list of {@code res} directories to find strings.xml files from
-   * @param whitelistedStringDirs set of directories that will be filtered out
    */
   GetStringsFilesStep(
       ProjectFilesystem filesystem,
       ImmutableList<Path> resDirs,
-      ImmutableList.Builder<Path> stringFilesBuilder,
-      ImmutableSet<Path> whitelistedStringDirs) {
+      ImmutableList.Builder<Path> stringFilesBuilder) {
     this.filesystem = filesystem;
     this.resDirs = resDirs;
     this.stringFilesBuilder = stringFilesBuilder;
-    this.whitelistedStringDirs = whitelistedStringDirs;
   }
 
   @Override
@@ -70,26 +65,13 @@ public class GetStringsFilesStep implements Step {
       };
 
       for (Path resDir : resDirs) {
-        // TODO(russellporter): Remove the need to check the whitelist
-        if (!isPathWhitelisted(resDir)) {
-          stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
-        }
+        stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
       }
       return 0;
     } catch (Exception e) {
       context.logError(e, "There was an error getting the list of string files.");
       return 1;
     }
-  }
-
-  private boolean isPathWhitelisted(Path pathRelativeToProjectRoot) {
-    for (Path whitelistedStringDir : whitelistedStringDirs) {
-      if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   @Override
