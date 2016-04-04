@@ -34,6 +34,7 @@ java_library(
 java_immutables_library(
   name = 'build_rule',
   srcs = [
+    'AbstractActionGraphAndResolver.java',
     'AbstractBuildRule.java',
     'AbstractBuildRuleType.java',
     'AbstractDescriptionArg.java',

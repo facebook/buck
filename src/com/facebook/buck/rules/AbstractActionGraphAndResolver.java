@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,16 +16,19 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
+import org.immutables.value.Value;
 
 /**
- * Responsible for converting a {@link TargetGraph} to a graph of some other type, typically of
- * {@link BuildRule}s, but there's not requirement for this to be the case.
+ * Holds an ActionGraph with the BuildRuleResolver that created it.
  */
-public interface TargetGraphTransformer
-    extends Function<TargetGraph, ActionGraphAndResolver> {
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractActionGraphAndResolver {
+  @Value.Parameter
+  ActionGraph getActionGraph();
 
-  @Override
-  ActionGraphAndResolver apply(TargetGraph input);
-
+  @Value.Parameter
+  BuildRuleResolver getResolver();
 }

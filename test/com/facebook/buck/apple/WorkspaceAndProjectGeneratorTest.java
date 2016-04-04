@@ -1451,7 +1451,7 @@ public class WorkspaceAndProjectGeneratorTest {
             ImmutableSet.of(
                 input));
         BuildRuleResolver ruleResolver =
-            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getSecond();
+            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getResolver();
         return new SourcePathResolver(ruleResolver);
       }
     };

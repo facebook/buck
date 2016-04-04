@@ -47,13 +47,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -535,9 +535,9 @@ public class ProjectCommand extends BuildCommand {
     TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
         new DefaultTargetNodeToBuildRuleTransformer());
-    Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+    ActionGraphAndResolver result = Preconditions.checkNotNull(
         targetGraphToActionGraph.apply(targetGraphAndTargets.getTargetGraph()));
-    BuildRuleResolver ruleResolver = result.getSecond();
+    BuildRuleResolver ruleResolver = result.getResolver();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
     JavacOptions javacOptions = new JavaBuckConfig(params.getBuckConfig())
@@ -655,16 +655,16 @@ public class ProjectCommand extends BuildCommand {
     }
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
-    Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+    ActionGraphAndResolver result = Preconditions.checkNotNull(
         new TargetGraphToActionGraph(
             params.getBuckEventBus(),
             new DefaultTargetNodeToBuildRuleTransformer())
             .apply(targetGraphAndTargets.getTargetGraph()));
-    ActionGraph actionGraph = result.getFirst();
+    ActionGraph actionGraph = result.getActionGraph();
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
-          new SourcePathResolver(result.getSecond()),
+          new SourcePathResolver(result.getResolver()),
           FluentIterable
               .from(actionGraph.getNodes())
               .filter(ProjectConfig.class)
@@ -860,7 +860,7 @@ public class ProjectCommand extends BuildCommand {
                     TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
                         ImmutableSet.of(targetNode));
                     BuildRuleResolver buildRuleResolver =
-                        targetGraphToActionGraph.apply(subgraph).getSecond();
+                        targetGraphToActionGraph.apply(subgraph).getResolver();
                     return new SourcePathResolver(buildRuleResolver);
                   }
                 });

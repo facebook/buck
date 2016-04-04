@@ -37,6 +37,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -713,15 +714,15 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
           new DefaultTargetNodeToBuildRuleTransformer());
-      Pair<ActionGraph, BuildRuleResolver> result = Preconditions.checkNotNull(
+      ActionGraphAndResolver result = Preconditions.checkNotNull(
           targetGraphTransformer.apply(targetGraph));
-      actionGraph = Optional.of(result.getFirst());
-      buildRuleResolver = Optional.of(result.getSecond());
+      actionGraph = Optional.of(result.getActionGraph());
+      buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {
         ruleKeyBuilderFactory = Optional.<RuleKeyBuilderFactory>of(
             new DefaultRuleKeyBuilderFactory(
                 params.getFileHashCache(),
-                new SourcePathResolver(result.getSecond())));
+                new SourcePathResolver(result.getResolver())));
       }
     }
 

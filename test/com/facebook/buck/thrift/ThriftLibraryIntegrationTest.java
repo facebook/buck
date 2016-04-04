@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -30,14 +29,14 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.TargetGraph;
@@ -125,14 +124,14 @@ public class ThriftLibraryIntegrationTest {
     // There was a case where the cxx library being generated wouldn't put the header into the tree
     // with the right flavour. This catches this case without us needing to stick a working thrift
     // compiler into buck's own source.
-    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+    ActionGraphAndResolver actionGraphAndResolver =
         new TargetGraphToActionGraph(eventBus, transformer)
         .apply(targetGraph);
 
     // This is to cover the case where we weren't passing flavors around correctly, which ended
     // making the binary depend 'placeholder' BuildRules instead of real ones. This is the
     // regression test for that case.
-    BuildRuleResolver ruleResolver = actionGraphAndResolver.getSecond();
+    BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     BuildTarget binaryFlavor = target.withFlavors(ImmutableFlavor.of("binary"));
     ImmutableSortedSet<BuildRule> deps = ruleResolver.getRule(binaryFlavor).getDeps();
     assertThat(

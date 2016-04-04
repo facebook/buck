@@ -18,9 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.simulate.BuildSimulator;
 import com.facebook.buck.simulate.SimulateReport;
 import com.facebook.buck.simulate.SimulateTimes;
@@ -72,7 +70,7 @@ public class SimulateCommand extends AbstractCommand {
 
     // Create a BuildCommand to generate the ActionGraph.
     BuildCommand buildCommand = new BuildCommand(arguments);
-    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver;
+    ActionGraphAndResolver actionGraphAndResolver;
     try (CommandThreadManager pool = new CommandThreadManager(
         "Simulate",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
@@ -95,8 +93,8 @@ public class SimulateCommand extends AbstractCommand {
     // Run the simulation with the generated ActionGraph.
     BuildSimulator simulator = new BuildSimulator(
         times,
-        actionGraphAndResolver.getFirst(),
-        actionGraphAndResolver.getSecond(),
+        actionGraphAndResolver.getActionGraph(),
+        actionGraphAndResolver.getResolver(),
         params.getBuckConfig().getNumThreads());
     SimulateReport report = simulator.simulateBuild(
         params.getClock().currentTimeMillis(),

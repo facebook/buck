@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 
@@ -36,8 +35,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
   private volatile int hashOfTargetGraph;
   @Nullable
-  private volatile Pair<ActionGraph, BuildRuleResolver> result;
-
+  private volatile ActionGraphAndResolver result;
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
@@ -47,7 +45,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   }
 
   @Override
-  public synchronized Pair<ActionGraph, BuildRuleResolver> apply(TargetGraph targetGraph) {
+  public synchronized ActionGraphAndResolver apply(TargetGraph targetGraph) {
     if (result != null) {
       if (targetGraph.hashCode() == hashOfTargetGraph) {
         return result;
@@ -61,7 +59,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     return result;
   }
 
-  private Pair<ActionGraph, BuildRuleResolver> createActionGraph(final TargetGraph targetGraph) {
+  private ActionGraphAndResolver createActionGraph(final TargetGraph targetGraph) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
@@ -87,11 +85,12 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
         };
     bottomUpTraversal.traverse();
 
-    Pair<ActionGraph, BuildRuleResolver> result = new Pair<>(
-        new ActionGraph(resolver.getBuildRules()),
-        resolver);
+    ActionGraphAndResolver result = ActionGraphAndResolver.builder()
+        .setActionGraph(new ActionGraph(resolver.getBuildRules()))
+        .setResolver(resolver)
+        .build();
+
     eventBus.post(ActionGraphEvent.finished(started));
     return result;
   }
-
 }

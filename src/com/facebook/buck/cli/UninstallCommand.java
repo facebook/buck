@@ -124,8 +124,8 @@ public class UninstallCommand extends AbstractCommand {
       TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
           new DefaultTargetNodeToBuildRuleTransformer());
-      resolver =
-          Preconditions.checkNotNull(targetGraphTransformer.apply(result.getSecond())).getSecond();
+      resolver = Preconditions.checkNotNull(
+          targetGraphTransformer.apply(result.getSecond())).getResolver();
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

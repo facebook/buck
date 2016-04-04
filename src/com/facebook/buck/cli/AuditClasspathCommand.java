@@ -187,7 +187,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets) throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getSecond();
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getResolver();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
@@ -216,7 +216,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       ImmutableSet<BuildTarget> targets)
       throws IOException, NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getSecond();
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getResolver();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {

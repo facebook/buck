@@ -26,9 +26,8 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
@@ -76,7 +75,7 @@ public class FetchCommand extends BuildCommand {
         "Fetch",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
-      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver;
+      ActionGraphAndResolver actionGraphAndResolver;
       ImmutableSet<BuildTarget> buildTargets;
       try {
         Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
@@ -99,8 +98,8 @@ public class FetchCommand extends BuildCommand {
 
       try (Build build = createBuild(
           params.getBuckConfig(),
-          actionGraphAndResolver.getFirst(),
-          actionGraphAndResolver.getSecond(),
+          actionGraphAndResolver.getActionGraph(),
+          actionGraphAndResolver.getResolver(),
           params.getAndroidPlatformTargetSupplier(),
           new CachingBuildEngine(
               pool.getExecutor(),
@@ -109,7 +108,7 @@ public class FetchCommand extends BuildCommand {
               params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-              actionGraphAndResolver.getSecond()),
+              actionGraphAndResolver.getResolver()),
           params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),

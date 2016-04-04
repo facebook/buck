@@ -25,12 +25,11 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
@@ -448,12 +447,11 @@ public class TestCommand extends BuildCommand {
           new TargetGraphToActionGraph(
               params.getBuckEventBus(),
               new DefaultTargetNodeToBuildRuleTransformer());
-      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
-          Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph));
-
+      ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
+          Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph)));
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules = Iterables.filter(
-          actionGraphAndResolver.getFirst().getNodes(),
+          actionGraphAndResolver.getActionGraph().getNodes(),
           TestRule.class);
 
       // Unless the user requests that we build filtered tests, filter them out here, before
@@ -474,11 +472,11 @@ public class TestCommand extends BuildCommand {
               params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-              actionGraphAndResolver.getSecond());
+              actionGraphAndResolver.getResolver());
       try (Build build = createBuild(
           params.getBuckConfig(),
-          actionGraphAndResolver.getFirst(),
-          actionGraphAndResolver.getSecond(),
+          actionGraphAndResolver.getActionGraph(),
+          actionGraphAndResolver.getResolver(),
           params.getAndroidPlatformTargetSupplier(),
           cachingBuildEngine,
           params.getArtifactCache(),

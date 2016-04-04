@@ -2023,7 +2023,7 @@ public class ParserTest {
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer())
             .apply(targetGraph))
-        .getSecond();
+        .getResolver();
   }
 
   /**
