@@ -44,6 +44,7 @@ public class AndroidLibraryGraphEnhancer {
   private final BuildRuleParams originalBuildRuleParams;
   private final JavacOptions javacOptions;
   private final DependencyMode resourceDependencyMode;
+  private final boolean forceFinalResourceIds;
   private final Optional<String> resourceUnionPackage;
 
   public AndroidLibraryGraphEnhancer(
@@ -51,6 +52,7 @@ public class AndroidLibraryGraphEnhancer {
       BuildRuleParams buildRuleParams,
       JavacOptions javacOptions,
       DependencyMode resourceDependencyMode,
+      boolean forceFinalResourceIds,
       Optional<String> resourceUnionPackage) {
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
@@ -59,6 +61,7 @@ public class AndroidLibraryGraphEnhancer {
         .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
         .build();
     this.resourceDependencyMode = resourceDependencyMode;
+    this.forceFinalResourceIds = forceFinalResourceIds;
     this.resourceUnionPackage = resourceUnionPackage;
   }
 
@@ -131,6 +134,7 @@ public class AndroidLibraryGraphEnhancer {
         androidResourceDeps,
         new BuildTargetSourcePath(abiJarTarget),
         javacOptions,
+        forceFinalResourceIds,
         resourceUnionPackage);
     ruleResolver.addToIndex(dummyRDotJava);
 

@@ -139,6 +139,7 @@ public class MergeAndroidResourcesStepTest {
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         Paths.get("output"),
+        /* forceFinalResourceIds */ true,
         Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -209,6 +210,7 @@ public class MergeAndroidResourcesStepTest {
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         Paths.get("output"),
+        /* forceFinalResourceIds */ true,
         Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -274,6 +276,7 @@ public class MergeAndroidResourcesStepTest {
         resolver,
         ImmutableList.of(res1, res2),
         Paths.get("output"),
+        /* forceFinalResourceIds */ false,
         Optional.of("res1"));
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();

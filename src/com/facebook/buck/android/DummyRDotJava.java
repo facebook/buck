@@ -60,6 +60,8 @@ public class DummyRDotJava extends AbstractBuildRule
   @AddToRuleKey
   private final JavacOptions javacOptions;
   @AddToRuleKey
+  private final boolean forceFinalResourceIds;
+  @AddToRuleKey
   private final Optional<String> unionPackage;
 
   public DummyRDotJava(
@@ -68,6 +70,7 @@ public class DummyRDotJava extends AbstractBuildRule
       Set<HasAndroidResourceDeps> androidResourceDeps,
       SourcePath abiJar,
       JavacOptions javacOptions,
+      boolean forceFinalResourceIds,
       Optional<String> unionPackage) {
     super(params, resolver);
     // Sort the input so that we get a stable ABI for the same set of resources.
@@ -75,6 +78,7 @@ public class DummyRDotJava extends AbstractBuildRule
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.abiJar = abiJar;
     this.javacOptions = javacOptions;
+    this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
   }
 
@@ -110,6 +114,7 @@ public class DummyRDotJava extends AbstractBuildRule
           getResolver(),
           androidResourceDeps,
           rDotJavaSrcFolder,
+          forceFinalResourceIds,
           unionPackage);
       steps.add(mergeStep);
       javaSourceFilePaths = mergeStep.getRDotJavaFiles();

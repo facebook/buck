@@ -57,6 +57,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
+        /* forceFinalResourceIds */ false,
         Optional.<String>absent());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
@@ -72,6 +73,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
+        /* forceFinalResourceIds */ false,
         Optional.<String>absent());
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -114,6 +116,7 @@ public class AndroidLibraryGraphEnhancerTest {
         buildRuleParams,
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
+        /* forceFinalResourceIds */ false,
         Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
@@ -168,6 +171,7 @@ public class AndroidLibraryGraphEnhancerTest {
             .setTargetLevel("7")
                     .build(),
                 DependencyMode.FIRST_ORDER,
+        /* forceFinalResourceIds */ false,
         Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
@@ -198,6 +202,7 @@ public class AndroidLibraryGraphEnhancerTest {
             new FakeBuildRuleParamsBuilder(target).build(),
             options,
             DependencyMode.FIRST_ORDER,
+            /* forceFinalResourceIds */ false,
             Optional.<String>absent());
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(

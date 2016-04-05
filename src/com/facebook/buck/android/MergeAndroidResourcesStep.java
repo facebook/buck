@@ -59,6 +59,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Optional<Path> uberRDotTxt;
   private final Path outputDir;
+  private final boolean forceFinalResourceIds;
   private final Optional<String> unionPackage;
 
   /**
@@ -74,12 +75,14 @@ public class MergeAndroidResourcesStep implements Step {
       List<HasAndroidResourceDeps> androidResourceDeps,
       Optional<Path> uberRDotTxt,
       Path outputDir,
+      boolean forceFinalResourceIds,
       Optional<String> unionPackage) {
     this.filesystem = filesystem;
     this.pathResolver = pathResolver;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
     this.outputDir = outputDir;
+    this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
   }
 
@@ -88,6 +91,7 @@ public class MergeAndroidResourcesStep implements Step {
       SourcePathResolver pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path outputDir,
+      boolean forceFinalResourceIds,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
@@ -95,6 +99,7 @@ public class MergeAndroidResourcesStep implements Step {
         androidResourceDeps,
         Optional.<Path>absent(),
         outputDir,
+        forceFinalResourceIds,
         unionPackage);
   }
 
@@ -111,6 +116,7 @@ public class MergeAndroidResourcesStep implements Step {
         androidResourceDeps,
         Optional.of(uberRDotTxt),
         outputDir,
+        /* forceFinalResourceIds */ true,
         unionPackage);
   }
 
@@ -253,7 +259,7 @@ public class MergeAndroidResourcesStep implements Step {
           // Write as an int.
           writer.format(
               "    public static%s%s %s=%s;\n",
-              uberRDotTxt.isPresent() ? " final " : " ",
+              forceFinalResourceIds ? " final " : " ",
               res.idType,
               res.name,
               res.idValue);
