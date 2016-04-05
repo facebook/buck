@@ -240,7 +240,7 @@ public class NativeRelinker {
         resolver,
         ImmutableList.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
         cpuType,
-        nativePlatforms.get(cpuType),
+        nativePlatforms.get(cpuType).getObjdump(),
         source,
         linker != null,
         linker,

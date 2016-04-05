@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.android.relinker;
 
-import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
@@ -30,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -59,8 +59,8 @@ class RelinkerRule extends AbstractBuildRule {
   private final NdkCxxPlatforms.TargetCpuType cpuType;
   @AddToRuleKey
   private final SourcePath baseLibSourcePath;
-  @AddToRuleKey(stringify = true)
-  private final NdkCxxPlatform cxxPlatform;
+  @AddToRuleKey
+  private final Tool objdump;
   @AddToRuleKey
   private final Boolean isRelinkable;
   @AddToRuleKey
@@ -75,14 +75,14 @@ class RelinkerRule extends AbstractBuildRule {
       SourcePathResolver resolver,
       ImmutableList<SourcePath> symbolsNeededPaths,
       NdkCxxPlatforms.TargetCpuType cpuType,
-      NdkCxxPlatform cxxPlatform,
+      Tool objdump,
       SourcePath baseLibSourcePath,
       boolean isRelinkable,
       Linker linker,
       ImmutableList<Arg> linkerArgs) {
     super(withDepsFromArgs(buildRuleParams, resolver, linkerArgs), resolver);
     this.cpuType = cpuType;
-    this.cxxPlatform = cxxPlatform;
+    this.objdump = objdump;
     this.isRelinkable = isRelinkable;
     this.linkerArgs = linkerArgs;
     this.buildRuleParams = buildRuleParams;
@@ -219,7 +219,7 @@ class RelinkerRule extends AbstractBuildRule {
 
   private Symbols getSymbols(Path path) throws IOException, InterruptedException {
     return Symbols.getSymbols(
-        cxxPlatform.getObjdump(),
+        objdump,
         getResolver(),
         absolutify(path));
   }
