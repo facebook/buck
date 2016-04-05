@@ -64,6 +64,7 @@ java_library(
   deps = [
     ':bundle_generated_lib',
     '//src/com/facebook/buck/event/external:external_lib',
+    '//src/com/facebook/buck/io:executable-finder',
     '//third-party/java/gson:gson',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-databind',

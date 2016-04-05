@@ -16,38 +16,31 @@
 
 package com.facebook.buck.intellij.plugin.config;
 
-import com.intellij.openapi.util.SystemInfo;
+import com.facebook.buck.io.ExecutableFinder;
+import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public final class BuckExecutableDetector {
+  private static final Path BUCK_EXECUTABLE = Paths.get("buck");
+  private static final Path ADB_EXECUTABLE = Paths.get("adb");
+  private static final ExecutableFinder EXECUTABLE_FINDER = new ExecutableFinder();
 
   private BuckExecutableDetector() {
   }
 
-  private static final String[] UNIX_PATHS = {
-      "/usr/local/bin",
-      "/usr/bin",
-      "/opt/local/bin",
-      "/opt/bin",
-  };
-  private static final String UNIX_EXECUTABLE = "buck";
-
-  public static String detect() {
-    if (SystemInfo.isWindows) {
-      return null;
-    }
-    return detectForUnix();
+  public static String getBuckExecutable() {
+    return getExecutable(BUCK_EXECUTABLE);
   }
 
-  private static String detectForUnix() {
-    // TODO(t7982097): Use Buck's ExecutableFinder class here.
-    for (String p : UNIX_PATHS) {
-      File f = new File(p, UNIX_EXECUTABLE);
-      if (f.exists()) {
-        return f.getPath();
-      }
-    }
-    return null;
+  public static String getAdbExecutable() {
+    return getExecutable(ADB_EXECUTABLE);
+  }
+
+  public static String getExecutable(Path suggestedExecutable) {
+    return EXECUTABLE_FINDER.getExecutable(
+        suggestedExecutable,
+        ImmutableMap.copyOf(System.getenv())).toString();
   }
 }
