@@ -376,7 +376,10 @@ public class SuperConsoleEventBusListenerTest {
         "[+] INSTALLING...0.5s"));
 
     rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.finished(installEventStarted, true, Optional.<Long>absent()),
+        InstallEvent.finished(
+            installEventStarted,
+            true, Optional.<Long>absent(),
+            Optional.<String>absent()),
         4000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     final String installingFinished = "[-] INSTALLING...FINISHED 1.5s";

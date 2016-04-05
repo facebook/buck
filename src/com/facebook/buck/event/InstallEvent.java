@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -48,8 +49,12 @@ public abstract class InstallEvent
     return new Started(buildTarget);
   }
 
-  public static Finished finished(Started started, boolean success, Optional<Long> pid) {
-    return new Finished(started, success, pid);
+  public static Finished finished(
+      Started started,
+      boolean success,
+      Optional<Long> pid,
+      Optional<String> packageName) {
+    return new Finished(started, success, pid, packageName);
   }
 
   public static class Started extends InstallEvent {
@@ -63,25 +68,38 @@ public abstract class InstallEvent
     }
   }
 
-  public static class Finished extends InstallEvent {
+  public static class Finished extends InstallEvent
+      implements InstallFinishedEventExternalInterface {
 
     private static long invalidPid = -1;
 
     private final boolean success;
     private final long pid;
+    private final String packageName;
 
-    protected Finished(Started started, boolean success, Optional<Long> pid) {
+    protected Finished(
+        Started started,
+        boolean success,
+        Optional<Long> pid,
+        Optional<String> packageName) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.or(invalidPid);
+      this.packageName = packageName.or("");
     }
 
+    @Override
     public boolean isSuccess() {
       return success;
     }
 
     public long getPid() {
       return pid;
+    }
+
+    @Override
+    public String getPackageName() {
+      return packageName;
     }
 
     @Override

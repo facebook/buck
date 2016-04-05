@@ -565,10 +565,12 @@ public class AdbHelper {
         },
         quiet);
     if (!quiet) {
+      AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
       getBuckEventBus().post(InstallEvent.finished(
               started,
               success,
-              Optional.<Long>absent()));
+              Optional.<Long>absent(),
+              Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(installableApk))));
     }
 
     return success;

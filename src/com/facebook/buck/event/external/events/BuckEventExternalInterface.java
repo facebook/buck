@@ -30,8 +30,6 @@ public interface BuckEventExternalInterface {
   String TEST_RUN_STARTED = "RunStarted";
   // Sent when an install has started
   String INSTALL_STARTED = "InstallStarted";
-  // Sent when an install has finished
-  String INSTALL_FINISHED = "InstallFinished";
   // Sent when a build has started
   String BUILD_STARTED = "BuildStarted";
   // Sent when a build has finished

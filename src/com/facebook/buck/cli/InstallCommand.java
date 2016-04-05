@@ -257,7 +257,8 @@ public class InstallCommand extends BuildCommand {
             InstallEvent.finished(
                 started,
                 installResult.getExitCode() == 0,
-                installResult.getLaunchedPid()));
+                installResult.getLaunchedPid(),
+                Optional.<String>absent()));
         exitCode = installResult.getExitCode();
         if (exitCode != 0) {
           return exitCode;

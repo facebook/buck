@@ -41,17 +41,20 @@ public class InstallEventTest {
         InstallEvent.finished(
             started,
             true,
-            Optional.<Long>absent()));
+            Optional.<Long>absent(),
+            Optional.<String>absent()));
     InstallEvent finishedDifferentEvent = configureTestEvent(
         InstallEvent.finished(
             startedDifferentEvent,
             true,
-            Optional.<Long>absent()));
+            Optional.<Long>absent(),
+            Optional.<String>absent()));
     InstallEvent finishedFail = configureTestEvent(
         InstallEvent.finished(
             started,
             false,
-            Optional.<Long>absent()));
+            Optional.<Long>absent(),
+            Optional.<String>absent()));
 
     assertNotEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);

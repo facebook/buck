@@ -181,7 +181,11 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
 
     rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.finished(installEventStarted, true, Optional.<Long>absent()),
+        InstallEvent.finished(
+            installEventStarted,
+            true,
+            Optional.<Long>absent(),
+            Optional.<String>absent()),
         4000L,
         TimeUnit.MILLISECONDS,
         threadId));
