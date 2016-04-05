@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.config;
 
+import com.facebook.buck.intellij.plugin.debugger.AndroidDebugger;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
@@ -41,7 +42,7 @@ public final class BuckModule implements ProjectComponent {
 
     public BuckModule(final Project project) {
         mProject = project;
-
+        AndroidDebugger.init();
         mEventHandler = new BuckEventsHandler(
             new BuckEventsConsumerFactory(mProject),
             new Runnable() {

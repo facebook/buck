@@ -72,6 +72,7 @@ java_library(
     '//third-party/java/jackson-datatype-guava:jackson-datatype-guava',
     '//third-party/java/jackson:jackson-mrbean',
     '//third-party/java/jetty:jetty',
+    '//third-party/java/ddmlib:ddmlib',
   ],
 )
 

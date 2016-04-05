@@ -83,4 +83,10 @@ public class BuckEventsConsumerFactory {
         return mBus.syncPublisher(
             BuckProjectGenerationStartedConsumer.PROJECT_GENERATION_STARTED_CONSUMER);
     }
+
+    public BuckInstallFinishedConsumer getInstallFinishedConsumer() {
+        return mBus.syncPublisher(
+            BuckInstallFinishedConsumer.INSTALL_FINISHED_CONSUMER);
+    }
+
 }
