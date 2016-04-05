@@ -27,6 +27,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.Icon;
 
 /**
  * Run buck install command.
@@ -35,9 +36,14 @@ public class BuckInstallAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck install";
   public static final String ACTION_DESCRIPTION = "Run buck install command";
+  public static final Icon ICON = AllIcons.Actions.Execute;
 
   public BuckInstallAction() {
-    super(ACTION_TITLE, ACTION_DESCRIPTION, AllIcons.Actions.Execute);
+    this(ACTION_TITLE, ACTION_DESCRIPTION, ICON);
+  }
+
+  public BuckInstallAction(String actionTitle, String actionDescription, Icon icon) {
+    super(actionTitle, actionDescription, icon);
   }
 
   @Override

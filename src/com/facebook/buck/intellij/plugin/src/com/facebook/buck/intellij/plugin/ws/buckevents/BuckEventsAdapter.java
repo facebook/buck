@@ -20,6 +20,7 @@ import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
 import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
+import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.event.external.events.ProgressEventInterface;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.facebook.buck.event.external.events.TestRunFinishedEventInterface;
@@ -56,7 +57,7 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(ConsoleEventExternalInterface.CONSOLE_EVENT, new BuckConsoleEventHandler());
     put(IndividualTesEventFinishedExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
         new BuckIndividualTestAwaitingResultsHandler());
-    put(BuckEventExternalInterface.INSTALL_FINISHED, new BuckInstallFinishedHandler());
+    put(InstallFinishedEventExternalInterface.INSTALL_FINISHED, new BuckInstallFinishedHandler());
     put(BuckEventExternalInterface.INSTALL_STARTED, new BuckInstallStartedHandler());
     put(BuckEventExternalInterface.PARSE_FINISHED, new BuckParseFinishedHandler());
     put(BuckEventExternalInterface.PARSE_STARTED, new BuckParseStartedHandler());

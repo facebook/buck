@@ -118,6 +118,9 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallAction" id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
       </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallDebugAction" id="buck.InstallDebug">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
+      </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckBuildAction" id="buck.Build">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
       </action>
