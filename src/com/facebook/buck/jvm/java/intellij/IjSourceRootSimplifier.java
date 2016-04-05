@@ -210,6 +210,10 @@ public class IjSourceRootSimplifier {
       PackagePathCache packagePathCache) {
     Preconditions.checkArgument(child.getPath().startsWith(parent.getPath()));
 
+    if (!parent.getClass().equals(child.getClass())) {
+      return false;
+    }
+
     if (!child.isCoalescent()) {
       return false;
     }

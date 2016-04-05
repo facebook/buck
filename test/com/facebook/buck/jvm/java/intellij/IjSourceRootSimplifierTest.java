@@ -254,4 +254,23 @@ public class IjSourceRootSimplifierTest {
             SimplificationLimit.of(0),
             ImmutableSet.of(abFolder, abrFolder, acFolder)),
         Matchers.containsInAnyOrder(mergedSrcFolder, abrFolder));
-  }}
+  }
+
+  @Test
+  public void testDifferentFolderTypesArentMerged() {
+    // If a TestFolder and a SourceFolder are merged problems can occur with the
+    // deps whereby the TestFolder gets promoted to a SourceFolder, but its deps
+    // still remain as test deps and so are unresolvable, so we should ensure
+    // that the two dep streams are never crossed.
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder sourceFolderOne = buildSourceFolder("src/a/source/b");
+    IjFolder sourceFolderTwo = buildSourceFolder("src/a/source/c");
+    IjFolder testFolder = buildTestFolder("src/a/test");
+
+    assertThat(
+        simplifier.simplify(
+          SimplificationLimit.of(0),
+          ImmutableSet.of(sourceFolderOne, sourceFolderTwo, testFolder)),
+        Matchers.containsInAnyOrder(buildSourceFolder("src/a/source/"), testFolder));
+  }
+}
