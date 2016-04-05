@@ -17,6 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -82,14 +83,19 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private ProcessExecutorFactory processExecutorFactory;
   private final File projectRoot;
   private final String hgCmd;
+  private final ImmutableMap<String, String> environment;
 
   public HgCmdLineInterface(
       ProcessExecutorFactory processExecutorFactory,
       File projectRoot,
-      String hgCmd) {
+      String hgCmd,
+      ImmutableMap<String, String> environment) {
     this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
+    this.environment = MoreMaps.merge(
+        environment,
+        HG_ENVIRONMENT_VARIABLES);
   }
 
   @Override
@@ -154,7 +160,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
         .setCommand(command)
         .setDirectory(projectRoot)
-        .setEnvironment(HG_ENVIRONMENT_VARIABLES)
+        .setEnvironment(environment)
         .build();
 
     ProcessExecutor.Result result;

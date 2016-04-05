@@ -18,6 +18,7 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutorFactory;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -28,20 +29,23 @@ public class DefaultVersionControlCmdLineInterfaceFactory
   private final Path projectRoot;
   private final ProcessExecutorFactory processExecutorFactory;
   private final String hgCmd;
+  private final ImmutableMap<String, String> environment;
 
   public DefaultVersionControlCmdLineInterfaceFactory(
       Path projectRoot,
       ProcessExecutorFactory processExecutorFactory,
-      VersionControlBuckConfig buckConfig) {
+      VersionControlBuckConfig buckConfig,
+      ImmutableMap<String, String> environment) {
     this.projectRoot = projectRoot;
     this.processExecutorFactory = processExecutorFactory;
     this.hgCmd = buckConfig.getHgCmd();
+    this.environment = environment;
   }
 
   @Override
   public VersionControlCmdLineInterface createCmdLineInterface() throws InterruptedException {
       HgCmdLineInterface hgCmdLineInterface =
-          new HgCmdLineInterface(processExecutorFactory, projectRoot.toFile(), hgCmd);
+          new HgCmdLineInterface(processExecutorFactory, projectRoot.toFile(), hgCmd, environment);
 
       try {
         hgCmdLineInterface.currentRevisionId();

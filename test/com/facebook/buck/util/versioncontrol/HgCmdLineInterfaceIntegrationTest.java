@@ -26,6 +26,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -188,7 +189,8 @@ public class HgCmdLineInterfaceIntegrationTest {
         new DefaultVersionControlCmdLineInterfaceFactory(
             tempFolder.getRoot().toPath(),
             new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()));
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
+            ImmutableMap.<String, String>of());
     VersionControlCmdLineInterface cmdLineInterface = vcFactory.createCmdLineInterface();
     assertEquals(NoOpCmdLineInterface.class, cmdLineInterface.getClass());
   }
@@ -222,7 +224,8 @@ public class HgCmdLineInterfaceIntegrationTest {
         new DefaultVersionControlCmdLineInterfaceFactory(
             repoRootDir,
             new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()));
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
+            ImmutableMap.<String, String>of());
     return vcFactory.createCmdLineInterface();
   }
 }

@@ -928,7 +928,8 @@ public final class Main {
                 new DefaultVersionControlCmdLineInterfaceFactory(
                     rootCell.getFilesystem().getRootPath(),
                     new PrintStreamProcessExecutorFactory(),
-                    vcBuckConfig),
+                    vcBuckConfig,
+                    buckConfig.getEnvironment()),
                 buildEventBus
             );
 
