@@ -22,16 +22,20 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 public class PythonRunTestsStep implements Step {
   private static final CharMatcher PYTHON_RE_REGULAR_CHARACTERS = CharMatcher.anyOf(
@@ -44,6 +48,15 @@ public class PythonRunTestsStep implements Step {
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
+
+  private final Function<Process, Void> timeoutHandler =
+      new Function<Process, Void>() {
+        @Override
+        public Void apply(Process input) {
+          timedOut = true;
+          return null;
+        }
+      };
 
   private boolean timedOut;
 
@@ -81,13 +94,30 @@ public class PythonRunTestsStep implements Step {
       return getShellStepWithArgs("-o", resultsOutputPath.toString()).execute(context);
     }
 
-    ShellStep listStep = getShellStepWithArgs("-l", "-L", "buck");
-    int exitCode = listStep.execute(context);
-    if (timedOut || exitCode != 0) {
-      return exitCode;
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(
+            ImmutableList.<String>builder()
+                .addAll(commandPrefix)
+                .add("-l", "-L", "buck")
+                .build())
+        .setDirectory(workingDirectory.toFile())
+        .setEnvironment(environment.get())
+        .build();
+    ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(
+        params,
+        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+        Optional.<String>absent(),
+        testRuleTimeoutMs,
+        Optional.of(timeoutHandler));
+
+    if (timedOut) {
+      return 1;
+    } else if (result.getExitCode() != 0) {
+      return result.getExitCode();
     }
 
-    String testsToRunRegex = getTestsToRunRegexFromListOutput(listStep.getStdout());
+    Preconditions.checkState(result.getStdout().isPresent());
+    String testsToRunRegex = getTestsToRunRegexFromListOutput(result.getStdout().get());
 
     return getShellStepWithArgs(
         "--hide-output",
@@ -167,14 +197,7 @@ public class PythonRunTestsStep implements Step {
 
       @Override
       protected Optional<Function<Process, Void>> getTimeoutHandler(ExecutionContext context) {
-        return Optional.<Function<Process, Void>>of(
-            new Function<Process, Void>() {
-              @Override
-              public Void apply(Process input) {
-                timedOut = true;
-                return null;
-              }
-            });
+        return Optional.of(timeoutHandler);
       }
     };
   }
