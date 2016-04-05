@@ -1,26 +1,27 @@
 [
   {
     "name": "Build Buck on Windows",
+    "shell_type": "SandcastleRemotePowershellWindows",
     "steps": [
       {
         "name": "Building Buck with ant",
-        "shell": "powershell -C 'ant clean default; exit $LastExitCode'"
+        "shell": "ant clean default"
       },
       {
         "name": "Linting with ant",
-        "shell": "powershell -C 'ant lint; exit $LastExitCode'"
+        "shell": "ant lint"
       },
       {
         "name": "Ensuring that `buck clean` works correctly",
-        "shell": "powershell -C '.\\bin\\buck clean; exit $LastExitCode'"
+        "shell": ".\\bin\\buck clean"
       },
       {
         "name": "Building Buck with Buck",
-        "shell": "powershell -C '.\\bin\\buck build buck; exit $LastExitCode'"
+        "shell": ".\\bin\\buck build buck"
       },
       {
         "name": "Testing with Buck",
-        "shell": "powershell -C '.\\bin\\buck test --all --test-selectors=@windows_failures.txt; exit $LastExitCode'",
+        "shell": ".\\bin\\buck test --all --test-selectors=@windows_failures.txt",
         "required": false
       }
     ]
