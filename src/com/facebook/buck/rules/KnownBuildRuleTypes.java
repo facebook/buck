@@ -433,6 +433,7 @@ public class KnownBuildRuleTypes {
         new PythonBinaryDescription(
             pyConfig,
             pythonPlatforms,
+            cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms);
 
@@ -515,20 +516,27 @@ public class KnownBuildRuleTypes {
                 new CommandThreadFactory("SmartDexing")));
 
 
-    builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
+    builder.register(
+        new AndroidAarDescription(
+            new AndroidManifestDescription(),
+            cxxBuckConfig,
+            ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
             defaultJavaOptions,
             defaultJavacOptions,
             proGuardConfig,
             ndkCxxPlatforms,
-            dxExecutorService));
+            dxExecutorService,
+            cxxBuckConfig));
     builder.register(new AndroidBuildConfigDescription(defaultJavacOptions));
-    builder.register(new AndroidInstrumentationApkDescription(
+    builder.register(
+        new AndroidInstrumentationApkDescription(
             proGuardConfig,
             defaultJavacOptions,
             ndkCxxPlatforms,
-            dxExecutorService));
+            dxExecutorService,
+            cxxBuckConfig));
     builder.register(new AndroidInstrumentationTestDescription(
         defaultJavaOptions,
         defaultTestRuleTimeoutMs));
@@ -576,10 +584,14 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             cxxPlatforms,
             defaultTestRuleTimeoutMs));
-    builder.register(new DBinaryDescription(dBuckConfig, defaultCxxPlatform));
+    builder.register(new DBinaryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig, defaultCxxPlatform));
-    builder.register(new DTestDescription(
-            dBuckConfig, defaultTestRuleTimeoutMs, defaultCxxPlatform));
+    builder.register(
+        new DTestDescription(
+            dBuckConfig,
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            defaultTestRuleTimeoutMs));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
@@ -631,7 +643,7 @@ public class KnownBuildRuleTypes {
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
-    builder.register(new PrebuiltCxxLibraryDescription(cxxPlatforms));
+    builder.register(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
     builder.register(new PrebuiltDotNetLibraryDescription());
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
@@ -645,6 +657,7 @@ public class KnownBuildRuleTypes {
             pythonBinaryDescription,
             pyConfig,
             pythonPlatforms,
+            cxxBuckConfig,
             defaultCxxPlatform,
             defaultTestRuleTimeoutMs,
             cxxPlatforms));

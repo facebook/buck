@@ -41,6 +41,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
         new PythonBinaryDescription(
             pythonBuckConfig,
             pythonPlatforms,
+            CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
             cxxPlatforms),
         target);

@@ -74,6 +74,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             originalParams,
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
             AndroidBinary.RelinkerMode.DISABLED
         );
 
@@ -144,6 +145,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             originalParams,
             nativePlatforms,
             ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
+            CxxPlatformUtils.DEFAULT_CONFIG,
             AndroidBinary.RelinkerMode.DISABLED
         );
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
@@ -54,12 +55,15 @@ public class DBinaryDescription implements
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final DBuckConfig dBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
   public DBinaryDescription(
       DBuckConfig dBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
   }
 
@@ -99,6 +103,7 @@ public class DBinaryDescription implements
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
+            cxxBuckConfig,
             /* compilerFlags */ ImmutableList.<String>of(),
             args.srcs,
             DIncludes.builder()

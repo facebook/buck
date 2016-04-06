@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1d7acfcb0b10343280a4c1325dda1a6431718c2f #@#
+#@# GENERATED FILE: DO NOT MODIFY e17b9fa26c33b2339b9bff1202ea38aac4b9216c #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -116,6 +116,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",

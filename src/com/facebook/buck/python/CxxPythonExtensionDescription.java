@@ -254,6 +254,7 @@ public class CxxPythonExtensionDescription implements
             pythonPlatform.getFlavor(),
             cxxPlatform.getFlavor());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params,
         ruleResolver,

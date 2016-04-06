@@ -262,7 +262,8 @@ public class CxxLibraryDescription implements
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+      ImmutableSet<BuildTarget> blacklist)
+      throws NoSuchBuildTargetException {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -305,6 +306,7 @@ public class CxxLibraryDescription implements
     ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params,
         ruleResolver,
@@ -496,7 +498,8 @@ public class CxxLibraryDescription implements
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+      ImmutableSet<BuildTarget> blacklist)
+      throws NoSuchBuildTargetException {
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(

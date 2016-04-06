@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -94,7 +95,8 @@ public class CxxGtestTestTest {
             pathResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
             Paths.get("output"),
-            ImmutableList.<Arg>of()),
+            ImmutableList.<Arg>of(),
+            Optional.<RuleScheduleInfo>absent()),
         new CommandTool.Builder()
             .addArg(new StringArg(""))
             .build(),

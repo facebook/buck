@@ -34,8 +34,9 @@ public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg> {
     super(
         new DTestDescription(
             dBuckConfig,
-            Optional.<Long>absent(),
-            defaultCxxPlatform),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            defaultCxxPlatform,
+            Optional.<Long>absent()),
         target);
   }
 

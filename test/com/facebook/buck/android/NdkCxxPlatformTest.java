@@ -160,6 +160,7 @@ public class NdkCxxPlatformTest {
         ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       BuildRule rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+          CxxPlatformUtils.DEFAULT_CONFIG,
           entry.getValue().getCxxPlatform(),
           new FakeBuildRuleParamsBuilder(target).build(),
           resolver,

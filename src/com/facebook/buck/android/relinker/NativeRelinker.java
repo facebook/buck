@@ -17,6 +17,7 @@ package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
@@ -61,6 +62,7 @@ import java.util.Set;
 public class NativeRelinker {
   private final BuildRuleParams buildRuleParams;
   private final SourcePathResolver resolver;
+  private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibs;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibsAssets;
   private ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
@@ -69,6 +71,7 @@ public class NativeRelinker {
   public NativeRelinker(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibs,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibsAssets) {
@@ -79,6 +82,7 @@ public class NativeRelinker {
 
     this.buildRuleParams = buildRuleParams;
     this.resolver = resolver;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
 
     /*
@@ -227,7 +231,7 @@ public class NativeRelinker {
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
         .appendExtraDeps(relinkerDeps);
     BuildRule baseRule = resolver.getRule(source).orNull();
-    ImmutableList<Arg> linkerArgs = ImmutableList.<Arg>of();
+    ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
     if (baseRule != null && baseRule instanceof CxxLink) {
       CxxLink link = (CxxLink) baseRule;
@@ -241,11 +245,11 @@ public class NativeRelinker {
         ImmutableList.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
         cpuType,
         nativePlatforms.get(cpuType).getObjdump(),
+        cxxBuckConfig,
         source,
         linker != null,
         linker,
-        linkerArgs
-    );
+        linkerArgs);
   }
 
   public ImmutableMap<Pair<TargetCpuType, String>, SourcePath> getRelinkedLibs() {

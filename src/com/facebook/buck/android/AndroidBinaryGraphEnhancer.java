@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.Keystore;
@@ -93,7 +94,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
   private final Optional<Integer> xzCompressionLevel;
-  private final AndroidNativeLibsPackageableGraphEnhancer  nativeLibsEnhancer;
+  private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
 
   private final ListeningExecutorService dxExecutorService;
 
@@ -123,7 +124,8 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      CxxBuckConfig cxxBuckConfig) {
     this.buildRuleParams = originalParams;
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalParams.getBuildTarget();
@@ -150,12 +152,14 @@ public class AndroidBinaryGraphEnhancer {
     this.buildConfigValuesFile = buildConfigValuesFile;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.nativeLibsEnhancer = new AndroidNativeLibsPackageableGraphEnhancer(
-        ruleResolver,
-        originalParams,
-        nativePlatforms,
-        cpuFilters,
-        relinkerMode);
+    this.nativeLibsEnhancer =
+        new AndroidNativeLibsPackageableGraphEnhancer(
+            ruleResolver,
+            originalParams,
+            nativePlatforms,
+            cpuFilters,
+            cxxBuckConfig,
+            relinkerMode);
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {
@@ -378,7 +382,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableList.Builder<DexProducedFromJavaLibrary> preDexRules,
       ImmutableList.Builder<SourcePath> buildConfigJarFilesBuilder) {
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
-        ImmutableList.<BuildConfigFields.Field>of(
+        ImmutableList.of(
             BuildConfigFields.Field.of(
                 "boolean",
                 BuildConfigs.DEBUG_CONSTANT,

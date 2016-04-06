@@ -22,6 +22,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -43,7 +44,8 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
             ANDROID_JAVAC_OPTIONS,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
-            MoreExecutors.newDirectExecutorService()),
+            MoreExecutors.newDirectExecutorService(),
+            CxxPlatformUtils.DEFAULT_CONFIG),
         target);
   }
 

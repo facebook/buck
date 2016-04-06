@@ -16,6 +16,7 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -47,16 +48,19 @@ public class DTestDescription implements
   private static final BuildRuleType TYPE = BuildRuleType.of("d_test");
 
   private final DBuckConfig dBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public DTestDescription(
       DBuckConfig dBuckConfig,
-      Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform) {
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      Optional<Long> defaultTestRuleTimeoutMs) {
     this.dBuckConfig = dBuckConfig;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -104,6 +108,7 @@ public class DTestDescription implements
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
+            cxxBuckConfig,
             ImmutableList.of("-unittest"),
             args.srcs,
             DIncludes.builder()

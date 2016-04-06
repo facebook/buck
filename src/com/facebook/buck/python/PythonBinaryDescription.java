@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.WindowsLinker;
 import com.facebook.buck.file.WriteFile;
@@ -67,16 +68,19 @@ public class PythonBinaryDescription implements
 
   private final PythonBuckConfig pythonBuckConfig;
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonBinaryDescription(
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pythonBuckConfig = pythonBuckConfig;
     this.pythonPlatforms = pythonPlatforms;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -302,6 +306,7 @@ public class PythonBinaryDescription implements
             pathResolver,
             binaryPackageComponents,
             pythonPlatform,
+            cxxBuckConfig,
             cxxPlatform,
             FluentIterable.from(args.linkerFlags.get())
                 .transform(

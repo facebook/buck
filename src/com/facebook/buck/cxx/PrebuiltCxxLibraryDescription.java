@@ -92,9 +92,13 @@ public class PrebuiltCxxLibraryDescription implements
 
   public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_cxx_library");
 
+  private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public PrebuiltCxxLibraryDescription(FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public PrebuiltCxxLibraryDescription(
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
 
@@ -390,6 +394,7 @@ public class PrebuiltCxxLibraryDescription implements
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath = BuildTargets.getGenPath(sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params.appendExtraDeps(
             getBuildRules(

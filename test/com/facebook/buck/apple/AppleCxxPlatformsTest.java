@@ -840,6 +840,7 @@ AppleSdkPaths appleSdkPaths =
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
       BuildRule rule =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              CxxPlatformUtils.DEFAULT_CONFIG,
               entry.getValue().getCxxPlatform(),
               new FakeBuildRuleParamsBuilder(target).build(),
               resolver,

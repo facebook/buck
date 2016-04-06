@@ -163,6 +163,7 @@ public class CxxLinkableEnhancerTest {
 
     // Build the archive using a normal input the outputs of the genrules above.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         resolver,
@@ -210,6 +211,7 @@ public class CxxLinkableEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .build();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         ruleResolver,
@@ -262,6 +264,7 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         resolver,
@@ -297,6 +300,7 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links as an executable.
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         ruleResolver,
@@ -313,11 +317,12 @@ public class CxxLinkableEnhancerTest {
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
-    assertFalse(executable.getArgs().contains(StringArg.from("-shared")));
+    assertFalse(executable.getArgs().contains(new StringArg("-shared")));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib.
     CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         ruleResolver,
@@ -339,6 +344,7 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links as a shared lib with a SONAME.
     CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         ruleResolver,
@@ -388,6 +394,7 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         ruleResolver,
@@ -412,6 +419,7 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links using shared dependencies.
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         ruleResolver,
@@ -456,6 +464,7 @@ public class CxxLinkableEnhancerTest {
     for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              CxxPlatformUtils.DEFAULT_CONFIG,
               cxxPlatform,
               params,
               ruleResolver,
@@ -528,6 +537,7 @@ public class CxxLinkableEnhancerTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = params.getProjectFilesystem();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         params,
         resolver,
@@ -564,6 +574,7 @@ public class CxxLinkableEnhancerTest {
     BuildTarget bundleLoaderTarget = BuildTargetFactory.newInstance("//foo:bundleLoader");
     BuildRuleParams bundleLoaderParams = new FakeBuildRuleParamsBuilder(bundleLoaderTarget).build();
     CxxLink bundleLoaderRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         bundleLoaderParams,
         resolver,
@@ -587,6 +598,7 @@ public class CxxLinkableEnhancerTest {
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
     BuildRuleParams bundleParams = new FakeBuildRuleParamsBuilder(bundleTarget).build();
     CxxLink bundleRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CXX_PLATFORM,
         bundleParams,
         resolver,

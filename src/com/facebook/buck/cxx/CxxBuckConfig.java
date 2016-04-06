@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
+import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -300,6 +301,17 @@ public class CxxBuckConfig {
                       }
                     }))
         .build();
+  }
+
+  public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
+    Optional<Long> linkWeight = delegate.getLong(cxxSection, "link_weight");
+    if (!linkWeight.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of(
+        RuleScheduleInfo.builder()
+            .setJobsMultiplier(linkWeight.get().intValue())
+            .build());
   }
 
   @Value.Immutable

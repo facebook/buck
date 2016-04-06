@@ -695,6 +695,7 @@ public class CxxDescriptionEnhancer {
     CxxLink cxxLink = createCxxLinkRule(
         params,
         resolver,
+        cxxBuckConfig,
         cxxPlatform,
         linkStyle,
         frameworks,
@@ -737,6 +738,7 @@ public class CxxDescriptionEnhancer {
   private static CxxLink createCxxLinkRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle,
       Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
@@ -756,6 +758,7 @@ public class CxxDescriptionEnhancer {
       // target, so that it corresponds to the actual binary we build.
       cxxLink =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              cxxBuckConfig,
               cxxPlatform,
               params,
               resolver,

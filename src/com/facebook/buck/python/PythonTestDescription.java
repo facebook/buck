@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
@@ -75,6 +76,7 @@ public class PythonTestDescription implements
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -83,12 +85,14 @@ public class PythonTestDescription implements
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       Optional<Long> defaultTestRuleTimeoutMs,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
     this.pythonPlatforms = pythonPlatforms;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatforms = cxxPlatforms;
@@ -269,6 +273,7 @@ public class PythonTestDescription implements
             pathResolver,
             testComponents,
             pythonPlatform,
+            cxxBuckConfig,
             cxxPlatform,
             FluentIterable.from(args.linkerFlags.get())
                 .transform(

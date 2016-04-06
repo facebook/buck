@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
@@ -129,7 +130,8 @@ public class AndroidInstrumentationApkTest {
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             DEFAULT_JAVAC_OPTIONS,
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
-            MoreExecutors.newDirectExecutorService())
+            MoreExecutors.newDirectExecutorService(),
+            CxxPlatformUtils.DEFAULT_CONFIG)
             .createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);
 
     assertEquals(

@@ -24,6 +24,7 @@ import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -96,6 +97,7 @@ public class AndroidBinaryDescription
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
 
@@ -104,10 +106,12 @@ public class AndroidBinaryDescription
       JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ListeningExecutorService dxExecutorService) {
+      ListeningExecutorService dxExecutorService,
+      CxxBuckConfig cxxBuckConfig) {
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
   }
@@ -209,7 +213,8 @@ public class AndroidBinaryDescription
         nativePlatforms,
         args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         dxExecutorService,
-        args.manifestEntries.get());
+        args.manifestEntries.get(),
+        cxxBuckConfig);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {

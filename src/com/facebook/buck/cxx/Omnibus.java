@@ -223,6 +223,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
     BuildTarget dummyOmnibusTarget =
@@ -230,6 +231,7 @@ public class Omnibus {
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+            cxxBuckConfig,
             cxxPlatform,
             params,
             ruleResolver,
@@ -247,6 +249,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
@@ -329,6 +332,7 @@ public class Omnibus {
     Optional<String> rootSoname = root.getSharedNativeLinkTargetLibraryName(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+            cxxBuckConfig,
             cxxPlatform,
             params,
             ruleResolver,
@@ -377,6 +381,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec)
@@ -458,6 +463,7 @@ public class Omnibus {
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+            cxxBuckConfig,
             cxxPlatform,
             params,
             ruleResolver,
@@ -486,8 +492,9 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
-      final CxxPlatform cxxPlatform,
-      final ImmutableList<? extends Arg> extraLdflags,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdflags,
       Iterable<? extends SharedNativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots)
       throws NoSuchBuildTargetException {
@@ -500,7 +507,13 @@ public class Omnibus {
     // we have the actual omnibus library available.  Note that this requires that the linker
     // supports linking shared libraries with undefined references.
     SourcePath dummyOmnibus =
-        createDummyOmnibus(params, ruleResolver, pathResolver, cxxPlatform, extraLdflags);
+        createDummyOmnibus(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxBuckConfig,
+            cxxPlatform,
+            extraLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
     for (SharedNativeLinkTarget target : spec.getRoots().values()) {
@@ -509,6 +522,7 @@ public class Omnibus {
               params,
               ruleResolver,
               pathResolver,
+              cxxBuckConfig,
               cxxPlatform,
               extraLdflags,
               spec,
@@ -520,7 +534,14 @@ public class Omnibus {
     // If there are any body nodes, generate the giant merged omnibus library.
     if (!spec.getBody().isEmpty()) {
       OmnibusLibrary omnibus =
-          createOmnibus(params, ruleResolver, pathResolver, cxxPlatform, extraLdflags, spec);
+          createOmnibus(
+              params,
+              ruleResolver,
+              pathResolver,
+              cxxBuckConfig,
+              cxxPlatform,
+              extraLdflags,
+              spec);
       libs.addLibraries(omnibus);
     }
 

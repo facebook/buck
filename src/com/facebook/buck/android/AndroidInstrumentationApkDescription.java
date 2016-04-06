@@ -21,6 +21,7 @@ import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.Classpaths;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -61,16 +62,19 @@ public class AndroidInstrumentationApkDescription
   private final JavacOptions javacOptions;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
+  private final CxxBuckConfig cxxBuckConfig;
 
   public AndroidInstrumentationApkDescription(
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ListeningExecutorService dxExecutorService) {
+      ListeningExecutorService dxExecutorService,
+      CxxBuckConfig cxxBuckConfig) {
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
+    this.cxxBuckConfig = cxxBuckConfig;
   }
 
   @Override
@@ -142,7 +146,8 @@ public class AndroidInstrumentationApkDescription
         nativePlatforms,
         AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService,
-        apkUnderTest.getManifestEntries());
+        apkUnderTest.getManifestEntries(),
+        cxxBuckConfig);
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

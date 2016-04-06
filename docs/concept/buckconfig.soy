@@ -1169,6 +1169,21 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'link_weight' /}
+  {param example_value: '3' /}
+  {param description}
+    The number of jobs that each C/C++ link rule consumes when running.
+    By default, this is <code>1</code>, but this can overriden to change
+    how many link rules can execute in parallel for a given <code>-j</code>
+    value.
+    This is useful for builds with large I/O intensive static links where using
+    a lower <code>-j</code> value is undesirable (since it reduces the parallelism
+    for other build rule types).
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'go' /}
   {param description}

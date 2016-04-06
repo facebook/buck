@@ -42,10 +42,12 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
             new PythonBinaryDescription(
                 pythonBuckConfig,
                 pythonPlatforms,
+                CxxPlatformUtils.DEFAULT_CONFIG,
                 defaultCxxPlatform,
                 cxxPlatforms),
             pythonBuckConfig,
             pythonPlatforms,
+            CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
             Optional.<Long>absent(),
             cxxPlatforms),

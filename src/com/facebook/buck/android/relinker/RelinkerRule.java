@@ -16,6 +16,7 @@
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.NdkCxxPlatforms;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.MorePaths;
@@ -27,6 +28,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.OverrideScheduleRule;
+import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -52,7 +55,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-class RelinkerRule extends AbstractBuildRule {
+class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
+
   @AddToRuleKey
   private final ImmutableList<SourcePath> symbolsNeededPaths;
   @AddToRuleKey
@@ -69,6 +73,7 @@ class RelinkerRule extends AbstractBuildRule {
   private final Linker linker;
 
   private final BuildRuleParams buildRuleParams;
+  private final CxxBuckConfig cxxBuckConfig;
 
   public RelinkerRule(
       BuildRuleParams buildRuleParams,
@@ -76,6 +81,7 @@ class RelinkerRule extends AbstractBuildRule {
       ImmutableList<SourcePath> symbolsNeededPaths,
       NdkCxxPlatforms.TargetCpuType cpuType,
       Tool objdump,
+      CxxBuckConfig cxxBuckConfig,
       SourcePath baseLibSourcePath,
       boolean isRelinkable,
       Linker linker,
@@ -83,6 +89,7 @@ class RelinkerRule extends AbstractBuildRule {
     super(withDepsFromArgs(buildRuleParams, resolver, linkerArgs), resolver);
     this.cpuType = cpuType;
     this.objdump = objdump;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.isRelinkable = isRelinkable;
     this.linkerArgs = linkerArgs;
     this.buildRuleParams = buildRuleParams;
@@ -156,13 +163,15 @@ class RelinkerRule extends AbstractBuildRule {
               getResolver(),
               linker,
               getLibFilePath(),
-              args).getBuildSteps(context, buildableContext));
+              args,
+              cxxBuckConfig.getLinkScheduleInfo())
+              .getBuildSteps(context, buildableContext));
       buildableContext.recordArtifact(getRelativeVersionFilePath());
     }
 
     buildableContext.recordArtifact(getSymbolsNeededOutPath());
 
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), getScratchDirPath()),
         new AbstractExecutionStep("xdso-dce relinker") {
           @Override
@@ -190,6 +199,11 @@ class RelinkerRule extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return getLibFilePath();
+  }
+
+  @Override
+  public RuleScheduleInfo getRuleScheduleInfo() {
+    return cxxBuckConfig.getLinkScheduleInfo().or(RuleScheduleInfo.DEFAULT);
   }
 
   private Path getScratchPath() {

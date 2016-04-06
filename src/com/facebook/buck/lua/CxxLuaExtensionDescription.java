@@ -195,6 +195,7 @@ public class CxxLuaExtensionDescription implements
             params.getBuildTarget(),
             cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params,
         ruleResolver,

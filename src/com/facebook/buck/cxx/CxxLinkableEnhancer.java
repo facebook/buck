@@ -61,6 +61,7 @@ public class CxxLinkableEnhancer {
   private CxxLinkableEnhancer() {}
 
   public static CxxLink createCxxLinkableBuildRule(
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -116,7 +117,8 @@ public class CxxLinkableEnhancer {
         resolver,
         linker,
         output,
-        allArgs);
+        allArgs,
+        cxxBuckConfig.getLinkScheduleInfo());
   }
 
   /**
@@ -127,6 +129,7 @@ public class CxxLinkableEnhancer {
    * @param immediateLinkableInput framework and libraries of the linkable itself
    */
   public static CxxLink createCxxLinkableBuildRule(
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -140,7 +143,8 @@ public class CxxLinkableEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      NativeLinkableInput immediateLinkableInput) throws NoSuchBuildTargetException {
+      NativeLinkableInput immediateLinkableInput)
+      throws NoSuchBuildTargetException {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -203,6 +207,7 @@ public class CxxLinkableEnhancer {
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
     return createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params,
         ruleResolver,
@@ -314,6 +319,7 @@ public class CxxLinkableEnhancer {
   }
 
   public static CxxLink createCxxLinkableSharedBuildRule(
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -331,6 +337,7 @@ public class CxxLinkableEnhancer {
     linkArgsBuilder.addAll(args);
     ImmutableList<Arg> linkArgs = linkArgsBuilder.build();
     return createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params,
         ruleResolver,

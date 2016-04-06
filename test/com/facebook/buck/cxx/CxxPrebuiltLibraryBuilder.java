@@ -25,7 +25,7 @@ public class CxxPrebuiltLibraryBuilder
   public CxxPrebuiltLibraryBuilder(
       BuildTarget target,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new PrebuiltCxxLibraryDescription(cxxPlatforms), target);
+    super(new PrebuiltCxxLibraryDescription(CxxPlatformUtils.DEFAULT_CONFIG, cxxPlatforms), target);
   }
 
   public CxxPrebuiltLibraryBuilder(BuildTarget target) {

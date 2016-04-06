@@ -34,6 +34,7 @@ public class DBinaryBuilder extends AbstractNodeBuilder<DBinaryDescription.Arg> 
     super(
         new DBinaryDescription(
             dBuckConfig,
+            CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform),
         target);
   }

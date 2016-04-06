@@ -16,6 +16,7 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -118,6 +119,7 @@ abstract class DDescriptionUtils {
       BuildRuleResolver buildRuleResolver,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       ImmutableList<String> compilerFlags,
       SourceList sources,
       DIncludes includes)
@@ -140,6 +142,7 @@ abstract class DDescriptionUtils {
     // Return a rule to link the .o for the binary together with its
     // dependencies.
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxBuckConfig,
         cxxPlatform,
         params,
         buildRuleResolver,

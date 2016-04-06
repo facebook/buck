@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -91,7 +92,8 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            Optional.<RuleScheduleInfo>absent()));
 
     // Verify that changing the archiver causes a rulekey change.
 
@@ -101,7 +103,8 @@ public class CxxLinkTest {
             pathResolver,
             new GnuLinker(new HashedFileTool(Paths.get("different"))),
             DEFAULT_OUTPUT,
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            Optional.<RuleScheduleInfo>absent()));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -112,7 +115,8 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             Paths.get("different"),
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            Optional.<RuleScheduleInfo>absent()));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -129,7 +133,8 @@ public class CxxLinkTest {
                         new BuildRuleResolver(
                             TargetGraph.EMPTY,
                             new DefaultTargetNodeToBuildRuleTransformer())),
-                    new FakeSourcePath("different")))));
+                    new FakeSourcePath("different"))),
+            Optional.<RuleScheduleInfo>absent()));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
@@ -179,7 +184,8 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            args1));
+            args1,
+            Optional.<RuleScheduleInfo>absent()));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
@@ -195,7 +201,8 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            args2));
+            args2,
+            Optional.<RuleScheduleInfo>absent()));
 
     assertEquals(ruleKey1, ruleKey2);
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.OmnibusLibraries;
@@ -137,6 +138,7 @@ public class PythonUtil {
       SourcePathResolver pathResolver,
       final PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
+      CxxBuckConfig cxxBuckConfig,
       final CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       final NativeLinkStrategy nativeLinkStrategy)
@@ -217,6 +219,7 @@ public class PythonUtil {
               params,
               ruleResolver,
               pathResolver,
+              cxxBuckConfig,
               cxxPlatform,
               extraLdflags,
               includedNativeLinkTargetRoots.values(),

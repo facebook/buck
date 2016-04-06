@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -68,12 +69,15 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       ImmutableFlavor.of("aar_android_resource");
 
   private final AndroidManifestDescription androidManifestDescription;
+  private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
       AndroidManifestDescription androidManifestDescription,
+      CxxBuckConfig cxxBuckConfig,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
   }
 
@@ -194,6 +198,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             originalBuildRuleParams,
             nativePlatforms,
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
+            cxxBuckConfig,
             AndroidBinary.RelinkerMode.DISABLED);
     Optional<CopyNativeLibraries> nativeLibrariesOptional =
         packageableGraphEnhancer.getCopyNativeLibraries(packageableCollection);
