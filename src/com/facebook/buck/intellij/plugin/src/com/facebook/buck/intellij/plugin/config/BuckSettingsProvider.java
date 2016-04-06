@@ -100,6 +100,12 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
     public String buckExecutable;
 
     /**
+     * Enable the debug window for the plugin.
+     *
+     */
+    public boolean showDebug = false;
+
+    /**
      * "-r" parameter for "buck install"
      */
     public Boolean runAfterInstall = true;
