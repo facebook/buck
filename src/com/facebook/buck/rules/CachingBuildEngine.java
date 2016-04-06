@@ -108,6 +108,9 @@ import javax.annotation.Nullable;
  */
 public class CachingBuildEngine implements BuildEngine {
 
+  // The default weight to use in the executor when building a rule locally.
+  private static final int DEFAULT_BUILD_WEIGHT = 1;
+
   private static final Logger LOG = Logger.get(CachingBuildEngine.class);
 
   /**
@@ -508,6 +511,7 @@ public class CachingBuildEngine implements BuildEngine {
 
             // 5. build the rule.  We re-submit via the service so that we schedule it with the
             // custom weight assigned to this rules steps.
+            RuleScheduleInfo ruleScheduleInfo = getRuleScheduleInfo(rule);
             return service.submit(
                 new Callable<BuildResult>() {
                   @Override
@@ -526,7 +530,8 @@ public class CachingBuildEngine implements BuildEngine {
                         BuildRuleSuccessType.BUILT_LOCALLY,
                         cacheResult);
                   }
-                });
+                },
+                DEFAULT_BUILD_WEIGHT * ruleScheduleInfo.getJobsMultiplier());
           }
         },
         service);
@@ -1411,6 +1416,13 @@ public class CachingBuildEngine implements BuildEngine {
 
   private static boolean isCachable(BuildRule rule) {
     return !(rule instanceof UncachableBuildRule);
+  }
+
+  private static RuleScheduleInfo getRuleScheduleInfo(BuildRule rule) {
+    if (rule instanceof OverrideScheduleRule) {
+      return ((OverrideScheduleRule) rule).getRuleScheduleInfo();
+    }
+    return RuleScheduleInfo.DEFAULT;
   }
 
   /**

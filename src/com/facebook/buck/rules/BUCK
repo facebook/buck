@@ -148,6 +148,7 @@ java_immutables_library(
   name = 'rules',
   srcs = [
     'AbstractBuildRuleKeys.java',
+    'AbstractRuleScheduleInfo.java',
     'AssociatedTargetNodePredicate.java',
     'BuildOutputInitializer.java',
     'BuildRuleEvent.java',
@@ -160,6 +161,7 @@ java_immutables_library(
     'Manifest.java',
     'NoopBuildRule.java',
     'NoopBuildRuleWithTests.java',
+    'OverrideScheduleRule.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
     'RuleDepsCache.java',
@@ -174,6 +176,7 @@ java_immutables_library(
   ],
   immutable_types = [
     'BuildRuleKeys',
+    'RuleScheduleInfo',
   ],
   tests = [
     '//test/com/facebook/buck/rules:rules',

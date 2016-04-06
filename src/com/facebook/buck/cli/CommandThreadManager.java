@@ -67,7 +67,10 @@ public class CommandThreadManager implements AutoCloseable {
     this.threadGroup = new ThreadGroup(name);
     this.executor =
         new WeightedListeningExecutorService(
-            new ListeningSemaphore(concurrencyLimit.threadLimit),
+            new ListeningSemaphore(
+                concurrencyLimit.threadLimit,
+                ListeningSemaphore.Cap.SOFT,
+                ListeningSemaphore.Fairness.FAIR),
             /* defaultPermits */ 1,
             listeningDecorator(
                 new LimitedThreadPoolExecutor(

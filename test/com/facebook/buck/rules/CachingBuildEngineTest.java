@@ -121,6 +121,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -2348,6 +2349,114 @@ public class CachingBuildEngineTest {
         return ImmutableList.of();
       }
     }
+  }
+
+  public static class ScheduleOverrideTests extends CommonFixture {
+
+    @Test
+    public void customWeights() throws Exception {
+      ControlledRule rule1 =
+          new ControlledRule(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule1"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver,
+              RuleScheduleInfo.DEFAULT.withJobsMultiplier(2));
+      ControlledRule rule2 =
+          new ControlledRule(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule2"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver,
+              RuleScheduleInfo.DEFAULT.withJobsMultiplier(2));
+      ListeningSemaphore semaphore = new ListeningSemaphore(3);
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              new WeightedListeningExecutorService(
+                  semaphore,
+                  /* defaultWeight */ 1,
+                  listeningDecorator(Executors.newCachedThreadPool())),
+              fileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              pathResolver,
+              Functions.constant(
+                  new CachingBuildEngine.RuleKeyFactories(
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+      ListenableFuture<BuildResult> result1 = cachingBuildEngine.build(buildContext, rule1);
+      rule1.waitForStart();
+      assertThat(rule1.hasStarted(), equalTo(true));
+      ListenableFuture<BuildResult> result2 = cachingBuildEngine.build(buildContext, rule2);
+      Thread.sleep(250);
+      assertThat(semaphore.getQueueLength(), equalTo(1));
+      assertThat(rule2.hasStarted(), equalTo(false));
+      rule1.finish();
+      result1.get();
+      rule2.finish();
+      result2.get();
+    }
+
+    private class ControlledRule extends AbstractBuildRule implements OverrideScheduleRule {
+
+      private final RuleScheduleInfo ruleScheduleInfo;
+
+      private final Semaphore started = new Semaphore(0);
+      private final Semaphore finish = new Semaphore(0);
+
+      private ControlledRule(
+          BuildRuleParams buildRuleParams,
+          SourcePathResolver resolver,
+          RuleScheduleInfo ruleScheduleInfo) {
+        super(buildRuleParams, resolver);
+        this.ruleScheduleInfo = ruleScheduleInfo;
+      }
+
+      @Override
+      public ImmutableList<Step> getBuildSteps(
+          BuildContext context,
+          BuildableContext buildableContext) {
+        return ImmutableList.<Step>of(
+            new AbstractExecutionStep("step") {
+              @Override
+              public int execute(ExecutionContext context) throws InterruptedException {
+                started.release();
+                finish.acquire();
+                return 0;
+              }
+            });
+      }
+
+      @Nullable
+      @Override
+      public Path getPathToOutput() {
+        return null;
+      }
+
+      @Override
+      public RuleScheduleInfo getRuleScheduleInfo() {
+        return ruleScheduleInfo;
+      }
+
+      public void finish() {
+        finish.release();
+      }
+
+      public void waitForStart() {
+        started.acquireUninterruptibly();
+        started.release();
+      }
+
+      public boolean hasStarted() {
+        return started.availablePermits() == 1;
+      }
+
+    }
+
   }
 
 
