@@ -58,6 +58,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -264,6 +265,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // Verify that android_build_config() was processed correctly.
     Flavor flavor = ImmutableFlavor.of("buildconfig_com_example_buck");
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildTarget enhancedBuildConfigTarget = BuildTarget
         .builder(apkTarget)
         .addFlavors(flavor)
@@ -274,7 +276,10 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.of(
             BuildTargets.getGenPath(enhancedBuildConfigTarget, "lib__%s__output")
                 .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
-        result.getClasspathEntriesToDex());
+        FluentIterable
+            .from(result.getClasspathEntriesToDex())
+            .transform(pathResolver.deprecatedPathFunction())
+        .toSet());
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
     AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =

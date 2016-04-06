@@ -631,7 +631,11 @@ public class AndroidBinary
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
     // Execute preprocess_java_classes_binary, if appropriate.
-    ImmutableSet<Path> classpathEntriesToDex;
+    ImmutableSet<Path> classpathEntriesToDex =
+        FluentIterable
+            .from(enhancementResult.getClasspathEntriesToDex())
+            .transform(getResolver().deprecatedPathFunction())
+            .toSet();
     if (preprocessJavaClassesBash.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
       // directory. Expect parallel outputs in the output directory and update classpathEntriesToDex
@@ -644,9 +648,9 @@ public class AndroidBinary
           new SymlinkFilesIntoDirectoryStep(
               getProjectFilesystem(),
               getProjectFilesystem().getRootPath(),
-              enhancementResult.getClasspathEntriesToDex(),
+              classpathEntriesToDex,
               preprocessJavaClassesInDir));
-      classpathEntriesToDex = FluentIterable.from(enhancementResult.getClasspathEntriesToDex())
+      classpathEntriesToDex = FluentIterable.from(classpathEntriesToDex)
           .transform(new Function<Path, Path>() {
             @Override
             public Path apply(Path classpathEntry) {
@@ -683,9 +687,6 @@ public class AndroidBinary
           environmentVariablesBuilder.put("ANDROID_BOOTCLASSPATH", bootclasspath);
         }
       });
-
-    } else {
-      classpathEntriesToDex = enhancementResult.getClasspathEntriesToDex();
     }
 
     // Execute proguard if desired (transforms input classpaths).
@@ -838,7 +839,7 @@ public class AndroidBinary
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
     final ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesMap =
-        getTransitiveClasspathEntries();
+        Classpaths.getClasspathEntries(ImmutableSet.<BuildRule>copyOf(rulesToExcludeFromDex));
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
@@ -1123,12 +1124,14 @@ public class AndroidBinary
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
-    return Classpaths.getClasspathEntries(getClasspathDeps());
+    return Classpaths.getClasspathEntries(ImmutableSet.copyOf(
+        getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
   }
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return Classpaths.getClasspathDeps(getClasspathDeps());
+    return Classpaths.getClasspathDeps(ImmutableSet.copyOf(
+        getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
   }
 
   @Override
