@@ -16,24 +16,38 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.CommandSplitter;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Level;
 
 /**
  * Create an object archive with ar.
  */
-public class ArchiveStep extends CompositeStep {
+public class ArchiveStep implements Step {
+
+  private final ProjectFilesystem filesystem;
+  private final ImmutableMap<String, String> environment;
+  private final ImmutableList<String> archiver;
+  private final Path output;
+  private final ImmutableList<Path> inputs;
 
   public ArchiveStep(
       ProjectFilesystem filesystem,
@@ -41,43 +55,62 @@ public class ArchiveStep extends CompositeStep {
       ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
-    super(getArchiveCommandSteps(filesystem, environment, archiver, output, inputs));
+    this.filesystem = filesystem;
+    this.environment = environment;
+    this.archiver = archiver;
+    this.output = output;
+    this.inputs = inputs;
   }
 
-  private static ShellStep getArchiveStep(
-      Path workingDirectory,
-      final ImmutableMap<String, String> environment,
-      final ImmutableList<String> command) {
-    return new ShellStep(workingDirectory) {
+  private ImmutableList<String> getAllInputs() throws IOException {
+    ImmutableList.Builder<String> allInputs = ImmutableList.builder();
 
-      @Override
-      public String getShortName() {
-        return "archive";
+    // Inputs can either be files or directories.  In the case of the latter, we add all files
+    // found from a recursive search.
+    for (Path input : inputs) {
+      if (Files.isDirectory(input)) {
+        // We make sure to sort the files we find under the directories so that we get
+        // deterministic output.
+        final Set<String> dirFiles = new TreeSet<>();
+        Files.walkFileTree(
+            input,
+            new SimpleFileVisitor<Path>() {
+              @Override
+              public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                dirFiles.add(file.toString());
+                return FileVisitResult.CONTINUE;
+              }
+            });
+        allInputs.addAll(dirFiles);
+      } else {
+        allInputs.add(input.toString());
       }
+    }
 
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        return command;
-      }
-
-      @Override
-      public ImmutableMap<String, String> getEnvironmentVariables(
-          ExecutionContext context) {
-        return environment;
-      }
-
-    };
+    return allInputs.build();
   }
 
-  private static ImmutableList<Step> getArchiveCommandSteps(
-      ProjectFilesystem filesystem,
-      final ImmutableMap<String, String> environment,
-      ImmutableList<String> archiver,
-      Path output,
-      ImmutableList<Path> inputs) {
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    if (inputs.isEmpty()) {
-      stepsBuilder.add(new WriteFileStep(filesystem, "!<arch>", output, /* executable */ false));
+  private int runArchiver(
+      ExecutionContext context,
+      final ImmutableList<String> command)
+      throws IOException, InterruptedException {
+    ProcessBuilder builder = new ProcessBuilder();
+    builder.directory(filesystem.getRootPath().toFile());
+    builder.environment().putAll(environment);
+    builder.command(command);
+    ProcessExecutor.Result result = context.getProcessExecutor().execute(builder.start());
+    if (result.getExitCode() != 0 && result.getStderr().isPresent()) {
+      context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, result.getStderr().get()));
+    }
+    return result.getExitCode();
+  }
+
+  @Override
+  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+    ImmutableList<String> allInputs = getAllInputs();
+    if (allInputs.isEmpty()) {
+      filesystem.writeContentsToPath("!<arch>\n", output);
+      return 0;
     } else {
       ImmutableList<String> archiveCommandPrefix =
           ImmutableList.<String>builder()
@@ -86,12 +119,23 @@ public class ArchiveStep extends CompositeStep {
               .add(filesystem.resolve(output).toString())
               .build();
       CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
-      Iterable<String> arguments = Iterables.transform(inputs, Functions.toStringFunction());
-      for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(arguments)) {
-        stepsBuilder.add(getArchiveStep(filesystem.getRootPath(), environment, command));
+      for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
+        int exitCode = runArchiver(context, command);
+        if (exitCode != 0) {
+          return exitCode;
+        }
       }
+      return 0;
     }
-    return stepsBuilder.build();
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    ImmutableList.Builder<String> command = ImmutableList.builder();
+    command.add("ar", "qc");
+    command.add(output.toString());
+    command.addAll(Iterables.transform(inputs, Functions.toStringFunction()));
+    return Joiner.on(' ').join(command.build());
   }
 
   @Override
