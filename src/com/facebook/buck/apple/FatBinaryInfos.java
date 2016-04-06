@@ -20,18 +20,15 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -48,10 +45,10 @@ public class FatBinaryInfos {
    *    when the target is a fat binary but has incompatible flavors.
    */
   public static Optional<FatBinaryInfo> create(
-      final Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinFlavors(platformFlavorsToAppleCxxPlatforms.keySet(), target.getFlavors());
+        generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
     if (thinFlavorSets.size() <= 1) {  // Actually a thin binary
       return Optional.absent();
     }
@@ -62,14 +59,11 @@ public class FatBinaryInfos {
           target);
     }
 
-    Predicate<Flavor> isPlatformFlavor =
-        Predicates.in(platformFlavorsToAppleCxxPlatforms.keySet());
-
     AppleCxxPlatform representativePlatform = null;
     AppleSdk sdk = null;
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
       AppleCxxPlatform platform = Preconditions.checkNotNull(
-          platformFlavorsToAppleCxxPlatforms.get(Iterables.find(flavorSet, isPlatformFlavor)));
+          appleCxxPlatforms.getValue(flavorSet).orNull());
       if (sdk == null) {
         sdk = platform.getAppleSdk();
         representativePlatform = platform;
@@ -85,8 +79,7 @@ public class FatBinaryInfos {
             .setFatTarget(target)
             .setRepresentativePlatform(Preconditions.checkNotNull(representativePlatform));
 
-    BuildTarget platformFreeTarget =
-        target.withoutFlavors(platformFlavorsToAppleCxxPlatforms.keySet());
+    BuildTarget platformFreeTarget = target.withoutFlavors(appleCxxPlatforms.getFlavors());
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
       builder.addThinTargets(platformFreeTarget.withFlavors(flavorSet));
     }

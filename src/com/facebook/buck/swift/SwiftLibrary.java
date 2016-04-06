@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,10 +34,9 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +59,7 @@ public class SwiftLibrary
   private final Iterable<? extends BuildRule> exportedDeps;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public SwiftLibrary(
       BuildRuleParams params,
@@ -68,13 +68,13 @@ public class SwiftLibrary
       Iterable<? extends BuildRule> exportedDeps,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
     super(params, pathResolver);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
     this.libraries = libraries;
-    this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
+    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
   }
 
   @Override
@@ -104,9 +104,8 @@ public class SwiftLibrary
 
     // Add linker flags.
 
-    AppleCxxPlatform appleCxxPlatform = platformFlavorsToAppleCxxPlatforms.get(
-        cxxPlatform.getFlavor());
-    Preconditions.checkState(appleCxxPlatform != null);
+    AppleCxxPlatform appleCxxPlatform =
+        appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
 
     // TODO(ryu2): Many of these args need to be deduplicated using a pseudo
     // target to represent the Swift runtime library's linker args.

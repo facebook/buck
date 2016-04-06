@@ -18,12 +18,10 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.util.HumanReadableException;
-
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 public class ApplePlatforms {
   // Utility class, do not instantiate.
@@ -40,7 +38,7 @@ public class ApplePlatforms {
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
       Optional<FatBinaryInfo> fatBinaryInfo) {
     AppleCxxPlatform appleCxxPlatform;
@@ -51,10 +49,11 @@ public class ApplePlatforms {
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
           target);
-      appleCxxPlatform =
-          platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
-      if (appleCxxPlatform == null) {
+      try {
+        appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
+      } catch (FlavorDomainException e) {
         throw new HumanReadableException(
+            e,
             "%s: Apple bundle requires an Apple platform, found '%s'",
             target,
             cxxPlatform.getFlavor().getName());

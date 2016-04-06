@@ -21,7 +21,6 @@ import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.FatBinaryInfo;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class SwiftDescriptions {
@@ -45,7 +43,7 @@ public class SwiftDescriptions {
   static BuildRule createSwiftModule(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -59,7 +57,7 @@ public class SwiftDescriptions {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
-        platformFlavorsToAppleCxxPlatforms,
+        appleCxxPlatformFlavorDomain,
         params.getBuildTarget(),
         Optional.<FatBinaryInfo>absent());
     Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();

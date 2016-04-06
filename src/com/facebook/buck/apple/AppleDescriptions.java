@@ -350,16 +350,16 @@ public class AppleDescriptions {
   static AppleDsym createAppleDsym(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AppleBundle appleBundle) {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
-        platformFlavorsToAppleCxxPlatforms,
+        appleCxxPlatformsFlavorDomain,
         params.getBuildTarget(),
-        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, params.getBuildTarget()));
+        FatBinaryInfos.create(appleCxxPlatformsFlavorDomain, params.getBuildTarget()));
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     return new AppleDsym(
         params.copyWithChanges(
@@ -392,7 +392,7 @@ public class AppleDescriptions {
   static AppleBundle createAppleBundle(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -407,9 +407,11 @@ public class AppleDescriptions {
       ImmutableSortedSet<BuildTarget> tests)
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-        cxxPlatformFlavorDomain, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms,
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        appleCxxPlatforms,
         params.getBuildTarget(),
-        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, params.getBuildTarget()));
+        FatBinaryInfos.create(appleCxxPlatforms, params.getBuildTarget()));
 
     AppleBundleDestinations destinations =
         AppleBundleDestinations.platformDestinations(

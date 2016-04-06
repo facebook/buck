@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -69,7 +70,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Set;
 
 public class AppleTestDescription implements
@@ -100,7 +100,7 @@ public class AppleTestDescription implements
   private final AppleBundleDescription appleBundleDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
@@ -111,7 +111,7 @@ public class AppleTestDescription implements
       AppleBundleDescription appleBundleDescription,
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
@@ -120,8 +120,7 @@ public class AppleTestDescription implements
     this.appleBundleDescription = appleBundleDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.platformFlavorsToAppleCxxPlatforms =
-        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
+    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -250,10 +249,12 @@ public class AppleTestDescription implements
       return library;
     }
 
-    AppleCxxPlatform appleCxxPlatform =
-        platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
-    if (appleCxxPlatform == null) {
+    AppleCxxPlatform appleCxxPlatform;
+    try {
+      appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
+    } catch (FlavorDomainException e) {
       throw new HumanReadableException(
+          e,
           "%s: Apple test requires an Apple platform, found '%s'",
           params.getBuildTarget(),
           cxxPlatform.getFlavor().getName());

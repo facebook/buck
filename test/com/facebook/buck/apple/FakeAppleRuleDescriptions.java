@@ -27,14 +27,12 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -146,14 +144,11 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform(),
           DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform());
 
-  private static final ImmutableMap<Flavor, AppleCxxPlatform>
-    DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS =
-      ImmutableMap.of(
-          DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform().getFlavor(),
+  private static final FlavorDomain<AppleCxxPlatform> DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN =
+      FlavorDomain.of(
+          "Fake Apple C++ Platforms",
           DEFAULT_IPHONEOS_I386_PLATFORM,
-          DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform().getFlavor(),
           DEFAULT_IPHONEOS_X86_64_PLATFORM,
-          DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform().getFlavor(),
           DEFAULT_MACOSX_X86_64_PLATFORM);
 
   /**
@@ -166,7 +161,7 @@ public class FakeAppleRuleDescriptions {
             DEFAULT_PLATFORM,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_APPLE_FLAVOR_DOMAIN),
-        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+        DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
@@ -182,7 +177,7 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
             DEFAULT_APPLE_FLAVOR_DOMAIN),
-        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+        DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
             ImmutableList.<ProvisioningProfileMetadata>of()));
@@ -195,7 +190,7 @@ public class FakeAppleRuleDescriptions {
           BINARY_DESCRIPTION,
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM,
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
@@ -211,7 +206,7 @@ public class FakeAppleRuleDescriptions {
           BUNDLE_DESCRIPTION,
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM,
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(

@@ -103,19 +103,19 @@ public class AppleLibraryDescription implements
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final CxxLibraryDescription delegate;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore) {
     this.delegate = delegate;
-    this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
+    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -161,7 +161,7 @@ public class AppleLibraryDescription implements
       return AppleDescriptions.createAppleBundle(
           delegate.getCxxPlatforms(),
           defaultCxxPlatform,
-          platformFlavorsToAppleCxxPlatforms,
+          appleCxxPlatformFlavorDomain,
           targetGraph,
           params,
           resolver,

@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Map;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>,
     Flavored,
@@ -67,7 +66,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
@@ -77,7 +76,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       AppleBinaryDescription appleBinaryDescription,
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
@@ -85,8 +84,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.platformFlavorsToAppleCxxPlatforms =
-        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
+    this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -143,7 +141,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     AppleBundle appleBundle = AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
-        platformFlavorsToAppleCxxPlatforms,
+        appleCxxPlatformsFlavorDomain,
         targetGraph,
         params,
         resolver,
@@ -163,7 +161,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     AppleDsym appleDsym = AppleDescriptions.createAppleDsym(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
-        platformFlavorsToAppleCxxPlatforms,
+        appleCxxPlatformsFlavorDomain,
         params,
         resolver,
         appleBundle);
@@ -188,7 +186,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     }
 
     Optional<FatBinaryInfo> fatBinaryInfo =
-        FatBinaryInfos.create(platformFlavorsToAppleCxxPlatforms, buildTarget);
+        FatBinaryInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     CxxPlatform cxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();

@@ -230,13 +230,12 @@ public class KnownBuildRuleTypes {
         testTempDirOverride).build();
   }
 
-  private static void buildAppleCxxPlatforms(
+  private static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
       Supplier<Optional<Path>> appleDeveloperDirectorySupplier,
       ImmutableList<Path> extraToolchainPaths,
       ImmutableList<Path> extraPlatformPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
-      ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleSdkPathsBuilder,
       ProcessExecutor processExecutor)
       throws IOException {
     Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
@@ -245,9 +244,10 @@ public class KnownBuildRuleTypes {
       LOG.error(
         "Developer directory is set to %s, but is not a directory",
         appleDeveloperDirectory.get());
-      return;
+      return ImmutableList.of();
     }
 
+    ImmutableList.Builder<AppleCxxPlatform> appleCxxPlatformsBuilder = ImmutableList.builder();
     ImmutableMap<String, AppleToolchain> toolchains =
         AppleToolchainDiscovery.discoverAppleToolchains(
             appleDeveloperDirectory,
@@ -273,11 +273,10 @@ public class KnownBuildRuleTypes {
             buckConfig,
             appleConfig,
             Optional.of(processExecutor));
-        platformFlavorsToAppleSdkPathsBuilder.put(
-            appleCxxPlatform.getCxxPlatform().getFlavor(),
-            appleCxxPlatform);
+        appleCxxPlatformsBuilder.add(appleCxxPlatform);
       }
     }
+    return appleCxxPlatformsBuilder.build();
   }
 
   @VisibleForTesting
@@ -318,18 +317,15 @@ public class KnownBuildRuleTypes {
 
     AppleConfig appleConfig = new AppleConfig(config);
 
-    ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatformsBuilder =
-        ImmutableMap.builder();
-    buildAppleCxxPlatforms(
+    ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         appleConfig.getExtraToolchainPaths(),
         appleConfig.getExtraPlatformPaths(),
         config,
         appleConfig,
-        platformFlavorsToAppleCxxPlatformsBuilder,
         processExecutor);
-    ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        platformFlavorsToAppleCxxPlatformsBuilder.build();
+    FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
+        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
 
     // Setup the NDK C/C++ platforms.
     Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
@@ -372,9 +368,10 @@ public class KnownBuildRuleTypes {
           ndkCxxPlatform.getCxxPlatform());
     }
 
-    for (Map.Entry<Flavor, AppleCxxPlatform> entry :
-        platformFlavorsToAppleCxxPlatforms.entrySet()) {
-      cxxPlatformsBuilder.put(entry.getKey(), entry.getValue().getCxxPlatform());
+    for (AppleCxxPlatform appleCxxPlatform : platformFlavorsToAppleCxxPlatforms.getValues()) {
+      cxxPlatformsBuilder.put(
+          appleCxxPlatform.getCxxPlatform().getFlavor(),
+          appleCxxPlatform.getCxxPlatform());
     }
 
     // Add the host's own C/C++ platform.

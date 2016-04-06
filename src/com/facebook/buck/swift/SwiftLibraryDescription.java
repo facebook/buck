@@ -25,19 +25,18 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,15 +50,15 @@ public class SwiftLibraryDescription implements
   public static final BuildRuleType TYPE = BuildRuleType.of("swift_library");
 
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
 
   public SwiftLibraryDescription(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform) {
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
+    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
@@ -94,19 +93,19 @@ public class SwiftLibraryDescription implements
     if (platform.isPresent()) {
       LOG.debug("Build target %s, platform %s", buildTarget, platform);
       return SwiftDescriptions.createSwiftModule(
-            cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
-            platformFlavorsToAppleCxxPlatforms,
-            targetGraph,
-            params,
-            resolver,
-            platform.get().getValue(),
-            args.moduleName.or(buildTarget.getShortName()),
-            args.srcs.get(),
-            args.compilerFlags.get(),
-            args.frameworks.get(),
-            args.libraries.get(),
-            args.enableObjcInterop.or(true));
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          appleCxxPlatformFlavorDomain,
+          targetGraph,
+          params,
+          resolver,
+          platform.get().getValue(),
+          args.moduleName.or(buildTarget.getShortName()),
+          args.srcs.get(),
+          args.compilerFlags.get(),
+          args.frameworks.get(),
+          args.libraries.get(),
+          args.enableObjcInterop.or(true));
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -117,7 +116,7 @@ public class SwiftLibraryDescription implements
         ImmutableList.<BuildRule>of(),
         args.frameworks.get(),
         args.libraries.get(),
-        platformFlavorsToAppleCxxPlatforms);
+        appleCxxPlatformFlavorDomain);
   }
 
   @SuppressFieldNotInitialized
