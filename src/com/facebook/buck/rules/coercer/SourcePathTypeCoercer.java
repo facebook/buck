@@ -51,8 +51,9 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       throws CoerceFailedException {
     if ((object instanceof String) &&
         (((String) object).startsWith("//") ||
-            ((String) object).startsWith(":") ||
-            ((String) object).startsWith("@"))) {
+         ((String) object).startsWith(":") ||
+         ((String) object).startsWith("+") ||
+         ((String) object).startsWith("@"))) {
       BuildTarget buildTarget =
           buildTargetTypeCoercer.coerce(
               cellRoots,

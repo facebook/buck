@@ -193,7 +193,7 @@ public class BuildTargetParserTest {
         return localRepoRoot;
       }
     };
-    String targetStr = "@localreponame//foo/bar:baz";
+    String targetStr = "+localreponame//foo/bar:baz";
 
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser, cellRoots);
     assertEquals("//foo/bar:baz", buildTarget.getFullyQualifiedName());
@@ -204,14 +204,14 @@ public class BuildTargetParserTest {
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
 
-    String invalidTargetStr = "@myRepo:baz";
+    String invalidTargetStr = "+myRepo:baz";
     parser.parse(invalidTargetStr, fullyQualifiedParser, createCellRoots(null));
   }
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithEmptyRepoName() throws NoSuchBuildTargetException {
 
-    String zeroLengthRepoTargetStr = "@//foo/bar:baz";
+    String zeroLengthRepoTargetStr = "+//foo/bar:baz";
     parser.parse(zeroLengthRepoTargetStr, fullyQualifiedParser, createCellRoots(null));
   }
 
