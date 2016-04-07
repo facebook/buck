@@ -21,8 +21,15 @@
       },
       {
         "name": "Testing with Buck",
-        "shell": ".\\bin\\buck test --all --test-selectors=@windows_failures.txt",
-        "required": false
+        "shell": ".\\bin\\buck test --all --test-selectors=@windows_failures.txt"
+      },
+      {
+        "name": "Testing with ant",
+        "shell": "ant test"
+      },
+      {
+        "name": "Ensuring that the 'buck targets' works correctly",
+        "shell": ".\\bin\\buck targets"
       }
     ]
   }
