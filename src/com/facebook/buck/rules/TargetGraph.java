@@ -38,7 +38,6 @@ import javax.annotation.Nullable;
  * by parsing the build files.
  */
 public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
-
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
       ImmutableMap.<BuildTarget, TargetNode<?>>of());
@@ -95,6 +94,19 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
             return get(input);
           }
         });
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof TargetGraph)) {
+      return false;
+    }
+    return targetsToNodes.equals(((TargetGraph) obj).targetsToNodes);
+  }
+
+  @Override
+  public int hashCode() {
+    return targetsToNodes.hashCode();
   }
 
   /**

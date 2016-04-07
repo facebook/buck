@@ -28,13 +28,11 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
@@ -443,12 +441,10 @@ public class TestCommand extends BuildCommand {
         return 1;
       }
 
-      TargetGraphToActionGraph targetGraphToActionGraph =
-          new TargetGraphToActionGraph(
-              params.getBuckEventBus(),
-              new DefaultTargetNodeToBuildRuleTransformer());
       ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
-          Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph)));
+          params.getActionGraphCache().getActionGraph(
+              params.getBuckEventBus(),
+              targetGraph));
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules = Iterables.filter(
           actionGraphAndResolver.getActionGraph().getNodes(),

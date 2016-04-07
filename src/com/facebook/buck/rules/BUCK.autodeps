@@ -1,5 +1,18 @@
-#@# GENERATED FILE: DO NOT MODIFY 1a227db8c74d744a624db09bf506d350137c57c2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3b8678fa28cf22298de51ead9bb62a856a321360 #@#
 {
+  "action_graph_cache" : {
+    "deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules/keys:keys",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/counters:counters",
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "build_event" : {
     "deps" : [ ],
     "exported_deps" : [

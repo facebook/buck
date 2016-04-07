@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 44ba95fecd843b2d6fe28795a097f5d066a67f62 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1a4f181fadc128e53243abd3ba97a743e73240fd #@#
 {
   "cli" : {
     "deps" : [
@@ -82,6 +82,7 @@
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/query:query",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",

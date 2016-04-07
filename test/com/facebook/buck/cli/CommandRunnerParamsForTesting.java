@@ -28,6 +28,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -107,7 +108,8 @@ public class CommandRunnerParamsForTesting {
         config,
         new NullFileHashCache(),
         new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
-        BUILD_ENVIRONMENT_DESCRIPTION);
+        BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache());
   }
 
   public static Builder builder() {

@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 
 import org.junit.Rule;
@@ -131,6 +132,7 @@ public class ReplCommandIntegrationTest {
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
         new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
-        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION);
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache());
   }
 }

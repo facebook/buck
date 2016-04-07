@@ -28,6 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.intellij.Project;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -146,7 +147,8 @@ public class CleanCommandTest extends EasyMockSupport {
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
         new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
-        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION);
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache());
   }
 
 }

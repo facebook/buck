@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
@@ -62,6 +63,7 @@ class CommandRunnerParams {
   private final FileHashCache fileHashCache;
   private final Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors;
   private final BuildEnvironmentDescription buildEnvironmentDescription;
+  private final ActionGraphCache actionGraphCache;
 
   public CommandRunnerParams(
       Console console,
@@ -81,7 +83,8 @@ class CommandRunnerParams {
       BuckConfig buckConfig,
       FileHashCache fileHashCache,
       Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors,
-      BuildEnvironmentDescription buildEnvironmentDescription) {
+      BuildEnvironmentDescription buildEnvironmentDescription,
+      ActionGraphCache actionGraphCache) {
     this.console = console;
     this.stdIn = stdIn;
     this.cell = cell;
@@ -100,6 +103,7 @@ class CommandRunnerParams {
     this.fileHashCache = fileHashCache;
     this.executors = executors;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
+    this.actionGraphCache = actionGraphCache;
   }
 
   public Console getConsole() {
@@ -172,6 +176,10 @@ class CommandRunnerParams {
 
   public BuildEnvironmentDescription getBuildEnvironmentDescription() {
     return buildEnvironmentDescription;
+  }
+
+  public ActionGraphCache getActionGraphCache() {
+    return actionGraphCache;
   }
 
   protected ExecutionContext createExecutionContext() {

@@ -61,6 +61,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -256,6 +257,7 @@ public final class Main {
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
     private final UUID watchmanQueryUUID;
+    private final ActionGraphCache actionGraphCache;
 
     public Daemon(
         Cell cell,
@@ -290,6 +292,8 @@ public final class Main {
       }
       watchmanQueryUUID = UUID.randomUUID();
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
+
+      actionGraphCache = new ActionGraphCache();
     }
 
     private Optional<WebServer> createWebServer(
@@ -345,6 +349,10 @@ public final class Main {
 
     private Parser getParser() {
       return parser;
+    }
+
+    private ActionGraphCache getActionGraphCache() {
+      return actionGraphCache;
     }
 
     private DefaultFileHashCache getFileHashCache() {
@@ -981,11 +989,20 @@ public final class Main {
                 new ConstructorArgMarshaller(typeCoercerFactory));
           }
 
+          ActionGraphCache actionGraphCache = getActionGraphCacheFromDaemon(context, rootCell);
+
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
           //
           // The counters will be unregistered once the counter registry is closed.
           counterRegistry.registerCounters(parser.getCounters());
+
+          // Because the ActionGraphCache is potentially constructed before the CounterRegistry,
+          // we need to manually register its counters after it's created. We register the counters
+          // of the ActionGraphCache only if we run the daemon.
+          if (context.isPresent()) {
+            counterRegistry.registerCounters(actionGraphCache.getCounters());
+          }
 
           JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
 
@@ -1034,7 +1051,8 @@ public final class Main {
                   buckConfig,
                   fileHashCache,
                   executors,
-                  buildEnvironmentDescription));
+                  buildEnvironmentDescription,
+                  actionGraphCache));
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(
               cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
@@ -1242,12 +1260,22 @@ public final class Main {
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
       Cell cell)
-      throws IOException, InterruptedException  {
+      throws IOException, InterruptedException {
     if (context.isPresent()) {
       Daemon daemon = getDaemon(cell, objectMapper);
       return daemon.getWebServer();
     }
     return Optional.absent();
+  }
+
+  private ActionGraphCache getActionGraphCacheFromDaemon(
+      Optional<NGContext> context,
+      Cell cell)
+      throws IOException, InterruptedException {
+    if (context.isPresent()) {
+      return getDaemon(cell, objectMapper).getActionGraphCache();
+    }
+    return new ActionGraphCache();
   }
 
   private void loadListenersFromBuckConfig(

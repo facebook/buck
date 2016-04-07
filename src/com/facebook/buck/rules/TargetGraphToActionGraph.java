@@ -18,24 +18,15 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nullable;
-
 public class TargetGraphToActionGraph implements TargetGraphTransformer {
-
-  private static final Logger LOG = Logger.get(TargetGraphToActionGraph.class);
 
   private final BuckEventBus eventBus;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
-
-  private volatile int hashOfTargetGraph;
-  @Nullable
-  private volatile ActionGraphAndResolver result;
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
@@ -46,17 +37,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
   @Override
   public synchronized ActionGraphAndResolver apply(TargetGraph targetGraph) {
-    if (result != null) {
-      if (targetGraph.hashCode() == hashOfTargetGraph) {
-        return result;
-      }
-      LOG.info("Flushing cached action graph. May be a performance hit.");
-    }
-
-    result = createActionGraph(targetGraph);
-    hashOfTargetGraph = targetGraph.hashCode();
-
-    return result;
+    return createActionGraph(targetGraph);
   }
 
   private ActionGraphAndResolver createActionGraph(final TargetGraph targetGraph) {
