@@ -118,7 +118,8 @@ public class CxxLinkableEnhancer {
         linker,
         output,
         allArgs,
-        cxxBuckConfig.getLinkScheduleInfo());
+        cxxBuckConfig.getLinkScheduleInfo(),
+        cxxBuckConfig.shouldCacheLinks());
   }
 
   /**

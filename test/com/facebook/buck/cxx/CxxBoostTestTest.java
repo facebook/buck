@@ -92,7 +92,8 @@ public class CxxBoostTestTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
                 ImmutableList.<Arg>of(),
-                Optional.<RuleScheduleInfo>absent()),
+                Optional.<RuleScheduleInfo>absent(),
+                /* cacheable */ true),
             new CommandTool.Builder()
                 .addArg(new StringArg(""))
                 .build(),

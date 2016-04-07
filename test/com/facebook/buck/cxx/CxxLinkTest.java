@@ -93,7 +93,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent()));
+            Optional.<RuleScheduleInfo>absent(),
+            /* cacheable */ true));
 
     // Verify that changing the archiver causes a rulekey change.
 
@@ -104,7 +105,8 @@ public class CxxLinkTest {
             new GnuLinker(new HashedFileTool(Paths.get("different"))),
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent()));
+            Optional.<RuleScheduleInfo>absent(),
+            /* cacheable */ true));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -116,7 +118,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             Paths.get("different"),
             DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent()));
+            Optional.<RuleScheduleInfo>absent(),
+            /* cacheable */ true));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -134,7 +137,8 @@ public class CxxLinkTest {
                             TargetGraph.EMPTY,
                             new DefaultTargetNodeToBuildRuleTransformer())),
                     new FakeSourcePath("different"))),
-            Optional.<RuleScheduleInfo>absent()));
+            Optional.<RuleScheduleInfo>absent(),
+            /* cacheable */ true));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
@@ -185,7 +189,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args1,
-            Optional.<RuleScheduleInfo>absent()));
+            Optional.<RuleScheduleInfo>absent(),
+            /* cacheable */ true));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
@@ -202,7 +207,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args2,
-            Optional.<RuleScheduleInfo>absent()));
+            Optional.<RuleScheduleInfo>absent(),
+            /* cacheable */ true));
 
     assertEquals(ruleKey1, ruleKey2);
   }

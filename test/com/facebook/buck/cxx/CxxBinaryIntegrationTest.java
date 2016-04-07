@@ -1813,4 +1813,18 @@ public class CxxBinaryIntegrationTest {
     assertThat(strippedOutput, Matchers.not(Matchers.equalTo(unstrippedOutput)));
   }
 
+  @Test
+  public void testDisablingLinkCaching() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.runBuckBuild("-c", "cxx.cache_links=false", "//foo:simple").assertSuccess();
+    workspace.runBuckCommand("clean");
+    workspace.runBuckBuild("-c", "cxx.cache_links=false", "//foo:simple").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(
+        CxxDescriptionEnhancer.createCxxLinkTarget(BuildTargetFactory.newInstance("//foo:simple"))
+            .toString());
+  }
+
 }

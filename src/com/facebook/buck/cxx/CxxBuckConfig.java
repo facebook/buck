@@ -314,6 +314,10 @@ public class CxxBuckConfig {
             .build());
   }
 
+  public boolean shouldCacheLinks() {
+    return delegate.getBooleanValue(cxxSection, "cache_links", true);
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractCxxToolProviderParams {

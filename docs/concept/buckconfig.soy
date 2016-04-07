@@ -1184,6 +1184,18 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'cache_links' /}
+  {param example_value: 'false' /}
+  {param description}
+    C/C++ link rules are cached by default.  However, static C/C++ link jobs
+    can take up lots of cache space and also get relatively low hit rates, so
+    this config option provides a way to disable caching of all C/C++ link rules
+    in the build.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'go' /}
   {param description}

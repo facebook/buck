@@ -60,7 +60,8 @@ public class CxxBinaryTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 bin,
                 ImmutableList.<Arg>of(),
-                Optional.<RuleScheduleInfo>absent()));
+                Optional.<RuleScheduleInfo>absent(),
+                /* cacheable */ true));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target").build();
     CxxBinary binary =
         ruleResolver.addToIndex(

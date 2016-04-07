@@ -164,7 +164,8 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
               linker,
               getLibFilePath(),
               args,
-              cxxBuckConfig.getLinkScheduleInfo())
+              cxxBuckConfig.getLinkScheduleInfo(),
+              cxxBuckConfig.shouldCacheLinks())
               .getBuildSteps(context, buildableContext));
       buildableContext.recordArtifact(getRelativeVersionFilePath());
     }

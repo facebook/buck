@@ -59,6 +59,7 @@ public class CxxLink
   @AddToRuleKey
   private final ImmutableList<Arg> args;
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
+  private final boolean cacheable;
 
   public CxxLink(
       BuildRuleParams params,
@@ -66,12 +67,14 @@ public class CxxLink
       Linker linker,
       Path output,
       ImmutableList<Arg> args,
-      Optional<RuleScheduleInfo> ruleScheduleInfo) {
+      Optional<RuleScheduleInfo> ruleScheduleInfo,
+      boolean cacheable) {
     super(params, resolver);
     this.linker = linker;
     this.output = output;
     this.args = args;
     this.ruleScheduleInfo = ruleScheduleInfo;
+    this.cacheable = cacheable;
     performChecks(params);
   }
 
@@ -132,6 +135,11 @@ public class CxxLink
   @Override
   public RuleScheduleInfo getRuleScheduleInfo() {
     return ruleScheduleInfo.or(RuleScheduleInfo.DEFAULT);
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
   }
 
   public Linker getLinker() {
