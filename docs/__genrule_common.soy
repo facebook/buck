@@ -60,6 +60,12 @@
       <dd>Expands to the location of the output of the build rule. This
       means that you can refer to these without needing to be aware of how
       Buck is storing data on the disk mid-build.</dd>
+
+      <dt><code>$(maven_coords /&#x2F;path/to:target)</code></dt>
+      <dd>Expands to the Maven coordinates for the build rule. This allows
+      you to access the Maven coordinates for Maven-aware build rules. The
+      format of the expansion is: <code>group_id:artifact_id:version</code>
+      </dd>
     </dl>
 
     Note that all build rules expanded in the command will be automatically

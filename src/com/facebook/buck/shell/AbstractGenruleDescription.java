@@ -31,6 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
@@ -58,6 +59,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           .put("exe", new ExecutableMacroExpander())
           .put("worker", new WorkerMacroExpander())
           .put("location", new LocationMacroExpander())
+          .put("maven_coords", new MavenCoordinatesMacroExpander())
           .build());
 
   protected abstract <A extends T> BuildRule createBuildRule(
