@@ -70,8 +70,7 @@ public class ReactNativeLibraryGraphEnhancer {
         args.srcs.get(),
         args.entryPath,
         platform,
-        args.packagerFlags,
-        buckConfig.useWorker());
+        args.packagerFlags);
     return resolver.addToIndex(depsFinder);
   }
 
@@ -108,8 +107,7 @@ public class ReactNativeLibraryGraphEnhancer {
         args.packagerFlags,
         buckConfig.getPackager(),
         ReactNativePlatform.ANDROID,
-        reactNativeDeps,
-        buckConfig.useWorker());
+        reactNativeDeps);
     resolver.addToIndex(bundle);
 
     ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
@@ -173,7 +171,6 @@ public class ReactNativeLibraryGraphEnhancer {
         args.packagerFlags,
         buckConfig.getPackager(),
         ReactNativePlatform.IOS,
-        reactNativeDeps,
-        buckConfig.useWorker());
+        reactNativeDeps);
   }
 }

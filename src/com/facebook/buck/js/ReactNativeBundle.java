@@ -29,15 +29,12 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -68,9 +65,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @AddToRuleKey
   private final Optional<String> packagerFlags;
 
-  @AddToRuleKey
-  private final boolean useWorker;
-
   private final ReactNativeDeps depsFinder;
   private final Path jsOutputDir;
   private final Path resource;
@@ -85,8 +79,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       Optional<String> packagerFlags,
       SourcePath jsPackager,
       ReactNativePlatform platform,
-      ReactNativeDeps depsFinder,
-      boolean useWorker) {
+      ReactNativeDeps depsFinder) {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
     this.isUnbundle = isUnbundle;
@@ -99,7 +92,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     BuildTarget buildTarget = ruleParams.getBuildTarget();
     this.jsOutputDir = getPathToJSBundleDir(buildTarget);
     this.resource = getPathToResources(buildTarget);
-    this.useWorker = useWorker;
   }
 
   @Override
@@ -113,11 +105,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     final Path sourceMapOutput = getPathToSourceMap(getBuildTarget());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutput.getParent()));
 
-    if (useWorker) {
-      appendWorkerSteps(steps, jsOutput, sourceMapOutput);
-    } else {
-      appendShellSteps(steps, jsOutput, sourceMapOutput);
-    }
+    appendWorkerSteps(steps, jsOutput, sourceMapOutput);
 
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
@@ -144,33 +132,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
         getProjectFilesystem().resolve(resource),
         getProjectFilesystem().resolve(sourceMapOutput));
     stepBuilder.add(workerStep);
-  }
-
-  private void appendShellSteps(
-      ImmutableList.Builder<Step> stepBuilder,
-      final Path outputFile,
-      final Path sourceMapOutput) {
-    ShellStep shellStep = new ShellStep(getProjectFilesystem().getRootPath()) {
-      @Override
-      public String getShortName() {
-        return "bundle_react_native";
-      }
-
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        return getBundleScript(
-            getResolver().getAbsolutePath(jsPackager),
-            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
-            platform,
-            isUnbundle,
-            isDevMode,
-            packagerFlags,
-            getProjectFilesystem().resolve(outputFile).toString(),
-            getProjectFilesystem().resolve(resource).toString(),
-            getProjectFilesystem().resolve(sourceMapOutput).toString());
-      }
-    };
-    stepBuilder.add(shellStep);
   }
 
   public SourcePath getJSBundleDir() {
@@ -202,36 +163,5 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @Override
   public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return depsFinder.getInputsHash();
-  }
-
-  public static ImmutableList<String> getBundleScript(
-      Path jsPackager,
-      Path absoluteEntryPath,
-      ReactNativePlatform platform,
-      boolean isUnbundle,
-      boolean isDevMode,
-      Optional<String> packagerFlags,
-      String absoluteBundleOutputPath,
-      String absoluteResourceOutputPath,
-      String absoluteSourceMapOutputPath) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    builder.add(
-      jsPackager.toString(),
-      isUnbundle ? "unbundle" : "bundle",
-      "--entry-file", absoluteEntryPath.toString(),
-      "--platform", platform.toString(),
-      "--dev", isDevMode ? "true" : "false",
-      "--bundle-output", absoluteBundleOutputPath,
-      "--assets-dest", absoluteResourceOutputPath,
-      "--sourcemap-output", absoluteSourceMapOutputPath
-    );
-
-
-    if (packagerFlags.isPresent()) {
-      builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
-    }
-
-    return builder.build();
   }
 }

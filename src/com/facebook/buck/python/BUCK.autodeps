@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5aa5ec0ddd131ce9c8e1041ab228a4025c0250b4 #@#
+#@# GENERATED FILE: DO NOT MODIFY fb312efc1992e40a07e4a27a8f5870af149e0818 #@#
 {
   "config" : {
     "deps" : [
@@ -27,6 +27,7 @@
       "//src/com/facebook/buck/rules/args:args",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:escaper",
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-databind",

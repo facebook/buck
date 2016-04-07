@@ -1,9 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 9cc3c6da6e6860908df0b720b73ed7afd6ceb3df #@#
+#@# GENERATED FILE: DO NOT MODIFY 457398fe78a09d861a089076ffad5ac690446f04 #@#
 {
   "js" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
-      "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions"
     ],

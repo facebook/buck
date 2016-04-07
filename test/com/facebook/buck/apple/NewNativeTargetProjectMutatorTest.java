@@ -372,7 +372,7 @@ public class NewNativeTargetProjectMutatorTest {
             .setSections(
                 ImmutableMap.of(
                     "react-native",
-                    ImmutableMap.of("packager", "react-native/packager.sh")))
+                    ImmutableMap.of("packager_worker", "react-native/packager.sh")))
             .setFilesystem(filesystem)
             .build());
     TargetNode<?> reactNativeNode =

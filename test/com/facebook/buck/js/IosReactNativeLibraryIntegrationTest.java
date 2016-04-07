@@ -48,10 +48,6 @@ public class IosReactNativeLibraryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
   }
 
-  private void enablePackagerWorker() throws IOException {
-    workspace.writeContentsToPath("[react-native]\n  use_worker = true\n", ".buckconfig.local");
-  }
-
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
@@ -60,37 +56,17 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testBundleOutputContainsJSAndResources() throws IOException {
-    runBundleOutputContainsJSAndResources();
-  }
-
-  @Test
-  public void testBundleOutputContainsJSAndResourcesWithWorker() throws IOException {
-    enablePackagerWorker();
-    runBundleOutputContainsJSAndResources();
-  }
-
-  private void runBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
         workspace.getPath(
             BuildTargets.getGenPath(
                 BuildTargetFactory.newInstance(
                     "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-                    "%s")));
+                "%s")));
   }
 
   @Test
   public void testUnbundleOutputContainsJSAndResources() throws IOException {
-    runUnbundleOutputContainsJSAndResources();
-  }
-
-  @Test
-  public void testUnbundleOutputContainsJSAndResourcesWithWorker() throws IOException {
-    enablePackagerWorker();
-    runUnbundleOutputContainsJSAndResources();
-  }
-
-  private void runUnbundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
         workspace.getPath(
@@ -102,16 +78,6 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
-    runFlavoredBundleOutputDoesNotContainJSAndResources();
-  }
-
-  @Test
-  public void testFlavoredBundleOutputDoesNotContainJSAndResourcesWithWorker() throws IOException {
-    enablePackagerWorker();
-    runFlavoredBundleOutputDoesNotContainJSAndResources();
-  }
-
-  private void runFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
     workspace
         .runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle,no-debug")
         .assertSuccess();

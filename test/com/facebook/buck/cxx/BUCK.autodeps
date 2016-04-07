@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 733a147e209f3b8df331bb8618b245a4758792a9 #@#
+#@# GENERATED FILE: DO NOT MODIFY 727715e140bd80ab8c5c0046880d4cdafe83ecb5 #@#
 {
   "cxx" : {
     "deps" : [
@@ -20,7 +20,6 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/shell:rules",
-      "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test:test",

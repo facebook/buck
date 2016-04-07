@@ -30,7 +30,6 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -48,7 +47,6 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -72,9 +70,6 @@ public class ReactNativeDeps extends AbstractBuildRule
   @AddToRuleKey
   private final SourcePath jsPackager;
 
-  @AddToRuleKey
-  private final boolean useWorker;
-
   private final Path outputDir;
   private final Path inputsHashFile;
 
@@ -87,8 +82,7 @@ public class ReactNativeDeps extends AbstractBuildRule
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath entryPath,
       ReactNativePlatform platform,
-      Optional<String> packagerFlags,
-      boolean useWorker) {
+      Optional<String> packagerFlags) {
     super(ruleParams, resolver);
     this.jsPackager = jsPackager;
     this.srcs = srcs;
@@ -98,7 +92,6 @@ public class ReactNativeDeps extends AbstractBuildRule
     this.outputDir = BuildTargets.getGenPath(getBuildTarget(), "%s");
     this.inputsHashFile = outputDir.resolve("inputs_hash.txt");
     this.outputInitializer = new BuildOutputInitializer<>(ruleParams.getBuildTarget(), this);
-    this.useWorker = useWorker;
   }
 
   @Override
@@ -110,11 +103,7 @@ public class ReactNativeDeps extends AbstractBuildRule
     final Path output = BuildTargets.getScratchPath(getBuildTarget(), "__%s/deps.txt");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
 
-    if (useWorker) {
-      appendWorkerSteps(steps, output);
-    } else {
-      appendShellSteps(steps, output);
-    }
+    appendWorkerSteps(steps, output);
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
 
@@ -177,35 +166,6 @@ public class ReactNativeDeps extends AbstractBuildRule
         getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
         getProjectFilesystem().resolve(outputFile));
     stepBuilder.add(workerStep);
-  }
-
-  private void appendShellSteps(ImmutableList.Builder<Step> stepBuilder, final Path outputFile) {
-    ShellStep shellStep = new ShellStep(getProjectFilesystem().getRootPath()) {
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-        builder.add(
-            getResolver().getAbsolutePath(jsPackager).toString(),
-            "list-dependencies",
-            platform.toString(),
-            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)).toString(),
-            "--output",
-            getProjectFilesystem().resolve(outputFile).toString());
-
-        if (packagerFlags.isPresent()) {
-          builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
-        }
-
-        return builder.build();
-      }
-
-      @Override
-      public String getShortName() {
-        return "react-native-deps";
-      }
-    };
-    stepBuilder.add(shellStep);
   }
 
   @Override
