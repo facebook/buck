@@ -70,4 +70,9 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
     return target.hashCode();
   }
 
+  @Override
+  public String toString() {
+    return target.toString();
+  }
+
 }
