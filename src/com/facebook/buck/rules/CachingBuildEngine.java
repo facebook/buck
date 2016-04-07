@@ -724,7 +724,7 @@ public class CachingBuildEngine implements BuildEngine {
               }
 
               private void uploadToCache(BuildRuleSuccessType success) {
-                if (!isCachable(rule)) {
+                if (!rule.isCacheable()) {
                   return;
                 }
 
@@ -1050,7 +1050,7 @@ public class CachingBuildEngine implements BuildEngine {
       ArtifactCache artifactCache,
       ProjectFilesystem filesystem,
       BuildContext buildContext) throws InterruptedException {
-    if (!isCachable(rule)) {
+    if (!rule.isCacheable()) {
       return CacheResult.ignored();
     }
 
@@ -1221,7 +1221,7 @@ public class CachingBuildEngine implements BuildEngine {
   private boolean useManifestCaching(BuildRule rule) {
     return depFiles == DepFiles.CACHE &&
         rule instanceof SupportsDependencyFileRuleKey &&
-        isCachable(rule) &&
+        rule.isCacheable() &&
         ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
   }
 
@@ -1412,10 +1412,6 @@ public class CachingBuildEngine implements BuildEngine {
         // TODO(shs96c): This should be shared between all tests, not one per cell
         rule.getProjectFilesystem(),
         context);
-  }
-
-  private static boolean isCachable(BuildRule rule) {
-    return !(rule instanceof UncachableBuildRule);
   }
 
   private static RuleScheduleInfo getRuleScheduleInfo(BuildRule rule) {

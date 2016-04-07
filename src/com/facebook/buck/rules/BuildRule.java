@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,5 +68,18 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
   Path getPathToOutput();
 
   ProjectFilesystem getProjectFilesystem();
+
+  /**
+   * Whether this {@link BuildRule} can be cached.
+   *
+   * Uncached build rules are never written out to cache, never read from cache, and does not count
+   * in cache statistics. This rule is useful for artifacts which cannot be easily normalized.
+   *
+   * Uncached rules are not always rebuilt, however, as long as the existing on-disk representation
+   * is up to date. This means that these rules can take advantage of
+   * {@link com.facebook.buck.rules.keys.SupportsInputBasedRuleKey} to prevent rebuilding.
+   */
+  @JsonIgnore
+  boolean isCacheable();
 
 }

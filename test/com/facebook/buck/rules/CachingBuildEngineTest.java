@@ -2330,7 +2330,7 @@ public class CachingBuildEngineTest {
     }
 
     private static class UncachableRule extends RuleWithSteps
-        implements UncachableBuildRule, SupportsDependencyFileRuleKey {
+        implements SupportsDependencyFileRuleKey {
       public UncachableRule(
           BuildRuleParams buildRuleParams,
           SourcePathResolver resolver,
@@ -2347,6 +2347,11 @@ public class CachingBuildEngineTest {
       @Override
       public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
         return ImmutableList.of();
+      }
+
+      @Override
+      public boolean isCacheable() {
+        return false;
       }
     }
   }

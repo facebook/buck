@@ -451,5 +451,10 @@ public class DefaultRuleKeyBuilderFactoryTest {
     public int compareTo(BuildRule o) {
       throw new UnsupportedOperationException("compareTo");
     }
+
+    @Override
+    public boolean isCacheable() {
+      return true;
+    }
   }
 }

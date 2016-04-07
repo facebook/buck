@@ -192,4 +192,10 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
       return this.getBuildTarget().compareTo(that.getBuildTarget());
     }
   }
+
+  @Override
+  public boolean isCacheable() {
+    return true;
+  }
+
 }

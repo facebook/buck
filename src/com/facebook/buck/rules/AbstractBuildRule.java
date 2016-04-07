@@ -137,4 +137,9 @@ public abstract class AbstractBuildRule implements BuildRule {
     return getFullyQualifiedName();
   }
 
+  @Override
+  public boolean isCacheable() {
+    return true;
+  }
+
 }
