@@ -24,12 +24,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -142,6 +144,8 @@ public class AuditInputCommand extends AbstractCommand {
 
       @Override
       public void visit(TargetNode<?> node) {
+        Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
+        Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
         LOG.debug(
             "Looking at inputs for %s",
             node.getBuildTarget().getFullyQualifiedName());
@@ -150,11 +154,13 @@ public class AuditInputCommand extends AbstractCommand {
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
-            if (!params.getCell().getFilesystem().exists(input)) {
+            if (!cell.getFilesystem().exists(input)) {
               throw new HumanReadableException(
-                  "Target %s refers to non-existent input file: %s", node, input);
+                  "Target %s refers to non-existent input file: %s",
+                  node,
+                  params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
             }
-            targetInputs.addAll(params.getCell().getFilesystem().getFilesUnderPath(input));
+            targetInputs.addAll(cell.getFilesystem().getFilesUnderPath(input));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -182,19 +188,21 @@ public class AuditInputCommand extends AbstractCommand {
 
       @Override
       public void visit(TargetNode<?> node) {
+        Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
+        Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
-            if (!params.getCell().getFilesystem().exists(input)) {
+            if (!cell.getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
                   node,
-                  input);
+                  params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
             }
             ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
-                params.getCell().getFilesystem().getFilesUnderPath(input));
+                cell.getFilesystem().getFilesUnderPath(input));
             for (Path path : nodeContents) {
-              putInput(path);
+              putInput(params.getCell().getRoot().relativize(cell.getRoot().resolve(path)));
             }
           } catch (IOException e) {
             throw new RuntimeException(e);
