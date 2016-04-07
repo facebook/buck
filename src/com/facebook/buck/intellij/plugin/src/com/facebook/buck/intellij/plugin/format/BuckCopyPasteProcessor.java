@@ -46,8 +46,10 @@ import java.util.regex.Pattern;
 
 public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
 
-  private static final Pattern DEPENDENCY_PATTERN =
+  private static final Pattern UNSOLVED_DEPENDENCY_PATTERN =
       Pattern.compile("^(package|import)\\s*([\\w\\.]*);?\\s*$");
+  private static final Pattern SOLVED_DEPENDENCY_PATTERN =
+      Pattern.compile("^\\s*[\\w/]*:[\\w]+\\s*$");
 
   @Nullable
   @Override
@@ -117,14 +119,34 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
    *
    * Example 4:
    * "/Users/tim/tb/java/com/example/activity/BUCK" -> "//java/com/example/activity:activity"
+   *
+   * Example 5
+   * //apps/myapp:app -> '//apps/myapp:app',
    */
   private String buildBuckDependencyPath(PsiElement element, Project project, String path) {
-    String original = path;
-    Matcher matcher = DEPENDENCY_PATTERN.matcher(path);
+
+    Matcher matcher = UNSOLVED_DEPENDENCY_PATTERN.matcher(path);
     if (matcher.matches()) {
       path = matcher.group(2);
+      return resolveUnsolvedBuckDependency(element, project, path);
     }
 
+    if (SOLVED_DEPENDENCY_PATTERN.matcher(path).matches()) {
+      if (!(path.startsWith("//") || path.startsWith(":"))) {
+        if (path.startsWith("/")) {
+          path = "/" + path;
+        } else {
+          path = "//" + path;
+        }
+      }
+      path = "'" + path + "',";
+    }
+
+    return path;
+  }
+
+  private String resolveUnsolvedBuckDependency(PsiElement element, Project project, String path) {
+    String original = path;
     VirtualFile buckFile = referenceNameToBuckFile(project, path);
     if (buckFile != null) {
       path = buckFile.getPath().replaceFirst(project.getBasePath(), "");
