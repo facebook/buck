@@ -269,7 +269,25 @@ public class TargetsCommand extends AbstractCommand {
 
     if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
       try {
-        showRulesResult = computeShowRules(params, executor);
+        if (getArguments().isEmpty()) {
+          throw new HumanReadableException("Must specify at least one build target.");
+        }
+
+        TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules = params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                params.getBuckEventBus(),
+                params.getCell(),
+                getEnableProfiling(),
+                executor,
+                parseArgumentsAsTargetNodeSpecs(
+                    params.getBuckConfig(),
+                    getArguments()),
+            /* ignoreBuckAutodepsFiles */ false);
+
+        showRulesResult = computeShowRules(
+            params,
+            executor,
+            targetGraphAndBuildTargetsForShowRules);
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(
             "Error getting rules: %s",
@@ -673,22 +691,9 @@ public class TargetsCommand extends AbstractCommand {
    */
   private ImmutableMap<String, ShowOptions> computeShowRules(
       CommandRunnerParams params,
-      ListeningExecutorService executor)
+      ListeningExecutorService executor,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    if (getArguments().isEmpty()) {
-      throw new HumanReadableException("Must specify at least one build target.");
-    }
-
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets = params.getParser()
-        .buildTargetGraphForTargetNodeSpecs(
-            params.getBuckEventBus(),
-            params.getCell(),
-            getEnableProfiling(),
-            executor,
-            parseArgumentsAsTargetNodeSpecs(
-                params.getBuckConfig(),
-                getArguments()),
-            /* ignoreBuckAutodepsFiles */ false);
 
     Map<String, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
     if (isShowTargetHash()) {
