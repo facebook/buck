@@ -323,6 +323,113 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
+  public void appleTVOSSdkPathsBuiltFromDirectory() throws Exception {
+    AppleSdkPaths appleSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
+            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(Paths.get("Platforms/AppleTVOS.platform"))
+            .setSdkPath(Paths.get("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"))
+            .build();
+
+    AppleToolchain toolchain = AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.XcodeDefault")
+        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+
+    AppleSdk targetSdk = AppleSdk.builder()
+        .setApplePlatform(ApplePlatform.APPLETVOS)
+        .setName("appletvos9.1")
+        .setVersion("9.1")
+        .setToolchains(ImmutableList.of(toolchain))
+        .build();
+
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
+        .add(Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
+        .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/lldb"))
+        .add(Paths.get("usr/bin/xctest"))
+        .build();
+
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            targetSdk,
+            "9.1",
+            "arm64",
+            appleSdkPaths,
+            FakeBuckConfig.builder().build(),
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+
+    assertEquals(
+        ImmutableList.of("usr/bin/actool"),
+        appleCxxPlatform.getActool().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("usr/bin/ibtool"),
+        appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("usr/bin/lldb"),
+        appleCxxPlatform.getLldb().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+
+    assertEquals(
+        ImmutableList.of("usr/bin/xctest"),
+        appleCxxPlatform.getXctest().getCommandPrefix(resolver));
+
+    assertEquals(
+        ImmutableFlavor.of("appletvos9.1-arm64"),
+        cxxPlatform.getFlavor());
+    assertEquals(
+        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
+        cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+    assertThat(
+        ImmutableList.<String>builder()
+            .addAll(cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver))
+            .addAll(cxxPlatform.getCflags())
+            .build(),
+        hasConsecutiveItems(
+            "-isysroot",
+            Paths.get("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk").toString()));
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasConsecutiveItems("-arch", "arm64"));
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasConsecutiveItems("-mtvos-version-min=9.1"));
+    assertThat(
+        cxxPlatform.getLdflags(),
+        hasConsecutiveItems(
+            "-Wl,-sdk_version",
+            "-Wl,9.1"));
+    assertEquals(
+        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
+        cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+    assertEquals(
+        Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/ar")
+            .toString(),
+        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
+  }
+
+  @Test
   public void platformWithoutOtestIsValid() throws Exception {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
@@ -748,6 +855,67 @@ AppleSdkPaths appleSdkPaths =
     assertThat(
         cxxPlatform.getLdflags(),
         hasItem("-mwatchos-simulator-version-min=2.0"));
+  }
+
+  @Test
+  public void appleTVOSSimulatorPlatformSetsLinkerFlags() throws Exception {
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(Paths.get("."))
+        .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(Paths.get("Platforms/AppleTVSimulator.platform"))
+        .setSdkPath(
+            Paths.get("Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator9.1.sdk")
+        )
+        .build();
+
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
+        .add(Paths.get("Platforms/AppleTVSimulator.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/AppleTVSimulator.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
+        .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/lldb"))
+        .add(Paths.get("usr/bin/xctest"))
+        .build();
+
+    AppleToolchain toolchain = AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.XcodeDefault")
+        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+
+    AppleSdk targetSdk = AppleSdk.builder()
+        .setApplePlatform(ApplePlatform.APPLETVSIMULATOR)
+        .setName("appletvsimulator9.1")
+        .setVersion("9.1")
+        .setToolchains(ImmutableList.of(toolchain))
+        .build();
+
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            targetSdk,
+            "9.1",
+            "arm64",
+            appleSdkPaths,
+            FakeBuckConfig.builder().build(),
+            new FakeAppleConfig(),
+            new FakeExecutableFinder(paths),
+            Optional.<ProcessExecutor>absent());
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasItem("-mtvos-simulator-version-min=9.1"));
+    assertThat(
+        cxxPlatform.getLdflags(),
+        hasItem("-mtvos-simulator-version-min=9.1"));
   }
 
   enum Operation {

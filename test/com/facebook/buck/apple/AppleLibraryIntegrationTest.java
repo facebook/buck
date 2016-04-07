@@ -102,6 +102,43 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryBuildsForAppleTVOS() throws IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVOS));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#appletvos-arm64,static");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsForAppleTVSimulator() throws IOException {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVSIMULATOR));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#appletvsimulator-x86_64,static");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+  }
+
+  @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

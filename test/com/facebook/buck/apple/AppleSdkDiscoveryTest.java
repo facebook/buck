@@ -228,6 +228,7 @@ public class AppleSdkDiscoveryTest {
     Path root = workspace.getPath("");
     createSymLinkIosSdks(root, "8.0");
     createSymLinkWatchosSdks(root, "2.0");
+    createSymLinkAppletvosSdks(root, "9.1");
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
@@ -313,6 +314,40 @@ public class AppleSdkDiscoveryTest {
                     "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk"))
             .build();
 
+    AppleSdk appletvos91Sdk =
+        AppleSdk.builder()
+            .setName("appletvos9.1")
+            .setVersion("9.1")
+            .setApplePlatform(ApplePlatform.APPLETVOS)
+            .addArchitectures("arm64")
+            .addToolchains(getDefaultToolchain(root))
+            .build();
+    AppleSdkPaths appletvos91Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/AppleTVOS.platform"))
+            .setSdkPath(root.resolve("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS.sdk"))
+            .build();
+
+    AppleSdk appletvsimulator91Sdk =
+        AppleSdk.builder()
+            .setName("appletvsimulator9.1")
+            .setVersion("9.1")
+            .setApplePlatform(ApplePlatform.APPLETVSIMULATOR)
+            .addArchitectures("x86_64")
+            .addToolchains(getDefaultToolchain(root))
+            .build();
+    AppleSdkPaths appletvsimulator91Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/AppleTVSimulator.platform"))
+            .setSdkPath(
+                root.resolve(
+                    "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator.sdk"))
+            .build();
+
     ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
         getDefaultToolchain(root));
@@ -329,6 +364,10 @@ public class AppleSdkDiscoveryTest {
             .put(watchos20Sdk.withName("watchos"), watchos20Paths)
             .put(watchsimulator20Sdk, watchsimulator20Paths)
             .put(watchsimulator20Sdk.withName("watchsimulator"), watchsimulator20Paths)
+            .put(appletvos91Sdk, appletvos91Paths)
+            .put(appletvos91Sdk.withName("appletvos"), appletvos91Paths)
+            .put(appletvsimulator91Sdk, appletvsimulator91Paths)
+            .put(appletvsimulator91Sdk.withName("appletvsimulator"), appletvsimulator91Paths)
             .build();
 
     assertThat(
@@ -592,6 +631,10 @@ public class AppleSdkDiscoveryTest {
     createSymLinkSdks(ImmutableSet.of("WatchOS", "WatchSimulator"), root, version);
   }
 
+  private void createSymLinkAppletvosSdks(Path root, String version) throws  IOException {
+    createSymLinkSdks(ImmutableSet.of("AppleTVOS", "AppleTVSimulator"), root, version);
+  }
+
   private void createSymLinkSdks(
       Iterable<String> sdks,
       Path root,
@@ -600,6 +643,7 @@ public class AppleSdkDiscoveryTest {
       Path sdkDir = root.resolve(String.format("Platforms/%s.platform/Developer/SDKs", sdk));
 
       if (!Files.exists(sdkDir)) {
+        System.out.println(sdkDir);
         continue;
       }
 
