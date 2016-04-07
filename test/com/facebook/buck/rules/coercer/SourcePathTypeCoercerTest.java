@@ -159,7 +159,7 @@ public class SourcePathTypeCoercerTest {
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     helloRoot,
-                    Optional.<String>absent(),
+                    Optional.of("hello"),
                     "//",
                     "hello"),
                 ImmutableSortedSet.<Flavor>of())),

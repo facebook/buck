@@ -34,9 +34,12 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    */
   public SingletonBuildTargetPattern(Path cellPath, String fullyQualifiedName) {
 
+    int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
     target = UnflavoredBuildTarget
-        .builder(fullyQualifiedName.substring(0, colon), fullyQualifiedName.substring(colon + 1))
+        .builder(
+            fullyQualifiedName.substring(buildTarget, colon),
+            fullyQualifiedName.substring(colon + 1))
         .setCellPath(cellPath)
         .build();
   }

@@ -365,7 +365,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     // Because of the way that the parser works, we know this can never return null.
     Description<?> description = cell.getDescription(buildRuleType);
 
-    UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
+    UnflavoredBuildTarget unflavoredBuildTarget = target.withoutCell().getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(
@@ -409,7 +409,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     Cell targetCell = cell.getCell(target);
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         targetCell.getFilesystem(),
-        target.withoutCell(),
+        target,
         new FilesystemBackedBuildFileTree(
             cell.getFilesystem(),
             cell.getBuildFileName()),
