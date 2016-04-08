@@ -25,11 +25,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -40,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.Stack;
@@ -58,31 +55,37 @@ public class RuleKeyBuilder {
   private final Hasher hasher;
   private final FileHashCache hashCache;
   private final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
+  private final RuleKeyLogger ruleKeyLogger;
   private Stack<String> keyStack;
-
-  @Nullable
-  private List<String> logElms;
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
+      RuleKeyLogger ruleKeyLogger) {
     this.resolver = resolver;
     this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
     this.hashCache = hashCache;
     this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
     this.keyStack = new Stack<>();
-    if (logger.isVerboseEnabled()) {
-      this.logElms = Lists.newArrayList();
-    }
+    this.ruleKeyLogger = ruleKeyLogger;
+  }
+
+  public RuleKeyBuilder(
+      SourcePathResolver resolver,
+      FileHashCache hashCache,
+      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+    this(resolver,
+        hashCache,
+        defaultRuleKeyBuilderFactory,
+        logger.isVerboseEnabled() ?
+            new DefaultRuleKeyLogger() :
+            new NullRuleKeyLogger());
   }
 
   private RuleKeyBuilder feed(byte[] bytes) {
     while (!keyStack.isEmpty()) {
       String key = keyStack.pop();
-      if (logElms != null) {
-        logElms.add(String.format("key(%s):", key));
-      }
       hasher.putBytes(key.getBytes(StandardCharsets.UTF_8));
       hasher.putByte(SEPARATOR);
     }
@@ -127,10 +130,7 @@ public class RuleKeyBuilder {
       pathForKey = resolver.getRelativePath(sourcePath).toString();
     }
 
-    if (logElms != null) {
-      logElms.add(String.format("path(%s):", pathForKey));
-    }
-
+    ruleKeyLogger.addNonHashingPath(pathForKey);
     feed(pathForKey.getBytes(StandardCharsets.UTF_8));
     return this;
   }
@@ -183,7 +183,7 @@ public class RuleKeyBuilder {
 
     int oldSize = keyStack.size();
     keyStack.push(key);
-    try {
+    try (RuleKeyLogger.Scope keyScope = ruleKeyLogger.pushKey(key)) {
       // Check to see if we're dealing with a collection of some description. Note
       // java.nio.file.Path implements "Iterable", so we don't check for that.
       if (val instanceof Collection) {
@@ -212,11 +212,17 @@ public class RuleKeyBuilder {
               key,
               val);
         }
-        feed("{".getBytes(StandardCharsets.UTF_8));
-        for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-          setReflectively(key, entry.getKey());
-          feed(" -> ".getBytes(StandardCharsets.UTF_8));
-          setReflectively(key, entry.getValue());
+        try (RuleKeyLogger.Scope mapScope = ruleKeyLogger.pushMap()) {
+          feed("{".getBytes(StandardCharsets.UTF_8));
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
+            try (RuleKeyLogger.Scope mapKeyScope = ruleKeyLogger.pushMapKey()) {
+              setReflectively(key, entry.getKey());
+            }
+            feed(" -> ".getBytes(StandardCharsets.UTF_8));
+            try (RuleKeyLogger.Scope mapValueScope = ruleKeyLogger.pushMapValue()) {
+              setReflectively(key, entry.getValue());
+            }
+          }
         }
         return feed("}".getBytes(StandardCharsets.UTF_8));
       }
@@ -256,9 +262,7 @@ public class RuleKeyBuilder {
       addToKey = ideallyRelative;
     }
 
-    if (logElms != null) {
-      logElms.add(String.format("path(%s:%s):", addToKey, sha1));
-    }
+    ruleKeyLogger.addPath(addToKey, sha1);
 
     feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
     feed(sha1.toString().getBytes(StandardCharsets.UTF_8));
@@ -268,31 +272,30 @@ public class RuleKeyBuilder {
   protected RuleKeyBuilder setSingleValue(@Nullable Object val) {
 
     if (val == null) { // Null value first
+      ruleKeyLogger.addNullValue();
       return feed(new byte[0]);
     } else if (val instanceof Boolean) {           // JRE types
-      if (logElms != null) {
-        logElms.add(String.format("boolean(\"%s\"):", (boolean) val ? "true" : "false"));
-      }
+      ruleKeyLogger.addValue((boolean) val);
       feed(((boolean) val ? "t" : "f").getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Enum) {
-      if (logElms != null) {
-        logElms.add(String.format("enum(%s):", val));
-      }
+      ruleKeyLogger.addValue((Enum<?>) val);
       feed(String.valueOf(val).getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Number) {
-      if (logElms != null) {
-        logElms.add(String.format("number(%s):", val));
-      }
       Class<?> wrapped = Primitives.wrap(val.getClass());
       if (Double.class.equals(wrapped)) {
+        ruleKeyLogger.addValue((Double) val);
         hasher.putDouble(((Double) val).doubleValue());
       } else if (Float.class.equals(wrapped)) {
+        ruleKeyLogger.addValue((Float) val);
         hasher.putFloat(((Float) val).floatValue());
       } else if (Integer.class.equals(wrapped)) {
+        ruleKeyLogger.addValue((Integer) val);
         hasher.putInt(((Integer) val).intValue());
       } else if (Long.class.equals(wrapped)) {
+        ruleKeyLogger.addValue((Long) val);
         hasher.putLong(((Long) val).longValue());
       } else if (Short.class.equals(wrapped)) {
+        ruleKeyLogger.addValue((Short) val);
         hasher.putShort(((Short) val).shortValue());
       } else {
         throw new RuntimeException(("Unhandled number type: " + val.getClass()));
@@ -301,28 +304,20 @@ public class RuleKeyBuilder {
       throw new HumanReadableException(
           "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
     } else if (val instanceof String) {
-      if (logElms != null) {
-        logElms.add(String.format("string(\"%s\"):", val));
-      }
+      ruleKeyLogger.addValue((String) val);
       feed(((String) val).getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof BuildRule) {                       // Buck types
       return setBuildRule((BuildRule) val);
     } else if (val instanceof BuildRuleType) {
-      if (logElms != null) {
-        logElms.add(String.format("ruleKeyType(%s):", val));
-      }
+      ruleKeyLogger.addValue((BuildRuleType) val);
       feed(val.toString().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof RuleKey) {
-      if (logElms != null) {
-        logElms.add(String.format("ruleKey(sha1=%s):", val));
-      }
+      ruleKeyLogger.addValue((RuleKey) val);
       feed(val.toString().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof BuildTarget || val instanceof UnflavoredBuildTarget) {
-      if (logElms != null) {
-        logElms.add(String.format("target(%s):", val));
-      }
-      feed(((HasBuildTarget) val).getBuildTarget().getFullyQualifiedName().getBytes(
-               StandardCharsets.UTF_8));
+      BuildTarget buildTarget = ((HasBuildTarget) val).getBuildTarget();
+      ruleKeyLogger.addValue(buildTarget);
+      feed(buildTarget.getFullyQualifiedName().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Either) {
       Either<?, ?> either = (Either<?, ?>) val;
       if (either.isLeft()) {
@@ -337,26 +332,28 @@ public class RuleKeyBuilder {
           (NonHashableSourcePathContainer) val;
       return setNonHashingSourcePath(nonHashableSourcePathContainer.getSourcePath());
     } else if (val instanceof SourceRoot) {
-      if (logElms != null) {
-        logElms.add(String.format("sourceroot(%s):", val));
-      }
-      feed(((SourceRoot) val).getName().getBytes(StandardCharsets.UTF_8));
+      SourceRoot sourceRoot = ((SourceRoot) val);
+      ruleKeyLogger.addValue(sourceRoot);
+      feed(sourceRoot.getName().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof SourceWithFlags) {
       SourceWithFlags source = (SourceWithFlags) val;
-      setSingleValue(source.getSourcePath());
-      feed("[".getBytes(StandardCharsets.UTF_8));
-      for (String flag : source.getFlags()) {
-        feed(flag.getBytes(StandardCharsets.UTF_8));
-        feed(",".getBytes(StandardCharsets.UTF_8));
+      try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
+        setSourcePath(source.getSourcePath());
+        feed("[".getBytes(StandardCharsets.UTF_8));
+        for (String flag : source.getFlags()) {
+          ruleKeyLogger.addValue(flag);
+          feed(flag.getBytes(StandardCharsets.UTF_8));
+          feed(",".getBytes(StandardCharsets.UTF_8));
+        }
+        feed("]".getBytes(StandardCharsets.UTF_8));
       }
-      feed("]".getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof Sha1HashCode) {
-      setSingleValue(((Sha1HashCode) val).getHash());
+      Sha1HashCode hashCode = (Sha1HashCode) val;
+      setSingleValue(hashCode.getHash());
     } else if (val instanceof byte[]) {
-      if (logElms != null) {
-        logElms.add(String.format("byteArray(%s):", val));
-      }
-      feed((byte[]) val);
+      byte[] bytes = (byte[]) val;
+      ruleKeyLogger.addValue(bytes);
+      feed(bytes);
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }
@@ -366,9 +363,7 @@ public class RuleKeyBuilder {
 
   public RuleKey build() {
     RuleKey ruleKey = new RuleKey(hasher.hash());
-    if (logElms != null) {
-      logger.verbose("RuleKey %s=%s", ruleKey, Joiner.on("").join(logElms));
-    }
+    ruleKeyLogger.registerRuleKey(ruleKey);
     return ruleKey;
   }
 
