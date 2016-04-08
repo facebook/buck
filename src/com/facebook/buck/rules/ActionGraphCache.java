@@ -21,8 +21,13 @@ import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.Subscribe;
+
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,7 +92,7 @@ public class ActionGraphCache {
     return lastActionGraph.getSecond();
   }
 
-  public static boolean equalRuleKeysFromActionGraphs(
+  private static boolean equalRuleKeysFromActionGraphs(
       ActionGraphAndResolver graph1,
       ActionGraphAndResolver graph2) {
     Map<BuildRule, RuleKey> graph1RuleKeys = getRuleKeysFromBuildRules(
@@ -100,7 +105,7 @@ public class ActionGraphCache {
     return graph1RuleKeys.equals(graph2RuleKeys);
   }
 
-  public static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
+  private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
       Iterable<BuildRule> buildRules,
       BuildRuleResolver buildRuleResolver
   ) {
@@ -122,5 +127,25 @@ public class ActionGraphCache {
         cacheHitCounter,
         cacheMissCounter,
         actionGraphsMismatch);
+  }
+
+  public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
+    if (!isFileContentModificationEvent(event)) {
+      invalidateCache();
+    }
+  }
+
+  @Subscribe
+  private static boolean isFileContentModificationEvent(WatchEvent<?> event) {
+    return event.kind() == StandardWatchEventKinds.ENTRY_MODIFY;
+  }
+
+  private void invalidateCache() {
+    lastActionGraph = null;
+  }
+
+  @VisibleForTesting
+  boolean isEmpty() {
+    return lastActionGraph == null;
   }
 }

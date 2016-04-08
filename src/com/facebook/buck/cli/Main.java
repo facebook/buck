@@ -274,12 +274,15 @@ public final class Main {
                   ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
+      actionGraphCache = new ActionGraphCache();
+
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
           new ParserConfig(cell.getBuckConfig()),
           typeCoercerFactory,
           new ConstructorArgMarshaller(typeCoercerFactory));
       fileEventBus.register(parser);
+      fileEventBus.register(actionGraphCache);
       fileEventBus.register(hashCache);
 
       if (webServerToReuse.isPresent()) {
@@ -292,8 +295,6 @@ public final class Main {
       }
       watchmanQueryUUID = UUID.randomUUID();
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
-
-      actionGraphCache = new ActionGraphCache();
     }
 
     private Optional<WebServer> createWebServer(

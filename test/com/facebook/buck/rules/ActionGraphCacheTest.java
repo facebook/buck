@@ -17,7 +17,9 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
@@ -28,6 +30,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.WatchEventsForTests;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -38,6 +42,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +61,9 @@ public class ActionGraphCacheTest {
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
+
+  @Rule
+  public TemporaryPaths tmpFilePath = new TemporaryPaths();
 
   @Before
   public void setUp() {
@@ -137,6 +147,46 @@ public class ActionGraphCacheTest {
     assertThat(resultRun1RuleKeys, Matchers.not(Matchers.equalTo(resultRun2RuleKeys)));
     // Run1 and Run3 should match.
     assertThat(resultRun1RuleKeys, Matchers.equalTo(resultRun3RuleKeys));
+  }
+
+  @Test
+  public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
+    ActionGraphCache cache = new ActionGraphCache();
+    Path file = tmpFilePath.newFile("foo.txt");
+
+    // Fill the cache. An overflow event should invalidate the cache.
+    cache.getActionGraph(eventBus, targetGraph);
+    assertFalse(cache.isEmpty());
+    cache.invalidateBasedOn(WatchEventsForTests.createOverflowEvent());
+    assertTrue(cache.isEmpty());
+
+    // Fill the cache. Add a file and ActionGraphCache should be invalidated.
+    cache.getActionGraph(eventBus, targetGraph);
+    assertFalse(cache.isEmpty());
+    cache.invalidateBasedOn(
+        WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
+    assertTrue(cache.isEmpty());
+
+    //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
+    cache.getActionGraph(eventBus, targetGraph);
+    assertFalse(cache.isEmpty());
+    cache.invalidateBasedOn(
+        WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
+    assertTrue(cache.isEmpty());
+
+    // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
+    cache.getActionGraph(eventBus, targetGraph);
+    assertFalse(cache.isEmpty());
+    cache.invalidateBasedOn(
+        WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
+    cache.getActionGraph(eventBus, targetGraph);
+    assertFalse(cache.isEmpty());
+
+    // We should have 4 cache misses and 1 hit from when you request the same graph after a file
+    // modification.
+    ImmutableList<Counter> counters = cache.getCounters();
+    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 1);
+    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 4);
   }
 
   private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
