@@ -242,6 +242,18 @@ public class PrebuiltCxxLibrary
     throw new RuntimeException("Invalid header visibility: " + headerVisibility);
   }
 
+  @Override
+  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
+    if (hasHeaders.apply(cxxPlatform)) {
+      return Optional.of(
+          CxxPreprocessables.requireHeaderSymlinkTreeForLibraryTarget(
+              ruleResolver,
+              getBuildTarget(),
+              cxxPlatform.getFlavor()));
+    } else {
+      return Optional.absent();
+    }
+  }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(

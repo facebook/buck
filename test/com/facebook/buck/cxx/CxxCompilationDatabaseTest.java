@@ -45,7 +45,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -230,8 +229,7 @@ public class CxxCompilationDatabaseTest {
         testSourcePathResolver,
         strategy,
         rules.build(),
-        privateSymlinkTree,
-        Optional.of(exportedSymlinkTree));
+        ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
 
     assertThat(
         compilationDatabase.getRuntimeDeps(),

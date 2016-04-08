@@ -334,10 +334,83 @@ public class CxxCompilationDatabaseIntegrationTest {
         "baz.h");
   }
 
+  @Test
+  public void compilationDatabaseWithDepsFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMapOfDeps()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compilation_database_with_deps", tmp);
+    workspace.setUp();
+
+    // This test only fails if the directory cache is enabled and we don't update
+    // the header map/symlink tree correctly when fetching from the cache.
+    workspace.enableDirCache();
+
+    addDepLibraryHeaderFiles(workspace);
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
+
+    // Populate the cache with the built rule
+    workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+
+    Path dep1ExportedSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            BuildTargetFactory.newInstance("//dep1:dep1#default,headers"),
+            "%s");
+    Path dep2ExportedSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            BuildTargetFactory.newInstance("//dep2:dep2#default,headers"),
+            "%s");
+
+    // Validate the deps' symlink tree/header maps
+    verifyHeaders(
+        workspace,
+        dep1ExportedSymlinkTreeFolder,
+        "dep1/dep1.h",
+        "dep1/dep1_new.h");
+    verifyHeaders(
+        workspace,
+        dep2ExportedSymlinkTreeFolder,
+        "dep2/dep2.h",
+        "dep2/dep2_new.h");
+
+    // Delete the newly-added files and build again
+    Files.delete(workspace.getPath("dep1/dep1_new.h"));
+    Files.delete(workspace.getPath("dep2/dep2_new.h"));
+    workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    verifyHeaders(
+        workspace,
+        dep1ExportedSymlinkTreeFolder,
+        "dep1/dep1.h");
+    verifyHeaders(
+        workspace,
+        dep2ExportedSymlinkTreeFolder,
+        "dep2/dep2.h");
+
+    // Restore the headers, build again, and check the deps' symlink tree/header maps
+    addDepLibraryHeaderFiles(workspace);
+    workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    verifyHeaders(
+        workspace,
+        dep1ExportedSymlinkTreeFolder,
+        "dep1/dep1.h",
+        "dep1/dep1_new.h");
+    verifyHeaders(
+        workspace,
+        dep2ExportedSymlinkTreeFolder,
+        "dep2/dep2.h",
+        "dep2/dep2_new.h");
+  }
+
   private void addLibraryHeaderFiles(ProjectWorkspace workspace) throws IOException {
     // These header files are included in //:library_with_header via a glob
     workspace.writeContentsToPath("// Hello world\n", "baz.h");
     workspace.writeContentsToPath("// Hello private world\n", "blech_private.h");
+  }
+
+  private void addDepLibraryHeaderFiles(ProjectWorkspace workspace) throws IOException {
+    workspace.writeContentsToPath("// Hello dep1 world\n", "dep1/dep1_new.h");
+    workspace.writeContentsToPath("// Hello dep2 world\n", "dep2/dep2_new.h");
   }
 
   private void verifyHeaders(
