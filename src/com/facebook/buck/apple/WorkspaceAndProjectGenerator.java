@@ -71,6 +71,7 @@ public class WorkspaceAndProjectGenerator {
   private final TargetGraph projectGraph;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
+  private final ImmutableList<BuildTarget> focusModules;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final boolean combinedProject;
   private final boolean buildWithBuck;
@@ -104,6 +105,7 @@ public class WorkspaceAndProjectGenerator {
       boolean combinedProject,
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      ImmutableList<BuildTarget> focusModules,
       boolean parallelizeBuild,
       boolean attemptToDetermineBestCxxPlatform,
       ExecutableFinder executableFinder,
@@ -119,6 +121,7 @@ public class WorkspaceAndProjectGenerator {
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
+    this.focusModules = focusModules;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.combinedProject = combinedProject;
     this.buildWithBuck = buildWithBuck;
@@ -257,6 +260,7 @@ public class WorkspaceAndProjectGenerator {
           projectGeneratorOptions,
           targetToBuildWithBuck,
           buildWithBuckFlags,
+          focusModules,
           executableFinder,
           environment,
           cxxPlatforms,
@@ -343,6 +347,7 @@ public class WorkspaceAndProjectGenerator {
                       }
                     }),
                 buildWithBuckFlags,
+                focusModules,
                 executableFinder,
                 environment,
                 cxxPlatforms,
@@ -381,6 +386,7 @@ public class WorkspaceAndProjectGenerator {
             projectGeneratorOptions,
             Optional.<BuildTarget>absent(),
             buildWithBuckFlags,
+            focusModules,
             executableFinder,
             environment,
             cxxPlatforms,

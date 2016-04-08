@@ -122,6 +122,7 @@ public class ProjectCommandTests {
             isCombinedProjects,
             true /* shouldUseHeaderMaps */),
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         projectGenerators,
         isBuildWithBuck,
         isCombinedProjects,

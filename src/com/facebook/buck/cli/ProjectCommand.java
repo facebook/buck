@@ -48,6 +48,8 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -224,6 +226,15 @@ public class ProjectCommand extends BuildCommand {
       usage = "After generating an IntelliJ project using --experimental-ij-generation, start a " +
           "cleaner which removes any .iml files which weren't generated as part of the project.")
   private boolean runIjCleaner = false;
+
+  @Option(
+      name = "--focus",
+      depends = "--build-with-buck",
+      usage = "Space separated list of build target full qualified names that should be part of " +
+          "focused project. Must be used with --build-with-buck. " +
+          "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib")
+  @Nullable
+  private String modulesToFocusOn = null;
 
   public boolean getCombinedProject() {
     return combinedProject;
@@ -794,6 +805,7 @@ public class ProjectCommand extends BuildCommand {
         passedInTargetsSet,
         options,
         super.getOptions(),
+        getFocusModules(params),
         new HashMap<Path, ProjectGenerator>(),
         getCombinedProject(),
         buildWithBuck || shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet),
@@ -825,6 +837,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
       ImmutableList<String> buildWithBuckFlags,
+      ImmutableList<BuildTarget> focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
       boolean buildWithBuck,
@@ -902,6 +915,7 @@ public class ProjectCommand extends BuildCommand {
           combinedProject,
           buildWithBuck,
           buildWithBuckFlags,
+          focusModules,
           !appleConfig.getXcodeDisableParallelizeBuild(),
           appleConfig.shouldAttemptToDetermineBestCxxPlatform(),
           new ExecutableFinder(),
@@ -930,6 +944,23 @@ public class ProjectCommand extends BuildCommand {
     }
 
     return requiredBuildTargetsBuilder.build();
+  }
+
+  private ImmutableList<BuildTarget> getFocusModules(CommandRunnerParams params) {
+    if (modulesToFocusOn == null) {
+      return ImmutableList.of();
+    }
+    ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
+
+    for (String fullyQualifiedName : modulesToFocusOn.split("\\s+")) {
+      BuildTarget target = BuildTargetParser.INSTANCE.parse(
+          fullyQualifiedName,
+          BuildTargetPatternParser.fullyQualified(),
+          params.getCell().getCellRoots());
+      builder.add(target);
+    }
+
+    return builder.build();
   }
 
   public static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(
