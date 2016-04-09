@@ -65,7 +65,7 @@ public class ProgressEstimatorTest {
 
     ProgressEstimator estimator = new ProgressEstimator(storagePath, getBuckEventBus(), MAPPER);
 
-    estimator.setCurrentCommand("project", ImmutableList.<String>of("arg1", "arg2"));
+    estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didParseBuckRules(10);
     assertThat(estimator.getEstimatedProgressOfProcessingBuckFiles().isPresent(),
         Matchers.equalTo(false));
@@ -94,9 +94,10 @@ public class ProgressEstimatorTest {
         getBuckEventBus(),
         MAPPER);
 
-    estimator.setCurrentCommand("project", ImmutableList.<String>of("arg1", "arg2"));
+    estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didParseBuckRules(10);
-    assertThat(estimator.getEstimatedProgressOfProcessingBuckFiles().get().doubleValue(),
+    assertThat(
+        estimator.getEstimatedProgressOfProcessingBuckFiles().get(),
         Matchers.closeTo(0.1, 0.01));
   }
 
@@ -123,7 +124,7 @@ public class ProgressEstimatorTest {
         getBuckEventBus(),
         MAPPER);
 
-    estimator.setCurrentCommand("project", ImmutableList.<String>of("arg1", "arg2"));
+    estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didParseBuckRules(10);
     estimator.didParseBuckRules(30);
     estimator.didParseBuckRules(10);
@@ -164,10 +165,11 @@ public class ProgressEstimatorTest {
         getBuckEventBus(),
         MAPPER);
 
-    estimator.setCurrentCommand("project", ImmutableList.<String>of("arg1", "arg2"));
+    estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didGenerateProjectForTarget();
     estimator.didGenerateProjectForTarget();
-    assertThat(estimator.getEstimatedProgressOfGeneratingProjectFiles().get().doubleValue(),
+    assertThat(
+        estimator.getEstimatedProgressOfGeneratingProjectFiles().get(),
         Matchers.closeTo(0.2, 0.01));
   }
 
@@ -193,7 +195,7 @@ public class ProgressEstimatorTest {
         getBuckEventBus(),
         MAPPER);
 
-    estimator.setCurrentCommand("project", ImmutableList.<String>of("arg1", "arg2"));
+    estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didGenerateProjectForTarget();
     estimator.didGenerateProjectForTarget();
     estimator.didGenerateProjectForTarget();
@@ -220,7 +222,7 @@ public class ProgressEstimatorTest {
         getBuckEventBus(),
         MAPPER);
 
-    estimator.setCurrentCommand("project", ImmutableList.<String>of("arg1", "arg2"));
+    estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
 
     estimator.didParseBuckRules(10);
     estimator.didParseBuckRules(20);
@@ -273,7 +275,7 @@ public class ProgressEstimatorTest {
     e.didFinishBuild();
 
     assertThat(e.getApproximateBuildProgress().isPresent(), Matchers.equalTo(true));
-    assertThat(e.getApproximateBuildProgress().get().doubleValue(), Matchers.closeTo(1.0, 0.01));
+    assertThat(e.getApproximateBuildProgress().get(), Matchers.closeTo(1.0, 0.01));
   }
 
   @Test
@@ -304,9 +306,7 @@ public class ProgressEstimatorTest {
     e.didFinishRule();
 
     assertThat(e.getApproximateBuildProgress().isPresent(), Matchers.equalTo(true));
-    assertThat(e.getApproximateBuildProgress().get().doubleValue(),
-        Matchers.greaterThan(0.0));
-    assertThat(e.getApproximateBuildProgress().get().doubleValue(),
-        Matchers.lessThan(1.0));
+    assertThat(e.getApproximateBuildProgress().get(), Matchers.greaterThan(0.0));
+    assertThat(e.getApproximateBuildProgress().get(), Matchers.lessThan(1.0));
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -199,6 +200,44 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return "BuildRuleResumed";
     }
 
+  }
+
+  public static class Scope implements AutoCloseable {
+
+    private final BuckEventBus eventBus;
+    private final BuildRule rule;
+    private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+
+    protected Scope(
+        BuckEventBus eventBus,
+        BuildRule rule,
+        RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      this.eventBus = eventBus;
+      this.rule = rule;
+      this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+    }
+
+    @Override
+    public final void close() {
+      eventBus.post(BuildRuleEvent.suspended(rule, ruleKeyBuilderFactory));
+    }
+
+  }
+
+  public static Scope startSuspendScope(
+      BuckEventBus eventBus,
+      BuildRule rule,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    eventBus.post(BuildRuleEvent.started(rule));
+    return new Scope(eventBus, rule, ruleKeyBuilderFactory);
+  }
+
+  public static Scope resumeSuspendScope(
+      BuckEventBus eventBus,
+      BuildRule rule,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyBuilderFactory));
+    return new Scope(eventBus, rule, ruleKeyBuilderFactory);
   }
 
 }

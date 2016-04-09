@@ -134,7 +134,6 @@ public class BuckEventOrderer<T extends BuckEvent> implements AutoCloseable {
       if (result == 0) {
         result = Long.compare(o1First.getEventKey().getValue(), o2First.getEventKey().getValue());
       }
-      Preconditions.checkState(result != 0);
       return result;
     }
   }
