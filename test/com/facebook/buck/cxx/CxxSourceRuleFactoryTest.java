@@ -770,5 +770,4 @@ public class CxxSourceRuleFactoryTest {
           cxxCompile.makeMainStep(scratchDir).getCommand(), Matchers.hasItems("-x", expected));
     }
   }
-
 }

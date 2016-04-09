@@ -45,6 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -201,6 +202,7 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
+                Optional.<PrecompiledHeaderReference>absent(),
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy));
         break;

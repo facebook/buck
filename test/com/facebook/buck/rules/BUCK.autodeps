@@ -1,10 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 65385db372b04e31e9e9d16cee9ed7cdfffc63fd #@#
+#@# GENERATED FILE: DO NOT MODIFY 826d0545c83c68498aaae4156e83af2f482b1f06 #@#
 {
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/counters:counters",
@@ -19,6 +18,7 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules:rule_key",

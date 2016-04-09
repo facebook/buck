@@ -26,6 +26,7 @@ import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -33,6 +34,8 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -131,13 +134,22 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    * Get the command for standalone preprocessor calls.
    *
    * @param compilerFlags flags to append.
+   * @param withExtraFlags whether to include extra flags for preprocessor macro rewrite hack.
    */
-  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
+  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags, boolean withExtraFlags) {
     return ImmutableList.<String>builder()
         .addAll(preprocessor.getCommandPrefix(resolver))
         .addAll(CxxToolFlags.concat(getFlagsWithSearchPaths(), compilerFlags).getAllFlags())
-        .addAll(preprocessor.getExtraFlags().or(ImmutableList.<String>of()))
+        .addAll(
+            withExtraFlags
+                ? preprocessor.getExtraFlags().or(ImmutableList.<String>of())
+                : ImmutableList.<String>of())
         .build();
+  }
+
+
+  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
+    return getCommand(compilerFlags, /* withExtraFlags */ true);
   }
 
   public ImmutableMap<String, String> getEnvironment() {
@@ -179,7 +191,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey
    */
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(List<String> depFileLines) {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<String> depFileLines) {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // Add inputs that we always use.
@@ -214,6 +226,30 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   public HeaderVerification getHeaderVerification() {
     return headerVerification;
+  }
+
+  public Optional<SourcePath> getPrefixHeader() {
+    return preprocessorFlags.getPrefixHeader();
+  }
+
+  /**
+   * Generate a digest of the compiler flags.
+   *
+   * Generated PCH files can only be used when compiling with similar compiler flags. This
+   * guarantees the uniqueness of the generated file.
+   */
+  public String hashCommand(CxxToolFlags extraFlags) {
+    Hasher hasher = Hashing.murmur3_128().newHasher();
+    String workingDirString = workingDir.toString();
+    for (String part : sanitizer.sanitizeFlags(getCommand(extraFlags))) {
+      // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
+      if (part.startsWith(workingDirString)) {
+        part = "<WORKINGDIR>" + part.substring(workingDirString.length());
+      }
+      hasher.putString(part, Charsets.UTF_8);
+      hasher.putBoolean(false); // separator
+    }
+    return hasher.hash().toString();
   }
 
   @SuppressWarnings("serial")

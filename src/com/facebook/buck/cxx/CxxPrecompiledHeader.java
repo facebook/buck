@@ -22,15 +22,16 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -64,12 +65,13 @@ import java.nio.file.Path;
  */
 public class CxxPrecompiledHeader
     extends AbstractBuildRule
-    implements HasPostBuildSteps, RuleKeyAppendable, SupportsDependencyFileRuleKey {
+    implements RuleKeyAppendable, SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   private final Path output;
 
   @AddToRuleKey
   private final PreprocessorDelegate preprocessorDelegate;
+  private final CxxToolFlags compilerFlags;
   @AddToRuleKey
   private final SourcePath input;
   @AddToRuleKey
@@ -82,11 +84,13 @@ public class CxxPrecompiledHeader
       SourcePathResolver resolver,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
+      CxxToolFlags compilerFlags,
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer sanitizer) {
     super(buildRuleParams, resolver);
     this.preprocessorDelegate = preprocessorDelegate;
+    this.compilerFlags = compilerFlags;
     this.output = output;
     this.input = input;
     this.inputType = inputType;
@@ -96,6 +100,12 @@ public class CxxPrecompiledHeader
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     builder.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
+    builder.setReflectively(
+        "compilerFlagsPlatform",
+        sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
+    builder.setReflectively(
+        "compilerFlagsRule",
+        sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
     return builder;
   }
 
@@ -103,48 +113,11 @@ public class CxxPrecompiledHeader
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-
-    // Check for conflicting headers.
-    try {
-      preprocessorDelegate.checkForConflictingHeaders();
-    } catch (PreprocessorDelegate.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-    }
-
     Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s_tmp");
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        new CxxPreprocessAndCompileStep(
-            getProjectFilesystem(),
-            CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
-            getPathToOutput(),
-            getDepFilePath(),
-            getResolver().getAbsolutePath(input),
-            inputType,
-            Optional.of(
-                new CxxPreprocessAndCompileStep.ToolCommand(
-                    // Constructing invocation from parts instead of using getCommand because it
-                    // adds some undesirable flags via preprocessor.getExtraFlags().
-                    ImmutableList.<String>builder()
-                        .addAll(
-                            preprocessorDelegate.getPreprocessor().getCommandPrefix(getResolver()))
-                        .addAll(preprocessorDelegate.getFlagsWithSearchPaths().getAllFlags())
-                        .build(),
-                    preprocessorDelegate.getEnvironment(),
-                    preprocessorDelegate.getFlagsForColorDiagnostics())),
-            Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
-            preprocessorDelegate.getHeaderPathNormalizer(),
-            sanitizer,
-            preprocessorDelegate.getHeaderVerification(),
-            Optional.<Function<String, Iterable<String>>>absent(),
-            scratchDir));
+        makeMainStep(scratchDir));
   }
 
   @Override
@@ -165,11 +138,44 @@ public class CxxPrecompiledHeader
         .build();
   }
 
+  @Override
+  public boolean isCacheable() {
+    return false;
+  }
+
   private Path getDepFilePath() {
     return output.getFileSystem().getPath(output.toString() + ".dep");
   }
 
-  private ImmutableList<String> readDepFileLines() throws IOException {
+  public ImmutableList<String> readDepFileLines() throws IOException {
     return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
+  }
+
+  @VisibleForTesting
+  CxxPreprocessAndCompileStep makeMainStep(Path scratchDir) {
+    try {
+      preprocessorDelegate.checkForConflictingHeaders();
+    } catch (PreprocessorDelegate.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+    }
+    return new CxxPreprocessAndCompileStep(
+        getProjectFilesystem(),
+        CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
+        getPathToOutput(),
+        getDepFilePath(),
+        // TODO(10194465): This uses relative path so as to get relative paths in the dep file
+        getResolver().getRelativePath(input),
+        inputType,
+        Optional.of(
+            new CxxPreprocessAndCompileStep.ToolCommand(
+                preprocessorDelegate.getCommand(compilerFlags, /* withExtraFlags */ false),
+                preprocessorDelegate.getEnvironment(),
+                preprocessorDelegate.getFlagsForColorDiagnostics())),
+        Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
+        preprocessorDelegate.getHeaderPathNormalizer(),
+        sanitizer,
+        preprocessorDelegate.getHeaderVerification(),
+        Optional.<Function<String, Iterable<String>>>absent(),
+        scratchDir);
   }
 }

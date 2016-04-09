@@ -218,5 +218,6 @@ java_library(
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/rules:rules',
   ],
 )
