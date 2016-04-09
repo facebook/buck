@@ -237,6 +237,17 @@ public class CxxPreprocessAndCompile
   }
 
   @Override
+  public String getType() {
+    if (operation.isCompile() && operation.isPreprocess()) {
+      return "cxx_preprocess_compile";
+    } else if (operation.isPreprocess()) {
+      return "cxx_preprocess";
+    } else {
+      return "cxx_compile";
+    }
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
