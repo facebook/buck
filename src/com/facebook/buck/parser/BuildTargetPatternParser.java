@@ -84,7 +84,7 @@ public abstract class BuildTargetPatternParser<T> {
         buildTargetPattern.startsWith(CELL_PREFIX) ||
         buildTargetPattern.startsWith(ALT_CELL_PREFIX),
         String.format(
-            "'%s' must start with '//' or a '%%' or '@' followed by a cell name",
+            "'%s' must start with '//' or a '+' or '@' followed by a cell name",
             buildTargetPattern));
 
     if (buildTargetPattern.equals(WILDCARD_BUILD_RULE_SUFFIX) ||
