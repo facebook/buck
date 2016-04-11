@@ -47,7 +47,6 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -68,7 +67,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -80,6 +81,7 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -114,12 +116,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -2416,7 +2418,8 @@ public class CachingBuildEngineTest {
 
     @Test
     public void eventsForBuiltLocallyRuleAreOnCorrectThreads() throws Exception {
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+      Clock clock = new IncrementingFakeClock();
+      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
       FakeBuckEventListener listener = new FakeBuckEventListener();
       buckEventBus.register(listener);
 
@@ -2465,7 +2468,8 @@ public class CachingBuildEngineTest {
 
     @Test
     public void eventsForMatchingRuleKeyRuleAreOnCorrectThreads() throws Exception {
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+      Clock clock = new IncrementingFakeClock();
+      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
       FakeBuckEventListener listener = new FakeBuckEventListener();
       buckEventBus.register(listener);
 
@@ -2522,7 +2526,8 @@ public class CachingBuildEngineTest {
 
     @Test
     public void eventsForBuiltLocallyRuleAndDepAreOnCorrectThreads() throws Exception {
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+      Clock clock = new IncrementingFakeClock();
+      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
       FakeBuckEventListener listener = new FakeBuckEventListener();
       buckEventBus.register(listener);
 
@@ -2588,12 +2593,15 @@ public class CachingBuildEngineTest {
         grouped.get(event.getBuildRule().getBuildTarget()).add(event);
       }
       for (List<BuildRuleEvent> queue : grouped.values()) {
-        TreeMap<Pair<Long, Integer>, BuildRuleEvent> orderedEvents =
-            new TreeMap<>(Pair.<Long, Integer>comparator());
-        for (int idx = 0; idx < queue.size(); idx++) {
-          orderedEvents.put(new Pair<>(queue.get(idx).getNanoTime(), idx), queue.get(idx));
-        }
-        Iterator<BuildRuleEvent> itr = orderedEvents.values().iterator();
+        Collections.sort(
+            queue,
+            new Comparator<BuildRuleEvent>() {
+              @Override
+              public int compare(BuildRuleEvent o1, BuildRuleEvent o2) {
+                return Long.compare(o1.getNanoTime(), o2.getNanoTime());
+              }
+            });
+        Iterator<BuildRuleEvent> itr = queue.iterator();
         while (itr.hasNext()) {
           BuildRuleEvent event1 = itr.next();
           BuildRuleEvent event2 = itr.next();
@@ -2604,7 +2612,15 @@ public class CachingBuildEngineTest {
                   event1.getThreadId(),
                   event2,
                   event2.getThreadId(),
-                  orderedEvents.values()),
+                  FluentIterable.from(queue)
+                      .transform(
+                          new Function<BuildRuleEvent, String>() {
+                            @Override
+                            public String apply(BuildRuleEvent event) {
+                              return String.format("%s@%s", event, event.getNanoTime());
+                            }
+                          })
+                        .toList()),
               event1.getThreadId(),
               equalTo(event2.getThreadId()));
         }
