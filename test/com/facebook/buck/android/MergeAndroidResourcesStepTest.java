@@ -98,6 +98,48 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
+  public void testGenerateRDotJavaForLibrary() throws IOException {
+    BuildTarget resTarget = BuildTargetFactory.newInstance("//:res1");
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            BuildTargets.getGenPath(resTarget, "__%s_text_symbols__/R.txt").toString(),
+            ImmutableList.of("int id id1 0x7f020000")));
+
+    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
+
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+
+    HasAndroidResourceDeps res = AndroidResourceRuleBuilder.newBuilder()
+        .setResolver(resolver)
+        .setBuildTarget(resTarget)
+        .setRes(new FakeSourcePath("res"))
+        .setRDotJavaPackage("com.res1")
+        .build();
+
+    MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
+        filesystem,
+        resolver,
+        ImmutableList.of(res),
+        Paths.get("output"),
+        /* forceFinalResourceIds */ false,
+        /* unionPackage */ Optional.<String>absent());
+
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+
+    assertEquals(0, mergeStep.execute(executionContext));
+
+    // Verify that the correct Java code is generated.
+    assertThat(
+        filesystem.readFileIfItExists(Paths.get("output/com/res1/R.java")).get(),
+        CoreMatchers.containsString("{\n    public static int id1=0x07f01001;")
+        );
+  }
+
+  @Test
   public void testGenerateRDotJavaForOneSymbolsFile() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
     String symbolsFile = BuildTargets.getGenPath(target, "__%s_text_symbols__/R.txt").toString();
