@@ -24,6 +24,7 @@ import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -129,28 +130,20 @@ public final class BuckModule implements ProjectComponent {
                     BuckWSServerPortUtils wsPortUtils = new BuckWSServerPortUtils();
                     try {
                         int port = wsPortUtils.getPort(BuckModule.this.mProject.getBasePath());
-
-                        if (port == BuckWSServerPortUtils.CONNECTION_FAILED) {
-                            BuckToolWindowFactory.outputConsoleMessage(
-                                mProject,
-                                "Your buck server may be turned off.\n" +
-                                    "It's possible that it can't get a port.\n" +
-                                    "Try adding to your '.buckconfig.local' file:\n" +
-                                    "[httpserver]\n" +
-                                    "    port = 0\n" +
-                                    "After that, try running the command again.\n",
-                                ConsoleViewContentType.ERROR_OUTPUT);
-                        } else {
-                            mClient = new BuckClient(port, mEventHandler);
-                            // Initiate connecting
-                            BuckModule.this.mClient.connect();
-                        }
+                        mClient = new BuckClient(port, mEventHandler);
+                        // Initiate connecting
+                        BuckModule.this.mClient.connect();
                     } catch (NumberFormatException e) {
                         LOG.error(e);
                     } catch (ExecutionException e) {
                         LOG.error(e);
                     } catch (IOException e) {
                         LOG.error(e);
+                    } catch (HumanReadableException e) {
+                        if (mBu == null) {
+                          attach(new BuckEventsConsumer(mProject), "");
+                        }
+                        mBu.consumeConsoleEvent(e.toString());
                     }
                 }
             }
