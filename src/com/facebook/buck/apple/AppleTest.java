@@ -17,15 +17,16 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -64,9 +65,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nullable;
+
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest
-    extends NoopBuildRule
+    extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
@@ -275,7 +278,7 @@ public class AppleTest
       if (!xctool.isPresent()) {
         throw new HumanReadableException(
             "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip " +
-            "in the [apple] section of .buckconfig to run this test");
+                "in the [apple] section of .buckconfig to run this test");
       }
 
       ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
@@ -462,9 +465,26 @@ public class AppleTest
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions) {
     return getTestCommand(
-        executionContext, testRunningOptions, NOOP_REPORTING_CALLBACK).getSecond();
+        executionContext,
+        testRunningOptions,
+        NOOP_REPORTING_CALLBACK)
+        .getSecond();
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
+  }
+
+  @Nullable
+  @Override
+  public Path getPathToOutput() {
+    return testBundle.getPathToOutput();
   }
 
 }
