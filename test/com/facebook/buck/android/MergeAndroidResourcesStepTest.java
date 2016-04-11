@@ -140,7 +140,7 @@ public class MergeAndroidResourcesStepTest {
         Optional.of(uberRDotTxt),
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
-        Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -211,7 +211,7 @@ public class MergeAndroidResourcesStepTest {
         Optional.of(uberRDotTxt),
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
-        Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
