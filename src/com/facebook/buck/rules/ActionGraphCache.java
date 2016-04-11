@@ -20,7 +20,6 @@ import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,9 +27,6 @@ import com.google.common.eventbus.Subscribe;
 
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -80,46 +76,12 @@ public class ActionGraphCache {
 
     if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
       cacheHitCounter.inc();
-
-      if (!equalRuleKeysFromActionGraphs(lastActionGraph.getSecond(), newActionGraph.getSecond())) {
-        actionGraphsMismatch.inc();
-      }
     } else {
       cacheMissCounter.inc();
     }
 
     lastActionGraph = newActionGraph;
     return lastActionGraph.getSecond();
-  }
-
-  private static boolean equalRuleKeysFromActionGraphs(
-      ActionGraphAndResolver graph1,
-      ActionGraphAndResolver graph2) {
-    Map<BuildRule, RuleKey> graph1RuleKeys = getRuleKeysFromBuildRules(
-        graph1.getActionGraph().getNodes(),
-        graph2.getResolver());
-    Map<BuildRule, RuleKey> graph2RuleKeys = getRuleKeysFromBuildRules(
-        graph2.getActionGraph().getNodes(),
-        graph2.getResolver());
-
-    return graph1RuleKeys.equals(graph2RuleKeys);
-  }
-
-  private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
-      Iterable<BuildRule> buildRules,
-      BuildRuleResolver buildRuleResolver
-  ) {
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
-    ContentAgnosticRuleKeyBuilderFactory factory =
-        new ContentAgnosticRuleKeyBuilderFactory(pathResolver);
-
-    HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
-
-    for (BuildRule rule : buildRules) {
-      ruleKeysMap.put(rule, factory.build(rule));
-    }
-
-    return ruleKeysMap;
   }
 
   public ImmutableList<Counter> getCounters() {
