@@ -28,10 +28,13 @@ import java.nio.channels.FileLock;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FileScrubberOverflowTest {
 
   private static class FakeFileChannel extends FileChannel {
+
+    private final AtomicBoolean unread = new AtomicBoolean(true);
 
     // Ten digits to match size metadata.  Doesn't fit in 32-bits.
     public static final long FILE_SIZE = 6000000000L;
@@ -44,8 +47,9 @@ public class FileScrubberOverflowTest {
     public int read(ByteBuffer buf) {
 
       // Scrubber is trying to read the global header, do nothing.
-      if (buf.capacity() == 0) {
-        return 0;
+      if (unread.getAndSet(false)) {
+        buf.put(ObjectFileScrubbers.GLOBAL_HEADER);
+        return buf.capacity();
       }
 
       // None of these values matter except for size and magic.
@@ -164,7 +168,7 @@ public class FileScrubberOverflowTest {
 
   @Test
   public void thatFileSizesOver32BitsIsOkay() throws IOException, FileScrubber.ScrubException {
-    FileScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber(new byte[] {});
+    FileScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber();
     scrubber.scrubFile(new FakeFileChannel());
   }
 

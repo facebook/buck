@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -178,9 +180,15 @@ public class CxxLibraryTest {
             cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
-        new FakeBuildRule(
+        Archive.from(
+            staticPicLibraryTarget,
             new FakeBuildRuleParamsBuilder(staticPicLibraryTarget).build(),
-            pathResolver));
+            pathResolver,
+            cxxPlatform.getAr(),
+            cxxPlatform.getRanlib(),
+            Archive.Contents.NORMAL,
+            BuildTargets.getGenPath(staticPicLibraryTarget, "%s/libfoo.a"),
+            ImmutableList.<SourcePath>of()));
 
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary = new CxxLibrary(

@@ -88,6 +88,7 @@ public class ArchiveTest {
             pathResolver,
             DEFAULT_ARCHIVER,
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
 
@@ -99,6 +100,7 @@ public class ArchiveTest {
             pathResolver,
             new GnuArchiver(new HashedFileTool(Paths.get("different"))),
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverChange);
@@ -111,6 +113,7 @@ public class ArchiveTest {
             pathResolver,
             DEFAULT_ARCHIVER,
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             Paths.get("different"),
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, outputChange);
@@ -123,6 +126,7 @@ public class ArchiveTest {
             pathResolver,
             DEFAULT_ARCHIVER,
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(new FakeSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
@@ -135,6 +139,7 @@ public class ArchiveTest {
             pathResolver,
             new BsdArchiver(new HashedFileTool(AR)),
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
@@ -165,6 +170,7 @@ public class ArchiveTest {
             new SourcePathResolver(resolver),
             DEFAULT_ARCHIVER,
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(
                 new FakeSourcePath("simple.o"),
@@ -203,6 +209,7 @@ public class ArchiveTest {
             pathResolver,
             DEFAULT_ARCHIVER,
             DEFAULT_RANLIB,
+            Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS);
 

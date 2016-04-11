@@ -16,20 +16,18 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -66,16 +64,13 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
-    BuildRule buildRule =
-        buildRuleResolver.requireRule(
+    Archive archive =
+        (Archive) buildRuleResolver.requireRule(
             getBuildTarget().withFlavors(
                 cxxPlatform.getFlavor(),
                 CxxDescriptionEnhancer.STATIC_FLAVOR));
     return NativeLinkableInput.of(
-        ImmutableList.of(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(buildRule.getBuildTarget()))),
+        ImmutableList.of(archive.toArg()),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
   }

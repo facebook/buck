@@ -193,6 +193,7 @@ public class HalideLibraryDescription
         pathResolver,
         platform.getAr(),
         platform.getRanlib(),
+        cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
             params.getBuildTarget(),
             platform.getFlavor(),

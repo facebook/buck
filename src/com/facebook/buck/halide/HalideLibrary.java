@@ -16,6 +16,7 @@
 
 package com.facebook.buck.halide;
 
+import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -30,12 +31,14 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
@@ -124,20 +127,27 @@ public class HalideLibrary
     return ImmutableList.of();
   }
 
+  private Arg requireLibraryArg(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
+      throws NoSuchBuildTargetException {
+    BuildRule rule =
+        ruleResolver
+            .requireRule(
+                getBuildTarget().withFlavors(
+                    CxxDescriptionEnhancer.flavorForLinkableDepType(type),
+                    cxxPlatform.getFlavor()));
+    if (rule instanceof Archive) {
+      return ((Archive) rule).toArg();
+    } else {
+      return new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
+    }
+  }
+
   @Override
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     return NativeLinkableInput.of(
-        SourcePathArg.from(
-            getResolver(),
-            new BuildTargetSourcePath(
-                ruleResolver
-                    .requireRule(
-                        getBuildTarget().withFlavors(
-                            CxxDescriptionEnhancer.flavorForLinkableDepType(type),
-                            cxxPlatform.getFlavor()))
-                    .getBuildTarget())),
+        ImmutableList.of(requireLibraryArg(cxxPlatform, type)),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
   }

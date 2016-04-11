@@ -17,6 +17,7 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.cxx.Archive;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
@@ -45,12 +46,15 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
   private static final BuildRuleType TYPE = BuildRuleType.of("d_library");
 
   private final DBuckConfig dBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
   public DLibraryDescription(
       DBuckConfig dBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
   }
 
@@ -114,7 +118,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
   /**
    * @return a BuildRule that creates a static library.
    */
-  private static BuildRule createStaticLibraryBuildRule(
+  private BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -156,6 +160,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
         pathResolver,
         cxxPlatform.getAr(),
         cxxPlatform.getRanlib(),
+        cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         compiledSources);
   }
