@@ -779,16 +779,28 @@ public class CachingBuildEngine implements BuildEngine {
                   successType = Optional.of(success);
                   uploadToCache(success);
 
-                  // Calculate the hash and size of the rule outputs that we built locally.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+                  // Get the size of outputs when they've changed.
+                  if (success.outputsHaveChanged()) {
                     try {
                       outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    } catch (IOException e) {
+                      context.getEventBus().post(
+                          ThrowableConsoleEvent.create(
+                              e,
+                              "Error getting output size for %s.",
+                              rule));
+                    }
+                  }
+
+                  // Calculate the hash of outputs that were built locally and are cacheable.
+                  if (success == BuildRuleSuccessType.BUILT_LOCALLY && rule.isCacheable()) {
+                    try {
                       outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
                     } catch (IOException e) {
                       context.getEventBus().post(
                           ThrowableConsoleEvent.create(
                               e,
-                              "Error getting output hash and size for %s.",
+                              "Error getting output hash for %s.",
                               rule));
                     }
                   }
