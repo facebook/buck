@@ -82,9 +82,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -862,21 +859,6 @@ public class ProjectCommand extends BuildCommand {
                 new DefaultTargetNodeToBuildRuleTransformer());
           }
         });
-    final LoadingCache<TargetNode<?>, SourcePathResolver>
-        sourcePathResolverCache =
-            CacheBuilder.newBuilder().build(
-                new CacheLoader<TargetNode<?>, SourcePathResolver>() {
-                  @Override
-                  public SourcePathResolver load(TargetNode<?> targetNode) {
-                    TargetGraphToActionGraph targetGraphToActionGraph =
-                        targetGraphToActionGraphSupplier.get();
-                    TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
-                        ImmutableSet.of(targetNode));
-                    BuildRuleResolver buildRuleResolver =
-                        targetGraphToActionGraph.apply(subgraph).getResolver();
-                    return new SourcePathResolver(buildRuleResolver);
-                  }
-                });
 
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
@@ -926,7 +908,13 @@ public class ProjectCommand extends BuildCommand {
           new Function<TargetNode<?>, SourcePathResolver>() {
             @Override
             public SourcePathResolver apply(TargetNode<?> input) {
-              return sourcePathResolverCache.getUnchecked(input);
+              TargetGraphToActionGraph targetGraphToActionGraph =
+                  targetGraphToActionGraphSupplier.get();
+              TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
+                  ImmutableSet.of(input));
+              BuildRuleResolver buildRuleResolver =
+                  targetGraphToActionGraph.apply(subgraph).getResolver();
+              return new SourcePathResolver(buildRuleResolver);
             }
           },
           params.getBuckEventBus(),
