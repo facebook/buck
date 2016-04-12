@@ -16,13 +16,17 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -83,9 +87,6 @@ public class AppleDescriptions {
           ImmutableMap.of(
               INCLUDE_FRAMEWORKS_FLAVOR, Boolean.TRUE,
               NO_INCLUDE_FRAMEWORKS_FLAVOR, Boolean.FALSE));
-  public static final Flavor APPLE_DSYM = ImmutableFlavor.of("apple-dsym");
-  public static final Flavor APPLE_BUNDLE_WITH_DSYM = ImmutableFlavor.of("apple-bundle-with-dsym");
-
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
@@ -347,46 +348,96 @@ public class AppleDescriptions {
             MERGED_ASSET_CATALOG_NAME));
   }
 
-  static AppleDsym createAppleDsym(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
+  static AppleDebuggableBinary createAppleDebuggableBinary(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      AppleBundle appleBundle) {
+      BuildRule strippedBinaryRule,
+      ProvidesStaticLibraryDeps unstrippedBinaryRule,
+      AppleDebugFormat debugFormat,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
+    Optional<AppleDsym> appleDsym = createAppleDsymForDebugFormat(
+        debugFormat,
+        params,
+        resolver,
+        unstrippedBinaryRule,
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        appleCxxPlatforms);
+    AppleDebuggableBinary rule = new AppleDebuggableBinary(
+        params.copyWithChanges(
+            strippedBinaryRule.getBuildTarget()
+                .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
+            Suppliers.ofInstance(
+                AppleDebuggableBinary.getRequiredDeps(
+                    debugFormat,
+                    strippedBinaryRule,
+                    unstrippedBinaryRule,
+                    appleDsym)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        new SourcePathResolver(resolver),
+        strippedBinaryRule);
+    return rule;
+  }
+
+  private static Optional<AppleDsym> createAppleDsymForDebugFormat(
+      AppleDebugFormat debugFormat,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      ProvidesStaticLibraryDeps unstrippedBinaryRule,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
+    if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
+      BuildTarget dsymBuildTarget = params.getBuildTarget()
+          .withoutFlavors(ImmutableSet.of(CxxStrip.RULE_FLAVOR))
+          .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
+          .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+          .withAppendedFlavor(AppleDsym.RULE_FLAVOR);
+      Optional<BuildRule> dsymRule = resolver.getRuleOptional(dsymBuildTarget);
+      if (!dsymRule.isPresent()) {
+        dsymRule = Optional.<BuildRule>of(
+            createAppleDsym(
+                params.copyWithBuildTarget(dsymBuildTarget),
+                resolver,
+                unstrippedBinaryRule,
+                cxxPlatformFlavorDomain,
+                defaultCxxPlatform,
+                appleCxxPlatforms));
+      }
+      Preconditions.checkArgument(dsymRule.get() instanceof AppleDsym);
+      return Optional.of((AppleDsym) dsymRule.get());
+    }
+    return Optional.absent();
+  }
+
+  static AppleDsym createAppleDsym(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      BuildRule unstrippedBinaryBuildRule,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
+
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
-        appleCxxPlatformsFlavorDomain,
-        params.getBuildTarget(),
-        FatBinaryInfos.create(appleCxxPlatformsFlavorDomain, params.getBuildTarget()));
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    return new AppleDsym(
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavor(APPLE_DSYM),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(appleBundle)),
+        appleCxxPlatforms,
+        unstrippedBinaryBuildRule.getBuildTarget(),
+        FatBinaryInfos.create(appleCxxPlatforms, unstrippedBinaryBuildRule.getBuildTarget()));
+
+    AppleDsym appleDsym = new AppleDsym(
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryBuildRule)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        sourcePathResolver,
-        appleBundle.getBundleRoot(),
-        appleBundle.getBundleBinaryPath(),
+        new SourcePathResolver(resolver),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),
-        appleCxxPlatform.getCxxPlatform().getStrip());
-  }
-
-  static AppleBundleWithDsym createAppleBundleWithDsym(
-      AppleBundle appleBundle,
-      AppleDsym appleDsym,
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    return new AppleBundleWithDsym(
-        params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavor(APPLE_BUNDLE_WITH_DSYM),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(appleDsym)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        sourcePathResolver,
-        appleBundle);
+        new BuildTargetSourcePath(unstrippedBinaryBuildRule.getBuildTarget()),
+        AppleDsym.getDsymOutputPath(params.getBuildTarget()));
+    resolver.addToIndex(appleDsym);
+    return appleDsym;
   }
 
   static AppleBundle createAppleBundle(
@@ -404,7 +455,8 @@ public class AppleDescriptions {
       final SourcePath infoPlist,
       Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
       ImmutableSortedSet<BuildTarget> deps,
-      ImmutableSortedSet<BuildTarget> tests)
+      ImmutableSortedSet<BuildTarget> tests,
+      AppleDebugFormat debugFormat)
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain,
@@ -469,11 +521,61 @@ public class AppleDescriptions {
         params.getBuildTarget().getFlavors(),
         resolver,
         binary);
+
+    if (!AppleDebuggableBinary.isBuildRuleDebuggable(flavoredBinaryRule)) {
+      debugFormat = AppleDebugFormat.NONE;
+    }
+
+    BuildTarget unstrippedTarget = flavoredBinaryRule.getBuildTarget()
+        .withoutFlavors(ImmutableSet.of(CxxStrip.RULE_FLAVOR))
+        .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
+        .withoutFlavors(ImmutableSet.of(AppleDebuggableBinary.RULE_FLAVOR))
+        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+        .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
+    if (unstrippedTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
+      unstrippedTarget = unstrippedTarget
+          .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))
+          .withAppendedFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    }
+    if (unstrippedTarget.getFlavors().contains(AppleTestDescription.BUNDLE_FLAVOR)) {
+      unstrippedTarget = unstrippedTarget.withAppendedFlavor(AppleDebuggableBinary.RULE_FLAVOR);
+    }
+    BuildRule unstrippedBinaryRule = resolver.requireRule(unstrippedTarget);
+
+    BuildRule targetDebuggableBinaryRule;
+    Optional<AppleDsym> appleDsym;
+    if (unstrippedBinaryRule instanceof ProvidesStaticLibraryDeps) {
+      BuildTarget binaryBuildTarget = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
+          .getBuildTarget()
+          .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+      BuildRuleParams binaryParams = params.copyWithBuildTarget(binaryBuildTarget);
+      targetDebuggableBinaryRule = createAppleDebuggableBinary(
+          binaryParams,
+          resolver,
+          getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
+          (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
+          debugFormat,
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          appleCxxPlatforms);
+      appleDsym = createAppleDsymForDebugFormat(
+          debugFormat,
+          params,
+          resolver,
+          (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          appleCxxPlatforms);
+    } else {
+      targetDebuggableBinaryRule = unstrippedBinaryRule;
+      appleDsym = Optional.absent();
+    }
+
     BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithUpdatedDeps(
         params,
         binary,
         ImmutableSet.<BuildRule>builder()
-            .add(flavoredBinaryRule)
+            .add(targetDebuggableBinaryRule)
             .addAll(assetCatalog.asSet())
             .addAll(
                 BuildRules.toBuildRulesFor(
@@ -487,6 +589,7 @@ public class AppleDescriptions {
                                 dirsContainingResourceDirs,
                                 bundleVariantFiles,
                                 frameworks)))))
+            .addAll(appleDsym.asSet())
             .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
@@ -500,7 +603,9 @@ public class AppleDescriptions {
         productName,
         infoPlist,
         infoPlistSubstitutions.get(),
-        Optional.of(flavoredBinaryRule),
+        Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
+        Optional.of(unstrippedBinaryRule),
+        appleDsym,
         destinations,
         bundleDirs,
         bundleFiles,
@@ -513,6 +618,13 @@ public class AppleDescriptions {
         tests,
         codeSignIdentityStore,
         provisioningProfileStore);
+  }
+
+  private static BuildRule getBinaryFromBuildRuleWithBinary(BuildRule rule) {
+    if (rule instanceof BuildRuleWithBinary) {
+      rule = ((BuildRuleWithBinary) rule).getBinaryBuildRule();
+    }
+    return rule;
   }
 
   private static BuildRule getFlavoredBinaryRule(
@@ -536,8 +648,6 @@ public class AppleDescriptions {
                 ImmutableSet.of(
                     ReactNativeFlavors.DO_NOT_BUNDLE,
                     AppleDescriptions.FRAMEWORK_FLAVOR,
-                    AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-                    AppleDebugFormat.NONE.getFlavor(),
                     AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
@@ -559,6 +669,11 @@ public class AppleDescriptions {
     BuildTarget buildTarget = buildTargetBuilder.build();
 
     final TargetNode<?> binaryTargetNode = targetGraph.get(buildTarget);
+
+    if (binaryTargetNode.getDescription() instanceof AppleTestDescription) {
+      return resolver.getRule(binary);
+    }
+
     // If the binary target of the AppleBundle is an AppleLibrary then the build flavor
     // must be specified.
     if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription &&
@@ -569,6 +684,16 @@ public class AppleDescriptions {
           "AppleExtension bundle [%s] must have exactly one of these flavors: [%s].",
           binaryTargetNode.getBuildTarget().toString(),
           Joiner.on(", ").join(AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS));
+    }
+
+    if (!StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      // append strip style depending on the type of the binary target
+      if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription ||
+          binaryTargetNode.getDescription() instanceof AppleTestDescription) {
+        buildTarget = buildTarget.withAppendedFlavor(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
+      } else {
+        buildTarget = buildTarget.withAppendedFlavor(StripStyle.ALL_SYMBOLS.getFlavor());
+      }
     }
 
     return resolver.requireRule(buildTarget);

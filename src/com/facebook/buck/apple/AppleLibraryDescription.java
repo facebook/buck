@@ -20,7 +20,10 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -68,6 +71,9 @@ public class AppleLibraryDescription implements
       AppleDescriptions.FRAMEWORK_FLAVOR,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
       AppleDebugFormat.NONE.getFlavor(),
+      StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),
+      StripStyle.ALL_SYMBOLS.getFlavor(),
+      StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
       ImmutableFlavor.of("default"));
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -107,18 +113,21 @@ public class AppleLibraryDescription implements
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
+  private final AppleDebugFormat defaultDebugFormat;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore) {
+      ProvisioningProfileStore provisioningProfileStore,
+      AppleDebugFormat defaultDebugFormat) {
     this.delegate = delegate;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
+    this.defaultDebugFormat = defaultDebugFormat;
   }
 
   @Override
@@ -146,54 +155,117 @@ public class AppleLibraryDescription implements
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
-      if (!args.infoPlist.isPresent()) {
-        throw new HumanReadableException(
-            "Cannot create framework for apple_library '%s':\n" +
-            "No value specified for 'info_plist' attribute.",
-            params.getBuildTarget().getUnflavoredBuildTarget());
-      }
-      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
-        return resolver.requireRule(
-            params.getBuildTarget().withAppendedFlavor(
-                AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
-      }
-
-      return AppleDescriptions.createAppleBundle(
-          delegate.getCxxPlatforms(),
-          defaultCxxPlatform,
-          appleCxxPlatformFlavorDomain,
-          targetGraph,
+      return createFrameworkBundleBuildRule(targetGraph, params, resolver, args);
+    } else {
+      return createLibraryBuildRule(
           params,
           resolver,
-          codeSignIdentityStore,
-          provisioningProfileStore,
-          params.getBuildTarget(),
-          Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK),
-          Optional.<String>absent(),
-          args.infoPlist.get(),
-          args.infoPlistSubstitutions,
-          args.deps.get(),
-          args.getTests());
+          args,
+          args.linkStyle,
+          Optional.<SourcePath>absent(),
+          ImmutableSet.<BuildTarget>of());
     }
-
-    return createBuildRule(
-        params,
-        resolver,
-        args,
-        args.linkStyle,
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
   }
 
-  public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
+  private <A extends Arg> BuildRule createFrameworkBundleBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) throws NoSuchBuildTargetException {
+    if (!args.infoPlist.isPresent()) {
+      throw new HumanReadableException(
+          "Cannot create framework for apple_library '%s':\n" +
+          "No value specified for 'info_plist' attribute.",
+          params.getBuildTarget().getUnflavoredBuildTarget());
+    }
+    if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
+      return resolver.requireRule(
+          params.getBuildTarget().withAppendedFlavor(
+              AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
+    }
+    AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
+        .getValue(params.getBuildTarget())
+        .or(defaultDebugFormat);
+    if (!params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
+      return resolver.requireRule(
+          params.getBuildTarget().withAppendedFlavor(debugFormat.getFlavor()));
+    }
+
+    return AppleDescriptions.createAppleBundle(
+        delegate.getCxxPlatforms(),
+        defaultCxxPlatform,
+        appleCxxPlatformFlavorDomain,
+        targetGraph,
+        params,
+        resolver,
+        codeSignIdentityStore,
+        provisioningProfileStore,
+        params.getBuildTarget(),
+        Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK),
+        Optional.<String>absent(),
+        args.infoPlist.get(),
+        args.infoPlistSubstitutions,
+        args.deps.get(),
+        args.getTests(),
+        debugFormat);
+  }
+
+  public <A extends AppleNativeTargetDescriptionArg> BuildRule createLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist) throws NoSuchBuildTargetException {
+
+    // We explicitly remove strip flavor from params to make sure rule
+    // has the same output regardless if we will strip or not.
+    Optional<StripStyle> flavoredStripStyle =
+        StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
+
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
+    BuildRule unstrippedBinaryRule = createUnstrippedBuildRule(
+        params,
+        resolver,
+        args,
+        linkableDepType,
+        bundleLoader,
+        blacklist,
+        pathResolver);
+
+    if (!shouldWrapIntoDebuggableBinary(params.getBuildTarget(), unstrippedBinaryRule)) {
+        return unstrippedBinaryRule;
+    }
+
+    BuildRule strippedBinaryRule = CxxDescriptionEnhancer.createCxxStripRule(
+        CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
+        resolver,
+        delegate.getCxxPlatforms().getValue(params.getBuildTarget()).or(defaultCxxPlatform),
+        flavoredStripStyle.or(StripStyle.NON_GLOBAL_SYMBOLS),
+        pathResolver,
+        unstrippedBinaryRule);
+
+    return AppleDescriptions.createAppleDebuggableBinary(
+        CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
+        resolver,
+        strippedBinaryRule,
+        (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget()).or(defaultDebugFormat),
+        delegate.getCxxPlatforms(),
+        delegate.getDefaultCxxPlatform(),
+        appleCxxPlatformFlavorDomain);
+  }
+
+  private <A extends AppleNativeTargetDescriptionArg> BuildRule createUnstrippedBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args,
+      Optional<Linker.LinkableDepType> linkableDepType,
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildTarget> blacklist,
+      SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver,
@@ -201,14 +273,44 @@ public class AppleLibraryDescription implements
         args,
         params.getBuildTarget());
 
-    return delegate.createBuildRule(
-        params,
-        resolver,
-        delegateArg,
-        linkableDepType,
-        bundleLoader,
-        blacklist);
+    // remove all debug format related flavors from cxx rule so it always ends up in the same output
+    BuildTarget unstrippedTarget = params.getBuildTarget()
+        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+    BuildTarget existingTarget = BuildTarget.copyOf(unstrippedTarget);
+    if (existingTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
+      existingTarget = existingTarget
+          .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))
+          .withAppendedFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    }
+
+    Optional<BuildRule> existingRule = resolver.getRuleOptional(existingTarget);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    } else {
+      BuildRule rule = delegate.createBuildRule(
+          params.copyWithBuildTarget(unstrippedTarget),
+          resolver,
+          delegateArg,
+          linkableDepType,
+          bundleLoader,
+          blacklist);
+      resolver.addToIndex(rule);
+      return rule;
+    }
   }
+
+  private boolean shouldWrapIntoDebuggableBinary(BuildTarget buildTarget, BuildRule buildRule) {
+    if (!AppleDebugFormat.FLAVOR_DOMAIN.getValue(buildTarget).isPresent()) {
+      return false;
+    }
+    if (!buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR) &&
+        !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
+      return false;
+    }
+
+    return AppleDebuggableBinary.isBuildRuleDebuggable(buildRule);
+  }
+
 
   @Override
   public <A extends Arg, U> Optional<U> createMetadata(

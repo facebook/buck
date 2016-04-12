@@ -20,11 +20,13 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
+import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -44,6 +46,8 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.MoveStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
@@ -70,10 +74,11 @@ import java.util.Set;
  */
 public class AppleBundle
     extends AbstractBuildRule
-    implements NativeTestable, BuildRuleWithAppleBundle {
+    implements NativeTestable, BuildRuleWithAppleBundle, BuildRuleWithBinary {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
+  public static final String DSYM_DWARF_FILE_FOLDER = "Contents/Resources/DWARF/";
 
   @AddToRuleKey
   private final String extension;
@@ -89,6 +94,12 @@ public class AppleBundle
 
   @AddToRuleKey
   private final Optional<BuildRule> binary;
+
+  @AddToRuleKey
+  private final Optional<BuildRule> unstrippedBinaryRule;
+
+  @AddToRuleKey
+  private final Optional<AppleDsym> appleDsym;
 
   @AddToRuleKey
   private final AppleBundleDestinations destinations;
@@ -140,7 +151,6 @@ public class AppleBundle
   private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
   private final Optional<AppleAssetCatalog> assetCatalog;
-
   private final Optional<String> platformBuildVersion;
   private final Optional<String> xcodeVersion;
   private final Optional<String> xcodeBuildVersion;
@@ -150,6 +160,7 @@ public class AppleBundle
   private final Path bundleRoot;
   private final Path binaryPath;
   private final Path bundleBinaryPath;
+
   private final boolean hasBinary;
 
   AppleBundle(
@@ -160,6 +171,8 @@ public class AppleBundle
       SourcePath infoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
+      Optional<BuildRule> unstrippedBinaryRule,
+      Optional<AppleDsym> appleDsym,
       AppleBundleDestinations destinations,
       Set<SourcePath> resourceDirs,
       Set<SourcePath> resourceFiles,
@@ -180,6 +193,8 @@ public class AppleBundle
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
+    this.unstrippedBinaryRule = unstrippedBinaryRule;
+    this.appleDsym = appleDsym;
     this.destinations = destinations;
     this.resourceDirs = resourceDirs;
     this.resourceFiles = resourceFiles;
@@ -314,6 +329,7 @@ public class AppleBundle
 
     if (hasBinary) {
       appendCopyBinarySteps(stepsBuilder);
+      appendCopyDsymStep(stepsBuilder, buildableContext);
     }
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
@@ -512,6 +528,55 @@ public class AppleBundle
               binaryOutputPath,
               watchKitStubDir.resolve("WK")));
     }
+  }
+
+  private void appendCopyDsymStep(
+      ImmutableList.Builder<Step> stepsBuilder,
+      BuildableContext buildableContext) {
+    if (appleDsym.isPresent()) {
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              appleDsym.get().getPathToOutput(),
+              bundleRoot.getParent(),
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+      appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext);
+    }
+  }
+
+  private void appendDsymRenameStepToMatchBundleName(
+      ImmutableList.Builder<Step> stepsBuilder,
+      BuildableContext buildableContext) {
+    Preconditions.checkArgument(hasBinary && appleDsym.isPresent());
+
+    // rename dSYM bundle to match bundle name
+    Path dsymPath = appleDsym.get().getPathToOutput();
+    Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
+    Path dsymDestinationPath = bundleRoot.getParent().resolve(
+        bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
+    stepsBuilder.add(new RmStep(getProjectFilesystem(), dsymDestinationPath, true, true));
+    stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
+
+    String dwarfFilename =
+        AppleDsym.getDwarfFilenameForDsymTarget(appleDsym.get().getBuildTarget());
+    if (unstrippedBinaryRule.isPresent()) {
+      Path unstrippedOutput = unstrippedBinaryRule.get().getPathToOutput();
+      Preconditions.checkNotNull(
+          unstrippedOutput,
+          "Unstripped binary %s of bundle %s has null output path. It shouldn't be null, as " +
+              "it used to determine the name of dwarf file inside dSYM bundle.",
+          unstrippedBinaryRule.get(), this);
+      dwarfFilename = unstrippedOutput.getFileName().toString();
+    }
+
+    // rename DWARF file inside dSYM bundle to match bundle name
+    Path dwarfFolder = dsymDestinationPath.resolve(DSYM_DWARF_FILE_FOLDER);
+    Path dwarfSourcePath = dwarfFolder.resolve(dwarfFilename);
+    Path dwarfDestinationPath = dwarfFolder.resolve(MorePaths.getNameWithoutExtension(bundleRoot));
+    stepsBuilder.add(new MoveStep(getProjectFilesystem(), dwarfSourcePath, dwarfDestinationPath));
+
+    // record dSYM so we can fetch it from cache
+    buildableContext.recordArtifact(dsymDestinationPath);
   }
 
   public void addStepsToCopyExtensionBundlesDependencies(
@@ -749,5 +814,10 @@ public class AppleBundle
 
   public Path getBundleBinaryPath() {
     return bundleBinaryPath;
+  }
+
+  @Override
+  public BuildRule getBinaryBuildRule() {
+    return binary.get();
   }
 }

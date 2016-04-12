@@ -35,6 +35,8 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -88,7 +90,7 @@ public class AppleBinaryIntegrationTest {
 
 
   @Test
-  public void testAppleBinaryAppBuildsApp() throws Exception {
+  public void testAppleBinaryAppBuildsAppWithDsym() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_builds_something", tmp);
@@ -99,16 +101,49 @@ public class AppleBinaryIntegrationTest {
 
     BuildTarget appTarget = target.withFlavors(
         AppleBinaryDescription.APP_FLAVOR,
-        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+        AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
     Path outputPath = workspace.getPath(
         BuildTargets.getGenPath(appTarget, "%s")
             .resolve(appTarget.getShortName() + ".app"));
     assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(outputPath.resolve("Info.plist")), is(true));
+
+    Path dsymPath = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(appTarget.getShortName() + ".app.dSYM"));
+    assertThat(Files.exists(dsymPath), is(true));
     assertThat(
         workspace.runCommand(
             "file",
             outputPath.resolve(appTarget.getShortName()).toString()).getStdout().get(),
         containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryAppBuildsAppWithoutDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#app,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget appTarget = target.withFlavors(
+        AppleBinaryDescription.APP_FLAVOR,
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+        AppleDebugFormat.NONE.getFlavor());
+    Path outputPath = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(appTarget.getShortName() + ".app"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(outputPath.resolve("Info.plist")), is(true));
+
+    Path dsymPath = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(appTarget.getShortName() + ".app.dSYM"));
+    assertThat(Files.exists(dsymPath), is(false));
   }
 
   @Test
@@ -312,6 +347,27 @@ public class AppleBinaryIntegrationTest {
         lipoVerifyResult.getStderr().or(""),
         0,
         lipoVerifyResult.getExitCode());
+  }
+
+  @Test
+  public void testAppleBinaryBuildsFatBinariesWithDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
+    BuildTarget targetToBuild = target
+        .withAppendedFlavor(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
+    BuildTarget dsymTarget = target.withAppendedFlavor(AppleDsym.RULE_FLAVOR);
+    workspace.runBuckCommand("build", targetToBuild.getFullyQualifiedName()).assertSuccess();
+    Path output = workspace.getPath(AppleDsym.getDsymOutputPath(dsymTarget));
+    AppleDsymTestUtil
+        .checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
+            workspace,
+            output,
+            Optional.of(ImmutableList.of("i386", "x86_64")));
   }
 
   @Test

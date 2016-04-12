@@ -19,6 +19,9 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -49,6 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -68,7 +72,9 @@ public class AppleBinaryDescription implements
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       APP_FLAVOR,
       CxxCompilationDatabase.COMPILATION_DATABASE,
-      CxxCompilationDatabase.UBER_COMPILATION_DATABASE);
+      CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
+      AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+      AppleDebugFormat.NONE.getFlavor());
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
@@ -81,16 +87,19 @@ public class AppleBinaryDescription implements
   private final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
+  private final AppleDebugFormat defaultDebugFormat;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
       FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore) {
+      ProvisioningProfileStore provisioningProfileStore,
+      AppleDebugFormat defaultDebugFormat) {
     this.delegate = delegate;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
+    this.defaultDebugFormat = defaultDebugFormat;
   }
 
   @Override
@@ -118,7 +127,9 @@ public class AppleBinaryDescription implements
           new Predicate<ImmutableSortedSet<Flavor>>() {
             @Override
             public boolean apply(ImmutableSortedSet<Flavor> input) {
-              return delegate.hasFlavors(input);
+              Set<Flavor> flavors = Sets.newHashSet(input);
+              flavors.removeAll(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+              return delegate.hasFlavors(ImmutableSet.copyOf(flavors));
             }
           });
     } else {
@@ -139,20 +150,74 @@ public class AppleBinaryDescription implements
     }
   }
 
+  // We want to wrap only if we have explicit debug flavor. This is because we don't want to
+  // force dSYM generation in case if its enabled by default in config. We just want the binary,
+  // so unless flavor is explicitly set, lets just produce binary!
+  private boolean shouldWrapIntoAppleDebuggableBinary(
+      BuildTarget buildTarget,
+      BuildRule binaryBuildRule) {
+    Optional<AppleDebugFormat> explicitDebugInfoFormat =
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(buildTarget);
+    boolean binaryIsWrappable = AppleDebuggableBinary.canWrapBinaryBuildRule(binaryBuildRule);
+    return explicitDebugInfoFormat.isPresent() && binaryIsWrappable;
+  }
+
   private <A extends Arg> BuildRule createBinaryBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    BuildTarget binaryBuildTarget = params.getBuildTarget().withoutFlavors(
-        AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+    // remove debug format flavors so binary will have the same output regardless of debug format
+    BuildTarget unstrippedBinaryBuildTarget = params.getBuildTarget()
+        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+        .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors());
 
-    BuildRule binaryBuildRule = createBinary(
+    BuildRule unstrippedBinaryRule = createBinary(
         targetGraph,
-        params.copyWithBuildTarget(binaryBuildTarget),
+        params.copyWithBuildTarget(unstrippedBinaryBuildTarget),
         resolver,
         args);
-    return binaryBuildRule;
+
+    if (shouldWrapIntoAppleDebuggableBinary(params.getBuildTarget(), unstrippedBinaryRule)) {
+      return createAppleDebuggableBinary(
+          targetGraph,
+          params,
+          resolver,
+          args,
+          unstrippedBinaryBuildTarget,
+          (ProvidesStaticLibraryDeps) unstrippedBinaryRule);
+    } else {
+      return unstrippedBinaryRule;
+    }
+  }
+
+  private <A extends Arg> BuildRule createAppleDebuggableBinary(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args,
+      BuildTarget unstrippedBinaryBuildTarget,
+      ProvidesStaticLibraryDeps unstrippedBinaryRule) throws NoSuchBuildTargetException {
+    BuildTarget strippedBinaryBuildTarget = unstrippedBinaryBuildTarget
+        .withAppendedFlavors(
+            CxxStrip.RULE_FLAVOR,
+            StripStyle.FLAVOR_DOMAIN
+                .getFlavor(params.getBuildTarget().getFlavors())
+                .or(StripStyle.ALL_SYMBOLS.getFlavor()));
+    BuildRule strippedBinaryRule = createBinary(
+        targetGraph,
+        params.copyWithBuildTarget(strippedBinaryBuildTarget),
+        resolver,
+        args);
+    return AppleDescriptions.createAppleDebuggableBinary(
+        params.copyWithBuildTarget(unstrippedBinaryBuildTarget),
+        resolver,
+        strippedBinaryRule,
+        unstrippedBinaryRule,
+        AppleDebugFormat.FLAVOR_DOMAIN.getRequiredValue(params.getBuildTarget()),
+        delegate.getCxxPlatforms(),
+        delegate.getDefaultCxxPlatform(),
+        platformFlavorsToAppleCxxPlatforms);
   }
 
   private <A extends Arg> BuildRule createBundleBuildRule(
@@ -166,7 +231,13 @@ public class AppleBinaryDescription implements
           "No value specified for 'info_plist' attribute.",
           params.getBuildTarget().getUnflavoredBuildTarget());
     }
-
+    AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
+        .getValue(params.getBuildTarget())
+        .or(defaultDebugFormat);
+    if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
+      return resolver.requireRule(
+          params.getBuildTarget().withAppendedFlavor(flavoredDebugFormat.getFlavor()));
+    }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       CxxPlatform cxxPlatform =
           delegate.getCxxPlatforms().getValue(params.getBuildTarget())
@@ -200,7 +271,8 @@ public class AppleBinaryDescription implements
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests());
+        args.getTests(),
+        flavoredDebugFormat);
   }
 
   private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(
@@ -302,12 +374,13 @@ public class AppleBinaryDescription implements
       resolver.addToIndex(thinRule);
       thinRules.add(thinRule);
     }
+
     ImmutableSortedSet<SourcePath> inputs = FluentIterable
         .from(resolver.getAllRules(fatBinaryInfo.getThinTargets()))
         .transform(SourcePaths.getToBuildTargetSourcePath())
         .toSortedSet(Ordering.natural());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    return new FatBinary(
+    FatBinary fatBinary = new FatBinary(
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             Suppliers.ofInstance(thinRules.build())),
@@ -315,6 +388,8 @@ public class AppleBinaryDescription implements
         fatBinaryInfo.getRepresentativePlatform().getLipo(),
         inputs,
         BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
+    resolver.addToIndex(fatBinary);
+    return fatBinary;
   }
 
   @Override

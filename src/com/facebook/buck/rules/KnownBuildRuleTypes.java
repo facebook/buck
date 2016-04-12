@@ -490,7 +490,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentityStore,
-            provisioningProfileStore);
+            provisioningProfileStore,
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription =
@@ -498,7 +499,8 @@ public class KnownBuildRuleTypes {
             cxxBinaryDescription,
             platformFlavorsToAppleCxxPlatforms,
             codeSignIdentityStore,
-            provisioningProfileStore);
+            provisioningProfileStore,
+            appleConfig.getDefaultDebugInfoFormat());
     builder.register(appleBinaryDescription);
 
     SwiftLibraryDescription swiftLibraryDescription =
@@ -570,7 +572,8 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor)));
+            appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
+            appleConfig.getDefaultDebugInfoFormat()));
     builder.register(new CoreDataModelDescription());
     builder.register(new CSharpLibraryDescription());
     builder.register(cxxBinaryDescription);
