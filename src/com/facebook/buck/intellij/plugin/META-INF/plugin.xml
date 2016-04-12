@@ -99,7 +99,7 @@
   </extensions>
 
   <actions>
-    <group id="buck.Menu" popup="true" text="Buck">
+    <group id="buck.Menu">
       <action
           id="buck.GoToBuckFile"
           class="com.facebook.buck.intellij.plugin.actions.GoToBuckFile"
@@ -109,9 +109,11 @@
       </action>
       <add-to-group anchor="first" group-id="BuildMenu"/>
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
+      <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
 
     <group id="buck.BuildGroup">
+      <separator></separator>
       <action class="com.facebook.buck.intellij.plugin.actions.ChooseTargetAction" id="buck.ChooseTarget">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
       </action>
@@ -136,6 +138,7 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
+      <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
   </actions>
 

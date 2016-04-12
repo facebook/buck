@@ -53,6 +53,9 @@ public class AndroidDebugger {
       @Override
       public void run() {
         IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
+        if (devices.length == 0) {
+          return;
+        }
         IDevice device = devices[0];
 
         Client client;
