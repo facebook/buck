@@ -1612,14 +1612,15 @@ public final class Main {
   private static void daemonizeIfPossible() {
     String osName = System.getProperty("os.name");
     Libc.OpenPtyLibrary openPtyLibrary;
-    if ("Linux".equals(osName)) {
+    Platform platform = Platform.detect();
+    if (platform == Platform.LINUX) {
       Libc.Constants.rTIOCSCTTY = Libc.Constants.LINUX_TIOCSCTTY;
       Libc.Constants.rFDCLOEXEC = Libc.Constants.LINUX_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.LINUX_F_GETFD;
       Libc.Constants.rFSETFD = Libc.Constants.LINUX_F_SETFD;
       openPtyLibrary = (Libc.OpenPtyLibrary)
           Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
-    } else if ("OS X".equals(osName)) {
+    } else if (platform == Platform.MACOS) {
       Libc.Constants.rTIOCSCTTY = Libc.Constants.DARWIN_TIOCSCTTY;
       Libc.Constants.rFDCLOEXEC = Libc.Constants.DARWIN_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.DARWIN_F_GETFD;
