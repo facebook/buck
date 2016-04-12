@@ -52,7 +52,10 @@ public class AppleDebuggableBinary
 
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-debuggable-binary");
 
-  private final BuildRule strippedBinaryRule;
+  /**
+   * Binary rule could be stripped and unstripped, depending on requirements. See AppleDebugFormat.
+   */
+  private final BuildRule binaryRule;
 
   @AddToRuleKey
   private final SourcePath binarySourcePath;
@@ -60,11 +63,11 @@ public class AppleDebuggableBinary
   public AppleDebuggableBinary(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      BuildRule strippedBinaryRule) {
+      BuildRule binaryRule) {
     super(buildRuleParams, resolver);
-    this.strippedBinaryRule = strippedBinaryRule;
-    this.binarySourcePath = new BuildTargetSourcePath(strippedBinaryRule.getBuildTarget());
-    performChecks(buildRuleParams, strippedBinaryRule);
+    this.binaryRule = binaryRule;
+    this.binarySourcePath = new BuildTargetSourcePath(binaryRule.getBuildTarget());
+    performChecks(buildRuleParams, binaryRule);
   }
 
   private void performChecks(BuildRuleParams buildRuleParams, BuildRule cxxStrip) {
@@ -101,7 +104,13 @@ public class AppleDebuggableBinary
     return false;
   }
 
-  public static ImmutableSortedSet<BuildRule> getRequiredDeps(
+  // Defines all rules that AppleDebuggableBinary should depend on, depending on debug format.
+  // For no-debug:  only stripped binary.
+  // For dwarf:     on unstripped binary and all static libs, because these files must be accessible
+  //                during debug session.
+  // For dsym:      on stripped binary and dsym rule, because dSYM must be accessible during debug
+  //                session.
+  public static ImmutableSortedSet<BuildRule> getRequiredRuntimeDeps(
       AppleDebugFormat debugFormat,
       BuildRule strippedBinaryRule,
       ProvidesStaticLibraryDeps unstrippedBinaryRule,
@@ -109,14 +118,18 @@ public class AppleDebuggableBinary
     if (debugFormat == AppleDebugFormat.NONE) {
       return ImmutableSortedSet.of(strippedBinaryRule);
     }
-    Preconditions.checkArgument(
-        appleDsym.isPresent(),
-        "debugFormat %s expects AppleDsym rule to be present", debugFormat);
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(strippedBinaryRule)
-        .addAll(unstrippedBinaryRule.getStaticLibraryDeps())
-        .add(appleDsym.get())
-        .build();
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder();
+    if (debugFormat == AppleDebugFormat.DWARF) {
+      builder.add(unstrippedBinaryRule);
+      builder.addAll(unstrippedBinaryRule.getStaticLibraryDeps());
+    } else if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
+      Preconditions.checkArgument(
+          appleDsym.isPresent(),
+          "debugFormat %s expects AppleDsym rule to be present", debugFormat);
+      builder.add(strippedBinaryRule);
+      builder.add(appleDsym.get());
+    }
+    return builder.build();
   }
 
   @Override
@@ -134,11 +147,11 @@ public class AppleDebuggableBinary
 
   @Override
   public BuildRule getBinaryBuildRule() {
-    return strippedBinaryRule;
+    return binaryRule;
   }
 
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.of(strippedBinaryRule);
+    return getDeclaredDeps();
   }
 }

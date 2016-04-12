@@ -365,19 +365,25 @@ public class AppleDescriptions {
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         appleCxxPlatforms);
+    BuildRule buildRuleForDebugFormat;
+    if (debugFormat == AppleDebugFormat.DWARF) {
+      buildRuleForDebugFormat = unstrippedBinaryRule;
+    } else {
+      buildRuleForDebugFormat = strippedBinaryRule;
+    }
     AppleDebuggableBinary rule = new AppleDebuggableBinary(
         params.copyWithChanges(
             strippedBinaryRule.getBuildTarget()
                 .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
             Suppliers.ofInstance(
-                AppleDebuggableBinary.getRequiredDeps(
+                AppleDebuggableBinary.getRequiredRuntimeDeps(
                     debugFormat,
                     strippedBinaryRule,
                     unstrippedBinaryRule,
                     appleDsym)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         new SourcePathResolver(resolver),
-        strippedBinaryRule);
+        buildRuleForDebugFormat);
     return rule;
   }
 
@@ -415,7 +421,7 @@ public class AppleDescriptions {
   static AppleDsym createAppleDsym(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      BuildRule unstrippedBinaryBuildRule,
+      ProvidesStaticLibraryDeps unstrippedBinaryBuildRule,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
@@ -429,7 +435,11 @@ public class AppleDescriptions {
 
     AppleDsym appleDsym = new AppleDsym(
         params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryBuildRule)),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .add(unstrippedBinaryBuildRule)
+                    .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
+                    .build()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         new SourcePathResolver(resolver),
         appleCxxPlatform.getDsymutil(),

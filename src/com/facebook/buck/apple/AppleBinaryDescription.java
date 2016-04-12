@@ -74,6 +74,7 @@ public class AppleBinaryDescription implements
       CxxCompilationDatabase.COMPILATION_DATABASE,
       CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+      AppleDebugFormat.DWARF.getFlavor(),
       AppleDebugFormat.NONE.getFlavor());
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -117,23 +118,23 @@ public class AppleBinaryDescription implements
     if (FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR)) {
       return true;
     }
+    final ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(
+        Sets.difference(flavors, AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()));
     Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
         FatBinaryInfos.generateThinFlavors(
             platformFlavorsToAppleCxxPlatforms.getFlavors(),
-            ImmutableSortedSet.copyOf(flavors));
+            ImmutableSortedSet.copyOf(delegateFlavors));
     if (thinFlavorSets.size() > 1) {
       return Iterables.all(
           thinFlavorSets,
           new Predicate<ImmutableSortedSet<Flavor>>() {
             @Override
             public boolean apply(ImmutableSortedSet<Flavor> input) {
-              Set<Flavor> flavors = Sets.newHashSet(input);
-              flavors.removeAll(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-              return delegate.hasFlavors(ImmutableSet.copyOf(flavors));
+              return delegate.hasFlavors(input);
             }
           });
     } else {
-      return delegate.hasFlavors(flavors);
+      return delegate.hasFlavors(delegateFlavors);
     }
   }
 

@@ -109,8 +109,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
     for (Flavor flavor : flavors) {
       if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE) ||
-          flavor.equals(AppleDebugFormat.DWARF_AND_DSYM.getFlavor()) ||
-          flavor.equals(AppleDebugFormat.NONE.getFlavor())) {
+          AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor)) {
         continue;
       }
       flavorBuilder.add(flavor);

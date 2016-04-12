@@ -332,8 +332,9 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: 'DWARF_AND_DSYM' /}
   {param description}
     <code>default_debug_info_format</code> setting controls the default debug info format. If you
-    don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug
-    data by specifying <code>NONE</code> value.
+    don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can disable debug
+    data by specifying <code>NONE</code> value. You can produce unstripped binary by specifying
+    <code>DWARF</code> value.
   {/param}
 {/call}
 

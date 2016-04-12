@@ -98,6 +98,7 @@ public class AppleTestDescription implements
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+      AppleDebugFormat.DWARF.getFlavor(),
       AppleDebugFormat.NONE.getFlavor());
 
   private final AppleConfig appleConfig;

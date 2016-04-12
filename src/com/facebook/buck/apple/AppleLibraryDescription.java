@@ -70,6 +70,7 @@ public class AppleLibraryDescription implements
       CxxDescriptionEnhancer.SHARED_FLAVOR,
       AppleDescriptions.FRAMEWORK_FLAVOR,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+      AppleDebugFormat.DWARF.getFlavor(),
       AppleDebugFormat.NONE.getFlavor(),
       StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),
       StripStyle.ALL_SYMBOLS.getFlavor(),
