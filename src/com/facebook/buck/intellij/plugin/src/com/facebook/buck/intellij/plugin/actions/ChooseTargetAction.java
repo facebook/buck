@@ -29,6 +29,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.sun.glass.events.KeyEvent;
 
@@ -50,6 +51,10 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
     presentation.setIcon(AllIcons.Actions.Preview);
   }
 
+  @Override
+  public void update(AnActionEvent e) {
+    e.getPresentation().setEnabled(!(e.getProject() == null || DumbService.isDumb(e.getProject())));
+  }
   @Override
   protected void gotoActionPerformed(AnActionEvent e) {
     final Project project = e.getData(CommonDataKeys.PROJECT);
