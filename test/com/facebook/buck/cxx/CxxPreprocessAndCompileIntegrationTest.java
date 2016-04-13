@@ -388,6 +388,50 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion()
+      throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:binary_with_used_relative_parent_header");
+    String usedHeaderName = "source_relative_parent_header.h";
+    String sourceName = "source_relative_parent_header/source.cpp";
+    BuildTarget preprocessTarget =
+        getPreprocessTarget(
+            cxxPlatform,
+            target,
+            sourceName,
+            AbstractCxxSource.Type.CXX);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Modify the used header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
   public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
