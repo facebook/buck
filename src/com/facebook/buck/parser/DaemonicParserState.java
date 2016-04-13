@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
-import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -673,12 +672,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
     }
   }
 
-  private static ImmutableMap<String, String> filteredEnv(ImmutableMap<String, String> env) {
-    return ImmutableMap.copyOf(Maps.filterKeys(env, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
-  }
-
   private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
-    ImmutableMap<String, String> cellEnv = filteredEnv(cell.getBuckConfig().getEnvironment());
+    ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getFilteredEnvironment();
     Iterable<String> defaultIncludes = new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
 
     boolean invalidatedByEnvironmentVariableChange = false;

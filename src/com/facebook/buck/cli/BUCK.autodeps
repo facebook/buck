@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1a4f181fadc128e53243abd3ba97a743e73240fd #@#
+#@# GENERATED FILE: DO NOT MODIFY 19c0483f779aa49f3998f52c218c69e96d45d171 #@#
 {
   "cli" : {
     "deps" : [
@@ -112,6 +112,7 @@
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network:network",
       "//third-party/java/okhttp:okhttp"
     ],

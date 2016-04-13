@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 773de12f22a3ea8ab419807ad98bf1fba17bff22 #@#
+#@# GENERATED FILE: DO NOT MODIFY 804ce039a5f1c0b8906c27d43e1a37891495a629 #@#
 {
   "config" : {
     "deps" : [ ],
@@ -17,7 +17,6 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
-      "//src/com/facebook/buck/util/environment:env-filter",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

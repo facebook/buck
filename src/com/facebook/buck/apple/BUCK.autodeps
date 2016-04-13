@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0ec9c75c15bffedf6b61d41816a0d312d781bf26 #@#
+#@# GENERATED FILE: DO NOT MODIFY d467b8afff4fa825f9cc872cfc1aba9e4e0490b8 #@#
 {
   "generators" : {
     "deps" : [
@@ -79,6 +79,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",

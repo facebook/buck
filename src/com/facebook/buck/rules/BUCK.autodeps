@@ -1,10 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY f3f8f2807123c77dbc5371fb43bc225e69472f36 #@#
+#@# GENERATED FILE: DO NOT MODIFY d7e3755cd40617c91e3040bd3bba553098ab6ef8 #@#
 {
   "action_graph_cache" : {
     "deps" : [
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules:rule_key",
-      "//src/com/facebook/buck/rules/keys:keys",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [

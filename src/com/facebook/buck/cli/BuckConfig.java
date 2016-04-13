@@ -41,6 +41,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.Beta;
@@ -136,6 +137,7 @@ public class BuckConfig {
   private final Platform platform;
 
   private final ImmutableMap<String, String> environment;
+  private final ImmutableMap<String, String> filteredEnvironment;
 
   public BuckConfig(
       Config config,
@@ -154,6 +156,8 @@ public class BuckConfig {
 
     this.platform = platform;
     this.environment = environment;
+    this.filteredEnvironment = ImmutableMap.copyOf(
+        Maps.filterKeys(environment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
   }
 
   /**
@@ -650,6 +654,10 @@ public class BuckConfig {
 
   public ImmutableMap<String, String> getEnvironment() {
     return environment;
+  }
+
+  public ImmutableMap<String, String> getFilteredEnvironment() {
+    return filteredEnvironment;
   }
 
   public String[] getEnv(String propertyName, String separator) {

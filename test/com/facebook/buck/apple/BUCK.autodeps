@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY dc1d58c44875c2771567edfe5094573235194fae #@#
+#@# GENERATED FILE: DO NOT MODIFY c6c441c720436e1b4aebaa65441be6e80f7d4eb2 #@#
 {
   "apple" : {
     "deps" : [
@@ -61,7 +61,9 @@
     "deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
