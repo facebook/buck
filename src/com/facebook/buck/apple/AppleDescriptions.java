@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
 import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -656,7 +655,6 @@ public class AppleDescriptions {
             Sets.difference(
                 flavors,
                 ImmutableSet.of(
-                    ReactNativeFlavors.DO_NOT_BUNDLE,
                     AppleDescriptions.FRAMEWORK_FLAVOR,
                     AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
