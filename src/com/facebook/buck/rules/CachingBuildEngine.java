@@ -1088,6 +1088,7 @@ public class CachingBuildEngine implements BuildEngine {
     CacheResult cacheResult =
         buildInfoRecorder.fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
+      LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
       return cacheResult;
     }
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
