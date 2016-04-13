@@ -38,6 +38,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents configuration specific to the {@link ArtifactCache}s.
@@ -56,6 +57,9 @@ public class ArtifactCacheBuckConfig {
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
   private static final String HTTP_MAX_STORE_SIZE = "http_max_store_size";
+  private static final String HTTP_THREAD_POOL_SIZE = "http_thread_pool_size";
+  private static final String HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS =
+      "http_thread_pool_keep_alive_duration_millis";
   private static final ImmutableSet<String> HTTP_CACHE_DESCRIPTION_FIELDS = ImmutableSet.of(
       HTTP_URL_FIELD_NAME,
       HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME,
@@ -84,6 +88,9 @@ public class ArtifactCacheBuckConfig {
   private static final String LOAD_BALANCING_TYPE = "load_balancing_type";
   private static final LoadBalancingType DEFAULT_LOAD_BALANCING_TYPE =
       LoadBalancingType.SINGLE_SERVER;
+  private static final long DEFAULT_HTTP_THREAD_POOL_SIZE = 200;
+  private static final long DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS =
+      TimeUnit.MINUTES.toMillis(1);
 
   private static final String TWO_LEVEL_CACHING_ENABLED_FIELD_NAME = "two_level_cache_enabled";
   // Old name for "two_level_cache_minimum_size", remove eventually.
@@ -199,6 +206,22 @@ public class ArtifactCacheBuckConfig {
       result.add(obtainEntryForName(Optional.of(cacheName)));
     }
     return result.build();
+  }
+
+  // It's important that this number is greater than the `-j` parallelism,
+  // as if it's too small, we'll overflow the reusable connection pool and
+  // start spamming new connections.  While this isn't the best location,
+  // the other current option is setting this wherever we construct a `Build`
+  // object and have access to the `-j` argument.  However, since that is
+  // created in several places leave it here for now.
+  public long getThreadPoolSize() {
+    return buckConfig.getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_SIZE)
+        .or(DEFAULT_HTTP_THREAD_POOL_SIZE);
+  }
+
+  public long getThreadPoolKeepAliveDurationMillis() {
+    return buckConfig.getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS)
+        .or(DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS);
   }
 
   public boolean getTwoLevelCachingEnabled() {
