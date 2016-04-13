@@ -20,6 +20,7 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
@@ -32,6 +33,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
+import org.xml.sax.SAXException;
+
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -40,8 +43,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Utility class to discover the location of SDKs contained inside an Xcode
@@ -190,7 +196,10 @@ public class AppleSdkDiscovery {
       NSDictionary sdkSettings;
       try {
         sdkSettings = (NSDictionary) PropertyListParser.parse(bufferedSdkSettingsPlist);
-      } catch (Exception e) {
+      } catch (PropertyListFormatException | ParseException | SAXException e) {
+        LOG.error(e, "Malformatted SDKSettings.plist. Skipping SDK path %s.", sdkDir);
+        return false;
+      } catch (ParserConfigurationException e) {
         throw new IOException(e);
       }
       String name = sdkSettings.objectForKey("CanonicalName").toString();
