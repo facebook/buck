@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -39,13 +40,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BuildSimulatorTest {
-
   private static final BuildTarget ROOT_NODE =
       BuildTargetFactory.newInstance("//root/target/node:target");
   private static final int NUMBER_OF_THREADS = 42;
   private static final long DEFAULT_MILLIS = 21;
   private static final int WIDE_GRAPH_LEAF_NODES_COUNT = 100;
   private static final BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+
 
   @Test
   public void testOneNodeActionGraph() throws IOException {
@@ -55,13 +56,9 @@ public class BuildSimulatorTest {
         new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
     ActionGraphAndResolver result =
         Preconditions.checkNotNull(transformer.apply(oneNodeGraph));
-    BuildSimulator sim = new BuildSimulator(
-        times,
-        result.getActionGraph(),
-        result.getResolver(),
-        NUMBER_OF_THREADS);
+    BuildSimulator sim = newBuildSimulator(times, result);
     SimulateReport report = sim.simulateBuild(
-        System.currentTimeMillis(),
+        0,
         ImmutableList.of(ROOT_NODE));
     Assert.assertEquals(1, report.getRunReports().size());
     SingleRunReport runReport = report.getRunReports().get(0);
@@ -77,17 +74,31 @@ public class BuildSimulatorTest {
         new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
     ActionGraphAndResolver result =
         Preconditions.checkNotNull(transformer.apply(oneNodeGraph));
-    BuildSimulator sim = new BuildSimulator(
-        times,
-        result.getActionGraph(),
-        result.getResolver(),
-        NUMBER_OF_THREADS);
+    BuildSimulator sim = newBuildSimulator(times, result);
     SimulateReport report = sim.simulateBuild(
-        System.currentTimeMillis(),
+        0,
         ImmutableList.of(ROOT_NODE));
     Assert.assertEquals(
         times.getTimeAggregates().size(),
         report.getRunReports().size());
+  }
+
+  private static BuildSimulator newBuildSimulator(
+      SimulateTimes times,
+      ActionGraphAndResolver result,
+      int numberThreads) {
+    BuckEventBus mockBus = EasyMock.createNiceMock(BuckEventBus.class);
+    return new BuildSimulator(
+        mockBus,
+        times,
+        result.getActionGraph(),
+        result.getResolver(),
+        numberThreads);
+  }
+
+  private static BuildSimulator newBuildSimulator(
+      SimulateTimes times, ActionGraphAndResolver result) {
+    return newBuildSimulator(times, result, NUMBER_OF_THREADS);
   }
 
   @Test
@@ -171,13 +182,9 @@ public class BuildSimulatorTest {
         new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
     ActionGraphAndResolver result =
         Preconditions.checkNotNull(transformer.apply(targetGraph));
-    BuildSimulator sim = new BuildSimulator(
-        times,
-        result.getActionGraph(),
-        result.getResolver(),
-        numberThreads);
+    BuildSimulator sim = newBuildSimulator(times, result, numberThreads);
     SimulateReport report = sim.simulateBuild(
-        System.currentTimeMillis(),
+        0,
         ImmutableList.of(ROOT_NODE));
     Assert.assertEquals(1, report.getRunReports().size());
     SingleRunReport runReport = report.getRunReports().get(0);

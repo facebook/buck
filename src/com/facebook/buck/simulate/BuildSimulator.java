@@ -13,9 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.simulate;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
@@ -34,7 +34,6 @@ import com.google.common.collect.Queues;
 
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Queue;
 
 public class BuildSimulator {
@@ -42,12 +41,15 @@ public class BuildSimulator {
   private final ActionGraph actionGraph;
   private final BuildRuleResolver resolver;
   private final int numberOfThreads;
+  private final BuckEventBus eventBus;
 
   public BuildSimulator(
+      BuckEventBus eventBus,
       SimulateTimes times,
       ActionGraph actionGraph,
       BuildRuleResolver resolver,
       int numberOfThreads) {
+    this.eventBus = eventBus;
     this.times = times;
     this.actionGraph = actionGraph;
     this.resolver = resolver;
@@ -90,31 +92,31 @@ public class BuildSimulator {
 
       // Run the simulation.
       simulateReport.addRunReports(
-          runSimulation(report, reverseDependencies, leafNodes, timeAggregate));
+          runSimulation(currentTimeMillis, report, reverseDependencies, leafNodes, timeAggregate));
     }
 
     return simulateReport.build();
   }
 
   private SingleRunReport runSimulation(
+      long currentMillis,
       SingleRunReport.Builder report,
       Map<BuildTarget, NodeState> reverseDependencies,
       Queue<BuildTarget> buildableNodes,
       String timeAggregate) {
 
     // Start simulation.
-    long simulationCurrentMillis = 0;
     int nodesBuilt = 0;
     int targetsThatUsedTheFallbackTimeMillis = 0;
-    PriorityQueue<RunningNode> targetsRunning = new PriorityQueue<>();
+    FakeThreadPool threadPool = new FakeThreadPool(numberOfThreads);
     while (nodesBuilt < reverseDependencies.size()) {
 
       // 1. Remove BuildTargets that are finished.
-      while (!targetsRunning.isEmpty() &&
-          targetsRunning.peek().getExpectedFinishMillis() <= simulationCurrentMillis) {
-        BuildTarget target = targetsRunning.remove().getTarget();
+      for (SimulationNode node : threadPool.popFinishedNodes(currentMillis)) {
+        SimulateEvent.Finished finished = new SimulateEvent.Finished(node, currentMillis);
+        eventBus.post(finished);
         ++nodesBuilt;
-        NodeState nodeState = Preconditions.checkNotNull(reverseDependencies.get(target));
+        NodeState nodeState = Preconditions.checkNotNull(reverseDependencies.get(node.getTarget()));
         for (BuildTarget dependant : nodeState.getDependantNodes()) {
           NodeState dependantState = Preconditions.checkNotNull(reverseDependencies.get(dependant));
           dependantState.decrementRefCount();
@@ -125,12 +127,13 @@ public class BuildSimulator {
       }
 
       // 2. Re-enqueue BuildTargets that can now be ran.
-      while (targetsRunning.size() < numberOfThreads &&
-          buildableNodes.size() > 0) {
+      while (threadPool.hasAvailableThreads() && buildableNodes.size() > 0) {
         BuildTarget target = buildableNodes.remove();
-        long expectedFinishMillis = simulationCurrentMillis +
+        long expectedFinishMillis = currentMillis +
             times.getMillisForTarget(target.toString(), timeAggregate);
-        targetsRunning.add(new RunningNode(expectedFinishMillis, target));
+        SimulationNode node = threadPool.runTarget(expectedFinishMillis, target);
+        SimulateEvent.Started started = new SimulateEvent.Started(node, currentMillis);
+        eventBus.post(started);
 
         if (!times.hasMillisForTarget(target.toString(), timeAggregate)) {
           ++targetsThatUsedTheFallbackTimeMillis;
@@ -138,13 +141,13 @@ public class BuildSimulator {
       }
 
       // 3. Compute the next cycle time.
-      if (!targetsRunning.isEmpty()) {
-        simulationCurrentMillis = targetsRunning.peek().getExpectedFinishMillis();
+      if (threadPool.hasTargetsRunning()) {
+        currentMillis = threadPool.getNextFinishingTargetMillis();
       }
     }
 
     report.setUsedActionGraphNodes(nodesBuilt)
-        .setBuildDurationMillis(simulationCurrentMillis)
+        .setBuildDurationMillis(currentMillis)
         .setActionGraphNodesWithoutSimulateTime(targetsThatUsedTheFallbackTimeMillis);
     return report.build();
   }
@@ -226,13 +229,15 @@ public class BuildSimulator {
     }
   }
 
-  private static class RunningNode implements Comparable<RunningNode> {
+  public static class SimulationNode implements Comparable<SimulationNode> {
     private final long expectedFinishMillis;
     private final BuildTarget target;
+    private final int threadId;
 
-    public RunningNode(long expectedFinishMillis, BuildTarget target) {
+    public SimulationNode(long expectedFinishMillis, BuildTarget target, int threadId) {
       this.expectedFinishMillis = expectedFinishMillis;
       this.target = target;
+      this.threadId = threadId;
     }
 
     public long getExpectedFinishMillis() {
@@ -244,12 +249,76 @@ public class BuildSimulator {
     }
 
     @Override
-    public int compareTo(RunningNode o) {
+    public int compareTo(SimulationNode o) {
       if (this == o) {
         return 0;
       }
 
       return (int) (this.expectedFinishMillis - o.expectedFinishMillis);
+    }
+
+    public int getThreadId() {
+      return threadId;
+    }
+  }
+
+  private static class FakeThreadPool {
+    private final SimulationNode[] runningNodes;
+    private int runningNodesCount;
+
+    public FakeThreadPool(int numberOfThreads) {
+      this.runningNodes = new SimulationNode[numberOfThreads];
+      this.runningNodesCount = 0;
+    }
+
+    public List<SimulationNode> popFinishedNodes(long simulationCurrentMillis) {
+      List<SimulationNode> finishedNodes = Lists.newArrayList();
+      for (int i = 0; i < runningNodes.length; ++i) {
+        SimulationNode node = runningNodes[i];
+        if (node == null) {
+          continue;
+        }
+
+        if (node.getExpectedFinishMillis() <= simulationCurrentMillis) {
+          runningNodes[i] = null;
+          --runningNodesCount;
+          finishedNodes.add(node);
+        }
+      }
+
+      return finishedNodes;
+    }
+
+    public boolean hasAvailableThreads() {
+      return runningNodesCount < runningNodes.length;
+    }
+
+    public SimulationNode runTarget(long expectedFinishMillis, BuildTarget target) {
+      for (int i = 0; i < runningNodes.length; ++i) {
+        if (runningNodes[i] == null) {
+          SimulationNode node = new SimulationNode(expectedFinishMillis, target, i);
+          runningNodes[i] = node;
+          ++runningNodesCount;
+          return node;
+        }
+      }
+
+      throw new IllegalStateException("Tried to schedule a task without any available threads.");
+    }
+
+    public boolean hasTargetsRunning() {
+      return runningNodesCount > 0;
+    }
+
+    public long getNextFinishingTargetMillis() {
+      long finishMillis = Long.MAX_VALUE;
+      for (int i = 0; i < runningNodes.length; ++i) {
+        if (runningNodes[i] != null) {
+          finishMillis = Math.min(finishMillis, runningNodes[i].getExpectedFinishMillis());
+        }
+      }
+
+      return finishMillis;
     }
   }
 }
