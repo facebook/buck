@@ -391,7 +391,7 @@ public class NewNativeTargetProjectMutatorTest {
     String shellScript = phase.getShellScript();
     assertThat(
         shellScript,
-        startsWith("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\n" +
+        startsWith("BASE_DIR=${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\n" +
             "JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js\n" +
             "SOURCE_MAP=${TEMP_DIR}/rn_source_map/Apps/Foo/FooBundle.js.map\n"));
     assertThat(shellScript, containsString("if false"));
