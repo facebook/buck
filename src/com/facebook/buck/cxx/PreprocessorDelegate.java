@@ -122,6 +122,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     builder.setReflectively("preprocessor", preprocessor);
     builder.setReflectively("includes", includes);
     builder.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
+    builder.setReflectively("headerVerification", headerVerification);
     preprocessorFlags.appendToRuleKey(builder, sanitizer);
     return builder;
   }

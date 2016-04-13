@@ -254,7 +254,7 @@ public class CxxPreprocessAndCompile
         sanitizer,
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getHeaderVerification() :
-            HeaderVerification.NONE,
+            HeaderVerification.of(HeaderVerification.Mode.IGNORE),
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getPreprocessorExtraLineProcessor() :
             Optional.<Function<String, Iterable<String>>>absent(),
