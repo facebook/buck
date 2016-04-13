@@ -225,6 +225,9 @@ public class CxxPreprocessAndCompile
               .add(
                   "-include-pch",
                   getResolver().getAbsolutePath(precompiledHeader.get().getSourcePath()).toString())
+              // Force clang to accept pch even if mtime of its input changes, since buck tracks
+              // input contents, this should be safe.
+              .add("-Wp,-fno-validate-pch")
               .build();
         }
       } else {

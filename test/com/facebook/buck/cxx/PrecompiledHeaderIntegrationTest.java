@@ -135,6 +135,33 @@ public class PrecompiledHeaderIntegrationTest {
   }
 
   @Test
+  public void touchingPchReferencedHeaderShouldNotCauseClangToRejectPch() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    workspace.runBuckBuild("//:some_binary#default").assertSuccess();
+    workspace.resetBuildLogFile();
+    // Change this file (not in the pch) to trigger recompile.
+    workspace.writeContentsToPath(
+        "int lib_func() { return 0; }",
+        "lib.c");
+    // Touch this file that contributes to the PCH without changing its contents.
+    workspace.writeContentsToPath(
+        workspace.getFileContents("referenced_by_prefix_header_from_dependency.h"),
+        "referenced_by_prefix_header_from_dependency.h");
+    workspace.runBuckBuild("//:some_binary#default").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertThat(
+        "PCH should not change as no pch input file contents has changed.",
+        buildLog,
+        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.MATCHING_RULE_KEY));
+    assertThat(
+        buildLog,
+        reportedTargetSuccessType(
+            workspace.newBuildTarget("//:some_library#default,static"),
+            BuildRuleSuccessType.BUILT_LOCALLY));
+  }
+
+
+  @Test
   public void changingCodeUsingPchWhenPchIsCachedButNotBuiltShouldBuildPch() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     workspace.enableDirCache();
