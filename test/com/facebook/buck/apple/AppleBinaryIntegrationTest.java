@@ -369,7 +369,7 @@ public class AppleBinaryIntegrationTest {
       Path strippedPath = BuildTargets.getGenPath(
           target
               .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
-              .withAppendedFlavors(StripStyle.ALL_SYMBOLS.getFlavor(), CxxStrip.RULE_FLAVOR),
+              .withAppendedFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(), CxxStrip.RULE_FLAVOR),
           "%s");
       MoreAsserts.assertContentsEqual(
           workspace.getPath(Paths.get("first").resolve(strippedPath)),

@@ -695,13 +695,7 @@ public class AppleDescriptions {
     }
 
     if (!StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
-      // append strip style depending on the type of the binary target
-      if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription ||
-          binaryTargetNode.getDescription() instanceof AppleTestDescription) {
-        buildTarget = buildTarget.withAppendedFlavor(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
-      } else {
-        buildTarget = buildTarget.withAppendedFlavor(StripStyle.ALL_SYMBOLS.getFlavor());
-      }
+      buildTarget = buildTarget.withAppendedFlavor(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
     }
 
     return resolver.requireRule(buildTarget);

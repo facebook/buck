@@ -204,7 +204,7 @@ public class AppleBinaryDescription implements
             CxxStrip.RULE_FLAVOR,
             StripStyle.FLAVOR_DOMAIN
                 .getFlavor(params.getBuildTarget().getFlavors())
-                .or(StripStyle.ALL_SYMBOLS.getFlavor()));
+                .or(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
     BuildRule strippedBinaryRule = createBinary(
         targetGraph,
         params.copyWithBuildTarget(strippedBinaryBuildTarget),
