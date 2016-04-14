@@ -575,10 +575,19 @@ public class BuckEventsConsumer implements
 
     @Override
     public void consumeInstallFinished(long timestamp, final String packageName) {
-
         if (BuckInstallDebugAction.shouldDebug()) {
-            AndroidDebugger.attachDebugger(packageName, mProject);
-            BuckInstallDebugAction.setDebug(false);
+            ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        AndroidDebugger.init();
+                        AndroidDebugger.attachDebugger(packageName, mProject);
+                        BuckInstallDebugAction.setDebug(false);
+                    } catch (Exception e) {
+                        consumeConsoleEvent(e.toString());
+                    }
+                }
+            });
         }
     }
 }

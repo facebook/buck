@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.plugin.config;
 
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -30,15 +31,15 @@ public final class BuckExecutableDetector {
   private BuckExecutableDetector() {
   }
 
-  public static String getBuckExecutable() {
+  public static String getBuckExecutable() throws HumanReadableException {
     return getExecutable(BUCK_EXECUTABLE);
   }
 
-  public static String getAdbExecutable() {
+  public static String getAdbExecutable() throws HumanReadableException {
     return getExecutable(ADB_EXECUTABLE);
   }
 
-  public static String getExecutable(Path suggestedExecutable) {
+  public static String getExecutable(Path suggestedExecutable) throws HumanReadableException {
     return EXECUTABLE_FINDER.getExecutable(
         suggestedExecutable,
         ImmutableMap.copyOf(System.getenv())).toString();
