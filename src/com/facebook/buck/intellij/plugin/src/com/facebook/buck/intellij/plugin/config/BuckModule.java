@@ -50,7 +50,6 @@ public final class BuckModule implements ProjectComponent {
 
     public BuckModule(final Project project) {
         mProject = project;
-        AndroidDebugger.init();
         mEventHandler = new BuckEventsHandler(
             new BuckEventsConsumerFactory(mProject),
             new Runnable() {
@@ -107,6 +106,7 @@ public final class BuckModule implements ProjectComponent {
     @Override
     public void projectClosed() {
         disconnect();
+        AndroidDebugger.disconnect();
     }
 
     public boolean isConnected() {
