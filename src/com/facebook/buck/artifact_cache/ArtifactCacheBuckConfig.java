@@ -69,6 +69,7 @@ public class ArtifactCacheBuckConfig {
       HTTP_WRITE_HEADERS_FIELD_NAME,
       HTTP_CACHE_ERROR_MESSAGE_NAME,
       HTTP_MAX_STORE_SIZE);
+  private static final String HTTP_MAX_FETCH_RETRIES = "http_max_fetch_retries";
 
   // List of names of cache-* sections that contain the fields above. This is used to emulate
   // dicts, essentially.
@@ -81,6 +82,7 @@ public class ArtifactCacheBuckConfig {
   private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
   private static final String DEFAULT_HTTP_CACHE_ERROR_MESSAGE =
       "{cache_name} cache encountered an error: {error_message}";
+  private static final int DEFAULT_HTTP_MAX_FETCH_RETRIES = 2;
 
   private static final String SERVED_CACHE_ENABLED_FIELD_NAME = "serve_local_cache";
   private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.readonly.name();
@@ -133,6 +135,11 @@ public class ArtifactCacheBuckConfig {
     return Integer.valueOf(
         buckConfig.getValue(CACHE_SECTION_NAME, "http_writer_shutdown_timeout_seconds")
             .or(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
+  }
+
+  public int getMaxFetchRetries() {
+    return buckConfig.getInteger(CACHE_SECTION_NAME, HTTP_MAX_FETCH_RETRIES)
+          .or(DEFAULT_HTTP_MAX_FETCH_RETRIES);
   }
 
   public boolean hasAtLeastOneWriteableCache() {

@@ -597,6 +597,10 @@ public class BuckConfig {
     return config.getValue(sectionName, propertyName);
   }
 
+  public Optional<Integer> getInteger(String sectionName, String propertyName) {
+    return config.getInteger(sectionName, propertyName);
+  }
+
   public Optional<Long> getLong(String sectionName, String propertyName) {
     return config.getLong(sectionName, propertyName);
   }

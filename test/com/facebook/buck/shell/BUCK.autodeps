@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ecf4b5f9dedeaf6a364b8a6850033c47e610e918 #@#
+#@# GENERATED FILE: DO NOT MODIFY 34ac398afc0007a5b06433349e57237b75bc6c14 #@#
 {
   "shell" : {
     "deps" : [
@@ -46,7 +46,8 @@
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jsr:jsr305",
-      "//third-party/java/junit:junit"
+      "//third-party/java/junit:junit",
+      "//third-party/java/nailgun:nailgun"
     ],
     "exported_deps" : [ ]
   },

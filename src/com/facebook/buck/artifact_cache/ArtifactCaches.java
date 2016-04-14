@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
@@ -283,7 +284,11 @@ public class ArtifactCaches {
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(
             new DefaultClock(),
             buckEventBus);
-        fetchService = new LoadBalancedService(clientSideSlb, fetchClient, buckEventBus);
+        fetchService =
+            new RetryingHttpService(
+                buckEventBus,
+                new LoadBalancedService(clientSideSlb, fetchClient, buckEventBus),
+                config.getMaxFetchRetries());
         storeService = new LoadBalancedService(clientSideSlb, storeClient, buckEventBus);
         break;
 
