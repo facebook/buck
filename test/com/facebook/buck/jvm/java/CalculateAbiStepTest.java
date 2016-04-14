@@ -71,7 +71,7 @@ public class CalculateAbiStepTest {
     // investigate why the value is different.
     // NOTE: If this starts failing on CI for no obvious reason it's possible that the offset
     // calculation in ZipConstants.getFakeTime() does not account for DST correctly.
-    assertEquals("8678c53b9ba104fac9626416959ff50e6fafc269", seenHash);
+    assertEquals("51787f5a1c004c81fb7fc893227787e0f266def1", seenHash);
   }
 
   @Test

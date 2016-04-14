@@ -540,6 +540,64 @@ public class MirrorTest {
         "RUNTIME");
   }
 
+  @Test
+  public void preservesAnnotationPrimitiveDefaultValues() throws IOException {
+    Path jar = buildAnnotationJar();
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+
+    MethodNode method = stubbed.findMethod("primitiveValue");
+    assertEquals(0, method.annotationDefault);
+  }
+
+  @Test
+  public void preservesAnnotationArrayDefaultValues() throws IOException {
+    Path jar = buildAnnotationJar();
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+
+    MethodNode method = stubbed.findMethod("stringArrayValue");
+    assertEquals(Lists.newArrayList("Hello"), method.annotationDefault);
+  }
+
+  @Test
+  public void preservesAnnotationAnnotationDefaultValues() throws IOException {
+    Path jar = buildAnnotationJar();
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+
+    MethodNode method = stubbed.findMethod("annotationValue");
+    AnnotationNode annotation = (AnnotationNode) method.annotationDefault;
+    assertEquals("Ljava/lang/annotation/Retention;", annotation.desc);
+    assertEquals(2, annotation.values.size());
+    assertEquals("value", annotation.values.get(0));
+    assertEnumAnnotationValue(
+        annotation.values,
+        1,
+        "Ljava/lang/annotation/RetentionPolicy;",
+        "SOURCE");
+  }
+
+  @Test
+  public void preservesAnnotationEnumDefaultValues() throws IOException {
+    Path jar = buildAnnotationJar();
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+
+    MethodNode method = stubbed.findMethod("enumValue");
+    String[] enumValue = (String[]) method.annotationDefault;
+    assertEquals("Ljava/lang/annotation/RetentionPolicy;", enumValue[0]);
+    assertEquals("CLASS", enumValue[1]);
+  }
+
   private void assertEnumAnnotationValue(
       List<Object> annotationValueList,
       int index,
@@ -836,9 +894,10 @@ public class MirrorTest {
             "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
             "public @interface Foo {",
             "  int primitiveValue() default 0;",
-            "  String[] stringArrayValue() default {};",
+            "  String[] stringArrayValue() default {\"Hello\"};",
             "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
             "  Retention[] annotationArrayValue() default {};",
+            "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
             "}"
             )));
   }

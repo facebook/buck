@@ -26,6 +26,8 @@ import org.objectweb.asm.Opcodes;
 
 import java.util.SortedSet;
 
+import javax.annotation.Nullable;
+
 class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
   private final String name;
   private final String desc;
@@ -34,6 +36,7 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
   private final String[] exceptions;
   private final SortedSet<AnnotationMirror> annotations;
   private final AnnotationMirror[] parameterAnnotations;
+  @Nullable private AnnotationDefaultValueMirror annotationDefault;
   private final String key;
 
   public MethodMirror(int access, String name, String desc, String signature, String[] exceptions) {
@@ -120,6 +123,12 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
   }
 
   @Override
+  public AnnotationVisitor visitAnnotationDefault() {
+    annotationDefault = new AnnotationDefaultValueMirror();
+    return annotationDefault;
+  }
+
+  @Override
   public int compareTo(MethodMirror o) {
     if (this == o) {
       return 0;
@@ -140,6 +149,11 @@ class MethodMirror extends MethodVisitor implements Comparable<MethodMirror> {
       }
       annotation.appendTo(method, i);
     }
+
+    if (annotationDefault != null) {
+      annotationDefault.appendTo(method);
+    }
+
     method.visitEnd();
   }
 }
