@@ -101,7 +101,7 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =
         "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT + "\n" +
-        "OK   //:rule_without_output FETCHED_FROM_CACHE\n";
+        "OK   //:rule_without_output BUILT_LOCALLY\n";
     assertThat(result3.getStderr(), containsString(expectedReport3));
   }
 

@@ -47,4 +47,10 @@ public class NoopBuildRule extends AbstractBuildRule {
     return null;
   }
 
+  // Avoid a round-trip to the cache, as noop rules have no output.
+  @Override
+  public final boolean isCacheable() {
+    return false;
+  }
+
 }

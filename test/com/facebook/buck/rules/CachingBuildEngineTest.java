@@ -861,7 +861,7 @@ public class CachingBuildEngineTest {
               .build();
 
       BuildRule rule =
-          new NoopBuildRule(
+          new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder("//:rule")
                   .setProjectFilesystem(filesystem)
                   .build(),
@@ -2425,7 +2425,7 @@ public class CachingBuildEngineTest {
 
       // Create a noop simple rule.
       BuildRule rule =
-          new NoopBuildRule(
+          new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
                   .setProjectFilesystem(filesystem)
                   .build(),
@@ -2475,7 +2475,7 @@ public class CachingBuildEngineTest {
 
       // Create a simple rule and set it up so that it has a matching rule key.
       BuildRule rule =
-          new NoopBuildRule(
+          new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
                   .setProjectFilesystem(filesystem)
                   .build(),
@@ -2533,13 +2533,13 @@ public class CachingBuildEngineTest {
 
       // Create a simple rule and dep.
       BuildRule dep =
-          new NoopBuildRule(
+          new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep"))
                   .setProjectFilesystem(filesystem)
                   .build(),
               pathResolver);
       BuildRule rule =
-          new NoopBuildRule(
+          new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
                   .setDeclaredDeps(ImmutableSortedSet.of(dep))
                   .setProjectFilesystem(filesystem)
@@ -2971,6 +2971,28 @@ public class CachingBuildEngineTest {
         new ListeningSemaphore(Integer.MAX_VALUE),
         /* defaultPermits */ 1,
         service);
+  }
+
+  private static class EmptyBuildRule extends AbstractBuildRule {
+
+    public EmptyBuildRule(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver) {
+      super(buildRuleParams, resolver);
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      return ImmutableList.of();
+    }
+
+    @Nullable
+    @Override
+    public Path getPathToOutput() {
+      return null;
+    }
+
   }
 
 }
