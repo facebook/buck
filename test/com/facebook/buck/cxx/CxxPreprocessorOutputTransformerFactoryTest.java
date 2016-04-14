@@ -28,7 +28,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
@@ -66,22 +65,20 @@ public class CxxPreprocessorOutputTransformerFactoryTest {
 
     // Fixup line marker lines properly.
     assertThat(
-        ImmutableList.of(
-            String.format("# 12 \"%s\"", Escaper.escapePathForCIncludeString(finalPath))),
+        String.format("# 12 \"%s\"", Escaper.escapePathForCIncludeString(finalPath)),
         equalTo(transformer.transformLine(String.format("# 12 \"%s\"", original))));
     assertThat(
-        ImmutableList.of(
-            String.format("# 12 \"%s\" 2 1", Escaper.escapePathForCIncludeString(finalPath))),
+        String.format("# 12 \"%s\" 2 1", Escaper.escapePathForCIncludeString(finalPath)),
         equalTo(transformer.transformLine(String.format("# 12 \"%s\" 2 1", original))));
 
     // test.h isn't in the replacement map, so shouldn't be replaced.
     assertThat(
-        ImmutableList.of("# 4 \"test.h\""),
+        "# 4 \"test.h\"",
         equalTo(transformer.transformLine("# 4 \"test.h\"")));
 
     // Don't modify non-line-marker lines.
     assertThat(
-        ImmutableList.of("int main() {"),
+        "int main() {",
         equalTo(transformer.transformLine("int main() {")));
   }
 }

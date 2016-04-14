@@ -39,7 +39,7 @@ public abstract class LineProcessorRunnable extends ManagedRunnable {
     this.outputStream = Preconditions.checkNotNull(outputStream);
   }
 
-  protected abstract Iterable<String> process(String line);
+  protected abstract String process(String line);
 
   @Override
   protected void run() throws Exception {
@@ -47,11 +47,8 @@ public abstract class LineProcessorRunnable extends ManagedRunnable {
          BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       String line;
       while ((line = reader.readLine()) != null) {
-        Iterable<String> processedLines = process(line);
-        for (String processedLine : processedLines) {
-          writer.write(processedLine);
-          writer.newLine();
-        }
+        writer.write(process(line));
+        writer.newLine();
       }
     }
   }

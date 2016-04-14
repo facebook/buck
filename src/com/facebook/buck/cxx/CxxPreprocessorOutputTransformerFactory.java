@@ -21,7 +21,6 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.InputStream;
@@ -54,7 +53,7 @@ class CxxPreprocessorOutputTransformerFactory {
         inputStream,
         outputStream) {
       @Override
-      public Iterable<String> process(String line) {
+      public String process(String line) {
         return transformLine(line);
       }
     };
@@ -71,11 +70,11 @@ class CxxPreprocessorOutputTransformerFactory {
       Pattern.compile("^# (?<num>\\d+) \"(?<path>[^\"]+)\"(?<rest>.*)?$");
 
   @VisibleForTesting
-  Iterable<String> transformLine(String line) {
+  String transformLine(String line) {
     if (line.startsWith("# ")) {
-      return ImmutableList.of(transformPreprocessorLine(line));
+      return transformPreprocessorLine(line);
     } else {
-      return ImmutableList.of(line);
+      return line;
     }
   }
 

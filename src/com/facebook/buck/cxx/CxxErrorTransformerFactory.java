@@ -73,8 +73,8 @@ class CxxErrorTransformerFactory {
         inputStream,
         outputStream) {
       @Override
-      public Iterable<String> process(String line) {
-        return ImmutableList.of(transformLine(line));
+      public String process(String line) {
+        return transformLine(line);
       }
     };
   }
