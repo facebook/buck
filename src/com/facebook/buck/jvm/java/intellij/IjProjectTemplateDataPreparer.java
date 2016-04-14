@@ -515,7 +515,9 @@ public class IjProjectTemplateDataPreparer {
     @Override
     public IjSourceFolder apply(IjFolder input) {
       String packagePrefix;
-      if (androidFacet.isPresent() && androidFacet.get().getPackageName().isPresent()) {
+      if (input instanceof AndroidResourceFolder &&
+          androidFacet.isPresent() &&
+          androidFacet.get().getPackageName().isPresent()) {
         packagePrefix = androidFacet.get().getPackageName().get();
       } else {
         packagePrefix = getPackagePrefix(input);
