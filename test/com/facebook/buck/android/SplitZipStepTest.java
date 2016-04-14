@@ -141,9 +141,6 @@ public class SplitZipStepTest {
             ProguardTranslatorFactory.createForTest(Optional.<Map<String, String>>absent()),
             Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(
-        "All non-.class files should be accepted.",
-        requiredInPrimaryZipPredicate.apply("apples.txt"));
-    assertTrue(
         "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
         requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableSortedSet.class"));
     assertTrue(

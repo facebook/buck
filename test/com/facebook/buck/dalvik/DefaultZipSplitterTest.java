@@ -99,7 +99,7 @@ public class DefaultZipSplitterTest {
     for (Path outputFile : outputToInputMap.keySet()) {
       ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(outputFile));
       for (String name : outputToInputMap.get(outputFile)) {
-        zipOut.putNextEntry(new ZipEntry(name));
+        zipOut.putNextEntry(new ZipEntry(name + ".class"));
         zipOut.write(fakeData);
       }
       zipOut.close();
@@ -284,19 +284,19 @@ public class DefaultZipSplitterTest {
         ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
         .execute();
-    assertTrue(nthSecondaryZipContains(1, "secondary/dex01/Canary.class"));
-    assertTrue(nthSecondaryZipContains(2, "secondary/dex02/Canary.class"));
-    assertTrue(nthSecondaryZipContains(3, "secondary/dex03/Canary.class"));
-    assertTrue(nthSecondaryZipContains(4, "secondary/dex04/Canary.class"));
+    assertTrue(nthSecondaryZipContains(1, "secondary/dex01/Canary"));
+    assertTrue(nthSecondaryZipContains(2, "secondary/dex02/Canary"));
+    assertTrue(nthSecondaryZipContains(3, "secondary/dex03/Canary"));
+    assertTrue(nthSecondaryZipContains(4, "secondary/dex04/Canary"));
   }
 
   private boolean primaryZipContains(String name) throws IOException {
-    return zipContains(outPrimary, name);
+    return zipContains(outPrimary, name + ".class");
   }
 
   private boolean nthSecondaryZipContains(int index, String name) throws IOException {
     String zipName = String.format(secondaryPattern, index);
-    return zipContains(tmpDir.getRoot().resolve(zipName), name);
+    return zipContains(tmpDir.getRoot().resolve(zipName), name + ".class");
   }
 
   private static boolean zipContains(Path file, String name) throws IOException {
