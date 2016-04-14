@@ -67,11 +67,6 @@ function _buck_completion_run() {
       ;;
 
     *)
-
-      if _buck_completion_try_long_arg "--version --help"; then
-        return 0
-      fi
-
       case "${words[1]}" in
         audit)      _buck_completion_try_audit      "$@";;
         build)      _buck_completion_try_build      "$@";;
