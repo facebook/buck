@@ -56,13 +56,13 @@ public class TargetGraphHashing {
    * returns a map of {@code (BuildTarget, HashCode)} pairs for all root
    * build targets and their dependencies.
    */
-  public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
+  public static ImmutableMap<TargetNode<?>, HashCode> hashTargetGraph(
       Cell rootCell,
       final TargetGraph targetGraph,
       FileHashLoader fileHashLoader,
-      Iterable<BuildTarget> roots) throws IOException {
+      Iterable<TargetNode<?>> roots) throws IOException {
     try {
-      Map<BuildTarget, HashCode> buildTargetHashes = new HashMap<>();
+      Map<TargetNode<?>, HashCode> buildTargetHashes = new HashMap<>();
       AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
               new GraphTraversable<TargetNode<?>>() {
@@ -71,14 +71,14 @@ public class TargetGraphHashing {
                   return targetGraph.getAll(node.getDeps()).iterator();
                 }
               });
-      for (TargetNode<?> node : traversal.traverse(targetGraph.getAll(roots))) {
-        if (buildTargetHashes.containsKey(node.getBuildTarget())) {
+      for (TargetNode<?> node : traversal.traverse(roots)) {
+        if (buildTargetHashes.containsKey(node)) {
           LOG.verbose("Already hashed node %s, not hashing again.", node);
           continue;
         }
         Hasher hasher = Hashing.sha1().newHasher();
         try {
-          hashNode(rootCell, fileHashLoader, hasher, buildTargetHashes, node);
+          hashNode(rootCell, fileHashLoader, targetGraph, hasher, buildTargetHashes, node);
         } catch (IOException e) {
           throw new HumanReadableException(
               e,
@@ -88,7 +88,7 @@ public class TargetGraphHashing {
         }
         HashCode result = hasher.hash();
         LOG.debug("Hash for target %s: %s", node.getBuildTarget(), result);
-        buildTargetHashes.put(node.getBuildTarget(), result);
+        buildTargetHashes.put(node, result);
       }
       return ImmutableMap.copyOf(buildTargetHashes);
     } catch (CycleException e) {
@@ -99,8 +99,9 @@ public class TargetGraphHashing {
   private static void hashNode(
       Cell rootCell,
       FileHashLoader fileHashLoader,
+      TargetGraph targetGraph,
       Hasher hasher,
-      Map<BuildTarget, HashCode> buildTargetHashes,
+      Map<TargetNode<?>, HashCode> buildTargetHashes,
       TargetNode<?> node) throws IOException {
     LOG.verbose("Hashing node %s", node);
     // Hash the node's build target and rules.
@@ -121,7 +122,7 @@ public class TargetGraphHashing {
     // We've already visited the dependencies (this is a depth-first traversal), so
     // hash each dependency's build target and that build target's own hash.
     for (BuildTarget dependency : node.getDeps()) {
-      HashCode dependencyHashCode = buildTargetHashes.get(dependency);
+      HashCode dependencyHashCode = buildTargetHashes.get(targetGraph.get(dependency));
       Preconditions.checkState(dependencyHashCode != null);
       LOG.verbose("Node %s: adding dependency %s (%s)", node, dependency, dependencyHashCode);
       StringHashing.hashStringAndLength(hasher, dependency.toString());
