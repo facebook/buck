@@ -1,9 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY ecf03c07dde939a56b6141cf40c1e3a61b11ad34 #@#
+#@# GENERATED FILE: DO NOT MODIFY eb690c9d18f70e79904899c7d725adb6055bd972 #@#
 {
   "args" : {
     "deps" : [
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],

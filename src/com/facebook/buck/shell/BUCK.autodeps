@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2f7ab94a26eb282e2f14e1e9843443a5c96c2c6c #@#
+#@# GENERATED FILE: DO NOT MODIFY f9e278b2b7efb8f513c32bb6e845733115e461f1 #@#
 {
   "rules" : {
     "deps" : [
@@ -62,7 +62,8 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/rules/macros:macros",
+      "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
@@ -82,6 +83,14 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/gson:gson",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "worker_tool" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rules",
       "//third-party/java/guava:guava"
     ]
   }
