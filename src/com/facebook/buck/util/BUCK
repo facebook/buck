@@ -1,9 +1,13 @@
 CONSTANT_SRCS = [
   'BuckConstant.java',
+  'AbstractSampleRate.java',
 ]
-java_library(
+java_immutables_library(
   name = 'constants',
   srcs = CONSTANT_SRCS,
+  immutable_types = [
+    'SampleRate',
+  ],
   tests = [
     '//test/com/facebook/buck/util:util',
   ],

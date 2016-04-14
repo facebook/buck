@@ -40,6 +40,7 @@ import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.SampleRate;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
@@ -574,19 +575,12 @@ public class BuckConfig {
     return getValue("log", "remote_log_url").transform(TO_URI);
   }
 
-  public Optional<Float> getRemoteLogSampleRate() {
+  public Optional<SampleRate> getRemoteLogSampleRate() {
     Optional<Float> sampleRate = config.getFloat("log", "remote_log_sample_rate");
     if (sampleRate.isPresent()) {
-      if (sampleRate.get() > 1.0f) {
-        throw new HumanReadableException(
-            ".buckconfig: remote_log_sample_rate should be less than or equal to 1.0.");
-      }
-      if (sampleRate.get() < 0.0f) {
-        throw new HumanReadableException(
-            ".buckconfig: remote_log_sample_rate should be greater than or equal to 0.");
-      }
+      return Optional.of(SampleRate.of(sampleRate.get()));
     }
-    return sampleRate;
+    return Optional.absent();
  }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {

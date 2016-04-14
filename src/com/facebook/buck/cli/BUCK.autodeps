@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 19c0483f779aa49f3998f52c218c69e96d45d171 #@#
+#@# GENERATED FILE: DO NOT MODIFY 467b15523cca081b6c867d7377f57a10663f56f0 #@#
 {
   "cli" : {
     "deps" : [
@@ -47,7 +47,6 @@
       "//src/com/facebook/buck/test:config",
       "//src/com/facebook/buck/test:report-format",
       "//src/com/facebook/buck/test/result/type:type",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
@@ -90,6 +89,7 @@
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
@@ -110,7 +110,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:rules",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network:network",
@@ -125,6 +124,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
