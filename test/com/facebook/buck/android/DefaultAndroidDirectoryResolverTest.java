@@ -15,6 +15,10 @@
  */
 package com.facebook.buck.android;
 
+import
+    static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_POST_R11_VERSION_FILENAME;
+import
+    static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_PRE_R11_VERSION_FILENAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -39,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class DefaultAndroidDirectoryResolverTest {
+
   @Rule
   public TemporaryPaths tmpDir = new TemporaryPaths();
 
@@ -63,8 +68,8 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
-  public void testFindAndroidNdkDir() throws IOException {
-    Path ndkDir = createTmpNdkVersions("ndk-dir", "r9d (64-bit)")[0];
+  public void testFindAndroidNdkDirWithOldFormat() throws IOException {
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
@@ -83,8 +88,32 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
-  public void testFindAndroidNdkDirInexactMatch() throws IOException {
-    Path ndkDir = createTmpNdkVersions("ndk-dir", "r9d-rc2 (64-bit)")[0];
+  public void testFindAndroidNdkDirWithNewFormat() throws IOException {
+    Path ndkDir = createTmpNdkVersions(
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir",
+        "Pkg.Desc = Android NDK\nPkg.Revision = 11.2.2725575")[0];
+
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "ndk.dir", Optional.of(ndkDir),
+            "ndk.repository", Optional.<Path>absent()));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver = new DefaultAndroidDirectoryResolver(
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Optional.<String>absent(),
+        Optional.of("11.2"),
+        propertyFinder);
+
+    assertEquals(Optional.of(ndkDir),
+        androidDirectoryResolver.findAndroidNdkDir());
+  }
+
+  @Test
+  public void testFindAndroidNdkDirInexactMatchWithOldFormat() throws IOException {
+    Path ndkDir = createTmpNdkVersions(
+        NDK_PRE_R11_VERSION_FILENAME,
+        "ndk-dir-r9d", "r9d-rc2 (64-bit)")[0];
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
@@ -98,13 +127,57 @@ public class DefaultAndroidDirectoryResolverTest {
             Optional.of("r9d"),
             propertyFinder);
 
+    assertEquals(
+        Optional.of(ndkDir),
+        androidDirectoryResolver.findAndroidNdkDir());
+  }
+
+  @Test
+  public void testFindAndroidNdkDirInexactMatchWithNewFormat() throws IOException {
+    Path ndkDir = createTmpNdkVersions(
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir-r11b", "Pkg.Revision = 11.1.32")[0];
+
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "ndk.dir", Optional.of(ndkDir),
+            "ndk.repository", Optional.<Path>absent()));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver = new DefaultAndroidDirectoryResolver(
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Optional.<String>absent(),
+        Optional.of("11.1"),
+        propertyFinder);
+
     assertEquals(Optional.of(ndkDir),
         androidDirectoryResolver.findAndroidNdkDir());
   }
 
   @Test
-  public void testFindAndroidNdkDirAbsent() throws IOException {
-    Path ndkDir = createTmpNdkVersions("ndk-dir", "r9e")[0];
+  public void testFindAndroidNdkDirAbsentWithOldFormat() throws IOException {
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9e")[0];
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "ndk.dir", Optional.of(ndkDir),
+            "ndk.repository", Optional.<Path>absent()));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
+            Optional.<String>absent(),
+            propertyFinder);
+
+    assertEquals(Optional.of(ndkDir),
+        androidDirectoryResolver.findAndroidNdkDir());
+  }
+
+  @Test
+  public void testFindAndroidNdkDirAbsentWithNewFormat() throws IOException {
+    Path ndkDir = createTmpNdkVersions(
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir",
+        "Pkg.Desc = Android NDK\nPkg.Revision = 11.2.2725575")[0];
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
             "ndk.dir", Optional.of(ndkDir),
@@ -144,7 +217,7 @@ public class DefaultAndroidDirectoryResolverTest {
 
   @Test
   public void testFindAndroidNdkDirThrowOnUnsupportedVersion() throws IOException {
-    Path ndkDir = createTmpNdkVersions("ndk-dir", "r9q")[0];
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
@@ -168,7 +241,7 @@ public class DefaultAndroidDirectoryResolverTest {
   public void testFindAndroidNdkDirScanThrowsOnFail() throws IOException {
     tmpDir.newFolder("ndk-dir-r9a");
     tmpDir.newFolder("ndk-dir-r9b");
-    createTmpNdkVersions("ndk-dir-r9c", "r9c");
+    createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9c", "r9c");
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
@@ -191,6 +264,7 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test
   public void testFindAndroidNdkDirScanTakesNewest() throws IOException {
     Path releaseDir = createTmpNdkVersions(
+        NDK_PRE_R11_VERSION_FILENAME,
         "ndk-dir-r9a", "r9a",
         "ndk-dir-r9b", "r9b (64-bit)",
         "ndk-dir-r9c", "r9c (64-bit)"
@@ -202,6 +276,22 @@ public class DefaultAndroidDirectoryResolverTest {
             "ndk.repository", Optional.of(tmpDir.getRoot())));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot()),
+            Optional.<String>absent(),
+            Optional.<String>absent(),
+            propertyFinder);
+
+    assertEquals(Optional.of(releaseDir),
+        androidDirectoryResolver.findAndroidNdkDir());
+
+    releaseDir = createTmpNdkVersions(
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir-r11c", "Pkg.Revision = 11.2.2725575",
+        "ndk-dir-r11b", "Pkg.Revision = 11.1.32"
+    )[0];
+
+    androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
@@ -243,6 +333,7 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test
   public void testFindAndroidNdkDirScanTakesVersion() throws IOException {
     Path expectedPath = createTmpNdkVersions(
+        NDK_PRE_R11_VERSION_FILENAME,
         "ndk-dir-r9a", "r9a",
         "ndk-dir-r9b", "r9b",
         "ndk-dir-r9c", "r9c"
@@ -267,6 +358,7 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test
   public void testFindAndroidNdkDirScanTakesVersionInexactMatch() throws IOException {
     Path expectedPath = createTmpNdkVersions(
+        NDK_PRE_R11_VERSION_FILENAME,
         "ndk-dir-r9a", "r9a-rc2",
         "ndk-dir-r9b", "r9b-rc3 (64-bit)",
         "ndk-dir-r9c", "r9c"
@@ -289,8 +381,8 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void testFindAndroidNdkDirScanTakesVersionEmptyRequested() throws IOException {
-    createTmpNdkVersions("ndk-dir-r9a", "r9a-rc2");
+    public void testFindAndroidNdkDirScanTakesVersionEmptyRequested() throws IOException {
+    createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9a", "r9a-rc2");
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
@@ -541,14 +633,14 @@ public class DefaultAndroidDirectoryResolverTest {
     androidDirectoryResolver.findAndroidBuildToolsDir();
   }
 
-  private Path[] createTmpNdkVersions(String... directoryNamesAndVersionStrings)
+  private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
       throws IOException {
     Path[] ret = new Path[directoryNamesAndVersionStrings.length / 2];
     for (int i = 0; i < directoryNamesAndVersionStrings.length / 2; i++) {
       String folderName = directoryNamesAndVersionStrings[i * 2];
       String version = directoryNamesAndVersionStrings[(i * 2) + 1];
       ret[i] = tmpDir.newFolder(folderName);
-      Path releaseFile = tmpDir.newFile(folderName + "/RELEASE.TXT");
+      Path releaseFile = tmpDir.newFile(folderName + "/" + filename);
       MoreFiles.writeLinesToFile(ImmutableList.of(version), releaseFile);
     }
     return ret;
