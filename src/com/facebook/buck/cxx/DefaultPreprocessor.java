@@ -21,7 +21,6 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -36,17 +35,7 @@ public class DefaultPreprocessor implements Preprocessor {
   }
 
   @Override
-  public Optional<ImmutableList<String>> getExtraFlags() {
-    return Optional.absent();
-  }
-
-  @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.absent();
-  }
-
-  @Override
-  public Optional<Function<String, Iterable<String>>> getExtraLineProcessor() {
     return Optional.absent();
   }
 

@@ -135,22 +135,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    * Get the command for standalone preprocessor calls.
    *
    * @param compilerFlags flags to append.
-   * @param withExtraFlags whether to include extra flags for preprocessor macro rewrite hack.
    */
-  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags, boolean withExtraFlags) {
+  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
     return ImmutableList.<String>builder()
         .addAll(preprocessor.getCommandPrefix(resolver))
         .addAll(CxxToolFlags.concat(getFlagsWithSearchPaths(), compilerFlags).getAllFlags())
-        .addAll(
-            withExtraFlags
-                ? preprocessor.getExtraFlags().or(ImmutableList.<String>of())
-                : ImmutableList.<String>of())
         .build();
-  }
-
-
-  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
-    return getCommand(compilerFlags, /* withExtraFlags */ true);
   }
 
   public ImmutableMap<String, String> getEnvironment() {
@@ -162,13 +152,6 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         resolver,
         minLengthPathRepresentation,
         frameworkPathSearchPathFunction);
-  }
-
-  /**
-   * Get custom line processor for preprocessor output for use when running the step.
-   */
-  public Optional<Function<String, Iterable<String>>> getPreprocessorExtraLineProcessor() {
-    return preprocessor.getExtraLineProcessor();
   }
 
   public void checkForConflictingHeaders() throws ConflictingHeadersException {

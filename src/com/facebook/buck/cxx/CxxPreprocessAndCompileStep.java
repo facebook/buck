@@ -62,7 +62,6 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final HeaderVerification headerVerification;
-  private final Optional<Function<String, Iterable<String>>> extraLineProcessor;
 
   /**
    * Directory to use to store intermediate/temp files used for compilation.
@@ -81,7 +80,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       HeaderVerification headerVerification,
-      Optional<Function<String, Iterable<String>>> extraLineProcessor,
       Path scratchDir) {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
@@ -97,7 +95,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.headerPathNormalizer = headerPathNormalizer;
     this.sanitizer = sanitizer;
     this.headerVerification = headerVerification;
-    this.extraLineProcessor = extraLineProcessor;
     this.scratchDir = scratchDir;
   }
 
@@ -421,8 +418,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     return new CxxPreprocessorOutputTransformerFactory(
         filesystem.getRootPath(),
         headerPathNormalizer,
-        sanitizer,
-        extraLineProcessor);
+        sanitizer);
   }
 
   private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {

@@ -19,16 +19,14 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
@@ -64,8 +62,7 @@ public class CxxPreprocessorOutputTransformerFactoryTest {
         new CxxPreprocessorOutputTransformerFactory(
             fakeProjectFilesystem.getRootPath(),
             normalizer,
-            sanitizer,
-            Optional.<Function<String, Iterable<String>>>absent());
+            sanitizer);
 
     // Fixup line marker lines properly.
     assertThat(

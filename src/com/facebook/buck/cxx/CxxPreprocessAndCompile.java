@@ -33,7 +33,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -258,9 +257,6 @@ public class CxxPreprocessAndCompile
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getHeaderVerification() :
             HeaderVerification.of(HeaderVerification.Mode.IGNORE),
-        preprocessDelegate.isPresent() ?
-            preprocessDelegate.get().getPreprocessorExtraLineProcessor() :
-            Optional.<Function<String, Iterable<String>>>absent(),
         scratchDir);
   }
 

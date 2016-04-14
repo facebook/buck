@@ -17,17 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public interface Preprocessor extends Tool {
 
-  Optional<ImmutableList<String>> getExtraFlags();
-
   Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
-
-  Optional<Function<String, Iterable<String>>> getExtraLineProcessor();
 
   boolean supportsHeaderMaps();
 

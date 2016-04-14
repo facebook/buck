@@ -32,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -168,14 +167,13 @@ public class CxxPrecompiledHeader
         inputType,
         Optional.of(
             new CxxPreprocessAndCompileStep.ToolCommand(
-                preprocessorDelegate.getCommand(compilerFlags, /* withExtraFlags */ false),
+                preprocessorDelegate.getCommand(compilerFlags),
                 preprocessorDelegate.getEnvironment(),
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
         Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
         preprocessorDelegate.getHeaderPathNormalizer(),
         sanitizer,
         preprocessorDelegate.getHeaderVerification(),
-        Optional.<Function<String, Iterable<String>>>absent(),
         scratchDir);
   }
 }

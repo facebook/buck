@@ -20,7 +20,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -37,17 +36,14 @@ class CxxPreprocessorOutputTransformerFactory {
   private final Path workingDir;
   private final HeaderPathNormalizer pathNormalizer;
   private final DebugPathSanitizer sanitizer;
-  private final Optional<Function<String, Iterable<String>>> extraPreprocessorTransformer;
 
   public CxxPreprocessorOutputTransformerFactory(
       Path workingDir,
       HeaderPathNormalizer pathNormalizer,
-      DebugPathSanitizer sanitizer,
-      Optional<Function<String, Iterable<String>>> extraPreprocessorTransformer) {
+      DebugPathSanitizer sanitizer) {
     this.workingDir = workingDir;
     this.pathNormalizer = pathNormalizer;
     this.sanitizer = sanitizer;
-    this.extraPreprocessorTransformer = extraPreprocessorTransformer;
   }
 
   public LineProcessorRunnable createTransformerThread(
@@ -78,8 +74,6 @@ class CxxPreprocessorOutputTransformerFactory {
   Iterable<String> transformLine(String line) {
     if (line.startsWith("# ")) {
       return ImmutableList.of(transformPreprocessorLine(line));
-    } else if (extraPreprocessorTransformer.isPresent()) {
-      return extraPreprocessorTransformer.get().apply(line);
     } else {
       return ImmutableList.of(line);
     }
